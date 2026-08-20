@@ -1,12 +1,13 @@
-import { existsSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { analyzeGitDelta } from "../src/git/git-diff.js";
 import { buildDependencyGraph } from "../src/repo/graph.js";
 import { ImpactAnalyzer } from "../src/repo/impact.js";
 import type { ImpactResult } from "../src/repo/impact-types.js";
+import { resolveDentalPresenceRepoPath } from "./target-repo.js";
 
-const repoPath = resolve(dirname(import.meta.filename), "../..");
+const repoPath = resolveDentalPresenceRepoPath();
 const SAMPLE_SIZE = 10;
 
 function runGit(args: string[]): string {
@@ -49,16 +50,12 @@ function summarizeImpact(result: ImpactResult) {
 }
 
 async function main() {
-  if (!existsSync(resolve(repoPath, "package.json"))) {
-    throw new Error(`Expected repo root with package.json at ${repoPath}`);
-  }
-
   const shas = listRecentShas(SAMPLE_SIZE);
   console.log(`Sampling ${shas.length} recent non-merge commits...`);
 
   const graphResult = await buildDependencyGraph({
     repoPath,
-    excludeDirs: ["diffci", "node_modules", ".next", "dist", "build"],
+    excludeDirs: ["node_modules", ".next", "dist", "build"],
   });
 
   const analyzer = new ImpactAnalyzer();
@@ -98,7 +95,9 @@ async function main() {
     details: samples.map((s) => ({ sha: s.sha, impact: s.impact })),
   };
 
-  const outPath = resolve(repoPath, "diffci", "impact-audit.json");
+  // See audit-dentalpresence-graph.ts's comment: writes under the target repo's own .diffci/ state
+  // directory now, not a diffci/ subfolder (removed from DentalPresence.in on 2026-08-21).
+  const outPath = resolve(repoPath, ".diffci", "impact-audit.json");
   writeFileSync(outPath, JSON.stringify(report, null, 2));
   console.log(`Wrote impact audit report to ${outPath}`);
 

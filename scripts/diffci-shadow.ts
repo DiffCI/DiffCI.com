@@ -4,10 +4,11 @@ import { runShadowExperiment } from "../src/shadow/experiment.js";
 import { DiffCiPersistence } from "../src/shadow/persistence.js";
 import { resolveCommitRange } from "../src/shadow/commit-resolution.js";
 
-const repoPath = resolve(dirname(import.meta.filename), "../..");
+// One level up from scripts/ - see diffci.ts's comment for why this changed from "../.." on 2026-08-21.
+const repoPath = resolve(dirname(import.meta.filename), "..");
 const SHADOW_DIR = resolve(repoPath, ".diffci/shadow");
 const EXPLAIN_DIR = resolve(SHADOW_DIR, "explain");
-const EXCLUDE_DIRS = ["diffci", "node_modules", ".next", "dist", "build"];
+const EXCLUDE_DIRS = ["node_modules", ".next", "dist", "build"];
 
 function parseArgs(argv: string[]) {
   const args = argv.slice(2);

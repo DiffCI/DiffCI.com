@@ -10,8 +10,12 @@ import { explain } from "../src/planner/explain.js";
 import { runShadowAnalysis, runGit } from "../src/shadow/runner.js";
 import { DiffCiPersistence } from "../src/shadow/persistence.js";
 
-const repoPath = resolve(dirname(import.meta.filename), "../..");
-const EXCLUDE_DIRS = ["diffci", "node_modules", ".next", "dist", "build"];
+// One level up from scripts/ - this file lives at <repo-root>/scripts/diffci.ts. Was "../.." before
+// this repo moved out of DentalPresence.in's diffci/ subfolder (2026-08-21); that resolved to the OLD
+// parent monorepo's root, which no longer exists relative to this file at all now that this repo IS the
+// root - fixed to analyze this repo's own history/tree, which is what every command below assumes.
+const repoPath = resolve(dirname(import.meta.filename), "..");
+const EXCLUDE_DIRS = ["node_modules", ".next", "dist", "build"];
 
 function parseArgs(argv: string[]) {
   const args = argv.slice(2);

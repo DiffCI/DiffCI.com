@@ -4,7 +4,8 @@ import { buildShadowReport } from "../src/shadow/report.js";
 import { DiffCiPersistence } from "../src/shadow/persistence.js";
 import type { ShadowRunRecord, ShadowReport } from "../src/shadow/types.js";
 
-const repoPath = resolve(dirname(import.meta.filename), "../..");
+// One level up from scripts/ - see diffci.ts's comment for why this changed from "../.." on 2026-08-21.
+const repoPath = resolve(dirname(import.meta.filename), "..");
 const SHADOW_DIR = resolve(repoPath, ".diffci/shadow");
 const REPORT_DIR = resolve(repoPath, ".diffci/reports");
 const SHADOW_JSONL = resolve(SHADOW_DIR, "shadow-runs.jsonl");

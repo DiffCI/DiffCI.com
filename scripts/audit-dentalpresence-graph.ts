@@ -1,9 +1,10 @@
-import { existsSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { buildDependencyGraph } from "../src/repo/graph.js";
 import type { DependencyGraph } from "../src/repo/types.js";
+import { resolveDentalPresenceRepoPath } from "./target-repo.js";
 
-const repoPath = resolve(dirname(import.meta.filename), "../..");
+const repoPath = resolveDentalPresenceRepoPath();
 
 function pickRepresentatives(graph: DependencyGraph) {
   const nodes = graph.nodes.map((n) => n.path);
@@ -48,13 +49,9 @@ function pickRepresentatives(graph: DependencyGraph) {
 }
 
 async function main() {
-  if (!existsSync(resolve(repoPath, "package.json"))) {
-    throw new Error(`Expected repo root with package.json at ${repoPath}`);
-  }
-
   const result = await buildDependencyGraph({
     repoPath,
-    excludeDirs: ["diffci", "node_modules", ".next", "dist", "build"],
+    excludeDirs: ["node_modules", ".next", "dist", "build"],
   });
 
   const {
@@ -176,7 +173,11 @@ async function main() {
     representativeQueries,
   };
 
-  const outPath = resolve(repoPath, "diffci", "graph-audit.json");
+  // Was resolve(repoPath, "diffci", "graph-audit.json") - that assumed a diffci/ subfolder existed
+  // inside the target repo to write into, which no longer applies now that diffci/ has been fully
+  // removed from DentalPresence.in. Written under the target repo's own .diffci/ state directory instead
+  // (already gitignored there, same convention .diffci/shadow and .diffci/cache already use).
+  const outPath = resolve(repoPath, ".diffci", "graph-audit.json");
   writeFileSync(outPath, JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report, null, 2));
 }

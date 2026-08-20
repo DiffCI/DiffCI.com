@@ -1,9 +1,10 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { buildBenchmarkReport, fromShadowRecord } from "../src/shadow/benchmark.js";
 import type { ShadowRunRecord } from "../src/shadow/types.js";
+import { resolveDentalPresenceRepoPath } from "./target-repo.js";
 
-const repoPath = resolve(dirname(import.meta.filename), "../..");
+const repoPath = resolveDentalPresenceRepoPath();
 const shadowDir = resolve(repoPath, ".diffci/shadow");
 const reportPath = resolve(repoPath, ".diffci/reports/phase5-benchmark-report.json");
 
