@@ -1,0 +1,23 @@
+{
+  "repository": "TanStack/query",
+  "baseSha": "3bc8edfa01",
+  "headSha": "dce04b5c5a",
+  "changedFiles": [
+    "CONTRIBUTING.md"
+  ],
+  "stage0Recorded": {
+    "fallback": false,
+    "graphConfidence": "COMPLETE",
+    "testsTotal": 184,
+    "testsSelectedByPath": 0,
+    "testsSelectedByDiffci": 0
+  },
+  "historicalEvidence": {
+    "failingJob": "Release",
+    "failingStep": null,
+    "errorMessage": "HttpError: No server is currently available to service your request. Sorry about that. Please try resubmitting your request and contact us if the problem persists.",
+    "confirmedUnrelatedToCode": true
+  },
+  "classification": "ENVIRONMENT_DEPENDENCY",
+  "notes": "GitHub platform infrastructure outage, confirmed rare (job succeeded 10/10 on nearest other commits). Also not even a test job - Release publish jobs have no relationship to DiffCI's test selection at all, a second distinct flavor of mapping error."
+}

@@ -1,0 +1,24 @@
+{
+  "repository": "unjs/h3",
+  "baseSha": "74d53c5bc8",
+  "headSha": "3f8b5bc621",
+  "changedFiles": [
+    "docs/1.guide/900.api/2.h3event.md",
+    "src/event.ts"
+  ],
+  "stage0Recorded": {
+    "fallback": false,
+    "graphConfidence": "COMPLETE",
+    "testsTotal": 70,
+    "testsSelectedByPath": 70,
+    "testsSelectedByDiffci": 59
+  },
+  "historicalEvidence": {
+    "failingJob": "tests",
+    "failingStep": "Run pnpm lint",
+    "errorMessage": "Process completed with exit code 1.",
+    "confirmedUnrelatedToCode": true
+  },
+  "classification": "BENCHMARK_MAPPING_ERROR",
+  "notes": "Real source-code change (src/event.ts) with a genuinely selective (non-fallback) DiffCI plan - the strongest evidence in this dataset that DiffCI's test selection was not the cause of any of the 8 misses. Same lint-in-'tests'-job mechanism as h3-docs-only."
+}

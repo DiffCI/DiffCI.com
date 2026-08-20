@@ -1,0 +1,23 @@
+{
+  "repository": "unjs/unstorage",
+  "baseSha": "05e2857e74",
+  "headSha": "bbc9990281",
+  "changedFiles": [
+    "vite.config.mjs"
+  ],
+  "stage0Recorded": {
+    "fallback": false,
+    "graphConfidence": "COMPLETE",
+    "testsTotal": 40,
+    "testsSelectedByPath": 40,
+    "testsSelectedByDiffci": 0
+  },
+  "historicalEvidence": {
+    "failingJob": "tests",
+    "failingStep": null,
+    "errorMessage": "Process completed with exit code 1. (GitHub log/step retention expired at time of investigation)",
+    "confirmedUnrelatedToCode": false
+  },
+  "classification": "UNKNOWN",
+  "notes": "Same evidentiary limit as unstorage-utils-ts. Not forced into a classification without evidence."
+}

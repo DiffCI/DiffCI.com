@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "diffci-research-sandbox",
+  "main": "./src/research/cloudflare/validation-worker.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    "SANDBOX_TRANSPORT": "rpc",
+    "DIFFCI_RESEARCH_ENABLED": "true"
+  },
+  "containers": [
+    {
+      "class_name": "ResearchSandbox",
+      "image": "docker.io/cloudflare/sandbox:0.12.5",
+      "instance_type": "standard-2",
+      // Real finding, larger-study run 2026-08-20: firing repository validations back-to-back with
+      // max_instances=1 caused repeated "the sandbox container stopped while the operation was
+      // pending" failures across MANY different repos, even exhausting all 3 retry attempts on several
+      // - the platform couldn't reliably free the single instance slot fast enough between sequential
+      // calls to different session ids (each with its own container). Raised to 5 for headroom, then
+      // to 10 after the Stage 0 full corpus completed (2026-08-20) so future batches can dispatch
+      // wider. Must stay ABOVE the orchestrator's concurrency clamp in validation-worker.ts (8) -
+      // the gap absorbs the slot-release lag between sessions that caused the original failures.
+      "max_instances": 10,
+      "rollout_step_percentage": [100]
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "ResearchSandbox", "class_name": "ResearchSandbox" }
+    ]
+  },
+  "r2_buckets": [
+    { "binding": "RESEARCH_BUCKET", "bucket_name": "diffci-research-evidence" }
+  ],
+  "d1_databases": [
+    { "binding": "RESEARCH_DB", "database_name": "diffci-research", "database_id": "84ddc2e5-0f1d-424f-8bfc-81f4e39dc534" }
+  ],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ResearchSandbox"] }
+  ]
+}

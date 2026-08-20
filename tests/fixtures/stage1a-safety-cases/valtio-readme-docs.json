@@ -1,0 +1,24 @@
+{
+  "repository": "pmndrs/valtio",
+  "baseSha": "a6ad505857",
+  "headSha": "4689e794de",
+  "changedFiles": [
+    "README.md",
+    "docs/api/advanced/ref.mdx"
+  ],
+  "stage0Recorded": {
+    "fallback": false,
+    "graphConfidence": "COMPLETE",
+    "testsTotal": 34,
+    "testsSelectedByPath": 0,
+    "testsSelectedByDiffci": 0
+  },
+  "historicalEvidence": {
+    "failingJob": "test_multiple_versions (19.0.0)",
+    "failingStep": null,
+    "errorMessage": "AssertionError: expected 0.11916369408326592 to be less than 0.1 (tests/perf/performance.test.ts > performance with nested objects > snapshot with subscription)",
+    "confirmedUnrelatedToCode": true
+  },
+  "classification": "ENVIRONMENT_DEPENDENCY",
+  "notes": "Flaky timing-threshold performance assertion, confirmed rare (9/9 nearest other commits succeeded). Not caused by, or predictable from, a documentation-only diff."
+}

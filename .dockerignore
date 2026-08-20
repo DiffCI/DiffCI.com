@@ -1,0 +1,7 @@
+node_modules
+dist
+.research
+tests
+docs
+*.log
+.git

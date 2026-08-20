@@ -1,0 +1,23 @@
+{
+  "repository": "unjs/unstorage",
+  "baseSha": "fdaa0e1a87",
+  "headSha": "bc7e5a959e",
+  "changedFiles": [
+    "src/_utils.ts"
+  ],
+  "stage0Recorded": {
+    "fallback": false,
+    "graphConfidence": "COMPLETE",
+    "testsTotal": 40,
+    "testsSelectedByPath": 40,
+    "testsSelectedByDiffci": 36
+  },
+  "historicalEvidence": {
+    "failingJob": "tests",
+    "failingStep": null,
+    "errorMessage": "Process completed with exit code 1. (GitHub log/step retention expired at time of investigation)",
+    "confirmedUnrelatedToCode": false
+  },
+  "classification": "UNKNOWN",
+  "notes": "Real source change, selective plan. Could not confirm root cause - GitHub's log retention had expired. Circumstantial context: same repo/job as the confirmed-environment-dependency unstorage-oxfmtrc case, sampled in a similar time window."
+}

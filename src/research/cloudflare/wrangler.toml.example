@@ -1,0 +1,31 @@
+name = "diffci-research"
+main = "src/research/cloudflare/worker.ts"
+compatibility_date = "2026-08-19"
+
+# NOT YET DEPLOYED. To use: copy to wrangler.toml, run
+#   wrangler d1 database create diffci-research
+#   wrangler d1 execute diffci-research --file=src/research/cloudflare/schema.sql
+# and paste the returned database_id below. See
+# diffci/docs/research/2026-08-20-stage0-full-experiment-architecture.md for the full design this
+# implements and diffci/docs/research/2026-08-20-stage0-full-experiment-gap-analysis.md for why it
+# isn't wired into the CLI yet.
+
+[[queues.producers]]
+queue = "diffci-research-queue"
+
+[[queues.consumers]]
+queue = "diffci-research-queue"
+max_batch_size = 10
+max_batch_timeout = 30
+
+[[r2_buckets]]
+binding = "RESEARCH_BUCKET"
+bucket_name = "diffci-research-evidence"
+
+[[d1_databases]]
+binding = "RESEARCH_DB"
+database_name = "diffci-research"
+database_id = "REPLACE_ME_AFTER_wrangler_d1_database_create"
+
+[vars]
+DIFFCI_RESEARCH_ENABLED = "false"

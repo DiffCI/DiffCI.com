@@ -1,0 +1,23 @@
+{
+  "repository": "pmndrs/zustand",
+  "baseSha": "da381c39cd",
+  "headSha": "4966a15d93",
+  "changedFiles": [
+    "README.md"
+  ],
+  "stage0Recorded": {
+    "fallback": false,
+    "graphConfidence": "COMPLETE",
+    "testsTotal": 13,
+    "testsSelectedByPath": 0,
+    "testsSelectedByDiffci": 0
+  },
+  "historicalEvidence": {
+    "failingJob": "build / build-job",
+    "failingStep": null,
+    "errorMessage": "step detail unavailable (log retention expired); ~25 real test jobs all succeeded on this commit; job succeeded 13/15 and was cancelled 1/15 on the nearest other commits checked - rare, isolated failure",
+    "confirmedUnrelatedToCode": false
+  },
+  "classification": "UNKNOWN",
+  "notes": "README-only fix; every real test job passed, only the build job failed. Structurally implausible as a real miss but not confirmed with certainty."
+}

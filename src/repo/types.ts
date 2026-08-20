@@ -1,0 +1,188 @@
+export type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "unknown";
+
+export interface PathAlias {
+  pattern: string;
+  substitutions: string[];
+}
+
+export interface SourceRoot {
+  path: string;
+  kind: "source" | "tests" | "scripts" | "operations" | "app" | "api";
+}
+
+export interface TestLocation {
+  glob: string;
+  count: number;
+}
+
+export interface Workflow {
+  path: string;
+  name?: string;
+}
+
+export interface EntryPoint {
+  path: string;
+  kind:
+    | "next-page"
+    | "next-layout"
+    | "next-route"
+    | "next-api"
+    | "next-loading"
+    | "next-error"
+    | "next-template"
+    | "script"
+    | "test"
+    | "unknown";
+}
+
+export interface RepositoryProfile {
+  packageManager: PackageManager;
+  packageJson: {
+    name?: string;
+    version?: string;
+    scripts: Record<string, string>;
+    dependencies: string[];
+    devDependencies: string[];
+  };
+  lockfile?: string;
+  tsconfig?: {
+    path: string;
+    baseUrl?: string;
+    pathAliases: PathAlias[];
+    allowJs: boolean;
+    include: string[];
+    exclude: string[];
+  };
+  nextConfig?: {
+    exists: boolean;
+    file?: string;
+  };
+  sourceRoots: SourceRoot[];
+  tests: TestLocation[];
+  /** Repo-relative paths of every individual test file discovered (same match as `tests`,
+   * unaggregated). The authoritative source for "all tests" callers that need real file
+   * paths rather than glob-pattern strings (e.g. per-test PATH-baseline comparisons). */
+  testFilePaths: string[];
+  workflows: Workflow[];
+  configFiles: string[];
+  pathAliases: PathAlias[];
+  entryPoints: EntryPoint[];
+  stats: {
+    sourceFiles: number;
+    testFiles: number;
+    workflowFiles: number;
+    configFiles: number;
+  };
+}
+
+export type DependencyEdgeKind =
+  | "import"
+  | "type-import"
+  | "re-export"
+  | "dynamic-import"
+  | "require"
+  | "asset";
+
+export type DependencyResolution =
+  | "internal-source"
+  | "external-package"
+  | "platform-builtin"
+  | "internal-asset"
+  | "unresolved";
+
+export interface DependencyEdge {
+  from: string;
+  to: string;
+  kind: DependencyEdgeKind;
+}
+
+export interface DependencyGraphNode {
+  path: string;
+  isSource: boolean;
+  isAsset: boolean;
+  assetType?: string;
+  isTest: boolean;
+  isEntryPoint: boolean;
+}
+
+export interface DependencyGraph {
+  nodes: DependencyGraphNode[];
+  edges: DependencyEdge[];
+  forward: Record<string, string[]>;
+  reverse: Record<string, string[]>;
+  dependenciesOf(filePath: string): string[];
+  dependentsOf(filePath: string): string[];
+  transitiveDependenciesOf(filePath: string): string[];
+  transitiveDependentsOf(filePath: string): string[];
+}
+
+export interface UnresolvedDependency {
+  importer: string;
+  specifier: string;
+  reason: string;
+  dynamic: boolean;
+  typeOnly: boolean;
+}
+
+export interface ResolutionReference {
+  resolution: DependencyResolution;
+  specifier: string;
+  importer: string;
+  kind: DependencyEdgeKind;
+  dynamic: boolean;
+}
+
+export interface ResolutionCounts {
+  internalSource: number;
+  internalAsset: number;
+  externalPackage: number;
+  platformBuiltin: number;
+  unresolved: number;
+}
+
+export type GraphConfidence = "COMPLETE" | "PARTIAL" | "UNSAFE";
+
+export interface GraphIntegrityFinding {
+  level: "critical" | "warning";
+  message: string;
+}
+
+export interface GraphIntegrityReport {
+  findings: GraphIntegrityFinding[];
+  criticalCount: number;
+  warningCount: number;
+  stats: {
+    nodeCount: number;
+    sourceNodeCount: number;
+    assetNodeCount: number;
+    edgeCount: number;
+    assetEdgeCount: number;
+  };
+}
+
+export interface GraphPerformanceMetrics {
+  durationMs: number;
+  heapUsedMb?: number;
+  heapAfterExtractionMb?: number;
+  filesDiscovered: number;
+  filesParsed: number;
+}
+
+export interface DependencyGraphResult {
+  graph: DependencyGraph;
+  profile: RepositoryProfile;
+  unresolved: UnresolvedDependency[];
+  references: ResolutionReference[];
+  counts: ResolutionCounts;
+  externalReferences: number;
+  platformBuiltinReferences: number;
+  internalAssetEdges: number;
+  performance: GraphPerformanceMetrics;
+  confidence: GraphConfidence;
+  integrity: GraphIntegrityReport;
+  /** Stage 1B (2026-08-21): whether TS project-reference resolution was used anywhere in this graph -
+   * exposed so refineConfidenceForDelta() can correctly cap a per-delta-narrowed confidence at PARTIAL
+   * rather than assuming COMPLETE, matching computeConfidence()'s own priority (project-reference use
+   * caps confidence even when nothing else flags a problem). Previously computed but never exposed. */
+  resolvedViaProjectReferences: boolean;
+}

@@ -1,0 +1,40 @@
+{
+  "name": "diffci",
+  "version": "0.1.0",
+  "description": "DiffCI - deterministic change-aware CI planning",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "exports": {
+    "./*": {
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc",
+    "test": "tsx --test tests/**/*.test.ts",
+    "check": "npm run typecheck && npm run test",
+    "diffci": "tsx scripts/diffci.ts",
+    "impact": "tsx scripts/diffci.ts impact",
+    "shadow": "tsx scripts/diffci-shadow.ts",
+    "shadow-report": "tsx scripts/diffci-shadow-report.ts",
+    "audit:dentalpresence": "tsx scripts/audit-dentalpresence-graph.ts",
+    "audit:dentalpresence-impact": "tsx scripts/audit-dentalpresence-impact.ts",
+    "research:stage0": "tsx src/research/cli/run-stage0.ts",
+    "research:sandbox:deploy": "wrangler deploy --config wrangler.research-sandbox.jsonc"
+  },
+  "dependencies": {
+    "typescript": "^5.8.3",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@cloudflare/sandbox": "0.12.5",
+    "@types/node": "^22.15.12",
+    "tsx": "^4.23.12",
+    "wrangler": "4.120.0"
+  }
+}

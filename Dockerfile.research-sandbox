@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1
+#
+# NOT CURRENTLY USED for the 2026-08-20 cloud validation deploy: building this requires a local Docker
+# daemon, which wasn't available. wrangler.research-sandbox.jsonc instead references the public
+# pre-built docker.io/cloudflare/sandbox:0.12.5 image directly (no local build needed - Cloudflare
+# pulls public Docker Hub images server-side) and uploads the diffci source into the running container
+# at request time via the Sandbox API (see validation-worker.ts), the same way ops/cloudflare-builder
+# receives this app's own source as a tarball. Kept here as the documented path to a leaner, faster-
+# starting custom image once a real Docker build (local, Workers Builds, or a dedicated builder
+# sandbox) is available - swap wrangler.research-sandbox.jsonc's `image` back to "./Dockerfile.research-
+# sandbox" to use it.
+#
+# Cloudflare Container image for the Stage 0 research pipeline's "isolated execution environment" -
+# see diffci/docs/research/2026-08-20-stage0-full-experiment-architecture.md for why this exists
+# (plain Workers/Workflows have no filesystem/subprocess capability, so git clone + the TypeScript
+# compiler API can't run there at all).
+#
+# Deliberately simpler than ops/cloudflare-builder/Dockerfile: that image needs Docker-in-Docker
+# because it builds and pushes this app's own container images. This one only needs git + Node to
+# clone an external repo and run diffci's existing analysis code - same proven "extract the sandbox
+# binary onto a real base" pattern, without the dind/php overhead.
+FROM docker.io/library/node:24.16.0-alpine
+
+# Match the @cloudflare/sandbox npm package version pinned in package.json - version mismatches
+# between the image and the SDK package can break sandbox features silently.
+COPY --from=docker.io/cloudflare/sandbox:0.12.5-musl /container-server/sandbox /sandbox
+COPY --from=docker.io/cloudflare/sandbox:0.12.5-musl /usr/lib/libstdc++.so.6 /usr/lib/libstdc++.so.6
+COPY --from=docker.io/cloudflare/sandbox:0.12.5-musl /usr/lib/libgcc_s.so.1 /usr/lib/libgcc_s.so.1
+COPY --from=docker.io/cloudflare/sandbox:0.12.5-musl /bin/bash /bin/bash
+COPY --from=docker.io/cloudflare/sandbox:0.12.5-musl /usr/lib/libreadline.so.8 /usr/lib/libreadline.so.8
+COPY --from=docker.io/cloudflare/sandbox:0.12.5-musl /usr/lib/libreadline.so.8.2 /usr/lib/libreadline.so.8.2
+
+RUN apk add --no-cache git \
+  && mkdir -p /workspace /opt/diffci
+
+WORKDIR /opt/diffci
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY src ./src
+COPY scripts ./scripts
+COPY tsconfig.json ./
+
+# ENTRYPOINT is set by the base pattern to the sandbox API server; do not override it - the Worker
+# drives everything via sandbox.exec() against this image, there is no default long-running CMD needed.
+ENTRYPOINT ["/sandbox"]

@@ -1,0 +1,24 @@
+{
+  "repository": "pmndrs/valtio",
+  "baseSha": "e5f5604d687e5362d9e3ead041bfa48ce2ad7fb3",
+  "headSha": "a8e8dd06ff9fece791276e1f0053bd51f4b37400",
+  "changedFiles": [
+    "src/vanilla.ts",
+    "tests/performance.test.tsx"
+  ],
+  "stage0Recorded": {
+    "fallback": false,
+    "graphConfidence": "COMPLETE",
+    "testsTotal": 34,
+    "testsSelectedByPath": 34,
+    "testsSelectedByDiffci": 35
+  },
+  "historicalEvidence": {
+    "failingJob": null,
+    "failingStep": null,
+    "errorMessage": null,
+    "confirmedUnrelatedToCode": null
+  },
+  "classification": "CHECKOUT_SEQUENCING_BUG",
+  "notes": "Not a historical-evidence miss - the Phase 6 impossible-count anomaly (testsSelectedByDiffci > testsTotal). Root cause: no code in the pipeline ever checks the repo out to a delta's specific headSha; tests/performance.test.tsx was later renamed to tests/perf/performance.test.ts, so the tip-state test-file scan misses it under its historical name while the headSha-independent git diff correctly reports it as added. Reproduced deterministically; fixed via a non-clamping testCountInvariantViolation guard (runner.ts/aggregator.ts) - see docs/research/2026-08-21-stage1a-valtio-anomaly.md."
+}

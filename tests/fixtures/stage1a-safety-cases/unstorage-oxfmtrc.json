@@ -1,0 +1,23 @@
+{
+  "repository": "unjs/unstorage",
+  "baseSha": "46aab4d8bc",
+  "headSha": "c28ebab4ae",
+  "changedFiles": [
+    ".oxfmtrc.json"
+  ],
+  "stage0Recorded": {
+    "fallback": false,
+    "graphConfidence": "COMPLETE",
+    "testsTotal": 40,
+    "testsSelectedByPath": 40,
+    "testsSelectedByDiffci": 0
+  },
+  "historicalEvidence": {
+    "failingJob": "tests",
+    "failingStep": null,
+    "errorMessage": "FetchError: [GET] \"https://api.github.com/repos/unjs/unstorage/git/trees/main?recursive=1\": 403 rate limit exceeded (test/drivers/github.test.ts > drivers: github > can read an item metadata)",
+    "confirmedUnrelatedToCode": true
+  },
+  "classification": "ENVIRONMENT_DEPENDENCY",
+  "notes": "A test that makes a live GitHub API call hit a rate limit during CI - entirely unrelated to the formatter-config-only change, and undetectable by any static analysis."
+}

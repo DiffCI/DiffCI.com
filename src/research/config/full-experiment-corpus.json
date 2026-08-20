@@ -1,0 +1,30 @@
+{
+  "version": "stage0-full-experiment-2026-08-21",
+  "note": "Selection criteria documented in diffci/docs/research/2026-08-21-stage0-full-experiment-corpus-selection.md, written BEFORE any of the 10 new candidates were run. Do not add/remove/reorder entries after seeing benchmark results.",
+  "repositories": [
+    { "owner": "axios", "name": "axios", "primaryLanguage": "javascript", "targetCommits": 100, "selectionBasis": "kept from medium batch - proven graph-capable, real positive signal" },
+    { "owner": "colinhacks", "name": "zod", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - proven graph-capable, real positive signal, deep/narrow structure" },
+    { "owner": "pmndrs", "name": "jotai", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - proven graph-capable, modest positive signal" },
+    { "owner": "pmndrs", "name": "zustand", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - proven graph-capable" },
+    { "owner": "sindresorhus", "name": "execa", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - real negative/weak case (100% fallback), valid corpus member" },
+    { "owner": "sindresorhus", "name": "ky", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - AVA test-discovery gap, test-count metrics excluded from aggregates" },
+    { "owner": "trpc", "name": "trpc", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - real negative result (UNSAFE graph confidence), deliberately NOT removed" },
+    { "owner": "unjs", "name": "defu", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - proven graph-capable, small library" },
+    { "owner": "unjs", "name": "h3", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - proven graph-capable, strongest opportunity frequency observed so far" },
+    { "owner": "unjs", "name": "ofetch", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "kept from medium batch - proven graph-capable, weak signal (mostly ties)" },
+    { "owner": "honojs", "name": "hono", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - closes the original 20-repo corpus.json gap (previously only in the 2026-08-19 local pilot, never the real Cloudflare pipeline); web framework, medium size" },
+    { "owner": "nestjs", "name": "nest", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - large TS application framework, monorepo-adjacent structure, broad PATH mapping expected" },
+    { "owner": "typeorm", "name": "typeorm", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - large single-package ORM library, deep dependency structure expected" },
+    { "owner": "TanStack", "name": "query", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - large TS monorepo, project references likely, different test framework/CI structure" },
+    { "owner": "date-fns", "name": "date-fns", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - huge small-unit-test-suite library (one test file per function), narrow/deep structure, single-package" },
+    { "owner": "mikro-orm", "name": "mikro-orm", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - medium ORM library, different domain from typeorm for comparison" },
+    { "owner": "unjs", "name": "unstorage", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - third unjs-family repo (small utility), tests consistency within a known-analyzable org" },
+    { "owner": "unocss", "name": "unocss", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - TS monorepo utility/framework, different GitHub Actions structure expected" },
+    { "owner": "pmndrs", "name": "valtio", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - third pmndrs-family repo, small state-management library, org-consistency comparison" },
+    { "owner": "redis", "name": "ioredis", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "NEW - single-package TS client library, different domain (database client) from existing corpus" }
+  ],
+  "backups": [
+    { "owner": "sindresorhus", "name": "got", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "BACKUP - single-package HTTP client, only used if a primary candidate is excluded" },
+    { "owner": "remeda", "name": "remeda", "primaryLanguage": "typescript", "targetCommits": 100, "selectionBasis": "BACKUP - deep/narrow TS utility library, only used if a primary candidate is excluded" }
+  ]
+}

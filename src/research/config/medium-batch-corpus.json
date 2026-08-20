@@ -1,0 +1,18 @@
+{
+  "version": "stage0-medium-batch-2026-08-21",
+  "note": "Selection criteria and rationale are documented in diffci/docs/research/2026-08-21-stage0-medium-batch-corpus-selection.md, written BEFORE any of these repositories were run. Do not add/remove/reorder entries after seeing benchmark results.",
+  "repositories": [
+    { "owner": "axios", "name": "axios", "primaryLanguage": "javascript", "framework": "http-client", "sizeClass": "medium", "selectionBasis": "proven graph-capable in the 2026-08-20 larger study" },
+    { "owner": "pmndrs", "name": "jotai", "primaryLanguage": "typescript", "framework": "react-state", "sizeClass": "small", "selectionBasis": "proven graph-capable" },
+    { "owner": "pmndrs", "name": "zustand", "primaryLanguage": "typescript", "framework": "react-store", "sizeClass": "small", "selectionBasis": "proven graph-capable" },
+    { "owner": "sindresorhus", "name": "ky", "primaryLanguage": "typescript", "framework": "http-client", "sizeClass": "small", "selectionBasis": "proven graph-capable" },
+    { "owner": "unjs", "name": "h3", "primaryLanguage": "typescript", "framework": "server-runtime", "sizeClass": "small", "selectionBasis": "proven graph-capable; best performer in the small-batch report" },
+    { "owner": "unjs", "name": "ofetch", "primaryLanguage": "typescript", "framework": "http-client", "sizeClass": "small", "selectionBasis": "proven graph-capable" },
+    { "owner": "colinhacks", "name": "zod", "primaryLanguage": "typescript", "framework": "validation-library", "sizeClass": "medium", "selectionBasis": "NEW - single-package TS library, deep/nested source tree (locales/, v3/, v4/ style subdirectories), medium-to-large test suite, narrow PATH mapping expected" },
+    { "owner": "sindresorhus", "name": "execa", "primaryLanguage": "typescript", "framework": "process-execution", "sizeClass": "small", "selectionBasis": "NEW - single-package TS library, shallow source tree, small test suite - structural counterpoint to zod's depth" },
+    { "owner": "trpc", "name": "trpc", "primaryLanguage": "typescript", "framework": "rpc-framework", "sizeClass": "large", "selectionBasis": "NEW - TS monorepo (pnpm workspaces), likely tsconfig project references, broad PATH mapping expected, larger test suite - diversity target for monorepo structure" },
+    { "owner": "vitest-dev", "name": "vitest", "primaryLanguage": "typescript", "framework": "testing-framework", "sizeClass": "large", "selectionBasis": "NEW - TS monorepo (packages/*), likely project references, different GH Actions structure (matrix testing expected) - second monorepo diversity target" },
+    { "owner": "unjs", "name": "defu", "primaryLanguage": "typescript", "framework": "utility-library", "sizeClass": "small", "selectionBasis": "BACKUP - tiny single-package TS utility, minimal test suite; only used if a primary candidate is excluded" },
+    { "owner": "remix-run", "name": "react-router", "primaryLanguage": "typescript", "framework": "routing-framework", "sizeClass": "large", "selectionBasis": "BACKUP - large TS monorepo, broad PATH mapping expected; only used if a primary candidate is excluded" }
+  ]
+}

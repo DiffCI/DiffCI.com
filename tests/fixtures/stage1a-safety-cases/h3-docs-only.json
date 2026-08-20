@@ -1,0 +1,10 @@
+{
+  "repository": "unjs/h3",
+  "baseSha": "ba429473b8",
+  "headSha": "50266f3d99",
+  "changedFiles": ["docs/.config/docs.yaml", "docs/2.utils/4.security.md", "docs/2.utils/5.proxy.md", "docs/2.utils/9.more.md", "docs/4.examples/handle-session.md", "docs/4.examples/validate-data.md", "docs/package.json", "docs/pnpm-lock.yaml", "docs/pnpm-workspace.yaml"],
+  "stage0Recorded": { "fallback": false, "graphConfidence": "COMPLETE", "testsTotal": 70, "testsSelectedByPath": 0, "testsSelectedByDiffci": 1 },
+  "historicalEvidence": { "failingJob": "tests", "failingStep": "Run pnpm lint", "errorMessage": "Process completed with exit code 1.", "confirmedUnrelatedToCode": true },
+  "classification": "BENCHMARK_MAPPING_ERROR",
+  "notes": "Docs-only change; the 'tests' job bundles lint+test - the actual failing step was lint, unrelated to DiffCI's test selection."
+}

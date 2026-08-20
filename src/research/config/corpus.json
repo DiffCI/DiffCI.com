@@ -1,0 +1,32 @@
+{
+  "version": "stage0-2026-08-19",
+  "selectionCriteria": [
+    "Active open-source repositories with public GitHub Actions workflows",
+    "At least one of the supported primary languages (TypeScript/JavaScript) plus representative unsupported languages",
+    "Diverse frameworks: Next/React/Node/Express/Nest/Fastify, Django/FastAPI/Flask, Go web libs, Rust libs, Java projects",
+    "Size class based on file/source count: small (<200 files), medium (200-2000 files), large (>2000 files)",
+    "MIT/Apache-2.0/BSD-style permissive licenses preferred"
+  ],
+  "repositories": [
+    { "owner": "pmndrs", "name": "zustand", "primaryLanguage": "typescript", "framework": "react-store", "sizeClass": "small" },
+    { "owner": "pmndrs", "name": "jotai", "primaryLanguage": "typescript", "framework": "react-state", "sizeClass": "small" },
+    { "owner": "honojs", "name": "hono", "primaryLanguage": "typescript", "framework": "web-framework", "sizeClass": "medium" },
+    { "owner": "unjs", "name": "h3", "primaryLanguage": "typescript", "framework": "server-runtime", "sizeClass": "small" },
+    { "owner": "unjs", "name": "ofetch", "primaryLanguage": "typescript", "framework": "http-client", "sizeClass": "small" },
+    { "owner": "sindresorhus", "name": "ky", "primaryLanguage": "typescript", "framework": "http-client", "sizeClass": "small" },
+    { "owner": "lukeed", "name": "kleur", "primaryLanguage": "javascript", "framework": "terminal-colors", "sizeClass": "small" },
+    { "owner": "expressjs", "name": "express", "primaryLanguage": "javascript", "framework": "web-framework", "sizeClass": "medium" },
+    { "owner": "fastify", "name": "fastify", "primaryLanguage": "javascript", "framework": "web-framework", "sizeClass": "medium" },
+    { "owner": "axios", "name": "axios", "primaryLanguage": "javascript", "framework": "http-client", "sizeClass": "medium" },
+    { "owner": "pallets", "name": "flask", "primaryLanguage": "python", "framework": "web-framework", "sizeClass": "medium" },
+    { "owner": "fastapi", "name": "fastapi", "primaryLanguage": "python", "framework": "web-framework", "sizeClass": "medium" },
+    { "owner": "psf", "name": "black", "primaryLanguage": "python", "framework": "cli-tool", "sizeClass": "medium" },
+    { "owner": "gin-gonic", "name": "gin", "primaryLanguage": "go", "framework": "web-framework", "sizeClass": "medium" },
+    { "owner": "spf13", "name": "cobra", "primaryLanguage": "go", "framework": "cli-framework", "sizeClass": "medium" },
+    { "owner": "serde-rs", "name": "serde", "primaryLanguage": "rust", "framework": "serialization-library", "sizeClass": "medium" },
+    { "owner": "rust-lang", "name": "regex", "primaryLanguage": "rust", "framework": "regex-library", "sizeClass": "medium" },
+    { "owner": "spring-projects", "name": "spring-petclinic", "primaryLanguage": "java", "framework": "spring-mvc", "sizeClass": "small" },
+    { "owner": "junit-team", "name": "junit5", "primaryLanguage": "java", "framework": "testing-framework", "sizeClass": "large" },
+    { "owner": "square", "name": "retrofit", "primaryLanguage": "java", "framework": "http-client", "sizeClass": "medium" }
+  ]
+}
