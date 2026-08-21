@@ -1857,6 +1857,22 @@ export default {
       }
       return shadowAppInfo(env, url.searchParams.get("delivery") ?? undefined);
     }
+    if (request.method === "GET" && url.pathname === "/v1/shadow/debug-baseline") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      const repository = url.searchParams.get("repository") ?? "";
+      const headSha = url.searchParams.get("headSha") ?? "";
+      if (!repository || !headSha) return json({ ok: false, error: "repository and headSha query params required" }, 400);
+      const token = await githubTokenForRepo(env, repository);
+      const { fetchBaselineEvidence } = await import("../../shadow/github-baseline.js");
+      try {
+        const result = await fetchBaselineEvidence({ repository, headSha, token });
+        return json({ ok: true, hadToken: !!token, status: result.status, fetchError: result.fetchError, completenessNotes: result.completenessNotes, fullRunsObserved: result.fullRunsObserved, jobCount: result.jobs.length });
+      } catch (error: unknown) {
+        return json({ ok: false, hadToken: !!token, error: error instanceof Error ? error.message : String(error) }, 500);
+      }
+    }
     return json({ ok: false, error: "not-found" }, 404);
   },
 
