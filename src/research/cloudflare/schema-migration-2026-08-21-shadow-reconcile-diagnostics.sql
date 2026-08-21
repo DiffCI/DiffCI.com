@@ -15,4 +15,4 @@ ALTER TABLE shadow_predictions ADD COLUMN last_reconcile_attempted_at TEXT;
 -- (src/shadow/reconcile.ts ReconcileResult.pendingReason) - the classification from the MOST RECENT
 -- attempt only; older attempts' reasons are not retained (this is a live diagnostic, not an audit log -
 -- shadow_cron_runs already provides the per-run audit trail).
-ALTER TABLE shadow_predictions ADD COLUMN last_reconcile_reason TEXT;
+ALTER TABLE shadow_predictions ADD COLUMN last_reconcile_reasonx TEXT;
