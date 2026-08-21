@@ -25,9 +25,10 @@ import { evaluateBudgetStatus } from "../config/cost-model.js";
 import { makeD1ShadowStore, type ObservationSource } from "./shadow-store.js";
 import { reconcilePrediction } from "../../shadow/reconcile.js";
 import { computeLogicalEventKey } from "../../shadow/event-identity.js";
-import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps } from "./shadow-cron.js";
+import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps, type VerifiedSourceArchive } from "./shadow-cron.js";
 import { handleShadowWebhook } from "./shadow-webhook.js";
 import { exchangeInstallationToken, signAppJwt, verifyWebhookSignature } from "../../shadow/github-app.js";
+import { computeSourceIntegrity, isValidSha, type SourceArchiveMeta } from "./shadow-source-integrity.js";
 
 // standard-2 Sandbox instance type (wrangler.research-sandbox.jsonc): 1 vCPU, 6 GiB memory, 12 GB disk.
 // Real Container CPU billing is active-use-only, but wall-clock is used as a conservative (over-, not
@@ -68,6 +69,14 @@ interface ValidationEnv {
   SHADOW_GITHUB_APP_ID?: string;
   SHADOW_GITHUB_APP_PRIVATE_KEY?: string;
   SHADOW_GITHUB_WEBHOOK_SECRET?: string;
+  /** The git commit SHA this exact Worker deployment expects its shadow source archive to be built
+   * from - stamped at deploy time via `wrangler deploy --var EXPECTED_SOURCE_SHA:<HEAD>`
+   * (scripts/deploy-research-sandbox.ts), deliberately NOT a static value in wrangler.research-
+   * sandbox.jsonc (a checked-in SHA would go stale the moment of the next commit, recreating the exact
+   * footgun this exists to close). Unset means "this Worker was deployed without the canonical deploy
+   * script" - autonomous polling refuses to run rather than trusting an unverifiable archive; see
+   * shadow-source-integrity.ts. */
+  EXPECTED_SOURCE_SHA?: string;
   /** Optional Worker secret (wrangler secret put GITHUB_TOKEN). When present, forwarded into the
    * container's exec env (never as a CLI arg - see cloudflare-analyze-batch.ts) to enable authenticated
    * historical CI evidence collection (4500 GitHub REST calls/hour vs 50 unauthenticated). Absent by
@@ -580,12 +589,20 @@ async function runtimeBenchmark(request: Request, env: ValidationEnv): Promise<R
 // whose CI is unaffected. execShadowPoll clones/updates the target itself (unlike execRuntimeBenchmark,
 // which relies on execSampleCommits for its throwaway clone trigger) - see cloudflare-shadow-poll.ts.
 
-async function execShadowPoll(sandbox: any, owner: string, name: string, language: string, lastSeenSha: string | undefined, cloneToken?: string): Promise<unknown> {
+async function execShadowPoll(sandbox: any, owner: string, name: string, language: string, lastSeenSha: string | undefined, cloneToken: string | undefined, engineSourceSha: string | undefined): Promise<unknown> {
   validateShellSafeIdentifiers(owner, name, language);
+  if (engineSourceSha !== undefined && !isValidSha(engineSourceSha)) {
+    // Defensive: this value is interpolated directly into a shell command string below, same discipline
+    // as owner/name/language via validateShellSafeIdentifiers - a 40-hex check is both the correct
+    // version-identity validation AND sufficient shell-injection protection (no shell metacharacters
+    // survive that pattern).
+    throw new Error(`invalid engineSourceSha: "${engineSourceSha}"`);
+  }
   const outPath = `/workspace/shadow-poll-result.json`;
   const lastSeenArg = lastSeenSha ? ` --last-seen-sha ${lastSeenSha}` : "";
+  const engineShaArg = engineSourceSha ? ` --engine-source-sha ${engineSourceSha}` : "";
   const exec = await sandbox.exec(
-    `cd /opt/diffci && npx tsx scripts/cloudflare-shadow-poll.ts --owner ${owner} --name ${name} --language ${language} --workspace /workspace --out ${outPath}${lastSeenArg}`,
+    `cd /opt/diffci && npx tsx scripts/cloudflare-shadow-poll.ts --owner ${owner} --name ${name} --language ${language} --workspace /workspace --out ${outPath}${lastSeenArg}${engineShaArg}`,
     // GITHUB_CLONE_TOKEN via exec's env option, never the command string (same rule as GITHUB_TOKEN in
     // execAnalyzeBatch) - collector.ts's gitAuthEnv() turns it into a git extraheader for private-repo
     // clones. undefined is skipped per BaseExecOptions, so public-repo polls are byte-identical to before.
@@ -633,7 +650,7 @@ interface ShadowPollOutcome {
 /** The poll flow shared by POST /v1/shadow/poll and the autonomous cron runner - everything after
  * "we have a validated owner/name/language and a source tarball". Enrollment is the HTTP handler's
  * concern (enroll-on-first-poll behavior); the cron only ever polls already-enrolled repositories. */
-async function executeShadowPoll(env: ValidationEnv, owner: string, name: string, language: string, source: File): Promise<ShadowPollOutcome> {
+async function executeShadowPoll(env: ValidationEnv, owner: string, name: string, language: string, source: File, engineSourceSha?: string): Promise<ShadowPollOutcome> {
   const repository = `${owner}/${name}`;
   const store = makeD1ShadowStore(env.RESEARCH_DB);
   const pollState = await store.getRepositoryPollState(repository);
@@ -649,7 +666,7 @@ async function executeShadowPoll(env: ValidationEnv, owner: string, name: string
     // App installation token when the DiffCI Shadow App is installed on this repository (private-repo
     // clones), else undefined - public repositories clone anonymously exactly as before.
     const cloneToken = await githubTokenForRepo(env, repository);
-    const result = (await execShadowPoll(sandbox, owner, name, language, pollState?.lastPolledSha, cloneToken)) as {
+    const result = (await execShadowPoll(sandbox, owner, name, language, pollState?.lastPolledSha, cloneToken, engineSourceSha)) as {
       ok: boolean; firstPoll?: boolean; newHeadSha: string; predictions?: any[]; errors?: string[]; error?: string;
     };
     await sandbox.destroy();
@@ -673,6 +690,11 @@ async function executeShadowPoll(env: ValidationEnv, owner: string, name: string
           opportunityCategory: prediction.opportunityCategory, testsSelectedDiffci: prediction.testsSelectedDiffci,
           testsSelectedPath: prediction.testsSelectedPath, testsTotalFull: prediction.testsTotalFull,
           diffciAnalysisOverheadMs: prediction.diffciAnalysisOverheadMs, predictionCreatedAt: prediction.predictionCreatedAt,
+          // Stamped by cloudflare-shadow-poll.ts from the --engine-source-sha this call passed it - read
+          // back per-prediction rather than reusing the outer `engineSourceSha` parameter directly, so a
+          // caller that didn't pass one (or a script run standalone without the flag) is recorded as
+          // genuinely unknown rather than silently defaulted.
+          engineSourceSha: prediction.engineSourceSha,
         },
         r2Key,
       );
@@ -714,11 +736,21 @@ async function shadowPoll(request: Request, env: ValidationEnv): Promise<Respons
   const language = String(form.get("language") || "typescript");
   if (!owner || !name) return json({ ok: false, error: "owner and name required" }, 400);
   validateShellSafeIdentifiers(owner, name, language);
+  // This is the ad-hoc, caller-supplied-source path (predates and remains independent of the R2
+  // source-integrity system, which only gates the AUTONOMOUS cron/webhook pollers - see
+  // shadow-source-integrity.ts's module comment). sourceSha here is an optional, best-effort caller
+  // claim about what they uploaded, not independently verified against anything: recorded when present,
+  // left genuinely unknown (NULL) when absent, never guessed.
+  const rawSourceSha = String(form.get("sourceSha") || "");
+  const engineSourceSha = rawSourceSha ? (isValidSha(rawSourceSha) ? rawSourceSha : undefined) : undefined;
+  if (rawSourceSha && !engineSourceSha) {
+    return json({ ok: false, error: `sourceSha, when supplied, must be a full 40-hex-character git SHA (got "${rawSourceSha}")` }, 400);
+  }
 
   const store = makeD1ShadowStore(env.RESEARCH_DB);
   await store.ensureRepository(`${owner}/${name}`, "cloudflare-poll", language);
 
-  const outcome = await executeShadowPoll(env, owner, name, language, source);
+  const outcome = await executeShadowPoll(env, owner, name, language, source, engineSourceSha);
   if (!outcome.ok) {
     return json({ ok: false, owner, name, error: outcome.error }, outcome.refusedByState ? 409 : 500);
   }
@@ -838,9 +870,32 @@ async function shadowStatus(request: Request, env: ValidationEnv): Promise<Respo
 // what removes the per-request source dependency that kept polling session-driven.
 // ============================================================================================
 
-const SHADOW_SOURCE_KEY = "shadow/source/current.tgz";
+// Source-version integrity (2026-08-21 fix, src/research/cloudflare/shadow-source-integrity.ts): the
+// archive itself lives at an IMMUTABLE, content-addressed key per commit SHA - never overwritten, so two
+// racing uploads of different SHAs can never corrupt each other's bytes (see the module doc comment for
+// the full race-safety argument). SHADOW_SOURCE_META_KEY is the one MUTABLE pointer, written LAST in
+// shadowSourceUpload (after the archive bytes are already durably stored) - "current" always means
+// "whatever the most recent successful upload's meta write named," and a reader that races a concurrent
+// upload sees either the old, fully-consistent (archive, meta) pair or the new one, never a mix.
 const SHADOW_SOURCE_META_KEY = "shadow/source/current-meta";
+function shadowSourceArchiveKey(sourceSha: string): string {
+  return `shadow/source/by-sha/${sourceSha}.tgz`;
+}
 
+async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** POST /v1/shadow/source - see scripts/upload-shadow-source.ts (the only intended caller; also called
+ * by the canonical scripts/deploy-research-sandbox.ts pipeline). `sourceSha` and `archiveHash` are
+ * REQUIRED, not optional conveniences: this is exactly the "reject malformed/missing version metadata"
+ * requirement the 2026-08-21 fix introduced. `sourceSha` must be the git commit the uploader actually
+ * packaged (upload-shadow-source.ts computes it from `git rev-parse HEAD` and refuses to run against a
+ * dirty working tree) - the Worker cannot itself verify that claim against anything (it has no git
+ * access), but it DOES independently recompute archiveHash from the bytes it actually received and
+ * rejects a mismatch, which at minimum catches transport corruption/truncation and a caller sending a
+ * hash that doesn't match its own upload. */
 async function shadowSourceUpload(request: Request, env: ValidationEnv): Promise<Response> {
   const contentLength = Number(request.headers.get("Content-Length") || "0");
   if (contentLength > MAX_SOURCE_ARCHIVE_BYTES + 64 * 1024) {
@@ -856,20 +911,68 @@ async function shadowSourceUpload(request: Request, env: ValidationEnv): Promise
   if (!(source instanceof File) || source.size < 1 || source.size > MAX_SOURCE_ARCHIVE_BYTES) {
     return json({ ok: false, error: "valid-source-archive-required" }, 400);
   }
+  const sourceSha = String(form.get("sourceSha") || "");
+  if (!isValidSha(sourceSha)) {
+    return json({ ok: false, error: "sourceSha required: a full 40-hex-character git commit SHA of the exact tree being packaged (see scripts/upload-shadow-source.ts)" }, 400);
+  }
+  const claimedHash = String(form.get("archiveHash") || "");
   const label = String(form.get("label") || "");
   const bytes = await source.arrayBuffer();
-  await env.RESEARCH_BUCKET.put(SHADOW_SOURCE_KEY, bytes);
-  const meta = { uploadedAt: new Date().toISOString(), sizeBytes: bytes.byteLength, label };
-  await new R2EvidenceStore(env.RESEARCH_BUCKET).put(SHADOW_SOURCE_META_KEY, meta);
-  return json({ ok: true, key: SHADOW_SOURCE_KEY, ...meta });
+  const archiveHash = await sha256Hex(bytes);
+  if (claimedHash && claimedHash !== archiveHash) {
+    // Never silently accept bytes that don't match what the uploader thinks it sent - a corrupted or
+    // truncated upload must be visibly rejected, not stored as if it were the real archive for this SHA.
+    return json({ ok: false, error: `archiveHash mismatch: uploader claimed ${claimedHash}, server computed ${archiveHash} from the received bytes - upload likely corrupted, retry` }, 400);
+  }
+
+  const archiveKey = shadowSourceArchiveKey(sourceSha);
+  const evidenceStore = new R2EvidenceStore(env.RESEARCH_BUCKET);
+  // Collision guard: a real git SHA is immutable, so re-uploading the SAME sha should always produce the
+  // SAME bytes. If it doesn't, something is actually wrong (a hash collision is astronomically unlikely -
+  // far more likely is a caller passing a stale/wrong sourceSha for genuinely different content) and this
+  // must be surfaced loudly rather than silently overwriting the earlier archive for that SHA.
+  const existing = await env.RESEARCH_BUCKET.get(archiveKey);
+  if (existing) {
+    const existingHash = await sha256Hex(await existing.arrayBuffer());
+    if (existingHash !== archiveHash) {
+      return json({ ok: false, error: `source-sha-collision: an archive already exists for ${sourceSha} with a DIFFERENT content hash (${existingHash} vs this upload's ${archiveHash}) - refusing to overwrite` }, 409);
+    }
+    // Identical content already stored under this SHA - fall through to (re-)writing the meta pointer
+    // only; re-writing byte-identical archive bytes would be a wasted R2 write.
+  } else {
+    await env.RESEARCH_BUCKET.put(archiveKey, bytes);
+  }
+
+  const meta: SourceArchiveMeta = { sourceSha, archiveHash, archiveKey, uploadedAt: new Date().toISOString(), sizeBytes: bytes.byteLength, label: label || undefined };
+  // Meta pointer written LAST, after the archive bytes are durably stored - see the section comment.
+  await evidenceStore.put(SHADOW_SOURCE_META_KEY, meta);
+  return json({ ok: true, ...meta });
 }
 
-async function loadShadowSource(env: ValidationEnv): Promise<File | undefined> {
-  const obj = await env.RESEARCH_BUCKET.get(SHADOW_SOURCE_KEY);
-  if (!obj) return undefined;
-  const bytes = await obj.arrayBuffer();
-  if (bytes.byteLength < 1) return undefined;
-  return new File([new Uint8Array(bytes)], "diffci-source.tgz");
+/** The single source of truth GET /v1/shadow/cron-status, shadow-cron.ts's autonomous poller, and the
+ * webhook's push-triggered poll all call - see computeSourceIntegrity's doc comment for why this must
+ * never drift between "what the status endpoint reports" and "what actually gates a poll". */
+async function checkSourceIntegrity(env: ValidationEnv): Promise<{ result: ReturnType<typeof computeSourceIntegrity>; meta: SourceArchiveMeta | undefined }> {
+  const meta = (await new R2EvidenceStore(env.RESEARCH_BUCKET).get(SHADOW_SOURCE_META_KEY)) as SourceArchiveMeta | undefined;
+  const archiveBytesExist = meta && isValidSha(meta.sourceSha) ? await new R2EvidenceStore(env.RESEARCH_BUCKET).headExists(meta.archiveKey ?? shadowSourceArchiveKey(meta.sourceSha)) : false;
+  const result = computeSourceIntegrity(env.EXPECTED_SOURCE_SHA, meta, archiveBytesExist);
+  return { result, meta };
+}
+
+async function loadVerifiedShadowSource(env: ValidationEnv): Promise<VerifiedSourceArchive> {
+  const { result, meta } = await checkSourceIntegrity(env);
+  if (result.status !== "CURRENT" || !meta) {
+    return result as VerifiedSourceArchive;
+  }
+  const obj = await env.RESEARCH_BUCKET.get(meta.archiveKey);
+  const bytes = obj ? await obj.arrayBuffer() : undefined;
+  if (!bytes || bytes.byteLength < 1) {
+    // The headExists() check above passed but the actual read failed/came back empty - an R2 read-after-
+    // write race or a genuinely corrupted object. Fail closed exactly like a MISSING status rather than
+    // trusting the integrity check alone.
+    return { ...result, status: "MISSING", detail: `archive object at "${meta.archiveKey}" exists but could not be read (empty or failed fetch)` } as VerifiedSourceArchive;
+  }
+  return { ...result, status: "CURRENT", file: new File([new Uint8Array(bytes)], "diffci-source.tgz"), archiveSha: meta.sourceSha } as VerifiedSourceArchive;
 }
 
 /** One cheap REST call to decide whether a repository's default branch moved since the last poll,
@@ -898,11 +1001,11 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
     // Per-repo token so the head pre-check also works on private repositories with an App
     // installation; githubTokenForRepo degrades to GITHUB_TOKEN/anonymous for everything else.
     fetchRemoteHead: async (repository) => fetchDefaultBranchHead(repository, await githubTokenForRepo(env, repository)),
-    getSourceArchive: () => loadShadowSource(env),
-    async pollRepository(repo: PollableRepository, source: File) {
+    getVerifiedSourceArchive: () => loadVerifiedShadowSource(env),
+    async pollRepository(repo: PollableRepository, source: File, engineSourceSha: string) {
       const [owner, name] = repo.repository.split("/");
       validateShellSafeIdentifiers(owner ?? "", name ?? "", repo.language);
-      const outcome = await executeShadowPoll(env, owner!, name!, repo.language, source);
+      const outcome = await executeShadowPoll(env, owner!, name!, repo.language, source, engineSourceSha);
       if (!outcome.ok) throw new Error(outcome.error ?? "shadow-poll-failed");
       return { predictionsRecorded: outcome.predictionsRecorded, errors: outcome.pollErrors };
     },
@@ -915,6 +1018,7 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
         reposConsidered: run.reposConsidered, headChecksSkipped: run.headChecksSkipped, reposPolled: run.reposPolled,
         predictionsRecorded: run.predictionsRecorded, reposReconciled: run.reposReconciled,
         groundTruthReconciled: run.groundTruthReconciled, stillPending: run.stillPending, errors: run.errors,
+        sourceIntegrityStatus: run.sourceIntegrityStatus,
       }),
     now: () => new Date(),
     log: (message) => console.log(message),
@@ -968,12 +1072,15 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
             const pollState = await store.getRepositoryPollState(repository);
             const language = pollState?.language ?? "typescript";
             validateShellSafeIdentifiers(owner ?? "", name ?? "", language);
-            const source = await loadShadowSource(env);
-            if (!source) {
-              console.log(`shadow-webhook: push for ${repository} but no source archive uploaded - poll skipped, next cron tick will catch the commit`);
+            const verified = await loadVerifiedShadowSource(env);
+            if (verified.status !== "CURRENT") {
+              // Same fail-closed rule as the cron path (shadow-cron.ts) - a STALE/MISSING/UNKNOWN source
+              // must not silently produce a prediction. The next cron tick's reconcile sweep still covers
+              // this repository regardless; only the instant-poll latency benefit is lost this once.
+              console.log(`shadow-webhook: push for ${repository} refused - source-integrity-${verified.status}: ${verified.detail}`);
               return;
             }
-            const result = await executeShadowPoll(env, owner!, name!, language, source);
+            const result = await executeShadowPoll(env, owner!, name!, language, verified.file, verified.archiveSha);
             // pollErrors carries per-commit analysis failures even when ok=true - a poll that saw new
             // commits but predicted nothing is invisible without them (real debugging gap 2026-08-21).
             console.log(
@@ -1068,12 +1175,22 @@ async function shadowAppInfo(env: ValidationEnv, deliveryId?: string): Promise<R
 async function shadowCronStatus(request: Request, env: ValidationEnv): Promise<Response> {
   const limit = Math.max(1, Math.min(50, Number.parseInt(new URL(request.url).searchParams.get("limit") ?? "10", 10) || 10));
   const store = makeD1ShadowStore(env.RESEARCH_DB);
-  const [runs, repositories, sourceMeta] = await Promise.all([
+  const [runs, repositories, integrity] = await Promise.all([
     store.listRecentCronRuns(limit),
     store.listPollableRepositories(),
-    new R2EvidenceStore(env.RESEARCH_BUCKET).get(SHADOW_SOURCE_META_KEY),
+    checkSourceIntegrity(env),
   ]);
-  return json({ ok: true, cronEnabled: env.SHADOW_CRON_ENABLED === "true", sourceArchive: sourceMeta ?? null, pollableRepositories: repositories, recentRuns: runs });
+  return json({
+    ok: true,
+    cronEnabled: env.SHADOW_CRON_ENABLED === "true",
+    // Kept for back-compat with anything already reading this field; sourceIntegrity below is the
+    // authoritative, gate-equivalent answer (same computeSourceIntegrity() call the cron/webhook poll
+    // paths use before running any analysis - see checkSourceIntegrity's doc comment).
+    sourceArchive: integrity.meta ?? null,
+    sourceIntegrity: integrity.result,
+    pollableRepositories: repositories,
+    recentRuns: runs,
+  });
 }
 
 /** Wires the real D1/R2 bindings to resumable-batch.ts's abstract ResumabilityStore/PersistenceStore

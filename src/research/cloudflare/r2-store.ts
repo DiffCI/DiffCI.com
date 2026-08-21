@@ -6,6 +6,10 @@ export interface R2Binding {
   get(key: string): Promise<{ json<T>(): Promise<T>; arrayBuffer(): Promise<ArrayBuffer> } | null>;
   put(key: string, value: string | ArrayBuffer): Promise<void>;
   list(options?: { prefix?: string }): Promise<{ objects: { key: string }[] }>;
+  /** Existence/metadata check without downloading the body - the real R2Bucket supports this natively.
+   * Optional (not every fake in the test suite implements it) - callers that need it fall back to a
+   * full get() when absent, see R2EvidenceStore.headExists. */
+  head?(key: string): Promise<unknown | null>;
 }
 
 export class R2EvidenceStore implements EvidenceStore {
@@ -28,6 +32,14 @@ export class R2EvidenceStore implements EvidenceStore {
   async exists(key: string): Promise<boolean> {
     const obj = await this.bucket.get(key);
     return obj !== null;
+  }
+
+  /** Existence-only check, cheap even for a multi-MB object (the shadow source archive) - uses head()
+   * when the binding supports it, otherwise falls back to a full get() so this stays correct against
+   * any fake/binding that only implements the minimal R2Binding surface. */
+  async headExists(key: string): Promise<boolean> {
+    if (this.bucket.head) return (await this.bucket.head(key)) !== null;
+    return this.exists(key);
   }
 
   async list(prefix: string): Promise<string[]> {

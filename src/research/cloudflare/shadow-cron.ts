@@ -21,6 +21,16 @@
  * cloudflare-shadow-poll.ts's prospectiveness comment).
  */
 
+import type { SourceIntegrityResult } from "./shadow-source-integrity.js";
+
+/** Either the verified-current source archive plus the exact SHA it was built from, or a refusal that
+ * carries the same integrity result GET /v1/shadow/cron-status reports - so a caller inspecting a
+ * ShadowCronRunRecord's errors and a caller inspecting the live status endpoint are never looking at two
+ * different explanations for the same problem. */
+export type VerifiedSourceArchive =
+  | (Omit<SourceIntegrityResult, "archiveSha"> & { status: "CURRENT"; file: File; archiveSha: string })
+  | (SourceIntegrityResult & { status: Exclude<SourceIntegrityResult["status"], "CURRENT"> });
+
 export interface PollableRepository {
   repository: string; // "owner/name"
   state: string;
@@ -41,6 +51,9 @@ export interface ShadowCronRunRecord {
   groundTruthReconciled: number;
   stillPending: number;
   errors: string[];
+  /** computeSourceIntegrity()'s status for this run, if a poll was attempted (undefined when nothing
+   * needed polling this cycle, so the source archive was never even consulted). */
+  sourceIntegrityStatus?: string;
 }
 
 export interface ShadowCronDeps {
@@ -55,9 +68,12 @@ export interface ShadowCronDeps {
    * determined (rate limit, network) - undefined means "poll anyway". A "gone" result means the
    * repository no longer exists / is blocked and must not consume a container. */
   fetchRemoteHead(repository: string): Promise<{ sha: string } | { gone: string } | undefined>;
-  /** The diffci source tarball from R2, or undefined if none has been uploaded yet. */
-  getSourceArchive(): Promise<File | undefined>;
-  pollRepository(repo: PollableRepository, source: File): Promise<{ predictionsRecorded: number; errors: string[] }>;
+  /** The diffci source tarball from R2, gated by source-version integrity (2026-08-21 fix,
+   * src/research/cloudflare/shadow-source-integrity.ts) - only ever CURRENT is safe to poll with. A
+   * STALE/MISSING/UNKNOWN result must never be silently treated as "good enough"; runShadowCronOnce
+   * below refuses to poll in every non-CURRENT case. */
+  getVerifiedSourceArchive(): Promise<VerifiedSourceArchive>;
+  pollRepository(repo: PollableRepository, source: File, engineSourceSha: string): Promise<{ predictionsRecorded: number; errors: string[] }>;
   reconcileRepository(repository: string): Promise<{ reconciled: number; stillPending: number; errors: string[] }>;
   recordCronRun(run: ShadowCronRunRecord): Promise<void>;
   now(): Date;
@@ -112,6 +128,7 @@ export async function runShadowCronOnce(
   let reposReconciled = 0;
   let groundTruthReconciled = 0;
   let stillPending = 0;
+  let sourceIntegrityStatus: string | undefined;
 
   let candidates: PollableRepository[] = [];
   try {
@@ -145,20 +162,28 @@ export async function runShadowCronOnce(
   }
 
   if (toPoll.length > 0) {
-    let source: File | undefined;
+    let verified: VerifiedSourceArchive | undefined;
     try {
-      source = await deps.getSourceArchive();
+      verified = await deps.getVerifiedSourceArchive();
     } catch (error: unknown) {
       errors.push(`get-source-archive: ${error instanceof Error ? error.message : String(error)}`);
     }
-    if (!source) {
+    if (!verified || verified.status !== "CURRENT") {
+      sourceIntegrityStatus = verified?.status;
       // Loud, recorded, and non-fatal for reconciliation below - reconcile needs no source archive.
-      errors.push(`source-archive-missing: ${toPoll.length} repository(ies) due for polling but no source tarball is uploaded (POST /v1/shadow/source)`);
+      // Deliberately NOT a poll attempt with a fallback source: a STALE/MISSING/UNKNOWN archive must
+      // never silently produce a normal prediction (the 2026-08-21 fix's whole point) - every repository
+      // due for polling this run is skipped, exactly like the pre-fix "no archive uploaded at all" case.
+      const reason = verified ? `source-integrity-${verified.status}` : "get-source-archive-failed";
+      const detail = verified?.detail ?? "getVerifiedSourceArchive threw - see the get-source-archive error above";
+      errors.push(`${reason}: ${toPoll.length} repository(ies) due for polling refused - ${detail}`);
     } else {
+      sourceIntegrityStatus = verified.status;
+      const { file, archiveSha } = verified;
       const results = await Promise.all(
         toPoll.map(async (repo) => {
           try {
-            const result = await deps.pollRepository(repo, source);
+            const result = await deps.pollRepository(repo, file, archiveSha);
             return { repo, result };
           } catch (error: unknown) {
             return { repo, error: error instanceof Error ? error.message : String(error) };
@@ -219,6 +244,7 @@ export async function runShadowCronOnce(
     groundTruthReconciled,
     stillPending,
     errors,
+    sourceIntegrityStatus,
   };
 
   try {
@@ -230,7 +256,7 @@ export async function runShadowCronOnce(
   }
 
   deps.log(
-    `shadow-cron (${trigger}): considered=${record.reposConsidered} skipped-unchanged=${headChecksSkipped} polled=[${reposPolled.join(",")}] predictions=${predictionsRecorded} reconciled=${groundTruthReconciled} pending=${stillPending} errors=${errors.length}`,
+    `shadow-cron (${trigger}): considered=${record.reposConsidered} skipped-unchanged=${headChecksSkipped} polled=[${reposPolled.join(",")}] predictions=${predictionsRecorded} reconciled=${groundTruthReconciled} pending=${stillPending} sourceIntegrity=${sourceIntegrityStatus ?? "not-checked"} errors=${errors.length}`,
   );
   return record;
 }

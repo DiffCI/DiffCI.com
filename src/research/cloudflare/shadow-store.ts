@@ -47,6 +47,11 @@ export interface RecordPredictionInput {
   testsTotalFull: number;
   diffciAnalysisOverheadMs: number;
   predictionCreatedAt: string;
+  /** The exact DiffCI git commit that produced this prediction (schema-migration-2026-08-21-shadow-
+   * source-integrity.sql) - undefined/omitted means genuinely unknown (stored as NULL), never guessed.
+   * Populated from the verified R2 source archive's sourceSha for cron/webhook-triggered polls; may be
+   * absent for an ad-hoc POST /v1/shadow/poll caller that didn't supply one. */
+  engineSourceSha?: string;
 }
 
 export interface RecordGroundTruthInput {
@@ -91,6 +96,10 @@ export interface RepositorySummaryRow {
   discriminativeOpportunities: number;
   mandatoryFallbacks: number;
   baselineAlreadyOptimal: number;
+  /** engine_source_sha of this repository's most recently recorded prediction - undefined when that
+   * prediction predates the source-integrity fix (or came from a caller that didn't supply one), which
+   * is reported as absent, never guessed at. */
+  latestEngineSourceSha?: string;
 }
 
 export interface PollableRepositoryRow {
@@ -113,6 +122,9 @@ export interface CronRunInput {
   groundTruthReconciled: number;
   stillPending: number;
   errors: string[];
+  /** What computeSourceIntegrity() found before this run attempted to poll, or undefined when the run
+   * never reached a poll attempt (nothing needed polling this cycle). */
+  sourceIntegrityStatus?: string;
 }
 
 export interface ShadowStore {
@@ -200,13 +212,15 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .prepare(
           `INSERT INTO shadow_cron_runs (
              started_at, finished_at, trigger_source, repos_considered, head_checks_skipped, repos_polled,
-             predictions_recorded, repos_reconciled, ground_truth_reconciled, still_pending, errors
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             predictions_recorded, repos_reconciled, ground_truth_reconciled, still_pending, errors,
+             source_integrity_status
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           input.startedAt, input.finishedAt, input.trigger, input.reposConsidered, input.headChecksSkipped,
           JSON.stringify(input.reposPolled), input.predictionsRecorded, input.reposReconciled,
           input.groundTruthReconciled, input.stillPending, JSON.stringify(input.errors),
+          input.sourceIntegrityStatus ?? null,
         )
         .run();
     },
@@ -245,8 +259,9 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
              logical_delta_key, repository, base_sha, head_sha, diffci_analysis_version, graph_version,
              shadow_schema_version, observation_source, plan_mode, fallback, effective_graph_confidence,
              opportunity_category, tests_selected_diffci, tests_selected_path, tests_total_full,
-             diffci_analysis_overhead_ms, r2_evidence_key, prediction_created_at, created_at
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             diffci_analysis_overhead_ms, r2_evidence_key, prediction_created_at, created_at,
+             engine_source_sha
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(logical_delta_key) DO NOTHING`,
         )
         .bind(
@@ -255,6 +270,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
           input.fallback ? 1 : 0, input.effectiveGraphConfidence, input.opportunityCategory,
           input.testsSelectedDiffci, input.testsSelectedPath, input.testsTotalFull,
           input.diffciAnalysisOverheadMs, r2EvidenceKey, input.predictionCreatedAt, now,
+          input.engineSourceSha ?? null,
         )
         .run();
       return { inserted: (result.meta?.changes ?? 0) > 0 };
@@ -340,6 +356,14 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
           relevant_failures_evaluable: number | null; failures_preserved_by_diffci: number | null; failures_preserved_by_path: number | null;
         }>();
 
+      // Separate query, not folded into predictionCounts' aggregate above: MAX(created_at) doesn't
+      // reliably give you ITS ROW's engine_source_sha in portable SQL (SQLite's "bare column" leniency
+      // isn't something to rely on), and this is cheap - one indexed row lookup.
+      const latest = await db
+        .prepare(`SELECT engine_source_sha FROM shadow_predictions WHERE repository = ? ORDER BY created_at DESC LIMIT 1`)
+        .bind(repository)
+        .first<{ engine_source_sha: string | null }>();
+
       return {
         repository,
         state: repoRow.state,
@@ -353,6 +377,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         discriminativeOpportunities: predictionCounts?.discriminative ?? 0,
         mandatoryFallbacks: predictionCounts?.mandatory ?? 0,
         baselineAlreadyOptimal: predictionCounts?.baseline_optimal ?? 0,
+        latestEngineSourceSha: latest?.engine_source_sha ?? undefined,
       };
     },
   };

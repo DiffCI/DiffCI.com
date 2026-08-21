@@ -19,7 +19,17 @@
  * "Research integrity" section forbids ("reconstructing a favorable decision afterward").
  *
  * Usage: npx tsx scripts/cloudflare-shadow-poll.ts --owner <o> --name <n> --language <lang>
- *        --workspace <path> [--last-seen-sha <sha>] [--diffci-version <v>] [--graph-version <v>] [--out <path>]
+ *        --workspace <path> [--last-seen-sha <sha>] [--diffci-version <v>] [--graph-version <v>]
+ *        [--engine-source-sha <sha>] [--out <path>]
+ *
+ * --engine-source-sha (2026-08-21 source-integrity fix, src/research/cloudflare/shadow-source-integrity.ts):
+ * the git commit SHA of the diffci source tree actually running THIS invocation of this very script -
+ * stamped onto every prediction this run computes (RecordPredictionInput.engineSourceSha) so a prediction
+ * can always be traced back to the exact implementation that produced it. validation-worker.ts's
+ * executeShadowPoll always passes this (sourced from the verified R2 archive it just loaded) for the
+ * cron/webhook autonomous paths; it's optional here because this script is also runnable standalone
+ * (local debugging) where no such verified value exists - predictions from a run without it simply
+ * record no engine SHA (NULL in D1), which is the honest answer, not a guess.
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -63,6 +73,7 @@ async function main() {
   const lastSeenSha = args["last-seen-sha"] || undefined;
   const diffciAnalysisVersion = args["diffci-version"] ?? "stage2-shadow-poll-1";
   const graphVersion = args["graph-version"] ?? "stage2-shadow-poll-1";
+  const engineSourceSha = args["engine-source-sha"] || undefined;
   const outPath = resolve(args.out ?? `${workspace}/shadow-poll-result.json`);
 
   if (!owner || !name) {
@@ -178,6 +189,7 @@ async function main() {
         headSha,
         diffciAnalysisVersion,
         graphVersion,
+        engineSourceSha,
         planMode: analysis.classification.fallbackRequired ? "FULL" : "SELECTIVE",
         fallback: analysis.classification.fallbackRequired,
         effectiveGraphConfidence: analysis.classification.graphConfidence,

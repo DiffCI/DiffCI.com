@@ -9,6 +9,14 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
+  // NOTE: EXPECTED_SOURCE_SHA (source-version integrity, 2026-08-21 fix - see
+  // src/research/cloudflare/shadow-source-integrity.ts) is deliberately NOT listed in "vars" below. It's
+  // always injected at deploy time via `wrangler deploy --var EXPECTED_SOURCE_SHA:<HEAD>` by
+  // scripts/deploy-research-sandbox.ts (`npm run shadow:deploy`) - a static value here would go stale
+  // the moment of the next commit, recreating the exact bug this exists to prevent. A Worker deployed any
+  // other way (plain `wrangler deploy`, no --var) has no EXPECTED_SOURCE_SHA, and autonomous shadow
+  // polling correctly refuses to run (sourceIntegrity.status "UNKNOWN") until redeployed via the
+  // canonical script.
   "vars": {
     "SANDBOX_TRANSPORT": "rpc",
     "DIFFCI_RESEARCH_ENABLED": "true",

@@ -7,14 +7,24 @@ import {
   type PollableRepository,
   type ShadowCronDeps,
   type ShadowCronRunRecord,
+  type VerifiedSourceArchive,
 } from "../../../src/research/cloudflare/shadow-cron.js";
 
 function repo(overrides: Partial<PollableRepository> & { repository: string }): PollableRepository {
   return { state: "SHADOW_ACTIVE", language: "typescript", ...overrides };
 }
 
+const CURRENT_SOURCE: VerifiedSourceArchive = {
+  status: "CURRENT",
+  file: new File(["fake-tarball"], "s.tgz"),
+  archiveSha: "aaaa111111111111111111111111111111111111",
+  expectedSha: "aaaa111111111111111111111111111111111111",
+  detail: "source archive matches the deployed Worker's expected SHA",
+};
+
 interface FakeCalls {
   polled: string[];
+  polledWithSha: string[];
   reconciled: string[];
   headChecked: string[];
   recorded: ShadowCronRunRecord[];
@@ -26,12 +36,13 @@ function makeDeps(options: {
   /** Defaults to `repos` - the common case where every pollable repository is also reconcilable. */
   reconcilable?: PollableRepository[];
   heads?: Record<string, { sha: string } | { gone: string } | undefined>;
-  source?: File | undefined;
+  /** Defaults to a CURRENT archive - override to exercise the STALE/MISSING/UNKNOWN refusal paths. */
+  sourceArchive?: VerifiedSourceArchive;
   pollResult?: (repository: string) => Promise<{ predictionsRecorded: number; errors: string[] }>;
   reconcileResult?: (repository: string) => Promise<{ reconciled: number; stillPending: number; errors: string[] }>;
   recordThrows?: boolean;
 }): { deps: ShadowCronDeps; calls: FakeCalls } {
-  const calls: FakeCalls = { polled: [], reconciled: [], headChecked: [], recorded: [], logs: [] };
+  const calls: FakeCalls = { polled: [], polledWithSha: [], reconciled: [], headChecked: [], recorded: [], logs: [] };
   const deps: ShadowCronDeps = {
     listPollableRepositories: async () => options.repos,
     listReconcilableRepositories: async () => options.reconcilable ?? options.repos,
@@ -39,9 +50,10 @@ function makeDeps(options: {
       calls.headChecked.push(repository);
       return options.heads?.[repository];
     },
-    getSourceArchive: async () => ("source" in options ? options.source : new File(["fake-tarball"], "s.tgz")),
-    pollRepository: async (r) => {
+    getVerifiedSourceArchive: async () => options.sourceArchive ?? CURRENT_SOURCE,
+    pollRepository: async (r, _source, engineSourceSha) => {
       calls.polled.push(r.repository);
+      calls.polledWithSha.push(engineSourceSha);
       return options.pollResult ? options.pollResult(r.repository) : { predictionsRecorded: 1, errors: [] };
     },
     reconcileRepository: async (repository) => {
@@ -135,15 +147,97 @@ describe("runShadowCronOnce", () => {
     assert.match(record.errors[0]!, /gone/);
   });
 
-  it("records a loud error and still reconciles when no source archive is uploaded", async () => {
-    const { deps, calls } = makeDeps({ repos: [repo({ repository: "a/one" })], source: undefined });
+  it("records a loud error and still reconciles when no source archive is uploaded (MISSING)", async () => {
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/one" })],
+      sourceArchive: { status: "MISSING", detail: "no source archive has ever been uploaded - run npm run shadow:deploy" },
+    });
     const record = await runShadowCronOnce(deps);
 
     assert.deepEqual(calls.polled, []);
     assert.deepEqual(calls.reconciled, ["a/one"]);
     assert.equal(record.errors.length, 1);
-    assert.match(record.errors[0]!, /source-archive-missing/);
+    assert.match(record.errors[0]!, /source-integrity-MISSING/);
+    assert.equal(record.sourceIntegrityStatus, "MISSING");
     assert.equal(calls.recorded.length, 1, "the failed run must still be recorded for the audit trail");
+  });
+
+  describe("source-version integrity gate (2026-08-21 fix)", () => {
+    it("polls normally when the source archive is CURRENT, passing the verified SHA through to pollRepository", async () => {
+      const { deps, calls } = makeDeps({ repos: [repo({ repository: "a/one" })] });
+      const record = await runShadowCronOnce(deps);
+
+      assert.deepEqual(calls.polled, ["a/one"]);
+      assert.deepEqual(calls.polledWithSha, ["aaaa111111111111111111111111111111111111"]);
+      assert.equal(record.predictionsRecorded, 1);
+      assert.equal(record.sourceIntegrityStatus, "CURRENT");
+      assert.deepEqual(record.errors, []);
+    });
+
+    it("refuses to poll ANY due repository when the archive is STALE - never falls back to the old archive", async () => {
+      const repos = [repo({ repository: "a/one" }), repo({ repository: "b/two" })];
+      const { deps, calls } = makeDeps({
+        repos,
+        sourceArchive: {
+          status: "STALE",
+          expectedSha: "bbbb222222222222222222222222222222222222",
+          archiveSha: "aaaa111111111111111111111111111111111111",
+          detail: "deployed Worker expects source bbbb222222222222222222222222222222222222 but the uploaded archive is aaaa111111111111111111111111111111111111",
+        },
+      });
+      const record = await runShadowCronOnce(deps);
+
+      assert.deepEqual(calls.polled, [], "a stale archive must never silently produce a prediction");
+      assert.equal(record.predictionsRecorded, 0);
+      assert.equal(record.sourceIntegrityStatus, "STALE");
+      assert.equal(record.errors.length, 1);
+      assert.match(record.errors[0]!, /source-integrity-STALE/);
+      // The refusal must read as an infrastructure/version-integrity failure, never get folded into an
+      // opportunity-classifier outcome like MANDATORY_FALLBACK - assert the literal string never appears.
+      assert.ok(!record.errors[0]!.includes("MANDATORY_FALLBACK"));
+      // Still reconciles - ground truth for earlier, already-recorded predictions doesn't depend on the
+      // source archive at all.
+      assert.deepEqual(calls.reconciled, ["a/one", "b/two"]);
+    });
+
+    it("refuses to poll when the archive is UNKNOWN (Worker deployed without EXPECTED_SOURCE_SHA)", async () => {
+      const { deps, calls } = makeDeps({
+        repos: [repo({ repository: "a/one" })],
+        sourceArchive: { status: "UNKNOWN", detail: "deployed Worker has no EXPECTED_SOURCE_SHA configured" },
+      });
+      const record = await runShadowCronOnce(deps);
+
+      assert.deepEqual(calls.polled, []);
+      assert.equal(record.sourceIntegrityStatus, "UNKNOWN");
+      assert.match(record.errors[0]!, /source-integrity-UNKNOWN/);
+    });
+
+    it("never even checks source integrity when nothing needs polling this run", async () => {
+      const repos = [repo({ repository: "a/unchanged", lastPolledSha: "same", lastPolledAt: "2026-08-21T09:00:00Z" })];
+      let integrityChecked = false;
+      const { deps, calls } = makeDeps({ repos, heads: { "a/unchanged": { sha: "same" } } });
+      deps.getVerifiedSourceArchive = async () => {
+        integrityChecked = true;
+        return CURRENT_SOURCE;
+      };
+      const record = await runShadowCronOnce(deps);
+
+      assert.equal(integrityChecked, false, "a repository with an unchanged head must never trigger a source fetch");
+      assert.deepEqual(calls.polled, []);
+      assert.equal(record.sourceIntegrityStatus, undefined);
+    });
+
+    it("a get-source-archive failure also refuses to poll, distinctly from a clean STALE/MISSING result", async () => {
+      const { deps, calls } = makeDeps({ repos: [repo({ repository: "a/one" })] });
+      deps.getVerifiedSourceArchive = async () => {
+        throw new Error("R2 read timed out");
+      };
+      const record = await runShadowCronOnce(deps);
+
+      assert.deepEqual(calls.polled, []);
+      assert.match(record.errors.join(" "), /get-source-archive: R2 read timed out/);
+      assert.match(record.errors.join(" "), /get-source-archive-failed/);
+    });
   });
 
   it("isolates one repository's poll failure from the others", async () => {

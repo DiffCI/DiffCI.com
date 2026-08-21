@@ -1,10 +1,14 @@
 # Registering the DiffCI Runner Dispatcher GitHub App
 
-> **Status: NOT YET DONE.** This is the write-scoped App that lets
-> `src/research/cloudflare/github-runner-worker.ts` mint self-hosted runner registration tokens.
-> Do not confuse this with the **DiffCI Shadow** App (see
-> [`docs/github-app-registration.md`](github-app-registration.md)) - that one is already registered,
-> read-only, and cannot do anything described here. This checklist is what's left.
+> **Status: DONE (2026-08-21).** The App is registered and installed on both `DiffCI.com` and
+> `DentalPresence.in` (installation id `155363973`), its three secrets are on the `diffci-github-runner`
+> Worker, and the webhook is active - end to end verified: pushes to `main` dispatch a fresh Cloudflare
+> Container per queued job, register as `[self-hosted, cloudflare]`, run `npm run check`, and deregister.
+> The last 8 consecutive `CI` runs on `DiffCI.com` are green (~1 min each once warm, ~$0.004/job, zero
+> GitHub Actions billing consumed). Do not confuse this App with the **DiffCI Shadow** App (see
+> [`docs/github-app-registration.md`](github-app-registration.md)) - that one is a separate, read-only
+> registration and cannot do anything described here. The checklist below is kept for registering the
+> App again elsewhere (e.g. transferring to an org) and as the reference for what was granted.
 
 Everything code-side is already written: `src/shadow/github-app.ts` (App-JWT signing, installation-token
 exchange, webhook HMAC verification - shared with the Shadow App, not duplicated) and

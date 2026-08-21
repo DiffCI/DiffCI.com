@@ -27,6 +27,7 @@
     "research:stage0": "tsx src/research/cli/run-stage0.ts",
     "research:sandbox:deploy": "wrangler deploy --config wrangler.research-sandbox.jsonc",
     "shadow:upload-source": "tsx scripts/upload-shadow-source.ts",
+    "shadow:deploy": "tsx scripts/deploy-research-sandbox.ts",
     "github-runner:deploy": "wrangler deploy --config wrangler.github-runner.jsonc"
   },
   "dependencies": {
