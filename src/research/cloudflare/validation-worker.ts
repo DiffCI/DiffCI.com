@@ -580,13 +580,16 @@ async function runtimeBenchmark(request: Request, env: ValidationEnv): Promise<R
 // whose CI is unaffected. execShadowPoll clones/updates the target itself (unlike execRuntimeBenchmark,
 // which relies on execSampleCommits for its throwaway clone trigger) - see cloudflare-shadow-poll.ts.
 
-async function execShadowPoll(sandbox: any, owner: string, name: string, language: string, lastSeenSha: string | undefined): Promise<unknown> {
+async function execShadowPoll(sandbox: any, owner: string, name: string, language: string, lastSeenSha: string | undefined, cloneToken?: string): Promise<unknown> {
   validateShellSafeIdentifiers(owner, name, language);
   const outPath = `/workspace/shadow-poll-result.json`;
   const lastSeenArg = lastSeenSha ? ` --last-seen-sha ${lastSeenSha}` : "";
   const exec = await sandbox.exec(
     `cd /opt/diffci && npx tsx scripts/cloudflare-shadow-poll.ts --owner ${owner} --name ${name} --language ${language} --workspace /workspace --out ${outPath}${lastSeenArg}`,
-    { timeout: 240_000 },
+    // GITHUB_CLONE_TOKEN via exec's env option, never the command string (same rule as GITHUB_TOKEN in
+    // execAnalyzeBatch) - collector.ts's gitAuthEnv() turns it into a git extraheader for private-repo
+    // clones. undefined is skipped per BaseExecOptions, so public-repo polls are byte-identical to before.
+    { timeout: 240_000, env: { GITHUB_CLONE_TOKEN: cloneToken } },
   );
   if (!exec.success) throw new Error(`shadow-poll failed (exit ${exec.exitCode}): ${errorTail(exec)}`);
   const file = await sandbox.readFile(outPath);
@@ -643,7 +646,10 @@ async function executeShadowPoll(env: ValidationEnv, owner: string, name: string
   const sandbox = getSandbox(env.ResearchSandbox as any, `${id}-shadow-poll`, { enableDefaultSession: false, keepAlive: false, sleepAfter: "5m", transport: "rpc" });
   try {
     await prepareContainer(sandbox, source);
-    const result = (await execShadowPoll(sandbox, owner, name, language, pollState?.lastPolledSha)) as {
+    // App installation token when the DiffCI Shadow App is installed on this repository (private-repo
+    // clones), else undefined - public repositories clone anonymously exactly as before.
+    const cloneToken = await githubTokenForRepo(env, repository);
+    const result = (await execShadowPoll(sandbox, owner, name, language, pollState?.lastPolledSha, cloneToken)) as {
       ok: boolean; firstPoll?: boolean; newHeadSha: string; predictions?: any[]; errors?: string[]; error?: string;
     };
     await sandbox.destroy();
@@ -884,7 +890,9 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
   return {
     listPollableRepositories: () => store.listPollableRepositories(),
     listReconcilableRepositories: () => store.listReconcilableRepositories(),
-    fetchRemoteHead: (repository) => fetchDefaultBranchHead(repository, env.GITHUB_TOKEN),
+    // Per-repo token so the head pre-check also works on private repositories with an App
+    // installation; githubTokenForRepo degrades to GITHUB_TOKEN/anonymous for everything else.
+    fetchRemoteHead: async (repository) => fetchDefaultBranchHead(repository, await githubTokenForRepo(env, repository)),
     getSourceArchive: () => loadShadowSource(env),
     async pollRepository(repo: PollableRepository, source: File) {
       const [owner, name] = repo.repository.split("/");
@@ -976,6 +984,76 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
     },
   );
   return json(outcome.body, outcome.status);
+}
+
+/** Diagnostic: what GitHub actually has on file for the registered App (GET /app authenticated as
+ * the App itself) - added while debugging why installation events arrived but push events did not
+ * (installation events are delivered unconditionally; push/workflow_run require the App's event
+ * subscriptions to include them, which only this endpoint can confirm without the App owner's UI). */
+async function shadowAppInfo(env: ValidationEnv, deliveryId?: string): Promise<Response> {
+  if (!env.SHADOW_GITHUB_APP_ID || !env.SHADOW_GITHUB_APP_PRIVATE_KEY) {
+    return json({ ok: false, error: "app-credentials-not-configured" }, 503);
+  }
+  try {
+    const jwt = await signAppJwt({ appId: env.SHADOW_GITHUB_APP_ID, privateKeyPkcs8Pem: env.SHADOW_GITHUB_APP_PRIVATE_KEY });
+
+    // Ask GitHub to redeliver one webhook delivery - lets us re-trigger a real, correctly-signed
+    // delivery on demand while watching logs, without waiting for the next real push.
+    if (deliveryId && deliveryId.startsWith("redeliver:")) {
+      const id = deliveryId.slice("redeliver:".length);
+      if (!/^\d{1,25}$/.test(id)) return json({ ok: false, error: "invalid delivery id" }, 400);
+      const redeliverRes = await fetch(`https://api.github.com/app/hook/deliveries/${id}/attempts`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${jwt}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-shadow" },
+      });
+      return json({ ok: redeliverRes.ok, status: redeliverRes.status, body: (await redeliverRes.text()).slice(0, 300) });
+    }
+
+    // Drill into one delivery: GitHub stores the exact request payload and OUR exact response body.
+    if (deliveryId && /^\d{1,25}$/.test(deliveryId)) {
+      const detailRes = await fetch(`https://api.github.com/app/hook/deliveries/${deliveryId}`, {
+        headers: { Authorization: `Bearer ${jwt}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-shadow" },
+      });
+      if (!detailRes.ok) return json({ ok: false, error: `GET delivery detail failed (${detailRes.status})` }, 502);
+      const detail = (await detailRes.json()) as { event: string; action: string | null; status_code: number; response?: { payload?: unknown }; request?: { payload?: { ref?: string; repository?: { full_name?: string; default_branch?: string } } } };
+      return json({
+        ok: true,
+        event: detail.event,
+        action: detail.action,
+        statusCode: detail.status_code,
+        ourResponse: detail.response?.payload,
+        requestRef: detail.request?.payload?.ref,
+        requestRepository: detail.request?.payload?.repository?.full_name,
+        requestDefaultBranch: detail.request?.payload?.repository?.default_branch,
+      });
+    }
+    const res = await fetch("https://api.github.com/app", {
+      headers: { Authorization: `Bearer ${jwt}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-shadow" },
+    });
+    if (!res.ok) return json({ ok: false, error: `GET /app failed (${res.status}): ${(await res.text()).slice(0, 300)}` }, 502);
+    const app = (await res.json()) as { slug?: string; name?: string; events?: string[]; permissions?: Record<string, string> };
+
+    // GitHub's own webhook delivery log for this App - status per delivery, from the horse's mouth.
+    const deliveriesRes = await fetch("https://api.github.com/app/hook/deliveries?per_page=15", {
+      headers: { Authorization: `Bearer ${jwt}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-shadow" },
+    });
+    // Delivery ids are 19-digit integers - beyond Number.MAX_SAFE_INTEGER, so JSON.parse silently
+    // rounds them (a real 404 bug hit while debugging: the rounded id doesn't exist). Extract the
+    // exact id strings from the raw body BEFORE parsing.
+    let deliveries: unknown;
+    if (deliveriesRes.ok) {
+      const rawList = await deliveriesRes.text();
+      const exactIds = [...rawList.matchAll(/"id":\s*(\d+)/g)].map((m) => m[1]!);
+      const parsed = JSON.parse(rawList) as Array<{ event: string; action: string | null; status: string; status_code: number; delivered_at: string; redelivery: boolean }>;
+      deliveries = parsed.map((d, i) => ({ id: exactIds[i], event: d.event, action: d.action, status: d.status, statusCode: d.status_code, deliveredAt: d.delivered_at, redelivery: d.redelivery }));
+    } else {
+      deliveries = `GET /app/hook/deliveries failed (${deliveriesRes.status})`;
+    }
+
+    return json({ ok: true, slug: app.slug, name: app.name, events: app.events, permissions: app.permissions, recentDeliveries: deliveries });
+  } catch (error: unknown) {
+    return json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 500);
+  }
 }
 
 async function shadowCronStatus(request: Request, env: ValidationEnv): Promise<Response> {
@@ -1646,6 +1724,12 @@ export default {
         return json({ ok: false, error: "unauthorized" }, 401);
       }
       return shadowCronStatus(request, env);
+    }
+    if (request.method === "GET" && url.pathname === "/v1/shadow/app-info") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return shadowAppInfo(env, url.searchParams.get("delivery") ?? undefined);
     }
     return json({ ok: false, error: "not-found" }, 404);
   },

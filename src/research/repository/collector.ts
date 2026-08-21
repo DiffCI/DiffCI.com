@@ -3,8 +3,32 @@ import { existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import type { ResearchRepository, RepositoryMetadata } from "../types.js";
 
+/**
+ * Git authentication for PRIVATE repositories (2026-08-21, first hit by the DiffCI Shadow App
+ * dogfood: adityankale190895/DiffCI.com is private, and the anonymous-clone path below failed with
+ * "clone failed" on the very first webhook-triggered self-poll). When GITHUB_CLONE_TOKEN is set in
+ * the process environment (the Worker passes an App installation token via exec's env option - never
+ * a CLI arg, same rule as GITHUB_TOKEN in cloudflare-analyze-batch.ts), every git subprocess gets an
+ * `http.<github>.extraheader` Authorization header injected via GIT_CONFIG_* environment variables.
+ * The token therefore never appears in argv, in any URL, or in git's stderr (which buildMetadata
+ * copies into error strings) - the actions/checkout approach, not the token-in-URL one.
+ * GIT_TERMINAL_PROMPT=0 makes an auth failure fail fast instead of waiting on a prompt that can
+ * never be answered inside a container.
+ */
+export function gitAuthEnv(cloneToken: string | undefined = process.env.GITHUB_CLONE_TOKEN): NodeJS.ProcessEnv {
+  const base: NodeJS.ProcessEnv = { ...process.env, GIT_TERMINAL_PROMPT: "0" };
+  if (!cloneToken) return base;
+  const basic = Buffer.from(`x-access-token:${cloneToken}`).toString("base64");
+  return {
+    ...base,
+    GIT_CONFIG_COUNT: "1",
+    GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
+    GIT_CONFIG_VALUE_0: `Authorization: basic ${basic}`,
+  };
+}
+
 export function runGit(args: string[], cwd: string, maxBuffer = 64 * 1024 * 1024): string {
-  const result = spawnSync("git", args, { cwd, encoding: "utf8", maxBuffer });
+  const result = spawnSync("git", args, { cwd, encoding: "utf8", maxBuffer, env: gitAuthEnv() });
   if (result.status !== 0) {
     throw new Error(`git ${args.join(" ")} failed: ${result.stderr?.trim() || result.stdout?.trim() || "unknown"}`);
   }
@@ -53,6 +77,7 @@ export function cloneOrUpdateRepo(repo: ResearchRepository, cacheDir: string, de
     const result = spawnSync("git", ["clone", "--depth", String(depth), "--filter=blob:none", "--no-single-branch", cloneUrl, localPath], {
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
+      env: gitAuthEnv(),
     });
     if (result.status !== 0) {
       return buildMetadata(repo, localPath, `clone failed: ${result.stderr?.trim() || result.stdout?.trim() || "unknown"}`);

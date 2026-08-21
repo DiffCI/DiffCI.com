@@ -146,3 +146,17 @@ describe("handleShadowWebhook", () => {
     assert.deepEqual(calls.reconciles, []);
   });
 });
+
+describe("gitAuthEnv (collector.ts)", () => {
+  it("injects an extraheader via GIT_CONFIG_* env - never argv or a URL - only when a token exists", async () => {
+    const { gitAuthEnv } = await import("../../../src/research/repository/collector.js");
+    const withToken = gitAuthEnv("tok-123");
+    assert.equal(withToken.GIT_CONFIG_COUNT, "1");
+    assert.equal(withToken.GIT_CONFIG_KEY_0, "http.https://github.com/.extraheader");
+    assert.equal(withToken.GIT_CONFIG_VALUE_0, `Authorization: basic ${Buffer.from("x-access-token:tok-123").toString("base64")}`);
+    assert.equal(withToken.GIT_TERMINAL_PROMPT, "0", "auth failures must fail fast, not hang on a prompt");
+    const withoutToken = gitAuthEnv(undefined);
+    assert.equal(withoutToken.GIT_CONFIG_COUNT, undefined, "no token must mean no auth config at all");
+    assert.equal(withoutToken.GIT_TERMINAL_PROMPT, "0");
+  });
+});
