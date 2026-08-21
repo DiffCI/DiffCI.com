@@ -30,6 +30,10 @@ export interface GroundTruthIdentityInput {
   workflowRunAttempt?: number;
 }
 
+/** Colon-delimited, deliberately not JSON/base64 - kept human-readable in R2 keys and D1 primary keys
+ * (see the module doc comment above for the full identity rationale). Field order is part of the
+ * contract: callers must not reorder it without also bumping graphVersion/diffciAnalysisVersion,
+ * since a reordering would silently change existing keys' meaning for already-recorded predictions. */
 export function computeLogicalDeltaKey(input: PredictionIdentityInput): string {
   return `${input.repository}:${input.baseSha}:${input.headSha}:${input.diffciAnalysisVersion}:${input.graphVersion}`;
 }
