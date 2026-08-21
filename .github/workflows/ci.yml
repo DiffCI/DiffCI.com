@@ -18,5 +18,9 @@ jobs:
     runs-on: [self-hosted, cloudflare]
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history, not the default depth-1: the test suite runs real git against this checkout
+          # (tests/git/*), and delta analysis of HEAD^..HEAD needs parent commits to exist.
+          fetch-depth: 0
       - run: npm ci
       - run: npm run check

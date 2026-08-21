@@ -90,13 +90,38 @@ async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null): Promis
   const jwt = await signAppJwt({ appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY });
   const headers = { Authorization: `Bearer ${jwt}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-github-runner" };
 
+  // ?delivery=joblogs:<installationId>:<owner/repo>:<jobId> - fetch a completed job's full log via
+  // the App installation token (actions:write includes log read). This is how CI failures on the
+  // Cloudflare fleet get debugged from the terminal without the GitHub UI.
+  if (deliveryId && deliveryId.startsWith("joblogs:")) {
+    const [, installationId, repoFull, jobId] = deliveryId.split(":");
+    if (!installationId || !/^\d+$/.test(installationId) || !repoFull || !/^[\w.-]+\/[\w.-]+$/.test(repoFull) || !jobId || !/^\d+$/.test(jobId)) {
+      return Response.json({ ok: false, error: "expected joblogs:<installationId>:<owner/repo>:<jobId>" }, { status: 400 });
+    }
+    const installationToken = await exchangeInstallationToken(jwt, installationId);
+    const logsRes = await fetch(`https://api.github.com/repos/${repoFull}/actions/jobs/${jobId}/logs`, {
+      headers: { Authorization: `token ${installationToken.token}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-github-runner" },
+    });
+    if (!logsRes.ok) return Response.json({ ok: false, error: `job logs fetch failed (${logsRes.status})` }, { status: 502 });
+    const text = await logsRes.text();
+    // The interesting part of a failed job is its tail.
+    return new Response(text.slice(-30_000), { headers: { "Content-Type": "text/plain" } });
+  }
+
   if (deliveryId && /^\d{1,25}$/.test(deliveryId)) {
     const detailRes = await fetch(`https://api.github.com/app/hook/deliveries/${deliveryId}`, { headers });
     if (!detailRes.ok) return Response.json({ ok: false, error: `delivery detail failed (${detailRes.status})` }, { status: 502 });
-    const detail = (await detailRes.json()) as { event: string; action: string | null; status_code: number; response?: { payload?: unknown }; request?: { payload?: { workflow_job?: { labels?: string[] }; repository?: { full_name?: string } } } };
+    const detail = (await detailRes.json()) as {
+      event: string; action: string | null; status_code: number; response?: { payload?: unknown };
+      request?: { payload?: { workflow_job?: { id?: number; labels?: string[]; conclusion?: string | null; runner_name?: string | null; started_at?: string; completed_at?: string; steps?: Array<{ name: string; conclusion: string | null }> }; repository?: { full_name?: string } } };
+    };
+    const job = detail.request?.payload?.workflow_job;
     return Response.json({
       ok: true, event: detail.event, action: detail.action, statusCode: detail.status_code,
-      ourResponse: detail.response?.payload, jobLabels: detail.request?.payload?.workflow_job?.labels,
+      ourResponse: detail.response?.payload, jobId: job?.id, jobLabels: job?.labels,
+      conclusion: job?.conclusion ?? null, runnerName: job?.runner_name ?? null,
+      startedAt: job?.started_at, completedAt: job?.completed_at,
+      steps: (job?.steps ?? []).map((s) => `${s.name}: ${s.conclusion ?? "?"}`),
       repository: detail.request?.payload?.repository?.full_name,
     });
   }
