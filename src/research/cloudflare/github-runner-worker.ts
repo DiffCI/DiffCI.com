@@ -83,7 +83,7 @@ interface RunnerEnv {
  * appeared, which is indistinguishable from "wrong event subscription" and "signature mismatch"
  * without GitHub's own delivery log. Delivery ids exceed Number.MAX_SAFE_INTEGER - extracted from
  * the raw body text, never JSON.parsed (same bug as the shadow App debugging found). */
-async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null): Promise<Response> {
+async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null, workerOrigin?: string): Promise<Response> {
   if (!env.GITHUB_APP_ID || !env.GITHUB_APP_PRIVATE_KEY) {
     return Response.json({ ok: false, error: "app-credentials-not-configured" }, { status: 503 });
   }
@@ -106,6 +106,75 @@ async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null): Promis
     const text = await logsRes.text();
     // The interesting part of a failed job is its tail.
     return new Response(text.slice(-30_000), { headers: { "Content-Type": "text/plain" } });
+  }
+
+  // ?delivery=fleet:<installationId>:<owner/repo> - the whole picture at once: registered runners
+  // (name/status/busy) and every queued + in-progress workflow run. THE first thing to check when
+  // "jobs are queued but nothing picks them up".
+  if (deliveryId && deliveryId.startsWith("fleet:")) {
+    const [, installationId, repoFull] = deliveryId.split(":");
+    if (!installationId || !/^\d+$/.test(installationId) || !repoFull || !/^[\w.-]+\/[\w.-]+$/.test(repoFull)) {
+      return Response.json({ ok: false, error: "expected fleet:<installationId>:<owner/repo>" }, { status: 400 });
+    }
+    const installationToken = await exchangeInstallationToken(jwt, installationId);
+    const ghHeaders = { Authorization: `token ${installationToken.token}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-github-runner" };
+    const [runnersRes, queuedRes, inProgressRes] = await Promise.all([
+      fetch(`https://api.github.com/repos/${repoFull}/actions/runners`, { headers: ghHeaders }),
+      fetch(`https://api.github.com/repos/${repoFull}/actions/runs?status=queued&per_page=30`, { headers: ghHeaders }),
+      fetch(`https://api.github.com/repos/${repoFull}/actions/runs?status=in_progress&per_page=30`, { headers: ghHeaders }),
+    ]);
+    const runners = runnersRes.ok ? ((await runnersRes.json()) as { runners?: Array<{ id: number; name: string; status: string; busy: boolean }> }).runners : `runners fetch failed (${runnersRes.status})`;
+    const mapRuns = (body: { workflow_runs?: Array<{ id: number; head_sha: string; created_at: string; status: string }> }) =>
+      (body.workflow_runs ?? []).map((r) => ({ runId: r.id, headSha: r.head_sha.slice(0, 7), createdAt: r.created_at, status: r.status }));
+    const queued = queuedRes.ok ? mapRuns((await queuedRes.json()) as never) : `queued fetch failed (${queuedRes.status})`;
+    const inProgress = inProgressRes.ok ? mapRuns((await inProgressRes.json()) as never) : `in-progress fetch failed (${inProgressRes.status})`;
+    return Response.json({ ok: true, runners, queued, inProgress });
+  }
+
+  // ?delivery=drain:<installationId>:<owner/repo>:<count> - start N fresh runner containers, each of
+  // which claims one queued job (oldest first, GitHub's choice). Recovery tool for a starved queue:
+  // jobs whose original queued-webhook containers died (the CRLF/ICU debugging era) never get another
+  // container, because GitHub does not re-deliver workflow_job.queued for them.
+  if (deliveryId && deliveryId.startsWith("drain:")) {
+    const [, installationId, repoFull, countRaw] = deliveryId.split(":");
+    const count = Math.max(1, Math.min(5, Number.parseInt(countRaw ?? "1", 10) || 1));
+    if (!installationId || !/^\d+$/.test(installationId) || !repoFull || !/^[\w.-]+\/[\w.-]+$/.test(repoFull)) {
+      return Response.json({ ok: false, error: "expected drain:<installationId>:<owner/repo>:<count>" }, { status: 400 });
+    }
+    const [owner, repo] = repoFull.split("/");
+    const started: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const token = await mintRegistrationToken(env, owner!, repo!, Number(installationId));
+      const name = `drain-${crypto.randomUUID().slice(0, 8)}`;
+      const container = getContainer(env.GITHUB_RUNNER, name);
+      await container.start({
+        envVars: {
+          GH_OWNER: owner!, GH_REPO: repo!, RUNNER_TOKEN: token, RUNNER_LABELS: CLAIM_LABELS.join(","), LOG_TAG: name,
+          LOG_SINK_URL: `${workerOrigin ?? ""}/container-log`, LOG_SINK_TOKEN: env.RUNNER_DISPATCH_TOKEN ?? "",
+        },
+      });
+      started.push(name);
+    }
+    return Response.json({ ok: true, started });
+  }
+
+  // ?delivery=runs:<installationId>:<owner/repo>:<headSha> - workflow runs for one commit, the
+  // queue-noise-free way to answer "did MY push's CI pass" while stale queued jobs drain.
+  if (deliveryId && deliveryId.startsWith("runs:")) {
+    const [, installationId, repoFull, headSha] = deliveryId.split(":");
+    if (!installationId || !/^\d+$/.test(installationId) || !repoFull || !/^[\w.-]+\/[\w.-]+$/.test(repoFull) || !headSha || !/^[0-9a-f]{7,40}$/.test(headSha)) {
+      return Response.json({ ok: false, error: "expected runs:<installationId>:<owner/repo>:<headSha>" }, { status: 400 });
+    }
+    const installationToken = await exchangeInstallationToken(jwt, installationId);
+    const runsRes = await fetch(`https://api.github.com/repos/${repoFull}/actions/runs?head_sha=${headSha}`, {
+      headers: { Authorization: `token ${installationToken.token}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-github-runner" },
+    });
+    if (!runsRes.ok) return Response.json({ ok: false, error: `runs fetch failed (${runsRes.status})` }, { status: 502 });
+    const body = (await runsRes.json()) as { workflow_runs?: Array<{ id: number; name: string; status: string; conclusion: string | null; head_sha: string; created_at: string }> };
+    return Response.json({
+      ok: true,
+      runs: (body.workflow_runs ?? []).map((r) => ({ runId: r.id, name: r.name, status: r.status, conclusion: r.conclusion, headSha: r.head_sha.slice(0, 7), createdAt: r.created_at })),
+    });
   }
 
   if (deliveryId && /^\d{1,25}$/.test(deliveryId)) {
@@ -215,7 +284,7 @@ export default {
       if (!env.RUNNER_DISPATCH_TOKEN || auth !== `Bearer ${env.RUNNER_DISPATCH_TOKEN}`) {
         return new Response("unauthorized", { status: 401 });
       }
-      return runnerAppInfo(env, url.searchParams.get("delivery"));
+      return runnerAppInfo(env, url.searchParams.get("delivery"), url.origin);
     }
     if (url.pathname === "/container-log" && request.method === "POST") {
       // Receives entrypoint.sh's exfiltrated container stdout and re-emits it on the Worker console,

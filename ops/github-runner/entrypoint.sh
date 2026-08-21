@@ -41,8 +41,14 @@ trap on_exit EXIT
 trap 'echo "entrypoint: received SIGTERM (platform stop - activity timeout or teardown)" >> "$LOGFILE"; upload_log; exit 143' TERM
 exec > >(tee -a "$LOGFILE") 2>&1
 
-# HOSTNAME is unique per container instance, so this is unique per job without needing a job id passed in.
-RUNNER_NAME="cf-${GH_REPO}-${HOSTNAME:-$$}"
+# HOSTNAME is NOT unique per container instance - every Cloudflare Container reports the literal
+# hostname "cloudchamber", so the original "cf-${GH_REPO}-${HOSTNAME}" collided across ALL instances.
+# Combined with --replace, each new container replaced the previous one's registration: the earlier
+# runner's session died mid-listen ("Runner connect error: The signature is not valid"), siblings got
+# "Error: Conflict", and at most one runner existed at a time - THE root cause of jobs sitting queued
+# while containers "exited normally" (exfiltrated-log finding, 2026-08-21). LOG_TAG (job-<id> or
+# drain-<uuid>) is genuinely unique per instance; timestamp+PID+RANDOM covers a missing tag.
+RUNNER_NAME="cf-${GH_REPO}-${LOG_TAG:-$(date +%s)-$$-${RANDOM}}"
 
 echo "entrypoint: runner agent ${RUNNER_VERSION_MARKER:-unknown-version}, registering ${RUNNER_NAME} for ${GH_OWNER}/${GH_REPO} labels=${RUNNER_LABELS}"
 
@@ -57,8 +63,9 @@ echo "entrypoint: runner agent ${RUNNER_VERSION_MARKER:-unknown-version}, regist
   --labels "${RUNNER_LABELS}" \
   --ephemeral \
   --disableupdate \
-  --unattended \
-  --replace
+  --unattended
+# --replace deliberately REMOVED: with unique names it can never match, and keeping it would silently
+# mask any future name-collision regression instead of failing loudly at config time.
 
 echo "entrypoint: config.sh succeeded, starting run.sh"
 
