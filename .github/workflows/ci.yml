@@ -1,0 +1,22 @@
+# Runs on the Cloudflare-Container-backed ephemeral self-hosted runner fleet, NOT a GitHub-hosted
+# runner - see wrangler.github-runner.jsonc and src/research/cloudflare/github-runner-worker.ts. The
+# `[self-hosted, cloudflare]` labels below are what routes the job here instead of ubuntu-latest; a
+# workflow_job webhook (configured on the GitHub App installed on this repo) triggers a fresh
+# Cloudflare Container per job, which registers, runs this, deregisters, and exits.
+#
+# Requires the GitHub App to be registered and installed on this repo (see the file doc comment on
+# src/shadow/github-app.ts) - until then, jobs with these labels will queue and never pick up a
+# runner, exactly like any self-hosted-runner workflow with no runner actually online.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: [self-hosted, cloudflare]
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run check

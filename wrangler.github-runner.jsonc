@@ -1,0 +1,38 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "diffci-github-runner",
+  "main": "./src/research/cloudflare/github-runner-worker.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  // No `vars` block for secrets - GITHUB_WEBHOOK_SECRET, GITHUB_APP_ID, and GITHUB_APP_PRIVATE_KEY are
+  // set with `wrangler secret put <NAME> --config wrangler.github-runner.jsonc`, never committed here.
+  // Requires a GitHub App (see docs/research on the Stage 2 App manifest for the shape) installed on
+  // BOTH DiffCI.com and DentalPresence.in, with Actions:write + Administration:write repo permissions
+  // (Administration:write is what lets it mint runner registration tokens) and subscribed to the
+  // `workflow_job` webhook event.
+  "containers": [
+    {
+      "class_name": "GithubRunner",
+      "image": "./ops/github-runner/Dockerfile",
+      "instance_type": "standard-2",
+      // One running instance per in-flight job (ephemeral - each self-terminates after its one job,
+      // so this bounds concurrent *running* jobs across both repos, not a standing idle pool). Raise
+      // if DiffCI.com and DentalPresence.in regularly queue jobs at the same time.
+      "max_instances": 5,
+      "rollout_step_percentage": [100]
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "GITHUB_RUNNER", "class_name": "GithubRunner" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["GithubRunner"] }
+  ]
+}
