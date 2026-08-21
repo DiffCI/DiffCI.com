@@ -137,7 +137,7 @@ export class DefaultCIPlanner implements CIPlanner {
         reason = "No matching changed files and task is not always-run";
       }
 
-      return { id: task.id, command: task.command, category: task.category, status, reason, alwaysRun, triggeredBy };
+      return { id: task.id, command: task.command, category: task.category, status, reason, alwaysRun, triggeredBy, hasTestCommand: task.hasTestCommand };
     });
   }
 

@@ -86,12 +86,19 @@ export function matchFailedTaskIds(baseline: BaselineEvidence, plan: ExecutionPl
  * no relationship to test selection at all. This does not change matching itself - only which matched
  * ids are treated as TEST misses vs excluded as non-test-category matches, which the caller reports
  * separately for auditability (see HistoricalEvidenceResult.nonTestCategoryExcludedTargets). */
+/** Stage 2C (2026-08-21) measurement-pipeline repair: a task counts as test-category evidence if EITHER
+ * the pre-existing name/step-inferred `category` says "test" (unchanged, exactly as before) OR the newer
+ * command-based `hasTestCommand` signal fired (a job whose real `run:` command - directly, or resolved
+ * one level through package.json scripts - invokes a recognized test runner, even though its name/step
+ * text alone gave no keyword signal - e.g. a job named "check" running `npm run typecheck && npm run
+ * test`). See src/research/baseline/test-activity.ts for the full rationale and the known "compound job"
+ * coarse-attribution limitation this does NOT hide. */
 export function filterToTestCategoryTaskIds(taskIds: string[], plan: ExecutionPlan): { testTargets: string[]; excludedNonTest: string[] } {
   const testTargets: string[] = [];
   const excludedNonTest: string[] = [];
   for (const id of taskIds) {
     const task = plan.tasks.find((t) => t.id === id);
-    if (task?.category === "test") testTargets.push(id);
+    if (task?.category === "test" || task?.hasTestCommand === true) testTargets.push(id);
     else excludedNonTest.push(id);
   }
   return { testTargets, excludedNonTest };

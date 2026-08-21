@@ -35,6 +35,12 @@ export interface TaskDecision {
   alwaysRun: boolean;
   commandSpec?: CommandSpec;
   triggeredBy: string[];
+  /** Stage 2C (2026-08-21) measurement-pipeline repair - see src/research/baseline/test-activity.ts.
+   * Purely additive/optional, carried through unchanged from CITaskDefinition; never read by any
+   * planning/selection/fallback logic in this file or elsewhere in src/planner|repo|git - only by
+   * evidence-collector.ts's filterToTestCategoryTaskIds at reconciliation time, after this plan has been
+   * serialized and read back from storage (reconciliation has no repo access to recompute it). */
+  hasTestCommand?: boolean;
 }
 
 export interface PlanEvidence {

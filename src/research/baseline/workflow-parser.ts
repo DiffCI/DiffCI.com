@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import YAML from "yaml";
 import type { RepositoryProfile } from "../../repo/types.js";
+import { detectTestCommand } from "./test-activity.js";
 
 export interface ParsedWorkflowTask {
   id: string;
@@ -10,6 +11,12 @@ export interface ParsedWorkflowTask {
   pathGlobs?: string[];
   pathIgnoreGlobs?: string[];
   dependsOn?: string[];
+  /** Stage 2C (2026-08-21) measurement-pipeline repair - see test-activity.ts's module doc comment for
+   * the full rationale. Computed independently of `category` (which stays exactly as inferCategory()
+   * always produced it, for planner-facing callers) from this job's real `run:` command text, resolved
+   * one level through package.json scripts. Consumed ONLY by evidence-collector.ts's
+   * filterToTestCategoryTaskIds - never read by any planning/selection/fallback logic. */
+  hasTestCommand: boolean;
 }
 
 export interface ParsedWorkflow {
@@ -19,10 +26,11 @@ export interface ParsedWorkflow {
 }
 
 export function parseRepositoryWorkflows(profile: RepositoryProfile, repoPath: string): ParsedWorkflow[] {
-  return profile.workflows.map((w) => parseWorkflow(resolve(repoPath, w.path), w.path));
+  const scripts = profile.packageJson?.scripts ?? {};
+  return profile.workflows.map((w) => parseWorkflow(resolve(repoPath, w.path), w.path, scripts));
 }
 
-function parseWorkflow(absolutePath: string, relativePath: string): ParsedWorkflow {
+function parseWorkflow(absolutePath: string, relativePath: string, scripts: Record<string, string>): ParsedWorkflow {
   let raw: string;
   try {
     raw = readFileSync(absolutePath, "utf8");
@@ -50,9 +58,11 @@ function parseWorkflow(absolutePath: string, relativePath: string): ParsedWorkfl
     const pathsIgnore = normalizeStringArray(job["paths-ignore"]) ?? [];
     const dependsOn = normalizeStringArray(job.needs) ?? [];
     const stepNames: string[] = [];
+    const runLines: string[] = [];
     const steps = Array.isArray(job.steps) ? (job.steps as Record<string, unknown>[]) : [];
     for (const step of steps) {
       if (typeof step?.name === "string") stepNames.push(step.name as string);
+      if (typeof step?.run === "string") runLines.push(step.run as string);
     }
 
     const category = inferCategory(namePart + " " + stepNames.join(" "));
@@ -63,6 +73,9 @@ function parseWorkflow(absolutePath: string, relativePath: string): ParsedWorkfl
       pathGlobs: paths.length > 0 ? paths : undefined,
       pathIgnoreGlobs: pathsIgnore.length > 0 ? pathsIgnore : undefined,
       dependsOn,
+      // Stage 2C: real `run:` command text, resolved one level through package.json scripts - see
+      // ParsedWorkflowTask.hasTestCommand's doc comment. Independent of `category` above.
+      hasTestCommand: detectTestCommand(runLines, scripts),
     });
   }
 

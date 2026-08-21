@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { chargeBudget, createRateBudget, hasBudgetFor, remainingBudget } from "../../src/research/historical/rate-budget.js";
-import { collectHistoricalEvidenceForDelta } from "../../src/research/historical/evidence-collector.js";
+import { collectHistoricalEvidenceForDelta, filterToTestCategoryTaskIds } from "../../src/research/historical/evidence-collector.js";
 import type { ExecutionPlan } from "../../src/planner/types.js";
 import type { BaselineEvidence } from "../../src/shadow/types.js";
 
@@ -252,5 +252,36 @@ describe("historical CI evidence - collectHistoricalEvidenceForDelta", () => {
         }),
     });
     assert.equal(remainingBudget(budget, 0), 47);
+  });
+});
+
+describe("filterToTestCategoryTaskIds - Stage 2C measurement-pipeline repair (2026-08-21)", () => {
+  it("THE Stage 2B regression, end to end: a task shaped exactly like DiffCI.com's own 'check' job (category 'validation', hasTestCommand true) is now included", () => {
+    const plan: ExecutionPlan = {
+      ...EMPTY_PLAN,
+      tasks: [{ id: ".github/workflows/ci.yml::check", command: "CI / check", category: "validation", status: "RUN", reason: "matched", alwaysRun: false, triggeredBy: [], hasTestCommand: true }],
+    };
+    const { testTargets, excludedNonTest } = filterToTestCategoryTaskIds([".github/workflows/ci.yml::check"], plan);
+    assert.deepEqual(testTargets, [".github/workflows/ci.yml::check"], "Stage 2B's exact bug: this must no longer be silently excluded");
+    assert.deepEqual(excludedNonTest, []);
+  });
+
+  it("a task with category 'validation' and hasTestCommand false (or absent) is still correctly excluded - the repair does not blanket-include every non-test task", () => {
+    const plan: ExecutionPlan = {
+      ...EMPTY_PLAN,
+      tasks: [
+        { id: "lint-only", command: "lint", category: "validation", status: "RUN", reason: "matched", alwaysRun: false, triggeredBy: [], hasTestCommand: false },
+        { id: "no-signal-at-all", command: "unknown", category: "validation", status: "RUN", reason: "matched", alwaysRun: false, triggeredBy: [] }, // hasTestCommand omitted entirely, pre-fix shape
+      ],
+    };
+    const { testTargets, excludedNonTest } = filterToTestCategoryTaskIds(["lint-only", "no-signal-at-all"], plan);
+    assert.deepEqual(testTargets, []);
+    assert.deepEqual(excludedNonTest, ["lint-only", "no-signal-at-all"]);
+  });
+
+  it("pre-existing category==='test' tasks are unaffected by this repair (no regression to the already-working path)", () => {
+    const plan: ExecutionPlan = { ...EMPTY_PLAN, tasks: [{ id: "test:unit", command: "npm test", category: "test", status: "RUN", reason: "matched", alwaysRun: false, triggeredBy: [] }] };
+    const { testTargets } = filterToTestCategoryTaskIds(["test:unit"], plan);
+    assert.deepEqual(testTargets, ["test:unit"]);
   });
 });

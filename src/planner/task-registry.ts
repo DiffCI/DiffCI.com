@@ -11,6 +11,10 @@ export interface CITaskDefinition {
   npmScript?: string;
   inputPatterns?: string[];
   globalRiskTriggers?: string[];
+  /** Stage 2C (2026-08-21) measurement-pipeline repair - see src/research/baseline/test-activity.ts.
+   * Purely additive/optional; never read by any selection, fallback, or risk-trigger logic - only by
+   * evidence-collector.ts's filterToTestCategoryTaskIds at reconciliation time. */
+  hasTestCommand?: boolean;
 }
 
 export interface TaskRegistry {

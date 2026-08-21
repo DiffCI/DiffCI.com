@@ -17,6 +17,7 @@ export function buildGenericTaskRegistry(profile: RepositoryProfile, language: s
         description: `Workflow job ${task.name ?? task.id}`,
         inputPatterns: inputs,
         globalRiskTriggers: defaultGlobalRiskTriggers(task.category),
+        hasTestCommand: task.hasTestCommand,
       });
     }
   }
