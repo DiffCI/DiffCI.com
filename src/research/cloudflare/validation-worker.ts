@@ -26,6 +26,8 @@ import { makeD1ShadowStore, type ObservationSource } from "./shadow-store.js";
 import { reconcilePrediction } from "../../shadow/reconcile.js";
 import { computeLogicalEventKey } from "../../shadow/event-identity.js";
 import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps } from "./shadow-cron.js";
+import { handleShadowWebhook } from "./shadow-webhook.js";
+import { exchangeInstallationToken, signAppJwt, verifyWebhookSignature } from "../../shadow/github-app.js";
 
 // standard-2 Sandbox instance type (wrangler.research-sandbox.jsonc): 1 vCPU, 6 GiB memory, 12 GB disk.
 // Real Container CPU billing is active-use-only, but wall-clock is used as a conservative (over-, not
@@ -60,6 +62,12 @@ interface ValidationEnv {
    * can be switched off (config redeploy) without disabling manually-driven research calls. */
   SHADOW_CRON_ENABLED?: string;
   RESEARCH_DISPATCH_TOKEN?: string;
+  /** The registered DiffCI Shadow GitHub App (docs/github-app-registration.md) - all three optional
+   * Worker secrets. Webhook route returns 503 until the webhook secret exists; installation-token
+   * minting silently falls back to GITHUB_TOKEN until app id + private key exist. */
+  SHADOW_GITHUB_APP_ID?: string;
+  SHADOW_GITHUB_APP_PRIVATE_KEY?: string;
+  SHADOW_GITHUB_WEBHOOK_SECRET?: string;
   /** Optional Worker secret (wrangler secret put GITHUB_TOKEN). When present, forwarded into the
    * container's exec env (never as a CLI arg - see cloudflare-analyze-batch.ts) to enable authenticated
    * historical CI evidence collection (4500 GitHub REST calls/hour vs 50 unauthenticated). Absent by
@@ -709,12 +717,34 @@ async function shadowPoll(request: Request, env: ValidationEnv): Promise<Respons
   });
 }
 
+/** The best available GitHub token for reading a repository's ground truth: the App's per-installation
+ * token when the DiffCI Shadow App is installed there (works for private design-partner repos, and its
+ * rate limit scales with the installation), else the account-wide GITHUB_TOKEN, else nothing
+ * (unauthenticated 50 req/h - how the pipeline ran before any token existed). Never throws: a failed
+ * token exchange is logged and degrades to the fallback rather than blocking reconciliation. */
+async function githubTokenForRepo(env: ValidationEnv, repository: string): Promise<string | undefined> {
+  if (env.SHADOW_GITHUB_APP_ID && env.SHADOW_GITHUB_APP_PRIVATE_KEY) {
+    try {
+      const installationId = await makeD1ShadowStore(env.RESEARCH_DB).getInstallationId(repository);
+      if (installationId) {
+        const jwt = await signAppJwt({ appId: env.SHADOW_GITHUB_APP_ID, privateKeyPkcs8Pem: env.SHADOW_GITHUB_APP_PRIVATE_KEY });
+        const { token } = await exchangeInstallationToken(jwt, installationId);
+        return token;
+      }
+    } catch (error: unknown) {
+      console.log(`githubTokenForRepo: installation-token exchange failed for ${repository}, falling back to GITHUB_TOKEN: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  return env.GITHUB_TOKEN;
+}
+
 /** The reconcile flow shared by POST /v1/shadow/reconcile and the autonomous cron runner. No container
  * involved - GitHub API + D1/R2 only. */
 async function executeShadowReconcile(env: ValidationEnv, repository: string, limit: number): Promise<{ attempted: number; reconciled: number; stillPending: number; errors: string[] }> {
   const store = makeD1ShadowStore(env.RESEARCH_DB);
   const evidenceStore = new R2EvidenceStore(env.RESEARCH_BUCKET);
   const pending = await store.findPendingPredictions(repository, limit);
+  const githubToken = pending.length > 0 ? await githubTokenForRepo(env, repository) : undefined;
 
   let reconciled = 0;
   let stillPending = 0;
@@ -732,7 +762,7 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
           plan: predictionBlob.plan, pathSelectedTaskIds: predictionBlob.pathSelectedTaskIds,
           diffciAnalysisOverheadMs: predictionBlob.diffciAnalysisOverheadMs, predictionCreatedAt: predictionBlob.predictionCreatedAt,
         },
-        { token: env.GITHUB_TOKEN, checkFlakiness: true },
+        { token: githubToken, checkFlakiness: true },
       );
       if (result.status === "STILL_PENDING") {
         stillPending++;
@@ -853,6 +883,7 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
   const store = makeD1ShadowStore(env.RESEARCH_DB);
   return {
     listPollableRepositories: () => store.listPollableRepositories(),
+    listReconcilableRepositories: () => store.listReconcilableRepositories(),
     fetchRemoteHead: (repository) => fetchDefaultBranchHead(repository, env.GITHUB_TOKEN),
     getSourceArchive: () => loadShadowSource(env),
     async pollRepository(repo: PollableRepository, source: File) {
@@ -887,6 +918,64 @@ async function shadowCronRun(request: Request, env: ValidationEnv): Promise<Resp
   }
   const record = await runShadowCronOnce(makeShadowCronDeps(env), { ...DEFAULT_SHADOW_CRON_CONFIG, maxPollsPerRun: maxPolls }, "manual");
   return json({ ok: true, ...record });
+}
+
+/** Minimal ExecutionContext shape - not importing workers-types for one method (same pattern as the
+ * hand-rolled D1Binding/R2Binding interfaces). */
+interface ExecutionCtx {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
+// ============================================================================================
+// Stage 2 GitHub App webhook route (2026-08-21) - POST /v1/shadow/webhook. Event decisions live in
+// shadow-webhook.ts (unit-tested); this wires the real HMAC secret, D1 store, and ctx.waitUntil
+// scheduling. NO bearer auth on this route - GitHub is the caller, and the HMAC signature over the
+// raw body (App webhook secret) is the authentication; a missing secret disables the route entirely
+// (503) rather than accepting unverifiable deliveries.
+// ============================================================================================
+
+async function shadowWebhook(request: Request, env: ValidationEnv, ctx: ExecutionCtx): Promise<Response> {
+  const secret = env.SHADOW_GITHUB_WEBHOOK_SECRET;
+  if (!secret) return json({ ok: false, error: "webhook-not-configured (SHADOW_GITHUB_WEBHOOK_SECRET unset)" }, 503);
+  const rawBody = await request.text();
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+
+  const outcome = await handleShadowWebhook(
+    request.headers.get("X-GitHub-Event"),
+    request.headers.get("X-Hub-Signature-256"),
+    rawBody,
+    {
+      verifySignature: (body, signature) => verifyWebhookSignature(body, signature, secret),
+      ensureRepository: (repository, language) => store.ensureRepository(repository, "github-app-webhook", language),
+      setInstallationId: (repository, installationId) => store.setInstallationId(repository, installationId),
+      schedulePoll: (repository) => {
+        ctx.waitUntil(
+          (async () => {
+            const [owner, name] = repository.split("/");
+            const pollState = await store.getRepositoryPollState(repository);
+            const language = pollState?.language ?? "typescript";
+            validateShellSafeIdentifiers(owner ?? "", name ?? "", language);
+            const source = await loadShadowSource(env);
+            if (!source) {
+              console.log(`shadow-webhook: push for ${repository} but no source archive uploaded - poll skipped, next cron tick will catch the commit`);
+              return;
+            }
+            const result = await executeShadowPoll(env, owner!, name!, language, source);
+            console.log(`shadow-webhook: push-triggered poll for ${repository}: ok=${result.ok} predictions=${result.predictionsRecorded}${result.error ? ` error=${result.error}` : ""}`);
+          })().catch((error: unknown) => console.log(`shadow-webhook: push-triggered poll for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
+        );
+      },
+      scheduleReconcile: (repository) => {
+        ctx.waitUntil(
+          executeShadowReconcile(env, repository, DEFAULT_SHADOW_CRON_CONFIG.reconcileLimitPerRepo)
+            .then((r) => console.log(`shadow-webhook: workflow_run-triggered reconcile for ${repository}: reconciled=${r.reconciled} stillPending=${r.stillPending} errors=${r.errors.length}`))
+            .catch((error: unknown) => console.log(`shadow-webhook: reconcile for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
+        );
+      },
+      log: (message) => console.log(message),
+    },
+  );
+  return json(outcome.body, outcome.status);
 }
 
 async function shadowCronStatus(request: Request, env: ValidationEnv): Promise<Response> {
@@ -1456,7 +1545,7 @@ async function scanUnsafeMisses(request: Request, env: ValidationEnv): Promise<R
 }
 
 export default {
-  async fetch(request: Request, env: ValidationEnv): Promise<Response> {
+  async fetch(request: Request, env: ValidationEnv, ctx: { waitUntil(promise: Promise<unknown>): void }): Promise<Response> {
     if (env.DIFFCI_RESEARCH_ENABLED !== "true") {
       return json({ ok: false, error: "diffci-research-sandbox disabled" }, 503);
     }
@@ -1535,6 +1624,10 @@ export default {
         return json({ ok: false, error: "unauthorized" }, 401);
       }
       return shadowStatus(request, env);
+    }
+    if (request.method === "POST" && url.pathname === "/v1/shadow/webhook") {
+      // No bearer auth - authenticated by GitHub's HMAC signature inside the handler.
+      return shadowWebhook(request, env, ctx);
     }
     if (request.method === "POST" && url.pathname === "/v1/shadow/source") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {

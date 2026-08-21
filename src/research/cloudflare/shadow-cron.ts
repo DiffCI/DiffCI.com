@@ -47,6 +47,10 @@ export interface ShadowCronDeps {
   /** Enrolled cloudflare-poll repositories in a pollable state, oldest-polled first (store-side order
    * is advisory; selection re-sorts defensively). */
   listPollableRepositories(): Promise<PollableRepository[]>;
+  /** Repositories eligible for the reconcile sweep - a SUPERSET of the pollable list: webhook-enrolled
+   * ('github-app-webhook') repositories reconcile event-driven when workflow_run deliveries arrive, but
+   * this cron sweep is their safety net against missed deliveries. */
+  listReconcilableRepositories(): Promise<PollableRepository[]>;
   /** Current default-branch head SHA via the GitHub REST API, or undefined when it cannot be
    * determined (rate limit, network) - undefined means "poll anyway". A "gone" result means the
    * repository no longer exists / is blocked and must not consume a container. */
@@ -173,9 +177,16 @@ export async function runShadowCronOnce(
     }
   }
 
-  // Reconcile every pollable repository (not only the ones polled this run) - ground truth for an
-  // earlier prediction can complete while the head hasn't moved since.
-  const toReconcile = candidates.slice(0, config.maxReconcilesPerRun);
+  // Reconcile every reconcilable repository (not only the ones polled this run) - ground truth for an
+  // earlier prediction can complete while the head hasn't moved since, and webhook-enrolled
+  // repositories need this sweep as their missed-delivery safety net.
+  let reconcilable: PollableRepository[] = [];
+  try {
+    reconcilable = await deps.listReconcilableRepositories();
+  } catch (error: unknown) {
+    errors.push(`list-reconcilable: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const toReconcile = reconcilable.slice(0, config.maxReconcilesPerRun);
   const reconcileResults = await Promise.all(
     toReconcile.map(async (repo) => {
       try {

@@ -119,10 +119,16 @@ export interface ShadowStore {
   /** Idempotent - does nothing if the repository is already enrolled. `language` only applies to the
    * initial enrollment insert; it never overwrites an existing row's value. */
   ensureRepository(repository: string, observationSource: ObservationSource, language?: string): Promise<void>;
-  getRepositoryPollState(repository: string): Promise<{ state: ShadowRepositoryState; lastPolledSha?: string } | undefined>;
+  getRepositoryPollState(repository: string): Promise<{ state: ShadowRepositoryState; lastPolledSha?: string; language: string } | undefined>;
   /** Repositories the cron runner may poll: observation_source = 'cloudflare-poll' in a pollable state,
    * never-polled first, then oldest-polled first. */
   listPollableRepositories(): Promise<PollableRepositoryRow[]>;
+  /** Repositories whose pending predictions the cron sweep may reconcile: any observation source, any
+   * pollable/active state - webhook-enrolled repositories reconcile event-driven (workflow_run), but the
+   * cron sweep is the safety net for missed deliveries. */
+  listReconcilableRepositories(): Promise<PollableRepositoryRow[]>;
+  setInstallationId(repository: string, installationId: string): Promise<void>;
+  getInstallationId(repository: string): Promise<string | undefined>;
   recordCronRun(input: CronRunInput): Promise<void>;
   listRecentCronRuns(limit: number): Promise<unknown[]>;
   updateLastPolled(repository: string, sha: string): Promise<void>;
@@ -162,6 +168,33 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
       }));
     },
 
+    async listReconcilableRepositories() {
+      const { results } = await db
+        .prepare(
+          `SELECT repository, state, language, last_polled_sha, last_polled_at FROM shadow_repositories
+           WHERE state IN ('VALIDATING', 'SHADOW_ACTIVE', 'SHADOW_LIMITED')
+           ORDER BY last_polled_at IS NOT NULL, last_polled_at ASC, repository ASC`,
+        )
+        .bind()
+        .all<{ repository: string; state: ShadowRepositoryState; language: string; last_polled_sha: string | null; last_polled_at: string | null }>();
+      return results.map((r) => ({
+        repository: r.repository,
+        state: r.state,
+        language: r.language,
+        lastPolledSha: r.last_polled_sha ?? undefined,
+        lastPolledAt: r.last_polled_at ?? undefined,
+      }));
+    },
+
+    async setInstallationId(repository, installationId) {
+      await db.prepare(`UPDATE shadow_repositories SET installation_id = ? WHERE repository = ?`).bind(installationId, repository).run();
+    },
+
+    async getInstallationId(repository) {
+      const row = await db.prepare(`SELECT installation_id FROM shadow_repositories WHERE repository = ?`).bind(repository).first<{ installation_id: string | null }>();
+      return row?.installation_id ?? undefined;
+    },
+
     async recordCronRun(input) {
       await db
         .prepare(
@@ -188,11 +221,11 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
 
     async getRepositoryPollState(repository) {
       const row = await db
-        .prepare(`SELECT state, last_polled_sha FROM shadow_repositories WHERE repository = ?`)
+        .prepare(`SELECT state, last_polled_sha, language FROM shadow_repositories WHERE repository = ?`)
         .bind(repository)
-        .first<{ state: ShadowRepositoryState; last_polled_sha: string | null }>();
+        .first<{ state: ShadowRepositoryState; last_polled_sha: string | null; language: string }>();
       if (!row) return undefined;
-      return { state: row.state, lastPolledSha: row.last_polled_sha ?? undefined };
+      return { state: row.state, lastPolledSha: row.last_polled_sha ?? undefined, language: row.language };
     },
 
     async updateLastPolled(repository, sha) {

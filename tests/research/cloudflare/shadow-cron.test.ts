@@ -23,6 +23,8 @@ interface FakeCalls {
 
 function makeDeps(options: {
   repos: PollableRepository[];
+  /** Defaults to `repos` - the common case where every pollable repository is also reconcilable. */
+  reconcilable?: PollableRepository[];
   heads?: Record<string, { sha: string } | { gone: string } | undefined>;
   source?: File | undefined;
   pollResult?: (repository: string) => Promise<{ predictionsRecorded: number; errors: string[] }>;
@@ -32,6 +34,7 @@ function makeDeps(options: {
   const calls: FakeCalls = { polled: [], reconciled: [], headChecked: [], recorded: [], logs: [] };
   const deps: ShadowCronDeps = {
     listPollableRepositories: async () => options.repos,
+    listReconcilableRepositories: async () => options.reconcilable ?? options.repos,
     fetchRemoteHead: async (repository) => {
       calls.headChecked.push(repository);
       return options.heads?.[repository];
@@ -184,6 +187,15 @@ describe("runShadowCronOnce", () => {
     const record = await runShadowCronOnce(deps);
     assert.equal(record.reposPolled.length, 1);
     assert.equal(calls.logs.filter((l) => l.includes("failed to record cron run telemetry")).length, 1);
+  });
+
+  it("reconciles webhook-enrolled repositories that are not in the pollable list", async () => {
+    const pollable = [repo({ repository: "a/polled" })];
+    const webhookEnrolled = [...pollable, repo({ repository: "b/webhook-only" })];
+    const { deps, calls } = makeDeps({ repos: pollable, reconcilable: webhookEnrolled });
+    await runShadowCronOnce(deps);
+    assert.deepEqual(calls.polled, ["a/polled"]);
+    assert.deepEqual(calls.reconciled, ["a/polled", "b/webhook-only"]);
   });
 
   it("labels manual triggers distinctly from scheduled ones", async () => {
