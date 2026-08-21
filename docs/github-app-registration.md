@@ -1,5 +1,12 @@
 # Registering the DiffCI Shadow GitHub App
 
+> **Status: DONE (2026-08-21).** The App is registered, its three `SHADOW_GITHUB_*` secrets are on the
+> research Worker, the webhook is active against `/v1/shadow/webhook`, and the first installation
+> (id 155368612) auto-enrolled `adityankale190895/DiffCI.com` and `adityankale190895/DentalPresence.in`
+> into shadow observation - this repository observes itself. The checklist below is kept for
+> registering the App again elsewhere (e.g. transferring to an org) and as the reference for what was
+> granted.
+
 Everything code-side is already written and tested (`src/shadow/github-app.ts`: App-JWT signing,
 installation-token exchange, webhook HMAC verification — see
 `docs/research/2026-08-21-stage2-architecture.md`, Phase 3/4). Registration itself is an
