@@ -93,10 +93,38 @@ export interface RepositorySummaryRow {
   baselineAlreadyOptimal: number;
 }
 
+export interface PollableRepositoryRow {
+  repository: string;
+  state: ShadowRepositoryState;
+  language: string;
+  lastPolledSha?: string;
+  lastPolledAt?: string;
+}
+
+export interface CronRunInput {
+  startedAt: string;
+  finishedAt: string;
+  trigger: "cron" | "manual";
+  reposConsidered: number;
+  headChecksSkipped: number;
+  reposPolled: string[];
+  predictionsRecorded: number;
+  reposReconciled: number;
+  groundTruthReconciled: number;
+  stillPending: number;
+  errors: string[];
+}
+
 export interface ShadowStore {
-  /** Idempotent - does nothing if the repository is already enrolled. */
-  ensureRepository(repository: string, observationSource: ObservationSource): Promise<void>;
+  /** Idempotent - does nothing if the repository is already enrolled. `language` only applies to the
+   * initial enrollment insert; it never overwrites an existing row's value. */
+  ensureRepository(repository: string, observationSource: ObservationSource, language?: string): Promise<void>;
   getRepositoryPollState(repository: string): Promise<{ state: ShadowRepositoryState; lastPolledSha?: string } | undefined>;
+  /** Repositories the cron runner may poll: observation_source = 'cloudflare-poll' in a pollable state,
+   * never-polled first, then oldest-polled first. */
+  listPollableRepositories(): Promise<PollableRepositoryRow[]>;
+  recordCronRun(input: CronRunInput): Promise<void>;
+  listRecentCronRuns(limit: number): Promise<unknown[]>;
   updateLastPolled(repository: string, sha: string): Promise<void>;
   setRepositoryState(repository: string, state: ShadowRepositoryState): Promise<void>;
   recordPrediction(input: RecordPredictionInput, r2EvidenceKey: string): Promise<{ inserted: boolean }>;
@@ -108,12 +136,54 @@ export interface ShadowStore {
 
 export function makeD1ShadowStore(db: D1Binding): ShadowStore {
   return {
-    async ensureRepository(repository, observationSource) {
+    async ensureRepository(repository, observationSource, language = "typescript") {
       const now = new Date().toISOString();
       await db
-        .prepare(`INSERT INTO shadow_repositories (repository, state, observation_source, enrolled_at) VALUES (?, 'VALIDATING', ?, ?) ON CONFLICT(repository) DO NOTHING`)
-        .bind(repository, observationSource, now)
+        .prepare(`INSERT INTO shadow_repositories (repository, state, observation_source, enrolled_at, language) VALUES (?, 'VALIDATING', ?, ?, ?) ON CONFLICT(repository) DO NOTHING`)
+        .bind(repository, observationSource, now, language)
         .run();
+    },
+
+    async listPollableRepositories() {
+      const { results } = await db
+        .prepare(
+          `SELECT repository, state, language, last_polled_sha, last_polled_at FROM shadow_repositories
+           WHERE observation_source = 'cloudflare-poll' AND state IN ('VALIDATING', 'SHADOW_ACTIVE', 'SHADOW_LIMITED')
+           ORDER BY last_polled_at IS NOT NULL, last_polled_at ASC, repository ASC`,
+        )
+        .bind()
+        .all<{ repository: string; state: ShadowRepositoryState; language: string; last_polled_sha: string | null; last_polled_at: string | null }>();
+      return results.map((r) => ({
+        repository: r.repository,
+        state: r.state,
+        language: r.language,
+        lastPolledSha: r.last_polled_sha ?? undefined,
+        lastPolledAt: r.last_polled_at ?? undefined,
+      }));
+    },
+
+    async recordCronRun(input) {
+      await db
+        .prepare(
+          `INSERT INTO shadow_cron_runs (
+             started_at, finished_at, trigger_source, repos_considered, head_checks_skipped, repos_polled,
+             predictions_recorded, repos_reconciled, ground_truth_reconciled, still_pending, errors
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind(
+          input.startedAt, input.finishedAt, input.trigger, input.reposConsidered, input.headChecksSkipped,
+          JSON.stringify(input.reposPolled), input.predictionsRecorded, input.reposReconciled,
+          input.groundTruthReconciled, input.stillPending, JSON.stringify(input.errors),
+        )
+        .run();
+    },
+
+    async listRecentCronRuns(limit) {
+      const { results } = await db
+        .prepare(`SELECT * FROM shadow_cron_runs ORDER BY id DESC LIMIT ?`)
+        .bind(Math.max(1, Math.min(100, limit)))
+        .all();
+      return results;
     },
 
     async getRepositoryPollState(repository) {

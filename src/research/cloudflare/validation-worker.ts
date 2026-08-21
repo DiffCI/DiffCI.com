@@ -25,6 +25,7 @@ import { evaluateBudgetStatus } from "../config/cost-model.js";
 import { makeD1ShadowStore, type ObservationSource } from "./shadow-store.js";
 import { reconcilePrediction } from "../../shadow/reconcile.js";
 import { computeLogicalEventKey } from "../../shadow/event-identity.js";
+import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps } from "./shadow-cron.js";
 
 // standard-2 Sandbox instance type (wrangler.research-sandbox.jsonc): 1 vCPU, 6 GiB memory, 12 GB disk.
 // Real Container CPU billing is active-use-only, but wall-clock is used as a conservative (over-, not
@@ -55,6 +56,9 @@ interface ValidationEnv {
   RESEARCH_BUCKET: R2Binding;
   RESEARCH_DB: D1Binding;
   DIFFCI_RESEARCH_ENABLED: string;
+  /** Gates the scheduled() autonomous shadow-poll handler independently of the HTTP API, so the cron
+   * can be switched off (config redeploy) without disabling manually-driven research calls. */
+  SHADOW_CRON_ENABLED?: string;
   RESEARCH_DISPATCH_TOKEN?: string;
   /** Optional Worker secret (wrangler secret put GITHUB_TOKEN). When present, forwarded into the
    * container's exec env (never as a CLI arg - see cloudflare-analyze-batch.ts) to enable authenticated
@@ -582,7 +586,7 @@ async function execShadowPoll(sandbox: any, owner: string, name: string, languag
 }
 
 async function shadowEnroll(request: Request, env: ValidationEnv): Promise<Response> {
-  let body: { repository?: string; observationSource?: ObservationSource };
+  let body: { repository?: string; observationSource?: ObservationSource; language?: string };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -590,42 +594,40 @@ async function shadowEnroll(request: Request, env: ValidationEnv): Promise<Respo
   }
   const repository = body.repository ?? "";
   const observationSource = body.observationSource ?? "cloudflare-poll";
+  const language = body.language ?? "typescript";
   if (!/^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/.test(repository)) {
     return json({ ok: false, error: "repository must be 'owner/name'" }, 400);
   }
+  if (!/^[a-z]{1,20}$/.test(language)) {
+    return json({ ok: false, error: "invalid language" }, 400);
+  }
   const store = makeD1ShadowStore(env.RESEARCH_DB);
-  await store.ensureRepository(repository, observationSource);
+  await store.ensureRepository(repository, observationSource, language);
   const state = await store.getRepositoryPollState(repository);
   return json({ ok: true, repository, state: state?.state ?? "VALIDATING" });
 }
 
-async function shadowPoll(request: Request, env: ValidationEnv): Promise<Response> {
-  const contentLength = Number(request.headers.get("Content-Length") || "0");
-  if (contentLength > MAX_SOURCE_ARCHIVE_BYTES + 64 * 1024) {
-    return json({ ok: false, error: "source-archive-too-large" }, 413);
-  }
-  let form: FormData;
-  try {
-    form = await request.formData();
-  } catch {
-    return json({ ok: false, error: "multipart-form-required" }, 400);
-  }
-  const source = form.get("source");
-  if (!(source instanceof File) || source.size < 1 || source.size > MAX_SOURCE_ARCHIVE_BYTES) {
-    return json({ ok: false, error: "valid-source-archive-required" }, 400);
-  }
-  const owner = String(form.get("owner") || "");
-  const name = String(form.get("name") || "");
-  const language = String(form.get("language") || "typescript");
-  if (!owner || !name) return json({ ok: false, error: "owner and name required" }, 400);
-  validateShellSafeIdentifiers(owner, name, language);
-  const repository = `${owner}/${name}`;
+interface ShadowPollOutcome {
+  ok: boolean;
+  repository: string;
+  firstPoll?: boolean;
+  newHeadSha?: string;
+  predictionsRecorded: number;
+  pollErrors: string[];
+  error?: string;
+  /** true when the repository's state (PAUSED/REMOVED) refused the poll - a caller distinction, not a failure. */
+  refusedByState?: boolean;
+}
 
+/** The poll flow shared by POST /v1/shadow/poll and the autonomous cron runner - everything after
+ * "we have a validated owner/name/language and a source tarball". Enrollment is the HTTP handler's
+ * concern (enroll-on-first-poll behavior); the cron only ever polls already-enrolled repositories. */
+async function executeShadowPoll(env: ValidationEnv, owner: string, name: string, language: string, source: File): Promise<ShadowPollOutcome> {
+  const repository = `${owner}/${name}`;
   const store = makeD1ShadowStore(env.RESEARCH_DB);
-  await store.ensureRepository(repository, "cloudflare-poll");
   const pollState = await store.getRepositoryPollState(repository);
   if (pollState?.state === "PAUSED" || pollState?.state === "REMOVED") {
-    return json({ ok: false, error: `repository is ${pollState.state} - not polling` }, 409);
+    return { ok: false, repository, predictionsRecorded: 0, pollErrors: [], error: `repository is ${pollState.state} - not polling`, refusedByState: true };
   }
 
   const evidenceStore = new R2EvidenceStore(env.RESEARCH_BUCKET);
@@ -637,7 +639,7 @@ async function shadowPoll(request: Request, env: ValidationEnv): Promise<Respons
       ok: boolean; firstPoll?: boolean; newHeadSha: string; predictions?: any[]; errors?: string[]; error?: string;
     };
     await sandbox.destroy();
-    if (!result.ok) return json({ ok: false, owner, name, error: result.error ?? "shadow-poll-failed" }, 500);
+    if (!result.ok) return { ok: false, repository, predictionsRecorded: 0, pollErrors: [], error: result.error ?? "shadow-poll-failed" };
 
     let predictionsRecorded = 0;
     for (const prediction of result.predictions ?? []) {
@@ -663,27 +665,53 @@ async function shadowPoll(request: Request, env: ValidationEnv): Promise<Respons
       await store.setRepositoryState(repository, "SHADOW_ACTIVE");
     }
 
-    return json({
+    return {
       ok: true, repository, firstPoll: result.firstPoll ?? false, newHeadSha: result.newHeadSha,
       predictionsRecorded, pollErrors: result.errors ?? [],
-    });
+    };
   } catch (error: unknown) {
     try { await sandbox.destroy(); } catch { /* best-effort cleanup */ }
-    return json({ ok: false, owner, name, error: error instanceof Error ? error.message : String(error) }, 500);
+    return { ok: false, repository, predictionsRecorded: 0, pollErrors: [], error: error instanceof Error ? error.message : String(error) };
   }
 }
 
-async function shadowReconcile(request: Request, env: ValidationEnv): Promise<Response> {
-  let body: { repository?: string; limit?: number };
-  try {
-    body = (await request.json()) as typeof body;
-  } catch {
-    return json({ ok: false, error: "JSON body required" }, 400);
+async function shadowPoll(request: Request, env: ValidationEnv): Promise<Response> {
+  const contentLength = Number(request.headers.get("Content-Length") || "0");
+  if (contentLength > MAX_SOURCE_ARCHIVE_BYTES + 64 * 1024) {
+    return json({ ok: false, error: "source-archive-too-large" }, 413);
   }
-  const repository = body.repository ?? "";
-  const limit = Math.max(1, Math.min(25, body.limit ?? 10));
-  if (!repository) return json({ ok: false, error: "repository required" }, 400);
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return json({ ok: false, error: "multipart-form-required" }, 400);
+  }
+  const source = form.get("source");
+  if (!(source instanceof File) || source.size < 1 || source.size > MAX_SOURCE_ARCHIVE_BYTES) {
+    return json({ ok: false, error: "valid-source-archive-required" }, 400);
+  }
+  const owner = String(form.get("owner") || "");
+  const name = String(form.get("name") || "");
+  const language = String(form.get("language") || "typescript");
+  if (!owner || !name) return json({ ok: false, error: "owner and name required" }, 400);
+  validateShellSafeIdentifiers(owner, name, language);
 
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+  await store.ensureRepository(`${owner}/${name}`, "cloudflare-poll", language);
+
+  const outcome = await executeShadowPoll(env, owner, name, language, source);
+  if (!outcome.ok) {
+    return json({ ok: false, owner, name, error: outcome.error }, outcome.refusedByState ? 409 : 500);
+  }
+  return json({
+    ok: true, repository: outcome.repository, firstPoll: outcome.firstPoll ?? false, newHeadSha: outcome.newHeadSha,
+    predictionsRecorded: outcome.predictionsRecorded, pollErrors: outcome.pollErrors,
+  });
+}
+
+/** The reconcile flow shared by POST /v1/shadow/reconcile and the autonomous cron runner. No container
+ * involved - GitHub API + D1/R2 only. */
+async function executeShadowReconcile(env: ValidationEnv, repository: string, limit: number): Promise<{ attempted: number; reconciled: number; stillPending: number; errors: string[] }> {
   const store = makeD1ShadowStore(env.RESEARCH_DB);
   const evidenceStore = new R2EvidenceStore(env.RESEARCH_BUCKET);
   const pending = await store.findPendingPredictions(repository, limit);
@@ -731,7 +759,22 @@ async function shadowReconcile(request: Request, env: ValidationEnv): Promise<Re
     }
   }
 
-  return json({ ok: true, repository, attempted: pending.length, reconciled, stillPending, errors });
+  return { attempted: pending.length, reconciled, stillPending, errors };
+}
+
+async function shadowReconcile(request: Request, env: ValidationEnv): Promise<Response> {
+  let body: { repository?: string; limit?: number };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return json({ ok: false, error: "JSON body required" }, 400);
+  }
+  const repository = body.repository ?? "";
+  const limit = Math.max(1, Math.min(25, body.limit ?? 10));
+  if (!repository) return json({ ok: false, error: "repository required" }, 400);
+
+  const result = await executeShadowReconcile(env, repository, limit);
+  return json({ ok: true, repository, ...result });
 }
 
 async function shadowStatus(request: Request, env: ValidationEnv): Promise<Response> {
@@ -742,6 +785,119 @@ async function shadowStatus(request: Request, env: ValidationEnv): Promise<Respo
   const summary = await store.getRepositorySummary(repository);
   if (!summary) return json({ ok: false, error: "repository not enrolled" }, 404);
   return json({ ok: true, ...summary });
+}
+
+// ============================================================================================
+// Stage 2 autonomous polling (2026-08-21) - the Cron Trigger runner. Decision logic lives in
+// shadow-cron.ts (unit-tested against fakes); this section wires the real D1/R2/Sandbox/GitHub
+// implementations and exposes the same run via POST /v1/shadow/cron-run (manual trigger, used to
+// verify the full autonomous path end-to-end without waiting for the schedule) plus
+// GET /v1/shadow/cron-status (recent run telemetry). The diffci source tarball the polls need is
+// uploaded once to R2 via POST /v1/shadow/source (scripts/upload-shadow-source.ts) - that upload is
+// what removes the per-request source dependency that kept polling session-driven.
+// ============================================================================================
+
+const SHADOW_SOURCE_KEY = "shadow/source/current.tgz";
+const SHADOW_SOURCE_META_KEY = "shadow/source/current-meta";
+
+async function shadowSourceUpload(request: Request, env: ValidationEnv): Promise<Response> {
+  const contentLength = Number(request.headers.get("Content-Length") || "0");
+  if (contentLength > MAX_SOURCE_ARCHIVE_BYTES + 64 * 1024) {
+    return json({ ok: false, error: "source-archive-too-large" }, 413);
+  }
+  let form: FormData;
+  try {
+    form = await request.formData();
+  } catch {
+    return json({ ok: false, error: "multipart-form-required" }, 400);
+  }
+  const source = form.get("source");
+  if (!(source instanceof File) || source.size < 1 || source.size > MAX_SOURCE_ARCHIVE_BYTES) {
+    return json({ ok: false, error: "valid-source-archive-required" }, 400);
+  }
+  const label = String(form.get("label") || "");
+  const bytes = await source.arrayBuffer();
+  await env.RESEARCH_BUCKET.put(SHADOW_SOURCE_KEY, bytes);
+  const meta = { uploadedAt: new Date().toISOString(), sizeBytes: bytes.byteLength, label };
+  await new R2EvidenceStore(env.RESEARCH_BUCKET).put(SHADOW_SOURCE_META_KEY, meta);
+  return json({ ok: true, key: SHADOW_SOURCE_KEY, ...meta });
+}
+
+async function loadShadowSource(env: ValidationEnv): Promise<File | undefined> {
+  const obj = await env.RESEARCH_BUCKET.get(SHADOW_SOURCE_KEY);
+  if (!obj) return undefined;
+  const bytes = await obj.arrayBuffer();
+  if (bytes.byteLength < 1) return undefined;
+  return new File([new Uint8Array(bytes)], "diffci-source.tgz");
+}
+
+/** One cheap REST call to decide whether a repository's default branch moved since the last poll,
+ * before spending a multi-minute container on it. Uses GITHUB_TOKEN when configured (5000 req/h);
+ * unauthenticated otherwise. Never throws for rate-limit/network trouble - the caller polls anyway. */
+async function fetchDefaultBranchHead(repository: string, token?: string): Promise<{ sha: string } | { gone: string } | undefined> {
+  try {
+    const headers: Record<string, string> = { Accept: "application/vnd.github+json", "User-Agent": "diffci-shadow-cron" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`https://api.github.com/repos/${repository}/commits?per_page=1`, { headers });
+    if (res.status === 404 || res.status === 451) return { gone: `HTTP ${res.status}` };
+    if (!res.ok) return undefined;
+    const body = (await res.json()) as Array<{ sha?: string }>;
+    const sha = body?.[0]?.sha;
+    return sha ? { sha } : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+  return {
+    listPollableRepositories: () => store.listPollableRepositories(),
+    fetchRemoteHead: (repository) => fetchDefaultBranchHead(repository, env.GITHUB_TOKEN),
+    getSourceArchive: () => loadShadowSource(env),
+    async pollRepository(repo: PollableRepository, source: File) {
+      const [owner, name] = repo.repository.split("/");
+      validateShellSafeIdentifiers(owner ?? "", name ?? "", repo.language);
+      const outcome = await executeShadowPoll(env, owner!, name!, repo.language, source);
+      if (!outcome.ok) throw new Error(outcome.error ?? "shadow-poll-failed");
+      return { predictionsRecorded: outcome.predictionsRecorded, errors: outcome.pollErrors };
+    },
+    async reconcileRepository(repository: string) {
+      return executeShadowReconcile(env, repository, DEFAULT_SHADOW_CRON_CONFIG.reconcileLimitPerRepo);
+    },
+    recordCronRun: (run) =>
+      store.recordCronRun({
+        startedAt: run.startedAt, finishedAt: run.finishedAt, trigger: run.trigger,
+        reposConsidered: run.reposConsidered, headChecksSkipped: run.headChecksSkipped, reposPolled: run.reposPolled,
+        predictionsRecorded: run.predictionsRecorded, reposReconciled: run.reposReconciled,
+        groundTruthReconciled: run.groundTruthReconciled, stillPending: run.stillPending, errors: run.errors,
+      }),
+    now: () => new Date(),
+    log: (message) => console.log(message),
+  };
+}
+
+async function shadowCronRun(request: Request, env: ValidationEnv): Promise<Response> {
+  let maxPolls = DEFAULT_SHADOW_CRON_CONFIG.maxPollsPerRun;
+  try {
+    const body = (await request.json()) as { maxPolls?: number };
+    if (typeof body.maxPolls === "number") maxPolls = Math.max(0, Math.min(5, body.maxPolls));
+  } catch {
+    // empty body is fine - defaults apply
+  }
+  const record = await runShadowCronOnce(makeShadowCronDeps(env), { ...DEFAULT_SHADOW_CRON_CONFIG, maxPollsPerRun: maxPolls }, "manual");
+  return json({ ok: true, ...record });
+}
+
+async function shadowCronStatus(request: Request, env: ValidationEnv): Promise<Response> {
+  const limit = Math.max(1, Math.min(50, Number.parseInt(new URL(request.url).searchParams.get("limit") ?? "10", 10) || 10));
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+  const [runs, repositories, sourceMeta] = await Promise.all([
+    store.listRecentCronRuns(limit),
+    store.listPollableRepositories(),
+    new R2EvidenceStore(env.RESEARCH_BUCKET).get(SHADOW_SOURCE_META_KEY),
+  ]);
+  return json({ ok: true, cronEnabled: env.SHADOW_CRON_ENABLED === "true", sourceArchive: sourceMeta ?? null, pollableRepositories: repositories, recentRuns: runs });
 }
 
 /** Wires the real D1/R2 bindings to resumable-batch.ts's abstract ResumabilityStore/PersistenceStore
@@ -1380,6 +1536,36 @@ export default {
       }
       return shadowStatus(request, env);
     }
+    if (request.method === "POST" && url.pathname === "/v1/shadow/source") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return shadowSourceUpload(request, env);
+    }
+    if (request.method === "POST" && url.pathname === "/v1/shadow/cron-run") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return shadowCronRun(request, env);
+    }
+    if (request.method === "GET" && url.pathname === "/v1/shadow/cron-status") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return shadowCronStatus(request, env);
+    }
     return json({ ok: false, error: "not-found" }, 404);
+  },
+
+  /** Cron Trigger entry point (wrangler.research-sandbox.jsonc "triggers.crons") - the autonomous
+   * shadow-validation heartbeat. Doubly gated: DIFFCI_RESEARCH_ENABLED guards the whole Worker,
+   * SHADOW_CRON_ENABLED guards just this handler so autonomous polling can be switched off without
+   * taking down the manually-driven research API. */
+  async scheduled(_controller: { scheduledTime: number; cron: string }, env: ValidationEnv): Promise<void> {
+    if (env.DIFFCI_RESEARCH_ENABLED !== "true" || env.SHADOW_CRON_ENABLED !== "true") {
+      console.log("shadow-cron: disabled (DIFFCI_RESEARCH_ENABLED/SHADOW_CRON_ENABLED) - skipping scheduled run");
+      return;
+    }
+    await runShadowCronOnce(makeShadowCronDeps(env), DEFAULT_SHADOW_CRON_CONFIG, "cron");
   },
 };

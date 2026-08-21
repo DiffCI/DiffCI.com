@@ -1,0 +1,18 @@
+{
+  "name": "DiffCI Shadow",
+  "url": "https://diffci.com",
+  "description": "Observe-only CI shadow validation: predicts which tests a change needs before the real CI outcome is known, then reconciles against what actually happened. Never modifies repository state, never comments, never blocks or cancels a run.",
+  "public": false,
+  "default_permissions": {
+    "metadata": "read",
+    "contents": "read",
+    "actions": "read",
+    "checks": "read",
+    "pull_requests": "read"
+  },
+  "default_events": ["push", "pull_request", "workflow_run"],
+  "hook_attributes": {
+    "url": "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/webhook",
+    "active": false
+  }
+}

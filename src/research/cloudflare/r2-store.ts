@@ -1,7 +1,9 @@
 import type { EvidenceStore } from "../types.js";
 
 export interface R2Binding {
-  get(key: string): Promise<{ json<T>(): Promise<T> } | null>;
+  // json/arrayBuffer are both on the real R2ObjectBody - arrayBuffer is used for the binary shadow
+  // source tarball (validation-worker.ts's shadow-cron wiring), json for all evidence records.
+  get(key: string): Promise<{ json<T>(): Promise<T>; arrayBuffer(): Promise<ArrayBuffer> } | null>;
   put(key: string, value: string | ArrayBuffer): Promise<void>;
   list(options?: { prefix?: string }): Promise<{ objects: { key: string }[] }>;
 }

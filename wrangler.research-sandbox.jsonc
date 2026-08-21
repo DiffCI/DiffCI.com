@@ -11,7 +11,19 @@
   },
   "vars": {
     "SANDBOX_TRANSPORT": "rpc",
-    "DIFFCI_RESEARCH_ENABLED": "true"
+    "DIFFCI_RESEARCH_ENABLED": "true",
+    // Gates ONLY the scheduled() autonomous shadow-poll handler (validation-worker.ts) - flip to
+    // "false" and redeploy to stop autonomous polling without disabling the manually-driven API.
+    "SHADOW_CRON_ENABLED": "true"
+  },
+  // Autonomous Stage 2 shadow validation (shadow-cron.ts): every 10 minutes the Worker checks each
+  // enrolled repository's default-branch head via one cheap GitHub REST call and only spends a
+  // container on repositories where something actually landed - so the steady-state cost of this
+  // cadence is API calls, not container-minutes. 10 minutes (not 30/60) because prospectiveness
+  // quality depends on predicting BEFORE the commit's own CI finishes, and real CI often completes
+  // within minutes of a push.
+  "triggers": {
+    "crons": ["*/10 * * * *"]
   },
   "containers": [
     {
