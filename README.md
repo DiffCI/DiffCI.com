@@ -27,13 +27,17 @@ Three completed research stages plus an in-progress prospective-validation stage
   live against real repositories (coverage improved, zero contradicted safety cases), and ran a real
   wall-clock FULL/PATH/DiffCI runtime pilot.
 - **Stage 2** (current) - prospective shadow validation on real, currently-arriving CI events, not more
-  historical benchmarking. A live pipeline (Cloudflare Sandbox Containers + Worker, D1 + R2) polls real
+  historical benchmarking. A live pipeline (Cloudflare Sandbox Containers + Worker, D1 + R2) observes real
   repositories, predicts *before* their outcome is known, and later reconciles against the real CI result.
-  Current verdict: **EXTEND SHADOW VALIDATION** - the pipeline is real and defect-free, but hasn't yet
-  accumulated enough real observation volume to support a go/no-go call. See
+  Current verdict: **EXTEND SHADOW VALIDATION** - the pipeline is real and defect-free, and since
+  2026-08-21 it runs **autonomously**: a Cron Trigger polls enrolled repositories every 10 minutes
+  (`src/research/cloudflare/shadow-cron.ts`), and the registered **DiffCI Shadow GitHub App**
+  (read-only; see [`docs/github-app-registration.md`](docs/github-app-registration.md)) delivers
+  push/workflow events to `/v1/shadow/webhook` for instant predictions and exactly-on-time
+  reconciliation - this repository shadow-observes itself through that App. See
   [`docs/research/2026-08-21-stage2-final-report.md`](docs/research/2026-08-21-stage2-final-report.md)
-  for the full picture, including what's honestly still missing (a registered GitHub App, real
-  design-partner repositories, autonomous polling).
+  for the full picture; what's honestly still missing is real observation volume, working GitHub
+  Actions on our own repositories (account billing), and real design-partner repositories.
 
 Every dated report behind these stages lives in [`docs/research/`](docs/research/) - start with
 `2026-08-21-stage2-architecture.md` for the fullest current picture of what's built vs not, or the
