@@ -50,6 +50,7 @@ function baseline(overrides: Partial<BaselineEvidence>): BaselineEvidence {
     jobs: [],
     failedJobNames: [],
     failedTaskIds: [],
+    apiCallsMade: 1,
     ...overrides,
   };
 }
@@ -244,9 +245,12 @@ describe("historical CI evidence - collectHistoricalEvidenceForDelta", () => {
             { workflowPath: "a.yml", workflowRunId: 1, runNumber: 1, status: "completed", conclusion: "success", htmlUrl: "" },
             { workflowPath: "b.yml", workflowRunId: 2, runNumber: 1, status: "completed", conclusion: "success", htmlUrl: "" },
           ],
+          // 1 runs-list call + 2 jobs calls (one per observed run) = 3 - the real count a fetchBaselineEvidence
+          // call would report for this shape (Task 2, 2026-08-21: charged verbatim, not recomputed - see
+          // evidence-collector.ts's chargeBudget call).
+          apiCallsMade: 3,
         }),
     });
-    // 1 runs-list call + 2 jobs calls (one per observed run) = 3.
     assert.equal(remainingBudget(budget, 0), 47);
   });
 });

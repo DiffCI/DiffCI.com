@@ -11,7 +11,7 @@ import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { makeD1ShadowStore, type D1Binding, type RecordPredictionInput } from "../../../src/research/cloudflare/shadow-store.js";
+import { makeD1ShadowStore, type D1Binding, type RecordGroundTruthInput, type RecordPredictionInput } from "../../../src/research/cloudflare/shadow-store.js";
 
 const SCHEMA_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../src/research/cloudflare");
 
@@ -24,6 +24,7 @@ function freshDb(): DatabaseSync {
     "schema-migration-2026-08-21-shadow-cron.sql",
     "schema-migration-2026-08-21-shadow-webhook.sql",
     "schema-migration-2026-08-21-shadow-source-integrity.sql",
+    "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql",
   ]) {
     db.exec(readFileSync(join(SCHEMA_DIR, file), "utf8"));
   }
@@ -194,5 +195,207 @@ describe("shadow-store: source_integrity_status on shadow_cron_runs", () => {
     const runs = (await store.listRecentCronRuns(10)) as Array<{ source_integrity_status: string | null }>;
     assert.equal(runs.length, 1);
     assert.equal(runs[0]!.source_integrity_status, null);
+  });
+});
+
+// --- Task 2 (2026-08-21) additions: reconciliation observability + idempotency + discriminative-scoped safety ---
+
+function groundTruth(overrides: Partial<RecordGroundTruthInput> & { logicalEventKey: string; logicalDeltaKey: string }): RecordGroundTruthInput {
+  return {
+    repository: "acme/web",
+    headSha: "head",
+    workflowRunAttempt: 1,
+    eventType: "poll-detected",
+    groundTruthStatus: "COMPLETE",
+    relevantFailuresObserved: 0,
+    relevantFailuresEvaluable: 0,
+    failuresPreservedByDiffci: 0,
+    failuresPreservedByPath: 0,
+    predictionPrecededGroundTruth: true,
+    groundTruthFetchedAt: "2026-08-21T12:00:00.000Z",
+    ...overrides,
+  };
+}
+
+describe("shadow-store: recordReconcileAttempt + getReconcileDiagnostics", () => {
+  it("recordReconcileAttempt persists the reason and timestamp of the most recent STILL_PENDING attempt", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "p1" }), "r2/p1");
+    await store.recordReconcileAttempt("p1", "ci_queued", "2026-08-21T12:30:00.000Z");
+
+    const row = db.prepare(`SELECT last_reconcile_reason, last_reconcile_attempted_at FROM shadow_predictions WHERE logical_delta_key = ?`).get("p1") as {
+      last_reconcile_reason: string; last_reconcile_attempted_at: string;
+    };
+    assert.equal(row.last_reconcile_reason, "ci_queued");
+    assert.equal(row.last_reconcile_attempted_at, "2026-08-21T12:30:00.000Z");
+  });
+
+  it("a later attempt's reason overwrites an earlier one - only the most recent classification is kept", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "p1" }), "r2/p1");
+    await store.recordReconcileAttempt("p1", "no_matching_workflow", "2026-08-21T12:00:00.000Z");
+    await store.recordReconcileAttempt("p1", "ci_in_progress", "2026-08-21T12:10:00.000Z");
+
+    const row = db.prepare(`SELECT last_reconcile_reason FROM shadow_predictions WHERE logical_delta_key = ?`).get("p1") as { last_reconcile_reason: string };
+    assert.equal(row.last_reconcile_reason, "ci_in_progress");
+  });
+
+  it("getReconcileDiagnostics reports total/reconciled/pending and groups pending predictions by reason", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "reconciled-1" }), "r2/reconciled-1");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge1", logicalDeltaKey: "reconciled-1" }), "r2/ge1");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "pending-queued" }), "r2/pending-queued");
+    await store.recordReconcileAttempt("pending-queued", "ci_queued", "2026-08-21T12:00:00.000Z");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "pending-fresh" }), "r2/pending-fresh"); // never attempted
+
+    const diagnostics = await store.getReconcileDiagnostics({ nowIso: "2026-08-21T12:00:00.000Z", stuckThresholdMs: 4 * 60 * 60 * 1000, stuckLimit: 20 });
+    assert.equal(diagnostics.total, 3);
+    assert.equal(diagnostics.reconciled, 1);
+    assert.equal(diagnostics.pending, 2);
+    assert.equal(diagnostics.terminalUnevaluable, 0);
+    const byReason = Object.fromEntries(diagnostics.pendingReasons.map((r) => [r.reason, r.count]));
+    assert.equal(byReason.ci_queued, 1);
+    assert.equal(byReason.not_yet_attempted, 1, "a prediction with no reconcile attempt yet must be its own honest bucket, not lumped into a GitHub-derived reason");
+  });
+
+  it("computes oldest pending age from prediction_created_at, and flags predictions past the stuck threshold", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "old", predictionCreatedAt: "2026-08-21T02:00:00.000Z" }), "r2/old");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "recent", predictionCreatedAt: "2026-08-21T11:30:00.000Z" }), "r2/recent");
+
+    const now = "2026-08-21T12:00:00.000Z"; // old = 10h ago, recent = 30m ago
+    const diagnostics = await store.getReconcileDiagnostics({ nowIso: now, stuckThresholdMs: 4 * 60 * 60 * 1000, stuckLimit: 20 });
+
+    assert.equal(diagnostics.oldestPendingAgeMs, 10 * 60 * 60 * 1000);
+    assert.equal(diagnostics.stuck.length, 1, "only the 10h-old prediction exceeds the 4h stuck threshold");
+    assert.equal(diagnostics.stuck[0]!.logicalDeltaKey, "old");
+    assert.equal(diagnostics.stuck[0]!.ageMs, 10 * 60 * 60 * 1000);
+  });
+
+  it("never labels a prediction stuck merely for being old if it has already been reconciled", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "very-old", predictionCreatedAt: "2026-08-01T00:00:00.000Z" }), "r2/very-old");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge-old", logicalDeltaKey: "very-old" }), "r2/ge-old");
+
+    const diagnostics = await store.getReconcileDiagnostics({ nowIso: "2026-08-21T12:00:00.000Z", stuckThresholdMs: 4 * 60 * 60 * 1000, stuckLimit: 20 });
+    assert.equal(diagnostics.stuck.length, 0);
+    assert.equal(diagnostics.pending, 0);
+  });
+
+  it("scopes correctly to one repository when `repository` is supplied", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.ensureRepository("acme/api", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "web-1", repository: "acme/web" }), "r2/web-1");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "api-1", repository: "acme/api" }), "r2/api-1");
+
+    const webOnly = await store.getReconcileDiagnostics({ repository: "acme/web", nowIso: "2026-08-21T12:00:00.000Z", stuckThresholdMs: 1000, stuckLimit: 20 });
+    assert.equal(webOnly.total, 1);
+    const all = await store.getReconcileDiagnostics({ nowIso: "2026-08-21T12:00:00.000Z", stuckThresholdMs: 1000, stuckLimit: 20 });
+    assert.equal(all.total, 2);
+  });
+});
+
+describe("shadow-store: ground-truth idempotency (duplicate webhook / cron-vs-webhook race)", () => {
+  it("recordGroundTruth is idempotent on logicalEventKey - a duplicate insert (simulating a retried webhook delivery) does not create a second row or double-count metrics", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "p1", opportunityCategory: "DISCRIMINATIVE_OPPORTUNITY" }), "r2/p1");
+
+    const first = await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge1", logicalDeltaKey: "p1", relevantFailuresObserved: 3, relevantFailuresEvaluable: 3, failuresPreservedByDiffci: 2 }), "r2/ge1");
+    const second = await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge1", logicalDeltaKey: "p1", relevantFailuresObserved: 999, relevantFailuresEvaluable: 999, failuresPreservedByDiffci: 999 }), "r2/ge1-retry");
+    assert.equal(first.inserted, true);
+    assert.equal(second.inserted, false, "the SAME logicalEventKey must never insert a second row - GitHub webhooks are not exactly-once");
+
+    const summary = await store.getRepositorySummary("acme/web");
+    assert.equal(summary?.groundTruthRecorded, 1, "exactly one ground-truth row, not two");
+    assert.equal(summary?.relevantFailuresObserved, 3, "the retry's (bogus) numbers must never be double-counted or overwrite the original");
+  });
+
+  it("concurrent inserts racing on the same logicalEventKey (cron and webhook reconciling the same real outcome) still converge to exactly one row", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "p1" }), "r2/p1");
+
+    const results = await Promise.all([
+      store.recordGroundTruth(groundTruth({ logicalEventKey: "ge-race", logicalDeltaKey: "p1" }), "r2/ge-race-a"),
+      store.recordGroundTruth(groundTruth({ logicalEventKey: "ge-race", logicalDeltaKey: "p1" }), "r2/ge-race-b"),
+    ]);
+    assert.equal(results.filter((r) => r.inserted).length, 1, "exactly one of the two racing writes must win");
+
+    const summary = await store.getRepositorySummary("acme/web");
+    assert.equal(summary?.groundTruthRecorded, 1);
+  });
+
+  it("a genuinely different workflow attempt for the SAME commit (a real retry, different logicalEventKey) is intentionally NOT deduped - both attempts' outcomes stay visible", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "p1" }), "r2/p1");
+
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "acme/web:head:100:1", logicalDeltaKey: "p1", workflowRunId: "100", workflowConclusion: "failure" }), "r2/attempt1");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "acme/web:head:100:2", logicalDeltaKey: "p1", workflowRunId: "100", workflowConclusion: "success" }), "r2/attempt2");
+
+    const summary = await store.getRepositorySummary("acme/web");
+    assert.equal(summary?.groundTruthRecorded, 2, "a flaky retry's different real outcome must remain visible, not collapsed into one row");
+  });
+});
+
+describe("shadow-store: discriminative-scoped safety metrics (§8 fix - never let FULL/fallback runs inflate apparent selective safety)", () => {
+  it("getRepositorySummary's discriminative* fields only reflect DISCRIMINATIVE_OPPORTUNITY predictions, not MANDATORY_FALLBACK ones", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+
+    // A MANDATORY_FALLBACK prediction ran the FULL suite - it trivially "preserves" every real failure,
+    // which must NOT be counted as evidence DiffCI's selective plan is safe.
+    await store.recordPrediction(prediction({ logicalDeltaKey: "fallback-1", opportunityCategory: "MANDATORY_FALLBACK", planMode: "FULL" }), "r2/fallback-1");
+    await store.recordGroundTruth(
+      groundTruth({ logicalEventKey: "ge-fallback", logicalDeltaKey: "fallback-1", relevantFailuresObserved: 5, relevantFailuresEvaluable: 5, failuresPreservedByDiffci: 5, failuresPreservedByPath: 5 }),
+      "r2/ge-fallback",
+    );
+
+    // A real DISCRIMINATIVE_OPPORTUNITY prediction where DiffCI's selective plan actually missed one.
+    await store.recordPrediction(prediction({ logicalDeltaKey: "discriminative-1", opportunityCategory: "DISCRIMINATIVE_OPPORTUNITY" }), "r2/discriminative-1");
+    await store.recordGroundTruth(
+      groundTruth({ logicalEventKey: "ge-discriminative", logicalDeltaKey: "discriminative-1", relevantFailuresObserved: 1, relevantFailuresEvaluable: 1, failuresPreservedByDiffci: 0, failuresPreservedByPath: 1 }),
+      "r2/ge-discriminative",
+    );
+
+    const summary = await store.getRepositorySummary("acme/web");
+    // Unfiltered (existing) fields blend both - documented as such, not what a safety claim should use.
+    assert.equal(summary?.relevantFailuresObserved, 6);
+    assert.equal(summary?.failuresPreservedByDiffci, 5);
+    // Discriminative-scoped fields must reflect ONLY the real test of selective safety.
+    assert.equal(summary?.discriminativeRelevantFailuresObserved, 1);
+    assert.equal(summary?.discriminativeRelevantFailuresEvaluable, 1);
+    assert.equal(summary?.discriminativeFailuresPreservedByDiffci, 0, "DiffCI's selective plan genuinely missed this - the fallback case's trivial 5/5 must not hide it");
+    assert.equal(summary?.discriminativeFailuresPreservedByPath, 1);
+  });
+
+  it("a BASELINE_ALREADY_OPTIMAL prediction is also excluded from the discriminative-scoped fields", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "optimal-1", opportunityCategory: "BASELINE_ALREADY_OPTIMAL" }), "r2/optimal-1");
+    await store.recordGroundTruth(
+      groundTruth({ logicalEventKey: "ge-optimal", logicalDeltaKey: "optimal-1", relevantFailuresObserved: 2, relevantFailuresEvaluable: 2, failuresPreservedByDiffci: 2, failuresPreservedByPath: 2 }),
+      "r2/ge-optimal",
+    );
+    const summary = await store.getRepositorySummary("acme/web");
+    assert.equal(summary?.discriminativeRelevantFailuresObserved, 0);
   });
 });

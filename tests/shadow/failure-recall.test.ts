@@ -44,6 +44,7 @@ function makeBaseline(): BaselineEvidence {
     ],
     failedJobNames: ["check"],
     failedTaskIds: [],
+    apiCallsMade: 2,
   };
 }
 

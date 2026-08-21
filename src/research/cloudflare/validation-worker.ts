@@ -809,6 +809,13 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
       );
       if (result.status === "STILL_PENDING") {
         stillPending++;
+        // Best-effort telemetry for GET /v1/shadow/reconcile-diagnostics - never let a write failure here
+        // fail the reconcile attempt itself (same posture as recordCronRun's telemetry handling).
+        try {
+          await store.recordReconcileAttempt(row.logicalDeltaKey, result.pendingReason, result.groundTruthFetchedAt);
+        } catch (telemetryError: unknown) {
+          console.log(`executeShadowReconcile: failed to record reconcile-attempt telemetry for ${row.logicalDeltaKey}: ${telemetryError instanceof Error ? telemetryError.message : String(telemetryError)}`);
+        }
         continue;
       }
       const logicalEventKey = computeLogicalEventKey({ repository, headSha: row.headSha, workflowRunId: result.workflowRunId });
@@ -1191,6 +1198,22 @@ async function shadowCronStatus(request: Request, env: ValidationEnv): Promise<R
     pollableRepositories: repositories,
     recentRuns: runs,
   });
+}
+
+const DEFAULT_STUCK_THRESHOLD_MS = 4 * 60 * 60 * 1000; // 4h - a diagnostic label only, never auto-terminal (Task 2 §11)
+
+/** GET /v1/shadow/reconcile-diagnostics - Task 2 (2026-08-21) reconciliation observability (§10/§11):
+ * total/reconciled/pending counts, WHY each pending prediction is pending (grouped), the oldest pending
+ * prediction's age, and a stuck list (pending longer than the threshold - a read-time label, never a
+ * stored state transition; see shadow-store.ts's ReconcileDiagnostics doc comment). */
+async function shadowReconcileDiagnostics(request: Request, env: ValidationEnv): Promise<Response> {
+  const url = new URL(request.url);
+  const repository = url.searchParams.get("repository") ?? undefined;
+  const stuckThresholdMs = Math.max(60_000, Number.parseInt(url.searchParams.get("stuckThresholdMs") ?? "", 10) || DEFAULT_STUCK_THRESHOLD_MS);
+  const stuckLimit = Math.max(1, Math.min(100, Number.parseInt(url.searchParams.get("stuckLimit") ?? "20", 10) || 20));
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+  const diagnostics = await store.getReconcileDiagnostics({ repository, nowIso: new Date().toISOString(), stuckThresholdMs, stuckLimit });
+  return json({ ok: true, repository: repository ?? "all", stuckThresholdMs, ...diagnostics });
 }
 
 /** Wires the real D1/R2 bindings to resumable-batch.ts's abstract ResumabilityStore/PersistenceStore
@@ -1856,6 +1879,12 @@ export default {
         return json({ ok: false, error: "unauthorized" }, 401);
       }
       return shadowAppInfo(env, url.searchParams.get("delivery") ?? undefined);
+    }
+    if (request.method === "GET" && url.pathname === "/v1/shadow/reconcile-diagnostics") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return shadowReconcileDiagnostics(request, env);
     }
     if (request.method === "GET" && url.pathname === "/v1/shadow/debug-baseline") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {

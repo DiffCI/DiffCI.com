@@ -166,17 +166,34 @@ export interface BaselineJobInfo {
   steps?: BaselineStepInfo[];
 }
 
+/** Task 2 (2026-08-21 reconciliation observability): a closed vocabulary for WHY a prediction has no
+ * completed ground truth yet, distinct from completenessNotes' free text - lets an operator-facing
+ * diagnostic group pending predictions meaningfully (GET /v1/shadow/reconcile-diagnostics) instead of
+ * every case reading as an opaque "no matching historical CI run found". Only set when status is
+ * UNAVAILABLE and no fetch/rate-limit error occurred first (those keep using fetchError/"github_rate_limit"
+ * - this vocabulary is specifically about "we successfully asked GitHub, and here's what we learned"). */
+export type ReconcilePendingReason =
+  | "no_matching_workflow" // no run (queued, in-flight, or completed) exists yet for this SHA at all
+  | "ci_queued" // a run exists but has not started
+  | "ci_in_progress"; // a run exists and is currently running
+
 export interface BaselineEvidence {
   repository: string;
   headSha: string;
   status: "COMPLETE" | "PARTIAL" | "UNAVAILABLE";
   completenessNotes?: string;
+  /** Only meaningful when status is UNAVAILABLE with no fetchError - see ReconcilePendingReason. */
+  pendingReason?: ReconcilePendingReason;
   fullRunsObserved: BaselineRunInfo[];
   jobs: BaselineJobInfo[];
   failedJobNames: string[];
   baselineDurationMs?: number;
   failedTaskIds: string[];
   fetchError?: string;
+  /** Total real GitHub REST calls this fetch made (runs list + per-run jobs + the optional pending-
+   * reason classification call) - the rate-budget caller (evidence-collector.ts) charges exactly this,
+   * not a recomputed estimate, so the pending-reason classification call is never charged for free. */
+  apiCallsMade: number;
 }
 
 export interface FailureRecallRecord {

@@ -30,6 +30,7 @@ function baseline(overrides: Partial<BaselineEvidence>): BaselineEvidence {
     jobs: [],
     failedJobNames: [],
     failedTaskIds: [],
+    apiCallsMade: 1,
     ...overrides,
   };
 }
@@ -128,5 +129,94 @@ describe("reconcilePrediction", () => {
     assert.equal(result.relevantFailuresEvaluable, 0, "excluded from the real-failure denominator once flagged flaky");
     assert.deepEqual(result.likelyFlakyExcludedTargets, ["test:e2e"]);
     assert.deepEqual(result.diffciHypotheticalUnsafeMisses, [], "a flaky failure must not count as a genuine unsafe miss");
+  });
+
+  // --- Task 2 (2026-08-21) additions: lifecycle/reason classification, identity scoping, idempotency-adjacent behavior ---
+
+  it("CI queued: STILL_PENDING with pendingReason ci_queued, not treated as an error or a miss", async () => {
+    const result = await reconcilePrediction(makePrediction(), {
+      budget: createRateBudget(50, 0),
+      fetchFn: async () => baseline({ status: "UNAVAILABLE", pendingReason: "ci_queued", completenessNotes: "a non-shadow CI run for this commit is queued but has not started" }),
+    });
+    assert.equal(result.status, "STILL_PENDING");
+    assert.equal(result.pendingReason, "ci_queued");
+  });
+
+  it("CI in progress: STILL_PENDING with pendingReason ci_in_progress", async () => {
+    const result = await reconcilePrediction(makePrediction(), {
+      budget: createRateBudget(50, 0),
+      fetchFn: async () => baseline({ status: "UNAVAILABLE", pendingReason: "ci_in_progress" }),
+    });
+    assert.equal(result.status, "STILL_PENDING");
+    assert.equal(result.pendingReason, "ci_in_progress");
+  });
+
+  it("GitHub API temporary failure remains retryable: STILL_PENDING with pendingReason fetch_error, never thrown", async () => {
+    const result = await reconcilePrediction(makePrediction(), {
+      budget: createRateBudget(50, 0),
+      fetchFn: async () => {
+        throw new Error("GitHub API 500 https://api.github.com/...: internal error");
+      },
+    });
+    assert.equal(result.status, "STILL_PENDING");
+    assert.equal(result.pendingReason, "fetch_error");
+    assert.match(result.reason ?? "", /fetch_error/);
+  });
+
+  it("rate-limited: STILL_PENDING with pendingReason github_rate_limit, no fetch attempted", async () => {
+    const budget = createRateBudget(1, 0); // below MIN_CALL_RESERVE
+    let fetchCalled = false;
+    const result = await reconcilePrediction(makePrediction(), {
+      budget,
+      fetchFn: async () => {
+        fetchCalled = true;
+        return baseline({ status: "COMPLETE" });
+      },
+    });
+    assert.equal(result.status, "STILL_PENDING");
+    assert.equal(result.pendingReason, "github_rate_limit");
+    assert.equal(fetchCalled, false, "an exhausted budget must never spend a real GitHub call");
+  });
+
+  it("wrong SHA cannot reconcile: fetchFn only ever receives the prediction's own headSha, never a different one", async () => {
+    let seenHeadSha: string | undefined;
+    await reconcilePrediction(makePrediction({ headSha: "the-real-sha" }), {
+      budget: createRateBudget(50, 0),
+      fetchFn: async (opts) => {
+        seenHeadSha = opts.headSha;
+        return baseline({ status: "UNAVAILABLE", headSha: opts.headSha });
+      },
+    });
+    assert.equal(seenHeadSha, "the-real-sha");
+  });
+
+  it("cancelled workflow: a cancelled non-shadow run with no failed jobs reconciles as COMPLETE with zero relevant failures, not as a miss", async () => {
+    const result = await reconcilePrediction(makePrediction(), {
+      budget: createRateBudget(50, 0),
+      checkFlakiness: false,
+      fetchFn: async () =>
+        baseline({
+          status: "COMPLETE",
+          fullRunsObserved: [{ workflowPath: ".github/workflows/ci.yml", workflowRunId: 99, runNumber: 1, status: "completed", conclusion: "cancelled", htmlUrl: "" }],
+          jobs: [{ jobId: 1, jobName: "test:unit", status: "completed", conclusion: "cancelled", completedAt: "2026-08-21T10:05:00.000Z" }],
+        }),
+    });
+    assert.equal(result.status, "RECONCILED");
+    assert.equal(result.workflowConclusion, undefined, "cancelled is neither success nor failure - must not be reported as either");
+    assert.equal(result.relevantFailuresObserved, 0, "a cancelled (not failed) job is not a failure");
+  });
+
+  it("a duplicate reconcile attempt for the same prediction (simulating cron+webhook racing) is a pure function - identical input yields identical output, safe for the caller's idempotency key (logicalEventKey) to dedupe", async () => {
+    const fetchFn = async () =>
+      baseline({
+        status: "COMPLETE",
+        fullRunsObserved: [{ workflowPath: ".github/workflows/ci.yml", workflowRunId: 77, runNumber: 1, status: "completed", conclusion: "success", htmlUrl: "" }],
+        jobs: [{ jobId: 1, jobName: "test:unit", status: "completed", conclusion: "success", completedAt: "2026-08-21T10:05:00.000Z" }],
+      });
+    const prediction = makePrediction();
+    const first = await reconcilePrediction(prediction, { budget: createRateBudget(50, 0), checkFlakiness: false, fetchFn });
+    const second = await reconcilePrediction(prediction, { budget: createRateBudget(50, 0), checkFlakiness: false, fetchFn });
+    assert.equal(first.workflowRunId, second.workflowRunId, "both attempts must derive the SAME workflowRunId from the same real data - this is what lets computeLogicalEventKey dedupe them at the store layer");
+    assert.equal(first.groundTruthStatus, second.groundTruthStatus);
   });
 });

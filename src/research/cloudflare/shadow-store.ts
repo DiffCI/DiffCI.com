@@ -100,6 +100,18 @@ export interface RepositorySummaryRow {
    * prediction predates the source-integrity fix (or came from a caller that didn't supply one), which
    * is reported as absent, never guessed at. */
   latestEngineSourceSha?: string;
+  /** Task 2 (2026-08-21) §8 fix: the relevantFailures.../failuresPreserved... fields above are summed
+   * across EVERY reconciled prediction regardless of opportunity_category, which trivially inflates
+   * apparent safety -
+   * a MANDATORY_FALLBACK prediction ran the FULL suite, so it preserves 100% of failures by construction,
+   * not because selective skipping worked. These four fields are the SAME metrics scoped to
+   * opportunity_category = 'DISCRIMINATIVE_OPPORTUNITY' only - the only category where DiffCI's selective
+   * plan actually excluded anything a real failure could have hidden behind, and therefore the only
+   * category where "did DiffCI preserve real failures" is a meaningful safety claim. */
+  discriminativeRelevantFailuresObserved: number;
+  discriminativeRelevantFailuresEvaluable: number;
+  discriminativeFailuresPreservedByDiffci: number;
+  discriminativeFailuresPreservedByPath: number;
 }
 
 export interface PollableRepositoryRow {
@@ -108,6 +120,37 @@ export interface PollableRepositoryRow {
   language: string;
   lastPolledSha?: string;
   lastPolledAt?: string;
+}
+
+export interface PendingReasonBreakdown {
+  reason: string; // "not_yet_attempted" for a prediction with no reconcile attempt recorded yet, else a pendingReason value
+  count: number;
+}
+
+export interface StuckPendingPrediction {
+  logicalDeltaKey: string;
+  repository: string;
+  headSha: string;
+  predictionCreatedAt: string;
+  ageMs: number;
+  lastReconcileAttemptedAt?: string;
+  lastReconcileReason?: string;
+}
+
+export interface ReconcileDiagnostics {
+  total: number;
+  reconciled: number;
+  pending: number;
+  /** Always 0 today - nothing in this codebase ever auto-terminalizes a pending prediction (Task 2 §11:
+   * age alone must never convert a normal delay into a failure). Reported explicitly, not omitted, so a
+   * future terminal-state feature has an obvious existing field to populate rather than inventing a new
+   * response shape. */
+  terminalUnevaluable: number;
+  pendingReasons: PendingReasonBreakdown[];
+  oldestPendingAgeMs?: number;
+  /** Pending predictions older than the stuck threshold - a diagnostic label computed at read time, never
+   * persisted as a state transition (see terminalUnevaluable's comment). */
+  stuck: StuckPendingPrediction[];
 }
 
 export interface CronRunInput {
@@ -150,6 +193,15 @@ export interface ShadowStore {
   /** Predictions with no corresponding shadow_ground_truth row yet, oldest first, capped at `limit`. */
   findPendingPredictions(repository: string, limit: number): Promise<PendingPredictionRow[]>;
   getRepositorySummary(repository: string): Promise<RepositorySummaryRow | undefined>;
+  /** Called after EVERY reconciliation attempt that returns STILL_PENDING (never for RECONCILED - see
+   * the migration file's comment on why that's fine). Never throws in a way that should fail the
+   * reconcile attempt itself - callers should treat this as best-effort telemetry, same posture as
+   * recordCronRun's telemetry-write-failure handling. */
+  recordReconcileAttempt(logicalDeltaKey: string, reason: string | undefined, attemptedAt: string): Promise<void>;
+  /** Task 2 (2026-08-21) reconciliation observability - GET /v1/shadow/reconcile-diagnostics. `repository`
+   * omitted means "across every enrolled repository". `nowIso`/`stuckThresholdMs` are caller-supplied
+   * (not `new Date()` internally) so this stays testable against a real SQLite fixture with fixed clocks. */
+  getReconcileDiagnostics(options: { repository?: string; nowIso: string; stuckThresholdMs: number; stuckLimit: number }): Promise<ReconcileDiagnostics>;
 }
 
 export function makeD1ShadowStore(db: D1Binding): ShadowStore {
@@ -364,6 +416,26 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .bind(repository)
         .first<{ engine_source_sha: string | null }>();
 
+      // §8 fix: same failure-recall aggregate as groundTruthCounts above, but joined to shadow_predictions
+      // and filtered to opportunity_category = 'DISCRIMINATIVE_OPPORTUNITY' - see RepositorySummaryRow's
+      // doc comment on why the unfiltered numbers alone would overstate DiffCI's selective safety.
+      const discriminativeCounts = await db
+        .prepare(
+          `SELECT
+             SUM(g.relevant_failures_observed) AS relevant_failures_observed,
+             SUM(g.relevant_failures_evaluable) AS relevant_failures_evaluable,
+             SUM(g.failures_preserved_by_diffci) AS failures_preserved_by_diffci,
+             SUM(g.failures_preserved_by_path) AS failures_preserved_by_path
+           FROM shadow_ground_truth g
+           JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
+           WHERE g.repository = ? AND p.opportunity_category = 'DISCRIMINATIVE_OPPORTUNITY'`,
+        )
+        .bind(repository)
+        .first<{
+          relevant_failures_observed: number | null; relevant_failures_evaluable: number | null;
+          failures_preserved_by_diffci: number | null; failures_preserved_by_path: number | null;
+        }>();
+
       return {
         repository,
         state: repoRow.state,
@@ -378,6 +450,85 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         mandatoryFallbacks: predictionCounts?.mandatory ?? 0,
         baselineAlreadyOptimal: predictionCounts?.baseline_optimal ?? 0,
         latestEngineSourceSha: latest?.engine_source_sha ?? undefined,
+        discriminativeRelevantFailuresObserved: discriminativeCounts?.relevant_failures_observed ?? 0,
+        discriminativeRelevantFailuresEvaluable: discriminativeCounts?.relevant_failures_evaluable ?? 0,
+        discriminativeFailuresPreservedByDiffci: discriminativeCounts?.failures_preserved_by_diffci ?? 0,
+        discriminativeFailuresPreservedByPath: discriminativeCounts?.failures_preserved_by_path ?? 0,
+      };
+    },
+
+    async recordReconcileAttempt(logicalDeltaKey, reason, attemptedAt) {
+      await db
+        .prepare(`UPDATE shadow_predictions SET last_reconcile_attempted_at = ?, last_reconcile_reason = ? WHERE logical_delta_key = ?`)
+        .bind(attemptedAt, reason ?? null, logicalDeltaKey)
+        .run();
+    },
+
+    async getReconcileDiagnostics({ repository, nowIso, stuckThresholdMs, stuckLimit }) {
+      const repoFilter = repository ? `AND p.repository = ?` : "";
+      const bindArgs = repository ? [repository] : [];
+
+      const totals = await db
+        .prepare(
+          `SELECT
+             COUNT(*) AS total,
+             SUM(CASE WHEN g.logical_delta_key IS NOT NULL THEN 1 ELSE 0 END) AS reconciled
+           FROM shadow_predictions p
+           LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
+           WHERE 1=1 ${repoFilter}`,
+        )
+        .bind(...bindArgs)
+        .first<{ total: number; reconciled: number | null }>();
+
+      const reasonRows = await db
+        .prepare(
+          `SELECT COALESCE(p.last_reconcile_reason, 'not_yet_attempted') AS reason, COUNT(*) AS count
+           FROM shadow_predictions p
+           LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
+           WHERE g.logical_delta_key IS NULL ${repoFilter}
+           GROUP BY reason
+           ORDER BY count DESC`,
+        )
+        .bind(...bindArgs)
+        .all<{ reason: string; count: number }>();
+
+      const pendingRows = await db
+        .prepare(
+          `SELECT p.logical_delta_key, p.repository, p.head_sha, p.prediction_created_at,
+                  p.last_reconcile_attempted_at, p.last_reconcile_reason
+           FROM shadow_predictions p
+           LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
+           WHERE g.logical_delta_key IS NULL ${repoFilter}
+           ORDER BY p.prediction_created_at ASC`,
+        )
+        .bind(...bindArgs)
+        .all<{
+          logical_delta_key: string; repository: string; head_sha: string; prediction_created_at: string;
+          last_reconcile_attempted_at: string | null; last_reconcile_reason: string | null;
+        }>();
+
+      const nowMs = Date.parse(nowIso);
+      const allPending = pendingRows.results.map((r) => ({
+        logicalDeltaKey: r.logical_delta_key,
+        repository: r.repository,
+        headSha: r.head_sha,
+        predictionCreatedAt: r.prediction_created_at,
+        ageMs: Math.max(0, nowMs - Date.parse(r.prediction_created_at)),
+        lastReconcileAttemptedAt: r.last_reconcile_attempted_at ?? undefined,
+        lastReconcileReason: r.last_reconcile_reason ?? undefined,
+      }));
+
+      return {
+        total: totals?.total ?? 0,
+        reconciled: totals?.reconciled ?? 0,
+        pending: allPending.length,
+        terminalUnevaluable: 0,
+        pendingReasons: reasonRows.results.map((r) => ({ reason: r.reason, count: r.count })),
+        oldestPendingAgeMs: allPending.length > 0 ? Math.max(...allPending.map((p) => p.ageMs)) : undefined,
+        stuck: allPending
+          .filter((p) => p.ageMs >= stuckThresholdMs)
+          .sort((a, b) => b.ageMs - a.ageMs)
+          .slice(0, stuckLimit),
       };
     },
   };

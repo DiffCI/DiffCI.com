@@ -44,6 +44,28 @@ function isCompleted(run: Record<string, unknown>): boolean {
   return typeof run.status === "string" && run.status === "completed";
 }
 
+/** One extra call, made ONLY when zero completed non-shadow runs were found - see the call site's
+ * comment. Never throws: a classification failure degrades to "no_matching_workflow" (the existing,
+ * pre-Task-2 behavior) rather than blocking reconciliation on a diagnostic-only lookup. */
+async function classifyPendingReason(
+  repository: string,
+  headSha: string,
+  token: string | undefined,
+  shadowWorkflowPath: string,
+): Promise<import("./types.js").ReconcilePendingReason> {
+  try {
+    // No status filter this time - deliberately wide, to see anything GitHub knows about for this SHA.
+    const data = (await githubFetch(`https://api.github.com/repos/${repository}/actions/runs?head_sha=${headSha}&per_page=10`, token)) as Record<string, unknown>;
+    const runs = Array.isArray(data.workflow_runs) ? (data.workflow_runs as Record<string, unknown>[]) : [];
+    const relevant = runs.filter((r) => typeof r.path === "string" && r.path !== shadowWorkflowPath);
+    if (relevant.some((r) => r.status === "in_progress")) return "ci_in_progress";
+    if (relevant.some((r) => r.status === "queued" || r.status === "requested" || r.status === "waiting" || r.status === "pending")) return "ci_queued";
+    return "no_matching_workflow";
+  } catch {
+    return "no_matching_workflow";
+  }
+}
+
 function parseSteps(steps: unknown): BaselineStepInfo[] | undefined {
   if (!Array.isArray(steps)) return undefined;
   return steps.map((s) => {
@@ -80,13 +102,16 @@ export async function fetchBaselineEvidence(options: FetchBaselineOptions): Prom
     jobs: [],
     failedJobNames: [],
     failedTaskIds: [],
+    apiCallsMade: 0,
   };
 
   const url = `https://api.github.com/repos/${repository}/actions/runs?head_sha=${headSha}&status=completed&per_page=30`;
   let runsList: unknown;
   try {
     runsList = await githubFetch(url, token);
+    base.apiCallsMade++;
   } catch (error: unknown) {
+    base.apiCallsMade++; // the attempt itself counts - see evidence-collector.ts's rate-pacing comment
     base.fetchError = error instanceof Error ? error.message : String(error);
     return base;
   }
@@ -118,7 +143,9 @@ export async function fetchBaselineEvidence(options: FetchBaselineOptions): Prom
     let jobsData: unknown;
     try {
       jobsData = await githubFetch(jobsUrl, token);
+      base.apiCallsMade++;
     } catch (error: unknown) {
+      base.apiCallsMade++; // the attempt itself counts
       notes.push(`failed to fetch jobs for run ${runId}: ${error instanceof Error ? error.message : String(error)}`);
       continue;
     }
@@ -138,7 +165,19 @@ export async function fetchBaselineEvidence(options: FetchBaselineOptions): Prom
 
   if (runInfos.length === 0) {
     base.status = "UNAVAILABLE";
-    base.completenessNotes = "no completed non-shadow CI runs found for this commit";
+    // One extra, cheap call ONLY in this branch (never on the happy path) to distinguish "CI hasn't even
+    // started" from "CI is running right now" from "no workflow will ever run for this SHA" - the
+    // reconciliation-observability ask (Task 2 §6/§10): these are all "retryable, try again later" today
+    // (same STILL_PENDING outcome, same safety methodology, unchanged), but an operator staring at a
+    // pending-predictions dashboard needs to tell them apart. Never affects unsafeMissTargets/recall math.
+    base.pendingReason = await classifyPendingReason(repository, headSha, token, skippedPath);
+    base.apiCallsMade++;
+    base.completenessNotes =
+      base.pendingReason === "ci_in_progress"
+        ? "a non-shadow CI run for this commit is currently in progress"
+        : base.pendingReason === "ci_queued"
+          ? "a non-shadow CI run for this commit is queued but has not started"
+          : "no completed non-shadow CI runs found for this commit";
     return base;
   }
 

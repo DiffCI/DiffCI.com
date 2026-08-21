@@ -131,6 +131,10 @@ export interface CollectHistoricalEvidenceOptions {
 export interface HistoricalEvidenceResult {
   status: HistoricalEvidenceStatus;
   reason?: string;
+  /** Structured classification of `reason` when status is UNAVAILABLE with no fetch/rate-limit error -
+   * "github_rate_limit" or "fetch_error" cover the other two UNAVAILABLE causes (see `reason`'s prefix
+   * for those). Task 2 (2026-08-21) reconciliation-observability addition - see BaselineEvidence.pendingReason. */
+  pendingReason?: "no_matching_workflow" | "ci_queued" | "ci_in_progress" | "github_rate_limit" | "fetch_error";
   /** Every matched failed task id, unfiltered - kept as the raw/complete record. */
   failedTargets: string[];
   /** Subset of failedTargets that are (a) test-category tasks and (b) SKIP_CANDIDATE in DiffCI's plan -
@@ -149,15 +153,15 @@ export interface HistoricalEvidenceResult {
   likelyFlakyExcludedTargets: string[];
 }
 
-function unavailable(reason: string): HistoricalEvidenceResult {
-  return { status: "UNAVAILABLE", reason, failedTargets: [], unsafeMissTargets: [], pathUnsafeMissTargets: [], nonTestCategoryExcludedTargets: [], likelyFlakyExcludedTargets: [] };
+function unavailable(reason: string, pendingReason?: HistoricalEvidenceResult["pendingReason"]): HistoricalEvidenceResult {
+  return { status: "UNAVAILABLE", reason, pendingReason, failedTargets: [], unsafeMissTargets: [], pathUnsafeMissTargets: [], nonTestCategoryExcludedTargets: [], likelyFlakyExcludedTargets: [] };
 }
 
 export async function collectHistoricalEvidenceForDelta(options: CollectHistoricalEvidenceOptions): Promise<HistoricalEvidenceResult> {
   const { repository, headSha, token, plan, pathSelectedTaskIds, budget, fetchFn = fetchBaselineEvidence, checkFlakiness = false, flakinessCheckFn = checkJobFlakiness } = options;
 
   if (!hasBudgetFor(budget, MIN_CALL_RESERVE)) {
-    return unavailable("github_rate_limit");
+    return unavailable("github_rate_limit", "github_rate_limit");
   }
 
   let baseline: BaselineEvidence;
@@ -167,14 +171,19 @@ export async function collectHistoricalEvidenceForDelta(options: CollectHistoric
     // The attempt itself counts as at least one call against the budget even on failure, so a string
     // of failures can't bypass pacing.
     chargeBudget(budget, 1);
-    return unavailable(`fetch_error: ${error instanceof Error ? error.message : String(error)}`);
+    return unavailable(`fetch_error: ${error instanceof Error ? error.message : String(error)}`, "fetch_error");
   }
-  // fetchBaselineEvidence makes 1 call for the runs list plus 1 per non-shadow completed run whose
-  // jobs it fetched (fullRunsObserved is exactly that set) - charge the real count, not the reservation.
-  chargeBudget(budget, 1 + baseline.fullRunsObserved.length);
+  // Charge the real, exact call count fetchBaselineEvidence made (runs list + per-run jobs + the
+  // optional pending-reason classification call when no completed run was found) - not a recomputed
+  // estimate, which would under-charge by 1 whenever the pending-reason classification call fires
+  // (Task 2, 2026-08-21).
+  chargeBudget(budget, baseline.apiCallsMade);
 
   if (baseline.status === "UNAVAILABLE") {
-    return unavailable(baseline.fetchError ? `fetch_error: ${baseline.fetchError}` : (baseline.completenessNotes ?? "no matching historical CI run found"));
+    return unavailable(
+      baseline.fetchError ? `fetch_error: ${baseline.fetchError}` : (baseline.completenessNotes ?? "no matching historical CI run found"),
+      baseline.fetchError ? "fetch_error" : (baseline.pendingReason ?? "no_matching_workflow"),
+    );
   }
 
   const jobNameById = matchFailedTaskIdsWithJobNames(baseline, plan);

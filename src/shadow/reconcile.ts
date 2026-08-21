@@ -35,6 +35,9 @@ export interface PendingPrediction {
 export interface ReconcileResult {
   status: "STILL_PENDING" | "RECONCILED";
   reason?: string;
+  /** Structured classification of `reason` for STILL_PENDING - see HistoricalEvidenceResult.pendingReason.
+   * Undefined for RECONCILED (not meaningful there). */
+  pendingReason?: "no_matching_workflow" | "ci_queued" | "ci_in_progress" | "github_rate_limit" | "fetch_error";
   logicalDeltaKey: string;
   repository: string;
   headSha: string;
@@ -98,6 +101,7 @@ export async function reconcilePrediction(
     return {
       status: "STILL_PENDING",
       reason: evidence.reason,
+      pendingReason: evidence.pendingReason,
       logicalDeltaKey: prediction.logicalDeltaKey,
       repository: prediction.repository,
       headSha: prediction.headSha,
