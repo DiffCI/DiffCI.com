@@ -44,8 +44,18 @@ interface WorkflowJobEvent {
   installation?: { id: number };
 }
 
+// This project's tsconfig deliberately omits @cloudflare/workers-types (see github-app.ts's note on
+// Node/Workers portability), so the ambient DurableObjectNamespace/ExecutionContext names don't
+// exist here. Derive the namespace type from getContainer's own signature and declare the one
+// ExecutionContext method actually used - the same hand-rolled-interface pattern as
+// validation-worker.ts's D1Binding/R2Binding/ExecutionCtx.
+type RunnerNamespace = Parameters<typeof getContainer>[0];
+interface ExecutionCtx {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
 interface RunnerEnv {
-  GITHUB_RUNNER: DurableObjectNamespace<GithubRunner>;
+  GITHUB_RUNNER: RunnerNamespace;
   GITHUB_WEBHOOK_SECRET: string;
   GITHUB_APP_ID: string;
   GITHUB_APP_PRIVATE_KEY: string;
@@ -76,21 +86,27 @@ async function mintRegistrationToken(env: RunnerEnv, owner: string, repo: string
   return body.token;
 }
 
-async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: ExecutionContext): Promise<void> {
+async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: ExecutionCtx): Promise<void> {
+  console.log("github-runner: received workflow_job", event.action, event.workflow_job?.labels);
   if (event.action !== "queued") return; // ignore in_progress/completed - we only ever START runners
   const labels = event.workflow_job.labels ?? [];
-  if (!CLAIM_LABELS.every((l) => labels.includes(l))) return; // not addressed to this fleet
+  if (!CLAIM_LABELS.every((l) => labels.includes(l))) {
+    console.log("github-runner: labels didn't match, ignoring", labels);
+    return; // not addressed to this fleet
+  }
 
   const owner = event.repository.owner.login;
   const repo = event.repository.name;
   const installationId = event.installation?.id ?? (env.GITHUB_APP_INSTALLATION_ID ? Number(env.GITHUB_APP_INSTALLATION_ID) : undefined);
   if (!installationId) throw new Error("no installation id on webhook payload and no GITHUB_APP_INSTALLATION_ID fallback set");
+  console.log("github-runner: dispatching", owner, repo, "job", event.workflow_job.id, "installation", installationId);
 
   // Do the actual dispatch in the background: GitHub expects the webhook endpoint to respond within
   // ~10s, and minting a token + starting a container comfortably exceeds that under cold start.
   ctx.waitUntil(
     (async () => {
       const token = await mintRegistrationToken(env, owner, repo, installationId);
+      console.log("github-runner: minted registration token, starting container");
       // One container instance per job id - guarantees a fresh, uniquely-named instance even if two
       // jobs for the same repo queue at once, and makes retried webhook deliveries for the SAME job
       // id land on the SAME (already-started-or-starting) instance instead of double-spawning.
@@ -103,12 +119,13 @@ async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: E
           RUNNER_LABELS: CLAIM_LABELS.join(","),
         },
       });
-    })().catch((err) => console.log("github-runner: dispatch failed", err)),
+      console.log("github-runner: container.start() resolved for job", event.workflow_job.id);
+    })().catch((err) => console.log("github-runner: dispatch failed", String(err), err?.stack)),
   );
 }
 
 export default {
-  async fetch(request: Request, env: RunnerEnv, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: RunnerEnv, ctx: ExecutionCtx): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname !== "/webhook" || request.method !== "POST") return new Response("not found", { status: 404 });
 
