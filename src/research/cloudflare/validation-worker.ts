@@ -969,7 +969,11 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
               return;
             }
             const result = await executeShadowPoll(env, owner!, name!, language, source);
-            console.log(`shadow-webhook: push-triggered poll for ${repository}: ok=${result.ok} predictions=${result.predictionsRecorded}${result.error ? ` error=${result.error}` : ""}`);
+            // pollErrors carries per-commit analysis failures even when ok=true - a poll that saw new
+            // commits but predicted nothing is invisible without them (real debugging gap 2026-08-21).
+            console.log(
+              `shadow-webhook: push-triggered poll for ${repository}: ok=${result.ok} predictions=${result.predictionsRecorded}${result.error ? ` error=${result.error}` : ""}${result.pollErrors.length ? ` pollErrors=${JSON.stringify(result.pollErrors).slice(0, 2000)}` : ""}`,
+            );
           })().catch((error: unknown) => console.log(`shadow-webhook: push-triggered poll for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
         );
       },
