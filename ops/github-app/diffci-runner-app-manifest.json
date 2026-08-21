@@ -1,0 +1,16 @@
+{
+  "name": "DiffCI Runner Dispatcher",
+  "url": "https://diffci.com",
+  "description": "Mints ephemeral GitHub Actions self-hosted runner registrations on Cloudflare Containers so CI can run without consuming GitHub-hosted Actions minutes. Write-scoped and installed on own repos only - never install alongside or in place of the read-only DiffCI Shadow App.",
+  "public": false,
+  "default_permissions": {
+    "metadata": "read",
+    "administration": "write",
+    "actions": "write"
+  },
+  "default_events": ["workflow_job"],
+  "hook_attributes": {
+    "url": "https://diffci-github-runner.damp-waterfall-0cd8.workers.dev/webhook",
+    "active": true
+  }
+}

@@ -27,8 +27,16 @@ const CLAIM_LABELS = ["self-hosted", "cloudflare"];
 
 export class GithubRunner extends Container {
   // No defaultPort/requiredPorts: this container serves no HTTP traffic and is never fetch()'d, only
-  // start()'d - see the Dockerfile's ENTRYPOINT note. sleepAfter is irrelevant for the same reason
-  // (the process exits on its own once the one job finishes; there's no idle period to sleep after).
+  // start()'d - see the Dockerfile's ENTRYPOINT note.
+  //
+  // sleepAfter is NOT irrelevant despite that (an earlier comment here claimed it was): the
+  // @cloudflare/containers activity timeout counts fetches, and a runner container never receives
+  // any - so the default sleepAfter stops the container while it is innocently waiting for GitHub to
+  // assign it the queued job ("Activity expired, signalling container to stop"), which surfaces as
+  // "container exited normally, job stuck queued forever" (the sixth debugging trigger, 2026-08-21).
+  // 45 minutes comfortably exceeds any CI job this fleet runs; the process still exits on its own
+  // the moment its one job finishes, so the timeout only matters as a stuck-container backstop.
+  override sleepAfter: string | number = "45m";
   override onStop() {
     console.log("github-runner: container exited (job finished or runner failed to register)");
   }
@@ -65,6 +73,46 @@ interface RunnerEnv {
   // webhook payload's `installation.id` (present on every App-sourced delivery) makes that trivial;
   // this constant is only a fallback for manual/local testing without a live delivery.
   GITHUB_APP_INSTALLATION_ID?: string;
+  /** Bearer token for the /app-info diagnostic route only - webhook auth is GitHub's HMAC, never this. */
+  RUNNER_DISPATCH_TOKEN?: string;
+}
+
+/** Diagnostic twin of validation-worker.ts's shadowAppInfo, for THIS Worker's (write-scoped runner)
+ * App: what GitHub has on file (events/permissions) plus its recent webhook deliveries with our
+ * stored responses - added when workflow_job deliveries returned Ok yet no dispatch log ever
+ * appeared, which is indistinguishable from "wrong event subscription" and "signature mismatch"
+ * without GitHub's own delivery log. Delivery ids exceed Number.MAX_SAFE_INTEGER - extracted from
+ * the raw body text, never JSON.parsed (same bug as the shadow App debugging found). */
+async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null): Promise<Response> {
+  if (!env.GITHUB_APP_ID || !env.GITHUB_APP_PRIVATE_KEY) {
+    return Response.json({ ok: false, error: "app-credentials-not-configured" }, { status: 503 });
+  }
+  const jwt = await signAppJwt({ appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY });
+  const headers = { Authorization: `Bearer ${jwt}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-github-runner" };
+
+  if (deliveryId && /^\d{1,25}$/.test(deliveryId)) {
+    const detailRes = await fetch(`https://api.github.com/app/hook/deliveries/${deliveryId}`, { headers });
+    if (!detailRes.ok) return Response.json({ ok: false, error: `delivery detail failed (${detailRes.status})` }, { status: 502 });
+    const detail = (await detailRes.json()) as { event: string; action: string | null; status_code: number; response?: { payload?: unknown }; request?: { payload?: { workflow_job?: { labels?: string[] }; repository?: { full_name?: string } } } };
+    return Response.json({
+      ok: true, event: detail.event, action: detail.action, statusCode: detail.status_code,
+      ourResponse: detail.response?.payload, jobLabels: detail.request?.payload?.workflow_job?.labels,
+      repository: detail.request?.payload?.repository?.full_name,
+    });
+  }
+
+  const appRes = await fetch("https://api.github.com/app", { headers });
+  if (!appRes.ok) return Response.json({ ok: false, error: `GET /app failed (${appRes.status})` }, { status: 502 });
+  const app = (await appRes.json()) as { slug?: string; events?: string[]; permissions?: Record<string, string> };
+  const deliveriesRes = await fetch("https://api.github.com/app/hook/deliveries?per_page=15", { headers });
+  let deliveries: unknown = `deliveries fetch failed (${deliveriesRes.status})`;
+  if (deliveriesRes.ok) {
+    const raw = await deliveriesRes.text();
+    const exactIds = [...raw.matchAll(/"id":\s*(\d+)/g)].map((m) => m[1]!);
+    const parsed = JSON.parse(raw) as Array<{ event: string; action: string | null; status: string; status_code: number; delivered_at: string }>;
+    deliveries = parsed.map((d, i) => ({ id: exactIds[i], event: d.event, action: d.action, status: d.status, statusCode: d.status_code, deliveredAt: d.delivered_at }));
+  }
+  return Response.json({ ok: true, slug: app.slug, events: app.events, permissions: app.permissions, recentDeliveries: deliveries });
 }
 
 async function mintRegistrationToken(env: RunnerEnv, owner: string, repo: string, installationId: number): Promise<string> {
@@ -76,6 +124,9 @@ async function mintRegistrationToken(env: RunnerEnv, owner: string, repo: string
       Authorization: `token ${installationToken.token}`,
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2026-03-10",
+      // Required - see the matching comment on exchangeInstallationToken in github-app.ts. GitHub's
+      // API firewall 403s any request with no User-Agent, which the Workers fetch runtime never adds.
+      "User-Agent": "DiffCI-App",
     },
   });
   if (!res.ok) {
@@ -86,7 +137,7 @@ async function mintRegistrationToken(env: RunnerEnv, owner: string, repo: string
   return body.token;
 }
 
-async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: ExecutionCtx): Promise<void> {
+async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: ExecutionCtx, workerOrigin: string): Promise<void> {
   console.log("github-runner: received workflow_job", event.action, event.workflow_job?.labels);
   if (event.action !== "queued") return; // ignore in_progress/completed - we only ever START runners
   const labels = event.workflow_job.labels ?? [];
@@ -117,6 +168,13 @@ async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: E
           GH_REPO: repo,
           RUNNER_TOKEN: token,
           RUNNER_LABELS: CLAIM_LABELS.join(","),
+          // Container-stdout exfiltration (entrypoint.sh): the container POSTs its own config.sh/
+          // run.sh output back to this Worker's /container-log route, because wrangler tail can only
+          // ever show the Worker's console - the sixth debugging trigger failed invisibly inside the
+          // container for exactly this reason. Empty token disables it gracefully (entrypoint no-ops).
+          LOG_SINK_URL: `${workerOrigin}/container-log`,
+          LOG_SINK_TOKEN: env.RUNNER_DISPATCH_TOKEN ?? "",
+          LOG_TAG: `job-${event.workflow_job.id}`,
         },
       });
       console.log("github-runner: container.start() resolved for job", event.workflow_job.id);
@@ -127,20 +185,51 @@ async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: E
 export default {
   async fetch(request: Request, env: RunnerEnv, ctx: ExecutionCtx): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === "/app-info" && request.method === "GET") {
+      const auth = request.headers.get("Authorization") ?? "";
+      if (!env.RUNNER_DISPATCH_TOKEN || auth !== `Bearer ${env.RUNNER_DISPATCH_TOKEN}`) {
+        return new Response("unauthorized", { status: 401 });
+      }
+      return runnerAppInfo(env, url.searchParams.get("delivery"));
+    }
+    if (url.pathname === "/container-log" && request.method === "POST") {
+      // Receives entrypoint.sh's exfiltrated container stdout and re-emits it on the Worker console,
+      // where wrangler tail and the observability logs can actually see it. Auth: same bearer as
+      // /app-info - the token reaches the container as LOG_SINK_TOKEN via start() envVars only.
+      const auth = request.headers.get("Authorization") ?? "";
+      if (!env.RUNNER_DISPATCH_TOKEN || auth !== `Bearer ${env.RUNNER_DISPATCH_TOKEN}`) {
+        return new Response("unauthorized", { status: 401 });
+      }
+      const tag = (url.searchParams.get("tag") ?? "untagged").slice(0, 64);
+      const body = (await request.text()).slice(0, 100_000);
+      // Chunked so no single console.log line gets truncated by the log pipeline.
+      for (let i = 0; i < body.length; i += 3000) {
+        console.log(`container-log [${tag}] (${i / 3000 + 1}/${Math.ceil(body.length / 3000)}):\n${body.slice(i, i + 3000)}`);
+      }
+      return new Response("ok");
+    }
     if (url.pathname !== "/webhook" || request.method !== "POST") return new Response("not found", { status: 404 });
 
     // Signature must be verified against the RAW body - read as text first, never parse-then-reserialize.
     const rawBody = await request.text();
     const signature = request.headers.get("X-Hub-Signature-256");
+    const eventName0 = request.headers.get("X-GitHub-Event");
+    const hookId = request.headers.get("X-GitHub-Hook-ID");
+    const targetType = request.headers.get("X-GitHub-Hook-Installation-Target-Type");
     if (!(await verifyWebhookSignature(rawBody, signature, env.GITHUB_WEBHOOK_SECRET))) {
+      // Header metadata only, never the body - enough to identify WHICH webhook (hook id + target
+      // type: 'integration' = a GitHub App, 'repository' = a classic repo-level webhook) is posting
+      // with the wrong secret, without logging attacker-controllable payload content.
+      console.log(`github-runner: SIGNATURE REJECTED event=${eventName0} hookId=${hookId} targetType=${targetType} signaturePresent=${signature !== null}`);
       return new Response("invalid signature", { status: 401 });
     }
+    console.log(`github-runner: verified delivery event=${eventName0} hookId=${hookId} targetType=${targetType}`);
 
     const eventName = request.headers.get("X-GitHub-Event");
     if (eventName !== "workflow_job") return new Response("ignored", { status: 202 });
 
     const event = JSON.parse(rawBody) as WorkflowJobEvent;
-    await handleWorkflowJob(event, env, ctx);
+    await handleWorkflowJob(event, env, ctx, url.origin);
     return new Response("accepted", { status: 202 });
   },
 };

@@ -84,7 +84,16 @@ export interface InstallationToken {
 export async function exchangeInstallationToken(appJwt: string, installationId: string, fetchFn: typeof fetch = fetch): Promise<InstallationToken> {
   const res = await fetchFn(`https://api.github.com/app/installations/${installationId}/access_tokens`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${appJwt}`, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2026-03-10" },
+    // User-Agent is REQUIRED - GitHub's API firewall 403s any request missing one ("Request forbidden
+    // by administrative rules") with no other indication of what's wrong. The Workers fetch runtime,
+    // unlike a browser or Node's http libs, does not add one automatically - found live 2026-08-21 when
+    // the runner-dispatcher App's installation-token exchange failed 403 with this header absent.
+    headers: {
+      Authorization: `Bearer ${appJwt}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2026-03-10",
+      "User-Agent": "DiffCI-App",
+    },
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");

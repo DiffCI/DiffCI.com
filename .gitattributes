@@ -1,0 +1,5 @@
+# Shell scripts get baked into Linux container images (ops/github-runner/entrypoint.sh) - a CRLF
+# shebang line breaks with "exit code 127" inside the container, found live 2026-08-21 on a Windows
+# checkout. Force LF regardless of the checking-out OS's core.autocrlf setting.
+*.sh text eol=lf
+Dockerfile* text eol=lf
