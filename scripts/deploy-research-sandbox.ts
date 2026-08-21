@@ -9,20 +9,25 @@
  *   1. Refuse a dirty working tree - the packaged source must be exactly what its SHA claims.
  *   2. npm run typecheck
  *   3. npm run test
- *   4. Package the source tree + upload it to R2, tagged with the real HEAD SHA (scripts/shadow-source-lib.ts)
- *   5. Deploy the Worker with `wrangler deploy --var EXPECTED_SOURCE_SHA:<HEAD>` - this is what makes the
+ *   4. Deploy the Worker with `wrangler deploy --var EXPECTED_SOURCE_SHA:<HEAD>` - this is what makes the
  *      deployed Worker's own idea of "the expected source" equal the same commit, without ever writing a
  *      SHA into the checked-in wrangler.research-sandbox.jsonc (which would itself go stale the moment of
  *      the next commit - see that file's comment).
+ *   5. Package the source tree + upload it to R2, tagged with the real HEAD SHA (scripts/shadow-source-lib.ts)
  *   6. Verify: GET /v1/shadow/cron-status and require sourceIntegrity.status === "CURRENT" with both
  *      expectedSha and archiveSha equal to the HEAD SHA this run packaged. Anything else exits non-zero -
  *      a deploy that can't PROVE the invariant holds is a failed deploy, not a "probably fine" one.
  *
- * Order rationale (archive-before-Worker): between step 4 and step 5 completing, the Worker still expects
- * the OLD SHA while the NEW archive already exists in R2 - computeSourceIntegrity reports that as STALE
- * (fails closed, autonomous polling simply pauses for that window) rather than CURRENT-but-wrong either
- * way, so this ordering is safe; it's chosen only because it keeps the STALE window as short as possible
- * (just the wrangler deploy call) rather than for correctness - see shadow-source-integrity.ts.
+ * Order rationale (Worker-first, THEN archive) - this is load-bearing, not cosmetic, discovered live
+ * running this exact script: POST /v1/shadow/source is itself served by the deployed Worker code, so
+ * uploading BEFORE deploying hits the OLD handler - which, across a change to the upload
+ * endpoint/metadata shape itself (exactly what this fix is), can silently accept/ignore fields the new
+ * code needs (sourceSha/archiveHash), leaving a stale-shaped meta object behind even though the upload
+ * "succeeded". Deploying first means every upload this script performs always hits the NEW handler.
+ * The residual risk this ordering does carry - the Worker briefly expects a SHA no archive has yet
+ * (between step 4 and step 5) - is safe by construction: computeSourceIntegrity reports that window as
+ * MISSING/STALE (fails closed, autonomous polling simply pauses) rather than CURRENT-but-wrong, and it's
+ * only as long as the upload call itself takes.
  *
  * Usage: npx tsx scripts/deploy-research-sandbox.ts --url https://<worker-host> [--label <note>] [--skip-checks]
  *   RESEARCH_DISPATCH_TOKEN environment variable required (never a CLI arg).
@@ -31,7 +36,7 @@
  */
 import { execSync } from "node:child_process";
 import { resolve } from "node:path";
-import { isWorkingTreeDirty, packageSource, uploadPackagedSource } from "./shadow-source-lib.js";
+import { currentHeadSha, isWorkingTreeDirty, packageSource, uploadPackagedSource } from "./shadow-source-lib.js";
 
 function parseArgs(argv: string[]) {
   const args: Record<string, string> = {};
@@ -100,21 +105,31 @@ async function main() {
     run("npm run test", repoRoot);
   }
 
-  // Step 4: package + upload, tagged with the real HEAD SHA.
+  // Step 4: deploy the Worker FIRST, stamping EXPECTED_SOURCE_SHA for THIS commit via --var (never
+  // written into wrangler.research-sandbox.jsonc itself - see that file's comment on why a static value
+  // there would be self-defeating). Must precede the upload below - see the module doc comment's "Order
+  // rationale" for why archive-first was tried and found to be actually broken, not just riskier.
+  const headSha = currentHeadSha(repoRoot);
+  run(`npx wrangler deploy --config wrangler.research-sandbox.jsonc --var EXPECTED_SOURCE_SHA:${headSha}`, repoRoot);
+
+  // Step 5: package + upload, tagged with the real HEAD SHA - now guaranteed to hit the Worker code
+  // just deployed above.
   const packaged = packageSource(repoRoot);
   console.log(`\npackaged source: sourceSha=${packaged.sourceSha} archiveHash=${packaged.archiveHash.slice(0, 16)}... size=${(packaged.sizeBytes / 1024 / 1024).toFixed(2)}MB`);
+  if (packaged.sourceSha !== headSha) {
+    // The working tree changed between step 4's git-read and step 5's packaging (e.g. another process
+    // committed concurrently) - refuse rather than deploy a Worker that expects one SHA while uploading
+    // a different one under its nose.
+    packaged.cleanup();
+    throw new Error(`HEAD changed mid-deploy: Worker was deployed expecting ${headSha}, but packaging now sees ${packaged.sourceSha} - re-run the deploy.`);
+  }
   try {
     const upload = await uploadPackagedSource({ url, token, packaged, label: args.label });
     if (!upload.ok) throw new Error(`source upload failed: ${upload.error}`);
     console.log(`source uploaded: ${JSON.stringify(upload)}`);
 
-    // Step 5: deploy the Worker, stamping EXPECTED_SOURCE_SHA for THIS commit via --var (never written
-    // into wrangler.research-sandbox.jsonc itself - see that file's comment on why a static value there
-    // would be self-defeating).
-    run(`npx wrangler deploy --config wrangler.research-sandbox.jsonc --var EXPECTED_SOURCE_SHA:${packaged.sourceSha}`, repoRoot);
-
-    // Step 6: verify. A short retry allows for eventual-consistency propagation of the new Worker
-    // version/vars; this is not expected to need more than one attempt in practice.
+    // Step 6: verify. A short retry allows for eventual-consistency propagation of the new archive/meta
+    // objects in R2; this is not expected to need more than one attempt in practice.
     let status: CronStatus | undefined;
     for (let attempt = 1; attempt <= 5; attempt++) {
       status = await fetchCronStatus(url, token);
