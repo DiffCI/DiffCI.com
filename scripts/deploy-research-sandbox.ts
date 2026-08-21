@@ -128,13 +128,15 @@ async function main() {
     if (!upload.ok) throw new Error(`source upload failed: ${upload.error}`);
     console.log(`source uploaded: ${JSON.stringify(upload)}`);
 
-    // Step 6: verify. A short retry allows for eventual-consistency propagation of the new archive/meta
-    // objects in R2; this is not expected to need more than one attempt in practice.
+    // Step 6: verify. Retries for eventual-consistency propagation - live-observed running this exact
+    // script: a fresh `wrangler deploy --var` env-var change can take up to ~20-30s to actually be
+    // visible to a request hitting the edge, even though the deploy command itself already returned and
+    // the R2 upload immediately after it succeeds. 12 attempts * 3s = up to 36s total.
     let status: CronStatus | undefined;
-    for (let attempt = 1; attempt <= 5; attempt++) {
+    for (let attempt = 1; attempt <= 12; attempt++) {
       status = await fetchCronStatus(url, token);
       if (status?.sourceIntegrity?.status === "CURRENT" && status.sourceIntegrity.expectedSha === packaged.sourceSha) break;
-      if (attempt < 5) await sleep(2000);
+      if (attempt < 12) await sleep(3000);
     }
 
     if (!status?.ok) {
