@@ -20,6 +20,16 @@ async function githubFetch(url: string, token?: string) {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": API_VERSION,
+    // REQUIRED - GitHub's API firewall 403s any request missing this (same bug class already fixed in
+    // github-app.ts and validation-worker.ts's fetchDefaultBranchHead/shadowAppInfo; this call site was
+    // missed). Live-confirmed 2026-08-21: every reconciliation attempt against a real, deployed
+    // Cloudflare Worker returned "Request forbidden by administrative rules. Please make sure your
+    // request has a User-Agent header" - silently swallowed into an UNAVAILABLE/STILL_PENDING result by
+    // collectHistoricalEvidenceForDelta, which is exactly why zero Stage 2 predictions had ever
+    // reconciled despite real completed CI existing for every one of them. Node's fetch tolerates a
+    // missing User-Agent against this same endpoint; Cloudflare Workers' fetch does not - this bites in
+    // the deployed runtime specifically, not in local `npm test`.
+    "User-Agent": "diffci-shadow",
   };
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(url, { headers });

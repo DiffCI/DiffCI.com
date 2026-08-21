@@ -16,7 +16,11 @@ import { chargeBudget, hasBudgetFor, type RateBudget } from "./rate-budget.js";
 const API_VERSION = "2026-03-10";
 
 async function githubFetch(url: string, token?: string): Promise<unknown> {
-  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": API_VERSION };
+  // User-Agent REQUIRED - GitHub's API firewall 403s any request missing one, and the Cloudflare
+  // Workers fetch runtime never adds a default one (same bug class fixed in github-baseline.ts, this
+  // session, and earlier in github-app.ts/github-runner-worker.ts - see the 2026-08-21 shadow reconcile
+  // trace that found it here too).
+  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "X-GitHub-Api-Version": API_VERSION, "User-Agent": "diffci-shadow" };
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(url, { headers });
   if (!res.ok) {
