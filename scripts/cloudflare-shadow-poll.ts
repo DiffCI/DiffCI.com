@@ -81,7 +81,10 @@ async function main() {
   // polls of an actively-polled repository. If lastSeenSha ever falls outside this window (a very long
   // gap between polls, or a burst of commits), the rev-list walk below fails safe - see the catch block.
   const repo: ResearchRepository = { owner, name, primaryLanguage, framework: "unknown", sizeClass: "medium" };
-  const metadata = cloneOrUpdateRepo(repo, repoCacheDir, POLL_CLONE_DEPTH);
+  // blobFilter:false - a full-blob shallow clone. The default blob:none partial clone broke private-
+  // repo polling: analyzeGitDelta's git subprocesses trigger unauthenticated lazy blob fetches - see
+  // cloneOrUpdateRepo's comment on the 2026-08-21 DiffCI.com self-shadow finding.
+  const metadata = cloneOrUpdateRepo(repo, repoCacheDir, POLL_CLONE_DEPTH, { blobFilter: false });
 
   if (metadata.exclusionReason) {
     writeFileSync(outPath, JSON.stringify({ ok: false, owner, name, error: `clone-excluded: ${metadata.exclusionReason}` }), "utf8");

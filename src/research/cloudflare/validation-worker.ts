@@ -653,6 +653,11 @@ async function executeShadowPoll(env: ValidationEnv, owner: string, name: string
       ok: boolean; firstPoll?: boolean; newHeadSha: string; predictions?: any[]; errors?: string[]; error?: string;
     };
     await sandbox.destroy();
+    // Full container result minus the bulky per-prediction plan payloads - the summary log line alone
+    // proved insufficient while debugging the empty-prediction mystery (2026-08-21).
+    console.log(
+      `executeShadowPoll ${repository} raw result: ${JSON.stringify({ ...result, predictions: (result.predictions ?? []).map((p: any) => ({ logicalDeltaKey: p.logicalDeltaKey, planMode: p.planMode, fallback: p.fallback })) }).slice(0, 3000)}`,
+    );
     if (!result.ok) return { ok: false, repository, predictionsRecorded: 0, pollErrors: [], error: result.error ?? "shadow-poll-failed" };
 
     let predictionsRecorded = 0;

@@ -64,7 +64,7 @@ export function unsupportedLanguageMetadata(repo: ResearchRepository, cacheDir: 
   };
 }
 
-export function cloneOrUpdateRepo(repo: ResearchRepository, cacheDir: string, depth: number): RepositoryMetadata {
+export function cloneOrUpdateRepo(repo: ResearchRepository, cacheDir: string, depth: number, options?: { blobFilter?: boolean }): RepositoryMetadata {
   if (isKnownUnsupportedLanguage(repo.primaryLanguage)) {
     return unsupportedLanguageMetadata(repo, cacheDir);
   }
@@ -74,7 +74,16 @@ export function cloneOrUpdateRepo(repo: ResearchRepository, cacheDir: string, de
 
   if (!existsSync(resolve(localPath, ".git"))) {
     const cloneUrl = `https://github.com/${repo.owner}/${repo.name}.git`;
-    const result = spawnSync("git", ["clone", "--depth", String(depth), "--filter=blob:none", "--no-single-branch", cloneUrl, localPath], {
+    // --filter=blob:none defers blob downloads to on-demand "lazy fetches" by whatever git process
+    // later touches a missing blob. Real finding (2026-08-21, DiffCI.com self-shadow): those lazy
+    // fetches run OUTSIDE this module's gitAuthEnv() - analyzeGitDelta's own git subprocesses hit
+    // "could not read Username for 'https://github.com'" on a PRIVATE repo and the delta analysis
+    // failed, while public repos lazily fetched fine anonymously (why unjs/* never showed this).
+    // Callers analyzing arbitrary later git state on possibly-private repos (the shadow poll) pass
+    // blobFilter:false for a full-blob shallow clone; the default keeps the bandwidth-saving filter
+    // for the public-corpus research paths.
+    const filterArgs = options?.blobFilter === false ? [] : ["--filter=blob:none"];
+    const result = spawnSync("git", ["clone", "--depth", String(depth), ...filterArgs, "--no-single-branch", cloneUrl, localPath], {
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
       env: gitAuthEnv(),
