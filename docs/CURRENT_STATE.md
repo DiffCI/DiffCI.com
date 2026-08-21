@@ -1,8 +1,9 @@
 # DiffCI — Current State
 
 **As of:** 2026-08-21 (live-verified against the deployed Worker and this repo's own CI at the time of
-writing) · **Repo:** [github.com/adityankale190895/DiffCI.com](https://github.com/adityankale190895/DiffCI.com)
-· **Branch:** `main` @ `d65b214`, working tree clean
+writing; updated later the same day after the source-integrity fix below shipped and was live-verified)
+· **Repo:** [github.com/adityankale190895/DiffCI.com](https://github.com/adityankale190895/DiffCI.com)
+· **Branch:** `main` @ `b997c6d`, working tree clean
 
 This document is a snapshot, not a design doc. For the full narrative and decision rationale behind any
 of this, follow the links in [Reference index](#reference-index) at the bottom — this file exists so you
@@ -19,11 +20,15 @@ don't have to read all 31 research reports to know where things stand right now.
 - **Infra:** two Cloudflare Workers (research/shadow pipeline, and a self-hosted GitHub Actions runner
   dispatcher), D1 + R2 for persistence, Cloudflare Sandbox Containers for real git/TypeScript analysis.
   Two separate, least-privilege GitHub Apps.
-- **CI health:** 302/302 tests passing, typecheck clean, this repo's own CI now runs on a
+- **CI health:** 336/336 tests passing, typecheck clean, this repo's own CI now runs on a
   Cloudflare-Container-backed self-hosted runner fleet (not GitHub-hosted) and has been green for the
   last 8 consecutive runs, ~1 minute each once warm, ~$0.004/job, zero GitHub Actions billing consumed.
-- **Biggest live gap right now:** the autonomous cron's diffci source snapshot in R2 is stamped `e58fdfb`
-  (an older commit) while `main` has moved 4 commits past it — see [Known gaps](#known-gaps--action-items).
+- **Biggest live gap as of the original writing of this doc** (the autonomous cron's diffci source
+  snapshot in R2 stamped `e58fdfb` while `main` had moved 4 commits past it) **is now fixed and
+  live-verified** — see [`2026-08-21-shadow-source-integrity-fix.md`](research/2026-08-21-shadow-source-integrity-fix.md)
+  and [Known gaps §1](#known-gaps--action-items). The invariant (deployed Worker's expected SHA == R2
+  archive SHA == SHA recorded on every new prediction) now holds by construction — a mismatch fails
+  closed (STALE/MISSING/UNKNOWN) instead of silently analyzing with old code.
 
 ## 1. What DiffCI is
 
@@ -123,20 +128,23 @@ Two GitHub Apps exist and are **deliberately never merged**:
 
 ```
 npm run typecheck   → clean, no errors
-npm run test        → 302 passed, 0 failed, 0 skipped (67 suites, ~39.5s)
+npm run test        → 336 passed, 0 failed, 0 skipped (74 suites) — 34 new tests from the source-integrity fix
 ```
 
 Working tree is clean; `main` is up to date with `origin/main`.
 
 ## 7. Known gaps / action items
 
-1. **Cron is polling a stale source snapshot.** `GET /v1/shadow/cron-status` reports
-   `sourceArchive: { label: "e58fdfb", uploadedAt: "2026-08-21T06:00:53Z" }` — that's the diffci source
-   as of an older commit (before the GitHub-runner CI work and its User-Agent/entrypoint fixes). `main`
-   has since moved to `d65b214`. Per the project's own operating note: *"after changing src/, re-upload
-   with `npm run shadow:upload-source -- --url <worker-url>` or cron polls keep running the OLD snapshot
-   silently."* This has not been re-run since. Predictions recorded by the cron right now reflect
-   pre-runner-fix DiffCI logic, not what's on `main` today.
+1. ~~Cron is polling a stale source snapshot~~ — **fixed and live-verified**
+   ([`2026-08-21-shadow-source-integrity-fix.md`](research/2026-08-21-shadow-source-integrity-fix.md)).
+   `GET /v1/shadow/cron-status`'s `sourceIntegrity` now reports `status: "CURRENT"` with `expectedSha`,
+   `archiveSha`, and this repo's real HEAD (`b997c6d...`) all equal — confirmed by directly querying the
+   deployed Worker after running the new `npm run shadow:deploy` pipeline. A live self-observed
+   prediction (via the DiffCI Shadow App's push webhook, triggered by this fix's own commits) recorded a
+   real, non-null `engine_source_sha`, proving the field flows through end-to-end, not just in unit
+   tests. Any future drift between the deployed Worker's expected SHA and the R2 archive now fails
+   closed (`STALE`/`MISSING`/`UNKNOWN`) and blocks autonomous analysis rather than silently using old
+   code — this class of bug cannot recur silently.
 2. **Zero ground-truth reconciliations across all 5 enrolled repositories.** Every headline Stage 2
    metric (prospective recall, unsafe-miss rate, fallback rate at scale, cost/savings) is still an empty
    denominator. This should resolve itself now that own-repo CI is real and green — but hasn't yet as of
@@ -200,14 +208,21 @@ src/shadow/    Stage 2 prospective pipeline: event identity, failure classificat
 npm run check                    # typecheck + full test suite
 npm run diffci / npm run impact  # generate a delta/impact/plan for this repo's latest commit
 npm run research:stage0          # real Stage 0-style historical benchmark, locally
-npm run research:sandbox:deploy  # deploy the research/shadow Worker
+npm run shadow:deploy            # CANONICAL: typecheck+test, deploy the research/shadow Worker, upload
+                                  # the source archive tagged with real HEAD, verify source integrity is
+                                  # CURRENT before exiting 0 - use this, not the two commands below, for
+                                  # any change to src/ that should be live in autonomous shadow polling
+npm run research:sandbox:deploy  # low-level: deploy the research/shadow Worker only (no source upload/verify)
+npm run shadow:upload-source     # low-level: re-upload the diffci source tarball only (no Worker deploy)
 npm run github-runner:deploy     # deploy the self-hosted-runner dispatcher Worker
-npm run shadow:upload-source     # re-upload the diffci source tarball the cron polls against (see §7.1)
 ```
 
 ## Reference index
 
 - [`README.md`](../README.md) — the maintained top-level summary this doc supplements with live numbers.
+- [`docs/research/2026-08-21-shadow-source-integrity-fix.md`](research/2026-08-21-shadow-source-integrity-fix.md) —
+  the source-version integrity fix (stale-cron incident, invariant, schema/migration, tests, live
+  verification).
 - [`docs/research/2026-08-21-stage2-final-report.md`](research/2026-08-21-stage2-final-report.md) —
   Stage 2 results and decision as of the session that shipped the shadow pipeline itself.
 - [`docs/research/2026-08-21-stage2-architecture.md`](research/2026-08-21-stage2-architecture.md) — full
