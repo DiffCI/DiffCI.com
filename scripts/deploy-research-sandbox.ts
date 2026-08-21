@@ -129,14 +129,18 @@ async function main() {
     console.log(`source uploaded: ${JSON.stringify(upload)}`);
 
     // Step 6: verify. Retries for eventual-consistency propagation - live-observed running this exact
-    // script: a fresh `wrangler deploy --var` env-var change can take up to ~20-30s to actually be
-    // visible to a request hitting the edge, even though the deploy command itself already returned and
-    // the R2 upload immediately after it succeeds. 12 attempts * 3s = up to 36s total.
+    // script twice in a row: a fresh `wrangler deploy --var` env-var change can take on the order of a
+    // full MINUTE (not seconds) to actually be visible to a request hitting the edge, even though the
+    // deploy command itself already returned and the R2 upload immediately after it succeeds - a 10s and
+    // then a 36s budget both still saw the PREVIOUS deploy's expectedSha; a manual poll ~70-90s after the
+    // deploy consistently found it CURRENT. 24 attempts * 5s = up to 120s total, logged so this doesn't
+    // read as hung.
     let status: CronStatus | undefined;
-    for (let attempt = 1; attempt <= 12; attempt++) {
+    for (let attempt = 1; attempt <= 24; attempt++) {
       status = await fetchCronStatus(url, token);
       if (status?.sourceIntegrity?.status === "CURRENT" && status.sourceIntegrity.expectedSha === packaged.sourceSha) break;
-      if (attempt < 12) await sleep(3000);
+      console.log(`  waiting for edge propagation... attempt ${attempt}/24, current status: ${status?.sourceIntegrity?.status ?? "unreachable"}`);
+      if (attempt < 24) await sleep(5000);
     }
 
     if (!status?.ok) {
