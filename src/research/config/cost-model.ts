@@ -187,7 +187,7 @@ export function evaluateBudgetStatus(cumulativeSpendUsd: number): BudgetEvaluati
   let status: BudgetStatus = "OK";
   if (spentCredits >= BUDGET_HARD_STOP_THRESHOLD) status = "BUDGET_STOPPED";
   else if (spentCredits >= BUDGET_RESERVE_THRESHOLD) status = "RESERVE";
-  else if (spentCredits >= BUDGET_WARNING_THRESHOLD) status = "WARNING";
+  else if (spentCredits > BUDGET_WARNING_THRESHOLD) status = "WARNING";
   return {
     status,
     spentCredits,
