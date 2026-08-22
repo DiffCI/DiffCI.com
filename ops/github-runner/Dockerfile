@@ -44,8 +44,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libicu74 libssl3 libkrb5-3 zlib1g liblttng-ust1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Node 20, matching this repo's package.json engines.node requirement.
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+# Node 22, matching this repo's package.json engines.node requirement (bumped 2026-08-22: the SaaS
+# foundation build's test suite (tests/**/store.test.ts) uses node:sqlite's DatabaseSync, which is only
+# available from Node 22.5.0 onward - the previous Node 20 pin here caused every real CI run to fail with
+# ERR_UNKNOWN_BUILTIN_MODULE from the moment those tests were first committed, invisibly, because local
+# development happened on a newer Node version where the module IS available. This exact gap is Case
+# Study #1 in docs/research/2026-08-22-preflight-p0-historical-failure-study.md - a config/environment-
+# parity mismatch a deterministic Preflight check could have caught before any CI minutes were spent.
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
