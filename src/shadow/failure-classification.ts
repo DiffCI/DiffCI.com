@@ -23,7 +23,7 @@ export type FailureCategory =
 
 const CATEGORY_BY_TASK_CATEGORY: Partial<Record<CITaskCategory, FailureCategory>> = {
   test: "TEST_FAILURE",
-  build: "LINT_FAILURE",
+  build: "BUILD_FAILURE",
   typecheck: "TYPECHECK_FAILURE",
   lint: "LINT_FAILURE",
 };
