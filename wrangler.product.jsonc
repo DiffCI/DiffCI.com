@@ -20,7 +20,19 @@
   "vars": {
     "DIFFCI_PRODUCT_ENABLED": "true",
     "DIFFCI_ENVIRONMENT": "production",
-    "DIFFCI_SESSION_TTL_MS": "2592000000" // 30 days
+    "DIFFCI_SESSION_TTL_MS": "2592000000", // 30 days
+    // Points the runner-provider selection (product-worker.ts runnerProviderFromEnv) at the real
+    // deployed Cloudflare Containers runner (Part 15/16) - RUNNER_CONTROL_TOKEN (secret, not here) must
+    // match the value configured on wrangler.synthetic-runner.jsonc for this to resolve to the real
+    // provider instead of falling back to the mock.
+    "SYNTHETIC_RUNNER_URL": "https://diffci-synthetic-runner.damp-waterfall-0cd8.workers.dev"
+  },
+  // Part 22: runs scheduled() (orphan-runner cleanup) every 10 minutes - same cadence as Stage 2F's own
+  // shadow-poll cron (wrangler.research-sandbox.jsonc), chosen for consistency, not because runner
+  // orphaning specifically needs sub-10-minute detection (the shortest configured timeout,
+  // maxProvisioningMs, is 5 minutes - see src/runner/cleanup.ts DEFAULT_TIMEOUT_CONFIG).
+  "triggers": {
+    "crons": ["*/10 * * * *"]
   },
   "d1_databases": [
     // Writable - this Worker owns diffci-product (accounts/billing/sessions/usage/runners/queue/audit).

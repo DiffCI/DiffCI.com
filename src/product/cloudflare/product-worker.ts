@@ -7,16 +7,20 @@
  * read-only `RESEARCH_DB` binding to `diffci-research` used ONLY by shadow-read-boundary.ts (Part 20) -
  * this Worker never issues a write against diffci-research.
  *
- * Authentication is now real (Part 2/3): every organization-scoped route resolves the requesting user
- * via authenticateRequest() (src/auth/authenticate.ts), which honors a real session (Bearer token or
+ * Authentication is real (Part 2/3): every organization-scoped route resolves the requesting user via
+ * authenticateRequest() (src/auth/authenticate.ts), which honors a real session (Bearer token or
  * diffci_session cookie) in every configuration, and additionally honors the spoofable
  * X-DiffCI-User-Id development header ONLY when DIFFCI_ALLOW_DEV_HEADER_AUTH=true, which
  * parseAuthConfig() (src/auth/config.ts) makes impossible to combine with DIFFCI_ENVIRONMENT=production
- * - the Worker throws and refuses to serve any request at all if that illegal combination is configured
- * (see the fetch() handler's top-level try/catch below). No GitHub OAuth login flow is deployed yet
- * (Part 2: "Do NOT necessarily deploy OAuth live yet... implement the application architecture now") -
- * creating a session today requires an out-of-band SessionStore.createSession() call (e.g. from a future
- * OAuth callback route, not yet built).
+ * - the Worker throws and refuses to serve any request at all if that illegal combination is configured.
+ * GET/auth/github + GET/auth/github/callback + POST/auth/logout implement the real GitHub OAuth flow
+ * (Part 6) - live-tested against mocked GitHub responses; the GitHub OAuth App itself (client_id/secret)
+ * is a manual registration step, see docs referenced in the build's final report.
+ *
+ * scheduled() runs the orphan-runner cleanup sweep (Part 15/22) on the Worker's own cron trigger
+ * (wrangler.product.jsonc triggers.crons) - uses the real CloudflareContainerRunnerProvider when
+ * RUNNER_CONTROL_TOKEN/SYNTHETIC_RUNNER_URL are configured, falling back to the mock provider otherwise
+ * (a stale mock-provider runner has nothing real to terminate, so this is always safe either way).
  */
 import { makeD1ProductStore, type D1Binding as ProductD1Binding } from "../store.js";
 import { makeD1BillingStore } from "../../billing/store.js";
@@ -36,6 +40,9 @@ import { generateCsrfToken, verifyCsrfToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME 
 import { buildSessionCookie, buildExpiredSessionCookie, buildCsrfCookie } from "../../auth/session-cookie.js";
 import { makeD1UsageStore } from "../../usage/store.js";
 import { makeD1RunnerStore } from "../../runner/store.js";
+import { runOrphanCleanup } from "../../runner/cleanup.js";
+import { createMockRunnerProvider } from "../../runner/mock-provider.js";
+import { createCloudflareContainerRunnerProvider } from "../../runner/cloudflare-container-provider.js";
 import { makeD1ExecutionQueueStore } from "../../execution-queue/store.js";
 import { makeD1ShadowReadBoundary, type D1Binding as ShadowD1Binding } from "../shadow-read-boundary.js";
 import {
@@ -59,6 +66,15 @@ export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   GITHUB_OAUTH_CLIENT_ID?: string;
   GITHUB_OAUTH_CLIENT_SECRET?: string;
   CSRF_SECRET?: string;
+  SYNTHETIC_RUNNER_URL?: string; // e.g. https://diffci-synthetic-runner.<account>.workers.dev
+  RUNNER_CONTROL_TOKEN?: string; // must match the secret configured on wrangler.synthetic-runner.jsonc
+}
+
+function runnerProviderFromEnv(env: Env) {
+  if (env.SYNTHETIC_RUNNER_URL && env.RUNNER_CONTROL_TOKEN) {
+    return createCloudflareContainerRunnerProvider({ workerBaseUrl: env.SYNTHETIC_RUNNER_URL, controlToken: env.RUNNER_CONTROL_TOKEN, jobCommand: 'echo "diffci-runner-ok"' });
+  }
+  return createMockRunnerProvider();
 }
 
 function json(payload: unknown, status = 200, extraHeaders?: Headers): Response {
@@ -165,7 +181,7 @@ export default {
         githubOAuthConfigured: Boolean(env.GITHUB_OAUTH_CLIENT_ID && env.GITHUB_OAUTH_CLIENT_SECRET),
         csrfConfigured: Boolean(env.CSRF_SECRET),
         queueSubsystemReachable: dbReachable, // queue/runner/usage all live in the same PRODUCT_DB binding as organizations
-        runnerProviderConfigured: true, // the mock provider is always available; a real provider's own reachability is checked at use time, not here
+        runnerProvider: env.SYNTHETIC_RUNNER_URL && env.RUNNER_CONTROL_TOKEN ? "cloudflare-containers" : "mock",
       });
     }
 
@@ -368,5 +384,16 @@ export default {
     }
 
     return json({ ok: false, error: "not-found" }, 404);
+  },
+
+  // Part 15/22: orphan-runner cleanup sweep, wired to wrangler.product.jsonc's cron trigger.
+  async scheduled(_event: unknown, env: Env): Promise<void> {
+    const runnerStore = makeD1RunnerStore(env.PRODUCT_DB);
+    const provider = runnerProviderFromEnv(env);
+    const results = await runOrphanCleanup(runnerStore, provider);
+    for (const r of results) {
+      logEvent("runner.orphan_cleanup", { runnerId: r.runnerId, previousStatus: r.previousStatus, terminated: r.terminated, error: r.error });
+    }
+    logEvent("orphan_cleanup.sweep_completed", { count: results.length, terminated: results.filter((r) => r.terminated).length, failed: results.filter((r) => !r.terminated).length });
   },
 };
