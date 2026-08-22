@@ -35,7 +35,11 @@ export interface ReconciliationRecord {
 }
 
 export interface ReconciliationInput {
-  prediction: PredictionRecord;
+  // Pick, not the full PredictionRecord: only these fields are ever read (see
+  // classifyReconciliationOutcome/reconcile below) - a narrower type lets Part G's replay engine
+  // reconcile against a lightweight, not-yet-persisted prediction shape without fabricating unused
+  // PredictionRecord fields (createdAt, mode, etc.) just to satisfy this function.
+  prediction: Pick<PredictionRecord, "id" | "predictedFailureClasses" | "recommendedChecks">;
   workflowRunId: string;
   workflowConclusion: string;
   actualFailureClass?: FailureClass;
@@ -50,15 +54,41 @@ export interface ReconciliationInput {
 // truly executed to completion tells us nothing about whether Preflight would have helped.
 const NOT_EVALUABLE_CONCLUSIONS: ReadonlySet<string> = new Set(["cancelled", "skipped", "timed_out", "action_required", "neutral", "stale"]);
 
-// Matches preventability.ts's own NOT_REASONABLY_PREVENTABLE discipline for these two classes (see its
-// NOT_PREVENTABLE_CLASSES set and FLAKY's inherently non-deterministic nature) - scoring Preflight
-// against a failure class it was never reasonably positioned to predict would fabricate a
-// non-evaluable case into a false miss.
-const NOT_EVALUABLE_FAILURE_CLASSES: ReadonlySet<FailureClass> = new Set(["RUNNER_INFRASTRUCTURE", "FLAKY"]);
+// Matches preventability.ts's own NOT_REASONABLY_PREVENTABLE discipline for RUNNER_INFRASTRUCTURE/FLAKY
+// (see its NOT_PREVENTABLE_CLASSES set and FLAKY's inherently non-deterministic nature) - scoring
+// Preflight against a failure class it was never reasonably positioned to predict would fabricate a
+// non-evaluable case into a false miss. "UNKNOWN" is included for the same reason at the taxonomy
+// level: taxonomy.ts's UNKNOWN means the evidence itself was insufficient to determine ANY real
+// failure class (see fingerprint.ts's classifyFailureFromEvidence) - scoring a miss against a failure
+// nobody could even classify would be exactly the fabricated-confidence this project forbids
+// (preventability.ts's own parallel: "insufficientEvidence always forces UNKNOWN, overriding every
+// other signal"). Found and added while running Part G's real replay - the first version left this
+// out and silently counted every historical UNKNOWN-class record as a miss.
+const NOT_EVALUABLE_FAILURE_CLASSES: ReadonlySet<FailureClass> = new Set(["RUNNER_INFRASTRUCTURE", "FLAKY", "UNKNOWN"]);
 
-export function isEligibleForPrevention(actualFailureClass: FailureClass, recommendedCheckIds: readonly string[], registry: readonly PreflightCheckDefinition[] = PREFLIGHT_CHECK_REGISTRY): boolean {
+// A REAL bug found and fixed while running Part G's actual replay against the historical 24 failures
+// (2026-08-22): the first version of isEligibleForPrevention() counted ANY recommended check whose
+// failureClassesDetected listed the actual class - including "known_pattern_match" (registry
+// confidence 0.5) and "affected_tests" (confidence 0.6), both of which are ALWAYS recommended
+// (applicability: "always") regardless of whether the prediction raised any real risk signal. Since
+// PREFLIGHT_CHECK_REGISTRY's own `confidence` field already exists specifically to express "how much
+// confidence a PASS on this check buys" (checks-registry.ts's own doc comment), ignoring it here meant
+// a bare registry declaration - not genuine predictive evidence - was silently counted as a prevention
+// success, inflating prevention recall from what turned out to be a real, honest ~0.71 down-corrected
+// figure into a fabricated-looking 0.958 the first time this was run (see
+// docs/research/2026-08-22-preflight-p1-replay-results.md's own note on this). DEFAULT_MIN_CONFIDENCE
+// restricts "eligible for prevention" to checks this project already treats as its DETERMINISTIC tier
+// (typecheck 0.95, lint 0.9, dependency_validation 0.85, build 0.9, runtime_parity 0.9 all qualify;
+// known_pattern_match/affected_tests/config_validation, all below 0.85, do not) - matching
+// preventability.ts's own DETERMINISTIC_CLASSES bar, not an arbitrarily chosen new number.
+export const DEFAULT_MIN_ELIGIBILITY_CONFIDENCE = 0.85;
+
+export function isEligibleForPrevention(actualFailureClass: FailureClass, recommendedCheckIds: readonly string[], registry: readonly PreflightCheckDefinition[] = PREFLIGHT_CHECK_REGISTRY, minConfidence: number = DEFAULT_MIN_ELIGIBILITY_CONFIDENCE): boolean {
   const byId = new Map(registry.map((c) => [c.id, c]));
-  return recommendedCheckIds.some((id) => byId.get(id)?.failureClassesDetected.includes(actualFailureClass) ?? false);
+  return recommendedCheckIds.some((id) => {
+    const check = byId.get(id);
+    return Boolean(check && check.confidence >= minConfidence && check.failureClassesDetected.includes(actualFailureClass));
+  });
 }
 
 export function classifyReconciliationOutcome(input: ReconciliationInput): { outcome: ReconciliationOutcome; reason: string } {

@@ -36,6 +36,22 @@ describe("isEligibleForPrevention - the concrete 'eligible for prevention' defin
   it("false for an unknown check id (never crashes, never assumes coverage)", () => {
     assert.equal(isEligibleForPrevention("TYPECHECK", ["does-not-exist"]), false);
   });
+
+  it("real bug fix (found running Part G's actual replay, 2026-08-22): a low-confidence check (known_pattern_match, 0.5) that merely LISTS a class does not count as eligible - a bare registry declaration is not genuine predictive evidence", () => {
+    assert.equal(isEligibleForPrevention("UNIT_TEST", ["known_pattern_match"]), false);
+    assert.equal(isEligibleForPrevention("UNIT_TEST", ["affected_tests"]), false, "affected_tests confidence (0.6) is also below the deterministic-tier bar");
+  });
+
+  it("high-confidence deterministic-tier checks (>= 0.85) still count as eligible", () => {
+    assert.equal(isEligibleForPrevention("TYPECHECK", ["typecheck"]), true);
+    assert.equal(isEligibleForPrevention("CONFIGURATION", ["runtime_parity"]), true);
+    assert.equal(isEligibleForPrevention("DEPENDENCY", ["dependency_validation"]), true);
+  });
+
+  it("a custom minConfidence can be supplied to loosen or tighten the bar explicitly", () => {
+    assert.equal(isEligibleForPrevention("UNIT_TEST", ["known_pattern_match"], undefined, 0.4), true);
+    assert.equal(isEligibleForPrevention("TYPECHECK", ["typecheck"], undefined, 0.99), false, "typecheck's own confidence (0.95) is below an unusually strict 0.99 bar");
+  });
 });
 
 describe("classifyReconciliationOutcome - Part E TP/TN/FP/FN/NOT_EVALUABLE", () => {
