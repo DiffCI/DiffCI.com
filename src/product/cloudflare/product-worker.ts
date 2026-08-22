@@ -77,6 +77,7 @@ export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   DIFFCI_API_ORIGIN?: string; // this Worker's own public base URL - injected into R1 runners so their
                               // bootstrap script knows where to call back (src/runner/agent-api.ts)
   DIFFCI_ENVIRONMENT_LABEL?: string; // R1 Part 6 resource-tag "environment" value - defaults to "staging"
+  SYNTHETIC_RUNNER_WORKER?: { fetch(request: Request): Promise<Response> }; // real Service Binding to diffci-synthetic-runner - see wrangler.product.jsonc's own comment on why this exists instead of a plain fetch(SYNTHETIC_RUNNER_URL)
 }
 
 function runnerProviderFromEnv(env: Env) {
@@ -87,10 +88,19 @@ function runnerProviderFromEnv(env: Env) {
 }
 
 /** R1's real, genuinely-async provider - see src/runner/cloudflare-container-async-provider.ts's own
- * header for why this is a SEPARATE provider from runnerProviderFromEnv()'s synchronous one above. */
+ * header for why this is a SEPARATE provider from runnerProviderFromEnv()'s synchronous one above.
+ * Routed through the real Service Binding (env.SYNTHETIC_RUNNER_WORKER), never a plain fetch() to
+ * SYNTHETIC_RUNNER_URL - found via a real, preserved first-attempt failure (R1 Part 26/40): Cloudflare
+ * rejects a Worker fetching another Worker's own workers.dev URL outright (error 1042). The existing
+ * SYNCHRONOUS provider (runnerProviderFromEnv, above) has this exact same latent issue if ever actually
+ * invoked from within this deployed Worker rather than an external script - out of scope to fix here
+ * (Part 2: don't redesign a working abstraction unless necessary), but worth flagging honestly (see the
+ * R1 final report's security/limitations review). */
 function asyncRunnerProviderFromEnv(env: Env) {
-  if (!env.SYNTHETIC_RUNNER_URL || !env.RUNNER_CONTROL_TOKEN) return undefined;
-  return createCloudflareContainerAsyncRunnerProvider({ workerBaseUrl: env.SYNTHETIC_RUNNER_URL, controlToken: env.RUNNER_CONTROL_TOKEN, startTimeoutMs: 30_000 });
+  if (!env.RUNNER_CONTROL_TOKEN || !env.SYNTHETIC_RUNNER_WORKER) return undefined;
+  const binding = env.SYNTHETIC_RUNNER_WORKER;
+  const bindingFetch: typeof fetch = (async (input: unknown, init?: RequestInit) => binding.fetch(new Request(input as string, init))) as typeof fetch;
+  return createCloudflareContainerAsyncRunnerProvider({ workerBaseUrl: "https://synthetic-runner.internal", controlToken: env.RUNNER_CONTROL_TOKEN, startTimeoutMs: 30_000 }, bindingFetch);
 }
 
 function agentApiDepsFromEnv(env: Env): AgentApiDeps {
@@ -165,8 +175,12 @@ function outcomeStatus(error: string): number {
   return 400;
 }
 
+interface ExecutionCtx {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionCtx): Promise<Response> {
     if (env.DIFFCI_PRODUCT_ENABLED !== "true") return json({ ok: false, error: "product API disabled" }, 503);
 
     let authConfig;
@@ -326,17 +340,30 @@ export default {
       // Part 9/26: request real teardown right after a genuine (non-duplicate) completion - R1's own
       // "one job per runner" model means completion IS the natural termination trigger, not a separate
       // later sweep. A duplicate result (already torn down by the first call) skips this safely.
+      //
+      // Deliberately run in ctx.waitUntil(), NOT awaited inline before responding - found via a real,
+      // preserved first-run bug (R1 Part 26): the runner container's own curl call back to /result can
+      // be torn down (by the Sandbox exec() timeout, or the container simply exiting right after firing
+      // the request) before it ever reads OUR response, and an inline await here left a runner
+      // genuinely stuck at 'terminating' with no 'terminated_at' when that happened - the request
+      // handler's own execution was cut short along with the now-gone client connection. ctx.waitUntil()
+      // guarantees this completes regardless of whether the calling container is still around to see it.
       if (!result.data?.duplicate) {
-        const runner = await deps.runnerStore.getRunner(result.data!.runnerId);
-        if (runner?.providerRunnerId && runner.status === "completed") {
-          const provider = asyncRunnerProviderFromEnv(env);
-          if (provider) {
-            await deps.runnerStore.transitionRunnerStatus(runner.id, "terminating");
-            await provider.terminateRunner(runner.providerRunnerId);
-            await deps.runnerStore.transitionRunnerStatus(runner.id, "terminated");
-            await store.recordAuditEvent({ organizationId: runner.organizationId, action: "runner.terminated", targetType: "runner", targetId: runner.id });
-          }
-        }
+        const runnerId = result.data!.runnerId;
+        ctx.waitUntil(
+          (async () => {
+            const runner = await deps.runnerStore.getRunner(runnerId);
+            if (runner?.providerRunnerId && runner.status === "completed") {
+              const provider = asyncRunnerProviderFromEnv(env);
+              if (provider) {
+                await deps.runnerStore.transitionRunnerStatus(runner.id, "terminating");
+                await provider.terminateRunner(runner.providerRunnerId);
+                await deps.runnerStore.transitionRunnerStatus(runner.id, "terminated");
+                await store.recordAuditEvent({ organizationId: runner.organizationId, action: "runner.terminated", targetType: "runner", targetId: runner.id });
+              }
+            }
+          })().catch((err) => logEvent("runner.termination_failed", { runnerId, error: err instanceof Error ? err.message : String(err) })),
+        );
       }
       return json(result, 200);
     }
@@ -437,10 +464,15 @@ export default {
               return { token: raw, apiBaseUrl: env.DIFFCI_API_ORIGIN!, jobCommand: item.jobReference };
             },
           },
-          1,
+          // batchLimit high enough that THIS request's own newly-enqueued item is never starved by an
+          // older still-queued item ahead of it in (priority, createdAt) order - found via a real,
+          // preserved first-attempt failure (R1 Part 26) where a stuck retrying item silently absorbed
+          // every subsequent request's single scheduling slot, and the real error was never surfaced.
+          20,
         );
         const outcome = outcomes.find((o) => o.queueItemId === item.id);
-        return json({ ok: true, queueItemId: item.id, runnerId: outcome?.runnerId, outcome: outcome?.outcome }, 202);
+        if (outcome?.outcome === "provisioning_failed") logEvent("runner.job_provisioning_failed", { queueItemId: item.id, runnerId: outcome.runnerId, error: outcome.error });
+        return json({ ok: true, queueItemId: item.id, runnerId: outcome?.runnerId, outcome: outcome?.outcome, error: outcome?.error }, 202);
       }
 
       const runnerMatch = subPath.match(/^\/runners\/([^/]+)$/);

@@ -36,7 +36,17 @@
     // deployed Cloudflare Containers runner (Part 15/16) - RUNNER_CONTROL_TOKEN (secret, not here) must
     // match the value configured on wrangler.synthetic-runner.jsonc for this to resolve to the real
     // provider instead of falling back to the mock.
-    "SYNTHETIC_RUNNER_URL": "https://diffci-synthetic-runner.damp-waterfall-0cd8.workers.dev"
+    // Real, currently-inert fallback for asyncRunnerProviderFromEnv()'s isConfigured() check and for
+    // any external/local script that talks to synthetic-runner directly - the actual R1 runtime calls
+    // go through the "services" binding below, never this URL, once it's configured (Cloudflare blocks
+    // a Worker from fetch()-ing another Worker's own workers.dev URL outright - error 1042, confirmed
+    // live - so a raw URL fetch from WITHIN this deployed Worker would never actually succeed).
+    "SYNTHETIC_RUNNER_URL": "https://diffci-synthetic-runner.damp-waterfall-0cd8.workers.dev",
+    // R1 (Real Runner): this Worker's own public base URL, injected into every real runner container so
+    // its bootstrap script knows where to call back (register/claim/result - src/runner/agent-api.ts).
+    // No custom domain configured yet (see the comment above), so this IS the real reachable address.
+    "DIFFCI_API_ORIGIN": "https://diffci-product.damp-waterfall-0cd8.workers.dev",
+    "DIFFCI_ENVIRONMENT_LABEL": "staging"
   },
   // Part 22: runs scheduled() (orphan-runner cleanup) every 10 minutes - same cadence as Stage 2F's own
   // shadow-poll cron (wrangler.research-sandbox.jsonc), chosen for consistency, not because runner
@@ -45,6 +55,11 @@
   "triggers": {
     "crons": ["*/10 * * * *"]
   },
+  // R1: real Worker-to-Worker call to diffci-synthetic-runner - a Cloudflare Service Binding (in-process
+  // call), NOT a fetch() to that Worker's own workers.dev URL (blocked outright, error 1042 - see the
+  // SYNTHETIC_RUNNER_URL comment above). Same pattern already proven for diffci-preflight ->
+  // diffci-github-runner.
+  "services": [{ "binding": "SYNTHETIC_RUNNER_WORKER", "service": "diffci-synthetic-runner" }],
   "d1_databases": [
     // Writable - this Worker owns diffci-product (accounts/billing/sessions/usage/runners/queue/audit).
     { "binding": "PRODUCT_DB", "database_name": "diffci-product", "database_id": "b3951dbd-e253-46bf-907e-ae07d0998aa5" },

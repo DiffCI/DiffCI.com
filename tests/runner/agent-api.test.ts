@@ -195,6 +195,19 @@ describe("handleResult", () => {
     assert.ok((auditEvent?.metadata?.stdoutPreview as string).length <= 200);
   });
 
+  it("Part 28 'job failure': a non-zero exit code still completes normally - the JOB failed, not the runner infrastructure", async () => {
+    const { deps, auditEvents, raw } = await claimedFixture();
+    const result = await handleResult({ token: raw, exitCode: 1, stdout: "", stderr: "boom: something failed\n", durationMs: 200 }, deps);
+    assert.equal(result.ok, true, "a failing synthetic job is still a successful RESULT SUBMISSION - the runner did its job correctly by reporting the failure");
+    const runner = await deps.runnerStore.getRunner("runner-1");
+    assert.equal(runner?.status, "completed");
+    const auditEvent = auditEvents.find((e) => e.action === "runner.execution_completed");
+    assert.equal(auditEvent?.metadata?.exitCode, 1);
+    // Usage is still recorded once - runner infrastructure ran real compute regardless of the job's own outcome.
+    const events = await deps.usageStore.listEventsInRange("org-1", "2020-01-01T00:00:00Z", "2030-01-01T00:00:00Z");
+    assert.equal(events.filter((e) => e.eventType === "runner_seconds").length, 1);
+  });
+
   it("rejects an unknown/invalid token entirely - no transition, no usage event", async () => {
     const db = freshProductDb(["runner", "execution-queue", "usage"]);
     seedFixture(db);
