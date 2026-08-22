@@ -238,10 +238,14 @@ async function runTick(env: Env): Promise<{ repositoriesProcessed: number; predi
       // Only commits at/after this repo's own observation start - never predict for history that
       // predates enrollment (that would blur "prospective" with "retroactive").
       const eligible = commits.filter((c) => c.commit.committer.date >= repo.observation_start_at);
+      console.log(`preflight: fetched ${commits.length} commits for ${owner}/${name}, ${eligible.length} eligible (observationStartAt=${repo.observation_start_at}, newest=${commits[0]?.commit.committer.date})`);
       for (const c of eligible) {
         const prediction = await generatePredictionForCommit(env.PREFLIGHT_DB, token, owner, name, c.sha);
+        console.log(`preflight: generatePredictionForCommit(${c.sha.slice(0, 7)}) -> ${prediction ? "created " + prediction.id : "skipped (already predicted or no data)"}`);
         if (prediction) predictionsCreated++;
       }
+    } else {
+      console.log(`preflight: commits fetch failed (${commitsRes.status}) for ${owner}/${name}`);
     }
 
     reconciled += await reconcilePendingPredictions(env.PREFLIGHT_DB, token, owner, name);
