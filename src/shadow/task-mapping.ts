@@ -46,7 +46,7 @@ export function stepFailed(step: BaselineStepInfo): boolean {
 export function failedTaskIds(baseline: BaselineEvidence): string[] {
   const failed = new Set<string>();
   for (const item of flattenSteps(baseline)) {
-    if (!stepFailed(item.step)) {
+    if (stepFailed(item.step)) {
       for (const id of item.taskIds) failed.add(id);
     }
   }
