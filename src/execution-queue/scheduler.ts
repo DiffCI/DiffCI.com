@@ -17,6 +17,15 @@ export interface SchedulerDeps {
   runnerProvider: RunnerProvider;
   /** Returns the organization's current max-concurrency entitlement (-1 = unlimited). */
   getMaxConcurrency: (organizationId: string) => Promise<number>;
+  /** R1 (Real Runner) addition - optional. When a provider needs a real, per-runner, per-job
+   * authentication credential (src/runner/agent-api.ts's register/claim/result boundary) rather than
+   * running synchronously inside one control-plane-initiated call, this hook mints one AFTER the
+   * Runner row exists (so runnerId is known) and BEFORE provisionRunner() is called, and its result is
+   * merged into the RunnerRequest as `runnerCredential`/`jobCommand`. Providers that don't need this
+   * (mock, the original synchronous Cloudflare Containers provider) are unaffected - the scheduler
+   * itself stays provider-agnostic; only a caller that KNOWS it's using a credential-based provider
+   * supplies this hook. */
+  mintRunnerCredential?: (input: { runnerId: string; jobId: string; organizationId: string }) => Promise<{ token: string; apiBaseUrl: string; jobCommand: string }>;
 }
 
 export interface ScheduleOutcome {
@@ -59,7 +68,13 @@ async function assignOne(deps: SchedulerDeps, item: QueueItem): Promise<Schedule
 
   try {
     await deps.runnerStore.transitionRunnerStatus(runner.id, "provisioning");
-    const instance = await deps.runnerProvider.provisionRunner({ organizationId: item.organizationId, repositoryId: item.repositoryId, resourceClass: item.requestedResourceClass });
+    const credential = await deps.mintRunnerCredential?.({ runnerId: runner.id, jobId: item.id, organizationId: item.organizationId });
+    const instance = await deps.runnerProvider.provisionRunner({
+      organizationId: item.organizationId,
+      repositoryId: item.repositoryId,
+      resourceClass: item.requestedResourceClass,
+      ...(credential ? { runnerCredential: { runnerId: runner.id, jobId: item.id, token: credential.token, apiBaseUrl: credential.apiBaseUrl }, jobCommand: credential.jobCommand } : {}),
+    });
     await deps.runnerStore.setProviderRunnerId(runner.id, instance.providerRunnerId);
     await deps.runnerStore.transitionRunnerStatus(runner.id, "ready");
     await deps.runnerStore.transitionRunnerStatus(runner.id, "assigned");

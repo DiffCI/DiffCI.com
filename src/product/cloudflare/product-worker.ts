@@ -43,6 +43,12 @@ import { makeD1RunnerStore } from "../../runner/store.js";
 import { runOrphanCleanup } from "../../runner/cleanup.js";
 import { createMockRunnerProvider } from "../../runner/mock-provider.js";
 import { createCloudflareContainerRunnerProvider } from "../../runner/cloudflare-container-provider.js";
+import { createCloudflareContainerAsyncRunnerProvider } from "../../runner/cloudflare-container-async-provider.js";
+import { makeD1RunnerTokenStore } from "../../runner/token.js";
+import { handleRegister, handleHeartbeat, handleClaim, handleResult, type AgentApiDeps } from "../../runner/agent-api.js";
+import { buildRunnerResourceTags } from "../../runner/tags.js";
+import { createCloudflareContainersLiteCostModel } from "../../usage/cost-model.js";
+import { scheduleNext } from "../../execution-queue/scheduler.js";
 import { makeD1ExecutionQueueStore } from "../../execution-queue/store.js";
 import { makeD1ShadowReadBoundary, type D1Binding as ShadowD1Binding } from "../shadow-read-boundary.js";
 import {
@@ -68,6 +74,9 @@ export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   CSRF_SECRET?: string;
   SYNTHETIC_RUNNER_URL?: string; // e.g. https://diffci-synthetic-runner.<account>.workers.dev
   RUNNER_CONTROL_TOKEN?: string; // must match the secret configured on wrangler.synthetic-runner.jsonc
+  DIFFCI_API_ORIGIN?: string; // this Worker's own public base URL - injected into R1 runners so their
+                              // bootstrap script knows where to call back (src/runner/agent-api.ts)
+  DIFFCI_ENVIRONMENT_LABEL?: string; // R1 Part 6 resource-tag "environment" value - defaults to "staging"
 }
 
 function runnerProviderFromEnv(env: Env) {
@@ -75,6 +84,25 @@ function runnerProviderFromEnv(env: Env) {
     return createCloudflareContainerRunnerProvider({ workerBaseUrl: env.SYNTHETIC_RUNNER_URL, controlToken: env.RUNNER_CONTROL_TOKEN, jobCommand: 'echo "diffci-runner-ok"' });
   }
   return createMockRunnerProvider();
+}
+
+/** R1's real, genuinely-async provider - see src/runner/cloudflare-container-async-provider.ts's own
+ * header for why this is a SEPARATE provider from runnerProviderFromEnv()'s synchronous one above. */
+function asyncRunnerProviderFromEnv(env: Env) {
+  if (!env.SYNTHETIC_RUNNER_URL || !env.RUNNER_CONTROL_TOKEN) return undefined;
+  return createCloudflareContainerAsyncRunnerProvider({ workerBaseUrl: env.SYNTHETIC_RUNNER_URL, controlToken: env.RUNNER_CONTROL_TOKEN, startTimeoutMs: 30_000 });
+}
+
+function agentApiDepsFromEnv(env: Env): AgentApiDeps {
+  const store = makeD1ProductStore(env.PRODUCT_DB);
+  return {
+    tokenStore: makeD1RunnerTokenStore(env.PRODUCT_DB),
+    runnerStore: makeD1RunnerStore(env.PRODUCT_DB),
+    queueStore: makeD1ExecutionQueueStore(env.PRODUCT_DB),
+    usageStore: makeD1UsageStore(env.PRODUCT_DB),
+    costModel: createCloudflareContainersLiteCostModel(),
+    recordAuditEvent: (entry) => store.recordAuditEvent(entry),
+  };
 }
 
 function json(payload: unknown, status = 200, extraHeaders?: Headers): Response {
@@ -260,6 +288,59 @@ export default {
       return json({ ok: true, status: result.status }); // always 200 for a recognized-but-not-actionable outcome - Part 7 safe retry behavior
     }
 
+    // --- R1 runner-agent API (Part 13) -----------------------------------------------------------------
+    // Authenticated purely by each request's own one-time runner token (src/runner/agent-api.ts /
+    // src/runner/token.ts) - NEVER a browser session (Part 13: "Do not reuse browser sessions for runner
+    // authentication"). Placed before the session-auth gate below since a real runner agent carries no
+    // user session at all - same reasoning as the billing webhook route just above.
+    if (request.method === "POST" && url.pathname === "/v1/runner/register") {
+      const body = (await request.json().catch(() => null)) as { token?: string } | null;
+      if (!body?.token) return json({ ok: false, error: "token is required" }, 400);
+      const result = await handleRegister(body.token, agentApiDepsFromEnv(env));
+      return json(result, result.ok ? 200 : 401);
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/runner/heartbeat") {
+      const body = (await request.json().catch(() => null)) as { token?: string } | null;
+      if (!body?.token) return json({ ok: false, error: "token is required" }, 400);
+      const result = await handleHeartbeat(body.token, agentApiDepsFromEnv(env));
+      return json(result, result.ok ? 200 : 401);
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/runner/claim") {
+      const body = (await request.json().catch(() => null)) as { token?: string } | null;
+      if (!body?.token) return json({ ok: false, error: "token is required" }, 400);
+      const result = await handleClaim(body.token, agentApiDepsFromEnv(env));
+      return json(result, result.ok ? 200 : result.error === "already_claimed" ? 409 : 401);
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/runner/result") {
+      const body = (await request.json().catch(() => null)) as { token?: string; exitCode?: number; stdout?: string; stderr?: string; durationMs?: number } | null;
+      if (!body?.token || body.exitCode === undefined || body.stdout === undefined || body.durationMs === undefined) {
+        return json({ ok: false, error: "token, exitCode, stdout, and durationMs are required" }, 400);
+      }
+      const deps = agentApiDepsFromEnv(env);
+      const result = await handleResult({ token: body.token, exitCode: body.exitCode, stdout: body.stdout, stderr: body.stderr, durationMs: body.durationMs }, deps);
+      if (!result.ok) return json(result, 401);
+
+      // Part 9/26: request real teardown right after a genuine (non-duplicate) completion - R1's own
+      // "one job per runner" model means completion IS the natural termination trigger, not a separate
+      // later sweep. A duplicate result (already torn down by the first call) skips this safely.
+      if (!result.data?.duplicate) {
+        const runner = await deps.runnerStore.getRunner(result.data!.runnerId);
+        if (runner?.providerRunnerId && runner.status === "completed") {
+          const provider = asyncRunnerProviderFromEnv(env);
+          if (provider) {
+            await deps.runnerStore.transitionRunnerStatus(runner.id, "terminating");
+            await provider.terminateRunner(runner.providerRunnerId);
+            await deps.runnerStore.transitionRunnerStatus(runner.id, "terminated");
+            await store.recordAuditEvent({ organizationId: runner.organizationId, action: "runner.terminated", targetType: "runner", targetId: runner.id });
+          }
+        }
+      }
+      return json(result, 200);
+    }
+
     if (request.method === "POST" && url.pathname === "/v1/organizations") {
       const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
       if (!principal) return json({ ok: false, error: "unauthorized" }, 401);
@@ -324,6 +405,42 @@ export default {
       if (request.method === "GET" && subPath === "/runners") {
         const outcome = await listRecentRunnerJobs(routeDeps, userId, organizationId);
         return outcome.ok ? json({ ok: true, runners: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      // R1 Part 26/35: the real end-to-end proof entry point - "authenticated organization -> create
+      // synthetic job -> queue -> scheduler -> provider -> real runner -> runner API -> result -> usage
+      // -> audit -> teardown", driven through this actual staging route, never by invoking provider code
+      // directly from a script. Deliberately: ONLY the fixed, trivial, deterministic command (Part 15) -
+      // no request body field lets a caller supply an arbitrary command (Part 36/40: R1 never executes
+      // caller-supplied code).
+      if (request.method === "POST" && subPath === "/runner-jobs/synthetic") {
+        const detailsOutcome = await getOrganizationDetails(routeDeps, userId, organizationId);
+        if (!detailsOutcome.ok) return json({ ok: false, error: detailsOutcome.error }, outcomeStatus(detailsOutcome.error));
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const provider = asyncRunnerProviderFromEnv(env);
+        if (!provider || !env.DIFFCI_API_ORIGIN) return json({ ok: false, error: "R1 real runner is not configured in this environment (SYNTHETIC_RUNNER_URL/RUNNER_CONTROL_TOKEN/DIFFCI_API_ORIGIN)" }, 503);
+
+        const tokenStore = makeD1RunnerTokenStore(env.PRODUCT_DB);
+        const item = await queueStore.enqueue({ organizationId, jobReference: 'node -e "console.log(\'diffci-runner-ok\')"', requestedResourceClass: "lite" });
+        await store.recordAuditEvent({ organizationId, actorUserId: userId, action: "runner.job_queue_created", targetType: "queue_item", targetId: item.id });
+
+        const outcomes = await scheduleNext(
+          {
+            queueStore,
+            runnerStore,
+            runnerProvider: provider,
+            getMaxConcurrency: async () => detailsOutcome.data.entitlements.maxConcurrency,
+            mintRunnerCredential: async ({ runnerId, jobId, organizationId: orgId }) => {
+              const { raw } = await tokenStore.issueToken({ runnerId, jobId, organizationId: orgId, ttlMs: 10 * 60_000 });
+              const tags = buildRunnerResourceTags({ environment: env.DIFFCI_ENVIRONMENT_LABEL ?? "staging", runnerId, organizationId: orgId, jobId, createdAt: new Date().toISOString() });
+              await store.recordAuditEvent({ organizationId: orgId, actorUserId: userId, action: "runner.provisioned", targetType: "runner", targetId: runnerId, metadata: { tags } });
+              return { token: raw, apiBaseUrl: env.DIFFCI_API_ORIGIN!, jobCommand: item.jobReference };
+            },
+          },
+          1,
+        );
+        const outcome = outcomes.find((o) => o.queueItemId === item.id);
+        return json({ ok: true, queueItemId: item.id, runnerId: outcome?.runnerId, outcome: outcome?.outcome }, 202);
       }
 
       const runnerMatch = subPath.match(/^\/runners\/([^/]+)$/);
