@@ -34,9 +34,14 @@ installed anywhere except your own two repos.
 1. **Create the App.** GitHub -> Settings -> Developer settings -> GitHub Apps -> *New GitHub App*
    (personal account, same as the Shadow App).
    - Name: `DiffCI Runner Dispatcher` - Homepage URL: `https://diffci.com`
-   - Webhook URL: `https://diffci-github-runner.damp-waterfall-0cd8.workers.dev/webhook` - **Active**
-     checked (unlike the Shadow App, the route is already live - `github-runner-worker.ts` is deployed
-     and waiting). Set a webhook secret (`openssl rand -hex 32`) and keep it for step 3.
+   - Webhook URL: `https://runner.diffci.com/webhook` - **Active** checked (unlike the Shadow App, the
+     route is already live - `github-runner-worker.ts` is deployed and waiting). Set a webhook secret
+     (`openssl rand -hex 32`) and keep it for step 3.
+     (Originally registered against `https://diffci-github-runner.damp-waterfall-0cd8.workers.dev/webhook`;
+     cut over to the `runner.diffci.com` custom domain on 2026-08-22 once that zone went active - see
+     wrangler.github-runner.jsonc's `routes` comment. Live-verified post-cutover: a real `workflow_job`
+     delivery to the new URL got a 202 and the underlying CI job ran to completion. The old workers.dev
+     URL is left deployed but is no longer what GitHub calls.)
    - Repository permissions - exactly these two:
      - **Administration: Read and write** (required to mint runner registration tokens via
        `POST /repos/{owner}/{repo}/actions/runners/registration-token`)

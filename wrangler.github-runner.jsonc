@@ -12,12 +12,12 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
-  // Custom-domain route added 2026-08-22 now that diffci.com is an active zone in this account. This
-  // ADDS runner.diffci.com as a second reachable hostname alongside the existing *.workers.dev URL - it
-  // does NOT remove or repoint the workers.dev URL GitHub's `workflow_job` webhook is still calling (see
-  // docs/github-app-registration-runner.md), so this deploy alone is non-disruptive. Do NOT update the
-  // GitHub App's webhook URL to runner.diffci.com until this route has been verified live - flipping that
-  // GitHub-side setting is the actual cutover and needs its own explicit go-ahead.
+  // Custom-domain route added 2026-08-22 now that diffci.com is an active zone in this account.
+  // GitHub's `workflow_job` webhook (Runner Dispatcher App) has been cut over to
+  // https://runner.diffci.com/webhook - live-verified: a real post-cutover delivery got a 202 and its CI
+  // job ran to completion (see docs/github-app-registration-runner.md). The old workers.dev URL is left
+  // deployed (removing it isn't necessary and Workers can answer on multiple hostnames at once) but
+  // GitHub no longer calls it.
   "routes": [{ "pattern": "runner.diffci.com", "custom_domain": true }],
   //
   // No `vars` block for secrets - GITHUB_WEBHOOK_SECRET, GITHUB_APP_ID, and GITHUB_APP_PRIVATE_KEY are
