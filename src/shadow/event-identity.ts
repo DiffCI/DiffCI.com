@@ -57,5 +57,5 @@ export function predictionPrecededGroundTruth(
   const predictedAtMs = Date.parse(predictionCreatedAt);
   const observedAtMs = Date.parse(groundTruth.workflowCompletedAt ?? groundTruth.groundTruthFetchedAt);
   if (Number.isNaN(predictedAtMs) || Number.isNaN(observedAtMs)) return false;
-  return predictedAtMs > observedAtMs;
+  return predictedAtMs < observedAtMs;
 }
