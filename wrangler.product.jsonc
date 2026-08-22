@@ -1,0 +1,43 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "diffci-product",
+  "main": "./src/product/cloudflare/product-worker.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  // DIFFCI_ENVIRONMENT="production" is the correct value here even though this deploys only to the
+  // workers.dev subdomain (no custom domain/route configured - Part 5/28: "not production-ready yet",
+  // "routes/domains only if appropriate"). DIFFCI_ENVIRONMENT governs AUTH SECURITY POSTURE
+  // (src/auth/config.ts parseAuthConfig), not public-announcement status - it must be "production" so
+  // DIFFCI_ALLOW_DEV_HEADER_AUTH can never be combined with it (parseAuthConfig() throws and the Worker
+  // refuses to serve ANY request if that illegal combination is ever configured - see Part 10/3).
+  // DIFFCI_ALLOW_DEV_HEADER_AUTH is deliberately ABSENT from vars entirely, not set to "false" - its
+  // absence is what proves no deploy process could have silently left the dev-header path enabled.
+  "vars": {
+    "DIFFCI_PRODUCT_ENABLED": "true",
+    "DIFFCI_ENVIRONMENT": "production",
+    "DIFFCI_SESSION_TTL_MS": "2592000000" // 30 days
+  },
+  "d1_databases": [
+    // Writable - this Worker owns diffci-product (accounts/billing/sessions/usage/runners/queue/audit).
+    { "binding": "PRODUCT_DB", "database_name": "diffci-product", "database_id": "b3951dbd-e253-46bf-907e-ae07d0998aa5" },
+    // READ-ONLY BY CODE DISCIPLINE, not by D1 permission (D1 bindings have no read-only mode). Every
+    // query against this binding must go through src/product/shadow-read-boundary.ts, which issues only
+    // SELECT statements - see that file's header comment (Part 20). This Worker must NEVER write to
+    // diffci-research; that database belongs to Stage 2F's frozen shadow/research pipeline.
+    { "binding": "RESEARCH_DB", "database_name": "diffci-research", "database_id": "84ddc2e5-0f1d-424f-8bfc-81f4e39dc534" }
+  ]
+  // Secrets (NOT committed here - set via `wrangler secret put <NAME> --config wrangler.product.jsonc`):
+  //   LEMONSQUEEZY_API_KEY, LEMONSQUEEZY_WEBHOOK_SECRET, LEMONSQUEEZY_STORE_ID  - billing (Part 12/13,
+  //     deferred per this build's own scoping decision - not yet configured, checkout/portal/webhook
+  //     routes correctly return 503 "billing is not configured" until they are)
+  //   LEMONSQUEEZY_VARIANT_IDS - optional JSON, e.g. '{"developer":"123"}'
+  //   GITHUB_OAUTH_CLIENT_ID, GITHUB_OAUTH_CLIENT_SECRET - GitHub OAuth App credentials (Part 6) - see
+  //     docs/product/2026-08-22-github-oauth-app-registration.md for the exact registration steps
+  //   CSRF_SECRET - signs the double-submit CSRF token (Part 9); generate with
+  //     `openssl rand -base64 32` or equivalent, never reused across environments
+}
