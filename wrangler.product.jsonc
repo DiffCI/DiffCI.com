@@ -5,10 +5,21 @@
   "compatibility_date": "2026-08-20",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  // Pinned explicitly (2026-08-22) now that this account holds a second zone (diffci.com, added
+  // alongside dentalpresence.in) - was previously implicit (this account was the only one the wrangler
+  // OAuth token could resolve to), so pinning changes nothing about where this already deploys, it just
+  // stops relying on that being true by accident now that there's more than one zone to disambiguate.
+  "account_id": "571ba9bf90457be28a492d139c055e54",
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
   },
+  // Custom-domain route deliberately NOT added below even though diffci.com now exists as a zone in this
+  // account (2026-08-22) - this Worker is still "not production-ready yet" per Part 5/28 (see the
+  // DIFFCI_ENVIRONMENT comment just below), and going live on the apex domain is a product decision, not
+  // a DNS one. Uncomment when actually ready to serve production traffic on diffci.com:
+  // "routes": [{ "pattern": "diffci.com/*", "custom_domain": true }],
+  //
   // DIFFCI_ENVIRONMENT="production" is the correct value here even though this deploys only to the
   // workers.dev subdomain (no custom domain/route configured - Part 5/28: "not production-ready yet",
   // "routes/domains only if appropriate"). DIFFCI_ENVIRONMENT governs AUTH SECURITY POSTURE

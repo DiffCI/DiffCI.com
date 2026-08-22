@@ -5,10 +5,17 @@
   "compatibility_date": "2026-08-20",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  // Pinned explicitly (2026-08-22) - see wrangler.product.jsonc's account_id comment for the full
+  // rationale (this account now holds two zones: dentalpresence.in and diffci.com).
+  "account_id": "571ba9bf90457be28a492d139c055e54",
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
   },
+  // No custom-domain route: this is Stage 2F's frozen research/shadow pipeline (bearer-token-gated,
+  // GitHub-App-webhook-driven), not a public product surface - workers.dev stays correct here regardless
+  // of diffci.com's zone. Do not add a route without re-reading the Stage 2F observation-window freeze
+  // (project memory: diffci-stage2f-observation-window-2026-08-22) first.
   // NOTE: EXPECTED_SOURCE_SHA (source-version integrity, 2026-08-21 fix - see
   // src/research/cloudflare/shadow-source-integrity.ts) is deliberately NOT listed in "vars" below. It's
   // always injected at deploy time via `wrangler deploy --var EXPECTED_SOURCE_SHA:<HEAD>` by

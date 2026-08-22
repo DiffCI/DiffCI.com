@@ -5,10 +5,18 @@
   "compatibility_date": "2026-08-20",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  // Pinned explicitly (2026-08-22) - see wrangler.product.jsonc's account_id comment for the full
+  // rationale (this account now holds two zones: dentalpresence.in and diffci.com).
+  "account_id": "571ba9bf90457be28a492d139c055e54",
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
   },
+  // Custom-domain route deliberately NOT added even though diffci.com now exists as a zone in this
+  // account (2026-08-22) - this Worker's routes are dispatch-token-gated diagnostics (/run-once,
+  // /status), not a public product surface, so workers.dev is fine for now. If exposed publicly later:
+  // "routes": [{ "pattern": "preflight.diffci.com/*", "custom_domain": true }],
+  //
   // Its own D1 database, separate from diffci-product and diffci-research (Stage 2F) - structural
   // storage separation, not just a separate table prefix. See src/preflight/cloudflare/schema.sql's
   // own header comment for the full rationale.

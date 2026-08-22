@@ -215,6 +215,19 @@ async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null, workerO
     return Response.json({ ok: true, runs: body.workflow_runs ?? [] });
   }
 
+  // ?delivery=installations - lists every installation of this App with its OWN currently-granted
+  // permissions (distinct from /app's own permissions, which is the App's declared CEILING, not what
+  // any specific installation has actually been granted - added while diagnosing a real 403 on
+  // /repos/.../commits after adding "Contents: Read-only" to the App's manifest: GitHub does not
+  // auto-propagate a permission increase to existing installations, the installation owner must
+  // separately approve it, and this route is how to check whether that approval has actually landed).
+  if (deliveryId === "installations") {
+    const res = await fetch("https://api.github.com/app/installations", { headers });
+    if (!res.ok) return Response.json({ ok: false, error: `installations fetch failed (${res.status})` }, { status: 502 });
+    const installations = (await res.json()) as Array<{ id: number; account: { login: string }; permissions: Record<string, string> }>;
+    return Response.json({ ok: true, installations: installations.map((i) => ({ id: i.id, account: i.account.login, permissions: i.permissions })) });
+  }
+
   // No delivery param - App-level metadata + recent webhook deliveries.
   const [appRes, deliveriesRes] = await Promise.all([
     fetch("https://api.github.com/app", { headers }),
