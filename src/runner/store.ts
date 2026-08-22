@@ -38,6 +38,9 @@ function rowToRunner(row: Record<string, unknown>): Runner {
     terminatedAt: (row.terminated_at as string | null) ?? undefined,
     runtimeSeconds: (row.runtime_seconds as number | null) ?? undefined,
     costEstimateUsd: (row.cost_estimate_usd as number | null) ?? undefined,
+    costBasis: (row.cost_basis as string | null) ?? undefined,
+    lastHeartbeatAt: (row.last_heartbeat_at as string | null) ?? undefined,
+    failureReason: (row.failure_reason as string | null) ?? undefined,
   };
 }
 
@@ -52,10 +55,13 @@ export interface RunnerStore {
   setProviderRunnerId(id: string, providerRunnerId: string): Promise<void>;
   /** Throws InvalidRunnerTransitionError (lifecycle.ts) without writing anything if `to` is not a legal
    * transition from the runner's CURRENT persisted status. */
-  transitionRunnerStatus(id: string, to: RunnerState, extra?: { runtimeSeconds?: number; costEstimateUsd?: number }): Promise<Runner>;
+  transitionRunnerStatus(id: string, to: RunnerState, extra?: { runtimeSeconds?: number; costEstimateUsd?: number; costBasis?: string; failureReason?: string }): Promise<Runner>;
   assignJob(id: string, jobId: string): Promise<void>;
   /** Part 15 orphan detection: runners stuck in a non-terminal state past the given cutoff timestamp. */
   findStaleRunners(olderThanIso: string, statuses: RunnerState[]): Promise<Runner[]>;
+  /** R1 Part 18: updated by every real runner-agent callback (register/heartbeat/claim/result), not
+   * just the dedicated heartbeat route - any successful call from the runner IS a liveness signal. */
+  recordHeartbeat(id: string): Promise<void>;
 }
 
 export function makeD1RunnerStore(db: D1Binding): RunnerStore {
@@ -99,13 +105,26 @@ export function makeD1RunnerStore(db: D1Binding): RunnerStore {
       const timestampColumn: Partial<Record<RunnerState, string>> = { ready: "ready_at", assigned: "started_at", completed: "completed_at", terminated: "terminated_at" };
       const col = timestampColumn[to];
 
+      const setClauses = [
+        "status = ?",
+        ...(col ? [`${col} = ?`] : []),
+        ...(extra?.runtimeSeconds !== undefined ? ["runtime_seconds = ?"] : []),
+        ...(extra?.costEstimateUsd !== undefined ? ["cost_estimate_usd = ?"] : []),
+        ...(extra?.costBasis !== undefined ? ["cost_basis = ?"] : []),
+        ...(extra?.failureReason !== undefined ? ["failure_reason = ?"] : []),
+      ];
+      const values = [
+        to,
+        ...(col ? [ts] : []),
+        ...(extra?.runtimeSeconds !== undefined ? [extra.runtimeSeconds] : []),
+        ...(extra?.costEstimateUsd !== undefined ? [extra.costEstimateUsd] : []),
+        ...(extra?.costBasis !== undefined ? [extra.costBasis] : []),
+        ...(extra?.failureReason !== undefined ? [extra.failureReason] : []),
+      ];
+
       await db
-        .prepare(
-          `UPDATE runners SET status = ?${col ? `, ${col} = ?` : ""}${extra?.runtimeSeconds !== undefined ? ", runtime_seconds = ?" : ""}${extra?.costEstimateUsd !== undefined ? ", cost_estimate_usd = ?" : ""} WHERE id = ?`,
-        )
-        .bind(
-          ...[to, ...(col ? [ts] : []), ...(extra?.runtimeSeconds !== undefined ? [extra.runtimeSeconds] : []), ...(extra?.costEstimateUsd !== undefined ? [extra.costEstimateUsd] : []), id],
-        )
+        .prepare(`UPDATE runners SET ${setClauses.join(", ")} WHERE id = ?`)
+        .bind(...values, id)
         .run();
 
       const updated = await db.prepare(`SELECT * FROM runners WHERE id = ?`).bind(id).first<Record<string, unknown>>();
@@ -124,6 +143,10 @@ export function makeD1RunnerStore(db: D1Binding): RunnerStore {
         .bind(olderThanIso, ...statuses)
         .all<Record<string, unknown>>();
       return results.map(rowToRunner);
+    },
+
+    async recordHeartbeat(id) {
+      await db.prepare(`UPDATE runners SET last_heartbeat_at = ? WHERE id = ?`).bind(nowIso(), id).run();
     },
   };
 }
