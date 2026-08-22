@@ -9,7 +9,7 @@
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
-    "noUncheckedIndexedAccess": false,
+    "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "declaration": true,
