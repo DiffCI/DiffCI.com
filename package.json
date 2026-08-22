@@ -16,7 +16,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsc",
-    "test": "tsx --test tests/**/*.test.ts",
+    "test": "tsx --test \"tests/**/*.test.ts\"",
     "check": "npm run typecheck && npm run test",
     "diffci": "tsx scripts/diffci.ts",
     "impact": "tsx scripts/diffci.ts impact",

@@ -85,9 +85,14 @@ export interface PredictionStore {
   getPrediction(id: string): Promise<PredictionRecord | undefined>;
   listPredictions(): Promise<readonly PredictionRecord[]>;
   /** Called by the reconciliation flow once real CI ground truth has been read for this commit -
-   * after this call, createLivePrediction() for the same (repo, commit) pair is refused. Idempotent. */
-  recordGroundTruthKnown(repositoryOwnerName: string, commitSha: string): void;
-  hasGroundTruthKnown(repositoryOwnerName: string, commitSha: string): boolean;
+   * after this call, createLivePrediction() for the same (repo, commit) pair is refused. Idempotent.
+   * Async in this interface (even though the in-memory implementation could be sync) because a real
+   * D1-backed implementation (src/preflight/cloudflare/d1-prediction-store.ts) derives this from a
+   * genuine query against preflight_reconciliations rather than tracking separate in-process state -
+   * found while building that implementation: a sync signature here would have forced a fake/throwing
+   * D1 implementation instead of a real one. */
+  recordGroundTruthKnown(repositoryOwnerName: string, commitSha: string): Promise<void>;
+  hasGroundTruthKnown(repositoryOwnerName: string, commitSha: string): Promise<boolean>;
 }
 
 function defaultId(): string {
@@ -112,8 +117,7 @@ export class InMemoryPredictionStore implements PredictionStore {
   }
 
   async createLivePrediction(input: CreatePredictionInput): Promise<PredictionRecord> {
-    const key = this.commitKey(input.repositoryOwnerName, input.commitSha);
-    if (this.groundTruthKnownCommits.has(key)) {
+    if (await this.hasGroundTruthKnown(input.repositoryOwnerName, input.commitSha)) {
       throw new GroundTruthAlreadyKnownError(input.repositoryOwnerName, input.commitSha);
     }
     const record: PredictionRecord = { id: this.generateId(), createdAt: this.now(), mode: "LIVE", ...input };
@@ -138,11 +142,11 @@ export class InMemoryPredictionStore implements PredictionStore {
     return [...this.predictions.values()];
   }
 
-  recordGroundTruthKnown(repositoryOwnerName: string, commitSha: string): void {
+  async recordGroundTruthKnown(repositoryOwnerName: string, commitSha: string): Promise<void> {
     this.groundTruthKnownCommits.add(this.commitKey(repositoryOwnerName, commitSha));
   }
 
-  hasGroundTruthKnown(repositoryOwnerName: string, commitSha: string): boolean {
+  async hasGroundTruthKnown(repositoryOwnerName: string, commitSha: string): Promise<boolean> {
     return this.groundTruthKnownCommits.has(this.commitKey(repositoryOwnerName, commitSha));
   }
 }

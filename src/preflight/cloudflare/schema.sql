@@ -14,6 +14,11 @@
 -- DentalPresence.in"). Existence of a row here is the enrollment; absence means "not observed."
 CREATE TABLE IF NOT EXISTS preflight_repositories (
   repository_owner_name TEXT PRIMARY KEY,      -- "owner/name", e.g. "adityankale190895/DiffCI.com"
+  installation_id TEXT NOT NULL,               -- the GitHub App installation id for this repo - needed
+                                                -- to mint an installation token for the (separate,
+                                                -- read-only) API calls src/preflight/cloudflare/worker.ts
+                                                -- makes; the SAME App diffci-github-runner already uses
+                                                -- (src/shadow/github-app.ts, read-only import, never modified)
   observation_start_at TEXT NOT NULL,          -- Part M's preflight_observation_start_at - set exactly
                                                 -- once, at enrollment, never edited afterwards
   enabled INTEGER NOT NULL DEFAULT 1           -- 0/1 - a kill switch that stops NEW predictions without

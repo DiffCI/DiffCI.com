@@ -29,13 +29,13 @@ describe("InMemoryPredictionStore - Part D temporal + structural safety", () => 
   it("refuses to create a LIVE prediction once ground truth is already known for that commit", async () => {
     const store = new InMemoryPredictionStore();
     const input = baseInput();
-    store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
+    await store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
     await assert.rejects(() => store.createLivePrediction(input), GroundTruthAlreadyKnownError);
   });
 
   it("recordGroundTruthKnown only blocks the SAME (repo, commit) pair, not unrelated ones", async () => {
     const store = new InMemoryPredictionStore();
-    store.recordGroundTruthKnown("adityankale190895/DiffCI.com", "some-other-sha");
+    await store.recordGroundTruthKnown("adityankale190895/DiffCI.com", "some-other-sha");
     const record = await store.createLivePrediction(baseInput());
     assert.ok(record.id);
   });
@@ -43,15 +43,15 @@ describe("InMemoryPredictionStore - Part D temporal + structural safety", () => 
   it("recordGroundTruthKnown is idempotent and does not throw on repeated calls", async () => {
     const store = new InMemoryPredictionStore();
     const input = baseInput();
-    store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
-    store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
-    assert.equal(store.hasGroundTruthKnown(input.repositoryOwnerName, input.commitSha), true);
+    await store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
+    await store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
+    assert.equal(await store.hasGroundTruthKnown(input.repositoryOwnerName, input.commitSha), true);
   });
 
   it("createReplayPrediction is allowed even when ground truth is already known - replay is explicitly retrospective", async () => {
     const store = new InMemoryPredictionStore(() => "2026-08-22T12:00:00.000Z");
     const input = baseInput();
-    store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
+    await store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
     const record = await store.createReplayPrediction({ ...input, simulatedCreatedAt: "2026-08-15T09:00:00.000Z" });
     assert.equal(record.mode, "REPLAY");
     assert.equal(record.createdAt, "2026-08-15T09:00:00.000Z", "createdAt represents the SIMULATED as-of time, not the real replay time");

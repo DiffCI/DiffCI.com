@@ -292,6 +292,22 @@ export default {
       }
       return runnerAppInfo(env, url.searchParams.get("delivery"), url.origin);
     }
+    // Internal token-proxy route (Preflight P1 Part M): diffci-preflight has no GitHub App credentials
+    // of its own - deliberately, to avoid duplicating a private key across two Workers - and instead
+    // requests a real installation token from THIS Worker, the one already holding those credentials.
+    // Same auth (RUNNER_DISPATCH_TOKEN) and same real signAppJwt/exchangeInstallationToken path
+    // mintRegistrationToken/runnerAppInfo already use - no new credential surface, only a new caller.
+    if (url.pathname === "/installation-token" && request.method === "GET") {
+      const auth = request.headers.get("Authorization") ?? "";
+      if (!env.RUNNER_DISPATCH_TOKEN || auth !== `Bearer ${env.RUNNER_DISPATCH_TOKEN}`) {
+        return new Response("unauthorized", { status: 401 });
+      }
+      const installationId = url.searchParams.get("installationId");
+      if (!installationId || !/^\d+$/.test(installationId)) return Response.json({ ok: false, error: "installationId is required" }, { status: 400 });
+      const appJwt = await signAppJwt({ appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY });
+      const installationToken = await exchangeInstallationToken(appJwt, installationId);
+      return Response.json({ ok: true, token: installationToken.token, expiresAt: installationToken.expiresAt });
+    }
     if (url.pathname !== "/webhook" || request.method !== "POST") return new Response("not found", { status: 404 });
 
     // Signature must be verified against the RAW body - read as text first, never parse-then-reserialize.

@@ -1,0 +1,41 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "diffci-preflight",
+  "main": "./src/preflight/cloudflare/worker.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  // Its own D1 database, separate from diffci-product and diffci-research (Stage 2F) - structural
+  // storage separation, not just a separate table prefix. See src/preflight/cloudflare/schema.sql's
+  // own header comment for the full rationale.
+  "d1_databases": [
+    {
+      "binding": "PREFLIGHT_DB",
+      "database_name": "diffci-preflight",
+      "database_id": "aa64b971-05b8-4537-a8ca-7691a589097b"
+    }
+  ],
+  // Every 10 minutes - matches Stage 2F's own established shadow-cron cadence (a real, working
+  // precedent in this project), not a new/untested interval choice.
+  "triggers": {
+    "crons": ["*/10 * * * *"]
+  },
+  // This Worker holds no GitHub App credentials of its own - it borrows a short-lived installation
+  // token per tick from diffci-github-runner's /installation-token route (the ONE Worker that holds
+  // the App's private key), via a real Cloudflare Service Binding (in-process Worker-to-Worker call),
+  // NOT a raw fetch() to that Worker's public *.workers.dev URL - Cloudflare blocks that specific
+  // pattern outright (error 1042, confirmed live: a Worker fetching another Worker's own workers.dev
+  // subdomain is rejected, apparently to prevent a Worker-loop/SSRF-shaped abuse pattern). A service
+  // binding is the documented, supported way to do this instead - it never touches the public network.
+  //
+  // Secrets (NOT committed here, via `wrangler secret put <NAME> --config wrangler.preflight.jsonc`):
+  // RUNNER_WORKER_TOKEN - the SAME value as diffci-github-runner's own RUNNER_DISPATCH_TOKEN secret
+  // (that Worker's /installation-token route checks incoming requests against it, regardless of
+  // whether they arrive via a service binding or the public internet).
+  // PREFLIGHT_DISPATCH_TOKEN - Bearer token for THIS Worker's own /run-once and /status diagnostic routes.
+  "services": [{ "binding": "RUNNER_WORKER", "service": "diffci-github-runner" }],
+}

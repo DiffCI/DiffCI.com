@@ -177,7 +177,7 @@ describe("end-to-end: prediction-before-ground-truth wired to reconciliation", (
     const record = reconcile({ prediction, workflowRunId: "r1", workflowConclusion: "success", totalWorkflowDurationMs: 5000 }, () => "2026-08-22T10:05:00.000Z");
     assert.equal(record.outcome, "TN");
 
-    store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
+    await store.recordGroundTruthKnown(input.repositoryOwnerName, input.commitSha);
     await assert.rejects(() => store.createLivePrediction(input));
   });
 });
