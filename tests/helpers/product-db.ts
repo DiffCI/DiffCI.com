@@ -12,13 +12,15 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 export type SchemaModule = "product" | "billing" | "auth" | "usage" | "runner" | "execution-queue";
 
-const SCHEMA_FILES: Record<SchemaModule, string> = {
-  product: "src/product/cloudflare/schema.sql",
-  billing: "src/billing/cloudflare/schema.sql",
-  auth: "src/auth/cloudflare/schema.sql",
-  usage: "src/usage/cloudflare/schema.sql",
-  runner: "src/runner/cloudflare/schema.sql",
-  "execution-queue": "src/execution-queue/cloudflare/schema.sql",
+// 'auth' applies BOTH auth files - schema.sql (sessions) and schema-oauth.sql (provider_identities,
+// oauth_states) - since every real deployment applies them together (see scripts/migrate-product-db.ts).
+const SCHEMA_FILES: Record<SchemaModule, string[]> = {
+  product: ["src/product/cloudflare/schema.sql"],
+  billing: ["src/billing/cloudflare/schema.sql"],
+  auth: ["src/auth/cloudflare/schema.sql", "src/auth/cloudflare/schema-oauth.sql"],
+  usage: ["src/usage/cloudflare/schema.sql"],
+  runner: ["src/runner/cloudflare/schema.sql"],
+  "execution-queue": ["src/execution-queue/cloudflare/schema.sql"],
 };
 
 export function freshProductDb(modules: SchemaModule[] = ["product"]): DatabaseSync {
@@ -27,7 +29,9 @@ export function freshProductDb(modules: SchemaModule[] = ["product"]): DatabaseS
   // references organizations(id)/repositories(id).
   const ordered = ["product", ...modules.filter((m) => m !== "product")] as SchemaModule[];
   for (const m of ordered) {
-    db.exec(readFileSync(join(REPO_ROOT, SCHEMA_FILES[m]), "utf8"));
+    for (const file of SCHEMA_FILES[m]) {
+      db.exec(readFileSync(join(REPO_ROOT, file), "utf8"));
+    }
   }
   return db;
 }
