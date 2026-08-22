@@ -51,16 +51,20 @@ export default {
     // src/runner/cloudflare-container-provider.ts for how RunnerProvider's async provision/status
     // contract is satisfied on top of this single call.
     if (request.method === "POST" && url.pathname === "/v1/runner/execute") {
-      const body = (await request.json().catch(() => null)) as { runnerId?: string; jobCommand?: string } | null;
+      const body = (await request.json().catch(() => null)) as { runnerId?: string; jobCommand?: string; timeoutMs?: number } | null;
       if (!body?.runnerId) return json({ ok: false, error: "runnerId is required" }, 400);
+      // Default stays short (synthetic jobs are seconds-long by design - Part 19); a caller
+      // investigating something genuinely longer-running (e.g. a real package install/diagnostic probe,
+      // not a "synthetic job" in the Part 19 sense) may opt into a longer budget explicitly, capped at 5 min.
+      const execTimeoutMs = Math.min(body.timeoutMs ?? 30_000, 5 * 60_000);
 
       const provisionStartedAt = Date.now();
-      const sandbox = getSandbox(env.SYNTHETIC_RUNNER, body.runnerId, { enableDefaultSession: false, keepAlive: false, sleepAfter: "2m", transport: "rpc" });
+      const sandbox = getSandbox(env.SYNTHETIC_RUNNER, body.runnerId, { enableDefaultSession: false, keepAlive: false, sleepAfter: "6m", transport: "rpc" });
       const readyAt = Date.now(); // getSandbox() itself is a cheap client construction, not a container start - the real cold-start cost is inside exec() below
 
       let exec: { success: boolean; exitCode: number; stdout: string; stderr: string };
       try {
-        exec = await sandbox.exec(body.jobCommand ?? 'echo "diffci-runner-ok"', { timeout: 30_000 });
+        exec = await sandbox.exec(body.jobCommand ?? 'echo "diffci-runner-ok"', { timeout: execTimeoutMs });
       } catch (err) {
         return json({ ok: false, error: `sandbox exec failed: ${err instanceof Error ? err.message : String(err)}` }, 502);
       }

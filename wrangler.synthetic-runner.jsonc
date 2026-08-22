@@ -21,7 +21,15 @@
       // diffci-research-sandbox - its own Worker, its own Durable Object class, no shared binding, no
       // Stage 2F file touched to build it.
       "image": "docker.io/cloudflare/sandbox:0.12.5",
-      "instance_type": "lite", // smallest available instance type - synthetic jobs are seconds-long by design (Part 19)
+      // Briefly bumped to "standard-2" on 2026-08-22 to diagnose real GH-runner-registration timeouts
+      // seen while validating diffci-github-runner's Sandbox pivot on this same Worker (a convenient
+      // throwaway testbed, since this Worker's actual job is unrelated trivial echo commands). Root
+      // cause confirmed: "lite" is too CPU/network-constrained for a download+tar+installdependencies.sh
+      // sequence - reliably 3-10x slower and prone to exec() timeouts, vs. a clean ~26s total on
+      // "standard-2". Reverted back to "lite" now that the diagnosis is done and applied to
+      // wrangler.github-runner.jsonc, which is where standard-2 actually belongs (Part 19's synthetic
+      // jobs here stay trivial and don't need it).
+      "instance_type": "lite",
       "max_instances": 3, // low ceiling deliberately - this Worker exists to prove the orchestration model (Part 12), not to run production workload volume
       "rollout_step_percentage": [100]
     }

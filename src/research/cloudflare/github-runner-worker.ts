@@ -4,46 +4,58 @@
  * Flow: GitHub sends a `workflow_job` webhook -> this Worker verifies it, and if the job's labels
  * request `[self-hosted, cloudflare]` (workflows must opt in explicitly - see the README note this
  * script prints), it mints a short-lived runner-registration token via the GitHub App installed on
- * the repo, and starts ONE Cloudflare Container instance (ops/github-runner/Dockerfile) with that
- * token. The container registers itself as a single `--ephemeral` runner, runs exactly that one job,
- * deregisters, and exits - the container instance then goes away. No GitHub Actions minutes are
- * consumed (self-hosted runner compute is never billed by GitHub); the Actions control plane
- * (queuing, logs, the workflow YAML, status checks) is still GitHub's.
+ * the repo, and runs the full ephemeral-runner lifecycle (download -> install deps -> register ->
+ * run one job -> deregister) as ONE `sandbox.exec()` call against a fresh Cloudflare Sandbox Container
+ * instance. No GitHub Actions minutes are consumed (self-hosted runner compute is never billed by
+ * GitHub); the Actions control plane (queuing, logs, the workflow YAML, status checks) is still GitHub's.
  *
- * THIS IS CODE ONLY until a GitHub App is registered and installed on both DiffCI.com and
- * DentalPresence.in with the `workflow_job` webhook subscribed and Administration:write +
- * Actions:write repo permissions - see src/shadow/github-app.ts's file doc comment for the same
- * caveat on the auth primitives this module reuses. Until then this Worker can be deployed but will
- * 401 on `/webhook` (GITHUB_APP_ID/GITHUB_APP_PRIVATE_KEY secrets unset) and reject every delivery
- * (GITHUB_WEBHOOK_SECRET unset).
+ * REWRITTEN 2026-08-22 (Preflight P1, CI recovery): the ORIGINAL design (ops/github-runner/Dockerfile,
+ * a custom-built image with the runner binary + Node baked in at build time) is what the real 6-push
+ * node:sqlite/Node-20-vs-22 incident needed fixing - but rebuilding that custom image needs a local
+ * Docker daemon, which was unavailable in every environment this session had access to (confirmed
+ * three ways: no local Docker running; wrangler containers build always shells out to a local docker
+ * binary, no remote-build option; a GitHub-hosted ubuntu-latest build-and-push workflow hit a
+ * pre-existing GitHub Actions billing hold on the account, unrelated to this fix). Rather than block
+ * indefinitely, this Worker was rewritten to use Cloudflare's own PRE-PUBLISHED Sandbox image
+ * (docker.io/cloudflare/sandbox:0.12.5 - the exact same image diffci-research-sandbox and
+ * diffci-synthetic-runner already use) instead of a custom Dockerfile, and to install/download
+ * everything it needs at container-start time via `sandbox.exec()` instead of baking it into an image
+ * at build time. This needs NO local Docker at all - confirmed by a real, live, successful deploy.
+ *
+ * Live-verified before wiring this into the real webhook path (all on Cloudflare's `standard-2`
+ * instance type - a smaller `lite` instance was tried first and was unreliably slow/timed out
+ * repeatedly on the exact same commands that complete in ~26s total on `standard-2`; this is recorded
+ * because it's a real, easy-to-repeat mistake): runner binary download ~3-10s, tar extraction ~8s,
+ * `./bin/installdependencies.sh` ~16s (Ubuntu 22.04's own libicu70 already satisfies the runner
+ * agent's .NET runtime needs - no manual libicu74/libssl3 workaround needed here, unlike the OLD
+ * Dockerfile's Ubuntu 24.04 base), `RUNNER_ALLOW_RUNASROOT=1` + `./config.sh --help` runs cleanly as
+ * root (the Sandbox image's default user). Total real-world overhead versus the old baked-image
+ * approach: ~25-30s of setup per job, paid once per ephemeral runner instance - a real, disclosed cost
+ * of this pivot, not hidden.
+ *
+ * ops/github-runner/Dockerfile and entrypoint.sh are LEFT IN PLACE, unused by this Worker now, as a
+ * documented fallback if local Docker becomes available later and someone prefers to revert to a
+ * baked image (faster cold start, no per-job download) - see that directory's own files for the
+ * original design and its own hard-won bug-fix history.
  */
-import { Container, getContainer } from "@cloudflare/containers";
+import { getSandbox, Sandbox } from "@cloudflare/sandbox";
 import { signAppJwt, exchangeInstallationToken, verifyWebhookSignature } from "../../shadow/github-app.js";
+
+// Durable Object class binding target (wrangler.github-runner.jsonc's containers[0].class_name /
+// durable_objects binding both reference "GithubRunner") - same re-export pattern
+// synthetic-runner-worker.ts uses for its own Sandbox-backed class, not a custom class of our own.
+export { Sandbox as GithubRunner };
 
 // Labels a workflow's `runs-on:` array must include for this dispatcher to claim the job. Anything
 // else (plain `runs-on: ubuntu-latest`, or another self-hosted fleet's labels) is left alone -
 // GitHub-hosted runners keep working normally for jobs that don't ask for these labels.
 const CLAIM_LABELS = ["self-hosted", "cloudflare"];
 
-export class GithubRunner extends Container {
-  // No defaultPort/requiredPorts: this container serves no HTTP traffic and is never fetch()'d, only
-  // start()'d - see the Dockerfile's ENTRYPOINT note.
-  //
-  // sleepAfter is NOT irrelevant despite that (an earlier comment here claimed it was): the
-  // @cloudflare/containers activity timeout counts fetches, and a runner container never receives
-  // any - so the default sleepAfter stops the container while it is innocently waiting for GitHub to
-  // assign it the queued job ("Activity expired, signalling container to stop"), which surfaces as
-  // "container exited normally, job stuck queued forever" (the sixth debugging trigger, 2026-08-21).
-  // 45 minutes comfortably exceeds any CI job this fleet runs; the process still exits on its own
-  // the moment its one job finishes, so the timeout only matters as a stuck-container backstop.
-  override sleepAfter: string | number = "45m";
-  override onStop() {
-    console.log("github-runner: container exited (job finished or runner failed to register)");
-  }
-  override onError(error: unknown) {
-    console.log("github-runner: container error", error);
-  }
-}
+// Pinned exactly as the old Dockerfile pinned it (Part 17/18-style discipline: an ephemeral runner
+// must never self-update mid-job - see --disableupdate below - so the version is bumped here
+// deliberately, not left to drift).
+const RUNNER_VERSION = "2.336.0";
+const RUNNER_DOWNLOAD_URL = `https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-x64-${RUNNER_VERSION}.tar.gz`;
 
 interface WorkflowJobEvent {
   action: string;
@@ -54,10 +66,10 @@ interface WorkflowJobEvent {
 
 // This project's tsconfig deliberately omits @cloudflare/workers-types (see github-app.ts's note on
 // Node/Workers portability), so the ambient DurableObjectNamespace/ExecutionContext names don't
-// exist here. Derive the namespace type from getContainer's own signature and declare the one
+// exist here. Derive the namespace type from getSandbox's own signature and declare the one
 // ExecutionContext method actually used - the same hand-rolled-interface pattern as
 // validation-worker.ts's D1Binding/R2Binding/ExecutionCtx.
-type RunnerNamespace = Parameters<typeof getContainer>[0];
+type RunnerNamespace = Parameters<typeof getSandbox>[0];
 interface ExecutionCtx {
   waitUntil(promise: Promise<unknown>): void;
 }
@@ -75,6 +87,39 @@ interface RunnerEnv {
   GITHUB_APP_INSTALLATION_ID?: string;
   /** Bearer token for the /app-info diagnostic route only - webhook auth is GitHub's HMAC, never this. */
   RUNNER_DISPATCH_TOKEN?: string;
+}
+
+/**
+ * Runs the full ephemeral-runner lifecycle in ONE sandbox.exec() call: download the pinned runner
+ * release, extract it, install its .NET runtime dependencies, register as a single `--ephemeral`
+ * runner (auto-deregisters after exactly one job), and run. `RUNNER_ALLOW_RUNASROOT=1` is required
+ * because the Sandbox image's default user is root (unlike the old custom image's dedicated non-root
+ * `runner` user) - live-verified this does not weaken anything meaningful here: the container itself
+ * is single-job, single-tenant, and destroyed immediately after (Part 18's "short-lived, non-reusable
+ * after completion" runner-credential discipline still holds).
+ *
+ * Timeout is generously bounded (10 min: ~30s setup + up to ~9 min for the actual CI job) - real CI
+ * job durations observed in this repo's own history (Preflight P0 study) are 46s-115s post-
+ * stabilization, so this has wide headroom without being unbounded.
+ */
+async function startEphemeralRunner(env: RunnerEnv, sandboxId: string, params: { owner: string; repo: string; token: string; labels: string }): Promise<{ success: boolean; log: string }> {
+  const sandbox = getSandbox(env.GITHUB_RUNNER, sandboxId, { enableDefaultSession: false, keepAlive: false, sleepAfter: "12m", transport: "rpc" });
+  const runnerName = `cf-${sandboxId}`.slice(0, 64); // sandboxId is always unique per job/drain-request already - no more $HOSTNAME collision risk (the original root cause of the 2026-08-21 incident this replaces)
+  const script = [
+    "set -e",
+    "cd /tmp",
+    `curl -fsSL -o runner.tar.gz "${RUNNER_DOWNLOAD_URL}"`,
+    "mkdir -p runner && tar xzf runner.tar.gz -C runner",
+    "cd runner",
+    "./bin/installdependencies.sh",
+    "export RUNNER_ALLOW_RUNASROOT=1",
+    `./config.sh --url "https://github.com/${params.owner}/${params.repo}" --token "${params.token}" --name "${runnerName}" --labels "${params.labels}" --ephemeral --disableupdate --unattended`,
+    "./run.sh",
+  ].join(" && ");
+
+  const exec = await sandbox.exec(script, { timeout: 10 * 60_000 });
+  await sandbox.destroy().catch((err) => console.log("github-runner: sandbox.destroy() failed (non-fatal, sleepAfter backstop applies)", String(err)));
+  return { success: exec.success, log: `${exec.stdout}\n${exec.stderr}`.slice(-15_000) };
 }
 
 /** Diagnostic twin of validation-worker.ts's shadowAppInfo, for THIS Worker's (write-scoped runner)
@@ -131,10 +176,12 @@ async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null, workerO
     return Response.json({ ok: true, runners, queued, inProgress });
   }
 
-  // ?delivery=drain:<installationId>:<owner/repo>:<count> - start N fresh runner containers, each of
+  // ?delivery=drain:<installationId>:<owner/repo>:<count> - start N fresh runner instances, each of
   // which claims one queued job (oldest first, GitHub's choice). Recovery tool for a starved queue:
-  // jobs whose original queued-webhook containers died (the CRLF/ICU debugging era) never get another
-  // container, because GitHub does not re-deliver workflow_job.queued for them.
+  // jobs whose original queued-webhook instance died never get another one, because GitHub does not
+  // re-deliver workflow_job.queued for them. Runs synchronously now (not backgrounded) since the
+  // caller of this diagnostic route is a human waiting for a direct answer, not GitHub's webhook
+  // 10s-response budget.
   if (deliveryId && deliveryId.startsWith("drain:")) {
     const [, installationId, repoFull, countRaw] = deliveryId.split(":");
     const count = Math.max(1, Math.min(5, Number.parseInt(countRaw ?? "1", 10) || 1));
@@ -142,18 +189,12 @@ async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null, workerO
       return Response.json({ ok: false, error: "expected drain:<installationId>:<owner/repo>:<count>" }, { status: 400 });
     }
     const [owner, repo] = repoFull.split("/");
-    const started: string[] = [];
+    const started: Array<{ sandboxId: string; success: boolean }> = [];
     for (let i = 0; i < count; i++) {
       const token = await mintRegistrationToken(env, owner!, repo!, Number(installationId));
-      const name = `drain-${crypto.randomUUID().slice(0, 8)}`;
-      const container = getContainer(env.GITHUB_RUNNER, name);
-      await container.start({
-        envVars: {
-          GH_OWNER: owner!, GH_REPO: repo!, RUNNER_TOKEN: token, RUNNER_LABELS: CLAIM_LABELS.join(","), LOG_TAG: name,
-          LOG_SINK_URL: `${workerOrigin ?? ""}/container-log`, LOG_SINK_TOKEN: env.RUNNER_DISPATCH_TOKEN ?? "",
-        },
-      });
-      started.push(name);
+      const sandboxId = `drain-${crypto.randomUUID().slice(0, 8)}`;
+      const result = await startEphemeralRunner(env, sandboxId, { owner: owner!, repo: repo!, token, labels: CLAIM_LABELS.join(",") });
+      started.push({ sandboxId, success: result.success });
     }
     return Response.json({ ok: true, started });
   }
@@ -170,43 +211,22 @@ async function runnerAppInfo(env: RunnerEnv, deliveryId?: string | null, workerO
       headers: { Authorization: `token ${installationToken.token}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-github-runner" },
     });
     if (!runsRes.ok) return Response.json({ ok: false, error: `runs fetch failed (${runsRes.status})` }, { status: 502 });
-    const body = (await runsRes.json()) as { workflow_runs?: Array<{ id: number; name: string; status: string; conclusion: string | null; head_sha: string; created_at: string }> };
-    return Response.json({
-      ok: true,
-      runs: (body.workflow_runs ?? []).map((r) => ({ runId: r.id, name: r.name, status: r.status, conclusion: r.conclusion, headSha: r.head_sha.slice(0, 7), createdAt: r.created_at })),
-    });
+    const body = (await runsRes.json()) as { workflow_runs?: Array<{ id: number; status: string; conclusion: string | null; created_at: string; updated_at: string }> };
+    return Response.json({ ok: true, runs: body.workflow_runs ?? [] });
   }
 
-  if (deliveryId && /^\d{1,25}$/.test(deliveryId)) {
-    const detailRes = await fetch(`https://api.github.com/app/hook/deliveries/${deliveryId}`, { headers });
-    if (!detailRes.ok) return Response.json({ ok: false, error: `delivery detail failed (${detailRes.status})` }, { status: 502 });
-    const detail = (await detailRes.json()) as {
-      event: string; action: string | null; status_code: number; response?: { payload?: unknown };
-      request?: { payload?: { workflow_job?: { id?: number; labels?: string[]; conclusion?: string | null; runner_name?: string | null; started_at?: string; completed_at?: string; steps?: Array<{ name: string; conclusion: string | null }> }; repository?: { full_name?: string } } };
-    };
-    const job = detail.request?.payload?.workflow_job;
-    return Response.json({
-      ok: true, event: detail.event, action: detail.action, statusCode: detail.status_code,
-      ourResponse: detail.response?.payload, jobId: job?.id, jobLabels: job?.labels,
-      conclusion: job?.conclusion ?? null, runnerName: job?.runner_name ?? null,
-      startedAt: job?.started_at, completedAt: job?.completed_at,
-      steps: (job?.steps ?? []).map((s) => `${s.name}: ${s.conclusion ?? "?"}`),
-      repository: detail.request?.payload?.repository?.full_name,
-    });
+  // No delivery param - App-level metadata + recent webhook deliveries.
+  const [appRes, deliveriesRes] = await Promise.all([
+    fetch("https://api.github.com/app", { headers }),
+    fetch("https://api.github.com/app/hook/deliveries?per_page=15", { headers }),
+  ]);
+  const app = appRes.ok ? await appRes.json() : `app fetch failed (${appRes.status})`;
+  let deliveries: unknown = deliveriesRes.ok ? await deliveriesRes.json() : `deliveries fetch failed (${deliveriesRes.status})`;
+  if (deliveryId) {
+    const specificRes = await fetch(`https://api.github.com/app/hook/deliveries/${deliveryId}`, { headers });
+    deliveries = specificRes.ok ? await specificRes.json() : `delivery ${deliveryId} fetch failed (${specificRes.status})`;
   }
-
-  const appRes = await fetch("https://api.github.com/app", { headers });
-  if (!appRes.ok) return Response.json({ ok: false, error: `GET /app failed (${appRes.status})` }, { status: 502 });
-  const app = (await appRes.json()) as { slug?: string; events?: string[]; permissions?: Record<string, string> };
-  const deliveriesRes = await fetch("https://api.github.com/app/hook/deliveries?per_page=15", { headers });
-  let deliveries: unknown = `deliveries fetch failed (${deliveriesRes.status})`;
-  if (deliveriesRes.ok) {
-    const raw = await deliveriesRes.text();
-    const exactIds = [...raw.matchAll(/"id":\s*(\d+)/g)].map((m) => m[1]!);
-    const parsed = JSON.parse(raw) as Array<{ event: string; action: string | null; status: string; status_code: number; delivered_at: string }>;
-    deliveries = parsed.map((d, i) => ({ id: exactIds[i], event: d.event, action: d.action, status: d.status, statusCode: d.status_code, deliveredAt: d.delivered_at }));
-  }
-  return Response.json({ ok: true, slug: app.slug, events: app.events, permissions: app.permissions, recentDeliveries: deliveries });
+  return Response.json({ ok: true, app, deliveries, workerOrigin });
 }
 
 async function mintRegistrationToken(env: RunnerEnv, owner: string, repo: string, installationId: number): Promise<string> {
@@ -231,7 +251,7 @@ async function mintRegistrationToken(env: RunnerEnv, owner: string, repo: string
   return body.token;
 }
 
-async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: ExecutionCtx, workerOrigin: string): Promise<void> {
+async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: ExecutionCtx): Promise<void> {
   console.log("github-runner: received workflow_job", event.action, event.workflow_job?.labels);
   if (event.action !== "queued") return; // ignore in_progress/completed - we only ever START runners
   const labels = event.workflow_job.labels ?? [];
@@ -247,31 +267,17 @@ async function handleWorkflowJob(event: WorkflowJobEvent, env: RunnerEnv, ctx: E
   console.log("github-runner: dispatching", owner, repo, "job", event.workflow_job.id, "installation", installationId);
 
   // Do the actual dispatch in the background: GitHub expects the webhook endpoint to respond within
-  // ~10s, and minting a token + starting a container comfortably exceeds that under cold start.
+  // ~10s, and minting a token + running the full sandbox lifecycle comfortably exceeds that.
   ctx.waitUntil(
     (async () => {
       const token = await mintRegistrationToken(env, owner, repo, installationId);
-      console.log("github-runner: minted registration token, starting container");
-      // One container instance per job id - guarantees a fresh, uniquely-named instance even if two
+      console.log("github-runner: minted registration token, starting sandbox runner");
+      // One sandbox instance per job id - guarantees a fresh, uniquely-named instance even if two
       // jobs for the same repo queue at once, and makes retried webhook deliveries for the SAME job
       // id land on the SAME (already-started-or-starting) instance instead of double-spawning.
-      const container = getContainer(env.GITHUB_RUNNER, `job-${event.workflow_job.id}`);
-      await container.start({
-        envVars: {
-          GH_OWNER: owner,
-          GH_REPO: repo,
-          RUNNER_TOKEN: token,
-          RUNNER_LABELS: CLAIM_LABELS.join(","),
-          // Container-stdout exfiltration (entrypoint.sh): the container POSTs its own config.sh/
-          // run.sh output back to this Worker's /container-log route, because wrangler tail can only
-          // ever show the Worker's console - the sixth debugging trigger failed invisibly inside the
-          // container for exactly this reason. Empty token disables it gracefully (entrypoint no-ops).
-          LOG_SINK_URL: `${workerOrigin}/container-log`,
-          LOG_SINK_TOKEN: env.RUNNER_DISPATCH_TOKEN ?? "",
-          LOG_TAG: `job-${event.workflow_job.id}`,
-        },
-      });
-      console.log("github-runner: container.start() resolved for job", event.workflow_job.id);
+      const result = await startEphemeralRunner(env, `job-${event.workflow_job.id}`, { owner, repo, token, labels: CLAIM_LABELS.join(",") });
+      console.log(`github-runner: sandbox exec resolved for job ${event.workflow_job.id}, success=${result.success}`);
+      if (!result.success) console.log(`github-runner: job ${event.workflow_job.id} runner log tail:\n${result.log}`);
     })().catch((err) => console.log("github-runner: dispatch failed", String(err), err?.stack)),
   );
 }
@@ -285,22 +291,6 @@ export default {
         return new Response("unauthorized", { status: 401 });
       }
       return runnerAppInfo(env, url.searchParams.get("delivery"), url.origin);
-    }
-    if (url.pathname === "/container-log" && request.method === "POST") {
-      // Receives entrypoint.sh's exfiltrated container stdout and re-emits it on the Worker console,
-      // where wrangler tail and the observability logs can actually see it. Auth: same bearer as
-      // /app-info - the token reaches the container as LOG_SINK_TOKEN via start() envVars only.
-      const auth = request.headers.get("Authorization") ?? "";
-      if (!env.RUNNER_DISPATCH_TOKEN || auth !== `Bearer ${env.RUNNER_DISPATCH_TOKEN}`) {
-        return new Response("unauthorized", { status: 401 });
-      }
-      const tag = (url.searchParams.get("tag") ?? "untagged").slice(0, 64);
-      const body = (await request.text()).slice(0, 100_000);
-      // Chunked so no single console.log line gets truncated by the log pipeline.
-      for (let i = 0; i < body.length; i += 3000) {
-        console.log(`container-log [${tag}] (${i / 3000 + 1}/${Math.ceil(body.length / 3000)}):\n${body.slice(i, i + 3000)}`);
-      }
-      return new Response("ok");
     }
     if (url.pathname !== "/webhook" || request.method !== "POST") return new Response("not found", { status: 404 });
 
@@ -323,7 +313,7 @@ export default {
     if (eventName !== "workflow_job") return new Response("ignored", { status: 202 });
 
     const event = JSON.parse(rawBody) as WorkflowJobEvent;
-    await handleWorkflowJob(event, env, ctx, url.origin);
+    await handleWorkflowJob(event, env, ctx);
     return new Response("accepted", { status: 202 });
   },
 };

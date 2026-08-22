@@ -18,7 +18,12 @@
   "containers": [
     {
       "class_name": "GithubRunner",
-      "image": "./ops/github-runner/Dockerfile",
+      // Cloudflare's own pre-published Sandbox image - see github-runner-worker.ts's file-header
+      // comment for the full rationale (local Docker was unavailable to build ./ops/github-runner/Dockerfile,
+      // a GitHub-Actions-hosted build hit a pre-existing account billing hold; this needs no build step
+      // at all, confirmed by a live successful deploy of the identical image reference for
+      // diffci-synthetic-runner and diffci-research-sandbox).
+      "image": "docker.io/cloudflare/sandbox:0.12.5",
       "instance_type": "standard-2",
       // One running instance per in-flight job (ephemeral - each self-terminates after its one job,
       // so this bounds concurrent *running* jobs across both repos, not a standing idle pool). Raise
