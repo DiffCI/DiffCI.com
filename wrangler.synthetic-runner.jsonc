@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "diffci-synthetic-runner",
+  "main": "./src/runner/cloudflare/synthetic-runner-worker.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "containers": [
+    {
+      "class_name": "SyntheticRunner",
+      // Cloudflare's own pre-published Sandbox image - the SAME image diffci-research-sandbox already
+      // uses (wrangler.research-sandbox.jsonc). Deliberately NOT a custom Dockerfile: building one
+      // requires a local Docker daemon, which was unavailable when this was built - a real, live-tested
+      // deploy attempt against a custom Dockerfile failed with "The Docker CLI is needed... could not be
+      // launched", while this public-image reference deployed successfully with no local build step at
+      // all (Cloudflare pulls it directly). This Worker is otherwise fully separate from
+      // diffci-research-sandbox - its own Worker, its own Durable Object class, no shared binding, no
+      // Stage 2F file touched to build it.
+      "image": "docker.io/cloudflare/sandbox:0.12.5",
+      "instance_type": "lite", // smallest available instance type - synthetic jobs are seconds-long by design (Part 19)
+      "max_instances": 3, // low ceiling deliberately - this Worker exists to prove the orchestration model (Part 12), not to run production workload volume
+      "rollout_step_percentage": [100]
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "SYNTHETIC_RUNNER", "class_name": "SyntheticRunner" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["SyntheticRunner"] }]
+  // Secret (NOT committed here): RUNNER_CONTROL_TOKEN - set via
+  //   `wrangler secret put RUNNER_CONTROL_TOKEN --config wrangler.synthetic-runner.jsonc`
+  // The SAME value must also be configured on the product Worker (as the CloudflareContainerRunnerProvider's
+  // controlToken) so it can call this Worker's control surface.
+}
