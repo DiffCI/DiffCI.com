@@ -12,10 +12,11 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
-  // Custom-domain route deliberately NOT added even though diffci.com now exists as a zone in this
-  // account (2026-08-22) - this Worker's routes are dispatch-token-gated diagnostics (/run-once,
-  // /status), not a public product surface, so workers.dev is fine for now. If exposed publicly later:
-  // "routes": [{ "pattern": "preflight.diffci.com/*", "custom_domain": true }],
+  // Custom-domain route added 2026-08-22 now that diffci.com is an active zone in this account. Purely
+  // additive - workers.dev URL keeps working too - and nothing external is configured against this
+  // Worker's URL (routes are dispatch-token-gated diagnostics, /run-once and /status), so there's no
+  // cutover risk here the way there is on wrangler.github-runner.jsonc's webhook.
+  "routes": [{ "pattern": "preflight.diffci.com", "custom_domain": true }],
   //
   // Its own D1 database, separate from diffci-product and diffci-research (Stage 2F) - structural
   // storage separation, not just a separate table prefix. See src/preflight/cloudflare/schema.sql's
