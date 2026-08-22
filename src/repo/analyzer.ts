@@ -242,7 +242,7 @@ function scanFiles(
       scanFiles(join(dirPath, entry.name), repoPath, excludeDirs, callback);
       continue;
     }
-    if (!entry.isFile()) continue;
+    if (entry.isFile()) continue;
     callback(repoRelative(repoPath, join(dirPath, entry.name)), entry.name);
   }
 }
