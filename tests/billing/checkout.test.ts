@@ -19,18 +19,30 @@ function makeDeps(overrides: Partial<CreateCheckoutDeps> = {}): CreateCheckoutDe
   return {
     provider,
     planCatalog: CATALOG,
-    isMember: async () => true,
+    getRole: async () => "owner",
     organizationExists: async () => true,
     ...overrides,
   };
 }
 
-describe("createCheckoutForOrganization - Part 9 authorization", () => {
+describe("createCheckoutForOrganization - Part 9 authorization / Part 22-23 (owner/admin-only billing action)", () => {
   it("rejects a user who is not a member of the organization", async () => {
-    const deps = makeDeps({ isMember: async () => false });
+    const deps = makeDeps({ getRole: async () => null });
     const outcome = await createCheckoutForOrganization(deps, "user_outsider", { organizationId: "org_1", planId: "developer" });
     assert.equal(outcome.ok, false);
     assert.equal(!outcome.ok && outcome.error, "unauthorized");
+  });
+
+  it("rejects a plain 'member' - checkout is owner/admin-only", async () => {
+    const deps = makeDeps({ getRole: async () => "member" });
+    const outcome = await createCheckoutForOrganization(deps, "user_member", { organizationId: "org_1", planId: "developer" });
+    assert.equal(!outcome.ok && outcome.error, "insufficient_role");
+  });
+
+  it("allows an 'admin', not just an 'owner'", async () => {
+    const deps = makeDeps({ getRole: async () => "admin" });
+    const outcome = await createCheckoutForOrganization(deps, "user_admin", { organizationId: "org_1", planId: "developer" });
+    assert.equal(outcome.ok, true);
   });
 
   it("rejects an organization that does not exist", async () => {

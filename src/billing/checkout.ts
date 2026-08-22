@@ -17,12 +17,16 @@ export interface CreateCheckoutInput {
 
 export type CreateCheckoutOutcome =
   | { ok: true; result: CheckoutResult }
-  | { ok: false; error: "unauthorized" | "invalid_plan" | "plan_not_purchasable" | "organization_not_found" };
+  | { ok: false; error: "unauthorized" | "insufficient_role" | "invalid_plan" | "plan_not_purchasable" | "organization_not_found" };
 
 export interface CreateCheckoutDeps {
   provider: BillingProvider;
   planCatalog: Record<string, Plan>;
-  isMember: (organizationId: string, userId: string) => Promise<boolean>;
+  /** Returns the requesting user's role in the organization, or null if they are not a member at all.
+   * Checkout is an owner/admin-only billing action (Part 22/23: "member cannot perform owner-only
+   * billing action") - a plain 'member' role is authenticated and IS a member, but is still rejected
+   * here, distinctly from a non-member (see CreateCheckoutOutcome's separate error codes). */
+  getRole: (organizationId: string, userId: string) => Promise<"owner" | "admin" | "member" | null>;
   organizationExists: (organizationId: string) => Promise<boolean>;
   /** Allowlist check for redirectUrl (Part 9 doesn't mandate this, but an open redirect via an
    * attacker-controlled checkout redirect is a real risk worth closing here rather than trusting the
@@ -40,8 +44,9 @@ export async function createCheckoutForOrganization(deps: CreateCheckoutDeps, re
   if (!orgExists) return { ok: false, error: "organization_not_found" };
 
   // Step 1 (Part 9): verify the requesting user belongs to/controls the organization.
-  const member = await deps.isMember(input.organizationId, requestingUserId);
-  if (!member) return { ok: false, error: "unauthorized" };
+  const role = await deps.getRole(input.organizationId, requestingUserId);
+  if (!role) return { ok: false, error: "unauthorized" };
+  if (role !== "owner" && role !== "admin") return { ok: false, error: "insufficient_role" }; // a real member, just not permitted to change billing
 
   if (!isPlanId(input.planId)) return { ok: false, error: "invalid_plan" };
 
