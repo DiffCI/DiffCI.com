@@ -56,3 +56,42 @@ review.
   no new `pendingReasons` types, health OK.
 - This entry was written manually (interactive session); the daily cloud routine's first scheduled run is
   `2026-08-23T03:15:00Z`.
+
+---
+
+## 2026-08-23 (Day 3) — `[FAILED — no data]`
+
+- Snapshot attempt time: `2026-08-23T03:16Z` (observation age: ~2d 00h06m; `gate_e_eligible_at`
+  (`2026-09-04T03:10:40.609Z`) not yet reached).
+- **OPERATIONAL ANOMALY — NEEDS REVIEW.** This routine could not reach the Worker at all this run:
+  - `GET /v1/shadow/reconcile-diagnostics` — failed. `curl` reported exit 56 (recv failure); the
+    session's egress proxy logged `connect_rejected` — `"gateway answered 403 to CONNECT (policy denial
+    or upstream failure)"` — against `diffci-research-sandbox.damp-waterfall-0cd8.workers.dev:443`.
+  - `GET /health` — same failure (same host blocked at the CONNECT tunnel).
+  - Confirmed persistent, not a transient blip: 3 retries of the diagnostics endpoint all returned no
+    response (`000`), and the proxy status endpoint's `recentRelayFailures` shows three consecutive
+    `connect_rejected` entries for this host in the same minute.
+  - Per this session's proxy guidance, a 403 at the CONNECT tunnel is an organization/session egress
+    policy denial, not a transient network error — it must be reported, not retried or routed around. No
+    workaround (e.g. disabling TLS verification) was attempted, consistent with that guidance and with
+    this routine's observation-only mandate.
+  - **No live data obtained this run.** Total/reconciled/pending, `pendingReasons`, stuck-row set, and
+    worker health are all **unknown** for this snapshot — not "unchanged", genuinely not queried. This is
+    a difference in kind from prior entries: it is not the routine's usual D1-access limitation (Step 4),
+    it is a total data-gathering failure at the HTTP layer this routine normally *can* use standalone.
+  - Consequently: **no deltas** could be computed against the 2026-08-22 (Day 1) entry. In particular the
+    two known DentalPresence stuck rows (`74c8104e...:62b47d53...` and `...6f0d4a65...:37ca6d23...`)
+    could **not** be re-checked this run — their state is carried forward unverified from Day 1, not
+    reconfirmed.
+  - Unresolved measurement limitation (as always, independent of the above): even when the HTTP endpoint
+    is reachable, this automated routine has no D1 access, so it cannot independently compute
+    `relevant_failures_evaluable` / `failures_preserved_by_diffci` (Gate C/D) or confirm false-negative
+    status — that requires a manual D1 check in the user's interactive session. Today that limitation is
+    moot only because no data was gathered at all.
+  - This appears to be an egress-policy/connectivity issue specific to this session's environment, not a
+    change made to any DiffCI algorithm or source code — none was touched this run, consistent with the
+    observation-only mandate.
+- **Action for the user:** verify the sandbox Worker (`diffci-research-sandbox.damp-waterfall-0cd8.workers.dev`)
+  is still up and check why this scheduled routine's egress proxy is now rejecting CONNECT to it (403) —
+  it reached this same host successfully on Day 1. Until resolved, expect this routine to keep failing to
+  collect data on subsequent scheduled runs.
