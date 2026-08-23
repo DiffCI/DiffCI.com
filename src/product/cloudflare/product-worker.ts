@@ -47,7 +47,11 @@ import { createCloudflareContainerAsyncRunnerProvider } from "../../runner/cloud
 import { makeD1RunnerTokenStore } from "../../runner/token.js";
 import { handleRegister, handleHeartbeat, handleClaim, handleResult, type AgentApiDeps } from "../../runner/agent-api.js";
 import { buildRunnerResourceTags } from "../../runner/tags.js";
-import { createCloudflareContainersLiteCostModel } from "../../usage/cost-model.js";
+import { createCloudflareContainersLiteCostModel, createDefaultComputeCostModel } from "../../usage/cost-model.js";
+import { createDefaultClimateImpactModel } from "../../usage/climate-model.js";
+import { makeD1DurationObservationStore } from "../../usage/duration-observation-store.js";
+import { computeHistoricalAverageSecondsPerTest } from "../../usage/duration-capture.js";
+import { runDurationCaptureSweep } from "../../usage/duration-capture-job.js";
 import { scheduleNext } from "../../execution-queue/scheduler.js";
 import { makeD1ExecutionQueueStore } from "../../execution-queue/store.js";
 import { makeD1ShadowReadBoundary, type D1Binding as ShadowD1Binding } from "../shadow-read-boundary.js";
@@ -201,6 +205,23 @@ export default {
     const queueStore = makeD1ExecutionQueueStore(env.PRODUCT_DB);
     const shadowBoundary = makeD1ShadowReadBoundary(env.RESEARCH_DB);
     const routeDeps: RouteDeps = { productStore: store, shadowBoundary, runnerStore, queueStore, usageStore };
+
+    // Real duration-derived cost/carbon savings (2026-08-23), computed lazily - only the two routes that
+    // actually surface savings numbers (dashboard, /savings) pay for this extra D1 read, not every
+    // request through this Worker. averageSecondsPerAvoidedTest is "unavailable" until the cron sweep
+    // (see scheduled() below) has captured at least one real commit's CI timing, and honestly tagged
+    // "historical_estimate" (never "measured") from then on. costModel/climateModel here are the GENERIC
+    // default shapes (createDefaultComputeCostModel/createDefaultClimateImpactModel), NOT
+    // createCloudflareContainersLiteCostModel - that model prices DiffCI's OWN 0.25 vCPU/256 MiB runner
+    // containers (used elsewhere in this file for R1's runner cost tracking), which has nothing to do
+    // with the cost/carbon of the CUSTOMER's own CI compute that these avoided tests would have run on.
+    async function routeDepsWithSavings(): Promise<RouteDeps> {
+      const durationObservationStore = makeD1DurationObservationStore(env.PRODUCT_DB);
+      const recentDurationObservations = await durationObservationStore.listRecent(undefined, 200);
+      const historicalDuration = computeHistoricalAverageSecondsPerTest(recentDurationObservations);
+      if (typeof historicalDuration.value !== "number") return routeDeps;
+      return { ...routeDeps, savingsOptions: { averageSecondsPerAvoidedTest: { seconds: historicalDuration.value, confidence: "historical_estimate" as const }, costModel: createDefaultComputeCostModel(), climateModel: createDefaultClimateImpactModel() } };
+    }
 
     // Part 26: deployment-safe health/diagnostics - only non-sensitive booleans/counts, never a secret
     // value, a token, customer data, or a raw SQL error message.
@@ -425,7 +446,7 @@ export default {
       if (request.method === "GET" && subPath === "/savings") {
         const ownerName = url.searchParams.get("repo");
         if (!ownerName) return json({ ok: false, error: "repo query param is required" }, 400);
-        const outcome = await getSavingsSummaryForOrganization(routeDeps, userId, organizationId, ownerName);
+        const outcome = await getSavingsSummaryForOrganization(await routeDepsWithSavings(), userId, organizationId, ownerName);
         return outcome.ok ? json({ ok: true, savings: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
       }
 
@@ -493,7 +514,7 @@ export default {
       }
 
       if (request.method === "GET" && subPath === "/dashboard") {
-        const outcome = await getDashboardForOrganization(routeDeps, userId, organizationId);
+        const outcome = await getDashboardForOrganization(await routeDepsWithSavings(), userId, organizationId);
         return outcome.ok ? json({ ok: true, dashboard: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
       }
 
@@ -544,5 +565,26 @@ export default {
       logEvent("runner.orphan_cleanup", { runnerId: r.runnerId, previousStatus: r.previousStatus, terminated: r.terminated, error: r.error });
     }
     logEvent("orphan_cleanup.sweep_completed", { count: results.length, terminated: results.filter((r) => r.terminated).length, failed: results.filter((r) => !r.terminated).length });
+
+    // 2026-08-23: real duration-observation capture, same cron trigger, own bounded batch. Reads Stage 2F
+    // predictions ONLY through the existing read-only ShadowReadBoundary (Part 20 - no new SQL against
+    // shadow_predictions/shadow_ground_truth, no write path touched), independently re-fetches real
+    // GitHub job timing (unauthenticated - no token configured for this Worker today), and writes only to
+    // the separate, additive ci_duration_observations table. maxPerSweep=5 keeps this comfortably under
+    // GitHub's unauthenticated 60 req/hour/IP limit even at the existing */10-minute cron cadence.
+    try {
+      const store = makeD1ProductStore(env.PRODUCT_DB);
+      const shadowBoundary = makeD1ShadowReadBoundary(env.RESEARCH_DB);
+      const durationStore = makeD1DurationObservationStore(env.PRODUCT_DB);
+      const repositories = (await store.listAllRepositories(50)).map((r) => r.ownerName);
+      const windowEnd = new Date();
+      const windowStart = new Date(windowEnd.getTime() - 30 * 24 * 60 * 60 * 1000); // last 30 days - a rolling window, not the repository's whole history
+      const captureResult = await runDurationCaptureSweep({ shadowBoundary, store: durationStore }, repositories, windowStart.toISOString(), windowEnd.toISOString(), 5);
+      logEvent("duration_capture.sweep_completed", { ...captureResult });
+    } catch (err) {
+      // Never let a duration-capture failure affect orphan cleanup's own success/failure signal above -
+      // this sweep is purely additive telemetry, not safety-critical.
+      logEvent("duration_capture.sweep_failed", { error: err instanceof Error ? err.message : String(err) });
+    }
   },
 };

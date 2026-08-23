@@ -22,6 +22,10 @@ export interface DashboardOverview {
   testsAvoided: number | "unknown";
   estimatedCiSecondsSaved: number | "unknown";
   estimatedCostSavedUsd: number | "unknown";
+  /** Climate-impact sibling of estimatedCostSavedUsd - see src/usage/climate-model.ts for why this is
+   * always an illustrative estimate, never a stronger claim, regardless of how the underlying compute
+   * count was measured. */
+  estimatedCarbonAvoidedKgCo2e: number | "unknown";
   activePlan: string;
 }
 
@@ -71,6 +75,7 @@ export function buildDashboardOverview(
     testsAvoided: savings.totalTestsAvoided.value,
     estimatedCiSecondsSaved: savings.totalEstimatedComputeSecondsAvoided.value,
     estimatedCostSavedUsd: savings.totalEstimatedCostAvoidedUsd.value,
+    estimatedCarbonAvoidedKgCo2e: savings.totalEstimatedCarbonAvoidedKgCo2e.value,
     activePlan: org.currentPlan,
   };
 }

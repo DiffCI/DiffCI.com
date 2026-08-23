@@ -95,6 +95,10 @@ export interface ProductStore {
   }): Promise<Repository>;
   getRepository(id: string): Promise<Repository | null>;
   listRepositories(organizationId: string): Promise<Repository[]>;
+  /** Cross-tenant, NOT organization-scoped - same pattern as RunnerStore.findStaleRunners(), used only by
+   * background maintenance sweeps (src/usage/duration-capture-job.ts's cron caller), never by an
+   * organization-facing route (which must always go through the scoped listRepositories above). */
+  listAllRepositories(limit?: number): Promise<Repository[]>;
   setRepositoryStatus(id: string, status: Repository["status"]): Promise<void>;
   setRepositoryShadowEnabled(id: string, enabled: boolean): Promise<void>;
 
@@ -250,6 +254,11 @@ export function makeD1ProductStore(db: D1Binding): ProductStore {
         .prepare(`SELECT * FROM repositories WHERE organization_id = ? ORDER BY created_at DESC`)
         .bind(organizationId)
         .all<Record<string, unknown>>();
+      return results.map(rowToRepository);
+    },
+
+    async listAllRepositories(limit = 100) {
+      const { results } = await db.prepare(`SELECT * FROM repositories ORDER BY created_at DESC LIMIT ?`).bind(limit).all<Record<string, unknown>>();
       return results.map(rowToRepository);
     },
 

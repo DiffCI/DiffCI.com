@@ -7,6 +7,7 @@
  * precision").
  */
 import type { ComputeCostModel } from "./cost-model.js";
+import type { ClimateImpactModel } from "./climate-model.js";
 import type { ShadowPredictionSummary } from "../product/shadow-read-boundary.js";
 
 export type SavingsConfidence = "measured" | "historical_estimate" | "count_based_estimate" | "unavailable";
@@ -25,21 +26,33 @@ export interface PredictionSavings {
   testsAvoided: ValueWithConfidence<number>;
   /** Only computable when a per-test duration assumption is supplied (Part 8: "Where reliable
    * historical execution durations exist, estimate... Prefer actual test/job history over uniform
-   * assumptions"). This module does NOT currently have access to real per-test historical timing data
-   * (no such column exists in shadow_predictions/shadow_ground_truth today - confirmed by the schema),
-   * so the best available confidence level here is "count_based_estimate" (a uniform assumption applied
-   * to a real, measured count of avoided tests), never "historical_estimate" - that would require wiring
-   * real per-test duration history, which is future work (see the final report's remaining blockers).
+   * assumptions"). Tagged "historical_estimate" when the caller's duration assumption itself came from
+   * real per-commit CI job timing (src/usage/duration-capture.ts's computeHistoricalAverageSecondsPerTest,
+   * 2026-08-23), "count_based_estimate" when it's a uniform placeholder - see SavingsOptions below.
    */
   estimatedComputeSecondsAvoided: ValueWithConfidence<number>;
   estimatedCostAvoidedUsd: ValueWithConfidence<number>;
+  /** Climate-impact sibling of estimatedCostAvoidedUsd - same "count_based_estimate" discipline, same
+   * "unavailable unless both a duration assumption AND a climate model are supplied" gate. See
+   * src/usage/climate-model.ts for why this can never be a stronger confidence tier today. */
+  estimatedCarbonAvoidedKgCo2e: ValueWithConfidence<number>;
 }
 
 export interface SavingsOptions {
-  /** A uniform seconds-per-avoided-test assumption. Omit to get "unavailable" for the
-   * compute/cost-avoided fields rather than a silently invented number. */
-  averageSecondsPerAvoidedTest?: number;
+  /** A seconds-per-avoided-test assumption. Omit to get "unavailable" for the compute/cost/carbon-avoided
+   * fields rather than a silently invented number. Pass a bare number for a uniform placeholder (tagged
+   * "count_based_estimate"), or `{ seconds, confidence: "historical_estimate" }` when the number was
+   * itself derived from real per-commit CI job timing (see src/usage/duration-capture.ts) - never invent
+   * the stronger tag by hand; only pass it when it's actually backed by real historical observations. */
+  averageSecondsPerAvoidedTest?: number | { seconds: number; confidence: "historical_estimate" | "count_based_estimate" };
   costModel?: ComputeCostModel;
+  climateModel?: ClimateImpactModel;
+}
+
+function resolveDurationAssumption(option: SavingsOptions["averageSecondsPerAvoidedTest"]): { seconds: number; confidence: SavingsConfidence } | undefined {
+  if (typeof option === "number") return option >= 0 ? { seconds: option, confidence: "count_based_estimate" } : undefined;
+  if (option && option.seconds >= 0) return { seconds: option.seconds, confidence: option.confidence };
+  return undefined;
 }
 
 export function computeSavingsForPrediction(prediction: ShadowPredictionSummary, options: SavingsOptions = {}): PredictionSavings {
@@ -54,6 +67,7 @@ export function computeSavingsForPrediction(prediction: ShadowPredictionSummary,
       testsAvoided: { value: "unknown", confidence: "unavailable" },
       estimatedComputeSecondsAvoided: { value: "unknown", confidence: "unavailable" },
       estimatedCostAvoidedUsd: { value: "unknown", confidence: "unavailable" },
+      estimatedCarbonAvoidedKgCo2e: { value: "unknown", confidence: "unavailable" },
     };
   }
 
@@ -62,13 +76,19 @@ export function computeSavingsForPrediction(prediction: ShadowPredictionSummary,
 
   let estimatedComputeSecondsAvoided: ValueWithConfidence<number> = { value: "unknown", confidence: "unavailable" };
   let estimatedCostAvoidedUsd: ValueWithConfidence<number> = { value: "unknown", confidence: "unavailable" };
+  let estimatedCarbonAvoidedKgCo2e: ValueWithConfidence<number> = { value: "unknown", confidence: "unavailable" };
 
-  if (typeof options.averageSecondsPerAvoidedTest === "number" && options.averageSecondsPerAvoidedTest >= 0) {
-    const seconds = testsAvoided * options.averageSecondsPerAvoidedTest;
-    estimatedComputeSecondsAvoided = { value: seconds, confidence: "count_based_estimate" };
+  const durationAssumption = resolveDurationAssumption(options.averageSecondsPerAvoidedTest);
+  if (durationAssumption) {
+    const seconds = testsAvoided * durationAssumption.seconds;
+    estimatedComputeSecondsAvoided = { value: seconds, confidence: durationAssumption.confidence };
     if (options.costModel) {
       const estimate = options.costModel.estimateCost({ computeSeconds: seconds });
-      estimatedCostAvoidedUsd = { value: estimate.estimatedUsd, confidence: "count_based_estimate" };
+      estimatedCostAvoidedUsd = { value: estimate.estimatedUsd, confidence: durationAssumption.confidence };
+    }
+    if (options.climateModel) {
+      const estimate = options.climateModel.estimateCarbon({ computeSeconds: seconds });
+      estimatedCarbonAvoidedKgCo2e = { value: estimate.estimatedKgCo2e, confidence: durationAssumption.confidence };
     }
   }
 
@@ -78,6 +98,7 @@ export function computeSavingsForPrediction(prediction: ShadowPredictionSummary,
     testsAvoided: { value: testsAvoided, confidence: "measured" },
     estimatedComputeSecondsAvoided,
     estimatedCostAvoidedUsd,
+    estimatedCarbonAvoidedKgCo2e,
   };
 }
 
@@ -87,6 +108,7 @@ export interface AggregateSavings {
   totalTestsAvoided: ValueWithConfidence<number>;
   totalEstimatedComputeSecondsAvoided: ValueWithConfidence<number>;
   totalEstimatedCostAvoidedUsd: ValueWithConfidence<number>;
+  totalEstimatedCarbonAvoidedKgCo2e: ValueWithConfidence<number>;
 }
 
 /** Aggregates a batch of per-prediction savings (e.g. "this month") - confidence of an aggregate field
@@ -100,6 +122,7 @@ export function aggregateSavings(perPrediction: PredictionSavings[]): AggregateS
       totalTestsAvoided: { value: "unknown", confidence: "unavailable" },
       totalEstimatedComputeSecondsAvoided: { value: "unknown", confidence: "unavailable" },
       totalEstimatedCostAvoidedUsd: { value: "unknown", confidence: "unavailable" },
+      totalEstimatedCarbonAvoidedKgCo2e: { value: "unknown", confidence: "unavailable" },
     };
   }
 
@@ -112,6 +135,7 @@ export function aggregateSavings(perPrediction: PredictionSavings[]): AggregateS
     totalTestsAvoided: sumField(perPrediction, (p) => p.testsAvoided),
     totalEstimatedComputeSecondsAvoided: sumField(perPrediction, (p) => p.estimatedComputeSecondsAvoided),
     totalEstimatedCostAvoidedUsd: sumField(perPrediction, (p) => p.estimatedCostAvoidedUsd),
+    totalEstimatedCarbonAvoidedKgCo2e: sumField(perPrediction, (p) => p.estimatedCarbonAvoidedKgCo2e),
   };
 }
 

@@ -25,6 +25,11 @@ export interface D1Binding {
 export interface ShadowPredictionSummary {
   logicalDeltaKey: string;
   repository: string; // "owner/name" - shadow's own key, not a product repositoryId
+  /** Widened onto the existing head_sha column (2026-08-23, src/usage/duration-capture-job.ts) - a pure
+   * read-projection change, no schema change, no write path touched. Lets the duration-capture pipeline
+   * independently re-fetch real GitHub job timing for this exact commit without needing any other source
+   * of "which commits to check." */
+  headSha: string;
   planMode: "FULL" | "SELECTIVE";
   opportunityCategory: "MANDATORY_FALLBACK" | "BASELINE_ALREADY_OPTIMAL" | "DISCRIMINATIVE_OPPORTUNITY";
   testsSelectedDiffci: number;
@@ -63,7 +68,7 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
     async listPredictions(ownerName, startIso, endIso) {
       const { results } = await db
         .prepare(
-          `SELECT logical_delta_key, repository, plan_mode, opportunity_category, tests_selected_diffci, tests_total_full, created_at
+          `SELECT logical_delta_key, repository, head_sha, plan_mode, opportunity_category, tests_selected_diffci, tests_total_full, created_at
            FROM shadow_predictions
            WHERE repository = ? AND created_at >= ? AND created_at < ?
            ORDER BY created_at DESC`,
@@ -73,6 +78,7 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
       return results.map((row) => ({
         logicalDeltaKey: row.logical_delta_key as string,
         repository: row.repository as string,
+        headSha: row.head_sha as string,
         planMode: row.plan_mode as "FULL" | "SELECTIVE",
         opportunityCategory: row.opportunity_category as ShadowPredictionSummary["opportunityCategory"],
         testsSelectedDiffci: row.tests_selected_diffci as number,

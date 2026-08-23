@@ -112,6 +112,7 @@ describe("ShadowReadBoundary - Part 20 (read-only, real Stage 2F schema)", () =>
     const results = await boundary.listPredictions("acme/web", "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z");
     assert.equal(results.length, 1);
     assert.equal(results[0]?.repository, "acme/web");
+    assert.equal(results[0]?.headSha, "h1", "head_sha is projected through - needed for real duration-capture correlation (src/usage/duration-capture-job.ts)");
   });
 
   it("getGroundTruthForDelta returns the matching ground truth row", async () => {

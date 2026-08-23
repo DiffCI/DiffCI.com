@@ -26,3 +26,24 @@ CREATE TABLE IF NOT EXISTS usage_events (
 );
 CREATE INDEX IF NOT EXISTS idx_usage_events_org_time ON usage_events(organization_id, occurred_at);
 CREATE INDEX IF NOT EXISTS idx_usage_events_org_type_time ON usage_events(organization_id, event_type, occurred_at);
+
+-- Real per-commit CI duration observations, captured for the cost/carbon-savings estimate (see
+-- src/usage/savings.ts, src/usage/climate-model.ts). Deliberately a SEPARATE, additive, product-owned
+-- table - it never touches diffci-research's shadow_predictions/shadow_ground_truth (Stage 2F's frozen
+-- schema, under its own 14-day observation-window freeze as of 2026-08-22 - see docs/research). The
+-- capture job (src/usage/duration-capture-job.ts) only ever READS Stage 2F predictions through the
+-- existing, already-sanctioned read-only ShadowReadBoundary (Part 20), and independently re-fetches real
+-- job timing from GitHub's own API (src/shadow/github-baseline.ts's fetchBaselineEvidence, unmodified) -
+-- nothing here writes to, or depends on the internal shape of, any Stage 2F table.
+CREATE TABLE IF NOT EXISTS ci_duration_observations (
+  logical_delta_key TEXT PRIMARY KEY, -- same identity as the Stage 2F prediction it was derived from, purely for idempotency/dedup - this table has no foreign key into shadow_predictions
+  repository TEXT NOT NULL,
+  head_sha TEXT NOT NULL,
+  workflow_run_ids TEXT NOT NULL DEFAULT '[]', -- JSON array of real GitHub Actions workflow_run ids this observation was derived from (audit provenance) - never raw log content
+  job_ids TEXT NOT NULL DEFAULT '[]', -- JSON array of real GitHub Actions job ids
+  tests_total_full INTEGER NOT NULL,
+  real_job_duration_ms INTEGER NOT NULL,
+  seconds_per_test REAL NOT NULL,
+  observed_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ci_duration_observations_repository ON ci_duration_observations(repository, observed_at);
