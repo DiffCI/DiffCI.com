@@ -9,9 +9,12 @@ import { validateCommand, buildSafeShellCommand, shellQuoteArg, ALLOWED_EXECUTAB
 // This module's quoting targets POSIX sh (the real production target: a Cloudflare Sandbox Linux
 // container). Node's own `execSync(..., {shell: true})` defaults to cmd.exe on Windows dev machines,
 // which uses entirely different quoting rules - so these tests explicitly force a real POSIX shell
-// (Git Bash's bash.exe, already relied on throughout this session) rather than silently testing the
-// wrong shell's semantics on Windows.
-const REAL_POSIX_SHELL = "C:/Program Files/Git/usr/bin/bash.exe";
+// rather than silently testing the wrong shell's semantics on Windows. On win32 that's Git Bash's
+// bash.exe (already relied on throughout dev sessions on this machine); everywhere else - including the
+// real GitHub Actions Linux runner, where this exact hardcoded Windows path doesn't exist and made every
+// one of these tests fail in real CI (found 2026-08-23, commit 843aa1e) - it's the platform's own
+// /bin/bash, already always present on the ubuntu-latest runner this project's CI workflow uses.
+const REAL_POSIX_SHELL = process.platform === "win32" ? "C:/Program Files/Git/usr/bin/bash.exe" : "/bin/bash";
 function runViaRealShell(shellLine: string): string {
   return execFileSync("node", ["-e", `const r = require('child_process').execSync(process.argv[1], {shell: process.argv[2], encoding: 'utf8'}); process.stdout.write(r);`, shellLine, REAL_POSIX_SHELL], { encoding: "utf8" });
 }
