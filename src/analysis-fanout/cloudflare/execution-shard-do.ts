@@ -78,6 +78,20 @@ function packageManagerBin(profile: RepoExecutionProfile, forRun: boolean): stri
   return forRun ? "npm run" : "npm";
 }
 
+/**
+ * Best-effort one-time corepack activation, prefixed onto the FIRST package-manager command of a
+ * container's lifetime (2026-08-24: `docker.io/cloudflare/sandbox:0.12.5` ships Node without corepack's
+ * shims pre-enabled - confirmed empirically, "corepack: command not found" on a real cal.com run). `npm
+ * install -g corepack` is guaranteed to work (npm itself is already confirmed present - the engine
+ * bootstrap step already ran `npm ci` in this same container) even on a Node version whose bundled
+ * corepack was stripped from the image. Idempotent and harmless to repeat (`|| true` swallows a
+ * subsequent "already enabled" failure); prepended, never a separate exec call, so it can never race
+ * with or be skipped independently of the command it's guarding. No-op for npm (needs no corepack). */
+function corepackSetupPrefix(profile: RepoExecutionProfile): string {
+  if (profile.packageManager === "npm") return "";
+  return "(corepack enable >/dev/null 2>&1 || npm install -g corepack --silent && corepack enable) >/dev/null 2>&1; ";
+}
+
 function workDir(record: ExecutionRecord): string {
   return `/workspace/${repoSlug(record.repository)}`;
 }
@@ -95,7 +109,7 @@ function buildTestArgv(profile: RepoExecutionProfile, reportName: string, files:
 
 function buildTestCmd(dir: string, profile: RepoExecutionProfile, argv: string[]): string {
   const envPrefix = profile.testEnv ? Object.entries(profile.testEnv).map(([k, v]) => `${k}=${v}`).join(" ") + " " : "";
-  return `cd ${dir} && ${envPrefix}${packageManagerBin(profile, true)} ${argvToShellSafe(argv)}`;
+  return `cd ${dir} && ${corepackSetupPrefix(profile)}${envPrefix}${packageManagerBin(profile, true)} ${argvToShellSafe(argv)}`;
 }
 
 async function failExecution(record: ExecutionRecord, errorClass: string, lastError: string): Promise<ExecutionStepResult> {
@@ -222,7 +236,7 @@ async function install(record: ExecutionRecord, deps: ExecutionStepDeps): Promis
   try {
     const dir = workDir(record);
     const t0 = deps.now();
-    const cmd = `cd ${dir} && ${packageManagerBin(profile, false)} ${argvToShellSafe(profile.installArgv)}`;
+    const cmd = `cd ${dir} && ${corepackSetupPrefix(profile)}${packageManagerBin(profile, false)} ${argvToShellSafe(profile.installArgv)}`;
     // A single generous-timeout sandbox.exec, matching AnalysisShard's `bootstrap()` npm-ci precedent
     // (10 min) scaled up for cal.com's heavier native-build install (observed ~20 min locally).
     const res = await sandbox.exec(cmd, { timeout: 25 * 60_000 });
@@ -243,7 +257,7 @@ async function pretest(record: ExecutionRecord, deps: ExecutionStepDeps): Promis
     const dir = workDir(record);
     const t0 = deps.now();
     for (const step of profile.pretestArgv) {
-      const cmd = `cd ${dir} && ${packageManagerBin(profile, true)} ${argvToShellSafe(step)}`;
+      const cmd = `cd ${dir} && ${corepackSetupPrefix(profile)}${packageManagerBin(profile, true)} ${argvToShellSafe(step)}`;
       const res = await sandbox.exec(cmd, { timeout: 5 * 60_000 });
       if (!res.success) {
         return failExecution(record, "pretest-failed", `pretest step [${step.join(" ")}] exited ${res.exitCode}: ${(res.stdout + " " + res.stderr).trim().slice(-1000)}`);

@@ -266,6 +266,16 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     assert.equal(typeof out.timings.installMs, "number");
   });
 
+  it("install prepends a best-effort corepack activation for yarn/pnpm profiles (2026-08-24: the sandbox image ships without corepack shims pre-enabled)", async () => {
+    const { sandbox, execCalls } = makeSandbox();
+    const { bucket } = makeBucket();
+    const { deps } = makeDeps(sandbox, bucket);
+    await stepExecution(record({ step: "installing" }), deps);
+    const installCall = execCalls.find((c) => c.command.includes("yarn install"));
+    assert.ok(installCall);
+    assert.match(installCall!.command, /corepack enable.*npm install -g corepack.*corepack enable.*corepack yarn install/);
+  });
+
   it("pretest runs every configured pretest step and fails fast on the first non-zero exit", async () => {
     const { sandbox, execCalls } = makeSandbox({ exec: (cmd) => (cmd.includes("prisma generate") ? { success: false, exitCode: 1, stderr: "db unreachable" } : undefined) });
     const { bucket } = makeBucket();
