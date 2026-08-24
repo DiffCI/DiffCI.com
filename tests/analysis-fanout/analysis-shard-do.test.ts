@@ -95,6 +95,9 @@ function makeSandbox(init: {
       const p = init.process === undefined ? { status: "running" } : init.process;
       return { id: "proc-1", status: p.status, exitCode: p.exitCode };
     },
+    async getProcessLogs() {
+      return { stdout: "", stderr: "" };
+    },
     async destroy() {
       destroyCalled = true;
     },

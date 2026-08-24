@@ -79,6 +79,16 @@ export type ExecutionStep =
   | "failed"
   | "cancelled";
 
+/**
+ * Whether structured evidence exists at all for a test-run step, independent of whether the run itself
+ * passed/failed - "the process exited" and "we can trust what it reported" are separate questions.
+ *  - `complete`: the JSON report parsed successfully.
+ *  - `missing-report`: the report file could not be read (2026-08-24 real finding: this happened on
+ *    every one of the first four cal.com test-run steps - never silently treated as zero tests).
+ *  - `malformed-report`: a report file existed but failed to parse as the expected shape.
+ */
+export type ObservabilityStatus = "complete" | "missing-report" | "malformed-report";
+
 export interface TestRunResult {
   command: string[];
   exitCode: number | null;
@@ -91,7 +101,39 @@ export interface TestRunResult {
   passed?: number;
   failed?: number;
   failedTests?: string[];
+  /** Last ~8000 chars of the process's own accumulated stdout/stderr (via the sandbox SDK's
+   * getProcessLogs, 2026-08-24 - previously never captured for any startProcess-based step). This is
+   * the audit trail when the structured report is missing or malformed: what the test runner actually
+   * printed, kept regardless of whether the structured report parsed. */
+  stdoutTail?: string;
   stderrTail?: string;
+  observabilityStatus: ObservabilityStatus;
+}
+
+/**
+ * Execution-selection invariant (2026-08-24): distinguishes "DiffCI asked for N specific test files" from
+ * "the test runner actually ran N specific test files" - a static selection is not evidence of what a
+ * black-box test command actually executed. Computed only for a *selected* invocation (never full),
+ * comparing `requestedTestFiles` against the parsed report's own executed file list.
+ *  - `HONORED_EXACTLY`: the executed file set equals the requested file set exactly.
+ *  - `HONORED_WITH_FRAMEWORK_EXPANSION`: every requested file executed, plus some additional files the
+ *    runner/framework required (e.g. a shared setup file counted as its own "test file") - the request
+ *    was not ignored, just not the exact boundary.
+ *  - `IGNORED_OR_BROADENED`: the executed file count is far larger than requested (a strong signal the
+ *    filter had no effect and the full/near-full suite ran instead).
+ *  - `UNMEASURABLE`: no structured report exists to compare against - never guessed from wall time alone.
+ */
+export type SelectionHonoredStatus = "HONORED_EXACTLY" | "HONORED_WITH_FRAMEWORK_EXPANSION" | "IGNORED_OR_BROADENED" | "UNMEASURABLE";
+
+export interface RuntimeSelectionEvidence {
+  requestedTestFiles: string[];
+  /** Distinct file paths actually reflected in the parsed report's failedTests/summary evidence, when
+   * derivable; undefined when the report doesn't expose per-file identity DiffCI's parser can read. */
+  executedTestFilesKnown: boolean;
+  testFilesExecuted?: number;
+  totalTestsExecuted?: number;
+  status: SelectionHonoredStatus;
+  explanation: string;
 }
 
 export interface MutationInfo {
@@ -139,6 +181,11 @@ export interface ExecutionRecord {
     pretestMs?: number;
   };
   baseline?: { full: TestRunResult; selected: TestRunResult };
+  /** Computed right after the selected-baseline test run completes - see RuntimeSelectionEvidence.
+   * Economics (gross/net saved) are only meaningful when this is HONORED_EXACTLY or
+   * HONORED_WITH_FRAMEWORK_EXPANSION; IGNORED_OR_BROADENED or UNMEASURABLE must not be reported as a
+   * savings result. */
+  runtimeSelection?: RuntimeSelectionEvidence;
   mutation?: MutationInfo;
   mutant?: { full: TestRunResult; selected: TestRunResult };
   /** Set once both baseline runs exist AND an analysisOverheadMs is available (either caller-supplied

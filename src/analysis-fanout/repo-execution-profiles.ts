@@ -19,7 +19,11 @@ const PROFILES: Record<string, RepoExecutionProfile> = {
     pretestArgv: [["prisma", "generate"]],
     testArgv: ["test", "--", "--no-isolate"],
     testEnv: { TZ: "UTC" },
-    reporterArgv: ["--reporter=json"],
+    // "default" alongside "json" (2026-08-24): the json reporter alone prints nothing human-readable to
+    // stdout, which left no way to cross-check a missing/malformed structured report against what the
+    // test runner actually did. Both write independently - default to the process's own stdout (now
+    // captured via getProcessLogs), json to its own --outputFile.json path.
+    reporterArgv: ["--reporter=json", "--reporter=default"],
   },
 };
 

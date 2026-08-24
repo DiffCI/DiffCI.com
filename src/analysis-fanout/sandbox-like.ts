@@ -31,6 +31,12 @@ export interface SandboxLike {
   readFile(path: string): Promise<{ content: string }>;
   startProcess(command: string, options?: { cwd?: string; autoCleanup?: boolean }): Promise<ProcessLike>;
   getProcess(id: string): Promise<ProcessLike | null>;
+  /** Accumulated stdout/stderr for a background process (real `@cloudflare/sandbox` SDK method,
+   * confirmed in node_modules/@cloudflare/sandbox/dist/sandbox-*.d.ts) - NOT previously wired up here
+   * (2026-08-24 finding): every startProcess-based step was discarding console output entirely,
+   * leaving no way to see what a test runner actually printed when its structured report went missing
+   * or came back malformed. */
+  getProcessLogs(id: string): Promise<{ stdout: string; stderr: string }>;
   destroy(): Promise<void>;
 }
 

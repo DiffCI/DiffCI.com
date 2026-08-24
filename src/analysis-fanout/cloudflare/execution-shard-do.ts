@@ -22,7 +22,7 @@
  */
 import { parseVitestJsonReport } from "../vitest-report.js";
 import type { SandboxLike, R2BucketLike } from "../sandbox-like.js";
-import type { ExecutionRecord, ExecutionSpec, ExecutionStep, RepoExecutionProfile, TestRunResult } from "../execution-types.js";
+import type { ExecutionRecord, ExecutionSpec, ExecutionStep, ObservabilityStatus, RepoExecutionProfile, RuntimeSelectionEvidence, TestRunResult } from "../execution-types.js";
 import { getRepoExecutionProfile } from "../repo-execution-profiles.js";
 import { repoSlug } from "./analysis-shard-do.js";
 
@@ -102,9 +102,15 @@ function reportPath(reportName: string): string {
 
 /** Builds the exact test-invocation argv (base command + reporter flags + trailing file filters), shared
  * between starting the process and reconstructing the `command` field once it completes. Pure function
- * of record/profile/inputs - safe to recompute across separate alarm invocations. */
+ * of record/profile/inputs - safe to recompute across separate alarm invocations.
+ *
+ * `--outputFile.<reporterName>=<path>` (dot-notation), not plain `--outputFile=<path>` (2026-08-24 fix):
+ * general and repository-independent, not a cal.com-specific workaround - it targets the "json" reporter
+ * by name regardless of how many OTHER reporters are also configured (repo-execution-profiles.ts may
+ * list more than one, e.g. adding `--reporter=default` for human-readable console output alongside the
+ * structured file), so it never depends on json being the only or the first reporter. */
 function buildTestArgv(profile: RepoExecutionProfile, reportName: string, files: string[] | undefined): string[] {
-  return [...profile.testArgv, ...profile.reporterArgv, `--outputFile=${reportPath(reportName)}`, ...(files ?? [])];
+  return [...profile.testArgv, ...profile.reporterArgv, `--outputFile.json=${reportPath(reportName)}`, ...(files ?? [])];
 }
 
 function buildTestCmd(dir: string, profile: RepoExecutionProfile, argv: string[]): string {
@@ -320,6 +326,21 @@ async function stepTestRun(record: ExecutionRecord, deps: ExecutionStepDeps, cfg
       raw = undefined;
     }
     const parsed = parseVitestJsonReport(raw);
+    // Captured regardless of report success - the audit trail for exactly this "structured report
+    // missing/malformed" case (2026-08-24 finding: this was never captured before, on any test-run step).
+    let stdoutTail: string | undefined;
+    let stderrTail: string | undefined;
+    try {
+      const logs = await sandbox.getProcessLogs(record.processId);
+      stdoutTail = logs.stdout?.slice(-8000);
+      stderrTail = logs.stderr?.slice(-8000);
+    } catch {
+      /* best-effort - a log-retrieval failure must not fail the whole step */
+    }
+    // Empty-but-present content counts as missing, not malformed - a zero-byte file (no report was ever
+    // written) is a different failure mode from "a report was written but isn't the expected shape",
+    // and conflating the two would misdirect debugging effort.
+    const observabilityStatus: ObservabilityStatus = parsed.parsed ? "complete" : raw === undefined || raw.trim() === "" ? "missing-report" : "malformed-report";
     const result: TestRunResult = {
       command: argv,
       exitCode: exitCode ?? null,
@@ -330,6 +351,9 @@ async function stepTestRun(record: ExecutionRecord, deps: ExecutionStepDeps, cfg
       passed: parsed.parsed ? parsed.passed : undefined,
       failed: parsed.parsed ? parsed.failed : undefined,
       failedTests: parsed.parsed ? parsed.failedTests : undefined,
+      stdoutTail,
+      stderrTail,
+      observabilityStatus,
     };
     cfg.applyResult(record, result);
     record.processId = undefined;
@@ -350,6 +374,44 @@ const fullBaseline = (record: ExecutionRecord, deps: ExecutionStepDeps): Promise
     applyResult: (r, result) => { r.baseline = { full: result, selected: r.baseline?.selected as TestRunResult }; },
   });
 
+/**
+ * Execution-selection invariant (2026-08-24, see RuntimeSelectionEvidence): compares what DiffCI asked
+ * the test runner to execute against what the runner's OWN structured report says it executed. A
+ * requested file count is never proof of an executed file count - this is what actually distinguishes
+ * them. `FRAMEWORK_EXPANSION_TOLERANCE` is a small, explainable slack (e.g. a shared setup/fixture file
+ * a runner counts as its own "test file"); anything past it, in either direction, means the request was
+ * not faithfully reflected in what ran and needs explanation, not a silent "close enough."
+ */
+const FRAMEWORK_EXPANSION_TOLERANCE = 3;
+
+export function classifyRuntimeSelection(requestedTestFiles: string[], result: TestRunResult): RuntimeSelectionEvidence {
+  if (result.observabilityStatus !== "complete" || result.files === undefined) {
+    return {
+      requestedTestFiles,
+      executedTestFilesKnown: false,
+      status: "UNMEASURABLE",
+      explanation: `no structured report to compare against (observabilityStatus: ${result.observabilityStatus})`,
+    };
+  }
+  const executed = result.files;
+  const requested = requestedTestFiles.length;
+  const diff = executed - requested;
+  const evidence = { requestedTestFiles, executedTestFilesKnown: true, testFilesExecuted: executed, totalTestsExecuted: result.tests };
+  if (diff === 0) {
+    return { ...evidence, status: "HONORED_EXACTLY", explanation: `executed file count (${executed}) matches requested (${requested}) exactly` };
+  }
+  if (Math.abs(diff) <= FRAMEWORK_EXPANSION_TOLERANCE) {
+    return { ...evidence, status: "HONORED_WITH_FRAMEWORK_EXPANSION", explanation: `executed ${executed} files vs ${requested} requested (Δ${diff > 0 ? "+" : ""}${diff}) - within framework-expansion tolerance` };
+  }
+  return {
+    ...evidence,
+    status: "IGNORED_OR_BROADENED",
+    explanation: diff > 0
+      ? `executed ${executed} files vs only ${requested} requested (Δ+${diff}) - the selection filter does not appear to have narrowed execution`
+      : `executed only ${executed} files vs ${requested} requested (Δ${diff}) - fewer files ran than requested; check for a path/pattern mismatch between DiffCI's selected paths and what the test runner matched`,
+  };
+}
+
 const selectedBaseline = (record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> =>
   stepTestRun(record, deps, {
     // Guaranteed populated by the deriving-selection step before any test-run step is reachable.
@@ -357,7 +419,10 @@ const selectedBaseline = (record: ExecutionRecord, deps: ExecutionStepDeps): Pro
     reportName: "selected-baseline",
     nextStep: "mutating",
     errorClass: "selected-baseline-failed",
-    applyResult: (r, result) => { r.baseline = { full: r.baseline!.full, selected: result }; },
+    applyResult: (r, result) => {
+      r.baseline = { full: r.baseline!.full, selected: result };
+      r.runtimeSelection = classifyRuntimeSelection(r.selectedTestPaths ?? [], result);
+    },
   });
 
 async function mutate(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> {
@@ -433,10 +498,14 @@ async function revert(record: ExecutionRecord, deps: ExecutionStepDeps): Promise
 }
 
 function computeEconomicsAndRecall(record: ExecutionRecord): void {
-  // analysisOverheadMs may be genuinely absent (neither caller-supplied nor derived, e.g. the shard
-  // failed before deriving-selection) - economics stays undefined rather than defaulting it to 0, which
-  // would misreport a zero-cost analysis instead of an unknown one.
-  if (record.baseline && record.analysisOverheadMs !== undefined) {
+  // Economics is gated on the runtime-selection invariant (2026-08-24): a "gross time saved" number is
+  // meaningless - worse, misleading - if the "selected" run didn't actually run only the selected tests.
+  // Only HONORED_EXACTLY / HONORED_WITH_FRAMEWORK_EXPANSION are eligible; IGNORED_OR_BROADENED and
+  // UNMEASURABLE must never produce a reported savings figure. analysisOverheadMs may also be genuinely
+  // absent (e.g. the shard failed before deriving-selection) - economics stays undefined rather than
+  // defaulting it to 0, which would misreport a zero-cost analysis instead of an unknown one.
+  const selectionHonored = record.runtimeSelection?.status === "HONORED_EXACTLY" || record.runtimeSelection?.status === "HONORED_WITH_FRAMEWORK_EXPANSION";
+  if (record.baseline && record.analysisOverheadMs !== undefined && selectionHonored) {
     const fullTestMs = record.baseline.full.wallMs;
     const selectedTestMs = record.baseline.selected.wallMs;
     const grossSavedMs = fullTestMs - selectedTestMs;
@@ -451,12 +520,18 @@ function computeEconomicsAndRecall(record: ExecutionRecord): void {
     };
   }
   if (record.mutant && record.mutation?.applied) {
-    const fullCaught = (record.mutant.full.failed ?? 0) > 0;
-    const selectedCaught = (record.mutant.selected.failed ?? 0) > 0;
+    // Never inferred from exitCode, and never treated as a definite "0 failures" when the report simply
+    // didn't parse - those are different situations (a real pass vs. an unknown outcome).
+    const fullObservable = record.mutant.full.observabilityStatus === "complete";
+    const selectedObservable = record.mutant.selected.observabilityStatus === "complete";
+    const fullCaught = fullObservable ? (record.mutant.full.failed ?? 0) > 0 : undefined;
+    const selectedCaught = selectedObservable ? (record.mutant.selected.failed ?? 0) > 0 : undefined;
     record.recall = {
-      fullSuiteCaughtMutant: fullCaught,
-      selectedSuiteCaughtMutant: selectedCaught,
-      recallMeasurable: fullCaught, // a full-suite miss makes recall unmeasurable, never a false "safe"
+      fullSuiteCaughtMutant: fullCaught ?? false,
+      selectedSuiteCaughtMutant: selectedCaught ?? false,
+      // Measurable only when the full suite's own report parsed AND genuinely shows a failure - an
+      // unparsed full-suite report makes recall unmeasurable, never a false "safe".
+      recallMeasurable: fullObservable && fullCaught === true,
     };
   }
 }
