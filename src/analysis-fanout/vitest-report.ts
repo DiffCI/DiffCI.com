@@ -45,8 +45,14 @@ export function parseVitestJsonReport(raw: string | undefined): VitestSummary {
     }
   }
   const num = (key: string): number => (typeof report[key] === "number" ? (report[key] as number) : 0);
+  // `testResults.length` (one entry per test FILE), not `numTotalTestSuites`, is the reliable file
+  // count (2026-08-24 real-world finding): on a real cal.com report, numTotalTestSuites read 14 for a
+  // genuine 2-file run - Vitest's JSON reporter counts nested describe blocks as "suites", not files,
+  // for at least this version/shape. Falls back to numTotalTestSuites only when testResults is absent
+  // or empty (e.g. an older/different reporter shape), never silently trusting a mismatched field.
+  const filesFromResults = testResults.length;
   return {
-    files: num("numTotalTestSuites"),
+    files: filesFromResults > 0 ? filesFromResults : num("numTotalTestSuites"),
     filesFailed: num("numFailedTestSuites"),
     tests: num("numTotalTests"),
     failed: num("numFailedTests"),

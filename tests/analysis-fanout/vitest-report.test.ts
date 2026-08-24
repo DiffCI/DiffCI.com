@@ -89,6 +89,32 @@ describe("parseVitestJsonReport", () => {
     assert.equal(r.failedTests[1], "unknown-file :: unknown-test");
   });
 
+  it("files count comes from testResults.length, not numTotalTestSuites, when they disagree (2026-08-24 real cal.com finding)", () => {
+    // Real evidence from exec-calcom-29940-plainfilter1: Vitest 4.1.8's JSON reporter reported
+    // numTotalTestSuites:14 for a genuine 2-file run (it counts nested describe blocks, not files) -
+    // testResults.length (2, one entry per file) is the semantically correct, reliable file count.
+    const raw = JSON.stringify({
+      numTotalTestSuites: 14,
+      numTotalTests: 20,
+      numPassedTests: 20,
+      numFailedTests: 0,
+      testResults: [
+        { name: "packages/lib/getReplyToHeader.test.ts", assertionResults: [] },
+        { name: "apps/web/app/api/verify-booking-token/__tests__/route.test.ts", assertionResults: [] },
+      ],
+    });
+    const r = parseVitestJsonReport(raw);
+    assert.equal(r.parsed, true);
+    assert.equal(r.files, 2); // NOT 14
+    assert.equal(r.tests, 20);
+  });
+
+  it("falls back to numTotalTestSuites only when testResults is absent or empty", () => {
+    const raw = JSON.stringify({ numTotalTestSuites: 5, testResults: [] });
+    const r = parseVitestJsonReport(raw);
+    assert.equal(r.files, 5);
+  });
+
   it("treats missing numeric fields as 0 rather than throwing", () => {
     const r = parseVitestJsonReport(JSON.stringify({ testResults: [] }));
     assert.equal(r.parsed, true);

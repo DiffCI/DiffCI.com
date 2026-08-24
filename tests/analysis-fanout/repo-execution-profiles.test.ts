@@ -8,14 +8,19 @@ describe("repo-execution-profiles", () => {
     assert.equal(getRepoExecutionProfile("not/configured"), undefined);
   });
 
-  it("returns cal.com's real CI-derived profile verbatim", () => {
+  it("returns cal.com's real CI-derived profile verbatim, WITHOUT the -- the CI workflow line shows", () => {
     const profile = getRepoExecutionProfile("calcom/cal.diy");
     assert.ok(profile);
     assert.equal(profile!.repository, "calcom/cal.diy");
     assert.equal(profile!.packageManager, "yarn");
     assert.deepEqual(profile!.installArgv, ["install"]);
     assert.deepEqual(profile!.pretestArgv, [["prisma", "generate"]]);
-    assert.deepEqual(profile!.testArgv, ["test", "--", "--no-isolate"]);
+    // Deliberately no "--" (2026-08-24 finding): this repo's yarn/vitest combination silently drops
+    // everything after a literal "--" in "yarn test -- <args>" - confirmed via a live Cloudflare
+    // diagnostic probe (docs/research/2026-08-24-calcom-execution-observability/07-argument-forwarding-
+    // root-cause.md). "yarn test --no-isolate <file>" forwards correctly; "yarn test -- --no-isolate
+    // <file>" silently runs the full suite with none of it applied.
+    assert.deepEqual(profile!.testArgv, ["test", "--no-isolate"]);
     assert.deepEqual(profile!.testEnv, { TZ: "UTC" });
   });
 
