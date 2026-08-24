@@ -1,0 +1,127 @@
+{
+  "runId": "blind-calcom-1",
+  "createdAt": 1787550377383,
+  "status": "completed",
+  "shape": "standard-4",
+  "shardsPerRepository": 6,
+  "maxConcurrentShards": 6,
+  "repositories": [
+    {
+      "name": "calcom/cal.diy",
+      "manifestKey": "manifests/2026-08-23-calcom-blind-baseline-selection-manifest.json"
+    }
+  ],
+  "engineChecksum": "e0f20b722d880d59775ab79453d4d214fa944d5b197d3ab76330abc90f77bdd3",
+  "tarballKey": "tarballs/diffci-8890e1a51edb.tgz",
+  "tarballSha256": "d148520793fa13f5bedae38b070e3c26ae912465ee09a59576b5904897e508e7",
+  "shards": [
+    {
+      "id": "blind-calcom-1:calcom/cal.diy:0",
+      "runId": "blind-calcom-1",
+      "repo": "calcom/cal.diy",
+      "shardIndex": 0,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550427815,
+      "timings": {
+        "bootstrapMs": 5172,
+        "cloneMs": 18198,
+        "totalMs": 21097
+      },
+      "memAvailableBeforeMb": 11866,
+      "memAvailableAfterMb": 11705
+    },
+    {
+      "id": "blind-calcom-1:calcom/cal.diy:1",
+      "runId": "blind-calcom-1",
+      "repo": "calcom/cal.diy",
+      "shardIndex": 1,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550451409,
+      "timings": {
+        "bootstrapMs": 7972,
+        "cloneMs": 18874,
+        "totalMs": 40984
+      },
+      "memAvailableBeforeMb": 11875,
+      "memAvailableAfterMb": 11714
+    },
+    {
+      "id": "blind-calcom-1:calcom/cal.diy:2",
+      "runId": "blind-calcom-1",
+      "repo": "calcom/cal.diy",
+      "shardIndex": 2,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550464103,
+      "timings": {
+        "bootstrapMs": 6440,
+        "cloneMs": 18716,
+        "totalMs": 47222
+      },
+      "memAvailableBeforeMb": 11866,
+      "memAvailableAfterMb": 11715
+    },
+    {
+      "id": "blind-calcom-1:calcom/cal.diy:3",
+      "runId": "blind-calcom-1",
+      "repo": "calcom/cal.diy",
+      "shardIndex": 3,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550456946,
+      "timings": {
+        "bootstrapMs": 8731,
+        "cloneMs": 19166,
+        "totalMs": 41933
+      },
+      "memAvailableBeforeMb": 11867,
+      "memAvailableAfterMb": 11721
+    },
+    {
+      "id": "blind-calcom-1:calcom/cal.diy:4",
+      "runId": "blind-calcom-1",
+      "repo": "calcom/cal.diy",
+      "shardIndex": 4,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787551317529,
+      "timings": {
+        "bootstrapMs": 6238,
+        "cloneMs": 104,
+        "totalMs": 21093
+      },
+      "memAvailableBeforeMb": 11867,
+      "memAvailableAfterMb": 11789
+    },
+    {
+      "id": "blind-calcom-1:calcom/cal.diy:5",
+      "runId": "blind-calcom-1",
+      "repo": "calcom/cal.diy",
+      "shardIndex": 5,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550470592,
+      "timings": {
+        "bootstrapMs": 6710,
+        "cloneMs": 18301,
+        "totalMs": 45966
+      },
+      "memAvailableBeforeMb": 11869,
+      "memAvailableAfterMb": 11695
+    }
+  ]
+}

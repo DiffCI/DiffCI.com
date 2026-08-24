@@ -7,3 +7,4 @@ graph-audit.json
 impact-audit.json
 .research/
 .diffci/
+.wrangler/

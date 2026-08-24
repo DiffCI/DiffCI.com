@@ -1,0 +1,76 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "diffci-analysis-fanout",
+  "main": "./src/analysis-fanout/cloudflare/analysis-fanout-worker.ts",
+  "compatibility_date": "2026-08-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  // Pinned explicitly (2026-08-22) - see wrangler.product.jsonc's account_id comment for the full
+  // rationale (this account now holds two zones: dentalpresence.in and diffci.com).
+  "account_id": "571ba9bf90457be28a492d139c055e54",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  // No custom-domain route: this is the product-path analysis fan-out (bearer-token-gated control
+  // surface), not a public product surface - workers.dev stays correct regardless of diffci.com's zone.
+  // The orchestration lives in Durable Objects driven by alarm() re-scheduling (AnalysisRun coordinator
+  // + AnalysisShard state machine per shard); the Worker only validates/gates the request and hands the
+  // run to the coordinator via POST /init. There is no ctx.waitUntil long-running work.
+  "containers": [
+    {
+      "class_name": "AnalysisShardContainer",
+      // Cloudflare's own pre-published Sandbox image - the SAME image diffci-research-sandbox and
+      // diffci-synthetic-runner use. Deliberately NOT a custom Dockerfile: building one needs a local
+      // Docker daemon (unavailable here); this public-image reference deploys with no local build step.
+      "image": "docker.io/cloudflare/sandbox:0.12.5",
+      // Bumped standard-2 -> standard-4 (2026-08-24, before the four-repository holdout run): standard-4
+      // is the LARGEST predefined Cloudflare Containers instance type (4 vCPU / 12 GiB / 20 GB disk;
+      // verified against current Cloudflare docs - custom instance types are capped at the same 4 vCPU /
+      // 12 GiB ceiling, so this is the maximum available short of a support-ticket exception). The
+      // deepseek-harness parity run (2026-08-24) completed cleanly on standard-2 with zero resource
+      // kills, but cal.com is ~18 MB of TypeScript and nx ~32 MB (vs. deepseek's ~10 MB) - the largest
+      // shape maximizes headroom against an OOM/exit-137 kill on those two and gives more vCPU to the
+      // per-merge TypeScript program build, directly reducing wall time.
+      "instance_type": "standard-4",
+      // Raised 32 -> 48 for the four-repository holdout run: with 4 repos x 30 merges each sharded at
+      // ~3 merges/shard that is 40 concurrent shards; must stay ABOVE the coordinator's concurrency bound
+      // (maxConcurrentShards) so slot-release lag between shards is absorbed - mirrors the research-
+      // sandbox finding that back-to-back validations at max_instances=1 caused "container stopped"
+      // failures. Account-wide ceiling check: 48 * 4 vCPU = 192 vCPU and 48 * 12 GiB = 576 GiB, both
+      // trivially within the account's 1,500 vCPU / 6 TiB Containers limits.
+      "max_instances": 48,
+      "rollout_step_percentage": [100]
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "ANALYSIS_RUN", "class_name": "AnalysisRun" },
+      { "name": "ANALYSIS_SHARD_MACHINE", "class_name": "AnalysisShard" },
+      { "name": "ANALYSIS_SHARD_CONTAINER", "class_name": "AnalysisShardContainer" },
+      // Execution validation (2026-08-24) - sibling capability of this SAME Worker, one DO per
+      // (runId, repository, mergeSha) that installs and runs a target repo's own test suite. Reuses the
+      // existing AnalysisShardContainer sandbox binding above (same image, same containers[] entry) via
+      // env.ANALYSIS_SHARD_CONTAINER inside execution-shard-do.ts - no separate container class needed.
+      { "name": "ANALYSIS_EXECUTION_SHARD", "class_name": "AnalysisExecutionShard" }
+    ]
+  },
+  // R2 stores the source tarball, the pack record, the frozen build manifest + selection manifests, and
+  // one JSONL object per shard at runs/<runId>/<repo>/shard-<n>.jsonl (create bucket diffci-analysis-fanout).
+  "r2_buckets": [
+    { "binding": "ANALYSIS_BUCKET", "bucket_name": "diffci-analysis-fanout" }
+  ],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["AnalysisRun", "AnalysisShard", "AnalysisShardContainer"] },
+    { "tag": "v2", "new_sqlite_classes": ["AnalysisExecutionShard"] }
+  ],
+  "vars": {
+    // R2 key of the frozen build manifest the Worker reads for the engineChecksum gate. The CLI `pack`
+    // uploads docs/research/blind-baseline-2026-08-23/2026-08-23-diffci-frozen-build-manifest.json to
+    // this exact key.
+    "FROZEN_MANIFEST_KEY": "manifests/2026-08-23-diffci-frozen-build-manifest.json"
+  }
+  // Secret (NOT committed here): ANALYSIS_CONTROL_TOKEN - set via
+  //   `wrangler secret put ANALYSIS_CONTROL_TOKEN --config wrangler.analysis-fanout.jsonc`
+  // The CLI reads the SAME value from the ANALYSIS_CONTROL_TOKEN env var to call the control surface.
+}

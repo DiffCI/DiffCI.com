@@ -1,4 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
+import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER, DEFAULT_TEST_PATTERNS, type TestFileMatcher } from "./test-discovery.js";
 import { isBuiltin } from "node:module";
 import { dirname, extname, join, normalize, relative, resolve, sep } from "node:path";
 import ts from "typescript";
@@ -76,9 +77,6 @@ function isNodeBuiltin(specifier: string): boolean {
   return isBuiltin(specifier);
 }
 
-function isTestFileName(fileName: string): boolean {
-  return /\.(test|spec)\./.test(fileName);
-}
 
 function toRelativeInternal(
   repoPath: string,
@@ -161,6 +159,7 @@ class DependencyGraphImpl implements DependencyGraph {
     assetPaths: ReadonlySet<string>,
     edges: DependencyEdge[],
     private repoPath: string,
+    isTestFile: TestFileMatcher = DEFAULT_TEST_FILE_MATCHER,
   ) {
     this.edges = [...edges].sort(DependencyGraphImpl.compareEdges);
     this.nodes = [
@@ -168,7 +167,7 @@ class DependencyGraphImpl implements DependencyGraph {
         path: p,
         isSource: true,
         isAsset: false,
-        isTest: isTestFileName(p),
+        isTest: isTestFile(p),
         isEntryPoint: false,
       })),
       ...Array.from(assetPaths).map((p) => ({
@@ -258,10 +257,12 @@ class DependencyGraphImpl implements DependencyGraph {
   }
 }
 
-export function hydrateDependencyGraph(graph: DependencyGraph, repoPath: string): DependencyGraph {
+/** Restores a cached graph. `testPatterns` (from the cached profile) keeps isTest flags consistent with
+ * the test universe the graph was built under; without it the pre-2026-08-23 defaults apply. */
+export function hydrateDependencyGraph(graph: DependencyGraph, repoPath: string, testPatterns?: readonly string[]): DependencyGraph {
   const sourcePaths = new Set(graph.nodes.filter((n) => n.isSource).map((n) => n.path));
   const assetPaths = new Set(graph.nodes.filter((n) => n.isAsset).map((n) => n.path));
-  return new DependencyGraphImpl(sourcePaths, assetPaths, graph.edges, repoPath);
+  return new DependencyGraphImpl(sourcePaths, assetPaths, graph.edges, repoPath, testPatterns ? createTestFileMatcher(testPatterns) : DEFAULT_TEST_FILE_MATCHER);
 }
 
 /**
@@ -336,6 +337,45 @@ function discoverFallbackSourceFiles(repoPath: string, sourceRoots: SourceRoot[]
   return found;
 }
 
+/** Monorepo layouts without a root `tsconfig.json` (a `tsconfig.json` per package under per-package
+ * subdirectories such as `packages/`, `apps/`, or `crates/` - e.g. biomejs/biome, calcom/cal.diy) are
+ * never seen by `ts.findConfigFile()`, which starts at the repository root and walks UP, never DOWN
+ * into subdirectories. This recursively discovers those per-package `tsconfig.json` files so the graph
+ * can still be built from the repository's real TypeScript surface instead of crashing. Mirrors the
+ * ignore set used by the source-file fallback scan so `node_modules` / build output / VCS internals are
+ * never descended into. */
+const NESTED_TSCONFIG_IGNORED_DIRS = FALLBACK_SCAN_IGNORED_DIRS;
+/** Defensive cap on how many tsconfig files the nested walk will ever collect, mirroring the
+ * source-file fallback's own bound - real monorepos have one per package, nowhere near this. */
+const NESTED_TSCONFIG_MAX_FILES = 1_000;
+
+function discoverNestedTsconfigPaths(repoPath: string): string[] {
+  const found: string[] = [];
+  function walk(dirAbs: string): void {
+    if (found.length >= NESTED_TSCONFIG_MAX_FILES) return;
+    let entries: import("node:fs").Dirent[];
+    try {
+      entries = readdirSync(dirAbs, { withFileTypes: true });
+    } catch {
+      return; // unreadable directory - skip it, not this function's concern to report
+    }
+    for (const entry of entries) {
+      if (found.length >= NESTED_TSCONFIG_MAX_FILES) return;
+      if (NESTED_TSCONFIG_IGNORED_DIRS.has(entry.name)) continue;
+      const full = join(dirAbs, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.isFile() && entry.name === "tsconfig.json") {
+        found.push(full);
+      }
+    }
+  }
+  walk(repoPath);
+  // Deterministic order: the option-merge below is "last wins", so a stable source order makes the
+  // merged compiler options reproducible across filesystems (readdir order is OS-dependent).
+  return found.sort();
+}
+
 function createProgram(
   repoPath: string,
   fallbackSourceRoots: SourceRoot[] = [],
@@ -346,45 +386,73 @@ function createProgram(
   resolvedViaProjectReferences: boolean;
 } {
   const configPath = ts.findConfigFile(repoPath, ts.sys.fileExists, "tsconfig.json");
-  if (!configPath) {
-    throw new Error(`No tsconfig.json found in ${repoPath}`);
-  }
 
-  const { config, error } = ts.readConfigFile(configPath, ts.sys.readFile);
-  if (error) {
-    throw new Error(ts.flattenDiagnosticMessageText(error.messageText, "\n"));
-  }
-
-  const parsed = ts.parseJsonConfigFileContent(
-    config,
-    ts.sys,
-    dirname(configPath),
-    undefined,
-    configPath,
-  );
-
-  let fileNames: readonly string[] = parsed.fileNames;
-  let options = parsed.options;
+  let fileNames: readonly string[] = [];
+  let options: ts.CompilerOptions = {};
   let resolvedViaProjectReferences = false;
+  let configFileParsingDiagnostics: readonly ts.Diagnostic[] = [];
 
-  if (fileNames.length === 0 && parsed.projectReferences && parsed.projectReferences.length > 0) {
-    const visited = new Set<string>([ts.sys.resolvePath ? ts.sys.resolvePath(configPath) : configPath]);
-    const collected: { fileNames: string[]; optionsList: ts.CompilerOptions[] } = { fileNames: [], optionsList: [] };
-    for (const ref of parsed.projectReferences) {
-      const refConfigPath = ts.resolveProjectReferencePath(ref);
-      if (!ts.sys.fileExists(refConfigPath)) continue;
-      const nested = resolveProjectReferenceInputs(refConfigPath, visited);
-      collected.fileNames.push(...nested.fileNames);
-      collected.optionsList.push(...nested.optionsList);
+  if (configPath) {
+    const { config, error } = ts.readConfigFile(configPath, ts.sys.readFile);
+    if (error) {
+      throw new Error(ts.flattenDiagnosticMessageText(error.messageText, "\n"));
     }
-    if (collected.fileNames.length > 0) {
-      fileNames = Array.from(new Set(collected.fileNames));
-      // Best-effort merge: later-referenced projects' options win on conflict. This is an
-      // approximation (referenced projects can legitimately have different compiler
-      // settings) but is used only for import resolution / AST parsing here, not for type
-      // checking, so it is strictly better than the empty-graph status quo.
-      options = collected.optionsList.reduce((merged, opts) => ({ ...merged, ...opts }), {} as ts.CompilerOptions);
-      resolvedViaProjectReferences = true;
+
+    const parsed = ts.parseJsonConfigFileContent(
+      config,
+      ts.sys,
+      dirname(configPath),
+      undefined,
+      configPath,
+    );
+
+    fileNames = parsed.fileNames;
+    options = parsed.options;
+    configFileParsingDiagnostics = parsed.errors;
+
+    if (fileNames.length === 0 && parsed.projectReferences && parsed.projectReferences.length > 0) {
+      const visited = new Set<string>([ts.sys.resolvePath ? ts.sys.resolvePath(configPath) : configPath]);
+      const collected: { fileNames: string[]; optionsList: ts.CompilerOptions[] } = { fileNames: [], optionsList: [] };
+      for (const ref of parsed.projectReferences) {
+        const refConfigPath = ts.resolveProjectReferencePath(ref);
+        if (!ts.sys.fileExists(refConfigPath)) continue;
+        const nested = resolveProjectReferenceInputs(refConfigPath, visited);
+        collected.fileNames.push(...nested.fileNames);
+        collected.optionsList.push(...nested.optionsList);
+      }
+      if (collected.fileNames.length > 0) {
+        fileNames = Array.from(new Set(collected.fileNames));
+        // Best-effort merge: later-referenced projects' options win on conflict. This is an
+        // approximation (referenced projects can legitimately have different compiler
+        // settings) but is used only for import resolution / AST parsing here, not for type
+        // checking, so it is strictly better than the empty-graph status quo.
+        options = collected.optionsList.reduce((merged, opts) => ({ ...merged, ...opts }), {} as ts.CompilerOptions);
+        resolvedViaProjectReferences = true;
+      }
+    }
+  } else {
+    // No root tsconfig.json. Instead of throwing (which previously crashed the whole analysis for
+    // every monorepo with only per-package tsconfigs - biomejs/biome, calcom/cal.diy, and the 2026-08-24
+    // blind baseline's "tsconfig crash" finding), discover the repository's nested per-package tsconfigs
+    // and merge their inputs exactly like project references. The same "multiple sub-projects' compiler
+    // options merged into one best-effort approximation" caveat applies, so resolvedViaProjectReferences
+    // is set to cap confidence at PARTIAL. If there is genuinely no tsconfig anywhere (pure-Rust repo,
+    // plain-JS repo), fileNames stays empty and computeConfidence() reports UNSAFE - a conservative
+    // FALLBACK rather than an unhandled exception.
+    const nestedConfigPaths = discoverNestedTsconfigPaths(repoPath);
+    if (nestedConfigPaths.length > 0) {
+      const visited = new Set<string>();
+      const collected: { fileNames: string[]; optionsList: ts.CompilerOptions[] } = { fileNames: [], optionsList: [] };
+      for (const nestedPath of nestedConfigPaths) {
+        const nested = resolveProjectReferenceInputs(nestedPath, visited);
+        collected.fileNames.push(...nested.fileNames);
+        collected.optionsList.push(...nested.optionsList);
+      }
+      if (collected.fileNames.length > 0) {
+        fileNames = Array.from(new Set(collected.fileNames));
+        options = collected.optionsList.reduce((merged, opts) => ({ ...merged, ...opts }), {} as ts.CompilerOptions);
+        resolvedViaProjectReferences = true;
+      }
     }
   }
 
@@ -419,7 +487,7 @@ function createProgram(
   const program = ts.createProgram({
     rootNames: fileNames,
     options,
-    configFileParsingDiagnostics: parsed.errors,
+    configFileParsingDiagnostics,
   });
 
   return { program, options, fileNames, resolvedViaProjectReferences };
@@ -459,6 +527,21 @@ function expandAliasCandidates(
     }
   }
   return [];
+}
+
+/**
+ * Bundler import-query suffixes (2026-08-23, deepseek-harness Phase 5): Vite/webpack allow
+ * `import css from "../styles/base.css?inline"` / `?raw` / `?url` / `?worker` (no `#` handling). The
+ * query changes HOW the bundler loads the file, never WHICH file - so for resolution purposes the
+ * specifier is the path before the first `?`/`#`. Without this every such import was "unresolved
+ * internal module", which made the whole ui-theme package UNSAFE and blocked 5 of 30 deepseek merges
+ * on nothing else. Applied only to relative/absolute/alias specifiers (bare package names cannot carry
+ * a query); the original specifier is still what gets recorded in references.
+ */
+function stripImportQuery(specifier: string): string {
+  // Only `?` - a leading `#` is a Node subpath import (`#internal/x`), and `#fragment` is not a bundler convention.
+  const cut = specifier.indexOf("?");
+  return cut <= 0 ? specifier : specifier.slice(0, cut);
 }
 
 function findAssetCandidate(
@@ -579,8 +662,10 @@ export async function buildDependencyGraph(
         continue;
       }
 
+      const specifierCategory = classifySpecifier(ref.specifier);
+      const resolvableSpecifier = specifierCategory === "relative" || specifierCategory === "absolute" || specifierCategory === "alias" ? stripImportQuery(ref.specifier) : ref.specifier;
       const resolution = ts.resolveModuleName(
-        ref.specifier,
+        resolvableSpecifier,
         sf.fileName,
         compilerOptions,
         ts.sys,
@@ -592,7 +677,7 @@ export async function buildDependencyGraph(
         if (category === "relative" || category === "absolute" || category === "alias") {
           const assetAbs = findAssetCandidate(
             sf.fileName,
-            ref.specifier,
+            resolvableSpecifier,
             profile.pathAliases,
             repoPath,
           );
@@ -641,7 +726,26 @@ export async function buildDependencyGraph(
     }
   }
 
-  const graph = new DependencyGraphImpl(internalSourcePaths, assetPaths, edges, repoPath);
+  // Nested-package test visibility (2026-08-24, biomejs/biome finding): `internalSourcePaths` above is
+  // strictly the TS PROGRAM's own file list (createProgram()'s `include`/nested-tsconfig-merged
+  // fileNames) - so a package whose own tsconfig deliberately excludes its test directory (a real,
+  // common pattern; confirmed verbatim on biome: `packages/@biomejs/js-api/tsconfig.json` has
+  // `"exclude": ["./tests", "./dist"], "include": ["./src"]`) NEVER contributes those files to the
+  // program, so they never became graph nodes and `totalTestsInGraph` stayed 0 even though
+  // `profile.testFilePaths` (the separate, tsconfig-agnostic glob walk in analyzer.ts's discoverTests())
+  // already found them correctly. Source-ROOT discovery itself was already correct (the 2026-08-21
+  // zod/trpc fallback already lists `packages`/`crates` as roots for exactly this monorepo shape) - the
+  // gap was narrower: the graph never incorporated what that walk found. Fix: union in any test file
+  // discoverTests() found that the TS program's own file list missed, as an ADDITIONAL leaf node
+  // (isTest true; no import edges - we have no real resolution info for a file the type-checker was
+  // never asked to see, so dependency-graph traversal through it is honestly absent, not guessed at).
+  // This does NOT add Rust visibility of any kind - testFilePaths only ever contains files already
+  // matched by the JS/TS test-file patterns; a `.rs` test is never in it and stays "unknown" as before.
+  for (const testPath of profile.testFilePaths) {
+    if (!internalSourcePaths.has(testPath) && !assetPaths.has(testPath)) internalSourcePaths.add(testPath);
+  }
+
+  const graph = new DependencyGraphImpl(internalSourcePaths, assetPaths, edges, repoPath, createTestFileMatcher(profile.testPatterns ?? DEFAULT_TEST_PATTERNS));
 
   for (const node of graph.nodes) {
     node.isEntryPoint = entryPointPaths.has(node.path);

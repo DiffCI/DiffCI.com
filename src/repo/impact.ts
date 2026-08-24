@@ -3,6 +3,8 @@ import type { ChangedFile, GitDelta } from "../git/types.js";
 import type { DependencyGraph, DependencyGraphNode, DependencyGraphResult, EntryPoint, RepositoryProfile } from "./types.js";
 import type { ChangedImpact, EntryPointImpact, ImpactEvidence, ImpactEvidencePath, ImpactReason, ImpactResult, ImpactRiskSignal, TestImpact } from "./impact-types.js";
 import { refineConfidenceForDelta } from "./graph.js";
+import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER } from "./test-discovery.js";
+import { resolveTestFixtureOwners } from "./test-fixture-ownership.js";
 
 const SOURCE_EXTENSIONS = new Set([".ts",".tsx",".js",".jsx",".mjs",".cjs",".mts",".cts"]);
 const ASSET_EXTENSIONS = new Set([".css",".scss",".sass",".less",".json",".jsonc",".svg",".png",".jpg",".jpeg",".gif",".webp",".ico",".bmp",".woff",".woff2",".ttf",".otf",".eot",".wasm",".md",".txt"]);
@@ -10,7 +12,9 @@ const NEXT_ENTRY_NAMES = new Set(["page","layout","route","api","loading","error
 
 function isSourceFilePath(filePath: string): boolean { return SOURCE_EXTENSIONS.has(extname(filePath).toLowerCase()); }
 function isAssetFilePath(filePath: string): boolean { return ASSET_EXTENSIONS.has(extname(filePath).toLowerCase()); }
-function isTestFileName(filePath: string): boolean { return /\.(test|spec)\./.test(filePath); }
+// "Is this a test?" is answered by the profile's test patterns (src/repo/test-discovery.ts) - one shared
+// definition with analyzer discovery and graph node flags. Module-level helpers receive it explicitly.
+type IsTestFile = (filePath: string) => boolean;
 function isScriptFile(filePath: string): boolean { return filePath.startsWith("scripts/") || filePath.startsWith("ops/"); }
 function isDocumentationFile(filePath: string): boolean { const ext = extname(filePath).toLowerCase(); return ext === ".md" || ext === ".mdx" || filePath.startsWith("docs/"); }
 function isConfigFile(filePath: string): boolean {
@@ -73,24 +77,84 @@ function shortestDependentPathToTest(graph: DependencyGraph, changedFilePath: st
   if (!path) return undefined;
   return { changedFile: changedFilePath, path, pathKind: "dependents" };
 }
-function collectScriptsAmong(candidates: Iterable<string>): string[] { const result: string[] = []; for (const path of candidates) { if (isScriptFile(path) && !isTestFileName(path)) result.push(path); } return result.sort(); }
+function collectScriptsAmong(candidates: Iterable<string>, isTestFile: IsTestFile): string[] { const result: string[] = []; for (const path of candidates) { if (isScriptFile(path) && !isTestFile(path)) result.push(path); } return result.sort(); }
 function makeEvidence(reason: ImpactReason, changedFile: string, message: string, affectedFile?: string, path?: ImpactEvidencePath): ImpactEvidence { return { reason, changedFile, affectedFile, message, path }; }
 
-function classifyChangedFile(file: ChangedFile): ChangedImpact["category"] {
+function classifyChangedFile(file: ChangedFile, isTestFile: IsTestFile, repositoryFiles?: ReadonlySet<string>): ChangedImpact["category"] {
   const path = file.path;
   const oldPath = file.oldPath;
   if (isConfigFile(path) || (oldPath && isConfigFile(oldPath))) return "config";
   if (isInfrastructureFile(path) || (oldPath && isInfrastructureFile(oldPath))) return "infrastructure";
   if (isDatabaseFile(path) || (oldPath && isDatabaseFile(oldPath))) return "database";
   if (isSourceFilePath(path)) {
-    if (isTestFileName(path)) return "test";
+    if (isTestFile(path)) return "test";
     if (isScriptFile(path)) return "script";
     if (classifyNextEntryPoint(path)) return "entry-point";
     return "source";
   }
   if (isAssetFilePath(path)) return "asset";
   if (isDocumentationFile(path)) return "docs";
+  if (isTranslatedDocumentationCompanion(path, repositoryFiles)) return "docs";
+  // Recorded test inputs under <scope>/tests/<snapshots|fixtures>/ are owned by the tests beside them
+  // (src/repo/test-fixture-ownership.ts). Only claimed when an owner can actually be resolved at HEAD.
+  if (resolveTestFixtureOwners(path, isTestFile, repositoryFiles)) return "test-fixture";
   return "unknown";
+}
+
+/**
+ * Executable directly-changed tests (2026-08-24): the set of added / modified / renamed-destination /
+ * copied-destination test files in a delta that MUST be present in the final selected-test set. This is
+ * the "changed-test self-selection" invariant's input. Deleted tests are excluded (their paths no longer
+ * exist at HEAD and must never be executed; a deleted test is instead handled conservatively elsewhere).
+ * Only `file.path` is considered here: for a rename/copy that is the destination (the source identity is
+ * `file.oldPath` and is intentionally not a test to run).
+ */
+export function directlyChangedExecutableTests(delta: GitDelta, isTestFile: IsTestFile): string[] {
+  const result = new Set<string>();
+  for (const file of delta.files) {
+    if (file.changeType === "deleted") continue;
+    const path = file.path;
+    if (isSourceFilePath(path) && isTestFile(path)) result.add(path);
+  }
+  return Array.from(result).sort();
+}
+
+/**
+ * Translated-documentation companion records (2026-08-23, docs/research/2026-08-23-deepseek-harness-
+ * benchmark.md): the deepseek-harness benchmark showed 26/28 fallbacks carried "Unknown changed file"
+ * and 777 of those files were `<doc>.i18n.yaml` - per-document translation-pairing metadata (the git
+ * blob hashes of `<doc>.md` / `<doc>.zh.md`) consumed only by a pre-push gate and a merge driver,
+ * never by runtime code or tests. Classifying them as docs is a RELATIONSHIP rule, not a YAML rule:
+ *   1. the file name is `<base>.<tag>.yaml|yml` where <tag> denotes translation METADATA
+ *      (`i18n`, `l10n`, `translation`, `translations`) - NOT a locale code, because `<base>.en.yaml`
+ *      is just as plausibly runtime i18n content loaded by a site generator;
+ *   2. a Markdown document `<base>.md` / `<base>.mdx` exists beside it at HEAD - the companion must
+ *      actually accompany a document; and
+ *   3. the caller supplied the HEAD file list at all. Without it the relationship cannot be verified
+ *      and the file stays "unknown" (full validation) - existing callers that pass nothing see
+ *      byte-identical behavior.
+ * Ordinary YAML (CI config, locale bundles under `locales/`, anything without the documented
+ * companion) never reaches this check as docs. Config/infra/database classification runs first, so
+ * e.g. `.github/README.i18n.yaml` still counts as config.
+ */
+const TRANSLATION_METADATA_TAGS = new Set(["i18n", "l10n", "translation", "translations"]);
+export function isTranslatedDocumentationCompanion(filePath: string, repositoryFiles: ReadonlySet<string> | undefined): boolean {
+  if (!repositoryFiles) return false;
+  const base = posix.basename(filePath);
+  const match = /^(.+)\.([A-Za-z0-9_-]+)\.(yaml|yml)$/.exec(base);
+  if (!match) return false;
+  const [, docStem, tag] = match;
+  if (!docStem || !tag || !TRANSLATION_METADATA_TAGS.has(tag.toLowerCase())) return false;
+  const dir = posix.dirname(filePath);
+  const companionBase = dir === "." ? docStem : `${dir}/${docStem}`;
+  return repositoryFiles.has(`${companionBase}.md`) || repositoryFiles.has(`${companionBase}.mdx`);
+}
+
+export interface ImpactAnalyzeOptions {
+  /** Repo-relative paths of every file present at HEAD (e.g. `git ls-tree -r --name-only <head>`).
+   * Enables relationship-based classification (see isTranslatedDocumentationCompanion). Optional -
+   * omitting it disables those rules and keeps prior behavior exactly. */
+  repositoryFiles?: ReadonlySet<string>;
 }
 
 function changedFileReasons(file: ChangedFile): ImpactReason[] {
@@ -111,12 +175,16 @@ export const DEFAULT_ALWAYS_RUN_CHECKS: AlwaysRunCheck[] = [
 
 export class ImpactAnalyzer {
   private alwaysRunChecks: AlwaysRunCheck[];
+  private isTestFile: IsTestFile = DEFAULT_TEST_FILE_MATCHER;
+  private repositoryFiles: ReadonlySet<string> | undefined;
   constructor(alwaysRunChecks: AlwaysRunCheck[] = DEFAULT_ALWAYS_RUN_CHECKS) { this.alwaysRunChecks = alwaysRunChecks; }
 
-  analyze(delta: GitDelta, graphResult: DependencyGraphResult, profile: RepositoryProfile): ImpactResult {
+  analyze(delta: GitDelta, graphResult: DependencyGraphResult, profile: RepositoryProfile, options: ImpactAnalyzeOptions = {}): ImpactResult {
     const start = process.hrtime.bigint();
     const { graph } = graphResult;
-    const changedImpacts: ChangedImpact[] = delta.files.map((file) => ({ file, category: classifyChangedFile(file), reasons: changedFileReasons(file) }));
+    this.isTestFile = profile.testPatterns ? createTestFileMatcher(profile.testPatterns) : DEFAULT_TEST_FILE_MATCHER;
+    this.repositoryFiles = options.repositoryFiles;
+    const changedImpacts: ChangedImpact[] = delta.files.map((file) => ({ file, category: classifyChangedFile(file, this.isTestFile, options.repositoryFiles), reasons: changedFileReasons(file) }));
     const evidence: ImpactEvidence[] = [];
     const riskSignals: ImpactRiskSignal[] = [];
     const fallbackReasons: string[] = [];
@@ -154,6 +222,19 @@ export class ImpactAnalyzer {
     this.handleStructuralNextLayout(changedImpacts, profile, affectedEntryPoints, affectedSources, evidence);
     this.handleAddedEntryPoints(delta, affectedEntryPoints, affectedSources, affectedTests, evidence, fallbackReasons);
     this.collectAlwaysRunTests(profile, graph, affectedTests, evidence);
+
+    // Changed-test self-selection invariant (2026-08-24): every executable directly-changed test
+    // (added / modified / renamed-destination / copied-destination) MUST be present in the final
+    // selected-test set. This is a defense-in-depth guard over the traversal above so a selection
+    // regression cannot silently authorize a SAFE_TO_PROPOSE that would skip a just-edited test.
+    const directlyChangedTests = directlyChangedExecutableTests(delta, this.isTestFile);
+    const selectedTestPaths = new Set(affectedTests.keys());
+    const missingSelectedTests = directlyChangedTests.filter((t) => !selectedTestPaths.has(t));
+    if (missingSelectedTests.length > 0) {
+      const message = `Changed test selection invariant violated: ${missingSelectedTests.length} directly changed test(s) not selected (${missingSelectedTests.join(", ")})`;
+      riskSignals.push({ level: "critical", reason: "TEST_SELECTION_INVARIANT", message, paths: missingSelectedTests });
+      if (!fallbackReasons.includes(message)) fallbackReasons.push(message);
+    }
 
     const fallbackRequired = effectiveGraphConfidence === "UNSAFE" || fallbackReasons.length > 0;
     const analysisStatus: ImpactResult["analysisStatus"] = fallbackRequired ? "FALLBACK" : "SAFE_TO_PROPOSE";
@@ -210,7 +291,19 @@ export class ImpactAnalyzer {
     fallbackReasons: string[],
   ): void {
     const category = changedImpact.category;
-    if (category === "unknown") {
+    if (category === "test-fixture") {
+      // Resolved per change PATH (a rename's old path resolves independently); an unresolvable side
+      // degrades to the unknown-file fallback below rather than being silently dropped.
+      const ownership = resolveTestFixtureOwners(changedPath, this.isTestFile, this.repositoryFiles);
+      if (ownership) {
+        for (const owner of ownership.owners) {
+          this.addAffectedTest(changedPath, owner, graph, affectedTests, "TEST_FIXTURE_OWNER", evidence);
+        }
+        evidence.push(makeEvidence("TEST_FIXTURE_OWNER", changedPath, `Test fixture ${changedPath} under ${ownership.fixtureDir} is owned by ${ownership.owners.length} test(s) in ${ownership.testsDir} (${ownership.scope})`));
+        return;
+      }
+    }
+    if (category === "unknown" || category === "test-fixture") {
       const message = `Unknown changed file: ${changedPath}`;
       evidence.push(makeEvidence("UNKNOWN_FILE", changedPath, message));
       riskSignals.push({ level: "critical", reason: "UNKNOWN_FILE", message, paths: [changedPath] });
@@ -224,6 +317,10 @@ export class ImpactAnalyzer {
     }
     if (category === "config" || category === "workflow" || category === "infrastructure" || category === "database") {
       evidence.push(makeEvidence("CONFIG_GLOBAL", changedPath, `Global ${category} change at ${changedPath}`));
+      return;
+    }
+    if (category === "test") {
+      this.processTestChange(changedPath, changedImpact, graph, profile, affectedSources, affectedEntryPoints, affectedTests, affectedScripts, evidence, riskSignals, fallbackReasons);
       return;
     }
     if (changedImpact.file.changeType === "deleted" && !hasNode(graph, changedPath)) {
@@ -254,10 +351,10 @@ export class ImpactAnalyzer {
       if (nodeByPath(graph, dependent)?.isEntryPoint) {
         this.addAffectedEntryPoint(dependent, profile, affectedEntryPoints, "ASSET_DEPENDENCY", assetPath, evidence);
       }
-      if (isTestFileName(dependent)) {
+      if (this.isTestFile(dependent)) {
         this.addAffectedTest(assetPath, dependent, graph, affectedTests, "ASSET_DEPENDENCY", evidence);
       }
-      if (isSourceFilePath(dependent) && !isTestFileName(dependent)) {
+      if (isSourceFilePath(dependent) && !this.isTestFile(dependent)) {
         if (!affectedSources.has(dependent)) affectedSources.set(dependent, []);
         affectedSources.get(dependent)!.push(makeEvidence("ASSET_DEPENDENCY", assetPath, `Asset ${assetPath} affects source ${dependent}`, dependent));
       }
@@ -281,7 +378,7 @@ export class ImpactAnalyzer {
       return;
     }
 
-    if (!isTestFileName(sourcePath)) {
+    if (!this.isTestFile(sourcePath)) {
       if (!affectedSources.has(sourcePath)) affectedSources.set(sourcePath, []);
       affectedSources.get(sourcePath)!.push(makeEvidence("DIRECT_CHANGE", sourcePath, `Changed source: ${sourcePath}`));
     }
@@ -291,23 +388,75 @@ export class ImpactAnalyzer {
 
     const dependents = graph.transitiveDependentsOf(sourcePath);
     for (const dependent of dependents) {
-      if (!isTestFileName(dependent)) {
+      if (!this.isTestFile(dependent)) {
         if (!affectedSources.has(dependent)) affectedSources.set(dependent, []);
         affectedSources.get(dependent)!.push(makeEvidence("DEPENDENCY", sourcePath, `${sourcePath} affects ${dependent} via dependency graph`, dependent));
       }
       if (nodeByPath(graph, dependent)?.isEntryPoint) {
         this.addAffectedEntryPoint(dependent, profile, affectedEntryPoints, "DEPENDENCY", sourcePath, evidence);
       }
-      if (isTestFileName(dependent)) {
+      if (this.isTestFile(dependent)) {
         this.addAffectedTest(sourcePath, dependent, graph, affectedTests, "DEPENDENCY", evidence);
       }
     }
 
     const reachable = new Set([sourcePath, ...dependents]);
-    for (const scriptPath of collectScriptsAmong(reachable)) {
+    for (const scriptPath of collectScriptsAmong(reachable, this.isTestFile)) {
       if (!affectedScripts.has(scriptPath)) affectedScripts.set(scriptPath, []);
       affectedScripts.get(scriptPath)!.push(makeEvidence("DEPENDENCY", sourcePath, `${sourcePath} affects script ${scriptPath}`, scriptPath));
     }
+  }
+
+  /**
+   * Handles a directly-changed test file (2026-08-24 fix). Previously changed tests fell through to
+   * processSourceChange, which never added the test itself to affectedTests, so a "test-only" diff
+   * (e.g. Nx #36723) authorized SAFE_TO_PROPOSE with zero selected tests. Now:
+   *   - deleted test: never select the (nonexistent) path; fall back when its node is absent, else
+   *     traverse its legacy dependents conservatively;
+   *   - rename/copy source identity (oldPath): record the legacy identity only — the destination is the
+   *     executable test and is handled on its own path iteration;
+   *   - added / modified / renamed-destination / copied-destination: select the test itself and then
+   *     traverse dependents (shared test helpers) exactly like processSourceChange.
+   */
+  private processTestChange(
+    changedPath: string,
+    changedImpact: ChangedImpact,
+    graph: DependencyGraph,
+    profile: RepositoryProfile,
+    affectedSources: Map<string, ImpactEvidence[]>,
+    affectedEntryPoints: Map<string, EntryPointImpact>,
+    affectedTests: Map<string, TestImpact>,
+    affectedScripts: Map<string, ImpactEvidence[]>,
+    evidence: ImpactEvidence[],
+    riskSignals: ImpactRiskSignal[],
+    fallbackReasons: string[],
+  ): void {
+    const file = changedImpact.file;
+    const isOldPath = file.oldPath !== undefined && changedPath === file.oldPath;
+
+    if (file.changeType === "deleted") {
+      // Never select a deleted test. If its node is still present (stale/base graph), traverse legacy
+      // dependents conservatively; otherwise safety cannot be established and we require full validation.
+      if (hasNode(graph, changedPath)) {
+        this.processSourceChange(changedPath, graph, profile, affectedSources, affectedEntryPoints, affectedTests, affectedScripts, evidence);
+        return;
+      }
+      const message = `Deleted test ${changedPath}; legacy coverage/dependents cannot be established safely`;
+      evidence.push(makeEvidence("DELETED_FILE_UNKNOWABLE_GRAPH", changedPath, message));
+      riskSignals.push({ level: "critical", reason: "DELETED_FILE_UNKNOWABLE_GRAPH", message, paths: [changedPath] });
+      if (!fallbackReasons.includes(message)) fallbackReasons.push(message);
+      return;
+    }
+
+    if (isOldPath) {
+      evidence.push(makeEvidence("RENAMED_FILE_LEGACY_IDENTITY", changedPath, `Renamed test source ${changedPath}; destination handled separately`));
+      return;
+    }
+
+    if (this.isTestFile(changedPath)) {
+      this.addAffectedTest(changedPath, changedPath, graph, affectedTests, "DIRECT_TEST_CHANGE", evidence);
+    }
+    this.processSourceChange(changedPath, graph, profile, affectedSources, affectedEntryPoints, affectedTests, affectedScripts, evidence);
   }
 
   private addAffectedEntryPoint(
@@ -401,7 +550,7 @@ export class ImpactAnalyzer {
       const kind = classifyNextEntryPoint(file.path);
       if (kind) result.push({ path: file.path, kind });
       else if (file.path.startsWith("scripts/")) result.push({ path: file.path, kind: "script" });
-      else if (isTestFileName(file.path)) result.push({ path: file.path, kind: "test" });
+      else if (this.isTestFile(file.path)) result.push({ path: file.path, kind: "test" });
     }
     return result;
   }
@@ -416,7 +565,7 @@ export class ImpactAnalyzer {
     const knownTestPaths = new Set<string>();
     for (const testLocation of profile.tests) {
       for (const node of graph.nodes) {
-        if (matchesGlob(testLocation.glob, node.path) || isTestFileName(node.path)) {
+        if (matchesGlob(testLocation.glob, node.path) || this.isTestFile(node.path)) {
           knownTestPaths.add(node.path);
         }
       }

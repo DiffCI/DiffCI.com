@@ -1,0 +1,233 @@
+/**
+ * Test discovery from test-runner configuration (2026-08-23, deepseek-harness benchmark Phase 2).
+ *
+ * Before this module DiffCI recognised a test file purely by the `.test.` / `.spec.` filename
+ * convention, hardcoded in three places (analyzer discovery, graph node flag, impact classification).
+ * On deepseek-harness that silently left 22 `*.snapshot.ts` and 136 `*.e2e.ts` suites - each run by
+ * its own `vitest run --config vitest.<family>.config.ts` CI job - outside the modelled test universe.
+ *
+ * This module reads the repository's OWN declaration of what a test is: the `include` globs of
+ * Vitest/Jest configuration files at the repository root. It is deliberately STATIC - config files
+ * are never imported or executed (they are repo code); string literals are lifted out of
+ * `include: [ ... ]` arrays (and `testMatch` for Jest) by a tolerant scanner. Anything it cannot read
+ * is simply not added, so the worst case is the pre-existing `.test.`/`.spec.` behaviour.
+ *
+ * Families are derived from the filename token between the last two dots (`foo.e2e.ts` -> e2e) -
+ * a convention, not a deepseek-specific rule - and the config file name (`vitest.e2e.config.ts`).
+ * Families matter downstream: a snapshot or e2e file is a real test that can be SELECTED, but it is
+ * executed by a different command (and may need credentials/browsers), so execution validation must
+ * treat families separately. Nothing here changes selection policy; it only widens what counts as a
+ * test. Repositories with no such config, or whose configs only restate `.test.`/`.spec.`, are
+ * unaffected.
+ */
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+
+export type TestFamily = "unit" | "snapshot" | "e2e" | "integration" | "benchmark";
+
+export interface TestRunnerConfig {
+  /** Repo-relative config file, e.g. "vitest.e2e.config.ts". */
+  file: string;
+  runner: "vitest" | "jest";
+  /** String-literal include globs lifted from the config (no evaluation). */
+  includes: string[];
+  /** package.json script names that invoke this config (`--config <file>`), or the bare runner
+   * for the default config. Execution validation uses these to find the real CI command. */
+  scripts: string[];
+  /** Family implied by the config's name token ("vitest.e2e.config.ts" -> e2e); undefined for the
+   * default config, whose files are classified individually by filename token. */
+  family?: TestFamily;
+}
+
+export interface TestDiscovery {
+  configs: TestRunnerConfig[];
+  /** Union of DEFAULT_TEST_PATTERNS and every config include, deduplicated. */
+  patterns: string[];
+}
+
+export const DEFAULT_TEST_PATTERNS: readonly string[] = [
+  "**/*.test.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
+  "**/*.spec.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
+];
+
+const FAMILY_TOKENS: Record<string, TestFamily> = {
+  test: "unit", spec: "unit", unit: "unit",
+  snapshot: "snapshot", snap: "snapshot",
+  e2e: "e2e",
+  integration: "integration", int: "integration", it: "integration",
+  bench: "benchmark", benchmark: "benchmark", perf: "benchmark",
+};
+
+/** Family of a test file from its filename token: `name.<token>.<ext>`. Undefined when the file has
+ * no recognised token (then it is only a test if a config include says so; treated as "unit"). */
+export function testFamilyOfPath(filePath: string): TestFamily | undefined {
+  const base = filePath.slice(filePath.lastIndexOf("/") + 1);
+  const parts = base.split(".");
+  if (parts.length < 3) return undefined;
+  const token = parts[parts.length - 2]!.toLowerCase();
+  return FAMILY_TOKENS[token];
+}
+
+function familyOfConfigName(file: string): TestFamily | undefined {
+  // vitest.<token>.config.ts / jest.<token>.config.js -> token; plain vitest.config.ts -> undefined
+  const m = /^(?:vitest|jest)\.([a-z0-9-]+)\.config\./i.exec(file);
+  if (!m) return undefined;
+  const token = m[1]!.toLowerCase();
+  if (token in FAMILY_TOKENS) return FAMILY_TOKENS[token];
+  if (token.includes("e2e")) return "e2e";
+  if (token.includes("snapshot")) return "snapshot";
+  if (token.includes("integration")) return "integration";
+  return undefined; // e.g. "web", "web-stress": family comes from each file's token instead
+}
+
+const CONFIG_NAME = /^(vitest|jest)(\.[a-z0-9-]+)?\.config\.(ts|mts|cts|js|mjs|cjs)$/i;
+
+/**
+ * Lift string literals out of `include: [ ... ]` / `testMatch: [ ... ]` arrays. Tolerates spreads,
+ * comments and conditional entries inside the array (their literals are lifted too - over-inclusion
+ * only makes MORE files count as tests, never fewer). Also follows one level of indirection:
+ * `include: someIdent` where `const someIdent = [ ... ]` is declared in the same file.
+ */
+/** Removes JS comments while leaving string literals untouched - a naive regex would eat the `/**\/`
+ * inside a glob like `tests/**\/*.spec.ts`. */
+export function stripComments(source: string): string {
+  let out = "";
+  let i = 0;
+  let quote: string | undefined;
+  while (i < source.length) {
+    const ch = source[i]!;
+    const next = source[i + 1];
+    if (quote) {
+      out += ch;
+      if (ch === "\\" && next !== undefined) { out += next; i += 2; continue; }
+      if (ch === quote) quote = undefined;
+      i++;
+      continue;
+    }
+    if (ch === "'" || ch === '"' || ch === "`") { quote = ch; out += ch; i++; continue; }
+    if (ch === "/" && next === "/") { while (i < source.length && source[i] !== "\n") i++; continue; }
+    if (ch === "/" && next === "*") { const end = source.indexOf("*/", i + 2); i = end === -1 ? source.length : end + 2; continue; }
+    out += ch;
+    i++;
+  }
+  return out;
+}
+
+/** Blanks `coverage: { ... }` blocks: their `include` lists INSTRUMENTED SOURCE files, not tests, and
+ * lifting them would mark every source file as a test (observed on deepseek-harness: +1,382 files). */
+export function blankCoverageBlocks(source: string): string {
+  let out = source;
+  for (let guard = 0; guard < 32; guard++) {
+    const m = /\bcoverage\s*:\s*\{/.exec(out);
+    if (!m) break;
+    const open = m.index + m[0].length - 1;
+    let depth = 0;
+    let close = -1;
+    for (let i = open; i < out.length; i++) {
+      if (out[i] === "{") depth++;
+      else if (out[i] === "}") { depth--; if (depth === 0) { close = i; break; } }
+    }
+    if (close === -1) break;
+    out = out.slice(0, m.index) + " ".repeat(close + 1 - m.index) + out.slice(close + 1);
+  }
+  return out;
+}
+
+export function extractIncludeGlobs(source: string): string[] {
+  const stripped = blankCoverageBlocks(stripComments(source));
+  // Bracket-depth aware: returns the body of the array literal opening at `open` (index of "[").
+  const arrayBodyAt = (open: number): string | undefined => {
+    let depth = 0;
+    for (let i = open; i < stripped.length; i++) {
+      const ch = stripped[i];
+      if (ch === "[") depth++;
+      else if (ch === "]") { depth--; if (depth === 0) return stripped.slice(open + 1, i); }
+    }
+    return undefined;
+  };
+  const arrays = new Map<string, string>();
+  for (const m of stripped.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=]+)?=\s*\[/g)) {
+    const body = arrayBodyAt(m.index + m[0].length - 1);
+    if (body !== undefined) arrays.set(m[1]!, body);
+  }
+  const globs: string[] = [];
+  const lift = (body: string) => { for (const s of body.matchAll(/['"`]([^'"`\n]+)['"`]/g)) globs.push(s[1]!); };
+  for (const m of stripped.matchAll(/\b(?:include|testMatch)\s*:\s*(\[|([A-Za-z_$][\w$]*))/g)) {
+    if (m[1] === "[") { const body = arrayBodyAt(m.index + m[0].length - 1); if (body !== undefined) lift(body); }
+    else if (m[2] && arrays.has(m[2])) lift(arrays.get(m[2])!);
+  }
+  // Only keep things that look like file globs (contain a slash or a glob char) - drops e.g. env names
+  return Array.from(new Set(globs.filter((g) => /[*/]/.test(g) && !g.startsWith("!"))));
+}
+
+function scriptsInvoking(scripts: Record<string, string>, runner: "vitest" | "jest", configFile: string, isDefault: boolean): string[] {
+  const result: string[] = [];
+  for (const [name, cmd] of Object.entries(scripts)) {
+    if (!new RegExp(`\\b${runner}\\b`).test(cmd)) continue;
+    const cfg = /--config(?:=|\s+)(\S+)/.exec(cmd)?.[1];
+    if (cfg ? cfg === configFile || cfg.endsWith(`/${configFile}`) : isDefault) result.push(name);
+  }
+  return result.sort();
+}
+
+/** Static discovery of test-runner configs at the repository root. Never throws; never executes. */
+export function discoverTestRunnerConfigs(repoPath: string, scripts: Record<string, string> = {}): TestDiscovery {
+  const configs: TestRunnerConfig[] = [];
+  const patterns = new Set<string>(DEFAULT_TEST_PATTERNS);
+  let entries: string[] = [];
+  try { entries = existsSync(repoPath) ? readdirSync(repoPath) : []; } catch { entries = []; }
+  for (const name of entries.sort()) {
+    const m = CONFIG_NAME.exec(name);
+    if (!m) continue;
+    const full = join(repoPath, name);
+    try { if (!statSync(full).isFile()) continue; } catch { continue; }
+    let source = "";
+    try { source = readFileSync(full, "utf8"); } catch { continue; }
+    const runner = m[1]!.toLowerCase() as "vitest" | "jest";
+    const includes = extractIncludeGlobs(source);
+    const isDefault = m[2] === undefined;
+    configs.push({ file: name, runner, includes, scripts: scriptsInvoking(scripts, runner, name, isDefault), family: familyOfConfigName(name) });
+    for (const g of includes) patterns.add(g);
+  }
+  return { configs, patterns: Array.from(patterns) };
+}
+
+// --- glob matching (shared by analyzer / graph / impact so "is this a test?" has ONE answer) ---
+
+function expandBraces(pattern: string): string[] {
+  const match = /\{([^{}]*)\}/.exec(pattern);
+  if (!match) return [pattern];
+  const prefix = pattern.slice(0, match.index);
+  const suffix = pattern.slice(match.index + match[0].length);
+  const out: string[] = [];
+  for (const alt of match[1]!.split(",")) out.push(...expandBraces(`${prefix}${alt}${suffix}`));
+  return out;
+}
+
+function globToRegex(pattern: string): RegExp {
+  let escaped = pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.");
+  escaped = escaped
+    .replace(/\*\*\//g, "\0GS\0")
+    .replace(/\/\*\*/g, "\0SG\0")
+    .replace(/\*/g, "[^/]*")
+    .replace(/\0GS\0/g, "(?:.*/)?")
+    .replace(/\0SG\0/g, "(?:/.*)?");
+  return new RegExp(`^${escaped}$`);
+}
+
+export interface TestFileMatcher {
+  (repoRelativePath: string): boolean;
+  readonly patterns: readonly string[];
+}
+
+/** Builds a matcher over repo-relative posix paths. Patterns without a slash (bare filename globs)
+ * are treated as `**\/<pattern>` so a config's `*.spec.ts` still means "anywhere". */
+export function createTestFileMatcher(patterns: readonly string[]): TestFileMatcher {
+  const regexes = patterns.flatMap((p) => expandBraces(p.includes("/") ? p : `**/${p}`)).map(globToRegex);
+  const fn = ((path: string) => regexes.some((r) => r.test(path))) as TestFileMatcher;
+  Object.defineProperty(fn, "patterns", { value: Object.freeze([...patterns]) });
+  return fn;
+}
+
+/** The pre-2026-08-23 behaviour, kept as the fallback when no profile is available. */
+export const DEFAULT_TEST_FILE_MATCHER: TestFileMatcher = createTestFileMatcher(DEFAULT_TEST_PATTERNS);

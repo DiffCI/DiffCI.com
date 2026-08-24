@@ -480,3 +480,128 @@ describe("createProgram tsconfig-file-scope fallback", () => {
     assert.ok(!result.graph.nodes.some((n) => n.path === "lib/unrelated.js"), "the fallback trigger (every fileName is a .d.ts) must not fire here - lib/main.js is real source, not a declaration file");
   });
 });
+describe("bundler import-query suffixes (2026-08-23, deepseek-harness Phase 5)", () => {
+  it("`?inline` / `?raw` / `?url` asset imports resolve to the real asset instead of being unresolved", async () => {
+    const result = await buildFixture({
+      "src/styles.ts": "import base from '../styles/base.css?inline';\nimport raw from './notes.txt?raw';\nimport url from '@/logo.svg?url';\nexport const all = [base, raw, url];\n",
+      "styles/base.css": "body{}\n",
+      "src/notes.txt": "n\n",
+      "src/logo.svg": "<svg/>\n",
+    });
+    assert.strictEqual(result.confidence, "COMPLETE", JSON.stringify(result.unresolved));
+    assert.deepStrictEqual(result.unresolved, []);
+    assert.deepStrictEqual(nodePaths(result, "src/styles.ts").dependencies(), ["src/logo.svg", "src/notes.txt", "styles/base.css"]);
+    assert.deepStrictEqual(nodePaths(result, "styles/base.css").dependents(), ["src/styles.ts"]);
+  });
+
+  it("`?worker` on a source module resolves to that module; a query on a MISSING file is still unresolved", async () => {
+    const result = await buildFixture({
+      "src/main.ts": "import W from './worker?worker';\nimport missing from './gone.css?inline';\nexport const x = [W, missing];\n",
+      "src/worker.ts": "export default 1;\n",
+    });
+    assert.deepStrictEqual(nodePaths(result, "src/main.ts").dependencies(), ["src/worker.ts"]);
+    assert.strictEqual(result.unresolved.length, 1);
+    assert.strictEqual(result.unresolved[0]?.specifier, "./gone.css?inline");
+    assert.strictEqual(result.confidence, "UNSAFE");
+  });
+
+  it("a leading `#` subpath import is never truncated", async () => {
+    const result = await buildFixture({
+      "src/main.ts": "import { x } from '#internal/x';\nexport const y = x;\n",
+    });
+    assert.strictEqual(result.unresolved[0]?.specifier, "#internal/x");
+  });
+});
+
+describe("nested-package test visibility (2026-08-24, biomejs/biome finding)", () => {
+  // Deliberately NOT buildFixture()/createTempRepo(): that helper always writes a ROOT tsconfig.json
+  // with a broad `include: ["**/*.ts"]`, which `ts.findConfigFile()` finds first and which sweeps up
+  // every .ts file repo-wide regardless of any NESTED package tsconfig's own `exclude` - so it never
+  // exercises the "no root tsconfig, only nested per-package configs" code path this fix targets (a
+  // fixture built with buildFixture() cannot reproduce biome's actual structure). This helper creates a
+  // repo with NO root tsconfig.json at all, matching biomejs/biome exactly.
+  function buildNoRootTsconfigFixture(files: FixtureFiles) {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-no-root-tsconfig-"));
+    writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "fixture", version: "1.0.0" }));
+    for (const [relativePath, content] of Object.entries(files)) {
+      const full = join(dir, relativePath);
+      mkdirSync(dirname(full), { recursive: true });
+      writeFileSync(full, content);
+    }
+    return buildDependencyGraph({ repoPath: dir, excludeDirs: ["node_modules"] });
+  }
+
+  it("a test file excluded from its package's own tsconfig still becomes a graph test node", async () => {
+    const result = await buildNoRootTsconfigFixture({
+      "packages/js-api/package.json": JSON.stringify({ name: "js-api", version: "1.0.0" }),
+      "packages/js-api/tsconfig.json": JSON.stringify({ compilerOptions: { target: "es2020", module: "commonjs" }, exclude: ["./tests", "./dist"], include: ["./src"] }),
+      "packages/js-api/src/index.ts": "export function add(a: number, b: number): number { return a + b; }\n",
+      "packages/js-api/tests/index.test.ts": "import { add } from '../src/index.js';\nif (add(1,1) !== 2) throw new Error('x');\n",
+    });
+    const testNode = result.graph.nodes.find((n) => n.path === "packages/js-api/tests/index.test.ts");
+    assert.ok(testNode, "the excluded test file must still be a graph node");
+    assert.strictEqual(testNode?.isTest, true);
+    assert.strictEqual(result.profile.stats.testFiles, 1);
+    // The src file the test imports is unaffected - still resolved normally via nested-tsconfig discovery.
+    const srcNode = result.graph.nodes.find((n) => n.path === "packages/js-api/src/index.ts");
+    assert.ok(srcNode);
+    assert.strictEqual(srcNode?.isTest, false);
+  });
+
+  it("does not add duplicate nodes when the test file IS already visible to the TS program (root-tsconfig repo)", async () => {
+    const result = await buildFixture({
+      "src/a.ts": "export const a = 1;\n",
+      "src/a.test.ts": "import { a } from './a.js';\nif (a !== 1) throw new Error();\n",
+    });
+    const matches = result.graph.nodes.filter((n) => n.path === "src/a.test.ts");
+    assert.strictEqual(matches.length, 1, "no duplicate node for a normally-visible test file");
+    assert.strictEqual(matches[0]?.isTest, true);
+    // Confirms it took the normal path (real edge to its import), not the union-merge path.
+    assert.deepStrictEqual(result.graph.dependenciesOf("src/a.test.ts"), ["src/a.ts"]);
+  });
+
+  it("does not add a duplicate node when the SAME excluded test file is also reachable via a nested-discovery-visible sibling package (no-root-tsconfig repo)", async () => {
+    const result = await buildNoRootTsconfigFixture({
+      "packages/js-api/package.json": JSON.stringify({ name: "js-api", version: "1.0.0" }),
+      "packages/js-api/tsconfig.json": JSON.stringify({ compilerOptions: { target: "es2020" }, exclude: ["./tests"], include: ["./src", "./tests"] }),
+      "packages/js-api/src/index.ts": "export const x = 1;\n",
+      "packages/js-api/tests/index.test.ts": "export const t = 1;\n",
+    });
+    // This package's tsconfig actually includes ./tests too (a repo that does NOT exclude tests from
+    // its own program) - the file is visible to the TS program already; the union step must not
+    // duplicate it.
+    const matches = result.graph.nodes.filter((n) => n.path === "packages/js-api/tests/index.test.ts");
+    assert.strictEqual(matches.length, 1);
+  });
+
+  it("never grants any visibility to non-JS/TS (e.g. Rust) files - this is not Rust support", async () => {
+    const result = await buildNoRootTsconfigFixture({
+      "packages/js-api/package.json": JSON.stringify({ name: "js-api", version: "1.0.0" }),
+      "packages/js-api/tsconfig.json": JSON.stringify({ compilerOptions: { target: "es2020" }, exclude: ["./tests"], include: ["./src"] }),
+      "packages/js-api/src/index.ts": "export const x = 1;\n",
+      "packages/js-api/tests/index.test.ts": "export const t = 1;\n",
+      "crates/fake_rust/lib.rs": "fn add(a: i32, b: i32) -> i32 { a + b }\n",
+      "crates/fake_rust/tests/add.rs": "#[test]\nfn it_adds() { assert_eq!(1 + 1, 2); }\n",
+    });
+    const rustPaths = result.graph.nodes.map((n) => n.path).filter((p) => p.endsWith(".rs"));
+    assert.deepStrictEqual(rustPaths, [], "no .rs file of any kind becomes a graph node");
+    assert.ok(!result.profile.testFilePaths.some((p) => p.endsWith(".rs")));
+    // The JS/TS side of the SAME repo is still correctly fixed alongside the untouched Rust side.
+    assert.strictEqual(result.graph.nodes.find((n) => n.path === "packages/js-api/tests/index.test.ts")?.isTest, true);
+  });
+
+  it("a test-only leaf node has no dependency edges (no fabricated resolution info) - genuinely program-excluded", async () => {
+    const result = await buildNoRootTsconfigFixture({
+      "packages/js-api/package.json": JSON.stringify({ name: "js-api", version: "1.0.0" }),
+      "packages/js-api/tsconfig.json": JSON.stringify({ compilerOptions: { target: "es2020" }, exclude: ["./tests"], include: ["./src"] }),
+      "packages/js-api/src/index.ts": "export const x = 1;\n",
+      "packages/js-api/tests/index.test.ts": "import { x } from '../src/index.js';\nexport const t = x;\n",
+    });
+    // Sanity: prove this file really did take the exclusion path, not a coincidental normal-resolution
+    // path - it must be absent from the pre-union program-derived node it would otherwise share a name
+    // with, i.e. it is the ONLY node at this path and it was added by the union step, not by parsing.
+    const deps = result.graph.dependenciesOf("packages/js-api/tests/index.test.ts");
+    assert.deepStrictEqual(deps, [], "no import edges are fabricated for a program-excluded test file");
+    assert.strictEqual(result.graph.nodes.find((n) => n.path === "packages/js-api/tests/index.test.ts")?.isTest, true);
+  });
+});

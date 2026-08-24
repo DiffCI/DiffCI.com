@@ -8,6 +8,7 @@ import {
   type GitDeltaAnalysis,
   type GitDeltaResult,
   type GitDeltaSummary,
+  type RepositoryInventory,
 } from "./types.js";
 
 export const EMPTY_TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
@@ -348,6 +349,20 @@ function headHasParent(headSha: string, repoPath: string | undefined): boolean {
   return parents.length > 0;
 }
 
+/**
+ * Canonical HEAD file inventory (see RepositoryInventory). One `git ls-tree` per analysis - cheap
+ * (~tens of ms for ~10k paths) and already co-located with the only code that knows repoPath+headSha.
+ * Failure is NOT fatal: returns undefined so the delta analysis still succeeds and relationship-based
+ * classification simply stays inert (conservative: affected files remain "unknown" -> fallback).
+ */
+export function readRepositoryInventory(headSha: string, repoPath: string | undefined): RepositoryInventory | undefined {
+  const result = runGit(["ls-tree", "-r", "--name-only", "-z", headSha], repoPath);
+  if (result.status !== 0) return undefined;
+  const files = new Set(result.stdout.split("\0").filter((p) => p.length > 0));
+  if (files.size === 0) return undefined; // an empty listing is never a trustworthy inventory
+  return { headSha, files, source: "git-ls-tree" };
+}
+
 export async function analyzeGitDelta(
   options: AnalyzeGitDeltaOptions = {},
 ): Promise<GitDeltaResult> {
@@ -425,7 +440,7 @@ export async function analyzeGitDelta(
       analysis,
     };
 
-    return { success: true, delta };
+    return { success: true, delta, inventory: readRepositoryInventory(headSha, repoPath) };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return {

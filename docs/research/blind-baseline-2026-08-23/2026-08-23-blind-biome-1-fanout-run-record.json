@@ -1,0 +1,127 @@
+{
+  "runId": "blind-biome-1",
+  "createdAt": 1787550219128,
+  "status": "completed",
+  "shape": "standard-4",
+  "shardsPerRepository": 6,
+  "maxConcurrentShards": 6,
+  "repositories": [
+    {
+      "name": "biomejs/biome",
+      "manifestKey": "manifests/2026-08-23-biome-blind-baseline-selection-manifest.json"
+    }
+  ],
+  "engineChecksum": "e0f20b722d880d59775ab79453d4d214fa944d5b197d3ab76330abc90f77bdd3",
+  "tarballKey": "tarballs/diffci-8890e1a51edb.tgz",
+  "tarballSha256": "b26660611f22aa9319e1fb501d16cca21ce26c286e431085eef18668beae5ffc",
+  "shards": [
+    {
+      "id": "blind-biome-1:biomejs/biome:0",
+      "runId": "blind-biome-1",
+      "repo": "biomejs/biome",
+      "shardIndex": 0,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550294744,
+      "timings": {
+        "bootstrapMs": 6067,
+        "cloneMs": 14768,
+        "totalMs": 43387
+      },
+      "memAvailableBeforeMb": 11863,
+      "memAvailableAfterMb": 11613
+    },
+    {
+      "id": "blind-biome-1:biomejs/biome:1",
+      "runId": "blind-biome-1",
+      "repo": "biomejs/biome",
+      "shardIndex": 1,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550289721,
+      "timings": {
+        "bootstrapMs": 4911,
+        "cloneMs": 15468,
+        "totalMs": 41538
+      },
+      "memAvailableBeforeMb": 11868,
+      "memAvailableAfterMb": 11577
+    },
+    {
+      "id": "blind-biome-1:biomejs/biome:2",
+      "runId": "blind-biome-1",
+      "repo": "biomejs/biome",
+      "shardIndex": 2,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550286682,
+      "timings": {
+        "bootstrapMs": 4471,
+        "cloneMs": 12732,
+        "totalMs": 42073
+      },
+      "memAvailableBeforeMb": 11868,
+      "memAvailableAfterMb": 11570
+    },
+    {
+      "id": "blind-biome-1:biomejs/biome:3",
+      "runId": "blind-biome-1",
+      "repo": "biomejs/biome",
+      "shardIndex": 3,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550315767,
+      "timings": {
+        "bootstrapMs": 6347,
+        "cloneMs": 17437,
+        "totalMs": 43652
+      },
+      "memAvailableBeforeMb": 11869,
+      "memAvailableAfterMb": 11635
+    },
+    {
+      "id": "blind-biome-1:biomejs/biome:4",
+      "runId": "blind-biome-1",
+      "repo": "biomejs/biome",
+      "shardIndex": 4,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550286297,
+      "timings": {
+        "bootstrapMs": 4675,
+        "cloneMs": 14086,
+        "totalMs": 41088
+      },
+      "memAvailableBeforeMb": 11886,
+      "memAvailableAfterMb": 11637
+    },
+    {
+      "id": "blind-biome-1:biomejs/biome:5",
+      "runId": "blind-biome-1",
+      "repo": "biomejs/biome",
+      "shardIndex": 5,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550291692,
+      "timings": {
+        "bootstrapMs": 5241,
+        "cloneMs": 12207,
+        "totalMs": 42908
+      },
+      "memAvailableBeforeMb": 11868,
+      "memAvailableAfterMb": 11611
+    }
+  ]
+}

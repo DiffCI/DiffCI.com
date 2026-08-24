@@ -10,10 +10,7 @@ import type {
   Workflow,
 } from "./types.js";
 
-const DEFAULT_TEST_PATTERNS = [
-  "**/*.test.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
-  "**/*.spec.{ts,tsx,js,jsx,mjs,cjs,mts,cts}",
-];
+import { discoverTestRunnerConfigs } from "./test-discovery.js";
 
 const IGNORED_DIRS = new Set([
   "node_modules",
@@ -190,10 +187,6 @@ function discoverSourceRoots(
   return roots;
 }
 
-function isTestFile(fileName: string): boolean {
-  return /\.(test|spec)\./.test(fileName);
-}
-
 function expandGlobBraces(pattern: string): string[] {
   const match = /\{([^{}]*)\}/.exec(pattern);
   if (!match) return [pattern];
@@ -261,7 +254,6 @@ function discoverTests(
   for (const source of sources) {
     if (!existsSync(source)) continue;
     scanFiles(source, repoPath, exclusions, (relPath, fileName) => {
-      if (!isTestFile(fileName)) return;
       for (const pattern of patterns) {
         if (!matchesTestGlob(relPath, pattern)) continue;
         counts.set(pattern, (counts.get(pattern) ?? 0) + 1);
@@ -423,10 +415,13 @@ export function analyzeRepository(
 
   const tsconfig = loadTsconfig(repoPath);
   const roots = discoverSourceRoots(repoPath, options.sourceRoots, excludeDirs);
+  // Test universe = defaults + what the repo's own Vitest/Jest configs declare (static read, never executed).
+  const testDiscovery = discoverTestRunnerConfigs(repoPath, scripts);
+  const testPatterns = options.testPatterns ?? testDiscovery.patterns;
   const { locations: tests, filePaths: testFilePaths } = discoverTests(
     repoPath,
     roots,
-    options.testPatterns ?? DEFAULT_TEST_PATTERNS,
+    testPatterns,
     excludeDirs,
   );
   const workflows = discoverWorkflows(repoPath);
@@ -470,6 +465,8 @@ export function analyzeRepository(
     sourceRoots: roots,
     tests,
     testFilePaths,
+    testPatterns: [...testPatterns],
+    testRunnerConfigs: testDiscovery.configs,
     workflows,
     configFiles,
     pathAliases: tsconfig?.pathAliases ?? [],

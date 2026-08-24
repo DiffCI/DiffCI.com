@@ -1,3 +1,4 @@
+import type { TestRunnerConfig } from "./test-discovery.js";
 export type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "unknown";
 
 export interface PathAlias {
@@ -63,6 +64,12 @@ export interface RepositoryProfile {
    * unaggregated). The authoritative source for "all tests" callers that need real file
    * paths rather than glob-pattern strings (e.g. per-test PATH-baseline comparisons). */
   testFilePaths: string[];
+  /** Effective test-file globs (DEFAULT_TEST_PATTERNS + test-runner config includes) - the ONE
+   * definition of "is this a test?" shared by analyzer discovery, graph node flags and impact
+   * classification (src/repo/test-discovery.ts). Optional for fixture compatibility; absent = defaults. */
+  testPatterns?: string[];
+  /** Test-runner configs found at the repo root, with their include globs, invoking scripts and family. */
+  testRunnerConfigs?: TestRunnerConfig[];
   workflows: Workflow[];
   configFiles: string[];
   pathAliases: PathAlias[];

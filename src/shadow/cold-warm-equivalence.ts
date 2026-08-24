@@ -39,6 +39,7 @@ export async function verifyColdWarmEquivalence(repoPath: string, cacheDir: stri
   const gitResult = await analyzeGitDelta({ baseSha, headSha, repoPath });
   if (!gitResult.success) throw new Error(gitResult.error);
   const delta = gitResult.delta;
+  const inventory = gitResult.inventory;
 
   async function analyze(): Promise<ExecutionPlan> {
     const cache = new GraphCache({ cacheDir });
@@ -56,14 +57,14 @@ export async function verifyColdWarmEquivalence(repoPath: string, cacheDir: stri
     let graphResult;
     const cached = cache.load(cacheKey);
     if (cached) {
-      cached.graph = hydrateDependencyGraph(cached.graph, repoPath);
+      cached.graph = hydrateDependencyGraph(cached.graph, repoPath, cached.profile?.testPatterns);
       graphResult = cached;
     } else {
       graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
       cache.save(cacheKey, graphResult);
     }
 
-    const impact = new ImpactAnalyzer().analyze(delta, graphResult, graphResult.profile);
+    const impact = new ImpactAnalyzer().analyze(delta, graphResult, graphResult.profile, { repositoryFiles: inventory?.files });
     const registry = buildDentalPresenceTaskRegistry();
     const planner = new DefaultCIPlanner(registry);
     return planner.plan({ delta, impact, profile: graphResult.profile });

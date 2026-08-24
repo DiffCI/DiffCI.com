@@ -76,7 +76,7 @@ export async function runShadowAnalysis(options: ShadowRunOptions): Promise<Shad
   const tGraphStart = nowMs();
   const cached = cache?.load(cacheKey);
   if (cached) {
-    cached.graph = hydrateDependencyGraph(cached.graph, repoPath);
+    cached.graph = hydrateDependencyGraph(cached.graph, repoPath, cached.profile?.testPatterns);
     graphResult = cached;
     timing.cacheInvalidationMs = 0;
     timing.graphLoadWarmMs = nowMs() - tGraphStart;
@@ -106,7 +106,7 @@ export async function runShadowAnalysis(options: ShadowRunOptions): Promise<Shad
   }
 
   const tImpactStart = nowMs();
-  const impact = new ImpactAnalyzer().analyze(delta, graphResult, graphResult.profile);
+  const impact = new ImpactAnalyzer().analyze(delta, graphResult, graphResult.profile, { repositoryFiles: gitResult.inventory?.files });
   timing.impactAnalysisMs = nowMs() - tImpactStart;
 
   const tPlannerStart = nowMs();

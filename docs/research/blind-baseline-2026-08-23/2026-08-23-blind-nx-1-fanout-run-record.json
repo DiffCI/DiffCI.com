@@ -1,0 +1,127 @@
+{
+  "runId": "blind-nx-1",
+  "createdAt": 1787551470365,
+  "status": "completed",
+  "shape": "standard-4",
+  "shardsPerRepository": 6,
+  "maxConcurrentShards": 6,
+  "repositories": [
+    {
+      "name": "nrwl/nx",
+      "manifestKey": "manifests/2026-08-23-nx-blind-baseline-selection-manifest.json"
+    }
+  ],
+  "engineChecksum": "e0f20b722d880d59775ab79453d4d214fa944d5b197d3ab76330abc90f77bdd3",
+  "tarballKey": "tarballs/diffci-8890e1a51edb.tgz",
+  "tarballSha256": "6ad5bd75d02fabf3a3c5e4f04c7e2b332bcdd9ef5e86a45f4fc2c5351152809d",
+  "shards": [
+    {
+      "id": "blind-nx-1:nrwl/nx:0",
+      "runId": "blind-nx-1",
+      "repo": "nrwl/nx",
+      "shardIndex": 0,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787551579811,
+      "timings": {
+        "bootstrapMs": 5990,
+        "cloneMs": 13966,
+        "totalMs": 82996
+      },
+      "memAvailableBeforeMb": 11868,
+      "memAvailableAfterMb": 11728
+    },
+    {
+      "id": "blind-nx-1:nrwl/nx:1",
+      "runId": "blind-nx-1",
+      "repo": "nrwl/nx",
+      "shardIndex": 1,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787551582845,
+      "timings": {
+        "bootstrapMs": 8409,
+        "cloneMs": 15710,
+        "totalMs": 82084
+      },
+      "memAvailableBeforeMb": 11880,
+      "memAvailableAfterMb": 11743
+    },
+    {
+      "id": "blind-nx-1:nrwl/nx:2",
+      "runId": "blind-nx-1",
+      "repo": "nrwl/nx",
+      "shardIndex": 2,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787551584791,
+      "timings": {
+        "bootstrapMs": 8730,
+        "cloneMs": 15653,
+        "totalMs": 82083
+      },
+      "memAvailableBeforeMb": 11912,
+      "memAvailableAfterMb": 11729
+    },
+    {
+      "id": "blind-nx-1:nrwl/nx:3",
+      "runId": "blind-nx-1",
+      "repo": "nrwl/nx",
+      "shardIndex": 3,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787551920597,
+      "timings": {
+        "bootstrapMs": 6370,
+        "cloneMs": 370945,
+        "totalMs": 63396
+      },
+      "memAvailableBeforeMb": 11860,
+      "memAvailableAfterMb": 11743
+    },
+    {
+      "id": "blind-nx-1:nrwl/nx:4",
+      "runId": "blind-nx-1",
+      "repo": "nrwl/nx",
+      "shardIndex": 4,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787551562983,
+      "timings": {
+        "bootstrapMs": 5409,
+        "cloneMs": 15470,
+        "totalMs": 62345
+      },
+      "memAvailableBeforeMb": 11865,
+      "memAvailableAfterMb": 11722
+    },
+    {
+      "id": "blind-nx-1:nrwl/nx:5",
+      "runId": "blind-nx-1",
+      "repo": "nrwl/nx",
+      "shardIndex": 5,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787551587401,
+      "timings": {
+        "bootstrapMs": 6657,
+        "cloneMs": 14589,
+        "totalMs": 84448
+      },
+      "memAvailableBeforeMb": 11865,
+      "memAvailableAfterMb": 11722
+    }
+  ]
+}

@@ -18,11 +18,14 @@ export type ImpactReason =
   | "INFRASTRUCTURE_GLOBAL"
   | "DATABASE_GLOBAL"
   | "UNKNOWN_FILE"
+  | "TEST_FIXTURE_OWNER"
   | "ALWAYS_RUN_POLICY"
   | "DELETED_FILE_LEGACY_DEPENDENTS"
   | "DELETED_FILE_UNKNOWABLE_GRAPH"
   | "RENAMED_FILE_LEGACY_IDENTITY"
   | "GRAPH_CONFIDENCE_UNSAFE"
+  | "DIRECT_TEST_CHANGE"
+  | "TEST_SELECTION_INVARIANT"
   | "EMPTY_DELTA";
 
 export interface ImpactEvidencePath {
@@ -47,7 +50,7 @@ export interface EntryPointImpact {
 
 export interface ChangedImpact {
   file: ChangedFile;
-  category: "source" | "asset" | "test" | "script" | "entry-point" | "config" | "workflow" | "infrastructure" | "database" | "docs" | "unknown";
+  category: "source" | "asset" | "test" | "script" | "entry-point" | "config" | "workflow" | "infrastructure" | "database" | "docs" | "test-fixture" | "unknown";
   reasons: ImpactReason[];
 }
 

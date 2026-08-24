@@ -1,0 +1,137 @@
+{
+  "name": "DiffCI frozen build manifest - blind multi-repository baseline",
+  "frozenAt": "2026-08-23T12:20:37.546Z",
+  "gitHead": "8890e1a51edb41211849beb77696016c302277e8",
+  "gitStatusPorcelain": [
+    "M ops/runner-agent/workload-runner.cjs",
+    " M scripts/audit-dentalpresence-impact.ts",
+    " M scripts/diffci.ts",
+    " M src/git/git-diff.ts",
+    " M src/git/types.ts",
+    " M src/product/cloudflare/product-worker.ts",
+    " M src/repo/analyzer.ts",
+    " M src/repo/graph.ts",
+    " M src/repo/impact-types.ts",
+    " M src/repo/impact.ts",
+    " M src/repo/types.ts",
+    " M src/research/diffci/adapter.ts",
+    " M src/runner/agent-api.ts",
+    " M src/runner/cloudflare/synthetic-runner-worker.ts",
+    " M src/shadow/cold-warm-equivalence.ts",
+    " M src/shadow/runner.ts",
+    " M tests/product/cloudflare/product-worker-r1.test.ts",
+    " M tests/repo/graph.test.ts",
+    " M tests/repo/impact.test.ts",
+    " M tests/runner/agent-api.test.ts",
+    " M tests/runner/workload-runner.test.ts",
+    " M wrangler.synthetic-runner.jsonc",
+    "?? docs/funding/2026-08-22-rainmatter-application-draft.md",
+    "?? docs/research/2026-08-23-deepseek-harness-benchmark-replay-companions.jsonl",
+    "?? docs/research/2026-08-23-deepseek-harness-benchmark-replay-companions.md",
+    "?? docs/research/2026-08-23-deepseek-harness-benchmark-replay-complete-pre-graph-fix.jsonl",
+    "?? docs/research/2026-08-23-deepseek-harness-benchmark-replay-complete.jsonl",
+    "?? docs/research/2026-08-23-deepseek-harness-benchmark-results.jsonl",
+    "?? docs/research/2026-08-23-deepseek-harness-benchmark.md",
+    "?? docs/research/2026-08-23-deepseek-harness-three-way-comparison.md",
+    "?? docs/research/2026-08-23-r2-basic-diagnostic-preregistration.md",
+    "?? scripts/diffci-benchmark-external.ts",
+    "?? scripts/diffci-blind-baseline.ts",
+    "?? scripts/diffci-execution-validation.ts",
+    "?? scripts/diffci-graph-unsafe-probe.ts",
+    "?? src/repo/test-discovery.ts",
+    "?? src/repo/test-fixture-ownership.ts",
+    "?? src/runner/r2-job-spec.ts",
+    "?? src/runner/repository-policy.ts",
+    "?? tests/repo/companion-production-wiring.test.ts",
+    "?? tests/repo/test-discovery.test.ts",
+    "?? tests/repo/test-fixture-ownership.test.ts",
+    "?? tests/runner/r2-job-spec.test.ts",
+    "?? tests/runner/repository-policy.test.ts"
+  ],
+  "workingTreeDiff": {
+    "trackedDiffSha256": "7f2a7f5771cb808fdd0b1a49b0b4e696c98cb574adf102ccf04210c3d08aa18d",
+    "trackedDiffBytes": 72322,
+    "untrackedFiles": 22,
+    "untrackedContentSha256": "cc5ab93cad9ee497d5c1451dca27de77f8404f7ae5cc1ea782e5894524233f9b",
+    "combinedSha256": "5fdbecfb5da1ed4ae60c3d814fc0de656a684ed1289eccd763a401cbae4d3670"
+  },
+  "engineFiles": {
+    "src/repo/impact.ts": {
+      "component": "impact engine",
+      "sha256": "a2806fffe8e32c2b2257eb54720653ca0a5ed9e2143c7c3f3da2560786a7c60e",
+      "bytes": 30329
+    },
+    "src/repo/impact-types.ts": {
+      "component": "impact engine",
+      "sha256": "62957a84816d640a476beb8cc79a505dab916280d48b9092e22b94666575aed4",
+      "bytes": 3452
+    },
+    "src/repo/test-discovery.ts": {
+      "component": "test discovery",
+      "sha256": "3440da0a45c2259b722bab5f6c74e9344a0a5d4a180825f5ad4f406785ca8e70",
+      "bytes": 11138
+    },
+    "src/repo/analyzer.ts": {
+      "component": "test discovery",
+      "sha256": "f30acaf58d511f3d1dd4366d246f88512a4bd1604b2530a62eaf2ace87848269",
+      "bytes": 15966
+    },
+    "src/repo/test-fixture-ownership.ts": {
+      "component": "fixture ownership",
+      "sha256": "9f824045350ec27db30fc07a8ee1e419df4da635a4f712e362b38a161397a495",
+      "bytes": 4265
+    },
+    "src/repo/graph.ts": {
+      "component": "graph resolution",
+      "sha256": "68bd747bcbe3c38df6117f091bb6fb8953b9f3217dd619d4fad3e7645c9237d9",
+      "bytes": 36792
+    },
+    "src/repo/types.ts": {
+      "component": "graph resolution",
+      "sha256": "2b554c136ee3dc2d01a668a2b3083758e62195b492f33a42c7e66f5ab7125d40",
+      "bytes": 5080
+    },
+    "src/git/git-diff.ts": {
+      "component": "git delta + inventory (policy input)",
+      "sha256": "b11914352d97bae881d56679dab9a07310835219b4f831870fa25abb73547c54",
+      "bytes": 15146
+    },
+    "src/git/types.ts": {
+      "component": "git delta + inventory (policy input)",
+      "sha256": "764b4a9a20b3adf44634ff16407282c1decfd39f39919f6902258981c1b768ba",
+      "bytes": 1992
+    },
+    "scripts/diffci-benchmark-external.ts": {
+      "component": "external benchmark runner (harness)",
+      "sha256": "799127f1ecf8eca206f08394633294fcc82359caf4d910b5f4eeacc794b0be06",
+      "bytes": 8211
+    },
+    "scripts/diffci-blind-baseline.ts": {
+      "component": "external benchmark runner (harness)",
+      "sha256": "77c94bc43a7c151df1e2f77e72036c971501ea4025cb76d762de2d81c438ceb4",
+      "bytes": 9395
+    }
+  },
+  "engineChecksum": "e0f20b722d880d59775ab79453d4d214fa944d5b197d3ab76330abc90f77bdd3",
+  "validation": {
+    "typecheck": "clean",
+    "tests": {
+      "total": 908,
+      "pass": 908,
+      "fail": 0
+    },
+    "exitCode": 0
+  },
+  "node": "v24.16.0",
+  "platform": "win32/x64",
+  "rules": [
+    "no policy change",
+    "no repo-specific rules",
+    "no test-pattern expansion after inspecting targets",
+    "no unknown-file suppression",
+    "no graph-confidence weakening",
+    "no result adjustment",
+    "no silent reruns",
+    "harness-only fixes documented + engine checksum re-verified"
+  ]
+}

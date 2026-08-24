@@ -69,7 +69,7 @@ export async function runDiffCIAnalysis(options: AnalyzeOptions): Promise<DiffCI
 
   const cached = cache?.load(cacheKey);
   if (cached) {
-    cached.graph = hydrateDependencyGraph(cached.graph, repoPath);
+    cached.graph = hydrateDependencyGraph(cached.graph, repoPath, cached.profile?.testPatterns);
     graphResult = cached;
     profile = graphResult.profile;
     timing.graphLoadWarmMs = nowMs() - tGraphStart;
@@ -88,7 +88,7 @@ export async function runDiffCIAnalysis(options: AnalyzeOptions): Promise<DiffCI
   }
 
   const tImpactStart = nowMs();
-  const impact = new ImpactAnalyzer().analyze(gitResult.delta, graphResult, profile);
+  const impact = new ImpactAnalyzer().analyze(gitResult.delta, graphResult, profile, { repositoryFiles: gitResult.inventory?.files });
   timing.impactAnalysisMs = nowMs() - tImpactStart;
 
   const tPlannerStart = nowMs();

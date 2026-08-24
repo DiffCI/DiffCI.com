@@ -83,7 +83,7 @@ async function runImpact(args: Record<string, string | boolean | string[]>) {
   const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
 
   const analyzer = new ImpactAnalyzer();
-  const result = analyzer.analyze(gitResult.delta, graphResult, graphResult.profile);
+  const result = analyzer.analyze(gitResult.delta, graphResult, graphResult.profile, { repositoryFiles: gitResult.inventory?.files });
   const proposal = toValidationProposal(result);
 
   if (json) {
@@ -129,7 +129,7 @@ async function runPlan(args: Record<string, string | boolean | string[]>) {
   }
 
   const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
-  const impact = new ImpactAnalyzer().analyze(gitResult.delta, graphResult, graphResult.profile);
+  const impact = new ImpactAnalyzer().analyze(gitResult.delta, graphResult, graphResult.profile, { repositoryFiles: gitResult.inventory?.files });
   const registry = buildDentalPresenceTaskRegistry();
   const planner = new DefaultCIPlanner(registry);
   const plan = planner.plan({ delta: gitResult.delta, impact, profile: graphResult.profile });
@@ -182,7 +182,7 @@ async function runExplain(args: Record<string, string | boolean | string[]>) {
   }
 
   const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
-  const impact = new ImpactAnalyzer().analyze(gitResult.delta, graphResult, graphResult.profile);
+  const impact = new ImpactAnalyzer().analyze(gitResult.delta, graphResult, graphResult.profile, { repositoryFiles: gitResult.inventory?.files });
   const registry = buildDentalPresenceTaskRegistry();
   const planner = new DefaultCIPlanner(registry);
   const plan = planner.plan({ delta: gitResult.delta, impact, profile: graphResult.profile });

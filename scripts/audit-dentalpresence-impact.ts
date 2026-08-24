@@ -69,7 +69,7 @@ async function main() {
       console.warn(`Skipping ${sha.slice(0, 7)}: ${gitResult.error}`);
       continue;
     }
-    const impact = analyzer.analyze(gitResult.delta, graphResult, graphResult.profile);
+    const impact = analyzer.analyze(gitResult.delta, graphResult, graphResult.profile, { repositoryFiles: gitResult.inventory?.files });
     samples.push({ sha, baseSha, subject, impact, summary: summarizeImpact(impact) });
     console.log(`Analyzed ${sha.slice(0, 7)}: ${impact.analysisStatus} (${impact.changedFiles.length} changed, ${impact.fallbackRequired ? "FALLBACK" : "selective"})`);
   }

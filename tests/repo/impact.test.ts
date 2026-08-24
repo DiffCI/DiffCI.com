@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
-import { ImpactAnalyzer } from "../../src/repo/impact.js";
+import { ImpactAnalyzer, directlyChangedExecutableTests } from "../../src/repo/impact.js";
 import type { DependencyGraph, DependencyGraphNode, DependencyGraphResult, RepositoryProfile } from "../../src/repo/types.js";
 import type { ChangedFile, GitDelta, GitDeltaSummary } from "../../src/git/types.js";
 
@@ -274,3 +274,171 @@ describe("ImpactAnalyzer synthetic cases", () => {
   });
 });
 
+
+describe("translated-documentation companion classification (2026-08-23, deepseek-harness benchmark)", () => {
+  const analyzer = new ImpactAnalyzer();
+  const run = (files: ChangedFile[], repositoryFiles?: ReadonlySet<string>, analysis: Partial<GitDelta["analysis"]> = {}) => {
+    const delta = makeDelta("base", "head", files, analysis, { modified: files.length });
+    return analyzer.analyze(delta, makeDependencyGraphResult(makeGraph([], [])), makeProfile(), repositoryFiles ? { repositoryFiles } : undefined);
+  };
+  const unknownSignal = (r: ReturnType<typeof analyzer.analyze>) => r.riskSignals.some((s) => s.reason === "UNKNOWN_FILE");
+
+  it("accepts `<doc>.i18n.yaml` beside an existing `<doc>.md` as docs (no fallback, nothing selected)", () => {
+    const repo = new Set(["packages/llm/README.md", "packages/llm/README.zh.md", "packages/llm/README.i18n.yaml"]);
+    const result = run([{ path: "packages/llm/README.i18n.yaml", changeType: "modified" }], repo);
+    assert.strictEqual(result.fallbackRequired, false);
+    assert.strictEqual(unknownSignal(result), false);
+    assert.deepStrictEqual(result.affectedTests, []);
+    assert.strictEqual(result.changedFiles[0]?.category, "docs");
+  });
+
+  it("accepts the other translation-metadata tags and an .mdx companion, at repo root too", () => {
+    const repo = new Set(["README.md", "docs/guide.mdx"]);
+    for (const path of ["README.l10n.yaml", "README.translations.yml", "docs/guide.translation.yaml"]) {
+      const result = run([{ path, changeType: "added" }], repo);
+      assert.strictEqual(result.fallbackRequired, false, path);
+    }
+  });
+
+  it("is inert when the caller supplies no repository file list (prior behavior preserved)", () => {
+    const result = run([{ path: "packages/llm/README.i18n.yaml", changeType: "modified" }]);
+    assert.strictEqual(result.fallbackRequired, true);
+    assert.ok(unknownSignal(result));
+  });
+
+  it("requires the Markdown companion to exist at HEAD - a lone or orphaned record stays unknown", () => {
+    const noCompanion = run([{ path: "packages/llm/README.i18n.yaml", changeType: "modified" }], new Set(["packages/llm/README.zh.md"]));
+    assert.strictEqual(noCompanion.fallbackRequired, true);
+    assert.ok(unknownSignal(noCompanion));
+    const wrongDir = run([{ path: "packages/llm/README.i18n.yaml", changeType: "modified" }], new Set(["packages/README.md", "README.md"]));
+    assert.strictEqual(wrongDir.fallbackRequired, true);
+  });
+
+  it("leaves ordinary YAML configuration unsafe even when a same-stem Markdown file exists", () => {
+    const repo = new Set(["config.md", "config.yaml", "app/settings.md", "app/settings.prod.yaml", "locales/en.yaml", "locales/en.md"]);
+    for (const path of ["config.yaml", "app/settings.prod.yaml", "locales/en.yaml"]) {
+      const result = run([{ path, changeType: "modified" }], repo);
+      assert.strictEqual(result.fallbackRequired, true, path);
+      assert.ok(unknownSignal(result), path);
+    }
+  });
+
+  it("does not treat a locale-code tag as translation metadata (`guide.en.yaml` may be runtime content)", () => {
+    // (not under docs/ - that prefix is already docs by the pre-existing isDocumentationFile rule)
+    const result = run([{ path: "website/guide.en.yaml", changeType: "modified" }], new Set(["website/guide.md"]));
+    assert.strictEqual(result.fallbackRequired, true);
+    assert.ok(unknownSignal(result));
+  });
+
+  it("keeps misleading names in config/infra locations on their stricter classification", () => {
+    const repo = new Set([".github/README.md", "docker/README.md", "ops/README.md"]);
+    const gh = run([{ path: ".github/README.i18n.yaml", changeType: "modified" }], repo, { configChanged: true });
+    assert.strictEqual(gh.fallbackRequired, true);
+    assert.strictEqual(gh.changedFiles[0]?.category, "config");
+    const ops = run([{ path: "ops/README.i18n.yaml", changeType: "modified" }], repo, { infrastructureChanged: true });
+    assert.strictEqual(ops.fallbackRequired, true);
+    assert.strictEqual(ops.changedFiles[0]?.category, "infrastructure");
+  });
+
+  it("mixed change: an accepted companion does not suppress another fallback trigger in the same delta", () => {
+    const repo = new Set(["packages/llm/README.md", "pnpm-lock.yaml"]);
+    const result = run(
+      [{ path: "packages/llm/README.i18n.yaml", changeType: "modified" }, { path: "pnpm-lock.yaml", changeType: "modified" }],
+      repo,
+      { lockfileChanged: true, configChanged: true },
+    );
+    assert.strictEqual(result.fallbackRequired, true);
+    assert.ok(result.riskSignals.some((s) => s.reason === "LOCKFILE_GLOBAL"));
+    const withUnknown = run([{ path: "packages/llm/README.i18n.yaml", changeType: "modified" }, { path: "examples/x/tests/snapshots/a/session.jsonl", changeType: "modified" }], repo);
+    assert.strictEqual(withUnknown.fallbackRequired, true);
+    assert.ok(unknownSignal(withUnknown));
+  });
+});
+describe("changed-test self-selection (2026-08-24)", () => {
+  const analyzer = new ImpactAnalyzer();
+
+  it("selects a modified test file itself via DIRECT_TEST_CHANGE without falling back", () => {
+    const graph = makeGraph(
+      ["src/lib/util.test.ts", "src/lib/util.ts"],
+      [["src/lib/util.test.ts", "src/lib/util.ts"]],
+    );
+    const profile = makeProfile();
+    const delta = makeDelta("base", "head", [{ path: "src/lib/util.test.ts", changeType: "modified" }], {}, { modified: 1 });
+    const result = analyzer.analyze(delta, makeDependencyGraphResult(graph), profile);
+    assert.strictEqual(result.fallbackRequired, false);
+    assert.deepStrictEqual(result.affectedTests.map((t) => t.path), ["src/lib/util.test.ts"]);
+    assert.ok(result.affectedTests[0]!.reasons.includes("DIRECT_TEST_CHANGE"));
+    assert.ok(result.evidence.some((e) => e.reason === "DIRECT_TEST_CHANGE"));
+  });
+
+  it("selects an added test file itself (never silently skips a just-added test)", () => {
+    const graph = makeGraph([], []);
+    const profile = makeProfile();
+    const delta = makeDelta("base", "head", [{ path: "src/lib/new.test.ts", changeType: "added" }], {}, { added: 1 });
+    const result = analyzer.analyze(delta, makeDependencyGraphResult(graph), profile);
+    assert.strictEqual(result.fallbackRequired, false);
+    assert.deepStrictEqual(result.affectedTests.map((t) => t.path), ["src/lib/new.test.ts"]);
+  });
+
+  it("selects the rename destination and records only the legacy identity for the source", () => {
+    const graph = makeGraph(["src/lib/renamed.test.ts"], []);
+    const profile = makeProfile();
+    const delta = makeDelta(
+      "base",
+      "head",
+      [{ path: "src/lib/renamed.test.ts", oldPath: "src/lib/old.test.ts", changeType: "renamed" }],
+      {},
+      { renamed: 1 },
+    );
+    const result = analyzer.analyze(delta, makeDependencyGraphResult(graph), profile);
+    assert.strictEqual(result.fallbackRequired, false);
+    assert.deepStrictEqual(result.affectedTests.map((t) => t.path), ["src/lib/renamed.test.ts"]);
+    assert.ok(!result.affectedTests.some((t) => t.path === "src/lib/old.test.ts"));
+    assert.ok(result.evidence.some((e) => e.reason === "RENAMED_FILE_LEGACY_IDENTITY"));
+  });
+
+  it("never selects a deleted test and requires full validation when its node is absent", () => {
+    const graph = makeGraph([], []);
+    const profile = makeProfile();
+    const delta = makeDelta("base", "head", [{ path: "src/lib/deleted.test.ts", changeType: "deleted" }], {}, { deleted: 1 });
+    const result = analyzer.analyze(delta, makeDependencyGraphResult(graph), profile);
+    assert.strictEqual(result.fallbackRequired, true);
+    assert.ok(result.riskSignals.some((s) => s.reason === "DELETED_FILE_UNKNOWABLE_GRAPH"));
+    assert.deepStrictEqual(result.affectedTests, []);
+  });
+
+  it("does not select a deleted test even when its stale node remains (legacy traversal only)", () => {
+    const graph = makeGraph(["src/lib/deleted.test.ts"], []);
+    const profile = makeProfile();
+    const delta = makeDelta("base", "head", [{ path: "src/lib/deleted.test.ts", changeType: "deleted" }], {}, { deleted: 1 });
+    const result = analyzer.analyze(delta, makeDependencyGraphResult(graph), profile);
+    assert.ok(!result.affectedTests.some((t) => t.path === "src/lib/deleted.test.ts"));
+  });
+});
+
+describe("directlyChangedExecutableTests", () => {
+  const isTest = (p: string) => /\.(test|spec)\./.test(p);
+
+  it("collects added/modified/renamed-dest/copied-dest tests and excludes deleted tests and source identities", () => {
+    const delta = makeDelta(
+      "base",
+      "head",
+      [
+        { path: "src/a.test.ts", changeType: "added" },
+        { path: "src/b.test.ts", changeType: "modified" },
+        { path: "src/c.test.ts", oldPath: "src/c-old.test.ts", changeType: "renamed" },
+        { path: "src/d.test.ts", oldPath: "src/d-old.test.ts", changeType: "copied" },
+        { path: "src/e.test.ts", changeType: "deleted" },
+        { path: "src/notest.ts", changeType: "modified" },
+      ],
+      {},
+      {},
+    );
+    assert.deepStrictEqual(directlyChangedExecutableTests(delta, isTest), [
+      "src/a.test.ts",
+      "src/b.test.ts",
+      "src/c.test.ts",
+      "src/d.test.ts",
+    ]);
+  });
+});

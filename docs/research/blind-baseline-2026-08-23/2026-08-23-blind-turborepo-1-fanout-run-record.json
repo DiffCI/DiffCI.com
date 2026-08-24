@@ -1,0 +1,127 @@
+{
+  "runId": "blind-turborepo-1",
+  "createdAt": 1787550089187,
+  "status": "completed",
+  "shape": "standard-4",
+  "shardsPerRepository": 6,
+  "maxConcurrentShards": 6,
+  "repositories": [
+    {
+      "name": "vercel/turborepo",
+      "manifestKey": "manifests/2026-08-23-turborepo-blind-baseline-selection-manifest.json"
+    }
+  ],
+  "engineChecksum": "e0f20b722d880d59775ab79453d4d214fa944d5b197d3ab76330abc90f77bdd3",
+  "tarballKey": "tarballs/diffci-8890e1a51edb.tgz",
+  "tarballSha256": "8de12e810d280e040300203be21111fdb13dee52460184c59dc5d4fe056225bb",
+  "shards": [
+    {
+      "id": "blind-turborepo-1:vercel/turborepo:0",
+      "runId": "blind-turborepo-1",
+      "repo": "vercel/turborepo",
+      "shardIndex": 0,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550155589,
+      "timings": {
+        "bootstrapMs": 5332,
+        "cloneMs": 11050,
+        "totalMs": 41697
+      },
+      "memAvailableBeforeMb": 11868,
+      "memAvailableAfterMb": 11723
+    },
+    {
+      "id": "blind-turborepo-1:vercel/turborepo:1",
+      "runId": "blind-turborepo-1",
+      "repo": "vercel/turborepo",
+      "shardIndex": 1,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550155529,
+      "timings": {
+        "bootstrapMs": 5131,
+        "cloneMs": 10232,
+        "totalMs": 42240
+      },
+      "memAvailableBeforeMb": 11866,
+      "memAvailableAfterMb": 11710
+    },
+    {
+      "id": "blind-turborepo-1:vercel/turborepo:2",
+      "runId": "blind-turborepo-1",
+      "repo": "vercel/turborepo",
+      "shardIndex": 2,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550166751,
+      "timings": {
+        "bootstrapMs": 8027,
+        "cloneMs": 13492,
+        "totalMs": 42560
+      },
+      "memAvailableBeforeMb": 11868,
+      "memAvailableAfterMb": 11754
+    },
+    {
+      "id": "blind-turborepo-1:vercel/turborepo:3",
+      "runId": "blind-turborepo-1",
+      "repo": "vercel/turborepo",
+      "shardIndex": 3,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550159808,
+      "timings": {
+        "bootstrapMs": 8325,
+        "cloneMs": 11624,
+        "totalMs": 41028
+      },
+      "memAvailableBeforeMb": 11910,
+      "memAvailableAfterMb": 11779
+    },
+    {
+      "id": "blind-turborepo-1:vercel/turborepo:4",
+      "runId": "blind-turborepo-1",
+      "repo": "vercel/turborepo",
+      "shardIndex": 4,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550158959,
+      "timings": {
+        "bootstrapMs": 5294,
+        "cloneMs": 11501,
+        "totalMs": 41810
+      },
+      "memAvailableBeforeMb": 11868,
+      "memAvailableAfterMb": 11748
+    },
+    {
+      "id": "blind-turborepo-1:vercel/turborepo:5",
+      "runId": "blind-turborepo-1",
+      "repo": "vercel/turborepo",
+      "shardIndex": 5,
+      "shardCount": 6,
+      "mergeCount": 5,
+      "status": "done",
+      "rowsCompleted": 5,
+      "heartbeatAt": 1787550157443,
+      "timings": {
+        "bootstrapMs": 4983,
+        "cloneMs": 8130,
+        "totalMs": 42980
+      },
+      "memAvailableBeforeMb": 11870,
+      "memAvailableAfterMb": 11712
+    }
+  ]
+}
