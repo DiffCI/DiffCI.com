@@ -329,18 +329,41 @@ async function handleCreateExecution(request: Request, env: Env): Promise<Respon
   if (typeof baseSha !== "string" || !/^[0-9a-f]{7,40}$/.test(baseSha)) {
     return json({ ok: false, error: "baseSha must be a hex commit sha" }, 400);
   }
-  if (!Array.isArray(selectedTestPaths)) {
-    return json({ ok: false, error: "selectedTestPaths must be an array" }, 400);
+  // Optional (2026-08-24): if omitted, the shard derives its own selection via the frozen engine
+  // (deriving-selection step) instead of requiring a pre-computed analyze-mode row.
+  if (selectedTestPaths !== undefined && !Array.isArray(selectedTestPaths)) {
+    return json({ ok: false, error: "selectedTestPaths, if provided, must be an array" }, 400);
   }
-  // Required, not defaulted: silently defaulting this to 0 would misreport "analysis overhead" as zero
-  // instead of surfacing that the caller forgot to join the prior analyze-mode row's own timing.
-  if (typeof body.analysisOverheadMs !== "number" || !Number.isFinite(body.analysisOverheadMs) || body.analysisOverheadMs < 0) {
-    return json({ ok: false, error: "analysisOverheadMs must be a non-negative number (from the prior analyze-mode row for this exact merge)" }, 400);
+  if (body.analysisOverheadMs !== undefined && (typeof body.analysisOverheadMs !== "number" || !Number.isFinite(body.analysisOverheadMs) || body.analysisOverheadMs < 0)) {
+    return json({ ok: false, error: "analysisOverheadMs, if provided, must be a non-negative number" }, 400);
   }
   // Reject before a container is ever provisioned - execution is never silently faked/approximated for
   // a repository whose real CI test command DiffCI has not verified (repo-execution-profiles.ts).
   if (!getRepoExecutionProfile(repository)) {
     return json({ ok: false, error: "not-configured", repository, configured: listConfiguredRepositories() }, 400);
+  }
+
+  // Same tarball/frozen-manifest verification gate as handleCreateRun - the caller only names a runId
+  // whose pack record was already uploaded (via the `pack` CLI command); it never supplies a checksum
+  // directly, so it can never bypass this gate.
+  const packKey = packRecordKey(runId);
+  const pack = (await readJson(env.ANALYSIS_BUCKET, packKey)) as unknown as PackRecord | null;
+  if (!pack || typeof pack.tarballKey !== "string" || typeof pack.tarballSha256 !== "string") {
+    return json({ ok: false, error: "pack-record-missing", key: packKey }, 400);
+  }
+  const tar = await env.ANALYSIS_BUCKET.get(pack.tarballKey);
+  if (!tar) return json({ ok: false, error: "tarball-missing", key: pack.tarballKey }, 400);
+  const actualTarballSha = await sha256Hex(await tar.arrayBuffer());
+  if (!hexMatches(actualTarballSha, pack.tarballSha256)) {
+    return json({ ok: false, error: "tarball-checksum-mismatch", provided: actualTarballSha, expected: pack.tarballSha256 }, 400);
+  }
+  const frozenKey = pack.frozenManifestKey ?? env.FROZEN_MANIFEST_KEY ?? DEFAULT_FROZEN_MANIFEST_KEY;
+  const frozen = await readJson(env.ANALYSIS_BUCKET, frozenKey);
+  if (!frozen || typeof frozen.engineChecksum !== "string") {
+    return json({ ok: false, error: "frozen-build-manifest-missing", key: frozenKey }, 400);
+  }
+  if (!hexMatches(pack.engineChecksum, frozen.engineChecksum)) {
+    return json({ ok: false, error: "engine-checksum-mismatch", provided: pack.engineChecksum, expected: frozen.engineChecksum }, 400);
   }
 
   const spec: ExecutionSpec = {
@@ -350,8 +373,12 @@ async function handleCreateExecution(request: Request, env: Env): Promise<Respon
     baseSha,
     prNumber: typeof body.prNumber === "number" ? body.prNumber : null,
     subject: typeof body.subject === "string" ? body.subject : "",
-    selectedTestPaths: selectedTestPaths as string[],
-    totalTestsInGraph: typeof body.totalTestsInGraph === "number" ? body.totalTestsInGraph : 0,
+    tarballKey: pack.tarballKey,
+    tarballSha256: pack.tarballSha256,
+    frozenManifestKey: frozenKey,
+    engineChecksum: pack.engineChecksum,
+    selectedTestPaths: selectedTestPaths as string[] | undefined,
+    totalTestsInGraph: typeof body.totalTestsInGraph === "number" ? body.totalTestsInGraph : undefined,
     analysisOverheadMs: body.analysisOverheadMs,
   };
 

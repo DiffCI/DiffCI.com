@@ -13,6 +13,10 @@ function spec(overrides: Partial<ExecutionSpec> = {}): ExecutionSpec {
     baseSha: "a".repeat(40),
     prNumber: 29940,
     subject: "test change",
+    tarballKey: "tarballs/x.tgz",
+    tarballSha256: "a".repeat(64),
+    frozenManifestKey: "manifests/frozen.json",
+    engineChecksum: "c".repeat(64),
     selectedTestPaths: ["apps/web/lib/foo.test.ts"],
     totalTestsInGraph: 250,
     analysisOverheadMs: 5_000,
@@ -110,24 +114,136 @@ function makeDeps(sandbox: SandboxLike, bucket: R2BucketLike, nowValue = 2000): 
   return { deps: { sandbox, bucket, profile: profile(), now: () => nowValue } };
 }
 
+function bootstrapBucketObjects(): Record<string, string> {
+  return {
+    "tarballs/x.tgz": "tarball-bytes",
+    "manifests/frozen.json": JSON.stringify({ engineChecksum: "c".repeat(64) }),
+  };
+}
+function bootstrapExec(overrides?: (command: string) => ExecResultLike | undefined): (command: string) => ExecResultLike | undefined {
+  return (command) => {
+    const o = overrides?.(command);
+    if (o) return o;
+    if (command.includes("sha256sum /opt/diffci-source.tgz")) return { success: true, exitCode: 0, stdout: `${"a".repeat(64)}  /opt/diffci-source.tgz` };
+    return { success: true, exitCode: 0, stdout: "" };
+  };
+}
+
 describe("AnalysisExecutionShard state machine (stepExecution)", () => {
-  it("bootstrap -> cloning", async () => {
-    const { sandbox } = makeSandbox();
-    const { bucket } = makeBucket();
+  it("bootstrap downloads/verifies the frozen engine tarball, then advances to cloning", async () => {
+    const { sandbox, execCalls } = makeSandbox({ exec: bootstrapExec() });
+    const { bucket } = makeBucket(bootstrapBucketObjects());
     const { deps } = makeDeps(sandbox, bucket);
     const { record: out, nextAlarmDelayMs } = await stepExecution(record({ step: "bootstrapping" }), deps);
     assert.equal(out.step, "cloning");
     assert.equal(nextAlarmDelayMs, 0);
+    assert.equal(typeof out.timings.bootstrapMs, "number");
+    assert.ok(execCalls.some((c) => c.command.includes("tar -xzf /opt/diffci-source.tgz")));
+    assert.ok(execCalls.some((c) => c.command.includes("npm ci")));
+    assert.ok(execCalls.some((c) => c.command.includes("verify-frozen-engine.cjs")));
   });
 
-  it("clone runs git clone + checkout to the exact mergeSha, then advances to installing", async () => {
+  it("bootstrap fails as tarball-corrupt on a post-transfer checksum mismatch, never proceeding to clone", async () => {
+    const { sandbox, execCalls } = makeSandbox({
+      exec: bootstrapExec((cmd) => (cmd.includes("sha256sum /opt/diffci-source.tgz") ? { success: true, exitCode: 0, stdout: `${"b".repeat(64)}  /opt/diffci-source.tgz` } : undefined)),
+    });
+    const { bucket } = makeBucket(bootstrapBucketObjects());
+    const { deps } = makeDeps(sandbox, bucket);
+    const { record: out, nextAlarmDelayMs } = await stepExecution(record({ step: "bootstrapping" }), deps);
+    assert.equal(out.step, "failed");
+    assert.equal(out.errorClass, "tarball-corrupt");
+    assert.equal(nextAlarmDelayMs, null);
+    assert.equal(execCalls.some((c) => c.command.includes("npm ci")), false);
+  });
+
+  it("bootstrap fails as engine-drift when verify-frozen-engine reports a mismatch", async () => {
+    const { sandbox } = makeSandbox({
+      exec: bootstrapExec((cmd) => (cmd.includes("verify-frozen-engine.cjs") ? { success: false, exitCode: 1, stderr: "DRIFT" } : undefined)),
+    });
+    const { bucket } = makeBucket(bootstrapBucketObjects());
+    const { deps } = makeDeps(sandbox, bucket);
+    const { record: out } = await stepExecution(record({ step: "bootstrapping" }), deps);
+    assert.equal(out.step, "failed");
+    assert.equal(out.errorClass, "engine-drift");
+  });
+
+  it("clone runs git clone + checkout to the exact mergeSha, then advances to deriving-selection", async () => {
     const { sandbox, execCalls } = makeSandbox();
     const { bucket } = makeBucket();
     const { deps } = makeDeps(sandbox, bucket);
     const { record: out } = await stepExecution(record({ step: "cloning" }), deps);
-    assert.equal(out.step, "installing");
+    assert.equal(out.step, "deriving-selection");
     assert.ok(execCalls.some((c) => c.command.includes("git clone") && c.command.includes("calcom/cal.diy")));
     assert.ok(execCalls.some((c) => c.command.includes(`git checkout --quiet --force --detach ${"b".repeat(40)}`)));
+  });
+
+  describe("deriving-selection", () => {
+    it("passes straight through to installing when the caller already supplied a selection", async () => {
+      const { sandbox, execCalls } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out, nextAlarmDelayMs } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: ["a.test.ts"] }), deps);
+      assert.equal(out.step, "installing");
+      assert.equal(nextAlarmDelayMs, 0);
+      assert.equal(execCalls.some((c) => c.command.includes("diffci-benchmark-external")), false);
+    });
+
+    it("derives a fresh selection via the frozen engine when none was supplied, never fabricating one", async () => {
+      const output = JSON.stringify({
+        summary: { ok: true, totalTestsInGraph: 250 },
+        full: { affectedTests: [{ path: "apps/web/a.test.ts" }, { path: "apps/web/b.test.ts" }] },
+      });
+      const { sandbox, execCalls } = makeSandbox({ exec: (cmd) => (cmd.includes("diffci-benchmark-external.ts") ? { success: true, exitCode: 0, stdout: output } : undefined) });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket, 4000);
+      const { record: out, nextAlarmDelayMs } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: undefined }), deps);
+      assert.equal(out.step, "installing");
+      assert.equal(nextAlarmDelayMs, 0);
+      assert.deepEqual(out.selectedTestPaths, ["apps/web/a.test.ts", "apps/web/b.test.ts"]);
+      assert.equal(out.totalTestsInGraph, 250);
+      assert.equal(typeof out.analysisOverheadMs, "number");
+      assert.ok(execCalls.some((c) => c.command.includes("cd /opt/diffci") && c.command.includes("--repo") && c.command.includes(`--base ${"a".repeat(40)}`) && c.command.includes(`--head ${"b".repeat(40)}`)));
+    });
+
+    it("derives an empty (zero-test) selection honestly rather than treating it as an error", async () => {
+      const output = JSON.stringify({ summary: { ok: true, totalTestsInGraph: 250 }, full: { affectedTests: [] } });
+      const { sandbox } = makeSandbox({ exec: (cmd) => (cmd.includes("diffci-benchmark-external.ts") ? { success: true, exitCode: 0, stdout: output } : undefined) });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: undefined }), deps);
+      assert.equal(out.step, "installing");
+      assert.deepEqual(out.selectedTestPaths, []);
+    });
+
+    it("fails rather than fabricating a selection when the frozen engine reports ok:false", async () => {
+      const output = JSON.stringify({ summary: { ok: false, error: "no package.json" } });
+      const { sandbox } = makeSandbox({ exec: (cmd) => (cmd.includes("diffci-benchmark-external.ts") ? { success: true, exitCode: 0, stdout: output } : undefined) });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: undefined }), deps);
+      assert.equal(out.step, "failed");
+      assert.equal(out.errorClass, "derive-selection-failed");
+      assert.match(out.lastError ?? "", /no package\.json/);
+    });
+
+    it("fails rather than fabricating a selection when the frozen engine's output is unparseable", async () => {
+      const { sandbox } = makeSandbox({ exec: (cmd) => (cmd.includes("diffci-benchmark-external.ts") ? { success: true, exitCode: 0, stdout: "not json" } : undefined) });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: undefined }), deps);
+      assert.equal(out.step, "failed");
+      assert.equal(out.errorClass, "derive-selection-failed");
+    });
+
+    it("fails rather than fabricating a selection when the derive process itself exits non-zero", async () => {
+      const { sandbox } = makeSandbox({ exec: (cmd) => (cmd.includes("diffci-benchmark-external.ts") ? { success: false, exitCode: 1, stderr: "crashed" } : undefined) });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: undefined }), deps);
+      assert.equal(out.step, "failed");
+      assert.equal(out.errorClass, "derive-selection-failed");
+      assert.match(out.lastError ?? "", /crashed/);
+    });
   });
 
   it("install failure surfaces install-failed with stdout/stderr tail, never silently passes", async () => {

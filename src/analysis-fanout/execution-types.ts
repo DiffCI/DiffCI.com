@@ -6,8 +6,13 @@
  * install/build/test commands - full suite and DiffCI-selected subset - then applies one generic,
  * repo-agnostic mutation (see mutation.ts) to prove failure-detection recall is not vacuous.
  *
- * This never touches the frozen engine (src/repo/*, src/git/*, scripts/diffci-benchmark-external.ts,
- * scripts/diffci-blind-baseline.ts) - it consumes an engine result as input.
+ * This never MODIFIES the frozen engine (src/repo/*, src/git/*, scripts/diffci-benchmark-external.ts,
+ * scripts/diffci-blind-baseline.ts). It normally consumes an already-produced selection as input; when
+ * the caller omits one, the shard derives it itself (2026-08-24) by bootstrapping the SAME frozen
+ * engine tarball AnalysisShard already uses into its own sandbox and invoking the frozen, unmodified
+ * scripts/diffci-benchmark-external.ts --json against the freshly-cloned target repo - entirely on
+ * Cloudflare, never locally (the standing "always use Cloudflare" rule applies to this derivation too,
+ * not just install/test execution).
  */
 
 /** How to invoke a repository's own package manager / test runner. Extensible per repository; a
@@ -37,19 +42,30 @@ export interface ExecutionSpec {
   baseSha: string;
   prNumber: number | null;
   subject: string;
-  /** DiffCI's own selected test file paths for this merge (from a prior analyze-mode result) - the
-   * exact set execution validation is trying to prove correct, never recomputed here. */
-  selectedTestPaths: string[];
-  totalTestsInGraph: number;
+  /** The pack record's own fields (mirrors ShardRecord) - the Worker looks these up from
+   * `manifests/<runId>/pack-record.json` in R2 and re-verifies them exactly like /v1/run does, so the
+   * caller never has to (and never can) hand-supply an unverified tarball/checksum pair. */
+  tarballKey: string;
+  tarballSha256: string;
+  frozenManifestKey: string;
+  engineChecksum: string;
+  /** DiffCI's own selected test file paths for this merge, from a prior analyze-mode result - the exact
+   * set execution validation is trying to prove correct. OMIT (undefined/empty) to have the shard
+   * derive its own selection instead, by running the frozen scripts/diffci-benchmark-external.ts
+   * against the freshly-cloned target repo inside its own sandbox (the `deriving-selection` step) -
+   * useful when no prior analyze-mode row exists for this exact merge. */
+  selectedTestPaths?: string[];
+  totalTestsInGraph?: number;
   /** The prior analyze-mode row's own measured analysis wall time (ms) for this exact merge - threaded
-   * through verbatim, never re-measured here (execution and analysis are separately timed; combining
-   * them silently would misreport "analysis overhead" as whatever this DO happens to take). */
-  analysisOverheadMs: number;
+   * through verbatim, never re-measured here, UNLESS omitted alongside selectedTestPaths, in which case
+   * the `deriving-selection` step measures its own real wall time instead of leaving this blank. */
+  analysisOverheadMs?: number;
 }
 
 export type ExecutionStep =
   | "bootstrapping"
   | "cloning"
+  | "deriving-selection"
   | "installing"
   | "pretest"
   | "full-baseline"
@@ -97,9 +113,15 @@ export interface ExecutionRecord {
   subject: string;
   step: ExecutionStep;
   shape: string;
-  selectedTestPaths: string[];
-  totalTestsInGraph: number;
-  analysisOverheadMs: number;
+  tarballKey: string;
+  tarballSha256: string;
+  frozenManifestKey: string;
+  engineChecksum: string;
+  /** Undefined until either the caller supplied it or the `deriving-selection` step fills it in - never
+   * defaulted to an empty array, so "not yet derived" and "derived, zero tests selected" stay distinct. */
+  selectedTestPaths?: string[];
+  totalTestsInGraph?: number;
+  analysisOverheadMs?: number;
   /** Set while a test-run step (full-baseline/selected-baseline/full-mutant/selected-mutant) has an
    * in-flight sandbox process; cleared once that step's result is captured. One field reused across the
    * four steps is safe because they run strictly sequentially, never concurrently - exactly the
@@ -112,15 +134,16 @@ export interface ExecutionRecord {
   timings: {
     bootstrapMs?: number;
     cloneMs?: number;
+    deriveSelectionMs?: number;
     installMs?: number;
     pretestMs?: number;
   };
   baseline?: { full: TestRunResult; selected: TestRunResult };
   mutation?: MutationInfo;
   mutant?: { full: TestRunResult; selected: TestRunResult };
-  /** Set once both baseline and mutant runs exist. `analysisOverheadMs` is threaded in from the prior
-   * analyze-mode result that produced `selectedTestPaths` - never re-measured here (execution and
-   * analysis are separately timed, per the task's own rule against combining them silently). */
+  /** Set once both baseline runs exist AND an analysisOverheadMs is available (either caller-supplied
+   * or self-derived) - if neither ever materializes, economics stays undefined rather than fabricating
+   * a zero overhead. */
   economics?: {
     analysisOverheadMs: number;
     fullTestMs: number;

@@ -11,12 +11,14 @@
  *
  * Steps (each fits inside ONE bounded DO invocation - the four test-run steps below poll across
  * MULTIPLE invocations, exactly like AnalysisShard's `analyze` step, never a blocking loop within one):
- *   bootstrapping -> cloning -> installing -> pretest -> full-baseline -> selected-baseline
- *   -> mutating -> full-mutant -> selected-mutant -> reverting -> finalizing -> done | failed
+ *   bootstrapping -> cloning -> deriving-selection -> installing -> pretest -> full-baseline
+ *   -> selected-baseline -> mutating -> full-mutant -> selected-mutant -> reverting -> finalizing
+ *   -> done | failed
  *
- * Does not touch the frozen engine at all - it consumes an ExecutionSpec, never recomputes a
- * selection. A repository absent from repo-execution-profiles.ts cannot be executed here; the Worker
- * rejects the request before a container is ever provisioned.
+ * Never MODIFIES the frozen engine. `deriving-selection` INVOKES it (bootstrapped into /opt/diffci
+ * exactly like AnalysisShard) when the caller didn't already supply a selection - see execution-types.ts.
+ * A repository absent from repo-execution-profiles.ts cannot be executed here; the Worker rejects the
+ * request before a container is ever provisioned.
  */
 import { parseVitestJsonReport } from "../vitest-report.js";
 import type { SandboxLike, R2BucketLike } from "../sandbox-like.js";
@@ -105,11 +107,47 @@ async function failExecution(record: ExecutionRecord, errorClass: string, lastEr
   return { record, nextAlarmDelayMs: null };
 }
 
+/**
+ * Bootstraps the frozen DiffCI engine itself into /opt/diffci - the SAME tarball/checksum/verify gate
+ * AnalysisShard.bootstrap() uses (steps 2-4 of that function), so the `deriving-selection` step below
+ * can invoke the unmodified frozen scripts/diffci-benchmark-external.ts against the target repo. Always
+ * run (not only when a selection needs deriving): a single, uniform code path is simpler to reason
+ * about than a conditional one, and the constant cost is small relative to the target repo's own
+ * install/test steps.
+ */
 async function bootstrap(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> {
-  const { sandbox } = deps;
+  const { sandbox, bucket } = deps;
   try {
     const t0 = deps.now();
-    await sandbox.exec("mkdir -p /workspace", { timeout: 30_000 });
+    await sandbox.exec("rm -rf /opt/diffci /workspace && mkdir -p /opt/diffci /workspace", { timeout: 30_000 });
+
+    const tar = await bucket.get(record.tarballKey);
+    if (!tar) return failExecution(record, "tarball-missing", `tarball missing in R2: ${record.tarballKey}`);
+    await sandbox.writeFile("/opt/diffci-source.tgz", tar.body);
+    await sandbox.exec("tar -xzf /opt/diffci-source.tgz -C /opt/diffci", { timeout: 120_000 });
+
+    const sum = await sandbox.exec("sha256sum /opt/diffci-source.tgz", { timeout: 30_000 });
+    const got = /^([0-9a-f]{64})/.exec(sum.stdout.trim());
+    if (!got || got[1].toLowerCase() !== record.tarballSha256.toLowerCase()) {
+      return failExecution(record, "tarball-corrupt", `post-transfer sha256 mismatch (${got ? got[1].slice(0, 12) : "none"} != ${record.tarballSha256.slice(0, 12)})`);
+    }
+
+    const npm = await sandbox.exec("cd /opt/diffci && npm ci --no-audit --no-fund", { timeout: 10 * 60_000 });
+    if (!npm.success) {
+      return failExecution(record, "bootstrap-failed", `npm ci exit ${npm.exitCode}: ${(npm.stdout + " " + npm.stderr).trim().slice(-1000)}`);
+    }
+
+    const frozen = await bucket.get(record.frozenManifestKey);
+    if (!frozen) return failExecution(record, "frozen-manifest-missing", `frozen manifest missing in R2: ${record.frozenManifestKey}`);
+    await sandbox.writeFile("/opt/frozen-manifest.json", await frozen.text());
+    const verify = await sandbox.exec(
+      "cd /opt/diffci && node docs/research/blind-baseline-2026-08-23/verify-frozen-engine.cjs --manifest /opt/frozen-manifest.json",
+      { timeout: 120_000 },
+    );
+    if (!verify.success) {
+      return failExecution(record, "engine-drift", `verify-frozen-engine exit ${verify.exitCode}: ${(verify.stdout + " " + verify.stderr).trim().slice(0, 1000)}`);
+    }
+
     record.timings.bootstrapMs = deps.now() - t0;
     record.step = "cloning";
     return { record, nextAlarmDelayMs: 0 };
@@ -130,10 +168,52 @@ async function clone(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<
     await sandbox.exec(`rm -rf ${dir} && git clone --quiet https://github.com/${record.repository}.git ${dir}`, { timeout: 20 * 60_000 });
     await sandbox.exec(`cd ${dir} && git checkout --quiet --force --detach ${record.mergeSha}`, { timeout: 5 * 60_000 });
     record.timings.cloneMs = deps.now() - t0;
-    record.step = "installing";
+    record.step = "deriving-selection";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {
     return failExecution(record, "clone-failed", err instanceof Error ? err.message : String(err));
+  }
+}
+
+/**
+ * If the caller already supplied a selection (a prior analyze-mode row for this exact merge), pass
+ * straight through - execution never recomputes a selection it was already given. Otherwise, derive one
+ * fresh by invoking the frozen, UNMODIFIED scripts/diffci-benchmark-external.ts against the freshly-
+ * cloned target repo, entirely inside this sandbox (never locally). Never fabricates: an unparseable or
+ * `ok:false` result fails the execution rather than defaulting to an empty/guessed selection.
+ */
+async function deriveSelection(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> {
+  const { sandbox } = deps;
+  if (record.selectedTestPaths && record.selectedTestPaths.length > 0) {
+    record.step = "installing";
+    return { record, nextAlarmDelayMs: 0 };
+  }
+  try {
+    const dir = workDir(record);
+    const t0 = deps.now();
+    const cmd = `cd /opt/diffci && npx tsx scripts/diffci-benchmark-external.ts --repo ${dir} --base ${record.baseSha} --head ${record.mergeSha} --json`;
+    const res = await sandbox.exec(cmd, { timeout: 10 * 60_000 });
+    record.timings.deriveSelectionMs = deps.now() - t0;
+    if (!res.success) {
+      return failExecution(record, "derive-selection-failed", `diffci-benchmark-external exited ${res.exitCode}: ${(res.stdout + " " + res.stderr).trim().slice(-1000)}`);
+    }
+    let parsed: { summary?: { ok?: boolean; error?: string; totalTestsInGraph?: number }; full?: { affectedTests?: { path?: string }[] } };
+    try {
+      parsed = JSON.parse(res.stdout.trim().split("\n").pop() ?? "");
+    } catch (err) {
+      return failExecution(record, "derive-selection-failed", `unparseable diffci-benchmark-external output: ${err instanceof Error ? err.message : String(err)}: ${res.stdout.slice(-500)}`);
+    }
+    if (!parsed.summary?.ok) {
+      return failExecution(record, "derive-selection-failed", `diffci-benchmark-external reported ok:false: ${parsed.summary?.error ?? "unknown error"}`);
+    }
+    const paths = (parsed.full?.affectedTests ?? []).map((t) => t.path).filter((p): p is string => typeof p === "string");
+    record.selectedTestPaths = paths;
+    record.totalTestsInGraph = parsed.summary.totalTestsInGraph ?? 0;
+    record.analysisOverheadMs = record.timings.deriveSelectionMs;
+    record.step = "installing";
+    return { record, nextAlarmDelayMs: 0 };
+  } catch (err) {
+    return failExecution(record, "derive-selection-failed", err instanceof Error ? err.message : String(err));
   }
 }
 
@@ -258,7 +338,8 @@ const fullBaseline = (record: ExecutionRecord, deps: ExecutionStepDeps): Promise
 
 const selectedBaseline = (record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> =>
   stepTestRun(record, deps, {
-    files: record.selectedTestPaths,
+    // Guaranteed populated by the deriving-selection step before any test-run step is reachable.
+    files: record.selectedTestPaths ?? [],
     reportName: "selected-baseline",
     nextStep: "mutating",
     errorClass: "selected-baseline-failed",
@@ -338,7 +419,10 @@ async function revert(record: ExecutionRecord, deps: ExecutionStepDeps): Promise
 }
 
 function computeEconomicsAndRecall(record: ExecutionRecord): void {
-  if (record.baseline) {
+  // analysisOverheadMs may be genuinely absent (neither caller-supplied nor derived, e.g. the shard
+  // failed before deriving-selection) - economics stays undefined rather than defaulting it to 0, which
+  // would misreport a zero-cost analysis instead of an unknown one.
+  if (record.baseline && record.analysisOverheadMs !== undefined) {
     const fullTestMs = record.baseline.full.wallMs;
     const selectedTestMs = record.baseline.selected.wallMs;
     const grossSavedMs = fullTestMs - selectedTestMs;
@@ -388,6 +472,7 @@ export async function stepExecution(record: ExecutionRecord, deps: ExecutionStep
   switch (record.step) {
     case "bootstrapping": return bootstrap(record, deps);
     case "cloning": return clone(record, deps);
+    case "deriving-selection": return deriveSelection(record, deps);
     case "installing": return install(record, deps);
     case "pretest": return pretest(record, deps);
     case "full-baseline": return fullBaseline(record, deps);
@@ -411,6 +496,10 @@ export function seedExecutionRecord(spec: ExecutionSpec, shape: string, now: num
     subject: spec.subject,
     step: "bootstrapping",
     shape,
+    tarballKey: spec.tarballKey,
+    tarballSha256: spec.tarballSha256,
+    frozenManifestKey: spec.frozenManifestKey,
+    engineChecksum: spec.engineChecksum,
     selectedTestPaths: spec.selectedTestPaths,
     totalTestsInGraph: spec.totalTestsInGraph,
     analysisOverheadMs: spec.analysisOverheadMs,
