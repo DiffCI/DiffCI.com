@@ -37,6 +37,11 @@ export interface SandboxLike {
    * leaving no way to see what a test runner actually printed when its structured report went missing
    * or came back malformed. */
   getProcessLogs(id: string): Promise<{ stdout: string; stderr: string }>;
+  /** Real `@cloudflare/sandbox` SDK method - terminates a background process. Used by the execution
+   * shard's max-step-duration safeguard (2026-08-24): a test-run process that runs far longer than any
+   * prior observation of the same command (e.g. the ~1,231s cal.com `--no-isolate` full-suite anomaly)
+   * must be killed rather than polled forever. */
+  killProcess(id: string, signal?: string): Promise<void>;
   destroy(): Promise<void>;
 }
 

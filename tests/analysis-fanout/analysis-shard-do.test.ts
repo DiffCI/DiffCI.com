@@ -98,6 +98,7 @@ function makeSandbox(init: {
     async getProcessLogs() {
       return { stdout: "", stderr: "" };
     },
+    async killProcess() {},
     async destroy() {
       destroyCalled = true;
     },

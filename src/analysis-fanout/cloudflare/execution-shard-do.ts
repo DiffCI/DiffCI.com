@@ -29,6 +29,11 @@ import { repoSlug } from "./analysis-shard-do.js";
 export const SHAPE = "standard-4"; // installs are heavy (cal.com: 3582 packages, native builds, ~20 min)
 /** How long the shard sleeps between poll alarms while a test-run process is in flight. */
 export const POLL_MS = 20_000;
+/** Applies when a RepoExecutionProfile omits its own `maxTestRunMs` (2026-08-24 safeguard - see
+ * RepoExecutionProfile.maxTestRunMs for the finding that motivated this). Deliberately generous as a
+ * global fallback since normal duration varies enormously by repository; a profile should set its own
+ * tighter value once real observations exist for that repository. */
+export const DEFAULT_MAX_TEST_RUN_MS = 20 * 60_000;
 const SANDBOX_OPTS = { enableDefaultSession: false, keepAlive: false, sleepAfter: "15m", transport: "rpc" } as const;
 const STATE_KEY = "execution";
 const TERMINAL_PROCESS: ReadonlySet<string> = new Set(["completed", "failed", "killed", "error"]);
@@ -131,13 +136,22 @@ function buildTestCmd(dir: string, profile: RepoExecutionProfile, argv: string[]
   return `cd ${dir} && ${corepackSetupPrefix(profile)}${envPrefix}${packageManagerBin(profile, true)} ${argvToShellSafe(argv)}`;
 }
 
+/**
+ * Marks the record failed and routes it through `finalizing` (2026-08-24 fix), not directly to the
+ * terminal `failed` step. Every prior version of this function set `step: "failed"` directly with
+ * `nextAlarmDelayMs: null` - which never reaches `finalize()`, meaning NO failure in this DO's history
+ * was ever persisted to R2 (only retrievable via the live DO state while it still exists) and the
+ * sandbox was never explicitly destroyed on a failure path (relying solely on the `sleepAfter` backstop).
+ * Routing through `finalizing` gives every failure the same R2 persistence and sandbox cleanup a
+ * successful run already gets, for free, via `finalize()`'s own existing logic.
+ */
 async function failExecution(record: ExecutionRecord, errorClass: string, lastError: string): Promise<ExecutionStepResult> {
-  record.step = "failed";
+  record.step = "finalizing";
   record.errorClass = errorClass;
   record.lastError = lastError;
   record.processId = undefined;
   record.processStartedAt = undefined;
-  return { record, nextAlarmDelayMs: null };
+  return { record, nextAlarmDelayMs: 0 };
 }
 
 /**
@@ -367,6 +381,23 @@ async function stepTestRun(record: ExecutionRecord, deps: ExecutionStepDeps, cfg
       status = "error";
     }
     if (!(status && TERMINAL_PROCESS.has(status))) {
+      // Max-step-duration safeguard (2026-08-24, cal.com --no-isolate full-suite anomaly finding): a
+      // process still running past its profile's own maxTestRunMs is killed rather than polled forever
+      // - see RepoExecutionProfile.maxTestRunMs and DEFAULT_MAX_TEST_RUN_MS.
+      const maxMs = profile.maxTestRunMs ?? DEFAULT_MAX_TEST_RUN_MS;
+      const elapsedMs = deps.now() - (record.processStartedAt ?? deps.now());
+      if (elapsedMs > maxMs) {
+        try {
+          await sandbox.killProcess(record.processId);
+        } catch {
+          /* best-effort - still fail the execution below even if the kill itself couldn't be confirmed */
+        }
+        return failExecution(
+          record,
+          "step-timeout",
+          `${cfg.reportName}: process exceeded maxTestRunMs (${maxMs}ms, elapsed ${elapsedMs}ms) - killed rather than polled indefinitely`,
+        );
+      }
       return { record, nextAlarmDelayMs: POLL_MS };
     }
 
@@ -597,7 +628,16 @@ async function finalize(record: ExecutionRecord, deps: ExecutionStepDeps): Promi
     await bucket.put(`runs/${record.runId}/${repoSlug(record.repository)}/execution-${record.mergeSha.slice(0, 10)}.json`, JSON.stringify(record, null, 2));
     return { record, nextAlarmDelayMs: null };
   } catch (err) {
-    return failExecution(record, "finalize-failed", err instanceof Error ? err.message : String(err));
+    // Deliberately NOT failExecution() here (which now routes to "finalizing", see its own doc comment) -
+    // finalize() is the terminal step; routing its own failure back to "finalizing" would loop forever
+    // on a persistent error (e.g. R2 genuinely unreachable). Goes straight to the "failed" terminal
+    // state instead - the record itself is still returned and persisted by the DO's own storage.put()
+    // (a step's return value is always saved to DO storage regardless of the R2 write's own success),
+    // it just won't have a corresponding R2 object if the R2 write itself was what failed.
+    record.step = "failed";
+    record.errorClass = "finalize-failed";
+    record.lastError = err instanceof Error ? err.message : String(err);
+    return { record, nextAlarmDelayMs: null };
   } finally {
     try { await sandbox.destroy(); } catch { /* best-effort teardown; sleepAfter backstop still applies */ }
   }

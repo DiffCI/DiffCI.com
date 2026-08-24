@@ -33,6 +33,12 @@ export interface RepoExecutionProfile {
   testEnv?: Record<string, string>;
   /** Vitest JSON reporter flag shape differs slightly by version; documented per repo, not guessed. */
   reporterArgv: string[];
+  /** Max-step-duration safeguard (2026-08-24, cal.com --no-isolate full-suite anomaly finding): a
+   * test-run process running longer than this is killed rather than polled forever - a genuinely hung
+   * or badly-degraded command must not consume Cloudflare compute indefinitely with no self-recovery.
+   * Per-repository, not a global constant, since normal duration varies enormously by suite size.
+   * Optional; DEFAULT_MAX_TEST_RUN_MS (execution-shard-do.ts) applies when a profile omits it. */
+  maxTestRunMs?: number;
 }
 
 export interface ExecutionSpec {

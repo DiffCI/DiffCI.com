@@ -38,6 +38,11 @@ const PROFILES: Record<string, RepoExecutionProfile> = {
     // test runner actually did. Both write independently - default to the process's own stdout (now
     // captured via getProcessLogs), json to its own --outputFile.json path.
     reporterArgv: ["--reporter=json", "--reporter=default"],
+    // 10 minutes (2026-08-24): every normal observation of this command (isolated OR --no-isolate
+    // selective) finishes in well under 4 minutes; the one anomalous run (--no-isolate, full 406-file
+    // suite) ran past 20 minutes with no sign of finishing. 10 minutes gives real variance headroom
+    // while still catching that failure mode instead of polling forever.
+    maxTestRunMs: 10 * 60_000,
   },
 };
 

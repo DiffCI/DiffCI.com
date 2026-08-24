@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { POLL_MS, classifyRuntimeSelection, sandboxContainerId, seedExecutionRecord, stepExecution } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
+import { DEFAULT_MAX_TEST_RUN_MS, POLL_MS, classifyRuntimeSelection, sandboxContainerId, seedExecutionRecord, stepExecution } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
 import type { ExecutionStepDeps } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
 import type { R2BucketLike, R2ObjectBodyLike, SandboxLike } from "../../src/analysis-fanout/sandbox-like.js";
 import type { ExecutionRecord, ExecutionSpec, RepoExecutionProfile, TestRunResult } from "../../src/analysis-fanout/execution-types.js";
@@ -55,6 +55,7 @@ function makeSandbox(init: {
 } = {}) {
   const execCalls: { command: string; options?: { timeout?: number; cwd?: string } }[] = [];
   const startProcessCalls: { command: string; options?: { cwd?: string } }[] = [];
+  const killProcessCalls: string[] = [];
   let destroyCalled = false;
 
   const sandbox: SandboxLike = {
@@ -82,12 +83,15 @@ function makeSandbox(init: {
     async getProcessLogs() {
       return init.processLogs ?? { stdout: "", stderr: "" };
     },
+    async killProcess(id) {
+      killProcessCalls.push(id);
+    },
     async destroy() {
       destroyCalled = true;
     },
   };
 
-  return { sandbox, execCalls, startProcessCalls, isDestroyed: () => destroyCalled };
+  return { sandbox, execCalls, startProcessCalls, killProcessCalls, isDestroyed: () => destroyCalled };
 }
 
 function makeBucket(objects: Record<string, string> = {}) {
@@ -154,9 +158,11 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     const { bucket } = makeBucket(bootstrapBucketObjects());
     const { deps } = makeDeps(sandbox, bucket);
     const { record: out, nextAlarmDelayMs } = await stepExecution(record({ step: "bootstrapping" }), deps);
-    assert.equal(out.step, "failed");
+    // failExecution() now routes through "finalizing" (2026-08-24), not directly to "failed" - so every
+    // failure gets the same R2 persistence + sandbox cleanup a success gets, via finalize()'s own logic.
+    assert.equal(out.step, "finalizing");
     assert.equal(out.errorClass, "tarball-corrupt");
-    assert.equal(nextAlarmDelayMs, null);
+    assert.equal(nextAlarmDelayMs, 0);
     assert.equal(execCalls.some((c) => c.command.includes("npm ci")), false);
   });
 
@@ -167,7 +173,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     const { bucket } = makeBucket(bootstrapBucketObjects());
     const { deps } = makeDeps(sandbox, bucket);
     const { record: out } = await stepExecution(record({ step: "bootstrapping" }), deps);
-    assert.equal(out.step, "failed");
+    assert.equal(out.step, "finalizing");
     assert.equal(out.errorClass, "engine-drift");
   });
 
@@ -225,7 +231,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       const { bucket } = makeBucket();
       const { deps } = makeDeps(sandbox, bucket);
       const { record: out } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: undefined }), deps);
-      assert.equal(out.step, "failed");
+      assert.equal(out.step, "finalizing");
       assert.equal(out.errorClass, "derive-selection-failed");
       assert.match(out.lastError ?? "", /no package\.json/);
     });
@@ -235,7 +241,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       const { bucket } = makeBucket();
       const { deps } = makeDeps(sandbox, bucket);
       const { record: out } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: undefined }), deps);
-      assert.equal(out.step, "failed");
+      assert.equal(out.step, "finalizing");
       assert.equal(out.errorClass, "derive-selection-failed");
     });
 
@@ -244,7 +250,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       const { bucket } = makeBucket();
       const { deps } = makeDeps(sandbox, bucket);
       const { record: out } = await stepExecution(record({ step: "deriving-selection", selectedTestPaths: undefined }), deps);
-      assert.equal(out.step, "failed");
+      assert.equal(out.step, "finalizing");
       assert.equal(out.errorClass, "derive-selection-failed");
       assert.match(out.lastError ?? "", /crashed/);
     });
@@ -255,10 +261,10 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     const { bucket } = makeBucket();
     const { deps } = makeDeps(sandbox, bucket);
     const { record: out, nextAlarmDelayMs } = await stepExecution(record({ step: "installing" }), deps);
-    assert.equal(out.step, "failed");
+    assert.equal(out.step, "finalizing");
     assert.equal(out.errorClass, "install-failed");
     assert.match(out.lastError ?? "", /EACCES boom/);
-    assert.equal(nextAlarmDelayMs, null);
+    assert.equal(nextAlarmDelayMs, 0);
   });
 
   it("install success advances to pretest and records installMs", async () => {
@@ -285,7 +291,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     const { bucket } = makeBucket();
     const { deps } = makeDeps(sandbox, bucket);
     const { record: out } = await stepExecution(record({ step: "pretest" }), deps);
-    assert.equal(out.step, "failed");
+    assert.equal(out.step, "finalizing");
     assert.equal(out.errorClass, "pretest-failed");
     assert.ok(execCalls.some((c) => c.command.includes("prisma generate")));
   });
@@ -374,6 +380,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         async startProcess() { return { id: "proc-1", status: "running" }; },
         async getProcess() { return null; },
         async getProcessLogs() { return { stdout: "", stderr: "" }; },
+        async killProcess() {},
         async destroy() {},
       };
       const { bucket } = makeBucket();
@@ -486,6 +493,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         async startProcess() { return { id: "proc-1", status: "running" }; },
         async getProcess() { return { id: "proc-1", status: "completed", exitCode: 0 }; },
         async getProcessLogs() { throw new Error("logs endpoint unavailable"); },
+        async killProcess() {},
         async destroy() {},
       };
       const { bucket } = makeBucket();
@@ -540,6 +548,64 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       assert.equal(nextAlarmDelayMs, POLL_MS);
       assert.equal(startProcessCalls.length, 0); // resumed, not restarted
       assert.equal(out.step, "full-baseline");
+    });
+
+    describe("max-step-duration safeguard (2026-08-24, cal.com --no-isolate full-suite anomaly)", () => {
+      it("a still-running process well within the timeout just keeps polling, unaffected", async () => {
+        const { sandbox, killProcessCalls } = makeSandbox({ process: { status: "running" } });
+        const { bucket } = makeBucket();
+        // profile() has no maxTestRunMs -> DEFAULT_MAX_TEST_RUN_MS (20 min) applies; 5 min elapsed is
+        // well within it.
+        const { deps } = makeDeps(sandbox, bucket, 1000 + 5 * 60_000);
+        const { record: out, nextAlarmDelayMs } = await stepExecution(record({ step: "full-baseline", processId: "proc-1", processStartedAt: 1000 }), deps);
+        assert.equal(nextAlarmDelayMs, POLL_MS);
+        assert.equal(out.step, "full-baseline");
+        assert.equal(killProcessCalls.length, 0);
+      });
+
+      it("a still-running process past DEFAULT_MAX_TEST_RUN_MS is killed and the execution fails with step-timeout", async () => {
+        const { sandbox, killProcessCalls } = makeSandbox({ process: { status: "running" } });
+        const { bucket, putCalls } = makeBucket();
+        const { deps } = makeDeps(sandbox, bucket, 1000 + DEFAULT_MAX_TEST_RUN_MS + 1);
+        const { record: out, nextAlarmDelayMs } = await stepExecution(record({ step: "full-baseline", processId: "proc-1", processStartedAt: 1000 }), deps);
+        assert.equal(killProcessCalls.length, 1);
+        assert.equal(killProcessCalls[0], "proc-1");
+        assert.equal(out.step, "finalizing"); // routed through finalize(), not silently orphaned
+        assert.equal(out.errorClass, "step-timeout");
+        assert.match(out.lastError ?? "", /exceeded maxTestRunMs/);
+        assert.equal(nextAlarmDelayMs, 0);
+        // never left polling forever - this alarm's own step is the one that terminates it
+        assert.notEqual(nextAlarmDelayMs, POLL_MS);
+        void putCalls; // finalize() itself is exercised by a separate test; here we only check the handoff
+      });
+
+      it("a profile's own (tighter) maxTestRunMs is honored instead of the global default", async () => {
+        const { sandbox, killProcessCalls } = makeSandbox({ process: { status: "running" } });
+        const { bucket } = makeBucket();
+        const tightProfile: RepoExecutionProfile = { ...profile(), maxTestRunMs: 60_000 };
+        const deps: ExecutionStepDeps = { sandbox, bucket, profile: tightProfile, now: () => 1000 + 61_000 };
+        const { record: out } = await stepExecution(record({ step: "full-baseline", processId: "proc-1", processStartedAt: 1000 }), deps);
+        assert.equal(killProcessCalls.length, 1);
+        assert.equal(out.errorClass, "step-timeout");
+      });
+
+      it("a killProcess failure is best-effort - the execution still fails with step-timeout even if the kill couldn't be confirmed", async () => {
+        const sandbox: SandboxLike = {
+          async exec() { return { success: true, exitCode: 0, stdout: "", stderr: "" }; },
+          async writeFile() { return { success: true }; },
+          async readFile() { return { content: "" }; },
+          async startProcess() { return { id: "proc-1", status: "running" }; },
+          async getProcess() { return { id: "proc-1", status: "running" }; },
+          async getProcessLogs() { return { stdout: "", stderr: "" }; },
+          async killProcess() { throw new Error("container unreachable"); },
+          async destroy() {},
+        };
+        const { bucket } = makeBucket();
+        const deps: ExecutionStepDeps = { sandbox, bucket, profile: profile(), now: () => 1000 + DEFAULT_MAX_TEST_RUN_MS + 1 };
+        const { record: out } = await stepExecution(record({ step: "full-baseline", processId: "proc-1", processStartedAt: 1000 }), deps);
+        assert.equal(out.step, "finalizing");
+        assert.equal(out.errorClass, "step-timeout");
+      });
     });
 
     it("terminal completed process with a parseable report advances to selected-baseline and never fabricates counts", async () => {

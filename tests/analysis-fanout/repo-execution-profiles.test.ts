@@ -22,6 +22,9 @@ describe("repo-execution-profiles", () => {
     // <file>" silently runs the full suite with none of it applied.
     assert.deepEqual(profile!.testArgv, ["test", "--no-isolate"]);
     assert.deepEqual(profile!.testEnv, { TZ: "UTC" });
+    // 2026-08-24 max-step-duration safeguard: tighter than the harness's own 20-min global default,
+    // since every normal observation of this command finishes in well under 4 minutes.
+    assert.equal(profile!.maxTestRunMs, 10 * 60_000);
   });
 
   it("listConfiguredRepositories includes exactly the configured repositories", () => {
