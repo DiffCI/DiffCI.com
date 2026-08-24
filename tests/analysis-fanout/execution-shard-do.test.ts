@@ -424,6 +424,27 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       assert.match(startProcessCalls[0]!.command, /TZ=UTC/);
     });
 
+    it("testArgvOverride replaces the profile's testArgv for command-shape experiments, never mutating the stored profile", async () => {
+      const { sandbox, startProcessCalls } = makeSandbox({ process: { status: "running" } });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      await stepExecution(record({ step: "full-baseline", testArgvOverride: ["test", "--", "--no-isolate", "--project", "@calcom/lib"] }), deps);
+      // argvToShellSafe quotes "@calcom/lib" ('@' isn't in its unquoted-safe character set) - correct,
+      // defensive shell quoting, not a bug; the value that reaches vitest is unaffected.
+      assert.match(startProcessCalls[0]!.command, /yarn test -- --no-isolate --project "@calcom\/lib" --reporter=json/);
+      // profile() itself (the shared fixture) is untouched - a fresh call still returns the real CI argv.
+      assert.deepEqual(profile().testArgv, ["test", "--", "--no-isolate"]);
+    });
+
+    it("without testArgvOverride, the stored profile's real CI-verified testArgv is used as before", async () => {
+      const { sandbox, startProcessCalls } = makeSandbox({ process: { status: "running" } });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      await stepExecution(record({ step: "full-baseline", testArgvOverride: undefined }), deps);
+      assert.match(startProcessCalls[0]!.command, /yarn test -- --no-isolate --reporter=json/);
+      assert.doesNotMatch(startProcessCalls[0]!.command, /--project/);
+    });
+
     it("a later alarm with a still-running process polls again without re-starting it", async () => {
       const { sandbox, startProcessCalls } = makeSandbox({ process: { status: "running" } });
       const { bucket } = makeBucket();

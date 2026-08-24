@@ -60,6 +60,14 @@ export interface ExecutionSpec {
    * through verbatim, never re-measured here, UNLESS omitted alongside selectedTestPaths, in which case
    * the `deriving-selection` step measures its own real wall time instead of leaving this blank. */
   analysisOverheadMs?: number;
+  /** Command-shape experimentation (2026-08-24, cal.com command-shape mission): when present, REPLACES
+   * `profile.testArgv` for every test-run step (full-baseline/selected-baseline/full-mutant/selected-mutant)
+   * in this run only - the stored repo-execution-profiles.ts entry (the CI-verified real command) is
+   * never modified. Exists to test whether a different invocation shape (e.g. adding `--project <name>`)
+   * actually narrows execution, without a new DO mode or a full pipeline rewrite for every candidate.
+   * A run using this MUST be labeled as a command-shape experiment, never conflated with a real
+   * CI-command baseline measurement - see ExecutionRecord.testArgvOverride and the run's own subject. */
+  testArgvOverride?: string[];
 }
 
 export type ExecutionStep =
@@ -164,6 +172,8 @@ export interface ExecutionRecord {
   selectedTestPaths?: string[];
   totalTestsInGraph?: number;
   analysisOverheadMs?: number;
+  /** See ExecutionSpec.testArgvOverride - carried through verbatim when present. */
+  testArgvOverride?: string[];
   /** Set while a test-run step (full-baseline/selected-baseline/full-mutant/selected-mutant) has an
    * in-flight sandbox process; cleared once that step's result is captured. One field reused across the
    * four steps is safe because they run strictly sequentially, never concurrently - exactly the

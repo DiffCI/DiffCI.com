@@ -337,6 +337,12 @@ async function handleCreateExecution(request: Request, env: Env): Promise<Respon
   if (body.analysisOverheadMs !== undefined && (typeof body.analysisOverheadMs !== "number" || !Number.isFinite(body.analysisOverheadMs) || body.analysisOverheadMs < 0)) {
     return json({ ok: false, error: "analysisOverheadMs, if provided, must be a non-negative number" }, 400);
   }
+  // Command-shape experimentation (2026-08-24): if provided, REPLACES the stored profile's testArgv for
+  // this run only - the caller (never a target-repo file, never the profile itself) supplies the
+  // candidate shape. Every element must be a plain string, same discipline as selectedTestPaths.
+  if (body.testArgvOverride !== undefined && (!Array.isArray(body.testArgvOverride) || !body.testArgvOverride.every((a) => typeof a === "string"))) {
+    return json({ ok: false, error: "testArgvOverride, if provided, must be an array of strings" }, 400);
+  }
   // Reject before a container is ever provisioned - execution is never silently faked/approximated for
   // a repository whose real CI test command DiffCI has not verified (repo-execution-profiles.ts).
   if (!getRepoExecutionProfile(repository)) {
@@ -380,6 +386,7 @@ async function handleCreateExecution(request: Request, env: Env): Promise<Respon
     selectedTestPaths: selectedTestPaths as string[] | undefined,
     totalTestsInGraph: typeof body.totalTestsInGraph === "number" ? body.totalTestsInGraph : undefined,
     analysisOverheadMs: body.analysisOverheadMs,
+    testArgvOverride: body.testArgvOverride as string[] | undefined,
   };
 
   const doStub = getExecutionDoStub(env, runId, repository, mergeSha);

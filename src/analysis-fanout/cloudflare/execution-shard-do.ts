@@ -122,8 +122,8 @@ function reportPath(reportName: string): string {
  * by name regardless of how many OTHER reporters are also configured (repo-execution-profiles.ts may
  * list more than one, e.g. adding `--reporter=default` for human-readable console output alongside the
  * structured file), so it never depends on json being the only or the first reporter. */
-function buildTestArgv(profile: RepoExecutionProfile, reportName: string, files: string[] | undefined): string[] {
-  return [...profile.testArgv, ...profile.reporterArgv, `--outputFile.json=${reportPath(reportName)}`, ...(files ?? [])];
+function buildTestArgv(profile: RepoExecutionProfile, reportName: string, files: string[] | undefined, testArgvBase: string[]): string[] {
+  return [...testArgvBase, ...profile.reporterArgv, `--outputFile.json=${reportPath(reportName)}`, ...(files ?? [])];
 }
 
 function buildTestCmd(dir: string, profile: RepoExecutionProfile, argv: string[]): string {
@@ -310,7 +310,7 @@ interface TestRunStepConfig {
 async function stepTestRun(record: ExecutionRecord, deps: ExecutionStepDeps, cfg: TestRunStepConfig): Promise<ExecutionStepResult> {
   const { sandbox, profile } = deps;
   const dir = workDir(record);
-  const argv = buildTestArgv(profile, cfg.reportName, cfg.files);
+  const argv = buildTestArgv(profile, cfg.reportName, cfg.files, record.testArgvOverride ?? profile.testArgv);
   try {
     if (!record.processId) {
       const proc = await sandbox.startProcess(buildTestCmd(dir, profile, argv), { cwd: dir, autoCleanup: false });
@@ -605,6 +605,7 @@ export function seedExecutionRecord(spec: ExecutionSpec, shape: string, now: num
     selectedTestPaths: spec.selectedTestPaths,
     totalTestsInGraph: spec.totalTestsInGraph,
     analysisOverheadMs: spec.analysisOverheadMs,
+    testArgvOverride: spec.testArgvOverride,
     timings: {},
     startedAt: now,
     heartbeatAt: now,
