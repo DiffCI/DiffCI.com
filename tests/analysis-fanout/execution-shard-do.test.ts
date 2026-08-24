@@ -309,6 +309,93 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     });
   });
 
+  describe("pretest routing to diagnosing vs full-baseline", () => {
+    it("routes to diagnosing when diagnosticCommands is present and non-empty", async () => {
+      const { sandbox } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "pretest", diagnosticCommands: ["yarn test --help"] }), deps);
+      assert.equal(out.step, "diagnosing");
+    });
+
+    it("routes to full-baseline as before when diagnosticCommands is absent", async () => {
+      const { sandbox } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "pretest", diagnosticCommands: undefined }), deps);
+      assert.equal(out.step, "full-baseline");
+    });
+
+    it("routes to full-baseline when diagnosticCommands is an empty array (not just absent)", async () => {
+      const { sandbox } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "pretest", diagnosticCommands: [] }), deps);
+      assert.equal(out.step, "full-baseline");
+    });
+  });
+
+  describe("diagnose (raw command-probe mode)", () => {
+    it("runs every command verbatim, in order, and captures full stdout/stderr/exitCode regardless of success", async () => {
+      const responses: Record<string, ExecResultLike> = {
+        "yarn test -- --help": { exitCode: 0, stdout: "help text with --", stderr: "" },
+        "yarn test --help": { exitCode: 0, stdout: "help text without --", stderr: "" },
+        "yarn test -- --definitely-invalid-diffci-option": { exitCode: 0, stdout: "ran everything (bad sign)", stderr: "" },
+        "yarn test --definitely-invalid-diffci-option": { exitCode: 1, stdout: "", stderr: "error: unknown option '--definitely-invalid-diffci-option'" },
+      };
+      const { sandbox } = makeSandbox({ exec: (cmd) => Object.entries(responses).find(([k]) => cmd.includes(k))?.[1] });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out, nextAlarmDelayMs } = await stepExecution(
+        record({ step: "diagnosing", diagnosticCommands: Object.keys(responses) }),
+        deps,
+      );
+      assert.equal(out.step, "finalizing");
+      assert.equal(nextAlarmDelayMs, 0);
+      assert.equal(out.diagnosticResults?.length, 4);
+      assert.deepEqual(out.diagnosticResults?.map((r) => r.command), Object.keys(responses));
+      const invalidWithSep = out.diagnosticResults?.find((r) => r.command === "yarn test -- --definitely-invalid-diffci-option");
+      const invalidNoSep = out.diagnosticResults?.find((r) => r.command === "yarn test --definitely-invalid-diffci-option");
+      assert.equal(invalidWithSep?.exitCode, 0); // the smoking-gun signature the user's hypothesis predicts
+      assert.equal(invalidNoSep?.exitCode, 1);
+      assert.match(invalidNoSep?.stderr ?? "", /unknown option/);
+    });
+
+    it("a single command throwing does not abort the batch - later commands still run and get their own result", async () => {
+      let calls = 0;
+      const sandbox: SandboxLike = {
+        async exec(command) {
+          calls++;
+          if (command.includes("boom")) throw new Error("sandbox transport error");
+          return { success: true, exitCode: 0, stdout: "ok", stderr: "" };
+        },
+        async writeFile() { return { success: true }; },
+        async readFile() { return { content: "" }; },
+        async startProcess() { return { id: "proc-1", status: "running" }; },
+        async getProcess() { return null; },
+        async getProcessLogs() { return { stdout: "", stderr: "" }; },
+        async destroy() {},
+      };
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "diagnosing", diagnosticCommands: ["yarn boom", "yarn fine"] }), deps);
+      assert.equal(calls, 2);
+      assert.equal(out.diagnosticResults?.length, 2);
+      assert.equal(out.diagnosticResults?.[0]?.exitCode, -1);
+      assert.match(out.diagnosticResults?.[0]?.stderr ?? "", /sandbox transport error/);
+      assert.equal(out.diagnosticResults?.[1]?.exitCode, 0);
+    });
+
+    it("an empty diagnosticCommands array still advances cleanly to finalizing with an empty results array", async () => {
+      const { sandbox } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "diagnosing", diagnosticCommands: [] }), deps);
+      assert.equal(out.step, "finalizing");
+      assert.deepEqual(out.diagnosticResults, []);
+    });
+  });
+
   describe("classifyRuntimeSelection (execution-selection invariant)", () => {
     function tr(overrides: Partial<TestRunResult> = {}): TestRunResult {
       return { command: [], exitCode: 0, timedOut: false, wallMs: 1, observabilityStatus: "complete", ...overrides };

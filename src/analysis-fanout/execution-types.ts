@@ -68,6 +68,23 @@ export interface ExecutionSpec {
    * A run using this MUST be labeled as a command-shape experiment, never conflated with a real
    * CI-command baseline measurement - see ExecutionRecord.testArgvOverride and the run's own subject. */
   testArgvOverride?: string[];
+  /** Diagnostic-probe mode (2026-08-24, argument-forwarding root-cause investigation): when present and
+   * non-empty, the shard runs each RAW shell command in sequence (via sandbox.exec, no argv construction
+   * or reporter-flag injection - exactly the literal command string given) after `pretest`, then goes
+   * straight to `finalizing`, skipping full-baseline/selected-baseline/mutate/mutant/revert entirely.
+   * Commands run relative to the cloned target repo's own directory. Built to compare argument-forwarding
+   * behavior (e.g. `yarn test -- --help` vs `yarn test --help`) cheaply - each command is fast (seconds),
+   * so a probe run's marginal cost over the fixed clone+install+pretest cost is small. A run using this
+   * MUST be labeled as a diagnostic probe, never conflated with a real baseline/mutant measurement. */
+  diagnosticCommands?: string[];
+}
+
+export interface DiagnosticCommandResult {
+  command: string;
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  wallMs: number;
 }
 
 export type ExecutionStep =
@@ -76,6 +93,7 @@ export type ExecutionStep =
   | "deriving-selection"
   | "installing"
   | "pretest"
+  | "diagnosing"
   | "full-baseline"
   | "selected-baseline"
   | "mutating"
@@ -174,6 +192,10 @@ export interface ExecutionRecord {
   analysisOverheadMs?: number;
   /** See ExecutionSpec.testArgvOverride - carried through verbatim when present. */
   testArgvOverride?: string[];
+  /** See ExecutionSpec.diagnosticCommands - carried through verbatim when present. */
+  diagnosticCommands?: string[];
+  /** Filled in by the `diagnosing` step, one entry per command in `diagnosticCommands`, in order. */
+  diagnosticResults?: DiagnosticCommandResult[];
   /** Set while a test-run step (full-baseline/selected-baseline/full-mutant/selected-mutant) has an
    * in-flight sandbox process; cleared once that step's result is captured. One field reused across the
    * four steps is safe because they run strictly sequentially, never concurrently - exactly the

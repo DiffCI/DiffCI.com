@@ -343,6 +343,11 @@ async function handleCreateExecution(request: Request, env: Env): Promise<Respon
   if (body.testArgvOverride !== undefined && (!Array.isArray(body.testArgvOverride) || !body.testArgvOverride.every((a) => typeof a === "string"))) {
     return json({ ok: false, error: "testArgvOverride, if provided, must be an array of strings" }, 400);
   }
+  // Diagnostic-probe mode (2026-08-24): raw shell commands, run verbatim after pretest, skipping the
+  // real baseline/mutant pipeline entirely. Same string-array discipline as testArgvOverride.
+  if (body.diagnosticCommands !== undefined && (!Array.isArray(body.diagnosticCommands) || !body.diagnosticCommands.every((a) => typeof a === "string"))) {
+    return json({ ok: false, error: "diagnosticCommands, if provided, must be an array of strings" }, 400);
+  }
   // Reject before a container is ever provisioned - execution is never silently faked/approximated for
   // a repository whose real CI test command DiffCI has not verified (repo-execution-profiles.ts).
   if (!getRepoExecutionProfile(repository)) {
@@ -387,6 +392,7 @@ async function handleCreateExecution(request: Request, env: Env): Promise<Respon
     totalTestsInGraph: typeof body.totalTestsInGraph === "number" ? body.totalTestsInGraph : undefined,
     analysisOverheadMs: body.analysisOverheadMs,
     testArgvOverride: body.testArgvOverride as string[] | undefined,
+    diagnosticCommands: body.diagnosticCommands as string[] | undefined,
   };
 
   const doStub = getExecutionDoStub(env, runId, repository, mergeSha);

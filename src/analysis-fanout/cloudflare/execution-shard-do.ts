@@ -22,7 +22,7 @@
  */
 import { parseVitestJsonReport } from "../vitest-report.js";
 import type { SandboxLike, R2BucketLike } from "../sandbox-like.js";
-import type { ExecutionRecord, ExecutionSpec, ExecutionStep, ObservabilityStatus, RepoExecutionProfile, RuntimeSelectionEvidence, TestRunResult } from "../execution-types.js";
+import type { DiagnosticCommandResult, ExecutionRecord, ExecutionSpec, ExecutionStep, ObservabilityStatus, RepoExecutionProfile, RuntimeSelectionEvidence, TestRunResult } from "../execution-types.js";
 import { getRepoExecutionProfile } from "../repo-execution-profiles.js";
 import { repoSlug } from "./analysis-shard-do.js";
 
@@ -283,10 +283,44 @@ async function pretest(record: ExecutionRecord, deps: ExecutionStepDeps): Promis
       }
     }
     record.timings.pretestMs = deps.now() - t0;
-    record.step = "full-baseline";
+    // Diagnostic-probe mode (2026-08-24): a run supplying diagnosticCommands skips the real
+    // baseline/mutant measurement pipeline entirely - it exists to answer a narrower question
+    // (argument-forwarding behavior) cheaply, not to measure economics.
+    record.step = record.diagnosticCommands && record.diagnosticCommands.length > 0 ? "diagnosing" : "full-baseline";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {
     return failExecution(record, "pretest-failed", err instanceof Error ? err.message : String(err));
+  }
+}
+
+/**
+ * Runs each of `record.diagnosticCommands` in sequence, RAW - no argv construction, no reporter-flag
+ * injection, exactly the literal string supplied. Each command is short-lived (a `--help`/`--list`/
+ * invalid-flag probe, not a real test run), so a single bounded `sandbox.exec` per command is
+ * appropriate (not startProcess+poll). Captures full stdout/stderr (not truncated to a tail - these
+ * outputs are expected to be short) regardless of exit code, so a "this flag doesn't exist" error is
+ * itself useful diagnostic evidence, not a failure to propagate.
+ */
+async function diagnose(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> {
+  const { sandbox } = deps;
+  try {
+    const dir = workDir(record);
+    const results: DiagnosticCommandResult[] = [];
+    for (const command of record.diagnosticCommands ?? []) {
+      const t0 = deps.now();
+      let res: { exitCode: number; stdout: string; stderr: string };
+      try {
+        res = await sandbox.exec(`cd ${dir} && ${command}`, { timeout: 60_000 });
+      } catch (err) {
+        res = { exitCode: -1, stdout: "", stderr: err instanceof Error ? err.message : String(err) };
+      }
+      results.push({ command, exitCode: res.exitCode, stdout: res.stdout, stderr: res.stderr, wallMs: deps.now() - t0 });
+    }
+    record.diagnosticResults = results;
+    record.step = "finalizing";
+    return { record, nextAlarmDelayMs: 0 };
+  } catch (err) {
+    return failExecution(record, "diagnose-failed", err instanceof Error ? err.message : String(err));
   }
 }
 
@@ -577,6 +611,7 @@ export async function stepExecution(record: ExecutionRecord, deps: ExecutionStep
     case "deriving-selection": return deriveSelection(record, deps);
     case "installing": return install(record, deps);
     case "pretest": return pretest(record, deps);
+    case "diagnosing": return diagnose(record, deps);
     case "full-baseline": return fullBaseline(record, deps);
     case "selected-baseline": return selectedBaseline(record, deps);
     case "mutating": return mutate(record, deps);
@@ -606,6 +641,7 @@ export function seedExecutionRecord(spec: ExecutionSpec, shape: string, now: num
     totalTestsInGraph: spec.totalTestsInGraph,
     analysisOverheadMs: spec.analysisOverheadMs,
     testArgvOverride: spec.testArgvOverride,
+    diagnosticCommands: spec.diagnosticCommands,
     timings: {},
     startedAt: now,
     heartbeatAt: now,
