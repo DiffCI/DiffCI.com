@@ -310,7 +310,11 @@ async function diagnose(record: ExecutionRecord, deps: ExecutionStepDeps): Promi
       const t0 = deps.now();
       let res: { exitCode: number; stdout: string; stderr: string };
       try {
-        res = await sandbox.exec(`cd ${dir} && ${command}`, { timeout: 60_000 });
+        // Generous timeout, not a tight one: most probe commands (--help/--list/invalid-flag) finish in
+        // seconds, but a candidate command that turns out NOT to narrow execution could run the full
+        // ~240s suite - that outcome is itself real diagnostic evidence and must be allowed to complete
+        // and be captured, not killed early and misread as a hang.
+        res = await sandbox.exec(`cd ${dir} && ${command}`, { timeout: 5 * 60_000 });
       } catch (err) {
         res = { exitCode: -1, stdout: "", stderr: err instanceof Error ? err.message : String(err) };
       }
