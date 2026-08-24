@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { POLL_MS, classifyRuntimeSelection, seedExecutionRecord, stepExecution } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
+import { POLL_MS, classifyRuntimeSelection, sandboxContainerId, seedExecutionRecord, stepExecution } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
 import type { ExecutionStepDeps } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
 import type { R2BucketLike, R2ObjectBodyLike, SandboxLike } from "../../src/analysis-fanout/sandbox-like.js";
 import type { ExecutionRecord, ExecutionSpec, RepoExecutionProfile, TestRunResult } from "../../src/analysis-fanout/execution-types.js";
@@ -288,6 +288,25 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     assert.equal(out.step, "failed");
     assert.equal(out.errorClass, "pretest-failed");
     assert.ok(execCalls.some((c) => c.command.includes("prisma generate")));
+  });
+
+  describe("sandboxContainerId (concurrent-run isolation)", () => {
+    it("two different runIds targeting the same merge get DIFFERENT container names - 2026-08-24 collision fix", () => {
+      const base = { repository: "calcom/cal.diy", mergeSha: "176037d0afbe572f870a3c702985e7cd83fe6c0c" };
+      const idA = sandboxContainerId({ ...base, runId: "exec-calcom-29940-1787565401" });
+      const idB = sandboxContainerId({ ...base, runId: "exec-calcom-29940-diag2" });
+      assert.notEqual(idA, idB);
+    });
+
+    it("the same runId+repo+mergeSha always yields the same id - resumability across alarms depends on this", () => {
+      const rec = { repository: "calcom/cal.diy", mergeSha: "176037d0afbe572f870a3c702985e7cd83fe6c0c", runId: "exec-calcom-29940-diag2" };
+      assert.equal(sandboxContainerId(rec), sandboxContainerId(rec));
+    });
+
+    it("sanitizes non-alphanumeric characters out of runId rather than producing an invalid container name", () => {
+      const id = sandboxContainerId({ repository: "calcom/cal.diy", mergeSha: "b".repeat(40), runId: "exec:calcom/29940 diag" });
+      assert.doesNotMatch(id, /[:/ ]/);
+    });
   });
 
   describe("classifyRuntimeSelection (execution-selection invariant)", () => {

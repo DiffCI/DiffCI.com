@@ -96,6 +96,19 @@ function workDir(record: ExecutionRecord): string {
   return `/workspace/${repoSlug(record.repository)}`;
 }
 
+/**
+ * The sandbox container's own name (2026-08-24 fix): MUST include `runId`, not just repo+mergeSha - two
+ * different runs targeting the same merge (e.g. a diagnostic rerun of a prior run, or two concurrent
+ * analyses) would otherwise land on the SAME underlying container and the SAME report file paths inside
+ * it (`/workspace/full-baseline.json` etc.), silently corrupting or overwriting each other's evidence.
+ * Truncated/sanitized since `runId` can be up to 128 chars and container names have practical limits;
+ * collision risk from truncation is negligible for the runId patterns this harness actually generates.
+ */
+export function sandboxContainerId(record: Pick<ExecutionRecord, "repository" | "mergeSha" | "runId">): string {
+  const safeRunId = record.runId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 24);
+  return `exec-${repoSlug(record.repository)}-${record.mergeSha.slice(0, 10)}-${safeRunId}`;
+}
+
 function reportPath(reportName: string): string {
   return `/workspace/${reportName}.json`;
 }
@@ -654,7 +667,7 @@ export class AnalysisExecutionShard {
     // alarms and evictions, exactly like AnalysisShard. `@cloudflare/sandbox` is imported lazily so the
     // pure state machine (`stepExecution` and its helpers) stays loadable under Node/tsx for tests.
     const { getSandbox } = await import("@cloudflare/sandbox");
-    const sandbox: SandboxLike = getSandbox(this.env.ANALYSIS_SHARD_CONTAINER, `exec-${repoSlug(record.repository)}-${record.mergeSha.slice(0, 10)}`, SANDBOX_OPTS);
+    const sandbox: SandboxLike = getSandbox(this.env.ANALYSIS_SHARD_CONTAINER, sandboxContainerId(record), SANDBOX_OPTS);
     const profile = getRepoExecutionProfile(record.repository);
     if (!profile) {
       record.step = "failed";
