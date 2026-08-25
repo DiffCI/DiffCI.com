@@ -533,7 +533,25 @@ async function mutate(record: ExecutionRecord, deps: ExecutionStepDeps): Promise
     // against a LOCAL filesystem/process, which has no meaning inside this DO - the actual git checkout
     // lives inside the remote sandbox container, reachable only through sandbox.exec/startProcess. The
     // change-detection query mutation.ts leaves to its caller is done here with a plain `git diff`.
-    const changed = (await sandbox.exec(`cd ${dir} && git diff --name-only ${record.baseSha} ${record.mergeSha} -- . ':!*.test.ts' ':!*.spec.ts'`, { timeout: 30_000 })).stdout.trim().split(/\r?\n/).filter(Boolean);
+    // Pathspec exclusions (2026-08-25 fix, DeepSeek execution-validation mission): the original list
+    // (`.test.ts`/`.spec.ts` only) let `git diff --name-only`'s alphabetical ordering pick a DOCS file
+    // ahead of the real source change whenever a merge touched both - confirmed on PR #2808
+    // (deepseek-ai/deepseek-harness): its own lexicographically-first non-`.test.ts`/`.spec.ts` path was
+    // `.agents/notes/implemented/bug-fix/2026-08-20-explicit-web-index-paths.i18n.yaml`, a translation
+    // file with no test coverage anywhere - not `packages/host/frontend-static/src/index.ts`, the file
+    // the PR's own subject and selected tests are actually about. Mutating a docs file would have made
+    // recall look silently unmeasurable for a merge Report 03's predeclared, source-category-aware policy
+    // (computed independently, before this was found) had already identified a real mutation target for.
+    // This exclusion list is a generic heuristic approximation of that same "ordinary source only" intent
+    // - it does not reach DiffCI's own full `changedFileCategories` classifier (config/manifest/lockfile
+    // changes are not excluded here), which is acceptable because merges with those triggers already fall
+    // back at the selection-engine level and never reach `SAFE_TO_PROPOSE` in the first place.
+    const changed = (await sandbox.exec(
+      `cd ${dir} && git diff --name-only ${record.baseSha} ${record.mergeSha} -- . ` +
+        `':!*.test.ts' ':!*.spec.ts' ':!*.test.tsx' ':!*.spec.tsx' ':!*.e2e.ts' ':!*.snapshot.ts' ` +
+        `':!*.md' ':!*.i18n.yaml'`,
+      { timeout: 30_000 },
+    )).stdout.trim().split(/\r?\n/).filter(Boolean);
     if (changed.length === 0) {
       record.mutation = { path: "", applied: false, skippedReason: "no non-test source file changed by this merge" };
       record.step = "reverting"; // nothing to mutate; skip straight to a no-op revert and finalize

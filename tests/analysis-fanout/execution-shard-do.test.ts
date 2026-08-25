@@ -745,6 +745,28 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       assert.equal(out.mutation?.path, "apps/web/bar.ts");
       assert.ok(execCalls.some((c) => c.command.includes(`git show ${"a".repeat(40)}:apps/web/bar.ts`)));
     });
+
+    it("PR #2808 regression (2026-08-25 fix): excludes docs/i18n and other test-family extensions from the " +
+      "pathspec, not just .test.ts/.spec.ts - on deepseek-ai/deepseek-harness the alphabetically-first " +
+      "non-test path was a .i18n.yaml translation file with no test coverage, not the real source change", async () => {
+      const { sandbox, execCalls } = makeSandbox({
+        exec: (cmd) => {
+          // Real command still includes the exclusions - a mock that only honors the OLD exclusion list
+          // would incorrectly still emit the docs file, so assert on the constructed command directly.
+          if (cmd.includes("git diff --name-only")) return { stdout: "packages/host/frontend-static/src/index.ts\n" };
+          if (cmd.includes("git cat-file -e")) return { stdout: "yes\n" };
+          return undefined;
+        },
+      });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "mutating" }), deps);
+      assert.equal(out.mutation?.path, "packages/host/frontend-static/src/index.ts");
+      const diffCmd = execCalls.find((c) => c.command.includes("git diff --name-only"))!.command;
+      for (const excluded of ["*.test.ts", "*.spec.ts", "*.test.tsx", "*.spec.tsx", "*.e2e.ts", "*.snapshot.ts", "*.md", "*.i18n.yaml"]) {
+        assert.ok(diffCmd.includes(`':!${excluded}'`), `expected pathspec to exclude ${excluded}, got: ${diffCmd}`);
+      }
+    });
   });
 
   it("full-mutant is skipped straight to reverting when no mutation was applied", async () => {
