@@ -890,6 +890,24 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
     economicsBeneficial: economics?.economicallyBeneficial ?? false,
     finalActivation,
   };
+
+  // Same gate, applied to the MUTANT phase when one ran (2026-08-25) - the baseline decision above answers
+  // "is this commit safe to activate selective execution for"; this one answers the narrower, equally
+  // real question the mutation mechanism exists to test: when a genuine new failure IS present (the
+  // reverted fix), does the selected suite's own result actually contain it. Reuses the identical
+  // baselineSafety/fingerprint/selectionSafe/economics - those are properties of the RUN, not the phase.
+  if (record.mutant) {
+    const mutantFullObserved = record.mutant.full.observabilityStatus === "complete" ? record.mutant.full.failedTests : undefined;
+    const mutantSelectedObserved = record.mutant.selected.observabilityStatus === "complete" ? (record.mutant.selected.failedTests ?? []) : [];
+    record.mutantActivationDecision = decideFinalActivation({
+      selectionSafe,
+      economicsBeneficial: economics?.economicallyBeneficial ?? false,
+      baselineSafety,
+      fingerprint,
+      fullObservedFailures: mutantFullObserved,
+      selectedObservedFailures: mutantSelectedObserved,
+    });
+  }
 }
 
 async function finalize(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> {

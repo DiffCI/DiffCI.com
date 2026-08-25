@@ -287,6 +287,17 @@ export interface ExecutionRecord {
       newFailuresMissedBySelection: readonly string[];
     };
   };
+  /** Same shape as `activationDecision.finalActivation`, applied to the mutant phase instead of baseline
+   * (2026-08-25) - present only when `mutant` exists. Answers whether the selected suite's own results
+   * contain the deliberate mutation's real new failure, using the identical fingerprint/baselineSafety as
+   * the baseline decision (properties of the run, not the phase). */
+  mutantActivationDecision?: {
+    decision: string;
+    explanation: string;
+    newFailuresInFull: readonly string[];
+    newFailuresInSelected: readonly string[];
+    newFailuresMissedBySelection: readonly string[];
+  };
   lastError?: string;
   errorClass?: string;
   startedAt: number;

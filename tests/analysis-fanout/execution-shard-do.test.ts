@@ -1205,6 +1205,66 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         assert.equal(out.activationDecision!.finalActivation.decision, "REFUSE_NEW_FAILURE_NOT_PRESERVED");
         assert.deepEqual(out.activationDecision!.finalActivation.newFailuresMissedBySelection, ["new-regression.spec.ts :: broken"]);
       });
+
+      it("also evaluates the MUTANT phase (same fingerprint/gate) when a mutation ran - the real PR #2808 shape: recall preserved, so EXECUTE_SELECTIVELY, not a refusal", async () => {
+        const { sandbox } = makeSandbox();
+        const fpKey = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+        const { bucket } = makeBucket({
+          [fpKey]: JSON.stringify({
+            repository: "calcom/cal.diy", branch: "unknown", baseSha: "a".repeat(40), environmentIdentity: "root",
+            testFamily: "unit", commandIdentity: "test -- --no-isolate", knownFailures: ["unrelated.spec.ts :: z"], establishedAtMs: 1000,
+          }),
+        });
+        const { deps } = makeDeps(sandbox, bucket, 2000);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["unrelated.spec.ts :: z"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+          mutation: { path: "apps/web/lib/foo.ts", applied: true },
+          mutant: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 2, failedTests: ["unrelated.spec.ts :: z", "real-regression.spec.ts :: caught"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: ["real-regression.spec.ts :: caught"], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.ok(out.mutantActivationDecision);
+        assert.deepEqual(out.mutantActivationDecision!.newFailuresInFull, ["real-regression.spec.ts :: caught"]);
+        assert.deepEqual(out.mutantActivationDecision!.newFailuresMissedBySelection, []);
+        assert.equal(out.mutantActivationDecision!.decision, "EXECUTE_SELECTIVELY");
+      });
+
+      it("mutant-phase evaluation REFUSES when the mutation's own real failure is missed by the selected suite", async () => {
+        const { sandbox } = makeSandbox();
+        const fpKey = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+        const { bucket } = makeBucket({
+          [fpKey]: JSON.stringify({
+            repository: "calcom/cal.diy", branch: "unknown", baseSha: "a".repeat(40), environmentIdentity: "root",
+            testFamily: "unit", commandIdentity: "test -- --no-isolate", knownFailures: [], establishedAtMs: 1000,
+          }),
+        });
+        const { deps } = makeDeps(sandbox, bucket, 2000);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 0, timedOut: false, wallMs: 100_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+          mutation: { path: "apps/web/lib/foo.ts", applied: true },
+          mutant: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: ["missed-regression.spec.ts :: whoops"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, failedTests: [], observabilityStatus: "complete" }, // selected never saw it
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.equal(out.mutantActivationDecision!.decision, "REFUSE_NEW_FAILURE_NOT_PRESERVED");
+        assert.deepEqual(out.mutantActivationDecision!.newFailuresMissedBySelection, ["missed-regression.spec.ts :: whoops"]);
+      });
     });
   });
 
