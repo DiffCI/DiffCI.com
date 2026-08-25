@@ -1,0 +1,137 @@
+{
+  "name": "DeepSeek execution-validation predeclared 5-merge corpus",
+  "generatedFrom": "2026-08-25-deepseek-v2-engine-canonical-replay-rows.jsonl",
+  "engineChecksum": "f6fd3ec007181beb779c7f078ee52aa4017d44af71e1423e2cabf700c0d9ae87",
+  "selectionRule": "eligible = SAFE_TO_PROPOSE, no fallback, affectedTests>=1, selectedTestsByFamily.unit>=1; sort ascending by affectedTests/totalTestsInGraph (ties broken by manifest index); partition into 5 approx-even quantiles by rank position (Math.floor(q*n/5)); pick the earliest manifest-ordered (lowest index = newest) merge within each quantile bucket. n=14 eligible.",
+  "generatedAt": "2026-08-25T03:27:49.661Z",
+  "corpus": [
+    {
+      "prNumber": 2760,
+      "manifestIndex": 6,
+      "mergeSha": "b7135e620674ef022a26a1d2cc87b79668790e7a",
+      "baseSha": "b70f27f764e014287faef04858e00822c4d138f2",
+      "subject": "Merge pull request #2760 from deepseek-harness/fix/continuation-cleanup-temp-handles",
+      "changedFiles": 1,
+      "changedFileCategories": {
+        "test": 1
+      },
+      "analysisStatus": "SAFE_TO_PROPOSE",
+      "selectedTestsByFamily": {
+        "unit": 1
+      },
+      "affectedTests": 1,
+      "totalTestsInGraph": 1027,
+      "selectionPercent": 0.0974,
+      "mutationTargetAvailable": false,
+      "expectedCommandFamilies": [
+        "unit"
+      ]
+    },
+    {
+      "prNumber": 2808,
+      "manifestIndex": 16,
+      "mergeSha": "c71ff384cc80f8cfba5f364c5e2fefec1d69f28d",
+      "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+      "subject": "Merge pull request #2808 from deepseek-harness/fix/frontend-static-miss-404",
+      "changedFiles": 15,
+      "changedFileCategories": {
+        "docs": 4,
+        "asset": 8,
+        "config": 1,
+        "source": 1,
+        "test": 1
+      },
+      "analysisStatus": "SAFE_TO_PROPOSE",
+      "selectedTestsByFamily": {
+        "unit": 4
+      },
+      "affectedTests": 4,
+      "totalTestsInGraph": 1026,
+      "selectionPercent": 0.3899,
+      "mutationTargetAvailable": true,
+      "expectedCommandFamilies": [
+        "unit"
+      ]
+    },
+    {
+      "prNumber": 1373,
+      "manifestIndex": 17,
+      "mergeSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+      "baseSha": "e3248cc89325dfd1f23ef18075555f3c4920578a",
+      "subject": "Merge pull request #1373 from deepseek-harness/codex/remove-cordis-catalog-line-numbers",
+      "changedFiles": 134,
+      "changedFileCategories": {
+        "docs": 44,
+        "asset": 88,
+        "source": 1,
+        "test": 1
+      },
+      "analysisStatus": "SAFE_TO_PROPOSE",
+      "selectedTestsByFamily": {
+        "unit": 6
+      },
+      "affectedTests": 6,
+      "totalTestsInGraph": 1026,
+      "selectionPercent": 0.5848,
+      "mutationTargetAvailable": true,
+      "expectedCommandFamilies": [
+        "unit"
+      ]
+    },
+    {
+      "prNumber": 2814,
+      "manifestIndex": 13,
+      "mergeSha": "a67b9a4d31e9e9312cca3aa5fbb3dff299ef8388",
+      "baseSha": "5951d19f58afbc190d3485e23660c8ffbc0c59ed",
+      "subject": "Merge pull request #2814 from deepseek-harness/fix/composer-edit-range-attribution",
+      "changedFiles": 7,
+      "changedFileCategories": {
+        "docs": 1,
+        "asset": 3,
+        "test": 2,
+        "source": 1
+      },
+      "analysisStatus": "SAFE_TO_PROPOSE",
+      "selectedTestsByFamily": {
+        "e2e": 1,
+        "unit": 59
+      },
+      "affectedTests": 60,
+      "totalTestsInGraph": 1026,
+      "selectionPercent": 5.848,
+      "mutationTargetAvailable": true,
+      "expectedCommandFamilies": [
+        "unit"
+      ]
+    },
+    {
+      "prNumber": 2844,
+      "manifestIndex": 14,
+      "mergeSha": "5951d19f58afbc190d3485e23660c8ffbc0c59ed",
+      "baseSha": "0864878cd094333ffa9c8d1406ed88648c6e26fb",
+      "subject": "Merge pull request #2844 from deepseek-harness/fix/turn-error-survives-retry-exhaustion",
+      "changedFiles": 21,
+      "changedFileCategories": {
+        "docs": 5,
+        "asset": 11,
+        "test": 2,
+        "source": 3
+      },
+      "analysisStatus": "SAFE_TO_PROPOSE",
+      "selectedTestsByFamily": {
+        "untagged": 1,
+        "e2e": 71,
+        "snapshot": 9,
+        "unit": 173
+      },
+      "affectedTests": 254,
+      "totalTestsInGraph": 1026,
+      "selectionPercent": 24.7563,
+      "mutationTargetAvailable": true,
+      "expectedCommandFamilies": [
+        "unit"
+      ]
+    }
+  ],
+  "manifestHash": "3d42deea836c66281d0e8f718f09f783cafcc15351333a60a4c26ab2f95e3c9b"
+}
