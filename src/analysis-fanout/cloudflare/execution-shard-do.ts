@@ -25,6 +25,8 @@ import type { SandboxLike, R2BucketLike } from "../sandbox-like.js";
 import type { DiagnosticCommandResult, ExecutionRecord, ExecutionSpec, ExecutionStep, ObservabilityStatus, RepoExecutionProfile, RuntimeSelectionEvidence, TestRunResult } from "../execution-types.js";
 import { getRepoExecutionProfile } from "../repo-execution-profiles.js";
 import { repoSlug } from "./analysis-shard-do.js";
+import { decideActivation } from "../activation-gate.js";
+import { decideBaselineSafety, decideFinalActivation, type BaselineFingerprint } from "../baseline-fingerprint-gate.js";
 
 export const SHAPE = "standard-4"; // installs are heavy (cal.com: 3582 packages, native builds, ~20 min)
 /** How long the shard sleeps between poll alarms while a test-run process is in flight. */
@@ -95,6 +97,22 @@ const NON_ROOT_UID = 1001;
 function wrapNonRoot(cmd: string, runAsNonRoot: boolean | undefined): string {
   if (!runAsNonRoot) return cmd;
   return `su - ${NON_ROOT_USER} -c '${cmd.replace(/'/g, "'\\''")}'`;
+}
+
+/** Baseline-fingerprint identity (2026-08-25, hard-wired enforcement round). All four values are part of
+ * the fingerprint STORE KEY (not just fields checked post-fetch) - a mismatch on any of them means the
+ * fetch itself finds nothing (REFUSE_NO_FINGERPRINT), not a stale/wrong object that then has to be
+ * detected by content comparison. `decideBaselineSafety` still re-verifies every field against the fetched
+ * object's own content as defense-in-depth against a key-scheme bug. */
+function environmentIdentityOf(record: Pick<ExecutionRecord, "runAsNonRoot">): string {
+  return record.runAsNonRoot ? "nonroot" : "root";
+}
+function commandIdentityOf(profile: RepoExecutionProfile, record: Pick<ExecutionRecord, "testArgvOverride">): string {
+  return (record.testArgvOverride ?? profile.testArgv).join(" ");
+}
+const TEST_FAMILY = "unit"; // the only family this harness executes end-to-end this mission - see repo-execution-profiles.ts
+function fingerprintKey(repository: string, branch: string, baseSha: string, environmentIdentity: string, testFamily: string, commandIdentity: string): string {
+  return `fingerprints/${repoSlug(repository)}/${encodeURIComponent(branch)}/${baseSha}/${environmentIdentity}__${testFamily}__${encodeURIComponent(commandIdentity)}.json`;
 }
 
 function packageManagerBin(profile: RepoExecutionProfile, forRun: boolean): string {
@@ -757,10 +775,128 @@ function computeEconomicsAndRecall(record: ExecutionRecord): void {
   }
 }
 
+/**
+ * Reads a stored BaselineFingerprint from R2, if one exists at the exact identity key. Never throws on a
+ * missing/corrupt object - a fingerprint that can't be read is exactly the same as one that was never
+ * written, from the safety gate's point of view (REFUSE_NO_FINGERPRINT), never a hard failure of the run
+ * it's being consulted for.
+ */
+async function readFingerprint(bucket: R2BucketLike, key: string): Promise<BaselineFingerprint | undefined> {
+  try {
+    const obj = await bucket.get(key);
+    if (!obj) return undefined;
+    return JSON.parse(await obj.text()) as BaselineFingerprint;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Hard-wired baseline-fingerprint enforcement (2026-08-25) - runs inside `finalize()`, the one place every
+ * execution path (real merge run or base-SHA control run) already converges, so there is no separate
+ * "did the caller remember to check the gate" step to skip. Two roles, mutually exclusive per run:
+ *
+ *   - A base-SHA CONTROL run (`record.mergeSha === record.baseSha`, exactly the shape Reports 12/14 used
+ *     manually) with a complete full-baseline observation WRITES a fresh fingerprint - this is how a
+ *     trusted fingerprint comes to exist at all, automatically, from the same mechanism this mission
+ *     already proved out, not a separate manual step.
+ *   - A real merge run READS whatever fingerprint exists at its own identity key and computes the full
+ *     `decideFinalActivation` verdict, persisted on the record as `activationDecision` - this IS the
+ *     enforcement: the decision is computed and stored for every real run, unconditionally, not only when
+ *     a caller happens to ask for it.
+ *
+ * Never throws - a fingerprint-store failure (read or write) degrades to "no fingerprint," the same
+ * conservative default as one never having been written, rather than failing the whole execution over a
+ * concern this run's own core measurement doesn't depend on.
+ */
+async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<void> {
+  const { bucket, profile, now } = deps;
+  const branch = record.branch ?? "unknown";
+  const environmentIdentity = environmentIdentityOf(record);
+  const commandIdentity = commandIdentityOf(profile, record);
+  const key = fingerprintKey(record.repository, branch, record.baseSha, environmentIdentity, TEST_FAMILY, commandIdentity);
+
+  if (record.mergeSha === record.baseSha) {
+    // Base-SHA control run: persist what THIS run itself observed, if it observed anything usable.
+    if (record.baseline?.full?.observabilityStatus === "complete") {
+      const fingerprint: BaselineFingerprint = {
+        repository: record.repository,
+        branch,
+        baseSha: record.baseSha,
+        environmentIdentity,
+        testFamily: TEST_FAMILY,
+        commandIdentity,
+        knownFailures: record.baseline.full.failedTests ?? [],
+        establishedAtMs: now(),
+      };
+      try {
+        await bucket.put(key, JSON.stringify(fingerprint, null, 2));
+        record.fingerprintPersisted = { key, knownFailureCount: fingerprint.knownFailures.length };
+      } catch {
+        /* best-effort - a failed write just means the next real run sees REFUSE_NO_FINGERPRINT, not a hard failure of this control run */
+      }
+    }
+    return;
+  }
+
+  // Real merge run: read, decide, and record - unconditionally, not only on request.
+  const fingerprint = await readFingerprint(bucket, key);
+  const baselineSafety = decideBaselineSafety({
+    repository: record.repository,
+    branch,
+    currentBaseSha: record.baseSha,
+    environmentIdentity,
+    testFamily: TEST_FAMILY,
+    commandIdentity,
+    fingerprint,
+    maxFingerprintAgeMs: 7 * 24 * 3_600_000, // 7 days - provisional, not yet tuned against real repository drift rates
+    nowMs: now(),
+  });
+
+  const selectionSafe = record.runtimeSelection?.status === "HONORED_EXACTLY" || record.runtimeSelection?.status === "HONORED_WITH_FRAMEWORK_EXPANSION";
+  // Reuses the EXISTING economic gate (activation-gate.ts) rather than a second, inconsistent economics
+  // check - single-sample (this one run), so its own lowConfidence flag applies exactly as it does
+  // everywhere else this module is used in this mission.
+  const economics = record.baseline && record.analysisOverheadMs !== undefined
+    ? decideActivation({
+        correctnessSafe: selectionSafe,
+        samples: [{ fullMs: record.baseline.full.wallMs, selectedMs: record.baseline.selected.wallMs }],
+        analysisOverheadMs: record.analysisOverheadMs,
+        executionPlanningOverheadMs: 0,
+        uncertaintyMarginFraction: 0.05,
+      })
+    : undefined;
+
+  const fullObservedFailures = record.baseline?.full?.observabilityStatus === "complete" ? record.baseline.full.failedTests : undefined;
+  const selectedObservedFailures = record.baseline?.selected?.observabilityStatus === "complete" ? (record.baseline.selected.failedTests ?? []) : [];
+
+  const finalActivation = decideFinalActivation({
+    selectionSafe,
+    economicsBeneficial: economics?.economicallyBeneficial ?? false,
+    baselineSafety,
+    fingerprint,
+    fullObservedFailures,
+    selectedObservedFailures,
+  });
+
+  record.activationDecision = {
+    branch,
+    environmentIdentity,
+    testFamily: TEST_FAMILY,
+    commandIdentity,
+    fingerprintKey: key,
+    fingerprintFound: fingerprint !== undefined,
+    baselineSafety,
+    economicsBeneficial: economics?.economicallyBeneficial ?? false,
+    finalActivation,
+  };
+}
+
 async function finalize(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> {
   const { sandbox, bucket } = deps;
   try {
     computeEconomicsAndRecall(record);
+    await applyBaselineFingerprintGate(record, deps);
     record.finishedAt = deps.now();
     const failed = record.errorClass !== undefined;
     record.step = failed ? "failed" : "done";
@@ -826,6 +962,7 @@ export function seedExecutionRecord(spec: ExecutionSpec, shape: string, now: num
     testArgvOverride: spec.testArgvOverride,
     diagnosticCommands: spec.diagnosticCommands,
     runAsNonRoot: spec.runAsNonRoot,
+    branch: spec.branch,
     timings: {},
     startedAt: now,
     heartbeatAt: now,

@@ -92,6 +92,11 @@ export interface ExecutionSpec {
    * root (chown makes the tree readable/writable by the new user regardless - only the TEST PROCESS's own
    * UID is the variable under test). Opt-in, per-run, never a profile default. */
   runAsNonRoot?: boolean;
+  /** Baseline-fingerprint identity (2026-08-25, hard-wired enforcement round - see
+   * baseline-fingerprint-gate.ts). Part of the fingerprint store key alongside repository/baseSha/
+   * environmentIdentity/testFamily/commandIdentity. Undefined defaults to "unknown" - never guessed as
+   * "main"/"master", since a wrong guess would silently mix fingerprints across branches. */
+  branch?: string;
 }
 
 export interface DiagnosticCommandResult {
@@ -256,6 +261,31 @@ export interface ExecutionRecord {
     /** True only when fullSuiteCaughtMutant is true; a full-suite miss makes recall unmeasurable, not
      * a false "safe" - reported as such, never silently treated as a selected-suite success. */
     recallMeasurable: boolean;
+  };
+  /** See ExecutionSpec.branch - carried through verbatim when present. */
+  branch?: string;
+  /** Set only for a base-SHA control run (mergeSha === baseSha) whose full baseline observed cleanly -
+   * confirms a BaselineFingerprint was written to R2 at this key (2026-08-25, baseline-fingerprint-gate.ts). */
+  fingerprintPersisted?: { key: string; knownFailureCount: number };
+  /** Set for every REAL merge run (mergeSha !== baseSha) in `finalize()`, unconditionally - the hard-wired
+   * differential-baseline safety verdict (2026-08-25), never only computed on request. See
+   * baseline-fingerprint-gate.ts's decideBaselineSafety/decideFinalActivation for the field shapes. */
+  activationDecision?: {
+    branch: string;
+    environmentIdentity: string;
+    testFamily: string;
+    commandIdentity: string;
+    fingerprintKey: string;
+    fingerprintFound: boolean;
+    baselineSafety: { decision: string; explanation: string; fingerprintAgeMs?: number };
+    economicsBeneficial: boolean;
+    finalActivation: {
+      decision: string;
+      explanation: string;
+      newFailuresInFull: readonly string[];
+      newFailuresInSelected: readonly string[];
+      newFailuresMissedBySelection: readonly string[];
+    };
   };
   lastError?: string;
   errorClass?: string;

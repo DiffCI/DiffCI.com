@@ -1059,6 +1059,153 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       assert.equal(out.errorClass, "finalize-failed");
       assert.equal(isDestroyed(), true);
     });
+
+    describe("baseline-fingerprint gate (2026-08-25, hard-wired enforcement)", () => {
+      it("a base-SHA control run (mergeSha === baseSha) with a complete full baseline PERSISTS a fingerprint to R2", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket, putCalls } = makeBucket();
+        const { deps } = makeDeps(sandbox, bucket, 5000);
+        const rec = record({
+          step: "finalizing",
+          mergeSha: "a".repeat(40), // same as baseSha - a control run, not a real merge
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 2, failedTests: ["a.spec.ts :: x", "b.spec.ts :: y"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.ok(out.fingerprintPersisted);
+        assert.equal(out.fingerprintPersisted!.knownFailureCount, 2);
+        const fpPut = putCalls.find((c) => c.key.startsWith("fingerprints/"));
+        assert.ok(fpPut, "expected a fingerprints/ R2 write");
+        assert.equal(fpPut!.key, `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`);
+        const written = JSON.parse(fpPut!.value as string);
+        assert.deepEqual(written.knownFailures, ["a.spec.ts :: x", "b.spec.ts :: y"]);
+        assert.equal(written.establishedAtMs, 5000);
+        // A control run never computes an activation decision for itself - there is no "merge" to activate.
+        assert.equal(out.activationDecision, undefined);
+      });
+
+      it("a control run whose full baseline never completed (missing-report) does NOT persist a fingerprint", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket, putCalls } = makeBucket();
+        const { deps } = makeDeps(sandbox, bucket);
+        const rec = record({
+          step: "finalizing",
+          mergeSha: "a".repeat(40),
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, observabilityStatus: "missing-report" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.equal(out.fingerprintPersisted, undefined);
+        assert.equal(putCalls.some((c) => c.key.startsWith("fingerprints/")), false);
+      });
+
+      it("a real merge run with NO fingerprint on record gets REFUSE_NO_FINGERPRINT, computed and stored unconditionally", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket } = makeBucket(); // empty - no fingerprint object exists
+        const { deps } = makeDeps(sandbox, bucket);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["unrelated.spec.ts :: z"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.ok(out.activationDecision);
+        assert.equal(out.activationDecision!.fingerprintFound, false);
+        assert.equal(out.activationDecision!.baselineSafety.decision, "REFUSE_NO_FINGERPRINT");
+        assert.equal(out.activationDecision!.finalActivation.decision, "REFUSE_BASELINE_UNSAFE");
+      });
+
+      it("a real merge run with a matching, fresh fingerprint that fully explains the observed failures ACTIVATEs end to end", async () => {
+        const { sandbox } = makeSandbox();
+        const fpKey = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+        const storedFingerprint = {
+          repository: "calcom/cal.diy",
+          branch: "unknown",
+          baseSha: "a".repeat(40),
+          environmentIdentity: "root",
+          testFamily: "unit",
+          commandIdentity: "test -- --no-isolate",
+          knownFailures: ["unrelated.spec.ts :: z"],
+          establishedAtMs: 1000,
+        };
+        const { bucket } = makeBucket({ [fpKey]: JSON.stringify(storedFingerprint) });
+        const { deps } = makeDeps(sandbox, bucket, 2000); // 1 second after establishedAtMs - well within the 7-day window
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["unrelated.spec.ts :: z"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.equal(out.activationDecision!.fingerprintFound, true);
+        assert.equal(out.activationDecision!.baselineSafety.decision, "ACTIVATE");
+        assert.equal(out.activationDecision!.finalActivation.decision, "EXECUTE_SELECTIVELY");
+        assert.deepEqual(out.activationDecision!.finalActivation.newFailuresInFull, []);
+      });
+
+      it("a real merge run under a DIFFERENT environment (root vs the fingerprint's nonroot) never finds the fingerprint - proves environment changes invalidate it", async () => {
+        const { sandbox } = makeSandbox();
+        // Stored under nonroot's key; this run is plain root (runAsNonRoot unset).
+        const fpKeyNonroot = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/nonroot__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+        const { bucket } = makeBucket({
+          [fpKeyNonroot]: JSON.stringify({
+            repository: "calcom/cal.diy", branch: "unknown", baseSha: "a".repeat(40), environmentIdentity: "nonroot",
+            testFamily: "unit", commandIdentity: "test -- --no-isolate", knownFailures: ["unrelated.spec.ts :: z"], establishedAtMs: 1000,
+          }),
+        });
+        const { deps } = makeDeps(sandbox, bucket, 2000);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["unrelated.spec.ts :: z"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.equal(out.activationDecision!.environmentIdentity, "root");
+        assert.equal(out.activationDecision!.fingerprintFound, false);
+        assert.equal(out.activationDecision!.baselineSafety.decision, "REFUSE_NO_FINGERPRINT");
+      });
+
+      it("a real merge run where the full suite shows a NEW failure the selected suite's own results do not contain REFUSES activation", async () => {
+        const { sandbox } = makeSandbox();
+        const fpKey = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+        const { bucket } = makeBucket({
+          [fpKey]: JSON.stringify({
+            repository: "calcom/cal.diy", branch: "unknown", baseSha: "a".repeat(40), environmentIdentity: "root",
+            testFamily: "unit", commandIdentity: "test -- --no-isolate", knownFailures: ["unrelated.spec.ts :: z"], establishedAtMs: 1000,
+          }),
+        });
+        const { deps } = makeDeps(sandbox, bucket, 2000);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            // full suite has the known failure AND a genuinely new one; selected suite's own results never saw it
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 2, failedTests: ["unrelated.spec.ts :: z", "new-regression.spec.ts :: broken"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.equal(out.activationDecision!.baselineSafety.decision, "ACTIVATE");
+        assert.equal(out.activationDecision!.finalActivation.decision, "REFUSE_NEW_FAILURE_NOT_PRESERVED");
+        assert.deepEqual(out.activationDecision!.finalActivation.newFailuresMissedBySelection, ["new-regression.spec.ts :: broken"]);
+      });
+    });
   });
 
   it("seedExecutionRecord starts at bootstrapping and carries analysisOverheadMs through verbatim", () => {
