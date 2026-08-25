@@ -108,10 +108,26 @@ function workDir(record: ExecutionRecord): string {
  * it (`/workspace/full-baseline.json` etc.), silently corrupting or overwriting each other's evidence.
  * Truncated/sanitized since `runId` can be up to 128 chars and container names have practical limits;
  * collision risk from truncation is negligible for the runId patterns this harness actually generates.
+ *
+ * BOTH components bounded, not just runId (2026-08-25 fix, DeepSeek execution-validation mission): the
+ * original truncation only capped `runId` at 24 chars, silently assuming `repoSlug(repository)` would
+ * always stay short. `calcom__cal.diy` (13 chars) made that assumption invisible - the resulting id
+ * (`exec-calcom__cal.diy-<sha10>-<runId>`, max 49 chars) stayed comfortably under container-name limits
+ * for every Cal.com run this mission. `deepseek-ai__deepseek-harness` (30 chars) does not: with a
+ * realistic runId (`deepseek-argprobe2`, 19 chars) the id landed at exactly 64 characters - one over the
+ * classic 63-char DNS-label limit container/hostname naming conventions commonly enforce. Confirmed via
+ * a real, reproducible failure: two independent deepseek-harness execution runs both stalled forever at
+ * `step: "bootstrapping"` with `heartbeatAt` frozen at the exact seed timestamp (proving the DO's
+ * `alarm()` handler never completed even once - it calls `getSandbox()`, which resolves the container by
+ * this id, BEFORE the line that updates `heartbeatAt`), while a same-Worker, same-DO-class Cal.com control
+ * probe started in between advanced through five real steps in under two minutes - isolating the failure
+ * to something specific to the longer repository name, not a general Cloudflare alarm outage. Both
+ * segments now bounded so the total is safely under 63 regardless of repository-name or runId length.
  */
 export function sandboxContainerId(record: Pick<ExecutionRecord, "repository" | "mergeSha" | "runId">): string {
-  const safeRunId = record.runId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 24);
-  return `exec-${repoSlug(record.repository)}-${record.mergeSha.slice(0, 10)}-${safeRunId}`;
+  const safeRunId = record.runId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 20);
+  const safeRepoSlug = repoSlug(record.repository).slice(0, 20);
+  return `exec-${safeRepoSlug}-${record.mergeSha.slice(0, 10)}-${safeRunId}`;
 }
 
 function reportPath(reportName: string): string {

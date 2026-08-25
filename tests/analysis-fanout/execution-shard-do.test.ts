@@ -313,6 +313,29 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       const id = sandboxContainerId({ repository: "calcom/cal.diy", mergeSha: "b".repeat(40), runId: "exec:calcom/29940 diag" });
       assert.doesNotMatch(id, /[:/ ]/);
     });
+
+    it("stays under the 63-char container-name limit even for a long repository name (2026-08-25 fix - " +
+      "deepseek-ai/deepseek-harness stalled forever at bootstrapping, heartbeatAt frozen, because the " +
+      "original truncation only bounded runId: exec-deepseek-ai__deepseek-harness-c71ff384cc-deepseek-" +
+      "argprobe2 landed at exactly 64 chars, one over. Reproduced twice under independent fresh runIds; " +
+      "a same-Worker Cal.com control probe advanced normally in the same window, isolating the cause to " +
+      "the longer repo slug, not a general alarm outage - see execution-shard-do.ts's own doc comment)", () => {
+      const id = sandboxContainerId({
+        repository: "deepseek-ai/deepseek-harness",
+        mergeSha: "c71ff384cc80f8cfba5f364c5e2fefec1d69f28d",
+        runId: "deepseek-argprobe2",
+      });
+      assert.ok(id.length <= 63, `expected <=63 chars, got ${id.length}: ${id}`);
+    });
+
+    it("stays under 63 chars for the longest inputs this harness actually allows (128-char runId, a long real repo name)", () => {
+      const id = sandboxContainerId({
+        repository: "deepseek-ai/deepseek-harness",
+        mergeSha: "c".repeat(40),
+        runId: "x".repeat(128),
+      });
+      assert.ok(id.length <= 63, `expected <=63 chars, got ${id.length}: ${id}`);
+    });
   });
 
   describe("pretest routing to diagnosing vs full-baseline", () => {
