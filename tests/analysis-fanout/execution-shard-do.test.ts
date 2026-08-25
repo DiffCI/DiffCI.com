@@ -1060,8 +1060,26 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       assert.equal(isDestroyed(), true);
     });
 
-    describe("baseline-fingerprint gate (2026-08-25, hard-wired enforcement)", () => {
-      it("a base-SHA control run (mergeSha === baseSha) with a complete full baseline PERSISTS a fingerprint to R2", async () => {
+    describe("baseline-fingerprint gate (2026-08-25 hard-wired enforcement; rolling multi-sample model)", () => {
+      const ROLLING_KEY = `rolling-fingerprints/calcom__cal.diy/unknown/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+      /** A rolling fingerprint with "unrelated.spec.ts :: z" observed in all 3 sampled bases (including
+       * the default record()'s own baseSha, "a".repeat(40)) - stable by every DEFAULT_STABILITY_POLICY
+       * rule (3 samples meets minSamples, frequency 1.0 clears minFrequency, recent, and with only 3
+       * total bases `half=1` so the frequency-increasing check never engages). Empty-string signatures
+       * throughout, matching what toObservedFailures() derives when a mock TestRunResult carries no
+       * failureSignatures - internally consistent with the code path under test. */
+      function seededRolling(overrides: Record<string, unknown> = {}) {
+        return {
+          repository: "calcom/cal.diy", branch: "unknown", environmentIdentity: "root", testFamily: "unit", commandIdentity: "test -- --no-isolate",
+          totalBaseRunsSampled: 3,
+          baseShaHistory: ["base1", "base2", "a".repeat(40)],
+          tracked: [{ testId: "unrelated.spec.ts :: z", signature: "", observations: [{ baseSha: "base1", observedAtMs: 1000 }, { baseSha: "base2", observedAtMs: 2000 }, { baseSha: "a".repeat(40), observedAtMs: 3000 }] }],
+          updatedAtMs: 3000,
+          ...overrides,
+        };
+      }
+
+      it("a base-SHA control run (mergeSha === baseSha) with a complete full baseline MERGES an observation into the rolling fingerprint (fresh, none existed before)", async () => {
         const { sandbox } = makeSandbox();
         const { bucket, putCalls } = makeBucket();
         const { deps } = makeDeps(sandbox, bucket, 5000);
@@ -1075,18 +1093,39 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         });
         const { record: out } = await stepExecution(rec, deps);
         assert.ok(out.fingerprintPersisted);
-        assert.equal(out.fingerprintPersisted!.knownFailureCount, 2);
-        const fpPut = putCalls.find((c) => c.key.startsWith("fingerprints/"));
-        assert.ok(fpPut, "expected a fingerprints/ R2 write");
-        assert.equal(fpPut!.key, `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`);
+        assert.equal(out.fingerprintPersisted!.knownFailureCount, 2); // tracked-entry count, not a stability judgment
+        const fpPut = putCalls.find((c) => c.key.startsWith("rolling-fingerprints/"));
+        assert.ok(fpPut, "expected a rolling-fingerprints/ R2 write");
+        assert.equal(fpPut!.key, ROLLING_KEY); // NOT keyed by baseSha - one rolling object spans many bases
         const written = JSON.parse(fpPut!.value as string);
-        assert.deepEqual(written.knownFailures, ["a.spec.ts :: x", "b.spec.ts :: y"]);
-        assert.equal(written.establishedAtMs, 5000);
+        assert.equal(written.totalBaseRunsSampled, 1);
+        assert.deepEqual(written.baseShaHistory, ["a".repeat(40)]);
+        assert.deepEqual(written.tracked.map((t: { testId: string }) => t.testId).sort(), ["a.spec.ts :: x", "b.spec.ts :: y"]);
         // A control run never computes an activation decision for itself - there is no "merge" to activate.
         assert.equal(out.activationDecision, undefined);
       });
 
-      it("a control run whose full baseline never completed (missing-report) does NOT persist a fingerprint", async () => {
+      it("a base-SHA control run MERGES into an EXISTING rolling fingerprint rather than overwriting its history", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket, putCalls } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
+        const { deps } = makeDeps(sandbox, bucket, 9000);
+        const rec = record({
+          step: "finalizing",
+          mergeSha: "a".repeat(40),
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: ["unrelated.spec.ts :: z"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        const fpPut = putCalls.find((c) => c.key === ROLLING_KEY)!;
+        const written = JSON.parse(fpPut.value as string);
+        assert.equal(written.totalBaseRunsSampled, 4); // 3 prior + this one
+        assert.equal(written.tracked[0].observations.length, 4); // the SAME (testId, "") entry gained a 4th sample
+        assert.equal(out.fingerprintPersisted!.key, ROLLING_KEY);
+      });
+
+      it("a control run whose full baseline never completed (missing-report) does NOT touch the rolling fingerprint", async () => {
         const { sandbox } = makeSandbox();
         const { bucket, putCalls } = makeBucket();
         const { deps } = makeDeps(sandbox, bucket);
@@ -1100,12 +1139,12 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         });
         const { record: out } = await stepExecution(rec, deps);
         assert.equal(out.fingerprintPersisted, undefined);
-        assert.equal(putCalls.some((c) => c.key.startsWith("fingerprints/")), false);
+        assert.equal(putCalls.some((c) => c.key.startsWith("rolling-fingerprints/")), false);
       });
 
-      it("a real merge run with NO fingerprint on record gets REFUSE_NO_FINGERPRINT, computed and stored unconditionally", async () => {
+      it("a real merge run with NO rolling fingerprint on record gets REFUSE_NO_ROLLING_FINGERPRINT, computed and stored unconditionally", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket } = makeBucket(); // empty - no fingerprint object exists
+        const { bucket } = makeBucket(); // empty - no rolling fingerprint object exists
         const { deps } = makeDeps(sandbox, bucket);
         const rec = record({
           step: "finalizing",
@@ -1119,25 +1158,14 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         const { record: out } = await stepExecution(rec, deps);
         assert.ok(out.activationDecision);
         assert.equal(out.activationDecision!.fingerprintFound, false);
-        assert.equal(out.activationDecision!.baselineSafety.decision, "REFUSE_NO_FINGERPRINT");
+        assert.equal(out.activationDecision!.baselineSafety.decision, "REFUSE_NO_ROLLING_FINGERPRINT");
         assert.equal(out.activationDecision!.finalActivation.decision, "REFUSE_BASELINE_UNSAFE");
       });
 
-      it("a real merge run with a matching, fresh fingerprint that fully explains the observed failures ACTIVATEs end to end", async () => {
+      it("case 1 (real requested validation): a matching, sufficiently-sampled rolling fingerprint with the observed failure classified STABLE ACTIVATEs end to end", async () => {
         const { sandbox } = makeSandbox();
-        const fpKey = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
-        const storedFingerprint = {
-          repository: "calcom/cal.diy",
-          branch: "unknown",
-          baseSha: "a".repeat(40),
-          environmentIdentity: "root",
-          testFamily: "unit",
-          commandIdentity: "test -- --no-isolate",
-          knownFailures: ["unrelated.spec.ts :: z"],
-          establishedAtMs: 1000,
-        };
-        const { bucket } = makeBucket({ [fpKey]: JSON.stringify(storedFingerprint) });
-        const { deps } = makeDeps(sandbox, bucket, 2000); // 1 second after establishedAtMs - well within the 7-day window
+        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
+        const { deps } = makeDeps(sandbox, bucket, 4000); // shortly after the 3rd sample - within the recency window
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1151,20 +1179,14 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         assert.equal(out.activationDecision!.fingerprintFound, true);
         assert.equal(out.activationDecision!.baselineSafety.decision, "ACTIVATE");
         assert.equal(out.activationDecision!.finalActivation.decision, "EXECUTE_SELECTIVELY");
-        assert.deepEqual(out.activationDecision!.finalActivation.newFailuresInFull, []);
+        assert.deepEqual(out.activationDecision!.finalActivation.newFailuresInFull, []); // correctly quarantined, not "new"
       });
 
-      it("a real merge run under a DIFFERENT environment (root vs the fingerprint's nonroot) never finds the fingerprint - proves environment changes invalidate it", async () => {
+      it("a real merge run under a DIFFERENT environment (root vs the fingerprint's nonroot) never finds the rolling fingerprint - proves environment changes invalidate it", async () => {
         const { sandbox } = makeSandbox();
-        // Stored under nonroot's key; this run is plain root (runAsNonRoot unset).
-        const fpKeyNonroot = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/nonroot__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
-        const { bucket } = makeBucket({
-          [fpKeyNonroot]: JSON.stringify({
-            repository: "calcom/cal.diy", branch: "unknown", baseSha: "a".repeat(40), environmentIdentity: "nonroot",
-            testFamily: "unit", commandIdentity: "test -- --no-isolate", knownFailures: ["unrelated.spec.ts :: z"], establishedAtMs: 1000,
-          }),
-        });
-        const { deps } = makeDeps(sandbox, bucket, 2000);
+        const nonrootKey = `rolling-fingerprints/calcom__cal.diy/unknown/nonroot__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+        const { bucket } = makeBucket({ [nonrootKey]: JSON.stringify(seededRolling({ environmentIdentity: "nonroot" })) });
+        const { deps } = makeDeps(sandbox, bucket, 4000);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1177,45 +1199,34 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         const { record: out } = await stepExecution(rec, deps);
         assert.equal(out.activationDecision!.environmentIdentity, "root");
         assert.equal(out.activationDecision!.fingerprintFound, false);
-        assert.equal(out.activationDecision!.baselineSafety.decision, "REFUSE_NO_FINGERPRINT");
+        assert.equal(out.activationDecision!.baselineSafety.decision, "REFUSE_NO_ROLLING_FINGERPRINT");
       });
 
-      it("a real merge run where the full suite shows a NEW failure the selected suite's own results do not contain REFUSES activation", async () => {
+      it("case 2 (real requested validation): a test with NO tracked history at all (unknown test or signature) is REFUSED, never quarantined just because a DIFFERENT failure in the same run is known", async () => {
         const { sandbox } = makeSandbox();
-        const fpKey = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
-        const { bucket } = makeBucket({
-          [fpKey]: JSON.stringify({
-            repository: "calcom/cal.diy", branch: "unknown", baseSha: "a".repeat(40), environmentIdentity: "root",
-            testFamily: "unit", commandIdentity: "test -- --no-isolate", knownFailures: ["unrelated.spec.ts :: z"], establishedAtMs: 1000,
-          }),
-        });
-        const { deps } = makeDeps(sandbox, bucket, 2000);
+        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
+        const { deps } = makeDeps(sandbox, bucket, 4000);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
           runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
           baseline: {
-            // full suite has the known failure AND a genuinely new one; selected suite's own results never saw it
+            // full suite has the known/stable failure AND a genuinely new one (no tracked history at all);
+            // selected suite's own results never saw the new one.
             full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 2, failedTests: ["unrelated.spec.ts :: z", "new-regression.spec.ts :: broken"], observabilityStatus: "complete" },
             selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
           },
         });
         const { record: out } = await stepExecution(rec, deps);
-        assert.equal(out.activationDecision!.baselineSafety.decision, "ACTIVATE");
-        assert.equal(out.activationDecision!.finalActivation.decision, "REFUSE_NEW_FAILURE_NOT_PRESERVED");
+        assert.equal(out.activationDecision!.baselineSafety.decision, "ACTIVATE"); // the rolling fingerprint itself is trusted...
+        assert.equal(out.activationDecision!.finalActivation.decision, "REFUSE_NEW_FAILURE_NOT_PRESERVED"); // ...but this specific new failure still isn't quarantined
         assert.deepEqual(out.activationDecision!.finalActivation.newFailuresMissedBySelection, ["new-regression.spec.ts :: broken"]);
       });
 
-      it("also evaluates the MUTANT phase (same fingerprint/gate) when a mutation ran - the real PR #2808 shape: recall preserved, so EXECUTE_SELECTIVELY, not a refusal", async () => {
+      it("case 3 (real requested validation): also evaluates the MUTANT phase (same rolling fingerprint/gate) - the real PR #2808 shape: recall preserved, so EXECUTE_SELECTIVELY, not a refusal", async () => {
         const { sandbox } = makeSandbox();
-        const fpKey = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
-        const { bucket } = makeBucket({
-          [fpKey]: JSON.stringify({
-            repository: "calcom/cal.diy", branch: "unknown", baseSha: "a".repeat(40), environmentIdentity: "root",
-            testFamily: "unit", commandIdentity: "test -- --no-isolate", knownFailures: ["unrelated.spec.ts :: z"], establishedAtMs: 1000,
-          }),
-        });
-        const { deps } = makeDeps(sandbox, bucket, 2000);
+        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
+        const { deps } = makeDeps(sandbox, bucket, 4000);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1232,21 +1243,15 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         });
         const { record: out } = await stepExecution(rec, deps);
         assert.ok(out.mutantActivationDecision);
-        assert.deepEqual(out.mutantActivationDecision!.newFailuresInFull, ["real-regression.spec.ts :: caught"]);
+        assert.deepEqual(out.mutantActivationDecision!.newFailuresInFull, ["real-regression.spec.ts :: caught"]); // "unrelated.spec.ts :: z" correctly quarantined out
         assert.deepEqual(out.mutantActivationDecision!.newFailuresMissedBySelection, []);
         assert.equal(out.mutantActivationDecision!.decision, "EXECUTE_SELECTIVELY");
       });
 
       it("mutant-phase evaluation REFUSES when the mutation's own real failure is missed by the selected suite", async () => {
         const { sandbox } = makeSandbox();
-        const fpKey = `fingerprints/calcom__cal.diy/unknown/${"a".repeat(40)}/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
-        const { bucket } = makeBucket({
-          [fpKey]: JSON.stringify({
-            repository: "calcom/cal.diy", branch: "unknown", baseSha: "a".repeat(40), environmentIdentity: "root",
-            testFamily: "unit", commandIdentity: "test -- --no-isolate", knownFailures: [], establishedAtMs: 1000,
-          }),
-        });
-        const { deps } = makeDeps(sandbox, bucket, 2000);
+        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
+        const { deps } = makeDeps(sandbox, bucket, 4000);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,

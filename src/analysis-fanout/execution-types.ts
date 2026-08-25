@@ -147,6 +147,8 @@ export interface TestRunResult {
   passed?: number;
   failed?: number;
   failedTests?: string[];
+  /** See VitestSummary.failureSignatures - carried through verbatim when the report parsed. */
+  failureSignatures?: Record<string, string>;
   /** Last ~8000 chars of the process's own accumulated stdout/stderr (via the sandbox SDK's
    * getProcessLogs, 2026-08-24 - previously never captured for any startProcess-based step). This is
    * the audit trail when the structured report is missing or malformed: what the test runner actually

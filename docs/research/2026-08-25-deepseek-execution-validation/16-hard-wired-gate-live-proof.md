@@ -57,6 +57,8 @@ Both `activationDecision` and `mutantActivationDecision` are present, unmodified
 
 A single base-SHA fingerprint (9 known failures, one sample) did **not** fully cover this next run's own flaky subset 29 minutes later - consistent with this mission's own characterization of the repository's flakiness (≥21 distinct flaky tests observed across Reports 11-14, no two runs showing an identical full set). **A production-grade implementation of this gate would likely need more than one fingerprint sample** - e.g. a rolling/merged known-flaky set built from several base-SHA runs, or an explicit re-fingerprinting cadence - to avoid refusing activation on ordinary flaky noise as often as a single snapshot does. This is a real operational limitation surfaced by real evidence, not a defect in the gate's logic (the gate did exactly what it was built to do: refuse when it cannot be sure) - flagged here as the natural next refinement, not silently smoothed over because the headline result this round was a refusal rather than an activation.
 
+> **Amendment (2026-08-25):** the mutant-phase `EXECUTE_SELECTIVELY` above demonstrates that the selected set preserved that mutation failure - it is NOT authorization of the original PR run. The baseline phase's `REFUSE_NEW_FAILURE_NOT_PRESERVED` is the actual production decision for `deepseek-2808-fp-merge` as a whole. **The overall decision for this run is REFUSE.**
+
 ## Updated posture
 
 ```

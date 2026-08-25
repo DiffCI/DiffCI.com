@@ -224,7 +224,12 @@ export type FinalActivationDecision =
 export interface FinalActivationInput {
   selectionSafe: boolean;
   economicsBeneficial: boolean;
-  baselineSafety: BaselineSafetyResult;
+  /** Any baseline-safety verdict shape with a `decision`/`explanation` (2026-08-25: widened from the
+   * single-sample-only `BaselineSafetyResult` so the rolling, multi-sample gate's own
+   * `RollingBaselineSafetyResult` - a materially different decision union - composes here unchanged; this
+   * function only ever compares `.decision !== "ACTIVATE"` as a plain string, never assumes which gate
+   * produced it). */
+  baselineSafety: { decision: string; explanation: string };
   fingerprint: BaselineFingerprint | undefined;
   /** The full suite's own observed failures THIS run, if one was actually executed (validation/measurement
    * contexts like this mission always have one; true steady-state production selective execution will not). */

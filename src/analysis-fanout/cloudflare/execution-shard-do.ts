@@ -26,7 +26,8 @@ import type { DiagnosticCommandResult, ExecutionRecord, ExecutionSpec, Execution
 import { getRepoExecutionProfile } from "../repo-execution-profiles.js";
 import { repoSlug } from "./analysis-shard-do.js";
 import { decideActivation } from "../activation-gate.js";
-import { decideBaselineSafety, decideFinalActivation, type BaselineFingerprint } from "../baseline-fingerprint-gate.js";
+import { decideFinalActivation } from "../baseline-fingerprint-gate.js";
+import { decideRollingBaselineSafety, deriveEffectiveFingerprint, mergeObservation, type RollingFingerprint } from "../rolling-fingerprint.js";
 
 export const SHAPE = "standard-4"; // installs are heavy (cal.com: 3582 packages, native builds, ~20 min)
 /** How long the shard sleeps between poll alarms while a test-run process is in flight. */
@@ -99,10 +100,12 @@ function wrapNonRoot(cmd: string, runAsNonRoot: boolean | undefined): string {
   return `su - ${NON_ROOT_USER} -c '${cmd.replace(/'/g, "'\\''")}'`;
 }
 
-/** Baseline-fingerprint identity (2026-08-25, hard-wired enforcement round). All four values are part of
- * the fingerprint STORE KEY (not just fields checked post-fetch) - a mismatch on any of them means the
- * fetch itself finds nothing (REFUSE_NO_FINGERPRINT), not a stale/wrong object that then has to be
- * detected by content comparison. `decideBaselineSafety` still re-verifies every field against the fetched
+/** Baseline-fingerprint identity (2026-08-25, hard-wired enforcement + rolling-fingerprint rounds). Both
+ * values are part of the ROLLING fingerprint STORE KEY (see `rollingKey` in applyBaselineFingerprintGate,
+ * NOT keyed by baseSha - one rolling object spans many base commits over time) - a mismatch on either
+ * means the fetch itself finds nothing (REFUSE_NO_ROLLING_FINGERPRINT), not a stale/wrong object that then
+ * has to be detected by content comparison. `decideRollingBaselineSafety` still re-verifies every identity
+ * field (including baseSha, checked against the fingerprint's own `baseShaHistory`) against the fetched
  * object's own content as defense-in-depth against a key-scheme bug. */
 function environmentIdentityOf(record: Pick<ExecutionRecord, "runAsNonRoot">): string {
   return record.runAsNonRoot ? "nonroot" : "root";
@@ -111,9 +114,6 @@ function commandIdentityOf(profile: RepoExecutionProfile, record: Pick<Execution
   return (record.testArgvOverride ?? profile.testArgv).join(" ");
 }
 const TEST_FAMILY = "unit"; // the only family this harness executes end-to-end this mission - see repo-execution-profiles.ts
-function fingerprintKey(repository: string, branch: string, baseSha: string, environmentIdentity: string, testFamily: string, commandIdentity: string): string {
-  return `fingerprints/${repoSlug(repository)}/${encodeURIComponent(branch)}/${baseSha}/${environmentIdentity}__${testFamily}__${encodeURIComponent(commandIdentity)}.json`;
-}
 
 function packageManagerBin(profile: RepoExecutionProfile, forRun: boolean): string {
   if (profile.packageManager === "yarn") return "corepack yarn";
@@ -535,6 +535,7 @@ async function stepTestRun(record: ExecutionRecord, deps: ExecutionStepDeps, cfg
       passed: parsed.parsed ? parsed.passed : undefined,
       failed: parsed.parsed ? parsed.failed : undefined,
       failedTests: parsed.parsed ? parsed.failedTests : undefined,
+      failureSignatures: parsed.parsed ? parsed.failureSignatures : undefined,
       stdoutTail,
       stderrTail,
       observabilityStatus,
@@ -775,21 +776,11 @@ function computeEconomicsAndRecall(record: ExecutionRecord): void {
   }
 }
 
-/**
- * Reads a stored BaselineFingerprint from R2, if one exists at the exact identity key. Never throws on a
- * missing/corrupt object - a fingerprint that can't be read is exactly the same as one that was never
- * written, from the safety gate's point of view (REFUSE_NO_FINGERPRINT), never a hard failure of the run
- * it's being consulted for.
- */
-async function readFingerprint(bucket: R2BucketLike, key: string): Promise<BaselineFingerprint | undefined> {
-  try {
-    const obj = await bucket.get(key);
-    if (!obj) return undefined;
-    return JSON.parse(await obj.text()) as BaselineFingerprint;
-  } catch {
-    return undefined;
-  }
-}
+// Single-sample BaselineFingerprint reads/writes (fingerprintKey/readFingerprint) were removed here
+// 2026-08-25 in favor of the rolling, multi-sample model below - decideBaselineSafety/BaselineFingerprint
+// themselves remain in baseline-fingerprint-gate.ts, still tested, still a real building block
+// (deriveEffectiveFingerprint produces a BaselineFingerprint-shaped object each evaluation), just no
+// longer read/written directly as a standalone artifact by this file.
 
 /**
  * Hard-wired baseline-fingerprint enforcement (2026-08-25) - runs inside `finalize()`, the one place every
@@ -809,48 +800,69 @@ async function readFingerprint(bucket: R2BucketLike, key: string): Promise<Basel
  * conservative default as one never having been written, rather than failing the whole execution over a
  * concern this run's own core measurement doesn't depend on.
  */
+/** Turns one TestRunResult's failedTests/failureSignatures into the {testId, signature} pairs the rolling
+ * model tracks. A failed test whose report carried no failureMessages (no signature captured) gets the
+ * empty string as its signature - it will only ever match another empty-signature observation of the
+ * exact same test, never silently cross-matched against a real captured signature. */
+function toObservedFailures(result: Pick<TestRunResult, "failedTests" | "failureSignatures">): { testId: string; signature: string }[] {
+  return (result.failedTests ?? []).map((testId) => ({ testId, signature: result.failureSignatures?.[testId] ?? "" }));
+}
+
+/** How many base-run samples a rolling fingerprint needs overall before it is trusted at all - see
+ * RollingBaselineSafetyInput.minTotalBaseRunsSampled. Provisional, matching DEFAULT_STABILITY_POLICY's
+ * own minSamples (3) - not yet tuned against real repository drift rates. */
+const MIN_TOTAL_BASE_RUNS_SAMPLED = 3;
+
 async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<void> {
   const { bucket, profile, now } = deps;
   const branch = record.branch ?? "unknown";
   const environmentIdentity = environmentIdentityOf(record);
   const commandIdentity = commandIdentityOf(profile, record);
-  const key = fingerprintKey(record.repository, branch, record.baseSha, environmentIdentity, TEST_FAMILY, commandIdentity);
+  const identity = { repository: record.repository, branch, environmentIdentity, testFamily: TEST_FAMILY, commandIdentity };
+  // Rolling fingerprints are keyed WITHOUT the base SHA (2026-08-25) - one rolling object per repository/
+  // branch/environment/family/command spans MANY base commits over time (that's the whole point of
+  // "rolling"); the single-sample BaselineFingerprint's key included baseSha because it was one snapshot
+  // for one commit. A distinct key namespace (not the old fingerprints/ prefix) so the single-sample
+  // objects already persisted this mission are never confused with or silently reinterpreted as rolling
+  // ones - both remain as separate, honest historical artifacts.
+  const rollingKey = `rolling-fingerprints/${repoSlug(record.repository)}/${encodeURIComponent(branch)}/${environmentIdentity}__${TEST_FAMILY}__${encodeURIComponent(commandIdentity)}.json`;
 
   if (record.mergeSha === record.baseSha) {
-    // Base-SHA control run: persist what THIS run itself observed, if it observed anything usable.
+    // Base-SHA control run: fold what THIS run itself observed into the rolling fingerprint, if it
+    // observed anything usable. Read-merge-write, not overwrite - every prior sample stays.
     if (record.baseline?.full?.observabilityStatus === "complete") {
-      const fingerprint: BaselineFingerprint = {
-        repository: record.repository,
-        branch,
-        baseSha: record.baseSha,
-        environmentIdentity,
-        testFamily: TEST_FAMILY,
-        commandIdentity,
-        knownFailures: record.baseline.full.failedTests ?? [],
-        establishedAtMs: now(),
-      };
       try {
-        await bucket.put(key, JSON.stringify(fingerprint, null, 2));
-        record.fingerprintPersisted = { key, knownFailureCount: fingerprint.knownFailures.length };
+        const existingRaw = await bucket.get(rollingKey);
+        const existing = existingRaw ? (JSON.parse(await existingRaw.text()) as RollingFingerprint) : undefined;
+        const updated = mergeObservation(existing, identity, toObservedFailures(record.baseline.full), record.baseSha, now());
+        await bucket.put(rollingKey, JSON.stringify(updated, null, 2));
+        record.fingerprintPersisted = { key: rollingKey, knownFailureCount: updated.tracked.length };
       } catch {
-        /* best-effort - a failed write just means the next real run sees REFUSE_NO_FINGERPRINT, not a hard failure of this control run */
+        /* best-effort - a failed read/write just means the next real run sees REFUSE_NO_ROLLING_FINGERPRINT (or an older sample count), not a hard failure of this control run */
       }
     }
     return;
   }
 
-  // Real merge run: read, decide, and record - unconditionally, not only on request.
-  const fingerprint = await readFingerprint(bucket, key);
-  const baselineSafety = decideBaselineSafety({
+  // Real merge run: read the rolling fingerprint, decide, derive this run's own quarantine-eligible
+  // subset, and record - unconditionally, not only on request.
+  let rolling: RollingFingerprint | undefined;
+  try {
+    const raw = await bucket.get(rollingKey);
+    rolling = raw ? (JSON.parse(await raw.text()) as RollingFingerprint) : undefined;
+  } catch {
+    rolling = undefined;
+  }
+  const nowMs = now();
+  const rollingSafety = decideRollingBaselineSafety({
     repository: record.repository,
     branch,
     currentBaseSha: record.baseSha,
     environmentIdentity,
     testFamily: TEST_FAMILY,
     commandIdentity,
-    fingerprint,
-    maxFingerprintAgeMs: 7 * 24 * 3_600_000, // 7 days - provisional, not yet tuned against real repository drift rates
-    nowMs: now(),
+    rolling,
+    minTotalBaseRunsSampled: MIN_TOTAL_BASE_RUNS_SAMPLED,
   });
 
   const selectionSafe = record.runtimeSelection?.status === "HONORED_EXACTLY" || record.runtimeSelection?.status === "HONORED_WITH_FRAMEWORK_EXPANSION";
@@ -867,14 +879,22 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
       })
     : undefined;
 
+  // The per-run derivation: which of THIS run's own observed failures does the rolling fingerprint
+  // consider stable enough to quarantine, evaluated fresh (never a stored static list - see
+  // deriveEffectiveFingerprint's own doc comment for why "known test, different signature" depends on
+  // this). Undefined `rolling` degrades to an always-empty quarantine set, exactly matching the
+  // conservative default REFUSE_NO_ROLLING_FINGERPRINT is meant to pair with.
   const fullObservedFailures = record.baseline?.full?.observabilityStatus === "complete" ? record.baseline.full.failedTests : undefined;
   const selectedObservedFailures = record.baseline?.selected?.observabilityStatus === "complete" ? (record.baseline.selected.failedTests ?? []) : [];
+  const derivedFingerprint = rolling
+    ? deriveEffectiveFingerprint(rolling, record.baseSha, toObservedFailures(record.baseline?.full ?? {}), nowMs)
+    : undefined;
 
   const finalActivation = decideFinalActivation({
     selectionSafe,
     economicsBeneficial: economics?.economicallyBeneficial ?? false,
-    baselineSafety,
-    fingerprint,
+    baselineSafety: rollingSafety,
+    fingerprint: derivedFingerprint,
     fullObservedFailures,
     selectedObservedFailures,
   });
@@ -884,9 +904,9 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
     environmentIdentity,
     testFamily: TEST_FAMILY,
     commandIdentity,
-    fingerprintKey: key,
-    fingerprintFound: fingerprint !== undefined,
-    baselineSafety,
+    fingerprintKey: rollingKey,
+    fingerprintFound: rolling !== undefined,
+    baselineSafety: rollingSafety,
     economicsBeneficial: economics?.economicallyBeneficial ?? false,
     finalActivation,
   };
@@ -894,16 +914,20 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
   // Same gate, applied to the MUTANT phase when one ran (2026-08-25) - the baseline decision above answers
   // "is this commit safe to activate selective execution for"; this one answers the narrower, equally
   // real question the mutation mechanism exists to test: when a genuine new failure IS present (the
-  // reverted fix), does the selected suite's own result actually contain it. Reuses the identical
-  // baselineSafety/fingerprint/selectionSafe/economics - those are properties of the RUN, not the phase.
+  // reverted fix), does the selected suite's own result actually contain it. The mutant phase gets its
+  // OWN derived fingerprint (its own observed failures may differ from baseline's), reusing the identical
+  // rollingSafety/selectionSafe/economics - those are properties of the RUN, not the phase.
   if (record.mutant) {
     const mutantFullObserved = record.mutant.full.observabilityStatus === "complete" ? record.mutant.full.failedTests : undefined;
     const mutantSelectedObserved = record.mutant.selected.observabilityStatus === "complete" ? (record.mutant.selected.failedTests ?? []) : [];
+    const mutantDerivedFingerprint = rolling
+      ? deriveEffectiveFingerprint(rolling, record.baseSha, toObservedFailures(record.mutant.full), nowMs)
+      : undefined;
     record.mutantActivationDecision = decideFinalActivation({
       selectionSafe,
       economicsBeneficial: economics?.economicallyBeneficial ?? false,
-      baselineSafety,
-      fingerprint,
+      baselineSafety: rollingSafety,
+      fingerprint: mutantDerivedFingerprint,
       fullObservedFailures: mutantFullObserved,
       selectedObservedFailures: mutantSelectedObserved,
     });

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { parseVitestJsonReport } from "../../src/analysis-fanout/vitest-report.js";
+import { normalizeFailureSignature, parseVitestJsonReport } from "../../src/analysis-fanout/vitest-report.js";
 
 describe("parseVitestJsonReport", () => {
   it("returns parsed:false and all-zero counts for undefined input - never fabricates a result", () => {
@@ -120,5 +120,45 @@ describe("parseVitestJsonReport", () => {
     assert.equal(r.parsed, true);
     assert.equal(r.files, 0);
     assert.equal(r.tests, 0);
+  });
+
+  describe("failureSignatures (2026-08-25, rolling-fingerprint mission)", () => {
+    it("captures a normalized signature from the first failureMessages entry, keyed by the same 'file :: fullName' identity", () => {
+      const raw = JSON.stringify({
+        testResults: [{
+          name: "/workspace/deepseek-ai__deepseek-harness/packages/host/frontend-static/tests/frontend-static.spec.ts",
+          assertionResults: [{
+            status: "failed",
+            fullName: "real Loader composition serves explicit index entries",
+            failureMessages: ["AssertionError: expected 404 to be 200\n    at /workspace/deepseek-ai__deepseek-harness/foo.ts:42:7"],
+          }],
+        }],
+      });
+      const r = parseVitestJsonReport(raw);
+      const testId = "frontend-static/tests/frontend-static.spec.ts :: real Loader composition serves explicit index entries";
+      assert.ok(r.failedTests.includes(testId));
+      assert.equal(r.failureSignatures[testId], "AssertionError: expected 404 to be 200 at <path>");
+    });
+
+    it("a failed test with no failureMessages at all gets no signature entry - never fabricated", () => {
+      const raw = JSON.stringify({
+        testResults: [{ name: "a.spec.ts", assertionResults: [{ status: "failed", fullName: "x" }] }],
+      });
+      const r = parseVitestJsonReport(raw);
+      assert.equal(Object.keys(r.failureSignatures).length, 0);
+    });
+
+    it("normalizeFailureSignature strips paths, line:col, timestamps, durations and UUIDs so the SAME underlying failure produces the SAME signature across two differently-formatted messages", () => {
+      const a = normalizeFailureSignature("Error at /workspace/repo/foo.ts:10:5 after 123ms, id 550e8400-e29b-41d4-a716-446655440000");
+      const b = normalizeFailureSignature("Error at C:\\repo\\foo.ts:99:1 after 4.2s, id 6ba7b810-9dad-11d1-80b4-00c04fd430c8");
+      assert.equal(a, b);
+      assert.equal(a, "Error at <path> after <duration>, id <uuid>");
+    });
+
+    it("normalizeFailureSignature does NOT collapse two genuinely different assertion messages to the same signature", () => {
+      const a = normalizeFailureSignature("AssertionError: expected 404 to be 200");
+      const b = normalizeFailureSignature("TypeError: cannot read property 'x' of undefined");
+      assert.notEqual(a, b);
+    });
   });
 });
