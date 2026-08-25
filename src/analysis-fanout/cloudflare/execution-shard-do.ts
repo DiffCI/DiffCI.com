@@ -273,6 +273,14 @@ async function clone(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<
       // the TEST PROCESS's own UID is the variable this experiment is testing. chown here so install and
       // the test runner (which DO run as NON_ROOT_USER) can read/write the tree at all.
       await sandbox.exec(`chown -R ${NON_ROOT_USER}:${NON_ROOT_USER} ${dir}`, { timeout: 60_000 });
+      // reportPath() writes structured JSON reports to /workspace/<name>.json - ONE LEVEL ABOVE the
+      // cloned repo dir, not inside it (2026-08-25 fix, found via a real run: the test process legitimately
+      // completed as ciuser, but its own JSON reporter hit EACCES opening /workspace/full-baseline.json -
+      // /workspace itself, created by root in bootstrap()'s mkdir, was never made writable by ciuser, only
+      // the repo subdirectory was). Non-recursive - only the directory entry itself needs to be writable
+      // for ciuser to create new files there; its other contents (this same repo clone) are already
+      // correctly owned by the recursive chown above.
+      await sandbox.exec(`chown ${NON_ROOT_USER}:${NON_ROOT_USER} /workspace`, { timeout: 15_000 });
       // git's "dubious ownership" protection (2026-08-25 fix, found via a real failed run - deriving-
       // selection's own git calls, run as root against a directory now owned by NON_ROOT_USER, refused
       // outright: "fatal: detected dubious ownership in repository", confirmed via a standalone

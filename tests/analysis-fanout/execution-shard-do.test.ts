@@ -323,6 +323,16 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       assert.ok(safeDirCalls.some((c) => c.command.includes("su - ciuser -c")), "ciuser's own global config");
     });
 
+    it("clone chowns /workspace itself (non-recursive), not just the repo subdirectory (2026-08-25 fix - " +
+      "a real run's own JSON reporter hit EACCES writing /workspace/full-baseline.json, ONE LEVEL ABOVE " +
+      "the chowned repo dir - reportPath() writes there, not inside the repo clone)", async () => {
+      const { sandbox, execCalls } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      await stepExecution(record({ step: "cloning", runAsNonRoot: true }), deps);
+      assert.ok(execCalls.some((c) => c.command === "chown ciuser:ciuser /workspace"));
+    });
+
     it("install runs corepack activation as root but the actual install command via su - ciuser", async () => {
       const { sandbox, execCalls } = makeSandbox();
       const { bucket } = makeBucket();
