@@ -25,6 +25,8 @@
  * mission's own instruction. It only decides whether a supplied fingerprint may be trusted, and classifies
  * observed failures against it; a caller who never supplies a fingerprint always gets REFUSE_NO_FINGERPRINT.
  */
+import type { SafetyBudget, SafetyBudgetSummary } from "./safety-budget.js";
+import { summarizeSafetyBudget } from "./safety-budget.js";
 
 export type BaselineSafetyDecision =
   | "ACTIVATE"
@@ -236,6 +238,17 @@ export interface FinalActivationInput {
   fullObservedFailures: readonly string[] | undefined;
   /** The selected suite's own observed failures - always present, selective execution's whole point. */
   selectedObservedFailures: readonly string[];
+  /** Optional (2026-08-25, "production-safe selective execution loop" follow-up to Report 17) - this
+   * repository/identity's accumulated safety-budget summary (safety-budget.ts), if one exists yet. Fed
+   * into `SafetyFacts` as a fifth, purely INFORMATIONAL fact - `strictRawOutcomePolicy` does not consume
+   * it, deliberately: per the explicit direction to keep policy separate from these observations, THIS
+   * run's own facts (selection safety, raw-outcome preservation, baseline health, economics) still decide
+   * THIS run's activation on their own. A repository's long-run track record is audit context for a
+   * human or a FUTURE, different policy to weigh - never a silent substitute for re-checking this run. */
+  repositorySafetyBudget?: SafetyBudget;
+  /** Required alongside `repositorySafetyBudget` to summarize it - see summarizeSafetyBudget's own doc
+   * comment for why a percentage-style miss-rate claim is withheld below this sample size. */
+  minAuditedSampleSize?: number;
 }
 
 /**
@@ -271,13 +284,18 @@ export interface SafetyFacts {
   newFailuresInFull: readonly string[];
   newFailuresInSelected: readonly string[];
   newFailuresMissedBySelection: readonly string[];
+  /** Undefined when the caller supplied no `repositorySafetyBudget` (e.g. no budget has ever been recorded
+   * for this identity yet) - never fabricated as INSUFFICIENT_AUDITED_SAMPLE from nothing. Purely
+   * informational (see FinalActivationInput.repositorySafetyBudget's own doc comment) - not consumed by
+   * strictRawOutcomePolicy. */
+  repositoryTrackRecord: SafetyBudgetSummary | undefined;
 }
 
 /** Computes the four SafetyFacts from raw inputs - no policy judgment, just what is objectively true this
  * run. Exported separately so a future policy can be evaluated (or re-evaluated under a DIFFERENT policy)
  * against the identical facts without recomputing classification. */
 export function computeSafetyFacts(input: FinalActivationInput): SafetyFacts {
-  const { selectionSafe, economicsBeneficial, baselineSafety, fingerprint, fullObservedFailures, selectedObservedFailures } = input;
+  const { selectionSafe, economicsBeneficial, baselineSafety, fingerprint, fullObservedFailures, selectedObservedFailures, repositorySafetyBudget, minAuditedSampleSize } = input;
 
   const selectedClassification = classifyAgainstFingerprint(selectedObservedFailures, fingerprint);
   const fullClassification = fullObservedFailures !== undefined ? classifyAgainstFingerprint(fullObservedFailures, fingerprint) : undefined;
@@ -292,6 +310,9 @@ export function computeSafetyFacts(input: FinalActivationInput): SafetyFacts {
   const rawFullSuiteOutcomePreserved: RawFullSuiteOutcomePreserved =
     fullObservedFailures === undefined ? "NOT_MEASURED" : newFailuresMissedBySelection.length === 0 ? "PRESERVED" : "NOT_PRESERVED";
 
+  const repositoryTrackRecord =
+    repositorySafetyBudget !== undefined && minAuditedSampleSize !== undefined ? summarizeSafetyBudget(repositorySafetyBudget, minAuditedSampleSize) : undefined;
+
   return {
     regressionSelectionSafety: selectionSafe ? "REGRESSION_SELECTION_SAFE" : "REGRESSION_SELECTION_UNSAFE",
     rawFullSuiteOutcomePreserved,
@@ -301,6 +322,7 @@ export function computeSafetyFacts(input: FinalActivationInput): SafetyFacts {
     newFailuresInFull,
     newFailuresInSelected,
     newFailuresMissedBySelection,
+    repositoryTrackRecord,
   };
 }
 

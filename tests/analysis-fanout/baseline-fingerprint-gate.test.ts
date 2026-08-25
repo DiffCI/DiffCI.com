@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { classifyAgainstFingerprint, computeSafetyFacts, decideBaselineSafety, decideFinalActivation, strictRawOutcomePolicy, type BaselineFingerprint } from "../../src/analysis-fanout/baseline-fingerprint-gate.js";
+import { recordDecision, type SafetyBudget } from "../../src/analysis-fanout/safety-budget.js";
 
 // Real evidence from this mission (Report 14): the 6 failures confirmed identical at PR #2808's base AND
 // merge SHA under non-root execution - a genuine trusted fingerprint, not a fabricated fixture.
@@ -298,6 +299,43 @@ describe("decideFinalActivation (hard-wired composed activation rule)", () => {
       assert.equal(r.facts.rawFullSuiteOutcomePreserved, "NOT_PRESERVED");
       // The refusal is fully explained by ONE fact (raw outcome not preserved) even though every OTHER
       // fact was favorable - exactly the separation this test suite exists to make legible.
+    });
+  });
+
+  // 2026-08-25 ("production-safe selective execution loop" follow-up): repositoryTrackRecord is a fifth,
+  // purely informational fact fed in from safety-budget.ts - never consumed by strictRawOutcomePolicy, per
+  // the explicit direction to keep the repository's long-run track record separate from THIS run's own
+  // policy decision.
+  describe("facts.repositoryTrackRecord (safety-budget.ts fed in, never consumed by the policy)", () => {
+    const BASE_INPUT = { selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "ACTIVATE", explanation: "trusted" }, fingerprint: fingerprint(), fullObservedFailures: REAL_2808_STABLE_FAILURES, selectedObservedFailures: [] };
+    const IDENTITY = { repository: "deepseek-ai/deepseek-harness", branch: "main", environmentIdentity: "nonroot", testFamily: "unit", commandIdentity: "test" };
+
+    it("is undefined when no repositorySafetyBudget is supplied - never fabricated from nothing", () => {
+      const r = decideFinalActivation(BASE_INPUT);
+      assert.equal(r.facts.repositoryTrackRecord, undefined);
+    });
+
+    it("is populated (and correctly INSUFFICIENT_AUDITED_SAMPLE) when a small budget IS supplied", () => {
+      let budget: SafetyBudget | undefined;
+      budget = recordDecision(budget, IDENTITY, { audited: true, outcomeChangingMiss: false, selectedWallMs: 1000, fullWallMs: 100_000, stage: "test", observedAtMs: 1000 });
+      const r = decideFinalActivation({ ...BASE_INPUT, repositorySafetyBudget: budget, minAuditedSampleSize: 10 });
+      assert.ok(r.facts.repositoryTrackRecord);
+      assert.equal(r.facts.repositoryTrackRecord!.confidence, "INSUFFICIENT_AUDITED_SAMPLE");
+    });
+
+    it("a real ESTABLISHED track record does NOT change the policy decision - it is informational only, this run's own facts still decide", () => {
+      let budget: SafetyBudget | undefined;
+      for (let i = 0; i < 300; i++) budget = recordDecision(budget, IDENTITY, { audited: true, outcomeChangingMiss: false, selectedWallMs: 1000, fullWallMs: 100_000, stage: "test", observedAtMs: i * 1000 });
+      // This run's OWN facts would refuse (a new failure not preserved) regardless of the repo's stellar track record.
+      const r = decideFinalActivation({
+        ...BASE_INPUT,
+        fullObservedFailures: [...REAL_2808_STABLE_FAILURES, REAL_MUTATION_FAILURE],
+        selectedObservedFailures: [], // did NOT catch it, this run
+        repositorySafetyBudget: budget,
+        minAuditedSampleSize: 10,
+      });
+      assert.equal(r.facts.repositoryTrackRecord!.confidence, "TRACK_RECORD_ESTABLISHED");
+      assert.equal(r.decision, "REFUSE_NEW_FAILURE_NOT_PRESERVED"); // NOT overridden by the good track record
     });
   });
 
