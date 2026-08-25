@@ -4,6 +4,7 @@ import { DEFAULT_MAX_TEST_RUN_MS, POLL_MS, classifyRuntimeSelection, sandboxCont
 import type { ExecutionStepDeps } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
 import type { R2BucketLike, R2ObjectBodyLike, SandboxLike } from "../../src/analysis-fanout/sandbox-like.js";
 import type { ExecutionRecord, ExecutionSpec, RepoExecutionProfile, TestRunResult } from "../../src/analysis-fanout/execution-types.js";
+import { ROLLING_FINGERPRINT_SCHEMA_VERSION } from "../../src/analysis-fanout/rolling-fingerprint.js";
 
 function spec(overrides: Partial<ExecutionSpec> = {}): ExecutionSpec {
   return {
@@ -1061,7 +1062,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     });
 
     describe("baseline-fingerprint gate (2026-08-25 hard-wired enforcement; rolling multi-sample model)", () => {
-      const ROLLING_KEY = `rolling-fingerprints/calcom__cal.diy/unknown/root__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+      const ROLLING_KEY = `rolling-fingerprints/calcom__cal.diy/unknown/root__unit__${encodeURIComponent("test -- --no-isolate")}__schema${ROLLING_FINGERPRINT_SCHEMA_VERSION}.json`;
       /** A rolling fingerprint with "unrelated.spec.ts :: z" observed in all 3 sampled bases (including
        * the default record()'s own baseSha, "a".repeat(40)) - stable by every DEFAULT_STABILITY_POLICY
        * rule (3 samples meets minSamples, frequency 1.0 clears minFrequency, recent, and with only 3
@@ -1071,6 +1072,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       function seededRolling(overrides: Record<string, unknown> = {}) {
         return {
           repository: "calcom/cal.diy", branch: "unknown", environmentIdentity: "root", testFamily: "unit", commandIdentity: "test -- --no-isolate",
+          schemaVersion: ROLLING_FINGERPRINT_SCHEMA_VERSION,
           totalBaseRunsSampled: 3,
           baseShaHistory: ["base1", "base2", "a".repeat(40)],
           tracked: [{ testId: "unrelated.spec.ts :: z", signature: "", observations: [{ baseSha: "base1", observedAtMs: 1000 }, { baseSha: "base2", observedAtMs: 2000 }, { baseSha: "a".repeat(40), observedAtMs: 3000 }] }],
@@ -1184,7 +1186,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
 
       it("a real merge run under a DIFFERENT environment (root vs the fingerprint's nonroot) never finds the rolling fingerprint - proves environment changes invalidate it", async () => {
         const { sandbox } = makeSandbox();
-        const nonrootKey = `rolling-fingerprints/calcom__cal.diy/unknown/nonroot__unit__${encodeURIComponent("test -- --no-isolate")}.json`;
+        const nonrootKey = `rolling-fingerprints/calcom__cal.diy/unknown/nonroot__unit__${encodeURIComponent("test -- --no-isolate")}__schema${ROLLING_FINGERPRINT_SCHEMA_VERSION}.json`;
         const { bucket } = makeBucket({ [nonrootKey]: JSON.stringify(seededRolling({ environmentIdentity: "nonroot" })) });
         const { deps } = makeDeps(sandbox, bucket, 4000);
         const rec = record({
@@ -1200,6 +1202,31 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         assert.equal(out.activationDecision!.environmentIdentity, "root");
         assert.equal(out.activationDecision!.fingerprintFound, false);
         assert.equal(out.activationDecision!.baselineSafety.decision, "REFUSE_NO_ROLLING_FINGERPRINT");
+      });
+
+      // 2026-08-25: defense-in-depth regression for the PID-normalization fix. The PRIMARY safeguard is the
+      // schema version being part of the store key itself (an old-schema object sits at a different key and
+      // is never read as this run's history at all - see the ROLLING_KEY vs a would-be unversioned key). This
+      // test proves the SECONDARY safeguard: even if an incompatible fingerprint somehow ends up readable at
+      // today's exact key (e.g. a future schema bump reusing key shape, or manual R2 tampering), the DO must
+      // still refuse rather than silently trust signatures built under different normalization rules.
+      it("a fingerprint present at today's key but stamped with a DIFFERENT schemaVersion is refused, not silently reused", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling({ schemaVersion: ROLLING_FINGERPRINT_SCHEMA_VERSION - 1 })) });
+        const { deps } = makeDeps(sandbox, bucket, 4000);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["unrelated.spec.ts :: z"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.equal(out.activationDecision!.fingerprintFound, true); // an object WAS found at this key...
+        assert.equal(out.activationDecision!.baselineSafety.decision, "REFUSE_SCHEMA_VERSION_MISMATCH"); // ...but refused, not trusted
+        assert.equal(out.activationDecision!.finalActivation.decision, "REFUSE_BASELINE_UNSAFE");
       });
 
       it("case 2 (real requested validation): a test with NO tracked history at all (unknown test or signature) is REFUSED, never quarantined just because a DIFFERENT failure in the same run is known", async () => {

@@ -6,6 +6,7 @@ import {
   deriveEffectiveFingerprint,
   mergeObservation,
   DEFAULT_STABILITY_POLICY,
+  ROLLING_FINGERPRINT_SCHEMA_VERSION,
   type RollingFingerprint,
 } from "../../src/analysis-fanout/rolling-fingerprint.js";
 import { classifyAgainstFingerprint, decideFinalActivation } from "../../src/analysis-fanout/baseline-fingerprint-gate.js";
@@ -47,6 +48,30 @@ describe("mergeObservation", () => {
     const r2 = mergeObservation(r1, IDENTITY, [], "base2", 2000);
     assert.equal(r2.totalBaseRunsSampled, 2);
     assert.equal(r2.tracked[0]!.observations.length, 1); // unchanged - STABLE_TEST wasn't observed this time
+  });
+
+  it("stamps every fresh series with the CURRENT ROLLING_FINGERPRINT_SCHEMA_VERSION", () => {
+    const r = mergeObservation(undefined, IDENTITY, [STABLE_TEST], "base1", 1000);
+    assert.equal(r.schemaVersion, ROLLING_FINGERPRINT_SCHEMA_VERSION);
+  });
+
+  // 2026-08-25: defense-in-depth for the PID-normalization fix (see ROLLING_FINGERPRINT_SCHEMA_VERSION's
+  // own comment) - even if an incompatible series somehow reaches mergeObservation as `existing`, its
+  // history must never be silently combined with fresh observations under different normalization rules.
+  it("treats an `existing` fingerprint stamped with a DIFFERENT schemaVersion as absent - starts fresh rather than merging incompatible history", () => {
+    const staleFromOldSchema: RollingFingerprint = {
+      ...IDENTITY,
+      schemaVersion: ROLLING_FINGERPRINT_SCHEMA_VERSION - 1,
+      totalBaseRunsSampled: 5,
+      baseShaHistory: ["old1", "old2", "old3", "old4", "old5"],
+      tracked: [{ testId: STABLE_TEST.testId, signature: STABLE_TEST.signature, observations: [{ baseSha: "old1", observedAtMs: 100 }] }],
+      updatedAtMs: 100,
+    };
+    const r = mergeObservation(staleFromOldSchema, IDENTITY, [STABLE_TEST], "new1", 2000);
+    assert.equal(r.schemaVersion, ROLLING_FINGERPRINT_SCHEMA_VERSION);
+    assert.equal(r.totalBaseRunsSampled, 1); // NOT 6 - the old series' count is discarded, not carried forward
+    assert.deepEqual(r.baseShaHistory, ["new1"]); // NOT the 5 old bases plus this one
+    assert.equal(r.tracked[0]!.observations.length, 1); // NOT 2 - the old sample is not merged in
   });
 });
 
@@ -102,6 +127,13 @@ describe("decideRollingBaselineSafety", () => {
   it("REFUSE_NO_ROLLING_FINGERPRINT is the ordinary starting state", () => {
     const r = decideRollingBaselineSafety({ ...IDENTITY, currentBaseSha: "base1", rolling: undefined, minTotalBaseRunsSampled: 3 });
     assert.equal(r.decision, "REFUSE_NO_ROLLING_FINGERPRINT");
+  });
+
+  it("REFUSE_SCHEMA_VERSION_MISMATCH when the stored fingerprint was built under a different normalizer version - checked BEFORE identity, never silently reused", () => {
+    let rolling: RollingFingerprint | undefined = mergeObservation(undefined, IDENTITY, [], "base1", 1000);
+    rolling = { ...rolling, schemaVersion: ROLLING_FINGERPRINT_SCHEMA_VERSION - 1 };
+    const r = decideRollingBaselineSafety({ ...IDENTITY, currentBaseSha: "base1", rolling, minTotalBaseRunsSampled: 1 });
+    assert.equal(r.decision, "REFUSE_SCHEMA_VERSION_MISMATCH");
   });
 
   it("REFUSE_IDENTITY_MISMATCH when the stored fingerprint is for a different environment", () => {

@@ -27,7 +27,7 @@ import { getRepoExecutionProfile } from "../repo-execution-profiles.js";
 import { repoSlug } from "./analysis-shard-do.js";
 import { decideActivation } from "../activation-gate.js";
 import { decideFinalActivation } from "../baseline-fingerprint-gate.js";
-import { decideRollingBaselineSafety, deriveEffectiveFingerprint, mergeObservation, type RollingFingerprint } from "../rolling-fingerprint.js";
+import { decideRollingBaselineSafety, deriveEffectiveFingerprint, mergeObservation, ROLLING_FINGERPRINT_SCHEMA_VERSION, type RollingFingerprint } from "../rolling-fingerprint.js";
 
 export const SHAPE = "standard-4"; // installs are heavy (cal.com: 3582 packages, native builds, ~20 min)
 /** How long the shard sleeps between poll alarms while a test-run process is in flight. */
@@ -825,7 +825,14 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
   // for one commit. A distinct key namespace (not the old fingerprints/ prefix) so the single-sample
   // objects already persisted this mission are never confused with or silently reinterpreted as rolling
   // ones - both remain as separate, honest historical artifacts.
-  const rollingKey = `rolling-fingerprints/${repoSlug(record.repository)}/${encodeURIComponent(branch)}/${environmentIdentity}__${TEST_FAMILY}__${encodeURIComponent(commandIdentity)}.json`;
+  // Schema version is part of the STORE KEY (not just a field checked after reading) so a fingerprint built
+  // under different normalization rules is never even read as this run's own history - the old key's object
+  // is left untouched as invalidated evidence rather than overwritten or deleted, and the new schema version
+  // starts a fresh series at its own key with no destructive action required (2026-08-25, live finding -
+  // see ROLLING_FINGERPRINT_SCHEMA_VERSION's own comment for why: normalizeFailureSignature previously left
+  // PIDs unstripped, so process-exit.spec.ts's most consistently recurring failure could never accumulate
+  // samples under the old key's data).
+  const rollingKey = `rolling-fingerprints/${repoSlug(record.repository)}/${encodeURIComponent(branch)}/${environmentIdentity}__${TEST_FAMILY}__${encodeURIComponent(commandIdentity)}__schema${ROLLING_FINGERPRINT_SCHEMA_VERSION}.json`;
 
   if (record.mergeSha === record.baseSha) {
     // Base-SHA control run: fold what THIS run itself observed into the rolling fingerprint, if it

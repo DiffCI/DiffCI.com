@@ -160,5 +160,48 @@ describe("parseVitestJsonReport", () => {
       const b = normalizeFailureSignature("TypeError: cannot read property 'x' of undefined");
       assert.notEqual(a, b);
     });
+
+    // 2026-08-25: real bug found live during rolling-fingerprint sample 1/2 (deepseek-harness) -
+    // process-exit.spec.ts's "managed pid <N> is still alive" failure recurred both runs but with a
+    // different PID each time, so v1 normalization never collapsed it to one tracked signature - the
+    // MOST consistently recurring failure in the whole mission could never accumulate samples. Fixed by
+    // contextual (keyword-adjacent only) PID stripping; these tests pin that fix and its boundaries.
+    describe("contextual PID normalization (v2, 2026-08-25 fix)", () => {
+      it("collapses the real recurring failure - same test, different PID each run - to one signature", () => {
+        const a = normalizeFailureSignature("Error: managed pid 669 is still alive at __vite_ssr_import_5__.vi.waitFor.interval (<path>)");
+        const b = normalizeFailureSignature("Error: managed pid 667 is still alive at __vite_ssr_import_5__.vi.waitFor.interval (<path>)");
+        assert.equal(a, b);
+        assert.equal(a, "Error: managed pid <pid> is still alive at __vite_ssr_import_5__.vi.waitFor.interval (<path>)");
+      });
+
+      it("normalizes 'PID: <n>' (colon form) and 'process <n>' the same way as 'pid <n>'", () => {
+        assert.equal(normalizeFailureSignature("worker PID: 4021 exited"), "worker pid <pid> exited");
+        assert.equal(normalizeFailureSignature("child process 4021 exited"), "child process <pid> exited");
+      });
+
+      it("does NOT strip status codes or other meaningful numbers not adjacent to pid/process keywords", () => {
+        const a = normalizeFailureSignature("AssertionError: expected 200, received 500");
+        const b = normalizeFailureSignature("AssertionError: expected 200, received 404");
+        assert.notEqual(a, b);
+        assert.equal(a, "AssertionError: expected 200, received 500");
+      });
+
+      it("does NOT strip worker/count numbers that are part of the failure's own meaning", () => {
+        const a = normalizeFailureSignature("1 worker failed");
+        const b = normalizeFailureSignature("10 workers failed");
+        assert.notEqual(a, b);
+      });
+
+      it("does NOT strip port/config numbers with no pid/process keyword nearby", () => {
+        const a = normalizeFailureSignature("listen EADDRINUSE: address already in use :::5432");
+        const b = normalizeFailureSignature("listen EADDRINUSE: address already in use :::5433");
+        assert.notEqual(a, b);
+      });
+
+      it("does NOT false-positive on 'process' used as an ordinary word with no adjacent number (e.g. Node internal stack frames)", () => {
+        const raw = "at processTicksAndRejections (node:internal/process/task_queues)";
+        assert.equal(normalizeFailureSignature(raw), raw); // unchanged - no pid/process keyword directly adjacent to a number
+      });
+    });
   });
 });

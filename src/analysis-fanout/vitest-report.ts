@@ -27,16 +27,39 @@ export interface VitestSummary {
 const EMPTY: VitestSummary = { files: 0, filesFailed: 0, tests: 0, failed: 0, passed: 0, skipped: 0, failedTests: [], failureSignatures: {}, parsed: false };
 
 /**
+ * Schema version for the normalization this function performs. Bumped whenever the normalization rules
+ * change in a way that alters which raw messages map to the same signature - a rolling fingerprint built
+ * under one version must never be silently reused under a different one (see
+ * ROLLING_FINGERPRINT_SCHEMA_VERSION in rolling-fingerprint.ts, which is defined as
+ * `NORMALIZE_FAILURE_SIGNATURE_VERSION` itself so the two can never drift apart by editing one and
+ * forgetting the other).
+ *
+ * v2 (2026-08-25): added contextual PID stripping (see below) after live evidence
+ * (docs/research/2026-08-25-deepseek-execution-validation, rolling-fingerprint samples 1-2) showed
+ * process-exit.spec.ts's "managed pid <N> is still alive" failure - one of the most consistently
+ * recurring flaky failures observed all mission - could never accumulate samples under v1, because each
+ * run's PID differed and nothing normalized it out.
+ */
+export const NORMALIZE_FAILURE_SIGNATURE_VERSION = 2;
+
+/**
  * Strips the parts of a Vitest failure message that vary between otherwise-identical failures (absolute
- * paths, line:column positions, timestamps, durations, UUIDs, ANSI color codes) so the SAME underlying
- * assertion failure produces the SAME signature across repeated runs, while a genuinely different
- * assertion/error produces a different one. Deliberately conservative (a real behavior change SHOULD
- * usually still change the message text meaningfully even after normalization) - this is a heuristic, not
- * a semantic diff, and is documented as such rather than treated as infallible.
+ * paths, line:column positions, timestamps, durations, UUIDs, ANSI color codes, contextual process
+ * identifiers) so the SAME underlying assertion failure produces the SAME signature across repeated runs,
+ * while a genuinely different assertion/error produces a different one. Deliberately conservative (a real
+ * behavior change SHOULD usually still change the message text meaningfully even after normalization) -
+ * this is a heuristic, not a semantic diff, and is documented as such rather than treated as infallible.
+ *
+ * Deliberately does NOT strip numbers in general - "expected 200, received 500", "1 worker failed" vs
+ * "10 workers failed", and port/config values are exactly the kind of numeric differences that indicate a
+ * materially DIFFERENT failure and must stay distinct. Only numbers in a specific, narrow, keyword-adjacent
+ * context (`pid 669`, `PID: 669`, `process 669`) are normalized, because only those are volatile process
+ * identifiers rather than part of the failure's own meaning.
  */
 export function normalizeFailureSignature(raw: string): string {
   return raw
     .replace(/\x1b\[[0-9;]*m/g, "") // ANSI color/style codes
+    .replace(/\b(pid|process)\s*[:=]?\s*\d+\b/gi, (_m, kw: string) => `${kw.toLowerCase()} <pid>`) // contextual process identifiers only
     .replace(/[A-Za-z]:[\\/][^\s:()]+|\/[^\s:()]+\.[a-z]+/gi, "<path>") // absolute file paths (Windows or POSIX)
     .replace(/:\d+:\d+\b/g, "") // trailing line:column
     .replace(/\b\d{4}-\d{2}-\d{2}T[\d:.Z+-]+/g, "<timestamp>") // ISO-8601 timestamps
