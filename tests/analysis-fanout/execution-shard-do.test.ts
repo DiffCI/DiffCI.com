@@ -5,7 +5,7 @@ import type { ExecutionStepDeps, RollingFingerprintStoreLike, SafetyBudgetStoreL
 import type { R2BucketLike, R2ObjectBodyLike, SandboxLike } from "../../src/analysis-fanout/sandbox-like.js";
 import type { ExecutionRecord, ExecutionSpec, RepoExecutionProfile, TestRunResult } from "../../src/analysis-fanout/execution-types.js";
 import { ROLLING_FINGERPRINT_SCHEMA_VERSION, mergeObservation, type RollingFingerprint } from "../../src/analysis-fanout/rolling-fingerprint.js";
-import { recordDecision, type DecisionOutcome, type SafetyBudget } from "../../src/analysis-fanout/safety-budget.js";
+import { recordDecision, SAFETY_BUDGET_SCHEMA_VERSION, type DecisionOutcome, type SafetyBudget } from "../../src/analysis-fanout/safety-budget.js";
 import { decideAuditSampling } from "../../src/analysis-fanout/audit-sampling.js";
 
 function spec(overrides: Partial<ExecutionSpec> = {}): ExecutionSpec {
@@ -1443,15 +1443,16 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         };
       }
 
-      it("records alwaysRunCohort (from the rolling fingerprint) and auditSampling (deterministic on mergeSha) on a real merge run", async () => {
+      it("auditSampling is deterministic on mergeSha, computed in finalize() - alwaysRunCohort (computed earlier, in deriving-selection) passes through unchanged", async () => {
         const { sandbox } = makeSandbox();
         const { bucket } = makeBucket();
-        const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
-        const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+        const { deps } = makeDeps(sandbox, bucket, 4000);
+        const preComputedCohort = { files: ["high-signal.spec.ts"], sourceEntries: [{ testId: "high-signal.spec.ts :: x", file: "high-signal.spec.ts", observationCount: 3 }] };
         const rec = record({
           step: "finalizing",
           mergeSha: "b".repeat(40),
           analysisOverheadMs: 1000,
+          alwaysRunCohort: preComputedCohort, // simulates what deriving-selection already set
           runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
           baseline: {
             full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["high-signal.spec.ts :: x"], observabilityStatus: "complete" },
@@ -1459,13 +1460,170 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
           },
         });
         const { record: out } = await stepExecution(rec, deps);
-        assert.deepEqual(out.alwaysRunCohort!.files, ["high-signal.spec.ts"]); // one-off.spec.ts excluded (1 observation < minObservations)
+        assert.deepEqual(out.alwaysRunCohort, preComputedCohort); // untouched by finalize() - not recomputed there anymore
         assert.ok(out.auditSampling);
         assert.equal(typeof out.auditSampling!.sampled, "boolean");
         assert.equal(out.auditSampling!.hashValue >= 0 && out.auditSampling!.hashValue < 1, true);
         // Deterministic - the SAME mergeSha always gets the SAME sampling decision.
         const again = decideAuditSampling("b".repeat(40));
         assert.deepEqual(out.auditSampling, again);
+      });
+
+      // 2026-08-25 ("close the cohort execution gap" follow-up to Report 18): direct tests of
+      // applyAlwaysRunCohort's own effect at deriving-selection - the cohort is computed AND unioned into
+      // what selected-baseline/selected-mutant actually invoke, not just recorded for later inspection.
+      describe("applyAlwaysRunCohort (deriving-selection) - closing the cohort execution gap", () => {
+        it("a real merge run with a nonempty rolling fingerprint gets alwaysRunCohort + effectiveSelectedTestPaths + testProvenance computed BEFORE selected-baseline runs", async () => {
+          const { sandbox } = makeSandbox();
+          const { bucket } = makeBucket();
+          const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
+          const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+          const rec = record({ step: "deriving-selection", mergeSha: "b".repeat(40), selectedTestPaths: ["affected.spec.ts"] });
+          const { record: out } = await stepExecution(rec, deps);
+          assert.equal(out.step, "installing");
+          assert.deepEqual(out.alwaysRunCohort!.files, ["high-signal.spec.ts"]); // one-off.spec.ts excluded (1 observation < minObservations)
+          assert.deepEqual(out.effectiveSelectedTestPaths, ["affected.spec.ts", "high-signal.spec.ts"]); // union, sorted
+          assert.deepEqual(out.testProvenance, [
+            { file: "affected.spec.ts", provenance: "AFFECTED" },
+            { file: "high-signal.spec.ts", provenance: "ALWAYS_RUN" },
+          ]);
+        });
+
+        it("a control run (mergeSha === baseSha) NEVER gets a cohort applied, even with a nonempty fingerprint available", async () => {
+          const { sandbox } = makeSandbox();
+          const { bucket } = makeBucket();
+          const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
+          const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+          const rec = record({ step: "deriving-selection", mergeSha: "a".repeat(40), baseSha: "a".repeat(40), selectedTestPaths: ["affected.spec.ts"] });
+          const { record: out } = await stepExecution(rec, deps);
+          assert.equal(out.alwaysRunCohort, undefined);
+          assert.equal(out.effectiveSelectedTestPaths, undefined);
+        });
+
+        it("no rolling fingerprint yet -> effectiveSelectedTestPaths/testProvenance stay undefined, never a fabricated empty-looking default", async () => {
+          const { sandbox } = makeSandbox();
+          const { bucket } = makeBucket();
+          const { deps } = makeDeps(sandbox, bucket, 4000); // empty rolling store
+          const rec = record({ step: "deriving-selection", mergeSha: "b".repeat(40), selectedTestPaths: ["affected.spec.ts"] });
+          const { record: out } = await stepExecution(rec, deps);
+          assert.equal(out.alwaysRunCohort, undefined);
+          assert.equal(out.effectiveSelectedTestPaths, undefined);
+        });
+
+        it("CRITICAL INVARIANT: a cohort-only file (outside the affected selection) actually appears in the selected-baseline test invocation's own argv", async () => {
+          const { sandbox, startProcessCalls } = makeSandbox();
+          const { bucket } = makeBucket();
+          const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
+          const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+          // Drive deriving-selection first so effectiveSelectedTestPaths gets computed...
+          const afterDerive = await stepExecution(record({ step: "deriving-selection", mergeSha: "b".repeat(40), selectedTestPaths: ["affected.spec.ts"] }), deps);
+          assert.deepEqual(afterDerive.record.effectiveSelectedTestPaths, ["affected.spec.ts", "high-signal.spec.ts"]);
+          // ...then selected-baseline (skipping the intervening install/full-baseline steps, which don't
+          // touch effectiveSelectedTestPaths) and confirm the cohort-only file is REALLY in the invoked argv.
+          const rec = { ...afterDerive.record, step: "selected-baseline" as const, baseline: { full: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, failedTests: [], observabilityStatus: "complete" as const }, selected: undefined as never } };
+          await stepExecution(rec, deps);
+          const invokedCommand = startProcessCalls[0]!.command;
+          assert.ok(invokedCommand.includes("high-signal.spec.ts"), `expected the cohort-only file in the invoked command: ${invokedCommand}`);
+          assert.ok(invokedCommand.includes("affected.spec.ts"), `expected the affected file in the invoked command: ${invokedCommand}`);
+        });
+
+        it("empty cohort (no tracked entries meet minObservations) - effectiveSelectedTestPaths equals the affected selection alone, sorted", async () => {
+          const { sandbox } = makeSandbox();
+          const { bucket } = makeBucket();
+          const emptyCohortFingerprint: RollingFingerprint = { ...seededRollingForCohort(), tracked: [] };
+          const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: emptyCohortFingerprint });
+          const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+          const rec = record({ step: "deriving-selection", mergeSha: "b".repeat(40), selectedTestPaths: ["b.spec.ts", "a.spec.ts"] });
+          const { record: out } = await stepExecution(rec, deps);
+          assert.deepEqual(out.alwaysRunCohort!.files, []);
+          assert.deepEqual(out.effectiveSelectedTestPaths, ["a.spec.ts", "b.spec.ts"]); // affected-only, sorted
+          assert.deepEqual(out.testProvenance!.map((p) => p.provenance), ["AFFECTED", "AFFECTED"]);
+        });
+
+        it("overlap/dedup: a file that is BOTH affected AND in the cohort appears ONCE, tagged BOTH", async () => {
+          const { sandbox } = makeSandbox();
+          const { bucket } = makeBucket();
+          const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
+          const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+          const rec = record({ step: "deriving-selection", mergeSha: "b".repeat(40), selectedTestPaths: ["high-signal.spec.ts"] }); // engine ALSO happened to pick the cohort's own file
+          const { record: out } = await stepExecution(rec, deps);
+          assert.deepEqual(out.effectiveSelectedTestPaths, ["high-signal.spec.ts"]); // not duplicated
+          assert.deepEqual(out.testProvenance, [{ file: "high-signal.spec.ts", provenance: "BOTH" }]);
+        });
+
+        it("CRITICAL INVARIANT: a cohort-only failure DOES influence the selective outcome - preserved as a NEW failure via finalActivation.facts", async () => {
+          const { sandbox } = makeSandbox();
+          const { bucket } = makeBucket();
+          const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
+          const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+          const rec = record({
+            step: "finalizing",
+            mergeSha: "b".repeat(40),
+            analysisOverheadMs: 1000,
+            alwaysRunCohort: { files: ["high-signal.spec.ts"], sourceEntries: [] },
+            runtimeSelection: { requestedTestFiles: ["affected.spec.ts", "high-signal.spec.ts"], executedTestFilesKnown: true, testFilesExecuted: 2, totalTestsExecuted: 2, status: "HONORED_EXACTLY", explanation: "" },
+            baseline: {
+              full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["high-signal.spec.ts :: a genuinely new regression the cohort caught"], observabilityStatus: "complete" },
+              // The cohort file's OWN new failure - not in the affected selection at all - shows up in the
+              // selected suite's real results because the cohort forced it to actually run.
+              selected: { command: [], exitCode: 1, timedOut: false, wallMs: 1_000, failed: 1, failedTests: ["high-signal.spec.ts :: a genuinely new regression the cohort caught"], observabilityStatus: "complete" },
+            },
+          });
+          const { record: out } = await stepExecution(rec, deps);
+          assert.deepEqual(out.activationDecision!.finalActivation.newFailuresInSelected, ["high-signal.spec.ts :: a genuinely new regression the cohort caught"]);
+          assert.deepEqual(out.activationDecision!.finalActivation.newFailuresMissedBySelection, []); // the cohort caught it - nothing missed
+        });
+
+        it("a cohort large enough to eliminate the economic benefit is reflected honestly in economicsBeneficial - the REAL executed plan's cost, not a cheaper hypothetical", async () => {
+          const { sandbox } = makeSandbox();
+          const { bucket } = makeBucket();
+          const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
+          const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+          const rec = record({
+            step: "finalizing",
+            mergeSha: "b".repeat(40),
+            analysisOverheadMs: 1000,
+            alwaysRunCohort: { files: ["high-signal.spec.ts"], sourceEntries: [] },
+            runtimeSelection: { requestedTestFiles: ["affected.spec.ts", "high-signal.spec.ts"], executedTestFilesKnown: true, testFilesExecuted: 2, totalTestsExecuted: 2, status: "HONORED_EXACTLY", explanation: "" },
+            baseline: {
+              full: { command: [], exitCode: 0, timedOut: false, wallMs: 100_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+              // The effective (cohort-included) run's REAL wall time is almost as expensive as the full
+              // suite - a real cohort cost genuinely large enough to erase most of the savings.
+              selected: { command: [], exitCode: 0, timedOut: false, wallMs: 95_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+            },
+          });
+          const { record: out } = await stepExecution(rec, deps);
+          // decideActivation reads record.baseline.selected.wallMs directly - the REAL, cohort-inclusive
+          // number - so a large cohort cost is automatically reflected here, never hidden behind a
+          // cheaper affected-only hypothetical.
+          assert.equal(out.activationDecision!.economicsBeneficial, false);
+        });
+
+        it("cohortWorkload attributes real per-file wall time to the cohort specifically, once fileDurationsMs is known", async () => {
+          const { sandbox } = makeSandbox();
+          const { bucket } = makeBucket();
+          const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
+          const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+          const rec = record({
+            step: "finalizing",
+            mergeSha: "b".repeat(40),
+            analysisOverheadMs: 1000,
+            selectedTestPaths: ["affected.spec.ts"],
+            alwaysRunCohort: { files: ["high-signal.spec.ts"], sourceEntries: [] },
+            effectiveSelectedTestPaths: ["affected.spec.ts", "high-signal.spec.ts"],
+            testProvenance: [{ file: "affected.spec.ts", provenance: "AFFECTED" }, { file: "high-signal.spec.ts", provenance: "ALWAYS_RUN" }],
+            runtimeSelection: { requestedTestFiles: ["affected.spec.ts", "high-signal.spec.ts"], executedTestFilesKnown: true, testFilesExecuted: 2, totalTestsExecuted: 2, status: "HONORED_EXACTLY", explanation: "" },
+            baseline: {
+              full: { command: [], exitCode: 0, timedOut: false, wallMs: 100_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+              selected: { command: [], exitCode: 0, timedOut: false, wallMs: 5_000, failed: 0, failedTests: [], observabilityStatus: "complete", fileDurationsMs: { "affected.spec.ts": 3000, "high-signal.spec.ts": 2000 } },
+            },
+          });
+          const { record: out } = await stepExecution(rec, deps);
+          assert.equal(out.cohortWorkload!.effectiveWallMs, 5000);
+          assert.equal(out.cohortWorkload!.cohortAddedWallMsApprox, 2000);
+          assert.equal(out.cohortWorkload!.affectedOnlyWallMsApprox, 3000);
+          assert.equal(out.cohortWorkload!.cohortAddedFileCount, 1);
+        });
       });
 
       it("no rolling fingerprint at all -> alwaysRunCohort stays undefined, never a fabricated empty-looking default", async () => {
@@ -1482,7 +1640,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         const { bucket } = makeBucket();
         const { safetyBudgetStore, store: budgetStore } = makeSafetyBudgetStore();
         const { deps } = makeDeps(sandbox, bucket, 4000, undefined, safetyBudgetStore);
-        const BUDGET_KEY = "safety-budgets/calcom__cal.diy/unknown/root__unit__" + encodeURIComponent("test -- --no-isolate") + ".json";
+        const BUDGET_KEY = `safety-budgets/calcom__cal.diy/unknown/root__unit__${encodeURIComponent("test -- --no-isolate")}__schema${SAFETY_BUDGET_SCHEMA_VERSION}.json`;
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1533,16 +1691,16 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         });
         const { record: out } = await stepExecution(rec, deps);
         assert.equal(out.activationDecision!.finalActivation.facts!.rawFullSuiteOutcomePreserved, "NOT_PRESERVED");
-        assert.equal(mergeCalls[0]!.outcome.outcomeChangingMiss, true);
+        assert.equal(mergeCalls[0]!.outcome.observedOutcomeMismatch, true);
       });
 
       it("repositorySafetyBudget (read before this run) feeds facts.repositoryTrackRecord on a real merge run, end to end", async () => {
         const { sandbox } = makeSandbox();
         const { bucket } = makeBucket();
-        const BUDGET_KEY = "safety-budgets/calcom__cal.diy/unknown/root__unit__" + encodeURIComponent("test -- --no-isolate") + ".json";
+        const BUDGET_KEY = `safety-budgets/calcom__cal.diy/unknown/root__unit__${encodeURIComponent("test -- --no-isolate")}__schema${SAFETY_BUDGET_SCHEMA_VERSION}.json`;
         let seededBudget: SafetyBudget | undefined;
         const IDENTITY = { repository: "calcom/cal.diy", branch: "unknown", environmentIdentity: "root", testFamily: "unit", commandIdentity: "test -- --no-isolate" };
-        for (let i = 0; i < 15; i++) seededBudget = recordDecision(seededBudget, IDENTITY, { audited: true, outcomeChangingMiss: false, selectedWallMs: 100, fullWallMs: 10_000, stage: "test", observedAtMs: i * 1000 });
+        for (let i = 0; i < 15; i++) seededBudget = recordDecision(seededBudget, IDENTITY, { countsTowardSafetyBudget: true, observedOutcomeMismatch: false, selectedWallMs: 100, fullWallMs: 10_000, stage: "test", observedAtMs: i * 1000 });
         const { safetyBudgetStore } = makeSafetyBudgetStore({ [BUDGET_KEY]: seededBudget! });
         const { deps } = makeDeps(sandbox, bucket, 4000, undefined, safetyBudgetStore);
         const rec = record({
@@ -1688,7 +1846,7 @@ describe("SafetyBudgetStore (Durable Object class)", () => {
 
   const IDENTITY = { repository: "calcom/cal.diy", branch: "unknown", environmentIdentity: "root", testFamily: "unit", commandIdentity: "test" };
   function outcome(overrides: Partial<DecisionOutcome> = {}): DecisionOutcome {
-    return { audited: true, outcomeChangingMiss: false, selectedWallMs: 1000, fullWallMs: 50_000, stage: "test", observedAtMs: 1000, ...overrides };
+    return { countsTowardSafetyBudget: true, observedOutcomeMismatch: false, selectedWallMs: 1000, fullWallMs: 50_000, stage: "test", observedAtMs: 1000, ...overrides };
   }
 
   it("/merge on a fresh instance starts a new budget and mirrors to R2", async () => {

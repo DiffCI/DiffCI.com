@@ -317,7 +317,7 @@ describe("decideFinalActivation (hard-wired composed activation rule)", () => {
 
     it("is populated (and correctly INSUFFICIENT_AUDITED_SAMPLE) when a small budget IS supplied", () => {
       let budget: SafetyBudget | undefined;
-      budget = recordDecision(budget, IDENTITY, { audited: true, outcomeChangingMiss: false, selectedWallMs: 1000, fullWallMs: 100_000, stage: "test", observedAtMs: 1000 });
+      budget = recordDecision(budget, IDENTITY, { countsTowardSafetyBudget: true, observedOutcomeMismatch: false, selectedWallMs: 1000, fullWallMs: 100_000, stage: "test", observedAtMs: 1000 });
       const r = decideFinalActivation({ ...BASE_INPUT, repositorySafetyBudget: budget, minAuditedSampleSize: 10 });
       assert.ok(r.facts.repositoryTrackRecord);
       assert.equal(r.facts.repositoryTrackRecord!.confidence, "INSUFFICIENT_AUDITED_SAMPLE");
@@ -325,7 +325,7 @@ describe("decideFinalActivation (hard-wired composed activation rule)", () => {
 
     it("a real ESTABLISHED track record does NOT change the policy decision - it is informational only, this run's own facts still decide", () => {
       let budget: SafetyBudget | undefined;
-      for (let i = 0; i < 300; i++) budget = recordDecision(budget, IDENTITY, { audited: true, outcomeChangingMiss: false, selectedWallMs: 1000, fullWallMs: 100_000, stage: "test", observedAtMs: i * 1000 });
+      for (let i = 0; i < 300; i++) budget = recordDecision(budget, IDENTITY, { countsTowardSafetyBudget: true, observedOutcomeMismatch: false, selectedWallMs: 1000, fullWallMs: 100_000, stage: "test", observedAtMs: i * 1000 });
       // This run's OWN facts would refuse (a new failure not preserved) regardless of the repo's stellar track record.
       const r = decideFinalActivation({
         ...BASE_INPUT,

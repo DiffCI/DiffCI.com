@@ -21,10 +21,17 @@ export interface VitestSummary {
    * strips. Absent (no entry) for a failed test whose report carried no failureMessages at all - treated
    * as an unknown/empty signature by callers, never fabricated. */
   failureSignatures: Record<string, string>;
+  /** Per-file real wall-clock duration in ms (2026-08-25, "production-safe selective execution loop"
+   * follow-up), keyed by the SAME normalized file name used elsewhere in this module. From the reporter's
+   * own per-file startTime/endTime (standard Jest/Vitest JSON-reporter fields) - present only when BOTH are
+   * finite numbers with endTime >= startTime; a file whose timing didn't parse cleanly simply has no entry
+   * here, never a fabricated 0. Used to attribute real measured cost to the always-run cohort specifically
+   * (cohort-economics.ts), separate from the effective run's own total wallMs. */
+  fileDurationsMs: Record<string, number>;
   parsed: boolean;
 }
 
-const EMPTY: VitestSummary = { files: 0, filesFailed: 0, tests: 0, failed: 0, passed: 0, skipped: 0, failedTests: [], failureSignatures: {}, parsed: false };
+const EMPTY: VitestSummary = { files: 0, filesFailed: 0, tests: 0, failed: 0, passed: 0, skipped: 0, failedTests: [], failureSignatures: {}, fileDurationsMs: {}, parsed: false };
 
 /**
  * Schema version for the normalization this function performs. Bumped whenever the normalization rules
@@ -82,11 +89,18 @@ export function parseVitestJsonReport(raw: string | undefined): VitestSummary {
   const report = j as Record<string, unknown>;
   const failedTests: string[] = [];
   const failureSignatures: Record<string, string> = {};
+  const fileDurationsMs: Record<string, number> = {};
   const testResults = Array.isArray(report.testResults) ? report.testResults : [];
   for (const f of testResults) {
     if (typeof f !== "object" || f === null) continue;
     const fileRecord = f as Record<string, unknown>;
     const name = typeof fileRecord.name === "string" ? fileRecord.name.replace(/\\/g, "/").split("/").slice(-3).join("/") : "unknown-file";
+    // Standard Jest/Vitest JSON-reporter per-file timing fields. Defensive: only recorded when both are
+    // finite numbers and endTime >= startTime - a malformed/missing pair simply leaves this file absent
+    // from fileDurationsMs rather than fabricating a 0 or negative duration.
+    if (typeof fileRecord.startTime === "number" && typeof fileRecord.endTime === "number" && Number.isFinite(fileRecord.startTime) && Number.isFinite(fileRecord.endTime) && fileRecord.endTime >= fileRecord.startTime) {
+      fileDurationsMs[name] = fileRecord.endTime - fileRecord.startTime;
+    }
     const assertions = Array.isArray(fileRecord.assertionResults) ? fileRecord.assertionResults : [];
     for (const a of assertions) {
       if (typeof a !== "object" || a === null) continue;
@@ -117,6 +131,7 @@ export function parseVitestJsonReport(raw: string | undefined): VitestSummary {
     skipped: num("numPendingTests") + num("numTodoTests"),
     failedTests,
     failureSignatures,
+    fileDurationsMs,
     parsed: true,
   };
 }

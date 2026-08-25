@@ -149,6 +149,8 @@ export interface TestRunResult {
   failedTests?: string[];
   /** See VitestSummary.failureSignatures - carried through verbatim when the report parsed. */
   failureSignatures?: Record<string, string>;
+  /** See VitestSummary.fileDurationsMs - carried through verbatim when the report parsed. */
+  fileDurationsMs?: Record<string, number>;
   /** Last ~8000 chars of the process's own accumulated stdout/stderr (via the sandbox SDK's
    * getProcessLogs, 2026-08-24 - previously never captured for any startProcess-based step). This is
    * the audit trail when the structured report is missing or malformed: what the test runner actually
@@ -174,7 +176,7 @@ export interface TestRunResult {
 export type SelectionHonoredStatus = "HONORED_EXACTLY" | "HONORED_WITH_FRAMEWORK_EXPANSION" | "IGNORED_OR_BROADENED" | "UNMEASURABLE";
 
 export interface RuntimeSelectionEvidence {
-  requestedTestFiles: string[];
+  requestedTestFiles: readonly string[];
   /** Distinct file paths actually reflected in the parsed report's failedTests/summary evidence, when
    * derivable; undefined when the report doesn't expose per-file identity DiffCI's parser can read. */
   executedTestFilesKnown: boolean;
@@ -288,13 +290,35 @@ export interface ExecutionRecord {
    * contain the deliberate mutation's real new failure, using the identical fingerprint/baselineSafety as
    * the baseline decision (properties of the run, not the phase). */
   mutantActivationDecision?: FinalActivationRecordShape;
-  /** The always-run cohort actually applied to THIS real merge run's selected-phase test paths (2026-08-25,
-   * "production-safe selective execution loop" follow-up to Report 17) - see always-run-cohort.ts. Present
-   * only for real merge runs (mergeSha !== baseSha) with a rolling fingerprint to draw from; undefined,
-   * never an empty-looking default, when no cohort was computed at all. */
+  /** The always-run cohort computed for THIS real merge run, drawn from the rolling fingerprint BEFORE
+   * selected-baseline/selected-mutant ran (2026-08-25, "close the cohort execution gap" follow-up to
+   * Report 18 - the cohort was previously only recorded, never forced into execution) - see
+   * always-run-cohort.ts. Present only for real merge runs (mergeSha !== baseSha) with a rolling
+   * fingerprint to draw from; undefined, never an empty-looking default, when no cohort was computed at
+   * all (e.g. no fingerprint exists yet). Its `.files` are UNIONED into effectiveSelectedTestPaths below,
+   * which is what selected-baseline/selected-mutant actually invoke the test runner with. */
   alwaysRunCohort?: {
     files: readonly string[];
     sourceEntries: readonly { testId: string; file: string; observationCount: number }[];
+  };
+  /** The engine's own affected selection (selectedTestPaths) UNIONED with the always-run cohort's files
+   * (2026-08-25) - what selected-baseline/selected-mutant actually request from the test runner. Equal to
+   * selectedTestPaths (deduplicated/sorted) when no cohort was computed. See execution-plan.ts. */
+  effectiveSelectedTestPaths?: readonly string[];
+  /** One entry per effectiveSelectedTestPaths member, tagging why each file is in the plan - AFFECTED
+   * (selection engine only), ALWAYS_RUN (cohort only), or BOTH. See execution-plan.ts's TestProvenance. */
+  testProvenance?: readonly { file: string; provenance: "AFFECTED" | "ALWAYS_RUN" | "BOTH" }[];
+  /** Workload attribution between the affected selection and the cohort, computed against the REAL
+   * executed selected-baseline run (2026-08-25) - see cohort-economics.ts's own doc comment for exactly
+   * which figures are real measurements vs approximations. Present only when both a rolling fingerprint
+   * existed (testProvenance computed) and the selected-baseline run actually completed. */
+  cohortWorkload?: {
+    affectedFileCount: number;
+    cohortAddedFileCount: number;
+    effectiveFileCount: number;
+    effectiveWallMs: number;
+    cohortAddedWallMsApprox?: number;
+    affectedOnlyWallMsApprox?: number;
   };
   /** This real merge run's periodic-full-suite-audit sampling decision (2026-08-25) - see
    * audit-sampling.ts. `sampled` here is the POLICY decision (would a real production system, sampling at

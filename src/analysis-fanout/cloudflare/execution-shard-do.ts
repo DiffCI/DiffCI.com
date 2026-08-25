@@ -29,8 +29,10 @@ import { decideActivation } from "../activation-gate.js";
 import { decideFinalActivation } from "../baseline-fingerprint-gate.js";
 import { decideRollingBaselineSafety, deriveEffectiveFingerprint, mergeObservation, ROLLING_FINGERPRINT_SCHEMA_VERSION, type RollingFingerprint } from "../rolling-fingerprint.js";
 import { selectAlwaysRunCohort, DEFAULT_COHORT_POLICY } from "../always-run-cohort.js";
+import { buildEffectiveExecutionPlan } from "../execution-plan.js";
+import { computeCohortWorkload } from "../cohort-economics.js";
 import { decideAuditSampling, DEFAULT_AUDIT_SAMPLING_POLICY } from "../audit-sampling.js";
-import { recordDecision, type SafetyBudget, type DecisionOutcome } from "../safety-budget.js";
+import { recordDecision, SAFETY_BUDGET_SCHEMA_VERSION, type SafetyBudget, type DecisionOutcome } from "../safety-budget.js";
 
 export const SHAPE = "standard-4"; // installs are heavy (cal.com: 3582 packages, native builds, ~20 min)
 /** How long the shard sleeps between poll alarms while a test-run process is in flight. */
@@ -278,7 +280,7 @@ function reportPath(reportName: string): string {
  * by name regardless of how many OTHER reporters are also configured (repo-execution-profiles.ts may
  * list more than one, e.g. adding `--reporter=default` for human-readable console output alongside the
  * structured file), so it never depends on json being the only or the first reporter. */
-function buildTestArgv(profile: RepoExecutionProfile, reportName: string, files: string[] | undefined, testArgvBase: string[]): string[] {
+function buildTestArgv(profile: RepoExecutionProfile, reportName: string, files: readonly string[] | undefined, testArgvBase: string[]): string[] {
   return [...testArgvBase, ...profile.reporterArgv, `--outputFile.json=${reportPath(reportName)}`, ...(files ?? [])];
 }
 
@@ -420,9 +422,48 @@ async function clone(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<
  * cloned target repo, entirely inside this sandbox (never locally). Never fabricates: an unparseable or
  * `ok:false` result fails the execution rather than defaulting to an empty/guessed selection.
  */
+/**
+ * Reads the rolling fingerprint and unions the always-run cohort into the effective execution plan for a
+ * REAL merge run (2026-08-25, "close the cohort execution gap" follow-up to Report 18 - the cohort was
+ * previously only computed and RECORDED in finalize(), never forced into what actually executed). Control-
+ * run samples (mergeSha === baseSha) never get a cohort applied - their "selected" phase is already
+ * flagged elsewhere as an operator-supplied convenience path, not real selection economics; overlaying a
+ * cohort would only further confound an already-non-representative measurement.
+ *
+ * Sets record.alwaysRunCohort / record.effectiveSelectedTestPaths / record.testProvenance. Best-effort: a
+ * failed or missing fingerprint read degrades to "no cohort applied" (the three fields stay undefined,
+ * selectedBaseline/selectedMutant fall back to record.selectedTestPaths alone) rather than failing the
+ * whole execution - the cohort is a safety ADDITION on top of the engine's own selection; its own
+ * unavailability must never block that underlying selection from running at all.
+ */
+async function applyAlwaysRunCohort(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<void> {
+  if (record.mergeSha === record.baseSha) return;
+  const { profile, rollingFingerprintStore } = deps;
+  const identity = {
+    repository: record.repository,
+    branch: record.branch ?? "unknown",
+    environmentIdentity: environmentIdentityOf(record),
+    testFamily: TEST_FAMILY,
+    commandIdentity: commandIdentityOf(profile, record),
+  };
+  let rolling: RollingFingerprint | undefined;
+  try {
+    rolling = await rollingFingerprintStore.read(rollingFingerprintKey(identity));
+  } catch {
+    rolling = undefined;
+  }
+  if (!rolling) return; // no fingerprint yet to build a cohort from - not an error, the ordinary early state
+  const cohort = selectAlwaysRunCohort(rolling, DEFAULT_COHORT_POLICY);
+  record.alwaysRunCohort = cohort;
+  const plan = buildEffectiveExecutionPlan(record.selectedTestPaths ?? [], cohort.files);
+  record.effectiveSelectedTestPaths = [...plan.effectiveFiles];
+  record.testProvenance = [...plan.provenance];
+}
+
 async function deriveSelection(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> {
   const { sandbox } = deps;
   if (record.selectedTestPaths && record.selectedTestPaths.length > 0) {
+    await applyAlwaysRunCohort(record, deps);
     record.step = "installing";
     return { record, nextAlarmDelayMs: 0 };
   }
@@ -448,6 +489,7 @@ async function deriveSelection(record: ExecutionRecord, deps: ExecutionStepDeps)
     record.selectedTestPaths = paths;
     record.totalTestsInGraph = parsed.summary.totalTestsInGraph ?? 0;
     record.analysisOverheadMs = record.timings.deriveSelectionMs;
+    await applyAlwaysRunCohort(record, deps);
     record.step = "installing";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {
@@ -544,7 +586,7 @@ async function diagnose(record: ExecutionRecord, deps: ExecutionStepDeps): Promi
 /** Config for one test-run step: which files to filter to (undefined = full suite), the JSON reporter's
  * output filename, which ExecutionStep to advance to, and where to store the resulting TestRunResult. */
 interface TestRunStepConfig {
-  files: string[] | undefined;
+  files: readonly string[] | undefined;
   reportName: string;
   nextStep: ExecutionStep;
   errorClass: string;
@@ -633,6 +675,7 @@ async function stepTestRun(record: ExecutionRecord, deps: ExecutionStepDeps, cfg
       failed: parsed.parsed ? parsed.failed : undefined,
       failedTests: parsed.parsed ? parsed.failedTests : undefined,
       failureSignatures: parsed.parsed ? parsed.failureSignatures : undefined,
+      fileDurationsMs: parsed.parsed ? parsed.fileDurationsMs : undefined,
       stdoutTail,
       stderrTail,
       observabilityStatus,
@@ -666,7 +709,7 @@ const fullBaseline = (record: ExecutionRecord, deps: ExecutionStepDeps): Promise
  */
 const FRAMEWORK_EXPANSION_TOLERANCE = 3;
 
-export function classifyRuntimeSelection(requestedTestFiles: string[], result: TestRunResult): RuntimeSelectionEvidence {
+export function classifyRuntimeSelection(requestedTestFiles: readonly string[], result: TestRunResult): RuntimeSelectionEvidence {
   if (result.observabilityStatus !== "complete" || result.files === undefined) {
     return {
       requestedTestFiles,
@@ -696,14 +739,21 @@ export function classifyRuntimeSelection(requestedTestFiles: string[], result: T
 
 const selectedBaseline = (record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> =>
   stepTestRun(record, deps, {
+    // 2026-08-25 ("close the cohort execution gap"): the EFFECTIVE set (affected selection UNION the
+    // always-run cohort, computed by applyAlwaysRunCohort in deriving-selection) when one was built for
+    // this real merge run - falls back to the bare affected-only selectedTestPaths for control-run
+    // samples (which never get a cohort) or if no rolling fingerprint existed yet to build one from.
     // Guaranteed populated by the deriving-selection step before any test-run step is reachable.
-    files: record.selectedTestPaths ?? [],
+    files: record.effectiveSelectedTestPaths ?? record.selectedTestPaths ?? [],
     reportName: "selected-baseline",
     nextStep: "mutating",
     errorClass: "selected-baseline-failed",
     applyResult: (r, result) => {
       r.baseline = { full: r.baseline!.full, selected: result };
-      r.runtimeSelection = classifyRuntimeSelection(r.selectedTestPaths ?? [], result);
+      // Classified against the EFFECTIVE request (affected+cohort), not the affected-only set - the
+      // cohort's deliberate addition is part of what was actually requested from the test runner this
+      // run, not an anomaly classifyRuntimeSelection should flag as broadened/ignored selection.
+      r.runtimeSelection = classifyRuntimeSelection(r.effectiveSelectedTestPaths ?? r.selectedTestPaths ?? [], result);
     },
   });
 
@@ -786,7 +836,10 @@ async function fullMutant(record: ExecutionRecord, deps: ExecutionStepDeps): Pro
 
 const selectedMutant = (record: ExecutionRecord, deps: ExecutionStepDeps): Promise<ExecutionStepResult> =>
   stepTestRun(record, deps, {
-    files: record.selectedTestPaths,
+    // Same effective (affected+cohort) set as selectedBaseline above - a cohort test that catches nothing
+    // at baseline but fails once the mutation is applied is exactly the invariant this whole mechanism
+    // exists to prove (see the "cohort-only failure influences the selective outcome" test).
+    files: record.effectiveSelectedTestPaths ?? record.selectedTestPaths,
     reportName: "selected-mutant",
     nextStep: "reverting",
     errorClass: "selected-mutant-failed",
@@ -913,8 +966,30 @@ const MIN_TOTAL_BASE_RUNS_SAMPLED = 3;
  * this many audited decisions (2026-08-25, "production-safe selective execution loop" follow-up). */
 const MIN_AUDITED_SAMPLE_SIZE = 10;
 
+// Schema version is part of the STORE KEY (2026-08-25, mirroring rollingKey's own pattern in
+// applyBaselineFingerprintGate) - a budget recorded under different DecisionOutcome/SafetyBudget field
+// semantics is never read as this identity's history at all; the old key's object is left untouched as
+// historical evidence rather than overwritten.
 function safetyBudgetKey(identity: Pick<RollingFingerprint, "repository" | "branch" | "environmentIdentity" | "testFamily" | "commandIdentity">): string {
-  return `safety-budgets/${repoSlug(identity.repository)}/${encodeURIComponent(identity.branch)}/${identity.environmentIdentity}__${identity.testFamily}__${encodeURIComponent(identity.commandIdentity)}.json`;
+  return `safety-budgets/${repoSlug(identity.repository)}/${encodeURIComponent(identity.branch)}/${identity.environmentIdentity}__${identity.testFamily}__${encodeURIComponent(identity.commandIdentity)}__schema${SAFETY_BUDGET_SCHEMA_VERSION}.json`;
+}
+
+// Rolling fingerprints are keyed WITHOUT the base SHA (2026-08-25) - one rolling object per repository/
+// branch/environment/family/command spans MANY base commits over time (that's the whole point of
+// "rolling"); the single-sample BaselineFingerprint's key included baseSha because it was one snapshot for
+// one commit. A distinct key namespace (not the old fingerprints/ prefix) so the single-sample objects
+// already persisted this mission are never confused with or silently reinterpreted as rolling ones - both
+// remain as separate, honest historical artifacts. Schema version is part of the STORE KEY (not just a
+// field checked after reading) so a fingerprint built under different normalization rules is never even
+// read as this run's own history - the old key's object is left untouched as invalidated evidence rather
+// than overwritten or deleted, and the new schema version starts a fresh series at its own key with no
+// destructive action required (2026-08-25, live finding - see ROLLING_FINGERPRINT_SCHEMA_VERSION's own
+// comment for why). Extracted as a shared helper (2026-08-25, "close the cohort execution gap" follow-up)
+// so deriveSelection (which now needs to read the fingerprint BEFORE selected-baseline runs) and
+// applyBaselineFingerprintGate (finalize()) always compute the IDENTICAL key - drift between the two would
+// silently read/write the wrong object.
+function rollingFingerprintKey(identity: Pick<RollingFingerprint, "repository" | "branch" | "environmentIdentity" | "testFamily" | "commandIdentity">): string {
+  return `rolling-fingerprints/${repoSlug(identity.repository)}/${encodeURIComponent(identity.branch)}/${identity.environmentIdentity}__${identity.testFamily}__${encodeURIComponent(identity.commandIdentity)}__schema${ROLLING_FINGERPRINT_SCHEMA_VERSION}.json`;
 }
 
 async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<void> {
@@ -923,20 +998,7 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
   const environmentIdentity = environmentIdentityOf(record);
   const commandIdentity = commandIdentityOf(profile, record);
   const identity = { repository: record.repository, branch, environmentIdentity, testFamily: TEST_FAMILY, commandIdentity };
-  // Rolling fingerprints are keyed WITHOUT the base SHA (2026-08-25) - one rolling object per repository/
-  // branch/environment/family/command spans MANY base commits over time (that's the whole point of
-  // "rolling"); the single-sample BaselineFingerprint's key included baseSha because it was one snapshot
-  // for one commit. A distinct key namespace (not the old fingerprints/ prefix) so the single-sample
-  // objects already persisted this mission are never confused with or silently reinterpreted as rolling
-  // ones - both remain as separate, honest historical artifacts.
-  // Schema version is part of the STORE KEY (not just a field checked after reading) so a fingerprint built
-  // under different normalization rules is never even read as this run's own history - the old key's object
-  // is left untouched as invalidated evidence rather than overwritten or deleted, and the new schema version
-  // starts a fresh series at its own key with no destructive action required (2026-08-25, live finding -
-  // see ROLLING_FINGERPRINT_SCHEMA_VERSION's own comment for why: normalizeFailureSignature previously left
-  // PIDs unstripped, so process-exit.spec.ts's most consistently recurring failure could never accumulate
-  // samples under the old key's data).
-  const rollingKey = `rolling-fingerprints/${repoSlug(record.repository)}/${encodeURIComponent(branch)}/${environmentIdentity}__${TEST_FAMILY}__${encodeURIComponent(commandIdentity)}__schema${ROLLING_FINGERPRINT_SCHEMA_VERSION}.json`;
+  const rollingKey = rollingFingerprintKey(identity);
 
   if (record.mergeSha === record.baseSha) {
     // Base-SHA control run: fold what THIS run itself observed into the rolling fingerprint, if it
@@ -965,14 +1027,21 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
   }
   const nowMs = now();
 
-  // Always-run cohort (2026-08-25, "production-safe selective execution loop" follow-up to Report 17) -
-  // computed and RECORDED for every real merge run with a rolling fingerprint to draw from. NOT YET forced
-  // into the selected-baseline test invocation itself (that requires reading the rolling fingerprint
-  // BEFORE deriving-selection/selected-baseline run, earlier in this state machine than finalize() - a
-  // real, identified follow-up, not silently skipped). Recording it now lets the retrospective question
-  // "would the cohort have caught something DiffCI's own selection missed" start being answerable from
-  // already-collected full-suite data, ahead of the step-machine change needed to actually act on it.
-  if (rolling) record.alwaysRunCohort = selectAlwaysRunCohort(rolling, DEFAULT_COHORT_POLICY);
+  // Always-run cohort economics (2026-08-25, "close the cohort execution gap" follow-up to Report 18) -
+  // record.alwaysRunCohort/effectiveSelectedTestPaths/testProvenance were already computed by
+  // applyAlwaysRunCohort back in deriving-selection (BEFORE selected-baseline actually ran) and are NOT
+  // recomputed here - only workload attribution against the real, already-executed run is new at this
+  // point. Reconstructing the plan from the already-persisted fields (cheap, pure) rather than storing the
+  // whole EffectiveExecutionPlan object redundantly on the record.
+  if (record.testProvenance && record.baseline?.selected.observabilityStatus === "complete") {
+    const plan = {
+      affectedFiles: record.selectedTestPaths ?? [],
+      cohortFiles: record.alwaysRunCohort?.files ?? [],
+      effectiveFiles: record.effectiveSelectedTestPaths ?? [],
+      provenance: record.testProvenance,
+    };
+    record.cohortWorkload = computeCohortWorkload(plan, record.baseline.selected.fileDurationsMs ?? {}, record.baseline.selected.wallMs);
+  }
 
   // Periodic full-suite audit sampling (audit-sampling.ts) - a deterministic per-merge decision on whether
   // THIS merge counts toward the repository's safety-budget AUDITED evidence. Seeded by mergeSha, not
@@ -1053,14 +1122,17 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
 
   // Fold THIS run's own outcome into the repository's running safety budget (2026-08-25) - only when both
   // sides of the comparison actually completed (a missing-report full or selected observation means there
-  // is nothing trustworthy to record either way). `audited` is the audit-SAMPLING policy decision above,
-  // not "did this validation harness happen to have full-suite data" - it always does, but the budget
-  // should model what a real, sampled production system would have measured, not this harness's own
-  // always-run-both methodology.
+  // is nothing trustworthy to record either way). `countsTowardSafetyBudget` is the audit-SAMPLING policy
+  // decision above, not "did this validation harness happen to have full-suite data" - it always does, but
+  // the STATISTICAL counters should model what a real, sampled production system would have measured, not
+  // this harness's own always-run-both methodology. `observedOutcomeMismatch` is recorded regardless -
+  // real comparison data exists this run (the guard above confirms it), so the raw observation is never
+  // dropped just because it fell outside the audit sample (2026-08-25 follow-up, after the real
+  // deepseek-2808-loop-smoke run showed exactly this: a genuine NOT_PRESERVED outcome, not sampled).
   if (record.baseline?.full?.observabilityStatus === "complete" && record.baseline.selected.observabilityStatus === "complete") {
     const outcome: DecisionOutcome = {
-      audited: record.auditSampling?.sampled ?? false,
-      outcomeChangingMiss: finalActivation.facts.rawFullSuiteOutcomePreserved === "NOT_PRESERVED",
+      observedOutcomeMismatch: finalActivation.facts.rawFullSuiteOutcomePreserved === "NOT_PRESERVED",
+      countsTowardSafetyBudget: record.auditSampling?.sampled ?? false,
       selectedWallMs: record.baseline.selected.wallMs,
       fullWallMs: record.baseline.full.wallMs,
       stage: "test",
