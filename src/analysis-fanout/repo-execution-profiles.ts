@@ -26,6 +26,51 @@
 import type { RepoExecutionProfile } from "./execution-types.js";
 
 const PROFILES: Record<string, RepoExecutionProfile> = {
+  /**
+   * deepseek-ai/deepseek-harness (2026-08-25, DeepSeek execution-validation mission, Phase 5). Confirmed
+   * verbatim from .github/workflows/ci.yml, package.json, and scripts/run-gates.ts (see
+   * docs/research/2026-08-25-deepseek-execution-validation/01-identity-and-validation-universe-inventory.md).
+   *
+   * UNIT FAMILY ONLY: this is the only family DiffCI's static engine currently selects tests for
+   * (`totalTestsInGraph` ~1015-1031 = root vitest.config.ts's test surface). Real CI's actual unit-test
+   * gate is coverage-instrumented and partitioned (`pnpm run check:ci:coverage` -> `test:coverage:partitioned`
+   * -> multiple single-worker `vitest run --coverage` processes merged), which has no simple per-file
+   * selective-invocation shape. `testArgv: ["test"]` instead targets the plain, uninstrumented
+   * `"test": "vitest run"` script - the same underlying vitest.config.ts test surface, without coverage
+   * instrumentation or partitioning, matching the Cal.com precedent's choice to measure the corrected,
+   * reliably-selectable command shape rather than force-fit real CI's own heavier wrapper. This is a
+   * deliberate, documented narrowing (see the inventory report's completeness label), not an
+   * approximation error. Snapshot (`test:snapshot`) and E2E (`test:e2e`, credential-gated) are
+   * documented in the same report but not yet wired here - DiffCI has no selection to validate against
+   * them (it doesn't select snapshot/e2e tests at all), so there is nothing for this profile to execute
+   * selectively in those families this round.
+   *
+   * `--ignore-scripts` on install (deviating from the CI workflow's bare `pnpm install --frozen-lockfile`)
+   * intentionally preserved from the pre-existing local harness (scripts/diffci-execution-validation.ts,
+   * 2026-08-23, never actually run) - a sandbox-safety policy (no arbitrary postinstall script execution
+   * inside the shared container), not a CI-fidelity shortcut. The unit family does not depend on any
+   * postinstall-built artifact (confirmed: no build prerequisite for `vitest run` per the inventory).
+   *
+   * Whether `corepack pnpm test <reporterArgv> --outputFile.json=... <files>` actually forwards the
+   * trailing file-filter arguments to vitest (pnpm's own argument-forwarding semantics for `pnpm run
+   * <script> <extra args>` are NOT assumed identical to yarn's, per the Cal.com `--` lesson) is NOT yet
+   * empirically confirmed for this repository - see the pending argument-forwarding probe report before
+   * trusting any selective run made with this profile.
+   */
+  "deepseek-ai/deepseek-harness": {
+    repository: "deepseek-ai/deepseek-harness",
+    packageManager: "pnpm",
+    installArgv: ["install", "--frozen-lockfile", "--ignore-scripts"],
+    pretestArgv: [],
+    testArgv: ["test"],
+    reporterArgv: ["--reporter=json", "--reporter=default"],
+    // 15 minutes (2026-08-25, provisional pending canary): no repo-declared per-job timeout exists for
+    // this family (only the unrelated windows/windows-native jobs set timeout-minutes), and this
+    // repository's modeled unit-test graph (~1015-1031 files) is roughly 4x cal.com's (~406), so cal.com's
+    // proven 10-minute cap is deliberately not reused as-is. Revisit after the canary run's real full-suite
+    // duration is observed.
+    maxTestRunMs: 15 * 60_000,
+  },
   "calcom/cal.diy": {
     repository: "calcom/cal.diy",
     packageManager: "yarn",

@@ -27,9 +27,27 @@ describe("repo-execution-profiles", () => {
     assert.equal(profile!.maxTestRunMs, 10 * 60_000);
   });
 
+  it("returns deepseek-harness's unit-family profile verbatim (2026-08-25 DeepSeek execution-validation mission)", () => {
+    const profile = getRepoExecutionProfile("deepseek-ai/deepseek-harness");
+    assert.ok(profile);
+    assert.equal(profile!.repository, "deepseek-ai/deepseek-harness");
+    assert.equal(profile!.packageManager, "pnpm");
+    // --ignore-scripts is a deliberate sandbox-safety policy, not a CI-fidelity deviation (see the
+    // profile's own doc comment) - real CI runs a bare `pnpm install --frozen-lockfile`.
+    assert.deepEqual(profile!.installArgv, ["install", "--frozen-lockfile", "--ignore-scripts"]);
+    assert.deepEqual(profile!.pretestArgv, []);
+    // "test" -> package.json's "test": "vitest run" (plain, uninstrumented) - deliberately NOT the real
+    // CI unit gate's coverage-partitioned wrapper (no simple per-file selective shape); see the profile's
+    // doc comment and docs/research/2026-08-25-deepseek-execution-validation/01-....md.
+    assert.deepEqual(profile!.testArgv, ["test"]);
+    assert.deepEqual(profile!.reporterArgv, ["--reporter=json", "--reporter=default"]);
+    assert.equal(profile!.maxTestRunMs, 15 * 60_000);
+  });
+
   it("listConfiguredRepositories includes exactly the configured repositories", () => {
     const list = listConfiguredRepositories();
     assert.ok(list.includes("calcom/cal.diy"));
+    assert.ok(list.includes("deepseek-ai/deepseek-harness"));
     assert.equal(list.length, new Set(list).size); // no duplicates
   });
 });
