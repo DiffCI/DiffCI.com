@@ -238,17 +238,45 @@ export interface FinalActivationInput {
   selectedObservedFailures: readonly string[];
 }
 
-export interface FinalActivationResult {
-  decision: FinalActivationDecision;
-  explanation: string;
+/**
+ * The four independent, objective facts a production-safety POLICY decides over (2026-08-25, Report 17
+ * follow-up - the "deeper problem" this mission's own live evidence surfaced: `decideFinalActivation`
+ * previously computed one bundled decision, conflating "what actually happened" with "what we choose to do
+ * about it." Separating them here so a future customer-configurable policy (see `ProductionSafetyPolicy`
+ * below) can be swapped WITHOUT touching how these facts are computed, and so the audit record always shows
+ * the raw facts regardless of which policy produced the final decision. None of these facts alone implies
+ * activation - that composition is the policy's job, not this function's. */
+export type RegressionSelectionSafety = "REGRESSION_SELECTION_SAFE" | "REGRESSION_SELECTION_UNSAFE";
+
+/** Whether the selected suite's own new-failure set is a superset of the full suite's - i.e. would
+ * selective execution, run alone, have surfaced everything the full suite did? "NOT_MEASURED" (not false)
+ * when no full suite ran this time at all - the ordinary real-production shape selective execution exists
+ * to reach - because there is nothing to compare against, not because preservation failed. Conflating
+ * "not measured" with "not preserved" would either wrongly refuse every real production run (no full-suite
+ * comparison ever exists in steady state) or wrongly claim preservation was verified when it wasn't - this
+ * mission's Report 11/12 "false green" finding was exactly a version of this confusion. */
+export type RawFullSuiteOutcomePreserved = "PRESERVED" | "NOT_PRESERVED" | "NOT_MEASURED";
+
+/** Whether this run's own baseline may be trusted as understood, independent of economics or selection. */
+export type BaselineHealth = "CLEAN_THIS_RUN" | "TRUSTED_FINGERPRINT" | "UNTRUSTED";
+
+export interface SafetyFacts {
+  regressionSelectionSafety: RegressionSelectionSafety;
+  rawFullSuiteOutcomePreserved: RawFullSuiteOutcomePreserved;
+  baselineHealth: BaselineHealth;
+  /** The underlying baseline-safety gate's own explanation (ACTIVATE/REFUSE_* reasoning), carried through
+   * verbatim for audit even when baselineHealth is CLEAN_THIS_RUN (which never consults it) or UNTRUSTED. */
+  baselineHealthDetail: string;
+  economicsBeneficial: boolean;
   newFailuresInFull: readonly string[];
   newFailuresInSelected: readonly string[];
-  /** Full-suite new failures the selected suite's own new-failure set does NOT contain - non-empty is
-   * exactly the condition that forces REFUSE_NEW_FAILURE_NOT_PRESERVED. */
   newFailuresMissedBySelection: readonly string[];
 }
 
-export function decideFinalActivation(input: FinalActivationInput): FinalActivationResult {
+/** Computes the four SafetyFacts from raw inputs - no policy judgment, just what is objectively true this
+ * run. Exported separately so a future policy can be evaluated (or re-evaluated under a DIFFERENT policy)
+ * against the identical facts without recomputing classification. */
+export function computeSafetyFacts(input: FinalActivationInput): SafetyFacts {
   const { selectionSafe, economicsBeneficial, baselineSafety, fingerprint, fullObservedFailures, selectedObservedFailures } = input;
 
   const selectedClassification = classifyAgainstFingerprint(selectedObservedFailures, fingerprint);
@@ -258,28 +286,89 @@ export function decideFinalActivation(input: FinalActivationInput): FinalActivat
   const selectedNewSet = new Set(newFailuresInSelected);
   const newFailuresMissedBySelection = newFailuresInFull.filter((t) => !selectedNewSet.has(t));
 
-  const base = { newFailuresInFull, newFailuresInSelected, newFailuresMissedBySelection };
-
-  if (!selectionSafe) {
-    return { decision: "REFUSE_SELECTION_UNSAFE", explanation: "selection verdict is not safe - economics and baseline are moot", ...base };
-  }
-  if (!economicsBeneficial) {
-    return { decision: "REFUSE_ECONOMICS_NOT_BENEFICIAL", explanation: "economics gate does not authorize activation for this merge", ...base };
-  }
-  // "baseline is clean" as an independent path to safety, alongside a trusted fingerprint: a full suite
-  // that was actually run THIS time and observed zero failures needs no fingerprint at all to trust.
   const baselineCleanThisRun = fullObservedFailures !== undefined && fullObservedFailures.length === 0;
-  if (baselineSafety.decision !== "ACTIVATE" && !baselineCleanThisRun) {
-    return { decision: "REFUSE_BASELINE_UNSAFE", explanation: `baseline safety gate: ${baselineSafety.explanation}`, ...base };
+  const baselineHealth: BaselineHealth = baselineCleanThisRun ? "CLEAN_THIS_RUN" : baselineSafety.decision === "ACTIVATE" ? "TRUSTED_FINGERPRINT" : "UNTRUSTED";
+
+  const rawFullSuiteOutcomePreserved: RawFullSuiteOutcomePreserved =
+    fullObservedFailures === undefined ? "NOT_MEASURED" : newFailuresMissedBySelection.length === 0 ? "PRESERVED" : "NOT_PRESERVED";
+
+  return {
+    regressionSelectionSafety: selectionSafe ? "REGRESSION_SELECTION_SAFE" : "REGRESSION_SELECTION_UNSAFE",
+    rawFullSuiteOutcomePreserved,
+    baselineHealth,
+    baselineHealthDetail: baselineSafety.explanation,
+    economicsBeneficial,
+    newFailuresInFull,
+    newFailuresInSelected,
+    newFailuresMissedBySelection,
+  };
+}
+
+/** A production-safety policy composes the four SafetyFacts into one final decision - the seam a future
+ * customer-configurable policy plugs into (2026-08-25 Report 17 follow-up: Option B "preserve change-
+ * attributable regressions only" or Option C "customer-approved quarantine plus always-run unstable
+ * cohort" from that correspondence). NEITHER is implemented here - this type only exists so
+ * `strictRawOutcomePolicy` below is visibly one interchangeable policy, not baked-in as the only possible
+ * behavior. */
+export type ProductionSafetyPolicy = (facts: SafetyFacts) => { decision: FinalActivationDecision; explanation: string };
+
+/**
+ * Option A ("preserve raw full-suite outcome exactly") - the ONLY policy this mission has ever run under
+ * (Reports 15-17): any new failure the selected suite did not itself observe blocks activation, regardless
+ * of whether that failure is attributable to the change under test. Kept as the default so existing
+ * behavior and every prior live-proven result in this mission is unchanged by this refactor.
+ */
+export const strictRawOutcomePolicy: ProductionSafetyPolicy = (facts) => {
+  if (facts.regressionSelectionSafety !== "REGRESSION_SELECTION_SAFE") {
+    return { decision: "REFUSE_SELECTION_UNSAFE", explanation: "selection verdict is not safe - economics and baseline are moot" };
   }
-  if (newFailuresMissedBySelection.length > 0) {
+  if (!facts.economicsBeneficial) {
+    return { decision: "REFUSE_ECONOMICS_NOT_BENEFICIAL", explanation: "economics gate does not authorize activation for this merge" };
+  }
+  if (facts.baselineHealth === "UNTRUSTED") {
+    return { decision: "REFUSE_BASELINE_UNSAFE", explanation: `baseline safety gate: ${facts.baselineHealthDetail}` };
+  }
+  if (facts.rawFullSuiteOutcomePreserved === "NOT_PRESERVED") {
     return {
       decision: "REFUSE_NEW_FAILURE_NOT_PRESERVED",
-      explanation: `the full suite observed ${newFailuresMissedBySelection.length} new failure(s) beyond the ` +
+      explanation: `the full suite observed ${facts.newFailuresMissedBySelection.length} new failure(s) beyond the ` +
         `trusted fingerprint that the selected suite's own results do not contain - selective execution is ` +
         "never trusted to have caught something it demonstrably did not",
-      ...base,
     };
   }
-  return { decision: "EXECUTE_SELECTIVELY", explanation: "selection safe, economically beneficial, baseline trusted (clean or fingerprinted), every observed new failure preserved by the selected suite", ...base };
+  return { decision: "EXECUTE_SELECTIVELY", explanation: "selection safe, economically beneficial, baseline trusted (clean or fingerprinted), every observed new failure preserved by the selected suite" };
+};
+
+export interface FinalActivationResult {
+  decision: FinalActivationDecision;
+  explanation: string;
+  newFailuresInFull: readonly string[];
+  newFailuresInSelected: readonly string[];
+  /** Full-suite new failures the selected suite's own new-failure set does NOT contain - non-empty is
+   * exactly the condition that forces REFUSE_NEW_FAILURE_NOT_PRESERVED under strictRawOutcomePolicy. */
+  newFailuresMissedBySelection: readonly string[];
+  /** The separated facts `decision` was computed from (2026-08-25 Report 17 follow-up) - present on every
+   * result so the audit record always carries the raw facts independent of which policy produced the final
+   * decision, per the explicit direction not to conflate "what happened" with "what we choose to do." */
+  facts: SafetyFacts;
+}
+
+/**
+ * decideFinalActivation composes computeSafetyFacts + strictRawOutcomePolicy - unchanged behavior/shape
+ * from before this refactor (every existing caller and the whole hard-wired, live-proven pipeline through
+ * Report 17 keeps working identically), now provably separated into facts-computation and policy-
+ * application rather than one bundled function. A future customer-configurable policy is a matter of
+ * calling `computeSafetyFacts` once and applying a DIFFERENT `ProductionSafetyPolicy` - not rewriting this
+ * function.
+ */
+export function decideFinalActivation(input: FinalActivationInput): FinalActivationResult {
+  const facts = computeSafetyFacts(input);
+  const policyResult = strictRawOutcomePolicy(facts);
+  return {
+    ...policyResult,
+    newFailuresInFull: facts.newFailuresInFull,
+    newFailuresInSelected: facts.newFailuresInSelected,
+    newFailuresMissedBySelection: facts.newFailuresMissedBySelection,
+    facts,
+  };
 }

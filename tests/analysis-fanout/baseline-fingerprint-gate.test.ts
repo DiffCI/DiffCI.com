@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { classifyAgainstFingerprint, decideBaselineSafety, decideFinalActivation, type BaselineFingerprint } from "../../src/analysis-fanout/baseline-fingerprint-gate.js";
+import { classifyAgainstFingerprint, computeSafetyFacts, decideBaselineSafety, decideFinalActivation, strictRawOutcomePolicy, type BaselineFingerprint } from "../../src/analysis-fanout/baseline-fingerprint-gate.js";
 
 // Real evidence from this mission (Report 14): the 6 failures confirmed identical at PR #2808's base AND
 // merge SHA under non-root execution - a genuine trusted fingerprint, not a fabricated fixture.
@@ -236,5 +236,78 @@ describe("decideFinalActivation (hard-wired composed activation rule)", () => {
     });
     assert.equal(r.decision, "EXECUTE_SELECTIVELY");
     assert.deepEqual(r.newFailuresInFull, []);
+  });
+
+  // 2026-08-25 (Report 17 follow-up): "what happened" (SafetyFacts) must be visible and correct
+  // independent of "what we chose to do about it" (the policy-produced decision) - these tests pin the
+  // four separated facts directly, not just the bundled decision string.
+  describe("facts (computeSafetyFacts, exposed on every decideFinalActivation result)", () => {
+    it("REGRESSION_SELECTION_SAFE / UNSAFE mirrors the selectionSafe input exactly", () => {
+      const safe = decideFinalActivation({ selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "ACTIVATE", explanation: "" }, fingerprint: fingerprint(), fullObservedFailures: [], selectedObservedFailures: [] });
+      const unsafe = decideFinalActivation({ selectionSafe: false, economicsBeneficial: true, baselineSafety: { decision: "ACTIVATE", explanation: "" }, fingerprint: fingerprint(), fullObservedFailures: [], selectedObservedFailures: [] });
+      assert.equal(safe.facts.regressionSelectionSafety, "REGRESSION_SELECTION_SAFE");
+      assert.equal(unsafe.facts.regressionSelectionSafety, "REGRESSION_SELECTION_UNSAFE");
+    });
+
+    it("rawFullSuiteOutcomePreserved is NOT_MEASURED (not falsely PRESERVED) when no full suite ran this time - the real production shape", () => {
+      const r = decideFinalActivation({ selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "ACTIVATE", explanation: "trusted" }, fingerprint: fingerprint(), fullObservedFailures: undefined, selectedObservedFailures: [] });
+      assert.equal(r.facts.rawFullSuiteOutcomePreserved, "NOT_MEASURED");
+    });
+
+    it("rawFullSuiteOutcomePreserved is PRESERVED when a full suite ran and every new failure is in the selected suite's own results", () => {
+      const r = decideFinalActivation({ selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "ACTIVATE", explanation: "trusted" }, fingerprint: fingerprint(), fullObservedFailures: [...REAL_2808_STABLE_FAILURES, REAL_MUTATION_FAILURE], selectedObservedFailures: [REAL_MUTATION_FAILURE] });
+      assert.equal(r.facts.rawFullSuiteOutcomePreserved, "PRESERVED");
+    });
+
+    it("rawFullSuiteOutcomePreserved is NOT_PRESERVED when a full suite ran and the selected suite's results miss a new failure", () => {
+      const r = decideFinalActivation({ selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "ACTIVATE", explanation: "trusted" }, fingerprint: fingerprint(), fullObservedFailures: [...REAL_2808_STABLE_FAILURES, REAL_MUTATION_FAILURE], selectedObservedFailures: [] });
+      assert.equal(r.facts.rawFullSuiteOutcomePreserved, "NOT_PRESERVED");
+    });
+
+    it("baselineHealth is CLEAN_THIS_RUN when the full suite ran and observed zero failures, even with no fingerprint at all", () => {
+      const r = decideFinalActivation({ selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "REFUSE_NO_FINGERPRINT", explanation: "no fingerprint" }, fingerprint: undefined, fullObservedFailures: [], selectedObservedFailures: [] });
+      assert.equal(r.facts.baselineHealth, "CLEAN_THIS_RUN");
+    });
+
+    it("baselineHealth is TRUSTED_FINGERPRINT when the baseline gate itself ACTIVATEs (dirty full suite, but fingerprinted)", () => {
+      const r = decideFinalActivation({ selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "ACTIVATE", explanation: "trusted" }, fingerprint: fingerprint(), fullObservedFailures: REAL_2808_STABLE_FAILURES, selectedObservedFailures: [] });
+      assert.equal(r.facts.baselineHealth, "TRUSTED_FINGERPRINT");
+    });
+
+    it("baselineHealth is UNTRUSTED when the baseline gate refuses and this run's own full suite was not clean either", () => {
+      const r = decideFinalActivation({ selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "REFUSE_NO_FINGERPRINT", explanation: "no fingerprint" }, fingerprint: undefined, fullObservedFailures: REAL_2808_STABLE_FAILURES, selectedObservedFailures: [] });
+      assert.equal(r.facts.baselineHealth, "UNTRUSTED");
+      assert.equal(r.facts.baselineHealthDetail, "no fingerprint"); // the underlying gate's own reasoning carried through verbatim
+    });
+
+    it("facts are populated identically regardless of which policy decision they produced - the same real PR #2808 merge-eval shape (Report 17) surfaces all four facts even on a REFUSE", () => {
+      // Mirrors the real deepseek-2808-roll-v2-merge baseline-phase result: sample-sufficiency ACTIVATEs,
+      // economics beneficial, but 4 genuinely new failures outside the fingerprint force a refusal anyway.
+      const r = decideFinalActivation({
+        selectionSafe: true,
+        economicsBeneficial: true,
+        baselineSafety: { decision: "ACTIVATE", explanation: "rolling fingerprint has 3 samples including this exact base" },
+        fingerprint: fingerprint(),
+        fullObservedFailures: [...REAL_2808_STABLE_FAILURES, "session-persistence-jsonl/tests/jsonl.spec.ts :: rejects an unknown event type"],
+        selectedObservedFailures: [],
+      });
+      assert.equal(r.decision, "REFUSE_NEW_FAILURE_NOT_PRESERVED");
+      assert.equal(r.facts.regressionSelectionSafety, "REGRESSION_SELECTION_SAFE");
+      assert.equal(r.facts.economicsBeneficial, true);
+      assert.equal(r.facts.baselineHealth, "TRUSTED_FINGERPRINT");
+      assert.equal(r.facts.rawFullSuiteOutcomePreserved, "NOT_PRESERVED");
+      // The refusal is fully explained by ONE fact (raw outcome not preserved) even though every OTHER
+      // fact was favorable - exactly the separation this test suite exists to make legible.
+    });
+  });
+
+  describe("strictRawOutcomePolicy applied directly to hand-built facts (policy/facts seam, not just the composed decideFinalActivation)", () => {
+    it("is exported and produces the SAME decision decideFinalActivation would, when fed decideFinalActivation's own computed facts", () => {
+      const input = { selectionSafe: true, economicsBeneficial: true, baselineSafety: { decision: "ACTIVATE", explanation: "trusted" }, fingerprint: fingerprint(), fullObservedFailures: REAL_2808_STABLE_FAILURES, selectedObservedFailures: [] };
+      const viaComposed = decideFinalActivation(input);
+      const facts = computeSafetyFacts(input);
+      const viaDirectPolicy = strictRawOutcomePolicy(facts);
+      assert.equal(viaDirectPolicy.decision, viaComposed.decision);
+    });
   });
 });
