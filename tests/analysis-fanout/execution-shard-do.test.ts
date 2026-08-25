@@ -921,6 +921,56 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       assert.equal(out.recall?.recallMeasurable, false);
     });
 
+    it("PR #2844 regression (2026-08-25 fix): a mutant failure count > 0 is NOT recall on its own when " +
+      "the baseline itself already has that exact failure - deepseek-ai/deepseek-harness's real baseline " +
+      "has 16-18 pre-existing/flaky failures on every run; the old raw-count check reported " +
+      "fullSuiteCaughtMutant:true here even though an exact failedTests diff showed zero new failures", async () => {
+      const { sandbox } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const preExisting = ["subagent/tests/continuation.spec.ts :: flaky pre-existing failure"];
+      const rec = record({
+        step: "finalizing",
+        mutation: { path: "apps/web/tests/scaffold.ts", applied: true },
+        baseline: {
+          full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: preExisting, observabilityStatus: "complete" },
+          selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, failedTests: [], observabilityStatus: "complete" },
+        },
+        mutant: {
+          // Same exact failure as baseline, nothing new - a real "no observable effect" mutation.
+          full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: preExisting, observabilityStatus: "complete" },
+          selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, failedTests: [], observabilityStatus: "complete" },
+        },
+      });
+      const { record: out } = await stepExecution(rec, deps);
+      assert.equal(out.recall?.fullSuiteCaughtMutant, false, "no NEW failure beyond the pre-existing baseline one");
+      assert.equal(out.recall?.recallMeasurable, false);
+    });
+
+    it("still correctly reports a genuine new failure when the baseline has unrelated pre-existing noise", async () => {
+      const { sandbox } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const preExisting = ["subagent/tests/continuation.spec.ts :: flaky pre-existing failure"];
+      const realNew = "frontend-static/tests/frontend-static.spec.ts :: real Loader composition serves explicit index entries";
+      const rec = record({
+        step: "finalizing",
+        mutation: { path: "packages/host/frontend-static/src/index.ts", applied: true },
+        baseline: {
+          full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: preExisting, observabilityStatus: "complete" },
+          selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, failedTests: [], observabilityStatus: "complete" },
+        },
+        mutant: {
+          full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 2, failedTests: [...preExisting, realNew], observabilityStatus: "complete" },
+          selected: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: [realNew], observabilityStatus: "complete" },
+        },
+      });
+      const { record: out } = await stepExecution(rec, deps);
+      assert.equal(out.recall?.fullSuiteCaughtMutant, true);
+      assert.equal(out.recall?.selectedSuiteCaughtMutant, true);
+      assert.equal(out.recall?.recallMeasurable, true);
+    });
+
     it("destroys the sandbox even when finalize itself throws", async () => {
       const { sandbox, isDestroyed } = makeSandbox();
       const bucket: R2BucketLike = {

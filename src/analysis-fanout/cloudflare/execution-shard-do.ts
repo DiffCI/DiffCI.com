@@ -626,6 +626,30 @@ async function revert(record: ExecutionRecord, deps: ExecutionStepDeps): Promise
   }
 }
 
+/**
+ * Failures the mutant run has that the baseline run did NOT already have (2026-08-25 fix, DeepSeek
+ * execution-validation mission). The original check was `(mutant.failed ?? 0) > 0` - a raw "any failure
+ * present" test, which is a FALSE POSITIVE on any repository whose baseline itself has pre-existing or
+ * flaky failures: deepseek-ai/deepseek-harness's real baseline consistently shows 16-18 such failures on
+ * every run (confirmed across every execution this mission), so the raw check reported
+ * `fullSuiteCaughtMutant: true` even on PR #2844's mutation, which an exact failedTests diff proved
+ * caused ZERO new failures (one flaky pre-existing failure simply didn't reproduce that run - normal
+ * variance, not a caught regression). Cal.com's baseline happened to be failure-free throughout this
+ * mission's entire history, which is why this never surfaced there - it is a property of THIS repository
+ * being exercised, not new code specific to it.
+ *
+ * Falls back to the raw count when a comparable baseline result genuinely is not available (analysis-only
+ * test fixtures, or a run whose own baseline never completed) - preserves prior behavior exactly for
+ * those cases rather than treating "no baseline to compare against" as "zero pre-existing failures".
+ */
+function newFailureCount(mutantResult: TestRunResult, baselineResult: TestRunResult | undefined): number {
+  if (mutantResult.failedTests && baselineResult?.observabilityStatus === "complete" && baselineResult.failedTests) {
+    const baselineFailures = new Set(baselineResult.failedTests);
+    return mutantResult.failedTests.filter((t) => !baselineFailures.has(t)).length;
+  }
+  return mutantResult.failed ?? 0;
+}
+
 function computeEconomicsAndRecall(record: ExecutionRecord): void {
   // Economics is gated on the runtime-selection invariant (2026-08-24): a "gross time saved" number is
   // meaningless - worse, misleading - if the "selected" run didn't actually run only the selected tests.
@@ -653,12 +677,12 @@ function computeEconomicsAndRecall(record: ExecutionRecord): void {
     // didn't parse - those are different situations (a real pass vs. an unknown outcome).
     const fullObservable = record.mutant.full.observabilityStatus === "complete";
     const selectedObservable = record.mutant.selected.observabilityStatus === "complete";
-    const fullCaught = fullObservable ? (record.mutant.full.failed ?? 0) > 0 : undefined;
-    const selectedCaught = selectedObservable ? (record.mutant.selected.failed ?? 0) > 0 : undefined;
+    const fullCaught = fullObservable ? newFailureCount(record.mutant.full, record.baseline?.full) > 0 : undefined;
+    const selectedCaught = selectedObservable ? newFailureCount(record.mutant.selected, record.baseline?.selected) > 0 : undefined;
     record.recall = {
       fullSuiteCaughtMutant: fullCaught ?? false,
       selectedSuiteCaughtMutant: selectedCaught ?? false,
-      // Measurable only when the full suite's own report parsed AND genuinely shows a failure - an
+      // Measurable only when the full suite's own report parsed AND genuinely shows a NEW failure - an
       // unparsed full-suite report makes recall unmeasurable, never a false "safe".
       recallMeasurable: fullObservable && fullCaught === true,
     };
