@@ -28,6 +28,9 @@ import { repoSlug } from "./analysis-shard-do.js";
 import { decideActivation } from "../activation-gate.js";
 import { decideFinalActivation } from "../baseline-fingerprint-gate.js";
 import { decideRollingBaselineSafety, deriveEffectiveFingerprint, mergeObservation, ROLLING_FINGERPRINT_SCHEMA_VERSION, type RollingFingerprint } from "../rolling-fingerprint.js";
+import { selectAlwaysRunCohort, DEFAULT_COHORT_POLICY } from "../always-run-cohort.js";
+import { decideAuditSampling, DEFAULT_AUDIT_SAMPLING_POLICY } from "../audit-sampling.js";
+import { recordDecision, type SafetyBudget, type DecisionOutcome } from "../safety-budget.js";
 
 export const SHAPE = "standard-4"; // installs are heavy (cal.com: 3582 packages, native builds, ~20 min)
 /** How long the shard sleeps between poll alarms while a test-run process is in flight. */
@@ -66,6 +69,10 @@ export interface ExecutionEnv {
   /** 2026-08-25 (Report 17 follow-up) - see RollingFingerprintStore's own doc comment for why this exists:
    * fixes a real, self-identified concurrent-write race in the rolling fingerprint's persistence. */
   ROLLING_FINGERPRINT_STORE: DONamespace;
+  /** 2026-08-25 ("production-safe selective execution loop" follow-up) - see SafetyBudgetStore's own doc
+   * comment. Same atomic-per-identity pattern as ROLLING_FINGERPRINT_STORE, a deliberately separate DO
+   * class (different accumulated shape, different concern) rather than a shared generic store. */
+  SAFETY_BUDGET_STORE: DONamespace;
 }
 
 /** Testable seam for rolling-fingerprint persistence (mirrors the SandboxLike/R2BucketLike pattern) - the
@@ -87,12 +94,20 @@ export interface RollingFingerprintStoreLike {
   read(rollingKey: string): Promise<RollingFingerprint | undefined>;
 }
 
+/** Testable seam for repository safety-budget persistence (mirrors RollingFingerprintStoreLike exactly -
+ * same atomic-per-identity rationale, see SafetyBudgetStore's own doc comment). */
+export interface SafetyBudgetStoreLike {
+  merge(budgetKey: string, identity: Pick<SafetyBudget, "repository" | "branch" | "environmentIdentity" | "testFamily" | "commandIdentity">, outcome: DecisionOutcome): Promise<SafetyBudget>;
+  read(budgetKey: string): Promise<SafetyBudget | undefined>;
+}
+
 export interface ExecutionStepDeps {
   sandbox: SandboxLike;
   bucket: R2BucketLike;
   profile: RepoExecutionProfile;
   now(): number;
   rollingFingerprintStore: RollingFingerprintStoreLike;
+  safetyBudgetStore: SafetyBudgetStoreLike;
 }
 
 /** Production adapter: routes every call through the DO instance named by `rollingKey` (the SAME string
@@ -119,6 +134,32 @@ function realRollingFingerprintStore(ns: DONamespace): RollingFingerprintStoreLi
       const body = (await res.json()) as { ok: boolean; fingerprint?: RollingFingerprint | null; error?: string };
       if (!body.ok) throw new Error(`rolling-fingerprint-store read failed: ${body.error ?? "unknown"}`);
       return body.fingerprint ?? undefined;
+    },
+  };
+}
+
+/** Production adapter for SafetyBudgetStore - identical shape/rationale to realRollingFingerprintStore
+ * above, routed through the SAFETY_BUDGET_STORE binding instead. */
+function realSafetyBudgetStore(ns: DONamespace): SafetyBudgetStoreLike {
+  return {
+    async merge(budgetKey, identity, outcome) {
+      const stub = ns.get(ns.idFromName(budgetKey)) as DOStub;
+      const res = await stub.fetch(
+        new Request("http://safety-budget-store/merge", {
+          method: "POST",
+          body: JSON.stringify({ identity, outcome, mirrorKey: budgetKey }),
+        }),
+      );
+      const body = (await res.json()) as { ok: boolean; budget?: SafetyBudget; error?: string };
+      if (!body.ok || !body.budget) throw new Error(`safety-budget-store merge failed: ${body.error ?? "unknown"}`);
+      return body.budget;
+    },
+    async read(budgetKey) {
+      const stub = ns.get(ns.idFromName(budgetKey)) as DOStub;
+      const res = await stub.fetch(new Request(`http://safety-budget-store/read?mirrorKey=${encodeURIComponent(budgetKey)}`));
+      const body = (await res.json()) as { ok: boolean; budget?: SafetyBudget | null; error?: string };
+      if (!body.ok) throw new Error(`safety-budget-store read failed: ${body.error ?? "unknown"}`);
+      return body.budget ?? undefined;
     },
   };
 }
@@ -868,9 +909,16 @@ function toObservedFailures(result: Pick<TestRunResult, "failedTests" | "failure
  * RollingBaselineSafetyInput.minTotalBaseRunsSampled. Provisional, matching DEFAULT_STABILITY_POLICY's
  * own minSamples (3) - not yet tuned against real repository drift rates. */
 const MIN_TOTAL_BASE_RUNS_SAMPLED = 3;
+/** Passed to summarizeSafetyBudget - see its own doc comment for why a miss-rate claim is withheld below
+ * this many audited decisions (2026-08-25, "production-safe selective execution loop" follow-up). */
+const MIN_AUDITED_SAMPLE_SIZE = 10;
+
+function safetyBudgetKey(identity: Pick<RollingFingerprint, "repository" | "branch" | "environmentIdentity" | "testFamily" | "commandIdentity">): string {
+  return `safety-budgets/${repoSlug(identity.repository)}/${encodeURIComponent(identity.branch)}/${identity.environmentIdentity}__${identity.testFamily}__${encodeURIComponent(identity.commandIdentity)}.json`;
+}
 
 async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<void> {
-  const { profile, now, rollingFingerprintStore } = deps;
+  const { profile, now, rollingFingerprintStore, safetyBudgetStore } = deps;
   const branch = record.branch ?? "unknown";
   const environmentIdentity = environmentIdentityOf(record);
   const commandIdentity = commandIdentityOf(profile, record);
@@ -916,6 +964,22 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
     rolling = undefined;
   }
   const nowMs = now();
+
+  // Always-run cohort (2026-08-25, "production-safe selective execution loop" follow-up to Report 17) -
+  // computed and RECORDED for every real merge run with a rolling fingerprint to draw from. NOT YET forced
+  // into the selected-baseline test invocation itself (that requires reading the rolling fingerprint
+  // BEFORE deriving-selection/selected-baseline run, earlier in this state machine than finalize() - a
+  // real, identified follow-up, not silently skipped). Recording it now lets the retrospective question
+  // "would the cohort have caught something DiffCI's own selection missed" start being answerable from
+  // already-collected full-suite data, ahead of the step-machine change needed to actually act on it.
+  if (rolling) record.alwaysRunCohort = selectAlwaysRunCohort(rolling, DEFAULT_COHORT_POLICY);
+
+  // Periodic full-suite audit sampling (audit-sampling.ts) - a deterministic per-merge decision on whether
+  // THIS merge counts toward the repository's safety-budget AUDITED evidence. Seeded by mergeSha, not
+  // baseSha - every distinct merge gets its own independent sampling decision, unlike the rolling
+  // fingerprint's base-SHA-keyed control samples.
+  record.auditSampling = decideAuditSampling(record.mergeSha, DEFAULT_AUDIT_SAMPLING_POLICY);
+
   const rollingSafety = decideRollingBaselineSafety({
     repository: record.repository,
     branch,
@@ -952,6 +1016,18 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
     ? deriveEffectiveFingerprint(rolling, record.baseSha, toObservedFailures(record.baseline?.full ?? {}), nowMs)
     : undefined;
 
+  // The repository's accumulated safety budget (safety-budget.ts) - read-only here, fed in as a fifth,
+  // purely INFORMATIONAL fact (never consumed by strictRawOutcomePolicy - see FinalActivationInput's own
+  // doc comment). Written back further below, after THIS run's own outcome is known.
+  const budgetIdentity = { repository: record.repository, branch, environmentIdentity, testFamily: TEST_FAMILY, commandIdentity };
+  const budgetKey = safetyBudgetKey(budgetIdentity);
+  let repositorySafetyBudget: SafetyBudget | undefined;
+  try {
+    repositorySafetyBudget = await safetyBudgetStore.read(budgetKey);
+  } catch {
+    repositorySafetyBudget = undefined;
+  }
+
   const finalActivation = decideFinalActivation({
     selectionSafe,
     economicsBeneficial: economics?.economicallyBeneficial ?? false,
@@ -959,6 +1035,8 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
     fingerprint: derivedFingerprint,
     fullObservedFailures,
     selectedObservedFailures,
+    repositorySafetyBudget,
+    minAuditedSampleSize: MIN_AUDITED_SAMPLE_SIZE,
   });
 
   record.activationDecision = {
@@ -972,6 +1050,29 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
     economicsBeneficial: economics?.economicallyBeneficial ?? false,
     finalActivation,
   };
+
+  // Fold THIS run's own outcome into the repository's running safety budget (2026-08-25) - only when both
+  // sides of the comparison actually completed (a missing-report full or selected observation means there
+  // is nothing trustworthy to record either way). `audited` is the audit-SAMPLING policy decision above,
+  // not "did this validation harness happen to have full-suite data" - it always does, but the budget
+  // should model what a real, sampled production system would have measured, not this harness's own
+  // always-run-both methodology.
+  if (record.baseline?.full?.observabilityStatus === "complete" && record.baseline.selected.observabilityStatus === "complete") {
+    const outcome: DecisionOutcome = {
+      audited: record.auditSampling?.sampled ?? false,
+      outcomeChangingMiss: finalActivation.facts.rawFullSuiteOutcomePreserved === "NOT_PRESERVED",
+      selectedWallMs: record.baseline.selected.wallMs,
+      fullWallMs: record.baseline.full.wallMs,
+      stage: "test",
+      observedAtMs: nowMs,
+    };
+    try {
+      const updatedBudget = await safetyBudgetStore.merge(budgetKey, budgetIdentity, outcome);
+      record.safetyBudgetPersisted = { key: budgetKey, totalDecisions: updatedBudget.totalDecisions, auditedDecisions: updatedBudget.auditedDecisions };
+    } catch {
+      /* best-effort - a failed budget fold just means the next run's track record is one decision behind, not a hard failure of this run */
+    }
+  }
 
   // Same gate, applied to the MUTANT phase when one ran (2026-08-25) - the baseline decision above answers
   // "is this commit safe to activate selective execution for"; this one answers the narrower, equally
@@ -992,6 +1093,12 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
       fingerprint: mutantDerivedFingerprint,
       fullObservedFailures: mutantFullObserved,
       selectedObservedFailures: mutantSelectedObserved,
+      // Same pre-this-run snapshot the baseline phase saw above - the mutant phase's own outcome is not
+      // separately folded into the budget (only the baseline decision represents "this merge's real
+      // selective-execution decision"; the mutant phase is a diagnostic probe of recall, not a second
+      // independent production decision).
+      repositorySafetyBudget,
+      minAuditedSampleSize: MIN_AUDITED_SAMPLE_SIZE,
     });
   }
 }
@@ -1144,6 +1251,7 @@ export class AnalysisExecutionShard {
       profile,
       now: () => Date.now(),
       rollingFingerprintStore: realRollingFingerprintStore(this.env.ROLLING_FINGERPRINT_STORE),
+      safetyBudgetStore: realSafetyBudgetStore(this.env.SAFETY_BUDGET_STORE),
     };
     record.heartbeatAt = Date.now();
     const { record: updated, nextAlarmDelayMs } = await stepExecution(record, deps);
@@ -1226,6 +1334,76 @@ export class RollingFingerprintStore {
         const mirrorKey = url.searchParams.get("mirrorKey") ?? undefined;
         const existing = await this.readWithR2Seed(mirrorKey);
         return Response.json({ ok: true, fingerprint: existing ?? null });
+      }
+      return Response.json({ ok: false, error: "not-found" }, { status: 404 });
+    } catch (err) {
+      return Response.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    }
+  }
+}
+
+const SAFETY_BUDGET_STORAGE_KEY = "safety-budget";
+
+/**
+ * SafetyBudgetStore - one Durable Object instance per repository/identity's safety budget (2026-08-25,
+ * "production-safe selective execution loop" follow-up to Report 17) - identical atomic-per-identity
+ * rationale as RollingFingerprintStore above (Cloudflare processes requests to one DO instance strictly one
+ * at a time, so routing every fold through the identity's own instance makes the read-merge-write atomic
+ * BY CONSTRUCTION), kept as a SEPARATE DO class rather than a shared generic store because the two
+ * accumulate materially different shapes for a materially different concern (failure signatures vs
+ * decision/outcome/wall-time counters).
+ *
+ * Same authoritative-storage-plus-R2-mirror-plus-seed-on-first-read design as RollingFingerprintStore - see
+ * its own doc comment for the full rationale, not repeated here.
+ */
+export class SafetyBudgetStore {
+  private readonly state: DurableObjectState;
+  private readonly env: ExecutionEnv;
+
+  constructor(state: DurableObjectState, env: ExecutionEnv) {
+    this.state = state;
+    this.env = env;
+  }
+
+  private async readWithR2Seed(mirrorKey?: string): Promise<SafetyBudget | undefined> {
+    const existing = await this.state.storage.get<SafetyBudget>(SAFETY_BUDGET_STORAGE_KEY);
+    if (existing !== undefined || !mirrorKey) return existing;
+    try {
+      const mirrored = await this.env.ANALYSIS_BUCKET.get(mirrorKey);
+      if (!mirrored) return undefined;
+      const seeded = JSON.parse(await mirrored.text()) as SafetyBudget;
+      await this.state.storage.put(SAFETY_BUDGET_STORAGE_KEY, seeded);
+      return seeded;
+    } catch {
+      return undefined;
+    }
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    try {
+      if (request.method === "POST" && url.pathname === "/merge") {
+        const body = (await request.json()) as {
+          identity: Pick<SafetyBudget, "repository" | "branch" | "environmentIdentity" | "testFamily" | "commandIdentity">;
+          outcome: DecisionOutcome;
+          mirrorKey?: string;
+        };
+        const existing = await this.readWithR2Seed(body.mirrorKey);
+        const updated = recordDecision(existing, body.identity, body.outcome);
+        await this.state.storage.put(SAFETY_BUDGET_STORAGE_KEY, updated);
+        if (body.mirrorKey) {
+          try {
+            await this.env.ANALYSIS_BUCKET.put(body.mirrorKey, JSON.stringify(updated, null, 2));
+          } catch {
+            /* best-effort mirror only - this DO's own storage remains the source of truth */
+          }
+        }
+        return Response.json({ ok: true, budget: updated });
+      }
+      if (request.method === "GET" && url.pathname === "/read") {
+        const mirrorKey = url.searchParams.get("mirrorKey") ?? undefined;
+        const existing = await this.readWithR2Seed(mirrorKey);
+        return Response.json({ ok: true, budget: existing ?? null });
       }
       return Response.json({ ok: false, error: "not-found" }, { status: 404 });
     } catch (err) {

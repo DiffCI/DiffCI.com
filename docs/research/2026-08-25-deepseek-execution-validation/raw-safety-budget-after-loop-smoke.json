@@ -1,0 +1,21 @@
+{
+  "repository": "deepseek-ai/deepseek-harness",
+  "branch": "main",
+  "environmentIdentity": "nonroot",
+  "testFamily": "unit",
+  "commandIdentity": "test",
+  "totalDecisions": 1,
+  "auditedDecisions": 0,
+  "outcomeChangingMisses": 0,
+  "cumulativeSelectedWallMs": 20648,
+  "cumulativeAuditedFullWallMs": 0,
+  "byStage": {
+    "test": {
+      "totalDecisions": 1,
+      "auditedDecisions": 0,
+      "cumulativeSelectedWallMs": 20648,
+      "cumulativeAuditedFullWallMs": 0
+    }
+  },
+  "updatedAtMs": 1787661882787
+}

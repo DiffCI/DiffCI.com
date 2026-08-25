@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { DEFAULT_MAX_TEST_RUN_MS, POLL_MS, RollingFingerprintStore, classifyRuntimeSelection, sandboxContainerId, seedExecutionRecord, stepExecution } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
-import type { ExecutionStepDeps, RollingFingerprintStoreLike } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
+import { DEFAULT_MAX_TEST_RUN_MS, POLL_MS, RollingFingerprintStore, SafetyBudgetStore, classifyRuntimeSelection, sandboxContainerId, seedExecutionRecord, stepExecution } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
+import type { ExecutionStepDeps, RollingFingerprintStoreLike, SafetyBudgetStoreLike } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
 import type { R2BucketLike, R2ObjectBodyLike, SandboxLike } from "../../src/analysis-fanout/sandbox-like.js";
 import type { ExecutionRecord, ExecutionSpec, RepoExecutionProfile, TestRunResult } from "../../src/analysis-fanout/execution-types.js";
 import { ROLLING_FINGERPRINT_SCHEMA_VERSION, mergeObservation, type RollingFingerprint } from "../../src/analysis-fanout/rolling-fingerprint.js";
+import { recordDecision, type DecisionOutcome, type SafetyBudget } from "../../src/analysis-fanout/safety-budget.js";
+import { decideAuditSampling } from "../../src/analysis-fanout/audit-sampling.js";
 
 function spec(overrides: Partial<ExecutionSpec> = {}): ExecutionSpec {
   return {
@@ -156,13 +158,45 @@ function makeRollingFingerprintStore(seed: Record<string, RollingFingerprint> = 
   return { rollingFingerprintStore, store, mergeCalls };
 }
 
+/** In-memory mock for SafetyBudgetStoreLike - same per-key promise-chain-queue rationale as
+ * makeRollingFingerprintStore above (models, does not reimplement, the real DO's serialization). */
+function makeSafetyBudgetStore(seed: Record<string, SafetyBudget> = {}) {
+  const store = new Map<string, SafetyBudget>(Object.entries(seed));
+  const queues = new Map<string, Promise<unknown>>();
+  const mergeCalls: { budgetKey: string; outcome: DecisionOutcome }[] = [];
+
+  function enqueue<T>(key: string, task: () => Promise<T>): Promise<T> {
+    const prior = queues.get(key) ?? Promise.resolve();
+    const next = prior.then(task, task);
+    queues.set(key, next);
+    return next;
+  }
+
+  const safetyBudgetStore: SafetyBudgetStoreLike = {
+    async merge(budgetKey, identity, outcome) {
+      mergeCalls.push({ budgetKey, outcome });
+      return enqueue(budgetKey, async () => {
+        const existing = store.get(budgetKey);
+        const updated = recordDecision(existing, identity, outcome);
+        store.set(budgetKey, updated);
+        return updated;
+      });
+    },
+    async read(budgetKey) {
+      return store.get(budgetKey);
+    },
+  };
+  return { safetyBudgetStore, store, mergeCalls };
+}
+
 function makeDeps(
   sandbox: SandboxLike,
   bucket: R2BucketLike,
   nowValue = 2000,
   rollingFingerprintStore: RollingFingerprintStoreLike = makeRollingFingerprintStore().rollingFingerprintStore,
+  safetyBudgetStore: SafetyBudgetStoreLike = makeSafetyBudgetStore().safetyBudgetStore,
 ): { deps: ExecutionStepDeps } {
-  return { deps: { sandbox, bucket, profile: profile(), now: () => nowValue, rollingFingerprintStore } };
+  return { deps: { sandbox, bucket, profile: profile(), now: () => nowValue, rollingFingerprintStore, safetyBudgetStore } };
 }
 
 function bootstrapBucketObjects(): Record<string, string> {
@@ -725,7 +759,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         const { sandbox, killProcessCalls } = makeSandbox({ process: { status: "running" } });
         const { bucket } = makeBucket();
         const tightProfile: RepoExecutionProfile = { ...profile(), maxTestRunMs: 60_000 };
-        const deps: ExecutionStepDeps = { sandbox, bucket, profile: tightProfile, now: () => 1000 + 61_000, rollingFingerprintStore: makeRollingFingerprintStore().rollingFingerprintStore };
+        const deps: ExecutionStepDeps = { sandbox, bucket, profile: tightProfile, now: () => 1000 + 61_000, rollingFingerprintStore: makeRollingFingerprintStore().rollingFingerprintStore, safetyBudgetStore: makeSafetyBudgetStore().safetyBudgetStore };
         const { record: out } = await stepExecution(record({ step: "full-baseline", processId: "proc-1", processStartedAt: 1000 }), deps);
         assert.equal(killProcessCalls.length, 1);
         assert.equal(out.errorClass, "step-timeout");
@@ -743,7 +777,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
           async destroy() {},
         };
         const { bucket } = makeBucket();
-        const deps: ExecutionStepDeps = { sandbox, bucket, profile: profile(), now: () => 1000 + DEFAULT_MAX_TEST_RUN_MS + 1, rollingFingerprintStore: makeRollingFingerprintStore().rollingFingerprintStore };
+        const deps: ExecutionStepDeps = { sandbox, bucket, profile: profile(), now: () => 1000 + DEFAULT_MAX_TEST_RUN_MS + 1, rollingFingerprintStore: makeRollingFingerprintStore().rollingFingerprintStore, safetyBudgetStore: makeSafetyBudgetStore().safetyBudgetStore };
         const { record: out } = await stepExecution(record({ step: "full-baseline", processId: "proc-1", processStartedAt: 1000 }), deps);
         assert.equal(out.step, "finalizing");
         assert.equal(out.errorClass, "step-timeout");
@@ -1389,6 +1423,143 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         assert.deepEqual(out.mutantActivationDecision!.newFailuresMissedBySelection, ["missed-regression.spec.ts :: whoops"]);
       });
     });
+
+    // 2026-08-25 ("production-safe selective execution loop" follow-up to Report 17): always-run cohort
+    // recording, audit-sampling recording, and safety-budget accumulation - wired into the SAME
+    // applyBaselineFingerprintGate real-merge-run path the baseline-fingerprint gate tests above exercise.
+    describe("production-safe selective execution loop (always-run cohort, audit sampling, safety budget)", () => {
+      const ROLLING_KEY_LOOP = `rolling-fingerprints/calcom__cal.diy/unknown/root__unit__${encodeURIComponent("test -- --no-isolate")}__schema${ROLLING_FINGERPRINT_SCHEMA_VERSION}.json`;
+      function seededRollingForCohort(): RollingFingerprint {
+        return {
+          repository: "calcom/cal.diy", branch: "unknown", environmentIdentity: "root", testFamily: "unit", commandIdentity: "test -- --no-isolate",
+          schemaVersion: ROLLING_FINGERPRINT_SCHEMA_VERSION,
+          totalBaseRunsSampled: 3,
+          baseShaHistory: ["base1", "base2", "a".repeat(40)],
+          tracked: [
+            { testId: "high-signal.spec.ts :: x", signature: "", observations: [{ baseSha: "base1", observedAtMs: 1000 }, { baseSha: "base2", observedAtMs: 2000 }, { baseSha: "a".repeat(40), observedAtMs: 3000 }] },
+            { testId: "one-off.spec.ts :: y", signature: "", observations: [{ baseSha: "base1", observedAtMs: 1000 }] }, // below minObservations - excluded
+          ],
+          updatedAtMs: 3000,
+        };
+      }
+
+      it("records alwaysRunCohort (from the rolling fingerprint) and auditSampling (deterministic on mergeSha) on a real merge run", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY_LOOP]: seededRollingForCohort() });
+        const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
+        const rec = record({
+          step: "finalizing",
+          mergeSha: "b".repeat(40),
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["high-signal.spec.ts :: x"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.deepEqual(out.alwaysRunCohort!.files, ["high-signal.spec.ts"]); // one-off.spec.ts excluded (1 observation < minObservations)
+        assert.ok(out.auditSampling);
+        assert.equal(typeof out.auditSampling!.sampled, "boolean");
+        assert.equal(out.auditSampling!.hashValue >= 0 && out.auditSampling!.hashValue < 1, true);
+        // Deterministic - the SAME mergeSha always gets the SAME sampling decision.
+        const again = decideAuditSampling("b".repeat(40));
+        assert.deepEqual(out.auditSampling, again);
+      });
+
+      it("no rolling fingerprint at all -> alwaysRunCohort stays undefined, never a fabricated empty-looking default", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket } = makeBucket();
+        const { deps } = makeDeps(sandbox, bucket, 4000); // empty rolling store
+        const rec = record({ step: "finalizing", analysisOverheadMs: 1000, baseline: { full: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, failedTests: [], observabilityStatus: "complete" }, selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, failedTests: [], observabilityStatus: "complete" } } });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.equal(out.alwaysRunCohort, undefined);
+      });
+
+      it("folds this run's outcome into the safety budget - a CLEAN merge (outcome preserved) is recorded as non-missing", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket } = makeBucket();
+        const { safetyBudgetStore, store: budgetStore } = makeSafetyBudgetStore();
+        const { deps } = makeDeps(sandbox, bucket, 4000, undefined, safetyBudgetStore);
+        const BUDGET_KEY = "safety-budgets/calcom__cal.diy/unknown/root__unit__" + encodeURIComponent("test -- --no-isolate") + ".json";
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 0, timedOut: false, wallMs: 100_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.ok(out.safetyBudgetPersisted);
+        assert.equal(out.safetyBudgetPersisted!.totalDecisions, 1);
+        const budget = budgetStore.get(BUDGET_KEY)!;
+        assert.equal(budget.totalDecisions, 1);
+        assert.equal(budget.outcomeChangingMisses, 0);
+      });
+
+      it("does NOT fold into the safety budget when the full or selected baseline observation is missing", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket } = makeBucket();
+        const { safetyBudgetStore, mergeCalls } = makeSafetyBudgetStore();
+        const { deps } = makeDeps(sandbox, bucket, 4000, undefined, safetyBudgetStore);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, observabilityStatus: "missing-report" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, observabilityStatus: "complete" },
+          },
+        });
+        await stepExecution(rec, deps);
+        assert.equal(mergeCalls.length, 0);
+      });
+
+      it("an outcome-changing miss (raw outcome NOT preserved) is folded as such into the budget", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket } = makeBucket();
+        const { safetyBudgetStore, mergeCalls } = makeSafetyBudgetStore();
+        const { deps } = makeDeps(sandbox, bucket, 4000, undefined, safetyBudgetStore);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 100_000, failed: 1, failedTests: ["unexplained-new-failure.spec.ts :: x"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" }, // never observed the new failure
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        assert.equal(out.activationDecision!.finalActivation.facts!.rawFullSuiteOutcomePreserved, "NOT_PRESERVED");
+        assert.equal(mergeCalls[0]!.outcome.outcomeChangingMiss, true);
+      });
+
+      it("repositorySafetyBudget (read before this run) feeds facts.repositoryTrackRecord on a real merge run, end to end", async () => {
+        const { sandbox } = makeSandbox();
+        const { bucket } = makeBucket();
+        const BUDGET_KEY = "safety-budgets/calcom__cal.diy/unknown/root__unit__" + encodeURIComponent("test -- --no-isolate") + ".json";
+        let seededBudget: SafetyBudget | undefined;
+        const IDENTITY = { repository: "calcom/cal.diy", branch: "unknown", environmentIdentity: "root", testFamily: "unit", commandIdentity: "test -- --no-isolate" };
+        for (let i = 0; i < 15; i++) seededBudget = recordDecision(seededBudget, IDENTITY, { audited: true, outcomeChangingMiss: false, selectedWallMs: 100, fullWallMs: 10_000, stage: "test", observedAtMs: i * 1000 });
+        const { safetyBudgetStore } = makeSafetyBudgetStore({ [BUDGET_KEY]: seededBudget! });
+        const { deps } = makeDeps(sandbox, bucket, 4000, undefined, safetyBudgetStore);
+        const rec = record({
+          step: "finalizing",
+          analysisOverheadMs: 1000,
+          runtimeSelection: { requestedTestFiles: ["a.test.ts"], executedTestFilesKnown: true, testFilesExecuted: 1, totalTestsExecuted: 1, status: "HONORED_EXACTLY", explanation: "" },
+          baseline: {
+            full: { command: [], exitCode: 0, timedOut: false, wallMs: 100_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1_000, failed: 0, failedTests: [], observabilityStatus: "complete" },
+          },
+        });
+        const { record: out } = await stepExecution(rec, deps);
+        const track = out.activationDecision!.finalActivation.facts!.repositoryTrackRecord!;
+        assert.equal(track.confidence, "TRACK_RECORD_ESTABLISHED"); // 15 audited >= MIN_AUDITED_SAMPLE_SIZE (10)
+        assert.equal(track.auditedDecisions, 15);
+      });
+    });
   });
 
   it("seedExecutionRecord starts at bootstrapping and carries analysisOverheadMs through verbatim", () => {
@@ -1490,6 +1661,85 @@ describe("RollingFingerprintStore (Durable Object class)", () => {
     const state = makeDOState();
     const { bucket } = makeBucket();
     const store = new RollingFingerprintStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/nonsense"));
+    assert.equal(res.status, 404);
+    const body = (await res.json()) as { ok: boolean };
+    assert.equal(body.ok, false);
+  });
+});
+
+// 2026-08-25 ("production-safe selective execution loop" follow-up): direct tests of the SafetyBudgetStore
+// Durable Object class itself - same shape as the RollingFingerprintStore tests above (separate DO class,
+// same atomic-per-identity/R2-mirror/seed-on-first-read design).
+describe("SafetyBudgetStore (Durable Object class)", () => {
+  function makeDOState() {
+    const data = new Map<string, unknown>();
+    return {
+      storage: {
+        async get<T>(key: string): Promise<T | undefined> { return data.get(key) as T | undefined; },
+        async put<T>(key: string, value: T): Promise<void> { data.set(key, value); },
+        async setAlarm(): Promise<void> {},
+        async deleteAlarm(): Promise<void> {},
+      },
+      waitUntil() {},
+      _data: data,
+    };
+  }
+
+  const IDENTITY = { repository: "calcom/cal.diy", branch: "unknown", environmentIdentity: "root", testFamily: "unit", commandIdentity: "test" };
+  function outcome(overrides: Partial<DecisionOutcome> = {}): DecisionOutcome {
+    return { audited: true, outcomeChangingMiss: false, selectedWallMs: 1000, fullWallMs: 50_000, stage: "test", observedAtMs: 1000, ...overrides };
+  }
+
+  it("/merge on a fresh instance starts a new budget and mirrors to R2", async () => {
+    const state = makeDOState();
+    const { bucket, putCalls } = makeBucket();
+    const store = new SafetyBudgetStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined, SAFETY_BUDGET_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/merge", { method: "POST", body: JSON.stringify({ identity: IDENTITY, outcome: outcome(), mirrorKey: "safety-budgets/k.json" }) }));
+    const body = (await res.json()) as { ok: boolean; budget: { totalDecisions: number } };
+    assert.equal(body.ok, true);
+    assert.equal(body.budget.totalDecisions, 1);
+    assert.ok(putCalls.some((c) => c.key === "safety-budgets/k.json"));
+  });
+
+  it("/merge on a SECOND call reads back its OWN storage - two merges through the same instance accumulate", async () => {
+    const state = makeDOState();
+    const { bucket } = makeBucket();
+    const store = new SafetyBudgetStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined, SAFETY_BUDGET_STORE: undefined } as never);
+    const mergeOnce = (observedAtMs: number) => store.fetch(new Request("http://do/merge", { method: "POST", body: JSON.stringify({ identity: IDENTITY, outcome: outcome({ observedAtMs }), mirrorKey: "safety-budgets/k.json" }) }));
+    await mergeOnce(1000);
+    const res2 = await mergeOnce(2000);
+    const body2 = (await res2.json()) as { budget: { totalDecisions: number; auditedDecisions: number } };
+    assert.equal(body2.budget.totalDecisions, 2);
+    assert.equal(body2.budget.auditedDecisions, 2);
+  });
+
+  it("/read on a FRESH instance seeds itself from the R2 mirror and persists the seed", async () => {
+    const state = makeDOState();
+    const seeded = recordDecision(undefined, IDENTITY, outcome());
+    const { bucket } = makeBucket({ "safety-budgets/k.json": JSON.stringify(seeded) });
+    const store = new SafetyBudgetStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined, SAFETY_BUDGET_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/read?mirrorKey=safety-budgets/k.json"));
+    const body = (await res.json()) as { ok: boolean; budget: { totalDecisions: number } };
+    assert.equal(body.ok, true);
+    assert.equal(body.budget.totalDecisions, 1); // carried forward from R2, not reset to zero
+    assert.deepEqual(await state.storage.get("safety-budget"), seeded);
+  });
+
+  it("/read on a fresh instance with NO R2 mirror returns null, not an error", async () => {
+    const state = makeDOState();
+    const { bucket } = makeBucket();
+    const store = new SafetyBudgetStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined, SAFETY_BUDGET_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/read?mirrorKey=safety-budgets/nope.json"));
+    const body = (await res.json()) as { ok: boolean; budget: unknown };
+    assert.equal(body.ok, true);
+    assert.equal(body.budget, null);
+  });
+
+  it("an unknown route returns a 404 ok:false response, not a thrown error", async () => {
+    const state = makeDOState();
+    const { bucket } = makeBucket();
+    const store = new SafetyBudgetStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined, SAFETY_BUDGET_STORE: undefined } as never);
     const res = await store.fetch(new Request("http://do/nonsense"));
     assert.equal(res.status, 404);
     const body = (await res.json()) as { ok: boolean };

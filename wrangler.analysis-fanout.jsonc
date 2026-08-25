@@ -60,7 +60,11 @@
       // drop one's samples. Cloudflare guarantees one DO instance processes requests to itself strictly one
       // at a time - routing every merge for an identity through its own instance makes the read-merge-write
       // atomic BY CONSTRUCTION. See RollingFingerprintStore's own doc comment in execution-shard-do.ts.
-      { "name": "ROLLING_FINGERPRINT_STORE", "class_name": "RollingFingerprintStore" }
+      { "name": "ROLLING_FINGERPRINT_STORE", "class_name": "RollingFingerprintStore" },
+      // Repository-level safety budget (2026-08-25, "production-safe selective execution loop" follow-up) -
+      // same atomic-per-identity pattern as ROLLING_FINGERPRINT_STORE, a deliberately separate DO class
+      // (different accumulated shape/concern). See SafetyBudgetStore's own doc comment in execution-shard-do.ts.
+      { "name": "SAFETY_BUDGET_STORE", "class_name": "SafetyBudgetStore" }
     ]
   },
   // R2 stores the source tarball, the pack record, the frozen build manifest + selection manifests, and
@@ -71,7 +75,8 @@
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["AnalysisRun", "AnalysisShard", "AnalysisShardContainer"] },
     { "tag": "v2", "new_sqlite_classes": ["AnalysisExecutionShard"] },
-    { "tag": "v3", "new_sqlite_classes": ["RollingFingerprintStore"] }
+    { "tag": "v3", "new_sqlite_classes": ["RollingFingerprintStore"] },
+    { "tag": "v4", "new_sqlite_classes": ["SafetyBudgetStore"] }
   ],
   "vars": {
     // R2 key of the frozen build manifest the Worker reads for the engineChecksum gate. The CLI `pack`

@@ -281,28 +281,68 @@ export interface ExecutionRecord {
     fingerprintFound: boolean;
     baselineSafety: { decision: string; explanation: string; fingerprintAgeMs?: number };
     economicsBeneficial: boolean;
-    finalActivation: {
-      decision: string;
-      explanation: string;
-      newFailuresInFull: readonly string[];
-      newFailuresInSelected: readonly string[];
-      newFailuresMissedBySelection: readonly string[];
-    };
+    finalActivation: FinalActivationRecordShape;
   };
   /** Same shape as `activationDecision.finalActivation`, applied to the mutant phase instead of baseline
    * (2026-08-25) - present only when `mutant` exists. Answers whether the selected suite's own results
    * contain the deliberate mutation's real new failure, using the identical fingerprint/baselineSafety as
    * the baseline decision (properties of the run, not the phase). */
-  mutantActivationDecision?: {
-    decision: string;
-    explanation: string;
-    newFailuresInFull: readonly string[];
-    newFailuresInSelected: readonly string[];
-    newFailuresMissedBySelection: readonly string[];
+  mutantActivationDecision?: FinalActivationRecordShape;
+  /** The always-run cohort actually applied to THIS real merge run's selected-phase test paths (2026-08-25,
+   * "production-safe selective execution loop" follow-up to Report 17) - see always-run-cohort.ts. Present
+   * only for real merge runs (mergeSha !== baseSha) with a rolling fingerprint to draw from; undefined,
+   * never an empty-looking default, when no cohort was computed at all. */
+  alwaysRunCohort?: {
+    files: readonly string[];
+    sourceEntries: readonly { testId: string; file: string; observationCount: number }[];
   };
+  /** This real merge run's periodic-full-suite-audit sampling decision (2026-08-25) - see
+   * audit-sampling.ts. `sampled` here is the POLICY decision (would a real production system, sampling at
+   * this fraction, have run a full-suite audit for this merge) - independent of whether a full suite
+   * actually ran in THIS validation harness (which always runs both, for measurement). Only `sampled`
+   * decisions are ever counted toward `safetyBudgetPersisted`'s auditedDecisions, so the accumulated budget
+   * honestly models what a sampled production system would have observed, not what this harness happened
+   * to have data for. */
+  auditSampling?: { sampled: boolean; hashValue: number; policyFraction: number };
+  /** Confirms this run's own decision outcome was folded into the repository's accumulated SafetyBudget
+   * (safety-budget.ts) - present only for real merge runs where the fold succeeded. */
+  safetyBudgetPersisted?: { key: string; totalDecisions: number; auditedDecisions: number };
   lastError?: string;
   errorClass?: string;
   startedAt: number;
   heartbeatAt: number;
   finishedAt?: number;
+}
+
+/** Inlined rather than imported (this file stays dependency-free by design) - structurally matches
+ * baseline-fingerprint-gate.ts's FinalActivationResult, minus `decision`/`explanation` (kept at the parent
+ * level above for backward compatibility with pre-2026-08-25 records) and `fingerprint` (never persisted
+ * directly - only its derived classification). `facts` (2026-08-25, "production-safe selective execution
+ * loop" follow-up) carries the SEPARATED safety facts (SafetyFacts) this decision was computed from,
+ * including the purely-informational `repositoryTrackRecord` when a safety budget was supplied - optional
+ * so older persisted records (before this field existed) still satisfy this type. */
+interface FinalActivationRecordShape {
+  decision: string;
+  explanation: string;
+  newFailuresInFull: readonly string[];
+  newFailuresInSelected: readonly string[];
+  newFailuresMissedBySelection: readonly string[];
+  facts?: {
+    regressionSelectionSafety: string;
+    rawFullSuiteOutcomePreserved: string;
+    baselineHealth: string;
+    baselineHealthDetail: string;
+    economicsBeneficial: boolean;
+    newFailuresInFull: readonly string[];
+    newFailuresInSelected: readonly string[];
+    newFailuresMissedBySelection: readonly string[];
+    repositoryTrackRecord?: {
+      confidence: string;
+      auditedDecisions: number;
+      outcomeChangingMisses: number;
+      observedMissRatePct?: number;
+      observedWorkloadReductionPct?: number;
+      explanation: string;
+    };
+  };
 }

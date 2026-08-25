@@ -30,6 +30,9 @@
  *  - `export { RollingFingerprintStore }` (2026-08-25, Report 17 follow-up) - one DO instance per rolling-
  *    fingerprint identity, fixing a real concurrent-write race in that fingerprint's persistence. Not
  *    reachable from the control plane directly; AnalysisExecutionShard's own alarm() talks to it.
+ *  - `export { SafetyBudgetStore }` (2026-08-25, "production-safe selective execution loop" follow-up) -
+ *    one DO instance per repository/identity's accumulated safety-budget track record. Same not-directly-
+ *    reachable shape as RollingFingerprintStore above.
  *
  * Orchestration note: there is NO `ctx.waitUntil(runFanOut(...))` here any more. The Worker's only job
  * is to validate the request, re-verify the tarball/frozen-manifest checksums, and hand the run to the
@@ -62,7 +65,7 @@ import { getRepoExecutionProfile, listConfiguredRepositories } from "../repo-exe
 export { Sandbox as AnalysisShardContainer } from "@cloudflare/sandbox";
 export { AnalysisShard } from "./analysis-shard-do.js";
 export { AnalysisRun } from "./analysis-run-do.js";
-export { AnalysisExecutionShard, RollingFingerprintStore } from "./execution-shard-do.js";
+export { AnalysisExecutionShard, RollingFingerprintStore, SafetyBudgetStore } from "./execution-shard-do.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DONamespace = any; // matches validation-worker.ts's idiom - no @cloudflare/workers-types dependency here
