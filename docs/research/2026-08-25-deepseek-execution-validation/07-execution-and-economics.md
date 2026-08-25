@@ -1,3 +1,5 @@
+> **Amendment (2026-08-25, Report 11):** the "clean"/"operationally completed" distinction, the unit-family-vs-all-family bounded reclassification of #2814/#2844, and the dirty-baseline/false-green check are in Report 11. Economics figures below are unaffected (wall-clock measurements, not correctness claims).
+
 # Report 07 — per-merge execution results and economics (Phases 7 & 9)
 
 All 5 predeclared merges terminal. `#2808` uses `canary2` (the corrected run; `canary1` is preserved separately as off-target-mutation evidence, Report 05).

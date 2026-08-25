@@ -1,3 +1,5 @@
+> **Amendment (2026-08-25, Report 11):** §1.1's "DiffCI's static engine models the unit-test family only" is corrected there — the engine models and selects across unit, snapshot, and e2e; only this round's *execution harness* wired a unit-only command. See Report 11 §1.
+
 # DeepSeek Harness execution validation — Phase 0/1: identity, evidence preservation, validation-universe inventory
 
 **Repository:** `deepseek-ai/deepseek-harness`. **Mission:** DiffCI Execution & Mutation Validation — DeepSeek Harness, second cross-repository case study, following the Cal.com precedent (`docs/research/2026-08-24-calcom-execution-observability/`).

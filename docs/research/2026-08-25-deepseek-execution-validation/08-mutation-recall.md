@@ -1,3 +1,5 @@
+> **Amendment (2026-08-25, Report 11):** "recall fully preserved" language elsewhere in this mission conflated two distinct claims. What this report measures — **differential mutation recall** (new failures caused by a deliberate mutation, 3/3 confirmed) — is correct and unaffected. **Absolute full-suite failure preservation** (does the selected suite's pass/fail status match the full suite's) is a separate claim, checked and confirmed clean for this 5-merge sample in Report 11, not a structural guarantee. The "2 unmeasurable" denominator is also broken out precisely there (1 unavailable-by-predeclaration vs. 1 attempted-but-undetected — already distinguished in the table below, but restated for emphasis).
+
 # Report 08 — mutation-recall report (Phase 8)
 
 ## Per-merge recall

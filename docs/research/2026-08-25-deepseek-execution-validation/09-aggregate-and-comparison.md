@@ -1,3 +1,5 @@
+> **Amendment (2026-08-25, Report 11):** this report's "clean" characterization of the 5 executions and its unqualified `HONORED_WITH_FRAMEWORK_EXPANSION`/`IGNORED_OR_BROADENED` labels for #2814/#2844 are superseded by Report 11's bounded (unit-scope vs. all-family-scope) reclassification and its "operationally completed" framing. The aggregate denominators below (4/4 positive economics, 3/3 recall) are unaffected.
+
 # Report 09 — aggregate result, infrastructure reliability, and Cal.com comparison (Phase 10)
 
 ## Aggregate, with explicit denominators
