@@ -348,6 +348,10 @@ async function handleCreateExecution(request: Request, env: Env): Promise<Respon
   if (body.diagnosticCommands !== undefined && (!Array.isArray(body.diagnosticCommands) || !body.diagnosticCommands.every((a) => typeof a === "string"))) {
     return json({ ok: false, error: "diagnosticCommands, if provided, must be an array of strings" }, 400);
   }
+  // CI-parity experiment (2026-08-25): see ExecutionSpec.runAsNonRoot.
+  if (body.runAsNonRoot !== undefined && typeof body.runAsNonRoot !== "boolean") {
+    return json({ ok: false, error: "runAsNonRoot, if provided, must be a boolean" }, 400);
+  }
   // Reject before a container is ever provisioned - execution is never silently faked/approximated for
   // a repository whose real CI test command DiffCI has not verified (repo-execution-profiles.ts).
   if (!getRepoExecutionProfile(repository)) {
@@ -393,6 +397,7 @@ async function handleCreateExecution(request: Request, env: Env): Promise<Respon
     analysisOverheadMs: body.analysisOverheadMs,
     testArgvOverride: body.testArgvOverride as string[] | undefined,
     diagnosticCommands: body.diagnosticCommands as string[] | undefined,
+    runAsNonRoot: body.runAsNonRoot as boolean | undefined,
   };
 
   const doStub = getExecutionDoStub(env, runId, repository, mergeSha);

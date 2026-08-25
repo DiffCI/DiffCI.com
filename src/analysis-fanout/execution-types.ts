@@ -83,6 +83,15 @@ export interface ExecutionSpec {
    * so a probe run's marginal cost over the fixed clone+install+pretest cost is small. A run using this
    * MUST be labeled as a diagnostic probe, never conflated with a real baseline/mutant measurement. */
   diagnosticCommands?: string[];
+  /** CI-parity experiment (2026-08-25, dirty-baseline/false-green investigation): when true, install and
+   * every test-run command (full-baseline/selected-baseline/full-mutant/selected-mutant) run as a
+   * created-fresh non-root user instead of the container's default root - probing whether the repository's
+   * recurring pre-existing test failures are a root-vs-non-root POSIX permission-check artifact rather
+   * than genuine application/environment failures. Corepack's own global activation still runs as root
+   * (it needs to) immediately before the user is created; git clone/checkout/mutation-revert also stay
+   * root (chown makes the tree readable/writable by the new user regardless - only the TEST PROCESS's own
+   * UID is the variable under test). Opt-in, per-run, never a profile default. */
+  runAsNonRoot?: boolean;
 }
 
 export interface DiagnosticCommandResult {
@@ -202,6 +211,8 @@ export interface ExecutionRecord {
   diagnosticCommands?: string[];
   /** Filled in by the `diagnosing` step, one entry per command in `diagnosticCommands`, in order. */
   diagnosticResults?: DiagnosticCommandResult[];
+  /** See ExecutionSpec.runAsNonRoot - carried through verbatim when present. */
+  runAsNonRoot?: boolean;
   /** Set while a test-run step (full-baseline/selected-baseline/full-mutant/selected-mutant) has an
    * in-flight sandbox process; cleared once that step's result is captured. One field reused across the
    * four steps is safe because they run strictly sequentially, never concurrently - exactly the

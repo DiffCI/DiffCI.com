@@ -286,6 +286,58 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     assert.match(installCall!.command, /corepack enable.*npm install -g corepack.*corepack enable.*corepack yarn install/);
   });
 
+  describe("runAsNonRoot (2026-08-25, CI-parity experiment - dirty-baseline/false-green investigation)", () => {
+    it("bootstrap creates the non-root user only when runAsNonRoot is true - every existing run is unaffected", async () => {
+      const { sandbox: sandboxOn, execCalls: callsOn } = makeSandbox({ exec: bootstrapExec() });
+      const { bucket: bucketOn } = makeBucket(bootstrapBucketObjects());
+      const { deps: depsOn } = makeDeps(sandboxOn, bucketOn);
+      await stepExecution(record({ step: "bootstrapping", runAsNonRoot: true }), depsOn);
+      assert.ok(callsOn.some((c) => c.command.includes("useradd") && c.command.includes("ciuser")));
+
+      const { sandbox: sandboxOff, execCalls: callsOff } = makeSandbox({ exec: bootstrapExec() });
+      const { bucket: bucketOff } = makeBucket(bootstrapBucketObjects());
+      const { deps: depsOff } = makeDeps(sandboxOff, bucketOff);
+      await stepExecution(record({ step: "bootstrapping" }), depsOff);
+      assert.equal(callsOff.some((c) => c.command.includes("useradd")), false);
+    });
+
+    it("clone chowns the cloned tree to the non-root user only when runAsNonRoot is true", async () => {
+      const { sandbox, execCalls } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      await stepExecution(record({ step: "cloning", runAsNonRoot: true }), deps);
+      assert.ok(execCalls.some((c) => c.command.includes("chown -R ciuser:ciuser")));
+    });
+
+    it("install runs corepack activation as root but the actual install command via su - ciuser", async () => {
+      const { sandbox, execCalls } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      await stepExecution(record({ step: "installing", runAsNonRoot: true }), deps);
+      const installCall = execCalls.find((c) => c.command.includes("yarn install"));
+      assert.ok(installCall);
+      // corepack activation precedes the su wrapper, not INSIDE it (must stay root - global npm install)
+      assert.match(installCall!.command, /^\(corepack enable.*corepack enable\).*>\/dev\/null 2>&1; su - ciuser -c '.*yarn install.*'$/);
+    });
+
+    it("full-baseline's test-run process is invoked via su - ciuser when runAsNonRoot is true", async () => {
+      const { sandbox, startProcessCalls } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      await stepExecution(record({ step: "full-baseline", runAsNonRoot: true }), deps);
+      assert.equal(startProcessCalls.length, 1);
+      assert.match(startProcessCalls[0]!.command, /su - ciuser -c '.*yarn test.*'/);
+    });
+
+    it("does not wrap any command when runAsNonRoot is absent/false - byte-identical to the pre-existing behavior", async () => {
+      const { sandbox, startProcessCalls } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      await stepExecution(record({ step: "full-baseline" }), deps);
+      assert.equal(startProcessCalls[0]!.command.includes("su -"), false);
+    });
+  });
+
   it("pretest runs every configured pretest step and fails fast on the first non-zero exit", async () => {
     const { sandbox, execCalls } = makeSandbox({ exec: (cmd) => (cmd.includes("prisma generate") ? { success: false, exitCode: 1, stderr: "db unreachable" } : undefined) });
     const { bucket } = makeBucket();

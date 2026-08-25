@@ -77,6 +77,26 @@ function argvToShellSafe(argv: string[]): string {
   return argv.map((a) => (/[^A-Za-z0-9_.\/=:-]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a)).join(" ");
 }
 
+/** CI-parity experiment user (2026-08-25) - see ExecutionSpec.runAsNonRoot. `docker.io/cloudflare/sandbox:
+ * 0.12.5` ships with no unprivileged human-usable account (`/etc/passwd` has only root and a shell-less
+ * `sync`), confirmed via a live diagnostic probe, so one is created fresh per run rather than assumed to
+ * exist. UID/GID 1001 is a common real convention (matches e.g. GitHub's own `ubuntu`-image runner user),
+ * not a byte-for-byte replica of deepseek-harness's actual CI UID - this experiment tests root-vs-non-root
+ * POSIX permission-check behavior, not an exact runner fingerprint. */
+const NON_ROOT_USER = "ciuser";
+const NON_ROOT_UID = 1001;
+
+/** Wraps a command to run as `NON_ROOT_USER` via `su -` (a LOGIN shell, so $HOME/$PATH resolve to the new
+ * user's own values - pnpm/corepack need a real $HOME for their store/cache paths, which a plain `su -c`
+ * without the login dash would leave pointed at root's). Single-quoted with POSIX-correct embedded-quote
+ * escaping (`'` -> `'\''`) since the inner command already carries its own double-quoting from
+ * `argvToShellSafe`. A no-op (returns `cmd` verbatim) when `runAsNonRoot` is falsy - every existing
+ * profile/repository is completely unaffected unless a run opts in. */
+function wrapNonRoot(cmd: string, runAsNonRoot: boolean | undefined): string {
+  if (!runAsNonRoot) return cmd;
+  return `su - ${NON_ROOT_USER} -c '${cmd.replace(/'/g, "'\\''")}'`;
+}
+
 function packageManagerBin(profile: RepoExecutionProfile, forRun: boolean): string {
   if (profile.packageManager === "yarn") return "corepack yarn";
   if (profile.packageManager === "pnpm") return "corepack pnpm";
@@ -147,9 +167,15 @@ function buildTestArgv(profile: RepoExecutionProfile, reportName: string, files:
   return [...testArgvBase, ...profile.reporterArgv, `--outputFile.json=${reportPath(reportName)}`, ...(files ?? [])];
 }
 
-function buildTestCmd(dir: string, profile: RepoExecutionProfile, argv: string[]): string {
+function buildTestCmd(dir: string, profile: RepoExecutionProfile, argv: string[], runAsNonRoot?: boolean): string {
   const envPrefix = profile.testEnv ? Object.entries(profile.testEnv).map(([k, v]) => `${k}=${v}`).join(" ") + " " : "";
-  return `cd ${dir} && ${corepackSetupPrefix(profile)}${envPrefix}${packageManagerBin(profile, true)} ${argvToShellSafe(argv)}`;
+  const testCmd = `cd ${dir} && ${envPrefix}${packageManagerBin(profile, true)} ${argvToShellSafe(argv)}`;
+  // Same root/non-root split as install() (2026-08-25): corepackSetupPrefix's global activation stays
+  // root, only the actual test invocation runs as NON_ROOT_USER. By the time a test-run step executes,
+  // corepack was already activated during install() - this repeats the best-effort/idempotent check
+  // (matches every OTHER test-run command's own prefix, unchanged for the non-experiment path) rather
+  // than assuming it's still enabled from an earlier step in the same container's lifetime.
+  return runAsNonRoot ? `${corepackSetupPrefix(profile)}${wrapNonRoot(testCmd, true)}` : `${corepackSetupPrefix(profile)}${testCmd}`;
 }
 
 /**
@@ -200,6 +226,17 @@ async function bootstrap(record: ExecutionRecord, deps: ExecutionStepDeps): Prom
       return failExecution(record, "bootstrap-failed", `npm ci exit ${npm.exitCode}: ${(npm.stdout + " " + npm.stderr).trim().slice(-1000)}`);
     }
 
+    // CI-parity experiment (2026-08-25, see ExecutionSpec.runAsNonRoot): create the non-root user this
+    // run's install/test commands will run as. `-m` creates the home directory `su -`'s login shell needs.
+    // `|| true` makes user creation idempotent-safe (harmless if this container is somehow reused), though
+    // every run in practice gets a fresh container per sandboxContainerId().
+    if (record.runAsNonRoot) {
+      const useradd = await sandbox.exec(`useradd -m -u ${NON_ROOT_UID} ${NON_ROOT_USER} || true`, { timeout: 30_000 });
+      if (!useradd.success) {
+        return failExecution(record, "nonroot-user-setup-failed", `useradd exit ${useradd.exitCode}: ${(useradd.stdout + " " + useradd.stderr).trim().slice(-500)}`);
+      }
+    }
+
     const frozen = await bucket.get(record.frozenManifestKey);
     if (!frozen) return failExecution(record, "frozen-manifest-missing", `frozen manifest missing in R2: ${record.frozenManifestKey}`);
     await sandbox.writeFile("/opt/frozen-manifest.json", await frozen.text());
@@ -230,6 +267,13 @@ async function clone(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<
     // which already runs this shape of command in production at up to a 20-minute timeout.
     await sandbox.exec(`rm -rf ${dir} && git clone --quiet https://github.com/${record.repository}.git ${dir}`, { timeout: 20 * 60_000 });
     await sandbox.exec(`cd ${dir} && git checkout --quiet --force --detach ${record.mergeSha}`, { timeout: 5 * 60_000 });
+    if (record.runAsNonRoot) {
+      // Ownership only, not the ACTING user, for git plumbing (2026-08-25): root can already read/write
+      // any ownership regardless, so clone/checkout/later mutation-revert stay root for simplicity - only
+      // the TEST PROCESS's own UID is the variable this experiment is testing. chown here so install and
+      // the test runner (which DO run as NON_ROOT_USER) can read/write the tree at all.
+      await sandbox.exec(`chown -R ${NON_ROOT_USER}:${NON_ROOT_USER} ${dir}`, { timeout: 60_000 });
+    }
     record.timings.cloneMs = deps.now() - t0;
     record.step = "deriving-selection";
     return { record, nextAlarmDelayMs: 0 };
@@ -285,7 +329,15 @@ async function install(record: ExecutionRecord, deps: ExecutionStepDeps): Promis
   try {
     const dir = workDir(record);
     const t0 = deps.now();
-    const cmd = `cd ${dir} && ${corepackSetupPrefix(profile)}${packageManagerBin(profile, false)} ${argvToShellSafe(profile.installArgv)}`;
+    // CI-parity experiment (2026-08-25): corepack's global activation genuinely needs root (it may `npm
+    // install -g`), so it always runs as root FIRST, standalone - separated from the actual install
+    // command rather than baked into one su-wrapped string, since `su - user -c "root-thing && user-thing"`
+    // would run BOTH halves as the non-root user, and the corepack half would then fail on write
+    // permission to the global npm prefix.
+    const installCmd = `cd ${dir} && ${packageManagerBin(profile, false)} ${argvToShellSafe(profile.installArgv)}`;
+    const cmd = record.runAsNonRoot
+      ? `${corepackSetupPrefix(profile)}${wrapNonRoot(installCmd, true)}`
+      : `${corepackSetupPrefix(profile)}${installCmd}`;
     // A single generous-timeout sandbox.exec, matching AnalysisShard's `bootstrap()` npm-ci precedent
     // (10 min) scaled up for cal.com's heavier native-build install (observed ~20 min locally).
     const res = await sandbox.exec(cmd, { timeout: 25 * 60_000 });
@@ -381,7 +433,7 @@ async function stepTestRun(record: ExecutionRecord, deps: ExecutionStepDeps, cfg
   const argv = buildTestArgv(profile, cfg.reportName, cfg.files, record.testArgvOverride ?? profile.testArgv);
   try {
     if (!record.processId) {
-      const proc = await sandbox.startProcess(buildTestCmd(dir, profile, argv), { cwd: dir, autoCleanup: false });
+      const proc = await sandbox.startProcess(buildTestCmd(dir, profile, argv, record.runAsNonRoot), { cwd: dir, autoCleanup: false });
       record.processId = proc.id;
       record.processStartedAt = deps.now();
       return { record, nextAlarmDelayMs: POLL_MS };
@@ -757,6 +809,7 @@ export function seedExecutionRecord(spec: ExecutionSpec, shape: string, now: num
     analysisOverheadMs: spec.analysisOverheadMs,
     testArgvOverride: spec.testArgvOverride,
     diagnosticCommands: spec.diagnosticCommands,
+    runAsNonRoot: spec.runAsNonRoot,
     timings: {},
     startedAt: now,
     heartbeatAt: now,

@@ -38,7 +38,9 @@ merge-only additions (2):
 
 Both merge-only additions were already flagged in Report 11 as single-occurrence (1/5 merges) entries in the cross-merge union - ordinary flaky variance, not part of the stable recurring set, and structurally the same *kind* of test (subprocess/process-timing) as the 16 stable failures, not a new category.
 
-**This directly satisfies the user's own stated condition** for PR #2760: *"If base and merge exhibit identical environmental failures, you can claim: no change-induced baseline failure was missed in the observed corpus."* All 16 of the base's failures are identical (exact string match) to failures already present at the merge SHA, before PR #2760's own change (a test-only edit with no source diff) was applied. **For PR #2760 specifically: no evidence of a change-induced failure.**
+**Narrowed per a further review round**: this establishes exactly what was directly measured, no more. **16 of 18 merge-baseline failures are directly proven to predate the merge** (exact string match, present at the base SHA before PR #2760's own change). **The remaining 2 are suspected flakes, not confirmed** - a single-run, single-occurrence observation does not establish flakiness; it only remains *consistent with* it. Confirming would need repeated runs, a stable/unstable fingerprint check, or historical CI evidence, none of which has been done for these 2 specifically.
+
+**Correct statement for #2760**: at least 16/18 merge-baseline failures predated the merge; 2 additional failure observations remain consistent with flakiness but are not yet conclusively attributed. Not "no evidence of a change-induced failure" stated without qualification - the 2 unresolved observations keep that claim open, even though they are unlikely to be change-induced given they don't touch any file #2760's diff (a test-only, no-source-change PR) could plausibly affect.
 
 ## What this does and does not establish
 
