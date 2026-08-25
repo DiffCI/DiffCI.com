@@ -1,3 +1,5 @@
+> **Amendment (2026-08-25, Report 12):** this report's "no false green occurred" conclusion (§ Correction 3) overreached - it answered a narrower question (do failing tests share a path with a selected file) than the operational one (full exit 1, selected exit 0 IS a false green under ordinary CI semantics, regardless of path overlap, since dependency-impact selection is meant to catch indirect consumers path-matching can't rule out). Corrections 1 and 2 below stand unchanged. See Report 12 for the corrected classification and a real executed base-SHA control run.
+
 # Report 11 — corrections: family-scope precision and dirty-baseline/false-green analysis
 
 External review (2026-08-25) identified three real imprecisions in Reports 01/07/08/09's framing. All three are accepted after independent verification against the raw records - not taken on faith. This report supersedes the executive verdict and specific claims named below; the originals are left unmodified with a pointer to this report, per this mission's own preserve-don't-rewrite discipline (the same pattern used for `canary1` in Report 05).
