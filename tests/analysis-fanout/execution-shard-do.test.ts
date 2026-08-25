@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { DEFAULT_MAX_TEST_RUN_MS, POLL_MS, classifyRuntimeSelection, sandboxContainerId, seedExecutionRecord, stepExecution } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
-import type { ExecutionStepDeps } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
+import { DEFAULT_MAX_TEST_RUN_MS, POLL_MS, RollingFingerprintStore, classifyRuntimeSelection, sandboxContainerId, seedExecutionRecord, stepExecution } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
+import type { ExecutionStepDeps, RollingFingerprintStoreLike } from "../../src/analysis-fanout/cloudflare/execution-shard-do.js";
 import type { R2BucketLike, R2ObjectBodyLike, SandboxLike } from "../../src/analysis-fanout/sandbox-like.js";
 import type { ExecutionRecord, ExecutionSpec, RepoExecutionProfile, TestRunResult } from "../../src/analysis-fanout/execution-types.js";
-import { ROLLING_FINGERPRINT_SCHEMA_VERSION } from "../../src/analysis-fanout/rolling-fingerprint.js";
+import { ROLLING_FINGERPRINT_SCHEMA_VERSION, mergeObservation, type RollingFingerprint } from "../../src/analysis-fanout/rolling-fingerprint.js";
 
 function spec(overrides: Partial<ExecutionSpec> = {}): ExecutionSpec {
   return {
@@ -119,8 +119,50 @@ function makeBucket(objects: Record<string, string> = {}) {
   return { bucket, putCalls };
 }
 
-function makeDeps(sandbox: SandboxLike, bucket: R2BucketLike, nowValue = 2000): { deps: ExecutionStepDeps } {
-  return { deps: { sandbox, bucket, profile: profile(), now: () => nowValue } };
+/**
+ * In-memory mock for RollingFingerprintStoreLike (2026-08-25, Report 17 follow-up). Concurrent `merge()`
+ * calls for the SAME rollingKey are forced through a per-key promise chain - this MODELS the real Durable
+ * Object's actual guarantee (Cloudflare processes requests to one DO instance strictly one at a time), it
+ * does not re-implement the fix itself; production correctness comes from the real platform serializing
+ * requests to `RollingFingerprintStore`, not from anything in this test file. Different keys queue
+ * independently, exactly like separate DO instances would.
+ */
+function makeRollingFingerprintStore(seed: Record<string, RollingFingerprint> = {}) {
+  const store = new Map<string, RollingFingerprint>(Object.entries(seed));
+  const queues = new Map<string, Promise<unknown>>();
+  const mergeCalls: { rollingKey: string; baseSha: string }[] = [];
+
+  function enqueue<T>(key: string, task: () => Promise<T>): Promise<T> {
+    const prior = queues.get(key) ?? Promise.resolve();
+    const next = prior.then(task, task);
+    queues.set(key, next);
+    return next;
+  }
+
+  const rollingFingerprintStore: RollingFingerprintStoreLike = {
+    async merge(rollingKey, identity, observedFailures, baseSha, nowMs) {
+      mergeCalls.push({ rollingKey, baseSha });
+      return enqueue(rollingKey, async () => {
+        const existing = store.get(rollingKey);
+        const updated = mergeObservation(existing, identity, observedFailures, baseSha, nowMs);
+        store.set(rollingKey, updated);
+        return updated;
+      });
+    },
+    async read(rollingKey) {
+      return store.get(rollingKey);
+    },
+  };
+  return { rollingFingerprintStore, store, mergeCalls };
+}
+
+function makeDeps(
+  sandbox: SandboxLike,
+  bucket: R2BucketLike,
+  nowValue = 2000,
+  rollingFingerprintStore: RollingFingerprintStoreLike = makeRollingFingerprintStore().rollingFingerprintStore,
+): { deps: ExecutionStepDeps } {
+  return { deps: { sandbox, bucket, profile: profile(), now: () => nowValue, rollingFingerprintStore } };
 }
 
 function bootstrapBucketObjects(): Record<string, string> {
@@ -683,7 +725,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         const { sandbox, killProcessCalls } = makeSandbox({ process: { status: "running" } });
         const { bucket } = makeBucket();
         const tightProfile: RepoExecutionProfile = { ...profile(), maxTestRunMs: 60_000 };
-        const deps: ExecutionStepDeps = { sandbox, bucket, profile: tightProfile, now: () => 1000 + 61_000 };
+        const deps: ExecutionStepDeps = { sandbox, bucket, profile: tightProfile, now: () => 1000 + 61_000, rollingFingerprintStore: makeRollingFingerprintStore().rollingFingerprintStore };
         const { record: out } = await stepExecution(record({ step: "full-baseline", processId: "proc-1", processStartedAt: 1000 }), deps);
         assert.equal(killProcessCalls.length, 1);
         assert.equal(out.errorClass, "step-timeout");
@@ -701,7 +743,7 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
           async destroy() {},
         };
         const { bucket } = makeBucket();
-        const deps: ExecutionStepDeps = { sandbox, bucket, profile: profile(), now: () => 1000 + DEFAULT_MAX_TEST_RUN_MS + 1 };
+        const deps: ExecutionStepDeps = { sandbox, bucket, profile: profile(), now: () => 1000 + DEFAULT_MAX_TEST_RUN_MS + 1, rollingFingerprintStore: makeRollingFingerprintStore().rollingFingerprintStore };
         const { record: out } = await stepExecution(record({ step: "full-baseline", processId: "proc-1", processStartedAt: 1000 }), deps);
         assert.equal(out.step, "finalizing");
         assert.equal(out.errorClass, "step-timeout");
@@ -1083,8 +1125,9 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
 
       it("a base-SHA control run (mergeSha === baseSha) with a complete full baseline MERGES an observation into the rolling fingerprint (fresh, none existed before)", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket, putCalls } = makeBucket();
-        const { deps } = makeDeps(sandbox, bucket, 5000);
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore, store, mergeCalls } = makeRollingFingerprintStore();
+        const { deps } = makeDeps(sandbox, bucket, 5000, rollingFingerprintStore);
         const rec = record({
           step: "finalizing",
           mergeSha: "a".repeat(40), // same as baseSha - a control run, not a real merge
@@ -1096,21 +1139,22 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         const { record: out } = await stepExecution(rec, deps);
         assert.ok(out.fingerprintPersisted);
         assert.equal(out.fingerprintPersisted!.knownFailureCount, 2); // tracked-entry count, not a stability judgment
-        const fpPut = putCalls.find((c) => c.key.startsWith("rolling-fingerprints/"));
-        assert.ok(fpPut, "expected a rolling-fingerprints/ R2 write");
-        assert.equal(fpPut!.key, ROLLING_KEY); // NOT keyed by baseSha - one rolling object spans many bases
-        const written = JSON.parse(fpPut!.value as string);
+        assert.equal(out.fingerprintPersisted!.key, ROLLING_KEY); // NOT keyed by baseSha - one rolling object spans many bases
+        assert.equal(mergeCalls.length, 1);
+        assert.equal(mergeCalls[0]!.rollingKey, ROLLING_KEY);
+        const written = store.get(ROLLING_KEY)!;
         assert.equal(written.totalBaseRunsSampled, 1);
         assert.deepEqual(written.baseShaHistory, ["a".repeat(40)]);
-        assert.deepEqual(written.tracked.map((t: { testId: string }) => t.testId).sort(), ["a.spec.ts :: x", "b.spec.ts :: y"]);
+        assert.deepEqual(written.tracked.map((t) => t.testId).sort(), ["a.spec.ts :: x", "b.spec.ts :: y"]);
         // A control run never computes an activation decision for itself - there is no "merge" to activate.
         assert.equal(out.activationDecision, undefined);
       });
 
       it("a base-SHA control run MERGES into an EXISTING rolling fingerprint rather than overwriting its history", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket, putCalls } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
-        const { deps } = makeDeps(sandbox, bucket, 9000);
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore, store } = makeRollingFingerprintStore({ [ROLLING_KEY]: seededRolling() });
+        const { deps } = makeDeps(sandbox, bucket, 9000, rollingFingerprintStore);
         const rec = record({
           step: "finalizing",
           mergeSha: "a".repeat(40),
@@ -1120,17 +1164,58 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
           },
         });
         const { record: out } = await stepExecution(rec, deps);
-        const fpPut = putCalls.find((c) => c.key === ROLLING_KEY)!;
-        const written = JSON.parse(fpPut.value as string);
+        const written = store.get(ROLLING_KEY)!;
         assert.equal(written.totalBaseRunsSampled, 4); // 3 prior + this one
-        assert.equal(written.tracked[0].observations.length, 4); // the SAME (testId, "") entry gained a 4th sample
+        assert.equal(written.tracked[0]!.observations.length, 4); // the SAME (testId, "") entry gained a 4th sample
         assert.equal(out.fingerprintPersisted!.key, ROLLING_KEY);
+      });
+
+      // 2026-08-25 (Report 17 follow-up): the actual regression test for the concurrent-write race this
+      // mission found and fixed. Two logically-concurrent control-run merges for the SAME identity (fired
+      // via Promise.all, not sequentially awaited) must BOTH be preserved - the old direct-R2 read-then-
+      // write implementation would have let the second write silently discard the first's sample. The mock
+      // store's per-key promise-chain queuing here models the real Durable Object's actual guarantee
+      // (Cloudflare serializes requests to one DO instance); this test proves applyBaselineFingerprintGate
+      // itself no longer does its own racy read-modify-write - it delegates entirely to the store.
+      it("two concurrent base-SHA control runs for the SAME identity BOTH persist - the race this fix closes", async () => {
+        const { sandbox: sandboxA } = makeSandbox();
+        const { sandbox: sandboxB } = makeSandbox();
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore, store } = makeRollingFingerprintStore();
+        const recA = record({
+          step: "finalizing",
+          mergeSha: "a".repeat(40),
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: ["a.spec.ts :: x"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, observabilityStatus: "complete" },
+          },
+        });
+        const recB = record({
+          step: "finalizing",
+          mergeSha: "b".repeat(40),
+          baseSha: "b".repeat(40),
+          baseline: {
+            full: { command: [], exitCode: 1, timedOut: false, wallMs: 1, failed: 1, failedTests: ["b.spec.ts :: y"], observabilityStatus: "complete" },
+            selected: { command: [], exitCode: 0, timedOut: false, wallMs: 1, failed: 0, observabilityStatus: "complete" },
+          },
+        });
+        const [{ deps: depsA }, { deps: depsB }] = [makeDeps(sandboxA, bucket, 5000, rollingFingerprintStore), makeDeps(sandboxB, bucket, 5001, rollingFingerprintStore)];
+        const [{ record: outA }, { record: outB }] = await Promise.all([stepExecution(recA, depsA), stepExecution(recB, depsB)]);
+        // Both runs' own records observe a successful persist - order between the two is not guaranteed
+        // (that's the point: they were genuinely concurrent), only that neither was silently dropped.
+        assert.ok(outA.fingerprintPersisted);
+        assert.ok(outB.fingerprintPersisted);
+        const written = store.get(ROLLING_KEY)!;
+        assert.equal(written.totalBaseRunsSampled, 2); // BOTH samples counted, neither lost
+        assert.deepEqual([...written.baseShaHistory].sort(), ["a".repeat(40), "b".repeat(40)].sort());
+        assert.deepEqual(written.tracked.map((t) => t.testId).sort(), ["a.spec.ts :: x", "b.spec.ts :: y"]); // BOTH tests tracked
       });
 
       it("a control run whose full baseline never completed (missing-report) does NOT touch the rolling fingerprint", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket, putCalls } = makeBucket();
-        const { deps } = makeDeps(sandbox, bucket);
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore, mergeCalls } = makeRollingFingerprintStore();
+        const { deps } = makeDeps(sandbox, bucket, 2000, rollingFingerprintStore);
         const rec = record({
           step: "finalizing",
           mergeSha: "a".repeat(40),
@@ -1141,13 +1226,13 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         });
         const { record: out } = await stepExecution(rec, deps);
         assert.equal(out.fingerprintPersisted, undefined);
-        assert.equal(putCalls.some((c) => c.key.startsWith("rolling-fingerprints/")), false);
+        assert.equal(mergeCalls.length, 0);
       });
 
       it("a real merge run with NO rolling fingerprint on record gets REFUSE_NO_ROLLING_FINGERPRINT, computed and stored unconditionally", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket } = makeBucket(); // empty - no rolling fingerprint object exists
-        const { deps } = makeDeps(sandbox, bucket);
+        const { bucket } = makeBucket();
+        const { deps } = makeDeps(sandbox, bucket); // empty rolling store - no fingerprint object exists
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1166,8 +1251,9 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
 
       it("case 1 (real requested validation): a matching, sufficiently-sampled rolling fingerprint with the observed failure classified STABLE ACTIVATEs end to end", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
-        const { deps } = makeDeps(sandbox, bucket, 4000); // shortly after the 3rd sample - within the recency window
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY]: seededRolling() });
+        const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore); // shortly after the 3rd sample - within the recency window
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1187,8 +1273,9 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       it("a real merge run under a DIFFERENT environment (root vs the fingerprint's nonroot) never finds the rolling fingerprint - proves environment changes invalidate it", async () => {
         const { sandbox } = makeSandbox();
         const nonrootKey = `rolling-fingerprints/calcom__cal.diy/unknown/nonroot__unit__${encodeURIComponent("test -- --no-isolate")}__schema${ROLLING_FINGERPRINT_SCHEMA_VERSION}.json`;
-        const { bucket } = makeBucket({ [nonrootKey]: JSON.stringify(seededRolling({ environmentIdentity: "nonroot" })) });
-        const { deps } = makeDeps(sandbox, bucket, 4000);
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore } = makeRollingFingerprintStore({ [nonrootKey]: seededRolling({ environmentIdentity: "nonroot" }) });
+        const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1212,8 +1299,9 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       // still refuse rather than silently trust signatures built under different normalization rules.
       it("a fingerprint present at today's key but stamped with a DIFFERENT schemaVersion is refused, not silently reused", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling({ schemaVersion: ROLLING_FINGERPRINT_SCHEMA_VERSION - 1 })) });
-        const { deps } = makeDeps(sandbox, bucket, 4000);
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY]: seededRolling({ schemaVersion: ROLLING_FINGERPRINT_SCHEMA_VERSION - 1 }) });
+        const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1231,8 +1319,9 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
 
       it("case 2 (real requested validation): a test with NO tracked history at all (unknown test or signature) is REFUSED, never quarantined just because a DIFFERENT failure in the same run is known", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
-        const { deps } = makeDeps(sandbox, bucket, 4000);
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY]: seededRolling() });
+        const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1252,8 +1341,9 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
 
       it("case 3 (real requested validation): also evaluates the MUTANT phase (same rolling fingerprint/gate) - the real PR #2808 shape: recall preserved, so EXECUTE_SELECTIVELY, not a refusal", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
-        const { deps } = makeDeps(sandbox, bucket, 4000);
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY]: seededRolling() });
+        const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1277,8 +1367,9 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
 
       it("mutant-phase evaluation REFUSES when the mutation's own real failure is missed by the selected suite", async () => {
         const { sandbox } = makeSandbox();
-        const { bucket } = makeBucket({ [ROLLING_KEY]: JSON.stringify(seededRolling()) });
-        const { deps } = makeDeps(sandbox, bucket, 4000);
+        const { bucket } = makeBucket();
+        const { rollingFingerprintStore } = makeRollingFingerprintStore({ [ROLLING_KEY]: seededRolling() });
+        const { deps } = makeDeps(sandbox, bucket, 4000, rollingFingerprintStore);
         const rec = record({
           step: "finalizing",
           analysisOverheadMs: 1000,
@@ -1305,5 +1396,103 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
     assert.equal(rec.step, "bootstrapping");
     assert.equal(rec.analysisOverheadMs, 12_345);
     assert.equal(rec.startedAt, 500);
+  });
+});
+
+// 2026-08-25 (Report 17 follow-up): direct tests of the RollingFingerprintStore Durable Object class
+// itself (its /merge and /read HTTP handlers, and the R2-seed-on-first-read bootstrap path) - separate from
+// the makeRollingFingerprintStore() mock used elsewhere, which models the CALLER's view of this contract,
+// not the DO class's own implementation.
+describe("RollingFingerprintStore (Durable Object class)", () => {
+  function makeDOState() {
+    const data = new Map<string, unknown>();
+    return {
+      storage: {
+        async get<T>(key: string): Promise<T | undefined> { return data.get(key) as T | undefined; },
+        async put<T>(key: string, value: T): Promise<void> { data.set(key, value); },
+        async setAlarm(): Promise<void> {},
+        async deleteAlarm(): Promise<void> {},
+      },
+      waitUntil() {},
+      _data: data,
+    };
+  }
+
+  const IDENTITY = { repository: "calcom/cal.diy", branch: "unknown", environmentIdentity: "root", testFamily: "unit", commandIdentity: "test" };
+
+  it("/merge on a fresh instance (no R2 mirror, no prior storage) starts a new series and mirrors to R2", async () => {
+    const state = makeDOState();
+    const { bucket, putCalls } = makeBucket();
+    const store = new RollingFingerprintStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/merge", {
+      method: "POST",
+      body: JSON.stringify({ identity: IDENTITY, observedFailures: [{ testId: "a.spec.ts :: x", signature: "" }], baseSha: "base1", nowMs: 1000, mirrorKey: "rolling-fingerprints/k.json" }),
+    }));
+    const body = (await res.json()) as { ok: boolean; fingerprint: { totalBaseRunsSampled: number; tracked: unknown[] } };
+    assert.equal(body.ok, true);
+    assert.equal(body.fingerprint.totalBaseRunsSampled, 1);
+    assert.equal(body.fingerprint.tracked.length, 1);
+    // Mirrored to R2 under the same key, for external inspection - not the source of truth, but present.
+    assert.ok(putCalls.some((c) => c.key === "rolling-fingerprints/k.json"));
+  });
+
+  it("/merge on a SECOND call reads back its OWN storage, not R2 - two merges through the same instance accumulate", async () => {
+    const state = makeDOState();
+    const { bucket } = makeBucket();
+    const store = new RollingFingerprintStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined } as never);
+    const mergeOnce = (baseSha: string, nowMs: number) =>
+      store.fetch(new Request("http://do/merge", {
+        method: "POST",
+        body: JSON.stringify({ identity: IDENTITY, observedFailures: [{ testId: "a.spec.ts :: x", signature: "" }], baseSha, nowMs, mirrorKey: "rolling-fingerprints/k.json" }),
+      }));
+    await mergeOnce("base1", 1000);
+    const res2 = await mergeOnce("base2", 2000);
+    const body2 = (await res2.json()) as { fingerprint: { totalBaseRunsSampled: number; tracked: { observations: unknown[] }[] } };
+    assert.equal(body2.fingerprint.totalBaseRunsSampled, 2);
+    assert.equal(body2.fingerprint.tracked[0]!.observations.length, 2);
+  });
+
+  it("/read on an instance with its own storage populated returns it directly, without touching R2", async () => {
+    const state = makeDOState();
+    await state.storage.put("rolling-fingerprint", { ...IDENTITY, schemaVersion: 1, totalBaseRunsSampled: 5, baseShaHistory: ["x"], tracked: [], updatedAtMs: 1 });
+    const bucket: R2BucketLike = { async get() { throw new Error("must not read R2 - DO storage already has it"); }, async put() { return undefined; } };
+    const store = new RollingFingerprintStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/read?mirrorKey=rolling-fingerprints/k.json"));
+    const body = (await res.json()) as { ok: boolean; fingerprint: { totalBaseRunsSampled: number } };
+    assert.equal(body.ok, true);
+    assert.equal(body.fingerprint.totalBaseRunsSampled, 5);
+  });
+
+  it("/read on a FRESH instance (empty own storage) seeds itself from the R2 mirror and persists the seed", async () => {
+    const state = makeDOState();
+    const seeded = { ...IDENTITY, schemaVersion: 1, totalBaseRunsSampled: 3, baseShaHistory: ["x", "y", "z"], tracked: [{ testId: "old.spec.ts :: t", signature: "", observations: [] }], updatedAtMs: 1 };
+    const { bucket } = makeBucket({ "rolling-fingerprints/k.json": JSON.stringify(seeded) });
+    const store = new RollingFingerprintStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/read?mirrorKey=rolling-fingerprints/k.json"));
+    const body = (await res.json()) as { ok: boolean; fingerprint: { totalBaseRunsSampled: number } };
+    assert.equal(body.ok, true);
+    assert.equal(body.fingerprint.totalBaseRunsSampled, 3); // carried forward from R2, not reset to zero
+    // And the seed is now persisted into this instance's OWN storage - a second read never needs R2 again.
+    assert.deepEqual(await state.storage.get("rolling-fingerprint"), seeded);
+  });
+
+  it("/read on a fresh instance with NO R2 mirror either returns null, not an error", async () => {
+    const state = makeDOState();
+    const { bucket } = makeBucket();
+    const store = new RollingFingerprintStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/read?mirrorKey=rolling-fingerprints/nope.json"));
+    const body = (await res.json()) as { ok: boolean; fingerprint: unknown };
+    assert.equal(body.ok, true);
+    assert.equal(body.fingerprint, null);
+  });
+
+  it("an unknown route returns a 404 ok:false response, not a thrown error", async () => {
+    const state = makeDOState();
+    const { bucket } = makeBucket();
+    const store = new RollingFingerprintStore(state as never, { ANALYSIS_SHARD_CONTAINER: undefined, ANALYSIS_BUCKET: bucket, ROLLING_FINGERPRINT_STORE: undefined } as never);
+    const res = await store.fetch(new Request("http://do/nonsense"));
+    assert.equal(res.status, 404);
+    const body = (await res.json()) as { ok: boolean };
+    assert.equal(body.ok, false);
   });
 });

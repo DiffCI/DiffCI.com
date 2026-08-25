@@ -52,7 +52,15 @@
       // (runId, repository, mergeSha) that installs and runs a target repo's own test suite. Reuses the
       // existing AnalysisShardContainer sandbox binding above (same image, same containers[] entry) via
       // env.ANALYSIS_SHARD_CONTAINER inside execution-shard-do.ts - no separate container class needed.
-      { "name": "ANALYSIS_EXECUTION_SHARD", "class_name": "AnalysisExecutionShard" }
+      { "name": "ANALYSIS_EXECUTION_SHARD", "class_name": "AnalysisExecutionShard" },
+      // Rolling-fingerprint atomic persistence (2026-08-25, Report 17 follow-up) - one DO instance per
+      // fingerprint identity (named by the same rollingKey string used as the R2 mirror key). Fixes a real,
+      // self-identified concurrent-write race: the pre-fix code read-merged-wrote directly against R2 with
+      // no compare-and-swap, so two concurrent base-SHA control runs for the SAME identity could silently
+      // drop one's samples. Cloudflare guarantees one DO instance processes requests to itself strictly one
+      // at a time - routing every merge for an identity through its own instance makes the read-merge-write
+      // atomic BY CONSTRUCTION. See RollingFingerprintStore's own doc comment in execution-shard-do.ts.
+      { "name": "ROLLING_FINGERPRINT_STORE", "class_name": "RollingFingerprintStore" }
     ]
   },
   // R2 stores the source tarball, the pack record, the frozen build manifest + selection manifests, and
@@ -62,7 +70,8 @@
   ],
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["AnalysisRun", "AnalysisShard", "AnalysisShardContainer"] },
-    { "tag": "v2", "new_sqlite_classes": ["AnalysisExecutionShard"] }
+    { "tag": "v2", "new_sqlite_classes": ["AnalysisExecutionShard"] },
+    { "tag": "v3", "new_sqlite_classes": ["RollingFingerprintStore"] }
   ],
   "vars": {
     // R2 key of the frozen build manifest the Worker reads for the engineChecksum gate. The CLI `pack`

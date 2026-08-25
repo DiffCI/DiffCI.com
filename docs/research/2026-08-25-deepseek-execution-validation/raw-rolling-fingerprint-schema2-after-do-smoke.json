@@ -1,0 +1,217 @@
+{
+  "repository": "deepseek-ai/deepseek-harness",
+  "branch": "main",
+  "environmentIdentity": "nonroot",
+  "testFamily": "unit",
+  "commandIdentity": "test",
+  "schemaVersion": 2,
+  "totalBaseRunsSampled": 4,
+  "baseShaHistory": [
+    "ed3ef7aceef1a567394b788c64b23fa6f96a7af3"
+  ],
+  "tracked": [
+    {
+      "testId": "subprocess-local/tests/process-exit.spec.ts :: synchronous cleanup on host exit removes an ordinary managed tree after 'direct'",
+      "signature": "Error: managed pid <pid> is still alive at __vite_ssr_import_5__.vi.waitFor.interval (<path>) at Timeout.checkCallback (fil<path>) at listOnTimeout (node:internal/timers) at processTimers (node:internal/timers)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787652327802
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787654722101
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787655663794
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787659192540
+        }
+      ]
+    },
+    {
+      "testId": "subprocess-local/tests/process-exit.spec.ts :: synchronous cleanup on host exit removes an ordinary managed tree after 'uncaught-exception'",
+      "signature": "Error: managed pid <pid> is still alive at __vite_ssr_import_5__.vi.waitFor.interval (<path>) at Timeout.checkCallback (fil<path>) at listOnTimeout (node:internal/timers) at processTimers (node:internal/timers)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787652327802
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787654722101
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787655663794
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787659192540
+        }
+      ]
+    },
+    {
+      "testId": "subprocess-local/tests/process-exit.spec.ts :: synchronous cleanup on host exit removes an ordinary managed tree after 'unhandled-rejection'",
+      "signature": "Error: managed pid <pid> is still alive at __vite_ssr_import_5__.vi.waitFor.interval (<path>) at Timeout.checkCallback (fil<path>) at listOnTimeout (node:internal/timers) at processTimers (node:internal/timers)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787652327802
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787654722101
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787655663794
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787659192540
+        }
+      ]
+    },
+    {
+      "testId": "subprocess-local/tests/process-exit.spec.ts :: synchronous cleanup on host exit removes a terminal root and descendant after direct exit",
+      "signature": "Error: managed pid <pid> is still alive at __vite_ssr_import_5__.vi.waitFor.interval (<path>) at Timeout.checkCallback (fil<path>) at listOnTimeout (node:internal/timers) at processTimers (node:internal/timers)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787652327802
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787654722101
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787655663794
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787659192540
+        }
+      ]
+    },
+    {
+      "testId": "deepseek-ai__deepseek-harness/scripts/install-lefthook.spec.ts :: worktree-local Lefthook installer replaces the owned hook path Git copies into a newly added worktree",
+      "signature": "Error: git config --worktree --get core.hooksPath failed: at git (<path>) at <path> at processTicksAndRejections (node:internal/process/task_queues) at fil<path>",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787652327802
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787654722101
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787655663794
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787659192540
+        }
+      ]
+    },
+    {
+      "testId": "subagent/tests/continuation.spec.ts :: SubagentRuntime.interrupt accepts an interrupt that lost the race with disposal without signalling twice",
+      "signature": "Error: STACK_TRACE_ERROR at task (fil<path>) at Object.<anonymous> (fil<path>) at Object.<anonymous> (fil<path>) at chain (fil<path>) at <path> at fil<path> at runWithSuite (fil<path>) at Object.collect (fil<path>) at Object.collect (fil<path>) at processTicksAndRejections (node:internal/process/task_queues)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787652327802
+        }
+      ]
+    },
+    {
+      "testId": "terminal-bash/tests/local.spec.ts :: terminal-bash real shell cancels a slow-starting raw-mode foreground process with a real SIGINT",
+      "signature": "AssertionError: expected '\\n<setattr(0, termios.TCSANOW, attrs)…' to contain 'RAW_READY' at waitForOutput (<path>) at <path> at fil<path>",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787652327802
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787654722101
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787655663794
+        },
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787659192540
+        }
+      ]
+    },
+    {
+      "testId": "subagent/tests/continuation.spec.ts :: continuable settlement delivery holds a maintaining parent live until it can read the notice",
+      "signature": "Error: STACK_TRACE_ERROR at task (fil<path>) at Object.<anonymous> (fil<path>) at Object.<anonymous> (fil<path>) at chain (fil<path>) at <path> at fil<path> at runWithSuite (fil<path>) at Object.collect (fil<path>) at Object.collect (fil<path>) at processTicksAndRejections (node:internal/process/task_queues)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787654722101
+        }
+      ]
+    },
+    {
+      "testId": "subagent/tests/continuation.spec.ts :: continuable settlement delivery delivers before releasing the ownership that lets the parent settle",
+      "signature": "Error: STACK_TRACE_ERROR at task (fil<path>) at Object.<anonymous> (fil<path>) at Object.<anonymous> (fil<path>) at chain (fil<path>) at <path> at fil<path> at runWithSuite (fil<path>) at Object.collect (fil<path>) at Object.collect (fil<path>) at processTicksAndRejections (node:internal/process/task_queues)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787654722101
+        }
+      ]
+    },
+    {
+      "testId": "subagent-acp/tests/subagent-acp.spec.ts :: dsh-subagent-acp logs a flattened child failure through the registered provider",
+      "signature": "Error: STACK_TRACE_ERROR at task (fil<path>) at Object.<anonymous> (fil<path>) at Object.<anonymous> (fil<path>) at chain (fil<path>) at <path> at fil<path> at runWithSuite (fil<path>) at Object.collect (fil<path>) at Object.collect (fil<path>) at processTicksAndRejections (node:internal/process/task_queues)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787655663794
+        }
+      ]
+    },
+    {
+      "testId": "deepseek-ai__deepseek-harness/scripts/oxlint-contract.spec.ts :: Oxlint executable contract prints only the final diagnostics when a fix retry still fails",
+      "signature": "Error: STACK_TRACE_ERROR at task (fil<path>) at Object.<anonymous> (fil<path>) at Object.<anonymous> (fil<path>) at chain (fil<path>) at <path> at fil<path> at runWithSuite (fil<path>) at Object.collect (fil<path>) at Object.collect (fil<path>) at processTicksAndRejections (node:internal/process/task_queues)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787655663794
+        }
+      ]
+    },
+    {
+      "testId": "subagent/tests/continuation.spec.ts :: SubagentRuntime.startContinuable returns both identities at inbox acceptance, without waiting for the turn or the log",
+      "signature": "Error: STACK_TRACE_ERROR at task (fil<path>) at Object.<anonymous> (fil<path>) at Object.<anonymous> (fil<path>) at chain (fil<path>) at <path> at fil<path> at runWithSuite (fil<path>) at Object.collect (fil<path>) at Object.collect (fil<path>) at processTicksAndRejections (node:internal/process/task_queues)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787659192540
+        }
+      ]
+    },
+    {
+      "testId": "subagent/tests/continuation.spec.ts :: SubagentRuntime.startContinuable publishes the reserved child id and appends the pre-turn descriptor",
+      "signature": "Error: STACK_TRACE_ERROR at task (fil<path>) at Object.<anonymous> (fil<path>) at Object.<anonymous> (fil<path>) at chain (fil<path>) at <path> at fil<path> at runWithSuite (fil<path>) at Object.collect (fil<path>) at Object.collect (fil<path>) at processTicksAndRejections (node:internal/process/task_queues)",
+      "observations": [
+        {
+          "baseSha": "ed3ef7aceef1a567394b788c64b23fa6f96a7af3",
+          "observedAtMs": 1787659192540
+        }
+      ]
+    }
+  ],
+  "updatedAtMs": 1787659192540
+}

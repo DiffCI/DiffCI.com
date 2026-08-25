@@ -54,10 +54,37 @@ interface DurableObjectState {
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SandboxNamespace = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DONamespace = any; // matches analysis-fanout-worker.ts's idiom - no @cloudflare/workers-types dependency here
+interface DOStub {
+  fetch(request: Request): Promise<Response>;
+}
 
 export interface ExecutionEnv {
   ANALYSIS_SHARD_CONTAINER: SandboxNamespace;
   ANALYSIS_BUCKET: R2BucketLike;
+  /** 2026-08-25 (Report 17 follow-up) - see RollingFingerprintStore's own doc comment for why this exists:
+   * fixes a real, self-identified concurrent-write race in the rolling fingerprint's persistence. */
+  ROLLING_FINGERPRINT_STORE: DONamespace;
+}
+
+/** Testable seam for rolling-fingerprint persistence (mirrors the SandboxLike/R2BucketLike pattern) - the
+ * pure state machine depends on this interface, never on the real Durable Object binding directly, so
+ * `stepExecution`/`applyBaselineFingerprintGate` stay unit-testable under plain node:test. See
+ * `realRollingFingerprintStore` for the production adapter and `RollingFingerprintStore` for the DO itself. */
+export interface RollingFingerprintStoreLike {
+  /** Folds one base-SHA control run's observations into the identity's rolling fingerprint and returns the
+   * updated result. Atomic per `rollingKey` in production (routed through one DO instance, which Cloudflare
+   * guarantees processes requests to itself strictly one at a time) - this is the actual fix for the race
+   * `applyBaselineFingerprintGate` used to have when it read-merged-wrote directly against R2. */
+  merge(
+    rollingKey: string,
+    identity: Pick<RollingFingerprint, "repository" | "branch" | "environmentIdentity" | "testFamily" | "commandIdentity">,
+    observedFailures: readonly { testId: string; signature: string }[],
+    baseSha: string,
+    nowMs: number,
+  ): Promise<RollingFingerprint>;
+  read(rollingKey: string): Promise<RollingFingerprint | undefined>;
 }
 
 export interface ExecutionStepDeps {
@@ -65,6 +92,35 @@ export interface ExecutionStepDeps {
   bucket: R2BucketLike;
   profile: RepoExecutionProfile;
   now(): number;
+  rollingFingerprintStore: RollingFingerprintStoreLike;
+}
+
+/** Production adapter: routes every call through the DO instance named by `rollingKey` (the SAME string
+ * `applyBaselineFingerprintGate` has always used as its R2 key) - one instance per fingerprint identity, so
+ * Cloudflare's own single-threaded-per-instance guarantee is what actually makes `merge` atomic, not
+ * anything reimplemented here. */
+function realRollingFingerprintStore(ns: DONamespace): RollingFingerprintStoreLike {
+  return {
+    async merge(rollingKey, identity, observedFailures, baseSha, nowMs) {
+      const stub = ns.get(ns.idFromName(rollingKey)) as DOStub;
+      const res = await stub.fetch(
+        new Request("http://rolling-fingerprint-store/merge", {
+          method: "POST",
+          body: JSON.stringify({ identity, observedFailures, baseSha, nowMs, mirrorKey: rollingKey }),
+        }),
+      );
+      const body = (await res.json()) as { ok: boolean; fingerprint?: RollingFingerprint; error?: string };
+      if (!body.ok || !body.fingerprint) throw new Error(`rolling-fingerprint-store merge failed: ${body.error ?? "unknown"}`);
+      return body.fingerprint;
+    },
+    async read(rollingKey) {
+      const stub = ns.get(ns.idFromName(rollingKey)) as DOStub;
+      const res = await stub.fetch(new Request(`http://rolling-fingerprint-store/read?mirrorKey=${encodeURIComponent(rollingKey)}`));
+      const body = (await res.json()) as { ok: boolean; fingerprint?: RollingFingerprint | null; error?: string };
+      if (!body.ok) throw new Error(`rolling-fingerprint-store read failed: ${body.error ?? "unknown"}`);
+      return body.fingerprint ?? undefined;
+    },
+  };
 }
 
 export interface ExecutionStepResult {
@@ -814,7 +870,7 @@ function toObservedFailures(result: Pick<TestRunResult, "failedTests" | "failure
 const MIN_TOTAL_BASE_RUNS_SAMPLED = 3;
 
 async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<void> {
-  const { bucket, profile, now } = deps;
+  const { profile, now, rollingFingerprintStore } = deps;
   const branch = record.branch ?? "unknown";
   const environmentIdentity = environmentIdentityOf(record);
   const commandIdentity = commandIdentityOf(profile, record);
@@ -836,16 +892,16 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
 
   if (record.mergeSha === record.baseSha) {
     // Base-SHA control run: fold what THIS run itself observed into the rolling fingerprint, if it
-    // observed anything usable. Read-merge-write, not overwrite - every prior sample stays.
+    // observed anything usable. Routed through rollingFingerprintStore.merge() (2026-08-25, Report 17
+    // follow-up) rather than a direct R2 read-then-write - see RollingFingerprintStoreLike's own doc
+    // comment for why the OLD direct-R2 version of this code was a real, self-identified concurrent-write
+    // race (two control runs for the SAME identity racing could silently drop one's samples).
     if (record.baseline?.full?.observabilityStatus === "complete") {
       try {
-        const existingRaw = await bucket.get(rollingKey);
-        const existing = existingRaw ? (JSON.parse(await existingRaw.text()) as RollingFingerprint) : undefined;
-        const updated = mergeObservation(existing, identity, toObservedFailures(record.baseline.full), record.baseSha, now());
-        await bucket.put(rollingKey, JSON.stringify(updated, null, 2));
+        const updated = await rollingFingerprintStore.merge(rollingKey, identity, toObservedFailures(record.baseline.full), record.baseSha, now());
         record.fingerprintPersisted = { key: rollingKey, knownFailureCount: updated.tracked.length };
       } catch {
-        /* best-effort - a failed read/write just means the next real run sees REFUSE_NO_ROLLING_FINGERPRINT (or an older sample count), not a hard failure of this control run */
+        /* best-effort - a failed merge just means the next real run sees REFUSE_NO_ROLLING_FINGERPRINT (or an older sample count), not a hard failure of this control run */
       }
     }
     return;
@@ -855,8 +911,7 @@ async function applyBaselineFingerprintGate(record: ExecutionRecord, deps: Execu
   // subset, and record - unconditionally, not only on request.
   let rolling: RollingFingerprint | undefined;
   try {
-    const raw = await bucket.get(rollingKey);
-    rolling = raw ? (JSON.parse(await raw.text()) as RollingFingerprint) : undefined;
+    rolling = await rollingFingerprintStore.read(rollingKey);
   } catch {
     rolling = undefined;
   }
@@ -1083,11 +1138,98 @@ export class AnalysisExecutionShard {
       await this.state.storage.deleteAlarm();
       return;
     }
-    const deps: ExecutionStepDeps = { sandbox, bucket: this.env.ANALYSIS_BUCKET, profile, now: () => Date.now() };
+    const deps: ExecutionStepDeps = {
+      sandbox,
+      bucket: this.env.ANALYSIS_BUCKET,
+      profile,
+      now: () => Date.now(),
+      rollingFingerprintStore: realRollingFingerprintStore(this.env.ROLLING_FINGERPRINT_STORE),
+    };
     record.heartbeatAt = Date.now();
     const { record: updated, nextAlarmDelayMs } = await stepExecution(record, deps);
     await this.state.storage.put(STATE_KEY, updated);
     if (nextAlarmDelayMs !== null) await this.state.storage.setAlarm(Date.now() + nextAlarmDelayMs);
     else await this.state.storage.deleteAlarm();
+  }
+}
+
+const ROLLING_FINGERPRINT_STORAGE_KEY = "rolling-fingerprint";
+
+/**
+ * RollingFingerprintStore - one Durable Object instance per fingerprint identity (named by the same
+ * `rollingKey` string `applyBaselineFingerprintGate` has always used as its R2 key), added 2026-08-25
+ * (Report 17 follow-up) to fix a real, self-identified correctness gap: the previous implementation read
+ * the rolling fingerprint from R2, called `mergeObservation`, and wrote the result back to R2 with no
+ * compare-and-swap - two concurrent base-SHA control runs for the SAME identity could both read the same
+ * starting state and the second write would silently discard the first's samples. Cloudflare guarantees a
+ * single DO instance processes requests to itself strictly one at a time (input/output gating); routing
+ * every merge for one identity through ONE instance makes the read-merge-write atomic BY CONSTRUCTION, with
+ * no CAS/retry loop needed - the platform's own serialization is the actual fix, not anything reimplemented
+ * here.
+ *
+ * This DO's own `state.storage` is the authoritative store. After every successful merge it ALSO
+ * best-effort mirrors the result to the SAME R2 key the pre-fix code always wrote to (`mirrorKey` in the
+ * request body) purely for external inspection (e.g. `wrangler r2 object get`) - a failed mirror write is
+ * never fatal. Symmetrically, on first-ever read/merge for an identity whose OWN storage is still empty,
+ * it seeds itself from that R2 mirror if one exists - carrying forward any fingerprint built under the
+ * pre-fix, direct-R2 code path (e.g. this mission's own schema-v2 3-sample fingerprint) rather than
+ * silently resetting it to zero samples.
+ */
+export class RollingFingerprintStore {
+  private readonly state: DurableObjectState;
+  private readonly env: ExecutionEnv;
+
+  constructor(state: DurableObjectState, env: ExecutionEnv) {
+    this.state = state;
+    this.env = env;
+  }
+
+  private async readWithR2Seed(mirrorKey?: string): Promise<RollingFingerprint | undefined> {
+    const existing = await this.state.storage.get<RollingFingerprint>(ROLLING_FINGERPRINT_STORAGE_KEY);
+    if (existing !== undefined || !mirrorKey) return existing;
+    try {
+      const mirrored = await this.env.ANALYSIS_BUCKET.get(mirrorKey);
+      if (!mirrored) return undefined;
+      const seeded = JSON.parse(await mirrored.text()) as RollingFingerprint;
+      // Persist the seed into this DO's own storage immediately so future reads never re-hit R2 for it.
+      await this.state.storage.put(ROLLING_FINGERPRINT_STORAGE_KEY, seeded);
+      return seeded;
+    } catch {
+      return undefined; // best-effort seed only - never blocks this DO from functioning as a fresh store
+    }
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    try {
+      if (request.method === "POST" && url.pathname === "/merge") {
+        const body = (await request.json()) as {
+          identity: Pick<RollingFingerprint, "repository" | "branch" | "environmentIdentity" | "testFamily" | "commandIdentity">;
+          observedFailures: readonly { testId: string; signature: string }[];
+          baseSha: string;
+          nowMs: number;
+          mirrorKey?: string;
+        };
+        const existing = await this.readWithR2Seed(body.mirrorKey);
+        const updated = mergeObservation(existing, body.identity, body.observedFailures, body.baseSha, body.nowMs);
+        await this.state.storage.put(ROLLING_FINGERPRINT_STORAGE_KEY, updated);
+        if (body.mirrorKey) {
+          try {
+            await this.env.ANALYSIS_BUCKET.put(body.mirrorKey, JSON.stringify(updated, null, 2));
+          } catch {
+            /* best-effort mirror only - this DO's own storage remains the source of truth */
+          }
+        }
+        return Response.json({ ok: true, fingerprint: updated });
+      }
+      if (request.method === "GET" && url.pathname === "/read") {
+        const mirrorKey = url.searchParams.get("mirrorKey") ?? undefined;
+        const existing = await this.readWithR2Seed(mirrorKey);
+        return Response.json({ ok: true, fingerprint: existing ?? null });
+      }
+      return Response.json({ ok: false, error: "not-found" }, { status: 404 });
+    } catch (err) {
+      return Response.json({ ok: false, error: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    }
   }
 }
