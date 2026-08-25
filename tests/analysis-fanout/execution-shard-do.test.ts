@@ -309,6 +309,20 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
       assert.ok(execCalls.some((c) => c.command.includes("chown -R ciuser:ciuser")));
     });
 
+    it("clone adds a git safe.directory exception for BOTH root and ciuser after chowning (2026-08-25 " +
+      "fix - a real run failed with 'fatal: detected dubious ownership in repository' at deriving-" +
+      "selection, reproduced standalone before this fix: root's own git calls against a directory now " +
+      "owned by ciuser are refused by git's own ownership protection)", async () => {
+      const { sandbox, execCalls } = makeSandbox();
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      await stepExecution(record({ step: "cloning", runAsNonRoot: true }), deps);
+      const safeDirCalls = execCalls.filter((c) => c.command.includes("safe.directory"));
+      assert.equal(safeDirCalls.length, 2);
+      assert.ok(safeDirCalls.some((c) => !c.command.includes("su -")), "root's own global config, unwrapped");
+      assert.ok(safeDirCalls.some((c) => c.command.includes("su - ciuser -c")), "ciuser's own global config");
+    });
+
     it("install runs corepack activation as root but the actual install command via su - ciuser", async () => {
       const { sandbox, execCalls } = makeSandbox();
       const { bucket } = makeBucket();

@@ -273,6 +273,14 @@ async function clone(record: ExecutionRecord, deps: ExecutionStepDeps): Promise<
       // the TEST PROCESS's own UID is the variable this experiment is testing. chown here so install and
       // the test runner (which DO run as NON_ROOT_USER) can read/write the tree at all.
       await sandbox.exec(`chown -R ${NON_ROOT_USER}:${NON_ROOT_USER} ${dir}`, { timeout: 60_000 });
+      // git's "dubious ownership" protection (2026-08-25 fix, found via a real failed run - deriving-
+      // selection's own git calls, run as root against a directory now owned by NON_ROOT_USER, refused
+      // outright: "fatal: detected dubious ownership in repository", confirmed via a standalone
+      // reproduction probe before this fix, not assumed). Root's later git operations here (mutate/revert)
+      // need root's own global exception; a test/install step that happens to shell out to git needs
+      // NON_ROOT_USER's own exception - both added, not just the one that actually failed.
+      await sandbox.exec(`git config --global --add safe.directory ${dir}`, { timeout: 15_000 });
+      await sandbox.exec(wrapNonRoot(`git config --global --add safe.directory ${dir}`, true), { timeout: 15_000 });
     }
     record.timings.cloneMs = deps.now() - t0;
     record.step = "deriving-selection";
