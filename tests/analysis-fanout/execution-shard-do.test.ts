@@ -767,6 +767,31 @@ describe("AnalysisExecutionShard state machine (stepExecution)", () => {
         assert.ok(diffCmd.includes(`':!${excluded}'`), `expected pathspec to exclude ${excluded}, got: ${diffCmd}`);
       }
     });
+
+    it("PR #2808 second regression (2026-08-25 fix): excludes a nested workspace package.json, not just " +
+      "docs, so a manifest file sorting before the real source path does not get mutated instead - the " +
+      "canary run this pathspec was meant to unblock mutated packages/host/frontend-static/package.json " +
+      "(base pinned different deps, breaking 16 unrelated tests) instead of src/index.ts, Report 03's " +
+      "already-predeclared target", async () => {
+      const { sandbox, execCalls } = makeSandbox({
+        exec: (cmd) => {
+          // Mocks git's own pathspec filtering (real behavior confirmed on Cloudflare, not re-tested
+          // here) - simulates the exclusion correctly stripping package.json, leaving only the real
+          // source file, then asserts the command string actually carries the exclusion below.
+          if (cmd.includes("git diff --name-only")) return { stdout: "packages/host/frontend-static/src/index.ts\n" };
+          if (cmd.includes("git cat-file -e")) return { stdout: "yes\n" };
+          return undefined;
+        },
+      });
+      const { bucket } = makeBucket();
+      const { deps } = makeDeps(sandbox, bucket);
+      const { record: out } = await stepExecution(record({ step: "mutating" }), deps);
+      assert.equal(out.mutation?.path, "packages/host/frontend-static/src/index.ts");
+      const diffCmd = execCalls.find((c) => c.command.includes("git diff --name-only"))!.command;
+      for (const excluded of ["package.json", "**/package.json", "pnpm-lock.yaml", "package-lock.json", "yarn.lock"]) {
+        assert.ok(diffCmd.includes(`':!${excluded}'`), `expected pathspec to exclude ${excluded}, got: ${diffCmd}`);
+      }
+    });
   });
 
   it("full-mutant is skipped straight to reverting when no mutation was applied", async () => {

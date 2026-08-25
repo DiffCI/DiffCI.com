@@ -533,23 +533,36 @@ async function mutate(record: ExecutionRecord, deps: ExecutionStepDeps): Promise
     // against a LOCAL filesystem/process, which has no meaning inside this DO - the actual git checkout
     // lives inside the remote sandbox container, reachable only through sandbox.exec/startProcess. The
     // change-detection query mutation.ts leaves to its caller is done here with a plain `git diff`.
-    // Pathspec exclusions (2026-08-25 fix, DeepSeek execution-validation mission): the original list
-    // (`.test.ts`/`.spec.ts` only) let `git diff --name-only`'s alphabetical ordering pick a DOCS file
-    // ahead of the real source change whenever a merge touched both - confirmed on PR #2808
-    // (deepseek-ai/deepseek-harness): its own lexicographically-first non-`.test.ts`/`.spec.ts` path was
-    // `.agents/notes/implemented/bug-fix/2026-08-20-explicit-web-index-paths.i18n.yaml`, a translation
-    // file with no test coverage anywhere - not `packages/host/frontend-static/src/index.ts`, the file
-    // the PR's own subject and selected tests are actually about. Mutating a docs file would have made
-    // recall look silently unmeasurable for a merge Report 03's predeclared, source-category-aware policy
-    // (computed independently, before this was found) had already identified a real mutation target for.
-    // This exclusion list is a generic heuristic approximation of that same "ordinary source only" intent
-    // - it does not reach DiffCI's own full `changedFileCategories` classifier (config/manifest/lockfile
-    // changes are not excluded here), which is acceptable because merges with those triggers already fall
-    // back at the selection-engine level and never reach `SAFE_TO_PROPOSE` in the first place.
+    // Pathspec exclusions (2026-08-25, two fixes during the DeepSeek execution-validation mission):
+    //
+    // Fix 1: the original list (`.test.ts`/`.spec.ts` only) let `git diff --name-only`'s alphabetical
+    // ordering pick a DOCS file ahead of the real source change whenever a merge touched both - confirmed
+    // on PR #2808 (deepseek-ai/deepseek-harness): its lexicographically-first non-`.test.ts`/`.spec.ts`
+    // path was a `.i18n.yaml` translation file with no test coverage anywhere. Added test-family
+    // (`.test.tsx`/`.spec.tsx`/`.e2e.ts`/`.snapshot.ts`) and docs (`.md`, `.i18n.yaml`) exclusions.
+    //
+    // Fix 2 (found immediately after, on the SAME PR #2808, via the canary run this pathspec was meant to
+    // unblock): fix 1 deliberately left manifest/lockfile/config files unexcluded, reasoning "merges with
+    // those triggers already fall back at the selection-engine level" - that reasoning was wrong. PR #2808
+    // itself changes a NESTED workspace `package.json` (`packages/host/frontend-static/package.json`) and
+    // is still `SAFE_TO_PROPOSE` (only a ROOT-level manifest/lockfile change triggers fallback, not a
+    // per-package one) - `git diff --name-only`'s alphabetical order put that package.json before
+    // `src/index.ts`, so the canary mutated a workspace manifest instead of the file the PR's own subject
+    // and Report 03's already-predeclared mutation policy (committed BEFORE this bug was found) identified
+    // as the real target. The mutated package.json's base content pinned different dependency versions,
+    // breaking 16 tests scattered across totally unrelated packages (subagent-acp, terminal-bash,
+    // storage-sqlite, ...) - a real recall "miss" that reflected an off-target mutation, not a genuine
+    // selection failure. Report 03's own rule already said "exclude... manifests" - this was a bug in
+    // implementing that rule, not a policy change made after seeing an inconvenient result.
+    //
+    // Neither fix reaches DiffCI's own full `changedFileCategories` classifier (still a generic heuristic,
+    // not a port of that TypeScript-level classification) - documented as a known limitation, not silently
+    // assumed complete.
     const changed = (await sandbox.exec(
       `cd ${dir} && git diff --name-only ${record.baseSha} ${record.mergeSha} -- . ` +
         `':!*.test.ts' ':!*.spec.ts' ':!*.test.tsx' ':!*.spec.tsx' ':!*.e2e.ts' ':!*.snapshot.ts' ` +
-        `':!*.md' ':!*.i18n.yaml'`,
+        `':!*.md' ':!*.i18n.yaml' ` +
+        `':!package.json' ':!**/package.json' ':!pnpm-lock.yaml' ':!package-lock.json' ':!yarn.lock'`,
       { timeout: 30_000 },
     )).stdout.trim().split(/\r?\n/).filter(Boolean);
     if (changed.length === 0) {
