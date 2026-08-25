@@ -29,6 +29,14 @@ import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository,
 import { handleShadowWebhook } from "./shadow-webhook.js";
 import { exchangeInstallationToken, signAppJwt, verifyWebhookSignature } from "../../shadow/github-app.js";
 import { computeSourceIntegrity, isValidSha, type SourceArchiveMeta } from "./shadow-source-integrity.js";
+// External Shadow Pilot M1 (2026-08-25). makeD1ShadowReadBoundary is nominally the product layer's
+// read-only view onto this Worker's own database; reused here rather than duplicated because every
+// method on it is a SELECT, so running it in-process against RESEARCH_DB is strictly narrower than the
+// direct access this Worker already has. The two D1Binding types are structurally identical, declared
+// separately per module to keep each module dependency-free - hence the casts at the call site.
+import { makeD1ShadowReadBoundary, type D1Binding as ShadowBoundaryD1 } from "../../product/shadow-read-boundary.js";
+import { makeD1ShadowEconomicsStore, type D1Binding as ShadowEconomicsD1 } from "../../usage/shadow-economics-store.js";
+import { runShadowEconomicsCaptureSweep } from "../../usage/shadow-economics-job.js";
 
 // standard-2 Sandbox instance type (wrangler.research-sandbox.jsonc): 1 vCPU, 6 GiB memory, 12 GB disk.
 // Real Container CPU billing is active-use-only, but wall-clock is used as a conservative (over-, not
@@ -1915,5 +1923,32 @@ export default {
       return;
     }
     await runShadowCronOnce(makeShadowCronDeps(env), DEFAULT_SHADOW_CRON_CONFIG, "cron");
+
+    // External Shadow Pilot M1 (2026-08-25): shadow-economics capture. Runs AFTER the poll/reconcile
+    // heartbeat above and in its own try/catch, so a failure here can never take down autonomous shadow
+    // validation - this is additive economics telemetry, not part of the safety methodology.
+    //
+    // Lives in this Worker specifically because it needs an authenticated GitHub credential, which only
+    // this Worker has (githubTokenForRepo: least-privilege App installation token where the Shadow App is
+    // actually installed, GITHUB_TOKEN for public repositories observed by poll only). It first ran in
+    // the product Worker and failed on every commit against the unauthenticated 60 req/hour/IP limit.
+    try {
+      const boundary = makeD1ShadowReadBoundary(env.RESEARCH_DB as unknown as ShadowBoundaryD1);
+      const windowEnd = new Date();
+      const windowStart = new Date(windowEnd.getTime() - 30 * 24 * 60 * 60 * 1000); // rolling 30-day window
+      const economicsResult = await runShadowEconomicsCaptureSweep(
+        {
+          shadowBoundary: boundary,
+          store: makeD1ShadowEconomicsStore(env.RESEARCH_DB as unknown as ShadowEconomicsD1),
+          resolveToken: (repository) => githubTokenForRepo(env, repository),
+        },
+        windowStart.toISOString(),
+        windowEnd.toISOString(),
+        5, // bounded per sweep; authenticated now, but still deliberately conservative
+      );
+      console.log(`shadow-economics: ${JSON.stringify({ event: "shadow_economics.sweep_completed", ...economicsResult })}`);
+    } catch (error: unknown) {
+      console.log(`shadow-economics: sweep failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
   },
 };

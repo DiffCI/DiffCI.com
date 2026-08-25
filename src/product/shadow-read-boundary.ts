@@ -61,6 +61,12 @@ export interface ShadowReadBoundary {
    * ownerName is omitted, the whole shadow system) since Stage 2 has no organization concept to scope by
    * directly. */
   getSafetySnapshot(ownerName?: string): Promise<ShadowSafetySnapshot>;
+  /** Repositories currently in an active shadow-observation state (SHADOW_ACTIVE/SHADOW_LIMITED) -
+   * External Shadow Pilot M1 (2026-08-25). Deliberately excludes INSTALLING/VALIDATING (not yet producing
+   * trustworthy predictions), PAUSED/REMOVED (no longer observed), and UNSUPPORTED/
+   * READY_FOR_ENFORCEMENT_REVIEW (different concerns entirely) - a repository must be genuinely, actively
+   * observed before any economics capture spends a real GitHub API call on it. */
+  listEnrolledRepositories(): Promise<string[]>;
 }
 
 export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
@@ -121,6 +127,14 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
       const evaluableFailures = row?.evaluable ?? 0;
       const failuresPreserved = row?.preserved ?? 0;
       return { evaluableFailures, failuresPreserved, falseNegatives: Math.max(0, evaluableFailures - failuresPreserved) };
+    },
+
+    async listEnrolledRepositories() {
+      const { results } = await db
+        .prepare(`SELECT repository FROM shadow_repositories WHERE state IN ('SHADOW_ACTIVE', 'SHADOW_LIMITED') ORDER BY repository`)
+        .bind()
+        .all<{ repository: string }>();
+      return results.map((r) => r.repository);
     },
   };
 }

@@ -36,6 +36,9 @@ function fakeShadowBoundary(predictions: ShadowPredictionSummary[]): ShadowReadB
     async getSafetySnapshot() {
       return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0 };
     },
+    async listEnrolledRepositories() {
+      return [];
+    },
   };
 }
 

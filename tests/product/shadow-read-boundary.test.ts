@@ -142,4 +142,23 @@ describe("ShadowReadBoundary - Part 20 (read-only, real Stage 2F schema)", () =>
     assert.equal(global.evaluableFailures, 3);
     assert.equal(global.falseNegatives, 1, "the acme/other false negative must be visible in the unscoped snapshot");
   });
+
+  // 2026-08-25 (External Shadow Pilot M1) - listEnrolledRepositories
+  it("listEnrolledRepositories returns only SHADOW_ACTIVE/SHADOW_LIMITED repositories, excluding every other state", async () => {
+    const db = freshDb();
+    seedShadowRepository(db, "acme/active");
+    db.prepare(`INSERT INTO shadow_repositories (repository, state, observation_source, enrolled_at) VALUES (?, 'SHADOW_LIMITED', 'cloudflare-poll', ?)`).run("acme/limited", "2026-08-21T00:00:00Z");
+    db.prepare(`INSERT INTO shadow_repositories (repository, state, observation_source, enrolled_at) VALUES (?, 'PAUSED', 'cloudflare-poll', ?)`).run("acme/paused", "2026-08-21T00:00:00Z");
+    db.prepare(`INSERT INTO shadow_repositories (repository, state, observation_source, enrolled_at) VALUES (?, 'REMOVED', 'cloudflare-poll', ?)`).run("acme/removed", "2026-08-21T00:00:00Z");
+    db.prepare(`INSERT INTO shadow_repositories (repository, state, observation_source, enrolled_at) VALUES (?, 'VALIDATING', 'cloudflare-poll', ?)`).run("acme/validating", "2026-08-21T00:00:00Z");
+    const boundary = makeD1ShadowReadBoundary(makeD1(db));
+    const repos = await boundary.listEnrolledRepositories();
+    assert.deepEqual(repos.sort(), ["acme/active", "acme/limited"]);
+  });
+
+  it("listEnrolledRepositories returns an empty array, not an error, when nothing is enrolled", async () => {
+    const db = freshDb();
+    const boundary = makeD1ShadowReadBoundary(makeD1(db));
+    assert.deepEqual(await boundary.listEnrolledRepositories(), []);
+  });
 });
