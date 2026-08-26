@@ -28,6 +28,11 @@
     "research:sandbox:deploy": "wrangler deploy --config wrangler.research-sandbox.jsonc",
     "shadow:upload-source": "tsx scripts/upload-shadow-source.ts",
     "shadow:deploy": "tsx scripts/deploy-research-sandbox.ts",
+    "shadow:screen": "tsx scripts/screen-shadow-eligibility.ts",
+    "shadow:status": "node scripts/shadow-status.mjs",
+    "shadow:report": "tsx scripts/generate-shadow-report.ts",
+    "shadow:freshness": "tsx scripts/check-deployment-freshness.ts",
+    "shadow:missed-commits": "tsx scripts/derive-missed-commits.ts",
     "github-runner:deploy": "wrangler deploy --config wrangler.github-runner.jsonc"
   },
   "dependencies": {
