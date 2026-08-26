@@ -176,9 +176,10 @@ export interface ShadowStore {
   /** Append-only head-transition log. Preserves the SEQUENCE of observed heads, which
    * last_observed_head_sha (overwritten state) cannot. */
   recordHeadTransition(t: { repository: string; fromSha?: string; toSha: string; detectedAt: string; analysed: boolean }): Promise<void>;
-  /** Analysis launches recorded since an instant - the daily-ceiling counter. Counts entries across each
-   * run's repos_polled array, so it measures real container launches rather than sweeps. */
-  countPollsSince(sinceIso: string): Promise<number>;
+  /** Atomically reserves one daily launch slot. Granted:false when the day's budget is spent. */
+  reserveLaunchSlot(repository: string, maxPerDay: number): Promise<{ granted: boolean; slotNo?: number }>;
+  /** Records how a reserved launch finished. Never frees the slot. */
+  recordLaunchOutcome(slotNo: number, outcome: "succeeded" | "failed"): Promise<void>;
   /** M3.2 liveness facts for the repositories examined in one sweep. */
   recordRepositoryLiveness(updates: RepositoryLivenessUpdate[]): Promise<void>;
   /** Idempotent - does nothing if the repository is already enrolled. `language` only applies to the
@@ -237,12 +238,34 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .run();
     },
 
-    async countPollsSince(sinceIso: string) {
-      const row = await db
-        .prepare(`SELECT COALESCE(SUM(json_array_length(repos_polled)), 0) as n FROM shadow_cron_runs WHERE started_at >= ?`)
-        .bind(sinceIso)
-        .first<{ n: number }>();
-      return row?.n ?? 0;
+    async reserveLaunchSlot(repository: string, maxPerDay: number) {
+      const now = new Date();
+      const day = now.toISOString().slice(0, 10);
+      // Bounded retry: PRIMARY KEY (day, slot_no) is the arbiter. Two overlapping sweeps that both read
+      // the same count will both try the same slot number and exactly one insert survives; the loser
+      // re-reads and either takes the next slot or is refused because the budget really is spent.
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const row = await db.prepare(`SELECT COUNT(*) as n FROM shadow_analysis_launches WHERE day = ?`).bind(day).first<{ n: number }>();
+        const next = (row?.n ?? 0) + 1;
+        if (next > maxPerDay) return { granted: false };
+        try {
+          await db
+            .prepare(`INSERT INTO shadow_analysis_launches (day, slot_no, repository, reserved_at) VALUES (?, ?, ?, ?)`)
+            .bind(day, next, repository, now.toISOString())
+            .run();
+          return { granted: true, slotNo: next };
+        } catch {
+          // Slot taken by a concurrent sweep - retry against a fresh count.
+        }
+      }
+      // Persistent contention is treated as a refusal rather than an overrun: exceeding the ceiling is
+      // worse than skipping one launch, and the next sweep is only minutes away.
+      return { granted: false };
+    },
+
+    async recordLaunchOutcome(slotNo: number, outcome: "succeeded" | "failed") {
+      const day = new Date().toISOString().slice(0, 10);
+      await db.prepare(`UPDATE shadow_analysis_launches SET outcome = ? WHERE day = ? AND slot_no = ?`).bind(outcome, day, slotNo).run();
     },
 
     async recordRepositoryLiveness(updates: RepositoryLivenessUpdate[]) {

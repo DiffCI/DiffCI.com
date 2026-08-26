@@ -47,6 +47,15 @@ export interface ShadowCronRunRecord {
   dailyCeilingRefusals?: number;
   /** Head transitions detected this sweep, whether or not they were analysed. */
   headTransitionsDetected?: number;
+  /** Container-launch accounting. attempted = launches this sweep wanted; allowed = slots granted;
+   * succeeded/failed = how those granted launches finished. attempted always equals
+   * allowed + refusedByCeiling, and allowed always equals succeeded + failed. These are deliberately
+   * SEPARATE from reposPolled/predictionsRecorded, which remain success/observation counts and are not
+   * redefined as attempts. */
+  launchesAttempted?: number;
+  launchesAllowed?: number;
+  launchesSucceeded?: number;
+  launchesFailed?: number;
   startedAt: string;
   finishedAt: string;
   trigger: "cron" | "manual";
@@ -79,8 +88,15 @@ export interface RepositoryLivenessUpdate {
 }
 
 export interface ShadowCronDeps {
-  /** Optional: analysis launches already performed since the given ISO instant, for the daily ceiling. */
-  countPollsSince?(sinceIso: string): Promise<number>;
+  /**
+   * Optional: atomically reserve ONE daily launch slot immediately before starting a container. Returns
+   * granted:false when the day's budget is spent. The slot is consumed regardless of how the launch
+   * turns out - success, clone-exclusion, timeout or crash - because the container cost is incurred
+   * either way. Never called for work refused before a launch.
+   */
+  reserveLaunchSlot?(repository: string, maxPerDay: number): Promise<{ granted: boolean; slotNo?: number }>;
+  /** Optional: records how a reserved launch finished. Never frees the slot. */
+  recordLaunchOutcome?(slotNo: number, outcome: "succeeded" | "failed"): Promise<void>;
   /** Optional: append-only record of an observed head transition. Written for EVERY detected change,
    * including ones the daily ceiling defers - a deferred transition is still a real observation, and
    * discarding it would destroy the missed-commit measurement. */
@@ -178,6 +194,8 @@ export async function runShadowCronOnce(
   let groundTruthReconciled = 0;
   let stillPending = 0;
   let sourceIntegrityStatus: string | undefined;
+  let launchesSucceeded = 0;
+  let launchesFailed = 0;
 
   let candidates: PollableRepository[] = [];
   try {
@@ -188,24 +206,6 @@ export async function runShadowCronOnce(
 
   // Head pre-check walks the full ordered candidate list until maxPollsPerRun repositories actually
   // NEED a container - a repository skipped for an unchanged head must not consume a poll slot.
-  // Daily ceiling, applied BEFORE any head check spends an API call. Failure to read the count is
-  // deliberately fail-open on the per-run cap (observation continues) but is recorded as an error.
-  let perRunCap = config.maxPollsPerRun;
-  if (deps.countPollsSince) {
-    try {
-      const startOfDay = new Date(deps.now());
-      startOfDay.setUTCHours(0, 0, 0, 0);
-      const usedToday = await deps.countPollsSince(startOfDay.toISOString());
-      const remaining = Math.max(0, config.maxPollsPerDay - usedToday);
-      if (remaining < perRunCap) {
-        perRunCap = remaining;
-        deps.log(`shadow-cron: daily analysis ceiling reached (${usedToday}/${config.maxPollsPerDay}) - launches capped at ${remaining} this sweep`);
-      }
-    } catch (error: unknown) {
-      errors.push(`daily-ceiling-check: ${error instanceof Error ? error.message : String(error)}`);
-    }
-  }
-
   const liveness = new Map<string, RepositoryLivenessUpdate>();
   const livenessFor = (repository: string): RepositoryLivenessUpdate => {
     let u = liveness.get(repository);
@@ -249,11 +249,34 @@ export async function runShadowCronOnce(
     changedNeedingAnalysis.push(repo);
   }
 
-  // Ceiling applied HERE - at the container launch, not at the observation.
-  const toPoll = changedNeedingAnalysis.slice(0, perRunCap);
-  const dailyCeilingRefusals = changedNeedingAnalysis.length - toPoll.length;
+  // Ceiling applied HERE - at the container launch, not at the observation. One slot is reserved per
+  // repository immediately before its container starts, and is never refunded whatever the outcome.
+  const wantToLaunch = changedNeedingAnalysis.slice(0, config.maxPollsPerRun);
+  const toPoll: PollableRepository[] = [];
+  const slotByRepository = new Map<string, number>();
+  let launchesAttempted = 0;
+  let dailyCeilingRefusals = 0;
+  for (const repo of wantToLaunch) {
+    launchesAttempted++;
+    if (!deps.reserveLaunchSlot) {
+      toPoll.push(repo);
+      continue;
+    }
+    const reservation = await deps.reserveLaunchSlot(repo.repository, config.maxPollsPerDay);
+    if (!reservation.granted) {
+      dailyCeilingRefusals++;
+      continue;
+    }
+    if (typeof reservation.slotNo === "number") slotByRepository.set(repo.repository, reservation.slotNo);
+    toPoll.push(repo);
+  }
+  // Head changes beyond maxPollsPerRun are NOT ceiling refusals - they are simply next sweep's work.
+  const deferredToNextSweep = changedNeedingAnalysis.length - wantToLaunch.length;
   if (dailyCeilingRefusals > 0) {
-    deps.log(`shadow-cron: ${dailyCeilingRefusals} observed head change(s) deferred - daily launch ceiling (${config.maxPollsPerDay}) reached; observation continues`);
+    deps.log(`shadow-cron: ${dailyCeilingRefusals} observed head change(s) refused - daily launch ceiling (${config.maxPollsPerDay}) spent; head checks continue`);
+  }
+  if (deferredToNextSweep > 0) {
+    deps.log(`shadow-cron: ${deferredToNextSweep} observed head change(s) deferred to a later sweep (per-sweep cap ${config.maxPollsPerRun})`);
   }
 
   // Every detected transition is recorded, analysed or deferred. Overwritten state cannot answer
@@ -309,9 +332,27 @@ export async function runShadowCronOnce(
         }),
       );
       for (const r of results) {
+        const slotNo = slotByRepository.get(r.repo.repository);
         if ("error" in r) {
+          launchesFailed++;
+          // The slot stays consumed: the container ran and cost real compute even though it failed.
+          if (deps.recordLaunchOutcome && typeof slotNo === "number") {
+            try {
+              await deps.recordLaunchOutcome(slotNo, "failed");
+            } catch {
+              /* outcome telemetry must never fail a sweep */
+            }
+          }
           errors.push(`poll ${r.repo.repository}: ${r.error}`);
           continue;
+        }
+        launchesSucceeded++;
+        if (deps.recordLaunchOutcome && typeof slotNo === "number") {
+          try {
+            await deps.recordLaunchOutcome(slotNo, "succeeded");
+          } catch {
+            /* outcome telemetry must never fail a sweep */
+          }
         }
         reposPolled.push(r.repo.repository);
         livenessFor(r.repo.repository).pollSucceeded = true;
@@ -374,6 +415,10 @@ export async function runShadowCronOnce(
     errors,
     dailyCeilingRefusals,
     headTransitionsDetected: changedNeedingAnalysis.length,
+    launchesAttempted,
+    launchesAllowed: toPoll.length,
+    launchesSucceeded,
+    launchesFailed,
     sourceIntegrityStatus,
   };
 

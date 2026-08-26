@@ -42,8 +42,11 @@ function makeDeps(options: {
   reconcileResult?: (repository: string) => Promise<{ reconciled: number; stillPending: number; errors: string[] }>;
   recordThrows?: boolean;
   pollsAlreadyToday?: number;
-}): { deps: ShadowCronDeps; calls: FakeCalls & { transitions: { repository: string; toSha: string; analysed: boolean }[] } } {
-  const calls = { polled: [], polledWithSha: [], reconciled: [], headChecked: [], recorded: [], logs: [], transitions: [] } as FakeCalls & { transitions: { repository: string; toSha: string; analysed: boolean }[] };
+}): { deps: ShadowCronDeps; calls: FakeCalls & { transitions: { repository: string; toSha: string; analysed: boolean }[]; slots: { repository: string; slotNo: number; outcome?: string }[] } } {
+  const calls = { polled: [], polledWithSha: [], reconciled: [], headChecked: [], recorded: [], logs: [], transitions: [], slots: [] } as FakeCalls & {
+    transitions: { repository: string; toSha: string; analysed: boolean }[];
+    slots: { repository: string; slotNo: number; outcome?: string }[];
+  };
   const deps: ShadowCronDeps = {
     listPollableRepositories: async () => options.repos,
     listReconcilableRepositories: async () => options.reconcilable ?? options.repos,
@@ -65,7 +68,17 @@ function makeDeps(options: {
       if (options.recordThrows) throw new Error("d1 write failed");
       calls.recorded.push(run);
     },
-    countPollsSince: async () => options.pollsAlreadyToday ?? 0,
+    reserveLaunchSlot: async (repository, maxPerDay) => {
+      // Mirrors the D1 PRIMARY KEY (day, slot_no) arbiter: a slot number can only be taken once.
+      const next = (options.pollsAlreadyToday ?? 0) + calls.slots.length + 1;
+      if (next > maxPerDay) return { granted: false };
+      calls.slots.push({ repository, slotNo: next, outcome: undefined });
+      return { granted: true, slotNo: next };
+    },
+    recordLaunchOutcome: async (slotNo, outcome) => {
+      const slot = calls.slots.find((s) => s.slotNo === slotNo);
+      if (slot) slot.outcome = outcome;
+    },
     recordHeadTransition: async (t) => {
       calls.transitions.push({ repository: t.repository, toSha: t.toSha, analysed: t.analysed });
     },
@@ -369,5 +382,152 @@ describe("daily launch ceiling", () => {
     assert.equal(run.headChecksSkipped, 1);
     assert.equal(run.dailyCeilingRefusals, 0, "nothing changed, so nothing was deferred");
     assert.equal(calls.transitions.length, 0, "no transition to record");
+  });
+});
+
+describe("atomic launch-slot accounting", () => {
+  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, reconcileLimitPerRepo: 10 };
+
+  // (1) The defect vitest-dev/vitest exposed live: a clone-excluded poll still burned a real container,
+  // yet the old success-counting ceiling read 1/60 while it happened every ten minutes.
+  it("a clone-excluded launch consumes a slot - failure never refunds budget", async () => {
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/one", lastPolledSha: "old", lastPolledAt: "2026-08-21T09:00:00Z" })],
+      heads: { "a/one": { sha: "new" } },
+      pollResult: async () => {
+        throw new Error("clone-excluded: no tsconfig.json found at the repository root");
+      },
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(calls.slots.length, 1, "the container ran, so the slot is spent");
+    assert.equal(calls.slots[0]?.outcome, "failed");
+    assert.equal(run.launchesAllowed, 1);
+    assert.equal(run.launchesFailed, 1);
+    assert.equal(run.launchesSucceeded, 0);
+    assert.deepEqual(run.reposPolled, [], "reposPolled stays a SUCCESS count and is not redefined as attempts");
+  });
+
+  // (2)
+  it("a successful launch consumes exactly one slot", async () => {
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/one", lastPolledSha: "old", lastPolledAt: "2026-08-21T09:00:00Z" })],
+      heads: { "a/one": { sha: "new" } },
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(calls.slots.length, 1);
+    assert.equal(calls.slots[0]?.outcome, "succeeded");
+    assert.equal(run.launchesSucceeded, 1);
+    assert.equal(run.launchesFailed, 0);
+  });
+
+  // (3)
+  it("work refused BEFORE a launch consumes no slot", async () => {
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/one", lastPolledSha: "same", lastPolledAt: "2026-08-21T09:00:00Z" })],
+      heads: { "a/one": { sha: "same" } },
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(calls.slots.length, 0, "an unchanged head never reaches a container");
+    assert.equal(run.launchesAttempted, 0);
+    assert.equal(run.headChecksSkipped, 1);
+  });
+
+  // (4)
+  it("slot 60 is allowed and slot 61 is refused", async () => {
+    const mk = (already: number) =>
+      makeDeps({
+        repos: [repo({ repository: "a/one", lastPolledSha: "old", lastPolledAt: "2026-08-21T09:00:00Z" })],
+        heads: { "a/one": { sha: "new" } },
+        pollsAlreadyToday: already,
+      });
+    const at59 = mk(59);
+    const run59 = await runShadowCronOnce(at59.deps, CFG, "cron");
+    assert.equal(run59.launchesAllowed, 1, "slot 60 must be granted");
+    assert.equal(at59.calls.slots[0]?.slotNo, 60);
+
+    const at60 = mk(60);
+    const run60 = await runShadowCronOnce(at60.deps, CFG, "cron");
+    assert.equal(run60.launchesAllowed, 0, "slot 61 must be refused");
+    assert.equal(run60.dailyCeilingRefusals, 1);
+    assert.equal(at60.calls.slots.length, 0);
+  });
+
+  // (5)
+  it("concurrent reservations cannot together exceed the ceiling", async () => {
+    const shared = { taken: 59 };
+    const mkDeps = () =>
+      makeDeps({
+        repos: [repo({ repository: "a/one", lastPolledSha: "old", lastPolledAt: "2026-08-21T09:00:00Z" })],
+        heads: { "a/one": { sha: "new" } },
+      }).deps;
+    const withSharedLedger = (deps: ShadowCronDeps): ShadowCronDeps => ({
+      ...deps,
+      reserveLaunchSlot: async (_repository, maxPerDay) => {
+        const next = shared.taken + 1;
+        if (next > maxPerDay) return { granted: false };
+        shared.taken = next; // stands in for the PRIMARY KEY (day, slot_no) arbiter
+        return { granted: true, slotNo: next };
+      },
+    });
+    const [a, b] = await Promise.all([runShadowCronOnce(withSharedLedger(mkDeps()), CFG, "cron"), runShadowCronOnce(withSharedLedger(mkDeps()), CFG, "cron")]);
+    const totalAllowed = (a.launchesAllowed ?? 0) + (b.launchesAllowed ?? 0);
+    assert.equal(totalAllowed, 1, "exactly one of the two racing sweeps may take the final slot");
+    assert.equal(shared.taken, 60, "the ceiling is never exceeded");
+  });
+
+  // (6)
+  it("a ceiling refusal never suppresses head checks on later repositories", async () => {
+    const repos = [
+      repo({ repository: "a/one", lastPolledSha: "o1", lastPolledAt: "2026-08-21T09:00:00Z" }),
+      repo({ repository: "b/two", lastPolledSha: "o2", lastPolledAt: "2026-08-21T10:00:00Z" }),
+      repo({ repository: "c/three", lastPolledSha: "o3", lastPolledAt: "2026-08-21T11:00:00Z" }),
+    ];
+    const { deps, calls } = makeDeps({
+      repos,
+      heads: { "a/one": { sha: "n1" }, "b/two": { sha: "n2" }, "c/three": { sha: "n3" } },
+      pollsAlreadyToday: 60,
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.deepEqual(calls.headChecked.sort(), ["a/one", "b/two", "c/three"]);
+    assert.equal(run.headTransitionsDetected, 3, "all three changes observed despite zero budget");
+    assert.equal(calls.slots.length, 0);
+  });
+
+  // (7)
+  it("a failing repository does not prevent later repositories being scanned or launched", async () => {
+    const repos = [
+      repo({ repository: "a/broken", lastPolledSha: "o1", lastPolledAt: "2026-08-21T09:00:00Z" }),
+      repo({ repository: "b/fine", lastPolledSha: "o2", lastPolledAt: "2026-08-21T10:00:00Z" }),
+    ];
+    const { deps, calls } = makeDeps({
+      repos,
+      heads: { "a/broken": { sha: "n1" }, "b/fine": { sha: "n2" } },
+      pollResult: async (repository) => {
+        if (repository === "a/broken") throw new Error("clone-excluded: no tsconfig.json found at the repository root");
+        return { predictionsRecorded: 2, errors: [] };
+      },
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.deepEqual(calls.headChecked.sort(), ["a/broken", "b/fine"]);
+    assert.deepEqual(run.reposPolled, ["b/fine"], "the healthy repository still succeeds");
+    assert.equal(run.launchesAttempted, 2);
+    assert.equal(run.launchesAllowed, 2);
+    assert.equal(run.launchesSucceeded, 1);
+    assert.equal(run.launchesFailed, 1);
+    assert.equal(calls.slots.length, 2, "both containers ran, so both slots are spent");
+  });
+
+  it("attempted always reconciles against allowed + refusedByCeiling", async () => {
+    const { deps } = makeDeps({
+      repos: [
+        repo({ repository: "a/one", lastPolledSha: "o1", lastPolledAt: "2026-08-21T09:00:00Z" }),
+        repo({ repository: "b/two", lastPolledSha: "o2", lastPolledAt: "2026-08-21T10:00:00Z" }),
+      ],
+      heads: { "a/one": { sha: "n1" }, "b/two": { sha: "n2" } },
+      pollsAlreadyToday: 59,
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(run.launchesAttempted, (run.launchesAllowed ?? 0) + (run.dailyCeilingRefusals ?? 0));
+    assert.equal(run.launchesAllowed, (run.launchesSucceeded ?? 0) + (run.launchesFailed ?? 0));
   });
 });
