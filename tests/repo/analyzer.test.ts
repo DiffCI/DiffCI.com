@@ -93,19 +93,31 @@ describe("analyzeRepository discoverTests", () => {
     }
   });
 
-  it("still scopes discovery to just src/ when a real conventional root exists (no regression for the common case)", () => {
+  it("discovers tests anywhere in the tree, and still never descends into excluded directories", () => {
+    // Phase 01 (2026-08-26). This test previously asserted the opposite - that discovery stays inside
+    // the source roots, so a test file under docs/ was deliberately NOT found. That was DiffCI
+    // imposing its own layout: a repository whose runner include glob is `**\/*.test.ts` really would
+    // run that file, and the same heuristic hid 239 of facebook/docusaurus's 241 tests under
+    // packages/. Where a repository keeps its tests is the one thing that must not be guessed.
+    //
+    // What genuinely must not be scanned is build output and dependencies, and that is still enforced
+    // by the exclusion set rather than by the source-root list.
     const dir = createTempRepo();
     try {
       mkdirSync(join(dir, "src"), { recursive: true });
       writeFileSync(join(dir, "src/a.test.ts"), "test('a', () => {});\n");
-      // A sibling top-level directory that is NOT a source root and must not be scanned.
       mkdirSync(join(dir, "docs"), { recursive: true });
-      writeFileSync(join(dir, "docs/unrelated.test.ts"), "test('should not be found', () => {});\n");
+      writeFileSync(join(dir, "docs/unrelated.test.ts"), "test('found now', () => {});\n");
+      mkdirSync(join(dir, "node_modules/pkg"), { recursive: true });
+      writeFileSync(join(dir, "node_modules/pkg/vendored.test.ts"), "test('never', () => {});\n");
+      mkdirSync(join(dir, "dist"), { recursive: true });
+      writeFileSync(join(dir, "dist/built.test.ts"), "test('never', () => {});\n");
 
       const profile = analyzeRepository({ repoPath: dir });
 
-      assert.equal(profile.testFilePaths.length, 1);
-      assert.ok(profile.testFilePaths[0]?.startsWith("src/"));
+      assert.deepEqual(profile.testFilePaths, ["docs/unrelated.test.ts", "src/a.test.ts"]);
+      assert.ok(!profile.testFilePaths.some((p) => p.startsWith("node_modules/")), "dependencies are never tests");
+      assert.ok(!profile.testFilePaths.some((p) => p.startsWith("dist/")), "build output is never a test");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

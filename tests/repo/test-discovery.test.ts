@@ -125,7 +125,17 @@ describe("analyzer + graph use the discovered universe", () => {
 
       const before = analyzeRepository({ repoPath: root });
       assert.deepStrictEqual(before.testFilePaths, ["tests/lib.spec.ts"], "no config -> only conventional names");
-      assert.deepStrictEqual(before.testPatterns, [...DEFAULT_TEST_PATTERNS]);
+      // Phase 01 (2026-08-26): a repository that declares vitest also contributes vitest's OWN default
+      // include glob, so a repository relying on its runner's defaults is no longer invisible. That
+      // glob is equivalent to the two conventional patterns here, which is why the discovered file
+      // list above is unchanged - the addition widens coverage without moving this case.
+      for (const pattern of DEFAULT_TEST_PATTERNS) {
+        assert.ok(before.testPatterns?.includes(pattern), `expected default pattern ${pattern}`);
+      }
+      assert.ok(
+        before.testPatterns?.includes("**/*.{test,spec}.?(c|m)[jt]s?(x)"),
+        "vitest is declared via the test script, so vitest's default include belongs in the universe",
+      );
 
       write(root, "vitest.snapshot.config.ts", `export default { test: { include: ['tests/**/*.snapshot.ts'] } }`);
       const after = analyzeRepository({ repoPath: root });
