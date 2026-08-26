@@ -45,6 +45,10 @@ function rowToObservation(row: Record<string, unknown>): ShadowEconomicsObservat
     avoidableMs: (row.avoidable_ms as number | null) ?? undefined,
     avoidableTier: row.avoidable_tier as EvidenceTier,
     estimationMethod: (row.estimation_method as string | null) ?? undefined,
+    testsSelectedDiffci: (row.tests_selected_diffci as number | null) ?? undefined,
+    planMode: (row.plan_mode as "FULL" | "SELECTIVE" | null) ?? undefined,
+    estimatorVersion: (row.estimator_version as number | null) ?? undefined,
+    estimatedAt: (row.estimated_at as string | null) ?? undefined,
     schemaVersion: row.schema_version as number,
     observedAt: row.observed_at as string,
   };
@@ -53,11 +57,15 @@ function rowToObservation(row: Record<string, unknown>): ShadowEconomicsObservat
 export interface ShadowEconomicsStore {
   /** Returns false if this exact (logicalDeltaKey, stage) pair was already recorded (routine dedup). */
   recordIfNew(observation: ShadowEconomicsObservation): Promise<boolean>;
-  /** This repository's own past 'test'-stage observations - the exact input
-   * computeHistoricalTestSecondsPerTest needs, scoped to avoid cross-repository/cross-stage contamination. */
-  listTestStageObservations(repository: string, limit: number): Promise<ShadowEconomicsObservation[]>;
   /** All stages for a repository within a time window - the input a report rollup (M3) reads. */
   listForReport(repository: string, startIso: string, endIso: string): Promise<ShadowEconomicsObservation[]>;
+  /** Rows whose DERIVED estimate is stale: either produced by an older estimator, or left UNKNOWN when
+   * its inputs are now sufficient to estimate. Bounded by `limit` so a sweep is always cheap. */
+  listRowsNeedingRecompute(currentEstimatorVersion: number, limit: number): Promise<ShadowEconomicsObservation[]>;
+  /** Overwrites ONLY the derived estimate fields for one (logical_delta_key, stage), and appends an audit
+   * row capturing before/after. Raw telemetry - measured workload, counts, commit identity, plan mode -
+   * is never touched by this statement, which is enforced by the SQL itself listing only derived columns. */
+  applyRecompute(input: RecomputeUpdate): Promise<void>;
   /** Every logical_delta_key this repository ALREADY has at least one stage row for. Read once per
    * repository per sweep so the sweep can skip predictions it has already measured WITHOUT spending a
    * GitHub API call or a slot of its per-sweep budget on them.
@@ -69,6 +77,24 @@ export interface ShadowEconomicsStore {
   listRecordedDeltaKeys(repository: string): Promise<string[]>;
 }
 
+export interface RecomputeUpdate {
+  logicalDeltaKey: string;
+  stage: CiStage;
+  repository: string;
+  reason: "unknown_now_estimable" | "estimator_version_upgrade";
+  fromEstimatorVersion: number | undefined;
+  toEstimatorVersion: number;
+  before: { selectedWorkloadMs: number | undefined; avoidableMs: number | undefined; avoidableTier: EvidenceTier };
+  after: {
+    selectedWorkloadMs: number | undefined;
+    selectedWorkloadConfidence: SavingsConfidence | undefined;
+    avoidableMs: number | undefined;
+    avoidableTier: EvidenceTier;
+    estimationMethod: string | undefined;
+  };
+  recomputedAt: string;
+}
+
 export function makeD1ShadowEconomicsStore(db: D1Binding): ShadowEconomicsStore {
   return {
     async recordIfNew(observation) {
@@ -77,8 +103,9 @@ export function makeD1ShadowEconomicsStore(db: D1Binding): ShadowEconomicsStore 
           `INSERT OR IGNORE INTO shadow_economics_observations
              (logical_delta_key, stage, repository, head_sha, workflow_run_ids, job_ids, full_workload_ms,
               tests_total_full, selected_workload_ms, selected_workload_confidence, avoidable_ms,
-              avoidable_tier, estimation_method, schema_version, observed_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              avoidable_tier, estimation_method, schema_version, observed_at,
+              tests_selected_diffci, plan_mode, estimator_version, estimated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           observation.logicalDeltaKey,
@@ -96,17 +123,13 @@ export function makeD1ShadowEconomicsStore(db: D1Binding): ShadowEconomicsStore 
           observation.estimationMethod ?? null,
           observation.schemaVersion,
           observation.observedAt,
+          observation.testsSelectedDiffci ?? null,
+          observation.planMode ?? null,
+          observation.estimatorVersion ?? null,
+          observation.estimatedAt ?? null,
         )
         .run();
       return (result.meta?.changes ?? 0) > 0;
-    },
-
-    async listTestStageObservations(repository, limit) {
-      const { results } = await db
-        .prepare(`SELECT * FROM shadow_economics_observations WHERE repository = ? AND stage = 'test' ORDER BY observed_at DESC LIMIT ?`)
-        .bind(repository, limit)
-        .all<Record<string, unknown>>();
-      return results.map(rowToObservation);
     },
 
     async listForReport(repository, startIso, endIso) {
@@ -115,6 +138,71 @@ export function makeD1ShadowEconomicsStore(db: D1Binding): ShadowEconomicsStore 
         .bind(repository, startIso, endIso)
         .all<Record<string, unknown>>();
       return results.map(rowToObservation);
+    },
+
+    async listRowsNeedingRecompute(currentEstimatorVersion, limit) {
+      const { results } = await db
+        .prepare(
+          `SELECT * FROM shadow_economics_observations
+             WHERE estimator_version IS NULL OR estimator_version < ?
+             ORDER BY observed_at ASC
+             LIMIT ?`,
+        )
+        .bind(currentEstimatorVersion, limit)
+        .all<Record<string, unknown>>();
+      return results.map(rowToObservation);
+    },
+
+    async applyRecompute(input) {
+      // Audit FIRST, so a value that ever appeared in a report is recoverable even if the update below
+      // fails partway. Append-only; never updated or deleted.
+      await db
+        .prepare(
+          `INSERT INTO shadow_economics_recompute_audit
+             (logical_delta_key, stage, repository, reason, from_estimator_version, to_estimator_version,
+              before_selected_workload_ms, before_avoidable_ms, before_avoidable_tier,
+              after_selected_workload_ms, after_avoidable_ms, after_avoidable_tier, recomputed_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind(
+          input.logicalDeltaKey,
+          input.stage,
+          input.repository,
+          input.reason,
+          input.fromEstimatorVersion ?? null,
+          input.toEstimatorVersion,
+          input.before.selectedWorkloadMs ?? null,
+          input.before.avoidableMs ?? null,
+          input.before.avoidableTier,
+          input.after.selectedWorkloadMs ?? null,
+          input.after.avoidableMs ?? null,
+          input.after.avoidableTier,
+          input.recomputedAt,
+        )
+        .run();
+
+      // DERIVED COLUMNS ONLY. full_workload_ms, tests_total_full, tests_selected_diffci, plan_mode,
+      // workflow_run_ids, job_ids, head_sha, observed_at and schema_version are deliberately absent from
+      // this SET list - raw telemetry is immutable once captured.
+      await db
+        .prepare(
+          `UPDATE shadow_economics_observations
+             SET selected_workload_ms = ?, selected_workload_confidence = ?, avoidable_ms = ?,
+                 avoidable_tier = ?, estimation_method = ?, estimator_version = ?, estimated_at = ?
+             WHERE logical_delta_key = ? AND stage = ?`,
+        )
+        .bind(
+          input.after.selectedWorkloadMs ?? null,
+          input.after.selectedWorkloadConfidence ?? null,
+          input.after.avoidableMs ?? null,
+          input.after.avoidableTier,
+          input.after.estimationMethod ?? null,
+          input.toEstimatorVersion,
+          input.recomputedAt,
+          input.logicalDeltaKey,
+          input.stage,
+        )
+        .run();
     },
 
     async listRecordedDeltaKeys(repository) {

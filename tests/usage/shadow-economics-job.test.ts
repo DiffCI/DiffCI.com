@@ -51,11 +51,14 @@ function fakeStore(): ShadowEconomicsStore & { recorded: ShadowEconomicsObservat
       recorded.push(observation);
       return true;
     },
-    async listTestStageObservations(repository, limit) {
-      return recorded.filter((o) => o.repository === repository && o.stage === "test").slice(0, limit);
-    },
     async listForReport(repository) {
       return recorded.filter((o) => o.repository === repository);
+    },
+    async listRowsNeedingRecompute() {
+      return [];
+    },
+    async applyRecompute() {
+      // not exercised by the capture-sweep tests
     },
     async listRecordedDeltaKeys(repository) {
       return [...new Set(recorded.filter((o) => o.repository === repository).map((o) => o.logicalDeltaKey))];
@@ -94,13 +97,18 @@ describe("runShadowEconomicsCaptureSweep", () => {
     assert.deepEqual(store.recorded.map((r) => r.stage).sort(), ["build", "test"]);
     const testRow = store.recorded.find((r) => r.stage === "test")!;
     assert.equal(testRow.fullWorkloadMs, 92_000);
-    assert.equal(testRow.avoidableTier, "UNKNOWN"); // no history yet on the first-ever capture
+    // Estimator v2: the FIRST capture is already estimable, because the counterfactual is anchored to
+    // this commit's own measured workload rather than to other commits' history. Under v1 this was
+    // UNKNOWN until some other commit had been captured, which is exactly what left the most valuable
+    // unjs/h3 row permanently blank.
+    assert.equal(testRow.avoidableTier, "ESTIMATED");
+    assert.equal(testRow.selectedWorkloadMs, (92_000 * 9) / 46);
     const buildRow = store.recorded.find((r) => r.stage === "build")!;
     assert.equal(buildRow.fullWorkloadMs, 45_000);
     assert.equal(buildRow.selectedWorkloadMs, undefined); // v1 cannot classify build economics
   });
 
-  it("a repeated capture for the same commit benefits from the FIRST capture's own history - second call's test stage becomes ESTIMATED", async () => {
+  it("every capture is independently estimable - a later commit does not depend on an earlier one having been captured", async () => {
     const store = fakeStore();
     const deps = { shadowBoundary: fakeShadowBoundary(["acme/web"], [prediction({ logicalDeltaKey: "k1", headSha: "1".repeat(40) })]), store, fetchBaseline: async () => completeEvidence(), nowIso: () => "2026-08-25T00:00:00Z" };
     await runShadowEconomicsCaptureSweep(deps, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 10);
@@ -108,8 +116,14 @@ describe("runShadowEconomicsCaptureSweep", () => {
     const deps2 = { ...deps, shadowBoundary: fakeShadowBoundary(["acme/web"], [prediction({ logicalDeltaKey: "k2", headSha: "2".repeat(40) })]) };
     await runShadowEconomicsCaptureSweep(deps2, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 10);
 
+    const firstTestRow = store.recorded.find((r) => r.logicalDeltaKey === "k1" && r.stage === "test")!;
     const secondTestRow = store.recorded.find((r) => r.logicalDeltaKey === "k2" && r.stage === "test")!;
-    assert.equal(secondTestRow.avoidableTier, "ESTIMATED"); // real history now exists from the first capture
+    // Both ESTIMATED, and identical - same measured workload and same counts must give the same answer
+    // regardless of capture order. v1 could not manage this: the first row was UNKNOWN and the second
+    // inherited the first's timings as its baseline.
+    assert.equal(firstTestRow.avoidableTier, "ESTIMATED");
+    assert.equal(secondTestRow.avoidableTier, "ESTIMATED");
+    assert.equal(secondTestRow.avoidableMs, firstTestRow.avoidableMs, "capture order must not change the estimate");
   });
 
   it("skips a prediction whose CI evidence is not yet COMPLETE - never records a partial/guessed row", async () => {
@@ -300,6 +314,10 @@ describe("runShadowEconomicsCaptureSweep", () => {
         avoidableMs: undefined,
         avoidableTier: "UNKNOWN",
         estimationMethod: undefined,
+        testsSelectedDiffci: undefined,
+        planMode: undefined,
+        estimatorVersion: undefined,
+        estimatedAt: undefined,
         schemaVersion: 1,
         observedAt: "2026-08-24T00:00:00Z",
       });
@@ -360,7 +378,7 @@ describe("runShadowEconomicsCaptureSweep", () => {
       logicalDeltaKey: "done-1", stage: "test", repository: "acme/web", headSha: p1.headSha,
       workflowRunIds: [], jobIds: [], fullWorkloadMs: 1000, testsTotalFull: 5,
       selectedWorkloadMs: undefined, selectedWorkloadConfidence: undefined, avoidableMs: undefined,
-      avoidableTier: "UNKNOWN", estimationMethod: undefined, schemaVersion: 1, observedAt: "2026-08-24T00:00:00Z",
+      avoidableTier: "UNKNOWN", estimationMethod: undefined, testsSelectedDiffci: undefined, planMode: undefined, estimatorVersion: undefined, estimatedAt: undefined, schemaVersion: 1, observedAt: "2026-08-24T00:00:00Z",
     });
     const tokenCalls: string[] = [];
     await runShadowEconomicsCaptureSweep(

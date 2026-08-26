@@ -17,7 +17,7 @@
  */
 import type { ShadowReadBoundary } from "../product/shadow-read-boundary.js";
 import type { ShadowEconomicsStore } from "./shadow-economics-store.js";
-import { deriveShadowEconomicsObservations, computeHistoricalTestSecondsPerTest } from "./shadow-economics.js";
+import { deriveShadowEconomicsObservations } from "./shadow-economics.js";
 import { fetchBaselineEvidence, type FetchBaselineOptions } from "../shadow/github-baseline.js";
 
 export interface ShadowEconomicsJobDeps {
@@ -157,18 +157,17 @@ export async function runShadowEconomicsCaptureSweep(deps: ShadowEconomicsJobDep
         continue;
       }
 
-      // This repository's OWN historical test-stage average, read fresh each prediction so an early
-      // capture within the same sweep can inform a later one (deliberately not batched/cached across the
-      // whole sweep - simplicity over a marginal API-call saving, and per-prediction correctness matters
-      // more than sweep-wide consistency here).
-      const history = await deps.store.listTestStageObservations(queue.repository, 30);
-      const historicalSecondsPerTest = computeHistoricalTestSecondsPerTest(history.map((o) => ({ fullWorkloadMs: o.fullWorkloadMs, testsTotalFull: o.testsTotalFull })));
-
       const rows = deriveShadowEconomicsObservations(
-        { logicalDeltaKey: prediction.logicalDeltaKey, repository: prediction.repository, headSha: prediction.headSha, testsSelectedDiffci: prediction.testsSelectedDiffci, testsTotalFull: prediction.testsTotalFull },
+        {
+          logicalDeltaKey: prediction.logicalDeltaKey,
+          repository: prediction.repository,
+          headSha: prediction.headSha,
+          testsSelectedDiffci: prediction.testsSelectedDiffci,
+          testsTotalFull: prediction.testsTotalFull,
+          planMode: prediction.planMode,
+        },
         evidence.fullRunsObserved,
         evidence.jobs,
-        historicalSecondsPerTest,
         nowIso(),
       );
 

@@ -12,8 +12,9 @@
  */
 import type { BaselineJobInfo, BaselineRunInfo } from "../shadow/types.js";
 import { bucketJobsByStage, type CiStage } from "../shadow/stage-classification.js";
-import { toEvidenceTier, combineForAvoidable, type EvidenceTier } from "./economics-classification.js";
-import type { SavingsConfidence, ValueWithConfidence } from "./savings.js";
+import { toEvidenceTier, type EvidenceTier } from "./economics-classification.js";
+import { estimateStageEconomics, ESTIMATOR_VERSION } from "./economics-estimator.js";
+import type { SavingsConfidence } from "./savings.js";
 
 export const SHADOW_ECONOMICS_SCHEMA_VERSION = 1;
 
@@ -25,6 +26,8 @@ export interface ShadowEconomicsCandidate {
    * for the 'test' stage's selected-workload estimate. */
   testsSelectedDiffci: number;
   testsTotalFull: number;
+  /** Raw input to the estimate and stored as such - a FULL plan must never report avoidable work. */
+  planMode: "FULL" | "SELECTIVE" | undefined;
 }
 
 export interface ShadowEconomicsObservation {
@@ -41,21 +44,26 @@ export interface ShadowEconomicsObservation {
   avoidableMs: number | undefined;
   avoidableTier: EvidenceTier;
   estimationMethod: string | undefined;
+  /** Raw inputs, persisted so a recompute is self-contained and auditable. Never rewritten. */
+  testsSelectedDiffci: number | undefined;
+  planMode: "FULL" | "SELECTIVE" | undefined;
+  /** Which estimator produced the derived fields, and when - drives the recompute/backfill sweep. */
+  estimatorVersion: number | undefined;
+  estimatedAt: string | undefined;
   schemaVersion: number;
   observedAt: string;
 }
 
 /**
- * Derives one observation PER STAGE present in the real job list. `historicalSecondsPerTest` is this
- * repository's own historical average (see computeHistoricalTestSecondsPerTest below) - the ONLY source
- * for a 'test' stage selected-workload estimate; when it's `unavailable` (no history yet, or too little),
- * the test stage's own avoidable figure is honestly UNKNOWN, exactly like every non-test stage.
+ * Derives one observation PER STAGE present in the real job list. Takes no history parameter: estimator v2
+ * anchors the counterfactual to THIS commit's own measured workload, so a capture no longer depends on
+ * (or can be contaminated by) another commit's timings. See economics-estimator.ts for why v1's
+ * cross-commit average was withdrawn.
  */
 export function deriveShadowEconomicsObservations(
   candidate: ShadowEconomicsCandidate,
   runs: readonly BaselineRunInfo[],
   jobs: readonly BaselineJobInfo[],
-  historicalSecondsPerTest: ValueWithConfidence<number>,
   observedAt: string,
 ): ShadowEconomicsObservation[] {
   const buckets = bucketJobsByStage(jobs);
@@ -70,67 +78,41 @@ export function deriveShadowEconomicsObservations(
     .filter((b) => b.totalDurationMs > 0)
     .map((bucket) => {
       const jobIds = jobs.filter((j) => bucket.jobNames.includes(j.jobName)).map((j) => j.jobId);
-
-      if (bucket.stage !== "test" || candidate.testsTotalFull <= 0) {
-        return {
-          logicalDeltaKey: candidate.logicalDeltaKey,
-          stage: bucket.stage,
-          repository: candidate.repository,
-          headSha: candidate.headSha,
-          workflowRunIds,
-          jobIds,
-          fullWorkloadMs: bucket.totalDurationMs,
-          testsTotalFull: undefined,
-          selectedWorkloadMs: undefined,
-          selectedWorkloadConfidence: undefined,
-          avoidableMs: undefined,
-          avoidableTier: "UNKNOWN" as const,
-          estimationMethod: undefined,
-          schemaVersion: SHADOW_ECONOMICS_SCHEMA_VERSION,
-          observedAt,
-        };
-      }
-
-      // Test stage, real total tests known - the one case v1 can attempt a selected-workload estimate.
-      const full: ValueWithConfidence<number> = { value: bucket.totalDurationMs, confidence: "measured" };
-      let selected: ValueWithConfidence<number> = { value: "unknown", confidence: "unavailable" };
-      let estimationMethod: string | undefined;
-      if (typeof historicalSecondsPerTest.value === "number") {
-        const selectedMs = candidate.testsSelectedDiffci * historicalSecondsPerTest.value * 1000;
-        selected = { value: selectedMs, confidence: historicalSecondsPerTest.confidence };
-        estimationMethod = `historical_avg_seconds_per_test_x${candidate.testsSelectedDiffci}`;
-      }
-      const avoidable = combineForAvoidable(full, selected);
+      // Every stage goes through the SAME estimator, which refuses (UNKNOWN) for non-test stages and for
+      // absent/zero/inconsistent counts - so there is exactly one place where a counterfactual can be
+      // produced, and exactly one place to audit.
+      const estimate = estimateStageEconomics({
+        stage: bucket.stage,
+        fullWorkloadMs: bucket.totalDurationMs,
+        testsSelectedDiffci: candidate.testsSelectedDiffci,
+        testsTotalFull: candidate.testsTotalFull,
+        planMode: candidate.planMode,
+      });
 
       return {
         logicalDeltaKey: candidate.logicalDeltaKey,
-        stage: "test" as const,
+        stage: bucket.stage,
         repository: candidate.repository,
         headSha: candidate.headSha,
         workflowRunIds,
         jobIds,
         fullWorkloadMs: bucket.totalDurationMs,
-        testsTotalFull: candidate.testsTotalFull,
-        selectedWorkloadMs: typeof selected.value === "number" ? selected.value : undefined,
-        selectedWorkloadConfidence: typeof selected.value === "number" ? selected.confidence : undefined,
-        avoidableMs: avoidable.value,
-        avoidableTier: avoidable.tier,
-        estimationMethod,
+        // Only meaningful where the estimator could actually use them; kept NULL elsewhere so a
+        // non-test row never implies DiffCI reasoned about its test counts.
+        testsTotalFull: bucket.stage === "test" ? candidate.testsTotalFull : undefined,
+        testsSelectedDiffci: bucket.stage === "test" ? candidate.testsSelectedDiffci : undefined,
+        planMode: candidate.planMode,
+        selectedWorkloadMs: estimate.selectedWorkloadMs,
+        selectedWorkloadConfidence: estimate.selectedWorkloadConfidence,
+        avoidableMs: estimate.avoidableMs,
+        avoidableTier: estimate.avoidableTier,
+        estimationMethod: estimate.estimationMethod,
+        estimatorVersion: ESTIMATOR_VERSION,
+        estimatedAt: observedAt,
         schemaVersion: SHADOW_ECONOMICS_SCHEMA_VERSION,
         observedAt,
       };
     });
-}
-
-/** This repository's own historical real-test-time-per-test average, computed ONLY from this repository's
- * own 'test'-stage shadow-economics observations - deliberately narrower than duration-capture.ts's
- * cross-repository computeHistoricalAverageSecondsPerTest, since a build/lint-contaminated lump sum from
- * the OLD (pre-stage-aware) pipeline must never leak into this repository's test-only estimate. */
-export function computeHistoricalTestSecondsPerTest(testStageObservations: readonly { fullWorkloadMs: number; testsTotalFull: number | undefined }[]): ValueWithConfidence<number> {
-  const usable = testStageObservations.filter((o): o is { fullWorkloadMs: number; testsTotalFull: number } => typeof o.testsTotalFull === "number" && o.testsTotalFull > 0);
-  if (usable.length === 0) return { value: "unknown", confidence: "unavailable" };
-  const total = usable.reduce((sum, o) => sum + o.fullWorkloadMs / 1000 / o.testsTotalFull, 0);
-  return { value: total / usable.length, confidence: "historical_estimate" };
 }
 
 export { toEvidenceTier };

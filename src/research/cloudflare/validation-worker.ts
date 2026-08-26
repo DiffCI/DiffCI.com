@@ -37,6 +37,7 @@ import { computeSourceIntegrity, isValidSha, type SourceArchiveMeta } from "./sh
 import { makeD1ShadowReadBoundary, type D1Binding as ShadowBoundaryD1 } from "../../product/shadow-read-boundary.js";
 import { makeD1ShadowEconomicsStore, type D1Binding as ShadowEconomicsD1 } from "../../usage/shadow-economics-store.js";
 import { runShadowEconomicsCaptureSweep } from "../../usage/shadow-economics-job.js";
+import { runShadowEconomicsRecompute } from "../../usage/shadow-economics-recompute.js";
 
 // standard-2 Sandbox instance type (wrangler.research-sandbox.jsonc): 1 vCPU, 6 GiB memory, 12 GB disk.
 // Real Container CPU billing is active-use-only, but wall-clock is used as a conservative (over-, not
@@ -1934,12 +1935,13 @@ export default {
     // the product Worker and failed on every commit against the unauthenticated 60 req/hour/IP limit.
     try {
       const boundary = makeD1ShadowReadBoundary(env.RESEARCH_DB as unknown as ShadowBoundaryD1);
+      const economicsStore = makeD1ShadowEconomicsStore(env.RESEARCH_DB as unknown as ShadowEconomicsD1);
       const windowEnd = new Date();
       const windowStart = new Date(windowEnd.getTime() - 30 * 24 * 60 * 60 * 1000); // rolling 30-day window
       const economicsResult = await runShadowEconomicsCaptureSweep(
         {
           shadowBoundary: boundary,
-          store: makeD1ShadowEconomicsStore(env.RESEARCH_DB as unknown as ShadowEconomicsD1),
+          store: economicsStore,
           resolveToken: (repository) => githubTokenForRepo(env, repository),
         },
         windowStart.toISOString(),
@@ -1947,6 +1949,15 @@ export default {
         5, // bounded per sweep; authenticated now, but still deliberately conservative
       );
       console.log(`shadow-economics: ${JSON.stringify({ event: "shadow_economics.sweep_completed", ...economicsResult })}`);
+
+      // M2 backfill: correct rows produced by a withdrawn estimator, and fill in rows left UNKNOWN when
+      // their inputs were not yet usable. Bounded and self-terminating - once every row carries the
+      // current estimator version this selects nothing and mutates nothing, so it costs one indexed query
+      // per tick in steady state. Runs after capture so freshly-written rows are already current.
+      const recomputeResult = await runShadowEconomicsRecompute({ store: economicsStore }, 50);
+      if (recomputeResult.examined > 0) {
+        console.log(`shadow-economics: ${JSON.stringify({ event: "shadow_economics.recompute_completed", ...recomputeResult })}`);
+      }
     } catch (error: unknown) {
       console.log(`shadow-economics: sweep failed: ${error instanceof Error ? error.message : String(error)}`);
     }
