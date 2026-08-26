@@ -58,6 +58,15 @@ export interface ShadowEconomicsStore {
   listTestStageObservations(repository: string, limit: number): Promise<ShadowEconomicsObservation[]>;
   /** All stages for a repository within a time window - the input a report rollup (M3) reads. */
   listForReport(repository: string, startIso: string, endIso: string): Promise<ShadowEconomicsObservation[]>;
+  /** Every logical_delta_key this repository ALREADY has at least one stage row for. Read once per
+   * repository per sweep so the sweep can skip predictions it has already measured WITHOUT spending a
+   * GitHub API call or a slot of its per-sweep budget on them.
+   *
+   * Deliberately a whole-key set rather than a cursor/high-water-mark: predictions are not ordered by
+   * capture-ability (an older commit whose CI was still running when it was first attempted becomes
+   * capturable later, and a cursor would skip past it forever), and "skip what is recorded, keep
+   * scanning" is naturally idempotent where a stored cursor is one more piece of state to get wrong. */
+  listRecordedDeltaKeys(repository: string): Promise<string[]>;
 }
 
 export function makeD1ShadowEconomicsStore(db: D1Binding): ShadowEconomicsStore {
@@ -106,6 +115,14 @@ export function makeD1ShadowEconomicsStore(db: D1Binding): ShadowEconomicsStore 
         .bind(repository, startIso, endIso)
         .all<Record<string, unknown>>();
       return results.map(rowToObservation);
+    },
+
+    async listRecordedDeltaKeys(repository) {
+      const { results } = await db
+        .prepare(`SELECT DISTINCT logical_delta_key FROM shadow_economics_observations WHERE repository = ?`)
+        .bind(repository)
+        .all<{ logical_delta_key: string }>();
+      return results.map((r) => r.logical_delta_key);
     },
   };
 }

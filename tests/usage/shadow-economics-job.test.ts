@@ -57,6 +57,9 @@ function fakeStore(): ShadowEconomicsStore & { recorded: ShadowEconomicsObservat
     async listForReport(repository) {
       return recorded.filter((o) => o.repository === repository);
     },
+    async listRecordedDeltaKeys(repository) {
+      return [...new Set(recorded.filter((o) => o.repository === repository).map((o) => o.logicalDeltaKey))];
+    },
   };
 }
 
@@ -275,6 +278,100 @@ describe("runShadowEconomicsCaptureSweep", () => {
     assert.deepEqual(tokenCalls, ["a/has-work"], "b/idle has nothing to fetch, so it must not cost a token exchange");
   });
 
+  it("reaches the BACKLOG: with the newest 5 of 8 predictions already recorded, the sweep processes 6-8 instead of re-treading the head", async () => {
+    const store = fakeStore();
+    // 8 predictions, newest first (listPredictions orders created_at DESC).
+    const all = Array.from({ length: 8 }, (_, i) =>
+      prediction({ repository: "acme/web", logicalDeltaKey: `k${i + 1}`, headSha: String(i + 1).repeat(40) }),
+    );
+    // Pre-record the newest five (k1..k5) exactly as a previous sweep would have left them.
+    for (const p of all.slice(0, 5)) {
+      await store.recordIfNew({
+        logicalDeltaKey: p.logicalDeltaKey,
+        stage: "test",
+        repository: p.repository,
+        headSha: p.headSha,
+        workflowRunIds: [1],
+        jobIds: [1],
+        fullWorkloadMs: 92_000,
+        testsTotalFull: 46,
+        selectedWorkloadMs: undefined,
+        selectedWorkloadConfidence: undefined,
+        avoidableMs: undefined,
+        avoidableTier: "UNKNOWN",
+        estimationMethod: undefined,
+        schemaVersion: 1,
+        observedAt: "2026-08-24T00:00:00Z",
+      });
+    }
+    const before = store.recorded.length;
+
+    const fetched: string[] = [];
+    const result = await runShadowEconomicsCaptureSweep(
+      {
+        shadowBoundary: fakeShadowBoundary(["acme/web"], all),
+        store,
+        fetchBaseline: async ({ headSha }) => {
+          fetched.push(headSha);
+          return completeEvidence();
+        },
+      },
+      "2026-08-01T00:00:00Z",
+      "2026-09-01T00:00:00Z",
+      5,
+    );
+
+    assert.equal(result.skippedAlreadyRecorded, 5, "the 5 already-measured predictions must be skipped for free");
+    assert.equal(result.predictionsAttempted, 3, "only k6/k7/k8 remain eligible - the backlog is exhausted before the budget is");
+    assert.equal(fetched.length, 3, "an already-recorded prediction must never cost a GitHub API call");
+    const newKeys = store.recorded.slice(before).map((o) => o.logicalDeltaKey);
+    assert.deepEqual([...new Set(newKeys)].sort(), ["k6", "k7", "k8"], "the sweep must reach the backlog, not re-tread the newest 5");
+  });
+
+  it("re-running the sweep after the backlog is fully captured does nothing at all - no API calls, no duplicate rows", async () => {
+    const store = fakeStore();
+    const all = Array.from({ length: 3 }, (_, i) => prediction({ repository: "acme/web", logicalDeltaKey: `k${i + 1}`, headSha: String(i + 1).repeat(40) }));
+    let calls = 0;
+    const deps = {
+      shadowBoundary: fakeShadowBoundary(["acme/web"], all),
+      store,
+      fetchBaseline: async () => {
+        calls++;
+        return completeEvidence();
+      },
+    };
+    const first = await runShadowEconomicsCaptureSweep(deps, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 5);
+    const callsAfterFirst = calls;
+    const rowsAfterFirst = store.recorded.length;
+
+    const second = await runShadowEconomicsCaptureSweep(deps, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 5);
+
+    assert.equal(first.predictionsAttempted, 3);
+    assert.equal(second.predictionsAttempted, 0, "nothing left to measure");
+    assert.equal(second.skippedAlreadyRecorded, 3);
+    assert.equal(calls, callsAfterFirst, "a settled sweep must make ZERO GitHub calls - this is the wasted-API-call half of the bug");
+    assert.equal(store.recorded.length, rowsAfterFirst, "idempotent: re-running can never duplicate a measurement");
+  });
+
+  it("never spends a token exchange on a repository whose whole window is already measured", async () => {
+    const store = fakeStore();
+    const p1 = prediction({ repository: "acme/web", logicalDeltaKey: "done-1" });
+    await store.recordIfNew({
+      logicalDeltaKey: "done-1", stage: "test", repository: "acme/web", headSha: p1.headSha,
+      workflowRunIds: [], jobIds: [], fullWorkloadMs: 1000, testsTotalFull: 5,
+      selectedWorkloadMs: undefined, selectedWorkloadConfidence: undefined, avoidableMs: undefined,
+      avoidableTier: "UNKNOWN", estimationMethod: undefined, schemaVersion: 1, observedAt: "2026-08-24T00:00:00Z",
+    });
+    const tokenCalls: string[] = [];
+    await runShadowEconomicsCaptureSweep(
+      { shadowBoundary: fakeShadowBoundary(["acme/web"], [p1]), store, resolveToken: async (r) => { tokenCalls.push(r); return "t"; }, fetchBaseline: async () => completeEvidence() },
+      "2026-08-01T00:00:00Z",
+      "2026-09-01T00:00:00Z",
+      5,
+    );
+    assert.deepEqual(tokenCalls, [], "no eligible prediction means no credential is needed at all");
+  });
+
   it("a repository with zero enrolled repos produces a clean, zero-activity result, not an error", async () => {
     const store = fakeStore();
     const result = await runShadowEconomicsCaptureSweep({ shadowBoundary: fakeShadowBoundary([], []), store, fetchBaseline: async () => completeEvidence() }, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 10);
@@ -282,14 +379,36 @@ describe("runShadowEconomicsCaptureSweep", () => {
     assert.equal(result.predictionsAttempted, 0);
   });
 
-  it("a repeated sweep of the SAME commit does not double-count captured rows - idempotent via the store's own dedup", async () => {
+  it("a repeated sweep of the SAME commit does not double-count captured rows", async () => {
     const store = fakeStore();
     const deps = { shadowBoundary: fakeShadowBoundary(["acme/web"], [prediction()]), store, fetchBaseline: async () => completeEvidence() };
     const r1 = await runShadowEconomicsCaptureSweep(deps, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 10);
     const r2 = await runShadowEconomicsCaptureSweep(deps, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 10);
     assert.equal(r1.stageRowsCaptured, 2);
     assert.equal(r2.stageRowsCaptured, 0);
-    assert.equal(r2.stageRowsAlreadyRecorded, 2);
+    // Updated 2026-08-25 with the backlog fix: the second sweep now skips this prediction BEFORE fetching
+    // it, so the write-level dedup is never even reached (stageRowsAlreadyRecorded stays 0 and the skip is
+    // counted as skippedAlreadyRecorded instead). The guarantee this test exists for - a re-run can never
+    // duplicate a measurement - is unchanged and still asserted below; only the layer enforcing it moved
+    // earlier, which is the point of the fix. The write-level dedup is still covered as a race safety net
+    // by the test immediately following this one.
+    assert.equal(r2.stageRowsAlreadyRecorded, 0);
+    assert.equal(r2.skippedAlreadyRecorded, 1);
     assert.equal(store.recorded.length, 2); // never duplicated
+  });
+
+  it("recordIfNew still dedups when two sweeps race - the pre-scan set can be stale, so the write must stay idempotent", async () => {
+    const store = fakeStore();
+    // Simulates two sweeps overlapping: both read listRecordedDeltaKeys BEFORE either wrote, so both see
+    // an empty set and both proceed to fetch and write the same commit. Only the write-level INSERT OR
+    // IGNORE can catch this, which is why the pre-scan does not replace it.
+    const racyStore = { ...store, async listRecordedDeltaKeys() { return []; } };
+    const deps = { shadowBoundary: fakeShadowBoundary(["acme/web"], [prediction()]), store: racyStore, fetchBaseline: async () => completeEvidence() };
+    const r1 = await runShadowEconomicsCaptureSweep(deps, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 10);
+    const r2 = await runShadowEconomicsCaptureSweep(deps, "2026-08-01T00:00:00Z", "2026-09-01T00:00:00Z", 10);
+    assert.equal(r1.stageRowsCaptured, 2);
+    assert.equal(r2.stageRowsCaptured, 0, "the racing sweep must write nothing new");
+    assert.equal(r2.stageRowsAlreadyRecorded, 2, "it reached the write and INSERT OR IGNORE caught it");
+    assert.equal(store.recorded.length, 2, "still exactly one row per (commit, stage)");
   });
 });

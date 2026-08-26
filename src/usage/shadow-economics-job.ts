@@ -60,6 +60,12 @@ export interface ShadowEconomicsJobResult {
   skippedCiPending: number;
   /** Evidence was COMPLETE but no stage bucket had usable timing - nothing honest to record. */
   skippedNoDerivableRows: number;
+  /** Predictions skipped because this repository already has stage rows for them. Costs NO GitHub API
+   * call and NO slot of maxPerSweep - that is the whole point. Real bug found live 2026-08-25: the sweep
+   * rebuilt its queues from index 0 every tick, so it re-fetched the same 5 newest predictions forever and
+   * never reached the backlog behind them (unjs/h3 had 3 predictions; only the newest was ever captured).
+   * A high number here alongside a healthy stageRowsCaptured is the sweep working through a backlog. */
+  skippedAlreadyRecorded: number;
   /** Which repositories actually got at least one prediction attempted this sweep. Directly answers
    * "did the budget reach the repositories I care about, or did one repo starve the rest?" - the
    * round-robin fairness fix above is only observable through this field. */
@@ -85,6 +91,7 @@ export async function runShadowEconomicsCaptureSweep(deps: ShadowEconomicsJobDep
     skippedFetchError: 0,
     skippedCiPending: 0,
     skippedNoDerivableRows: 0,
+    skippedAlreadyRecorded: 0,
     repositoriesAttempted: [],
   };
 
@@ -100,24 +107,36 @@ export async function runShadowEconomicsCaptureSweep(deps: ShadowEconomicsJobDep
   // repos matters more here than in duration-capture-job.ts's own identical-shaped loop (that job serves a
   // single DiffCI.com-enrolled repository today, so the starvation case can't yet occur there) - left
   // unmodified rather than touched as part of this fix, since it isn't blocking anything live right now.
-  const queues: { repository: string; predictions: Awaited<ReturnType<ShadowReadBoundary["listPredictions"]>>; index: number; token?: string }[] = [];
+  const queues: { repository: string; predictions: Awaited<ReturnType<ShadowReadBoundary["listPredictions"]>>; index: number; token?: string; recorded: Set<string> }[] = [];
   for (const repository of repositories) {
     const predictions = await deps.shadowBoundary.listPredictions(repository, windowStartIso, windowEndIso);
-    // Skip token resolution entirely for a repository with nothing to do - never spend an
-    // installation-token exchange on a repository this sweep will not read.
     if (predictions.length === 0) continue;
-    const token = deps.resolveToken ? await deps.resolveToken(repository) : undefined;
-    queues.push({ repository, predictions, index: 0, token });
+    // One cheap query per repository, before any GitHub work: which of these predictions are already
+    // measured. Everything in here is skipped below for free, so the per-sweep budget is spent only on
+    // predictions that can actually produce a new measurement.
+    const recorded = new Set(await deps.store.listRecordedDeltaKeys(repository));
+    // Resolve a token only if at least one prediction is actually still capturable - a repository whose
+    // whole window is already measured must not cost an installation-token exchange.
+    const hasEligible = predictions.some((p) => !recorded.has(p.logicalDeltaKey));
+    const token = hasEligible && deps.resolveToken ? await deps.resolveToken(repository) : undefined;
+    queues.push({ repository, predictions, index: 0, token, recorded });
   }
 
   for (;;) {
     let madeProgress = false;
     for (const queue of queues) {
       if (result.predictionsAttempted >= maxPerSweep) break;
+      // Advance past everything already measured. This consumes no budget and makes no API call, which is
+      // what lets a single sweep reach the BACKLOG behind the newest predictions instead of re-treading
+      // the same head of the list every tick.
+      while (queue.index < queue.predictions.length && queue.recorded.has(queue.predictions[queue.index]!.logicalDeltaKey)) {
+        queue.index++;
+        result.skippedAlreadyRecorded++;
+      }
       if (queue.index >= queue.predictions.length) continue;
       madeProgress = true;
 
-      const prediction = queue.predictions[queue.index];
+      const prediction = queue.predictions[queue.index]!;
       queue.index++;
       result.predictionsAttempted++;
       if (!result.repositoriesAttempted.includes(queue.repository)) result.repositoriesAttempted.push(queue.repository);
