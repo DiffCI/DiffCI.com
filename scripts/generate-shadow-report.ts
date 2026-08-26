@@ -107,8 +107,22 @@ async function main() {
   const windowEndIso = now.toISOString();
   const windowStartIso = new Date(now.getTime() - days * 86_400_000).toISOString();
 
+  // Eligible = predictions DiffCI generated for this repository in the window. This is the coverage
+  // DENOMINATOR, and it is what turns "3 commits observed" into a meaningful statement.
+  const eligible = d1Query<{ n: number }>(
+    `SELECT COUNT(*) as n FROM shadow_predictions WHERE repository = ${sqlString(repository)} AND created_at >= ${sqlString(windowStartIso)} AND created_at < ${sqlString(windowEndIso)}`,
+  );
+  const eligiblePredictions = eligible[0]?.n ?? 0;
+
+  // Observations are selected by their PREDICTION's window membership, not by capture time, so the
+  // numerator and denominator describe the same set of commits. Filtering economics rows by observed_at
+  // would drift: a commit predicted inside the window but captured just after it would vanish from the
+  // numerator while remaining in the denominator, understating coverage for no real reason.
   const rows = d1Query<RawRow>(
-    `SELECT * FROM shadow_economics_observations WHERE repository = ${sqlString(repository)} AND observed_at >= ${sqlString(windowStartIso)} AND observed_at < ${sqlString(windowEndIso)} ORDER BY observed_at ASC`,
+    `SELECT e.* FROM shadow_economics_observations e
+     JOIN shadow_predictions p ON p.logical_delta_key = e.logical_delta_key
+     WHERE e.repository = ${sqlString(repository)} AND p.created_at >= ${sqlString(windowStartIso)} AND p.created_at < ${sqlString(windowEndIso)}
+     ORDER BY e.observed_at ASC`,
   );
 
   // Safety comes from Stage 2F's own reconciliation, not from the economics table - the economics layer
@@ -126,6 +140,7 @@ async function main() {
     windowStartIso,
     windowEndIso,
     observations: rows.map(toObservation),
+    eligiblePredictions,
     safety: { evaluableFailures, failuresPreserved, falseNegatives: Math.max(0, evaluableFailures - failuresPreserved) },
   });
 

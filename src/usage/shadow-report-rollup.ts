@@ -24,6 +24,7 @@
 import type { CiStage } from "../shadow/stage-classification.js";
 import type { EvidenceTier } from "./economics-classification.js";
 import type { ShadowEconomicsObservation } from "./shadow-economics.js";
+import { assessEvidence, type EvidenceAssessment, type EvidenceThresholds } from "./shadow-evidence-readiness.js";
 
 /** Stage display order - deliberately fixed rather than derived from the data, so a repository with no
  * lint stage still shows lint as absent rather than silently omitting the category. */
@@ -71,6 +72,9 @@ export interface ShadowRepositoryReport {
   /** ALWAYS 0. Kept as an explicit field, not omitted: shadow mode cannot measure a counterfactual, and
    * the report is more credible for saying so than for leaving the reader to wonder. */
   totalMeasuredAvoidableMs: 0;
+  /** Observation coverage and readiness state. Answers "what did DiffCI actually observe?" BEFORE the
+   * report asks anyone to believe anything about opportunity. */
+  evidence: EvidenceAssessment;
   /** Share of observed CI time DiffCI can currently classify at all (test stage). The load-bearing
    * falsifiable metric: a low value is useful information about DiffCI's coverage, not a failure to hide
    * by narrowing the denominator to just the tests. */
@@ -84,6 +88,11 @@ export interface RollupInput {
   windowEndIso: string;
   observations: readonly ShadowEconomicsObservation[];
   safety: { evaluableFailures: number; failuresPreserved: number; falseNegatives: number };
+  /** How many predictions DiffCI generated for this repository in the window - the coverage denominator.
+   * Without it the report can only say "3 commits observed", which is meaningless until you know whether
+   * the total was 4 or 47. */
+  eligiblePredictions: number;
+  thresholds?: EvidenceThresholds;
 }
 
 export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
@@ -123,6 +132,23 @@ export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
   const testStage = stages.find((s) => s.stage === "test");
   const classifiedMs = testStage?.observedMs ?? 0;
 
+  // Plan mix is counted over DISTINCT predictions, not rows - one commit emitting test+build+other rows
+  // is one observation, not three, and counting rows would inflate the evidence count severalfold.
+  const planByDelta = new Map<string, "FULL" | "SELECTIVE" | undefined>();
+  for (const r of rows) if (!planByDelta.has(r.logicalDeltaKey)) planByDelta.set(r.logicalDeltaKey, r.planMode);
+  const plans = [...planByDelta.values()];
+
+  const evidence = assessEvidence(
+    {
+      eligiblePredictions: input.eligiblePredictions,
+      capturedPredictions: planByDelta.size,
+      selectiveObservations: plans.filter((p) => p === "SELECTIVE").length,
+      fullObservations: plans.filter((p) => p === "FULL").length,
+      evaluableFailures: input.safety.evaluableFailures,
+    },
+    input.thresholds,
+  );
+
   return {
     repository: input.repository,
     windowStartIso: input.windowStartIso,
@@ -135,6 +161,7 @@ export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
     stages,
     totalEstimatedAvoidableMs: testStage?.estimatedAvoidableMs,
     totalMeasuredAvoidableMs: 0,
+    evidence,
     classifiedFraction: totalObservedMs > 0 ? classifiedMs / totalObservedMs : 0,
     safety: input.safety,
   };

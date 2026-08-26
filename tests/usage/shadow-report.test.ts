@@ -42,6 +42,7 @@ describe("rollUpShadowReport", () => {
     const r = rollUpShadowReport({
       repository: "unjs/h3",
       ...WINDOW,
+      eligiblePredictions: 3,
       safety: SAFETY,
       observations: [
         obs({ logicalDeltaKey: "a", headSha: "aaa", workflowRunIds: [1, 2] }),
@@ -58,7 +59,7 @@ describe("rollUpShadowReport", () => {
   });
 
   it("measured avoidable compute is ALWAYS structurally zero in shadow mode", () => {
-    const r = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, safety: SAFETY, observations: [obs()] });
+    const r = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, eligiblePredictions: 3, safety: SAFETY, observations: [obs()] });
     assert.equal(r.totalMeasuredAvoidableMs, 0);
   });
 
@@ -66,6 +67,7 @@ describe("rollUpShadowReport", () => {
     const r = rollUpShadowReport({
       repository: "unjs/h3",
       ...WINDOW,
+      eligiblePredictions: 3,
       safety: SAFETY,
       observations: [
         obs({ logicalDeltaKey: "a", headSha: "aaa", avoidableMs: 34_500, avoidableTier: "ESTIMATED" }),
@@ -82,6 +84,7 @@ describe("rollUpShadowReport", () => {
     const r = rollUpShadowReport({
       repository: "unjs/h3",
       ...WINDOW,
+      eligiblePredictions: 3,
       safety: SAFETY,
       observations: [
         obs({ fullWorkloadMs: 20_000 }),
@@ -92,7 +95,7 @@ describe("rollUpShadowReport", () => {
   });
 
   it("flags insufficient data when nothing was observed, rather than reporting zeros", () => {
-    const r = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, safety: SAFETY, observations: [] });
+    const r = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, eligiblePredictions: 3, safety: SAFETY, observations: [] });
     assert.equal(r.hasSufficientData, false);
     assert.ok(r.insufficientReason);
   });
@@ -102,6 +105,7 @@ describe("renderShadowReport - vocabulary rules", () => {
   const report = rollUpShadowReport({
     repository: "unjs/h3",
     ...WINDOW,
+    eligiblePredictions: 3,
     safety: SAFETY,
     observations: [obs(), obs({ logicalDeltaKey: "o", stage: "other", fullWorkloadMs: 55_000, avoidableMs: undefined, avoidableTier: "UNKNOWN", testsTotalFull: undefined, testsSelectedDiffci: undefined })],
   });
@@ -145,7 +149,7 @@ describe("renderShadowReport - vocabulary rules", () => {
     const text = renderShadowReport(report);
     // Found by generating the first real report: unjs/h3 showed 255s for a week, which any maintainer
     // knows is far too small. Without this framing the headline reads as a census and destroys trust.
-    assert.ok(text.includes("sample rather than a complete"));
+    assert.ok(text.includes("sample of repository CI activity"));
     assert.ok(text.includes("lower bound"));
     assert.ok(!text.includes("CI compute consumed"), "must not assert what the repository spent overall");
   });
@@ -160,6 +164,7 @@ describe("renderShadowReport - vocabulary rules", () => {
     const withFailures = rollUpShadowReport({
       repository: "unjs/h3",
       ...WINDOW,
+      eligiblePredictions: 3,
       safety: { evaluableFailures: 4, failuresPreserved: 4, falseNegatives: 0 },
       observations: [obs()],
     });
@@ -172,6 +177,7 @@ describe("renderShadowReport - vocabulary rules", () => {
     const full = rollUpShadowReport({
       repository: "unjs/h3",
       ...WINDOW,
+      eligiblePredictions: 3,
       safety: SAFETY,
       observations: [obs({ planMode: "FULL", testsSelectedDiffci: 70, avoidableMs: 0, fullWorkloadMs: 63_000 })],
     });
@@ -180,8 +186,71 @@ describe("renderShadowReport - vocabulary rules", () => {
     assert.ok(!text.includes("up to 0.0s"));
   });
 
+  it("M3.1: leads with observation coverage - captured of eligible - before any economics", () => {
+    const text = renderShadowReport(report);
+    const coverageIdx = text.indexOf("Observation coverage");
+    const economicsIdx = text.indexOf("total estimated avoidable compute");
+    assert.ok(coverageIdx > -1);
+    assert.ok(coverageIdx < economicsIdx, "coverage must be answered BEFORE the reader is asked to believe anything about opportunity");
+    assert.ok(text.includes("of 3 eligible commits"), "'2 commits observed' is meaningless without the denominator");
+    assert.ok(/capture coverage/.test(text));
+  });
+
+  it("M3.1: reports the SELECTIVE/FULL plan mix, since only selective plans evidence opportunity", () => {
+    const text = renderShadowReport(report);
+    assert.ok(/\d+ produced a SELECTIVE plan; \d+ produced FULL plans\./.test(text));
+  });
+
+  it("M3.1: a thin sample is COLLECTING and makes no recommendation", () => {
+    const text = renderShadowReport(report);
+    assert.ok(text.includes("STATUS: SHADOW - COLLECTING"));
+    assert.ok(text.includes("Evidence still accumulating"));
+    assert.ok(text.includes("DiffCI makes no recommendation at this coverage."));
+    assert.ok(text.includes("of 20 captured observations required"));
+    assert.ok(text.includes("selection safety remains untested"));
+  });
+
+  it("M3.1: reaching both thresholds flips the state to EVIDENCE READY", () => {
+    const many = Array.from({ length: 22 }, (_, i) =>
+      obs({ logicalDeltaKey: `k${i}`, headSha: `sha${i}`, planMode: i < 6 ? "SELECTIVE" : "FULL", testsSelectedDiffci: i < 6 ? 1 : 70, avoidableMs: i < 6 ? 34_500 : 0 }),
+    );
+    const r = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, eligiblePredictions: 22, safety: { evaluableFailures: 2, failuresPreserved: 2, falseNegatives: 0 }, observations: many });
+    assert.equal(r.evidence.state, "EVIDENCE_READY");
+    assert.equal(r.evidence.capturedPredictions, 22);
+    assert.equal(r.evidence.selectiveObservations, 6);
+    assert.equal(r.evidence.captureCoverage, 1);
+    const text = renderShadowReport(r);
+    assert.ok(text.includes("STATUS: SHADOW - EVIDENCE READY"));
+    assert.ok(text.includes("Evidence threshold reached"));
+  });
+
+  it("M3.1: counts one commit as ONE observation even when it emits several stage rows", () => {
+    const r = rollUpShadowReport({
+      repository: "unjs/h3",
+      ...WINDOW,
+      eligiblePredictions: 1,
+      safety: SAFETY,
+      observations: [obs({ logicalDeltaKey: "same", stage: "test" }), obs({ logicalDeltaKey: "same", stage: "build" }), obs({ logicalDeltaKey: "same", stage: "other" })],
+    });
+    assert.equal(r.evidence.capturedPredictions, 1, "counting rows would inflate the evidence count threefold");
+    assert.equal(r.evidence.selectiveObservations, 1);
+  });
+
+  it("M3.1: zero eligible predictions yields UNDEFINED coverage, never a misleading 100%", () => {
+    const r = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, eligiblePredictions: 0, safety: SAFETY, observations: [] });
+    assert.equal(r.evidence.captureCoverage, undefined, "0/0 is no information, not full coverage");
+  });
+
+  it("M3.1: never extrapolates the observed sample into a monthly or annual figure", () => {
+    const text = renderShadowReport(report).toLowerCase();
+    assert.ok(text.includes("not extrapolated"));
+    assert.ok(!text.includes("per month"));
+    assert.ok(!text.includes("monthly opportunity"));
+    assert.ok(!/[$]/.test(text), "no dollar figure may be derived from an unrepresentative sample");
+  });
+
   it("an empty window renders an explicit 'nothing observed' statement, never a page of zeros", () => {
-    const empty = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, safety: SAFETY, observations: [] });
+    const empty = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, eligiblePredictions: 3, safety: SAFETY, observations: [] });
     const text = renderShadowReport(empty);
     assert.ok(text.includes("No completed CI workload was observed"));
     assert.ok(text.includes("not about this repository's activity"), "must not imply the repo was idle");

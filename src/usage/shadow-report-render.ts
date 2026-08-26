@@ -91,14 +91,22 @@ export function renderShadowReport(report: ShadowRepositoryReport): string {
     return L.join("\n");
   }
 
-  L.push(`DiffCI observed ${report.commitsObserved} commits (${report.workflowRunsObserved} workflow runs) in this window.`);
-  L.push(`${seconds(report.totalObservedMs)}s (${hours(report.totalObservedMs)} runner-hours) of CI compute across those runs  [MEASURED]`);
+  const ev = report.evidence;
+
+  // State first, before any number. DiffCI decides when it has earned the right to make a recommendation;
+  // it does not show every fresh installation a percentage after one lucky selective commit.
+  L.push(ev.state === "EVIDENCE_READY" ? "STATUS: SHADOW - EVIDENCE READY" : "STATUS: SHADOW - COLLECTING");
   L.push("");
-  // Load-bearing honesty: observation is sampled (bounded per sweep), so these totals are a LOWER BOUND on
-  // what this repository actually spent, never a census of it. Without this line a maintainer reads the
-  // headline as their weekly CI bill, sees a number far too small, and correctly discards the report.
-  L.push("These totals cover only the commits DiffCI observed, which is a sample rather than a complete");
-  L.push("census of this repository's CI. Treat them as a lower bound on actual consumption.");
+
+  // Observation coverage comes BEFORE the economics. "3 commits observed" is meaningless until the reader
+  // knows whether the total was 4 or 47 - those are completely different reports.
+  L.push("Observation coverage");
+  L.push(`  DiffCI observed ${ev.capturedPredictions} of ${ev.eligiblePredictions} eligible commits in this period` + (ev.captureCoverage === undefined ? "." : ` (${pct(ev.captureCoverage)} capture coverage).`));
+  L.push(`  ${ev.selectiveObservations} produced a SELECTIVE plan; ${ev.fullObservations} produced FULL plans.`);
+  L.push("  These measurements are a sample of repository CI activity, not total weekly CI usage.");
+  L.push("  Estimates below apply only to the observed workloads, and are a lower bound on actual consumption.");
+  L.push("");
+  L.push(`${seconds(report.totalObservedMs)}s (${hours(report.totalObservedMs)} runner-hours) of CI compute across ${report.workflowRunsObserved} observed workflow runs  [MEASURED]`);
   L.push("");
   L.push("By stage:");
   for (const stage of report.stages) L.push(renderStageLine(stage));
@@ -126,6 +134,21 @@ export function renderShadowReport(report: ShadowRepositoryReport): string {
   if (testStage) L.push(...renderCommitEvidence(testStage));
 
   L.push("");
+  if (ev.state === "COLLECTING") {
+    L.push("Evidence still accumulating");
+    L.push(`  DiffCI has observed ${ev.capturedPredictions} eligible commits, including ${ev.selectiveObservations} selective ` + (ev.selectiveObservations === 1 ? "opportunity" : "opportunities") + ".");
+    L.push("  More observations are required before DiffCI recommends enabling optimization:");
+    for (const c of ev.unmetCriteria) L.push(`    - ${c}`);
+    if (!ev.canMakePositiveSafetyStatement) {
+      L.push("    - no failing execution has been evaluable yet, so selection safety remains untested");
+    }
+    L.push("  DiffCI makes no recommendation at this coverage.");
+  } else {
+    L.push("Evidence threshold reached");
+    L.push("  This report rests on enough observations to be worth acting on. It still describes potential");
+    L.push("  opportunity, not validated savings - see below.");
+  }
+  L.push("");
   L.push("How to read this report");
   L.push("  MEASURED  - real timings from this repository's own completed GitHub Actions runs.");
   L.push("  ESTIMATED - a projection of what DiffCI's selection WOULD have cost. The selected subset was");
@@ -136,6 +159,9 @@ export function renderShadowReport(report: ShadowRepositoryReport): string {
   L.push("  (container startup, dependency install, compilation). At small selection ratios it therefore");
   L.push("  OVERSTATES avoidable compute - a run of one test still pays the suite's startup cost.");
   L.push("  Treat these figures as potential opportunity to investigate, not as compute already avoided.");
+  L.push("  They are deliberately NOT extrapolated into a monthly or annual figure: the relationship between");
+  L.push("  what DiffCI observed and this repository's total CI activity is not yet characterised well");
+  L.push("  enough to scale them honestly.");
   L.push("");
   L.push("  DiffCI made no change to this repository's CI. Nothing was skipped, cancelled or modified.");
 
