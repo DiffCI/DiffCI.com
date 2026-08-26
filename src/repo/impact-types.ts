@@ -26,6 +26,7 @@ export type ImpactReason =
   | "GRAPH_CONFIDENCE_UNSAFE"
   | "DIRECT_TEST_CHANGE"
   | "TEST_SELECTION_INVARIANT"
+  | "TEST_UNIVERSE_EMPTY"
   | "EMPTY_DELTA";
 
 export interface ImpactEvidencePath {

@@ -10,7 +10,8 @@ import type {
   Workflow,
 } from "./types.js";
 
-import { discoverTestRunnerConfigs } from "./test-discovery.js";
+import { discoverTestRunnerConfigs, matchesGlob } from "./test-discovery.js";
+import { defaultIncludesFor, detectDeclaredFrameworks } from "./test-framework.js";
 
 const IGNORED_DIRS = new Set([
   "node_modules",
@@ -174,7 +175,14 @@ function discoverSourceRoots(
   // graph, not this file list) were then compared against a total of 0, producing the impossible
   // "selected > total" records caught in Gate C's aggregation. Fixed by only skipping the fallback when
   // a PRIMARY (code-bearing) root was found - scripts/ops alone no longer suppresses it.
-  const hasPrimarySourceRoot = roots.some((r) => r.kind !== "scripts" && r.kind !== "operations");
+  //
+  // Phase 01 (2026-08-26) extends the same reasoning to `tests`: a top-level test/ or tests/ directory
+  // is no more evidence that a repository's CODE lives at the root than a scripts/ directory is.
+  // facebook/docusaurus has exactly that shape - a root test/ with all real code under packages/ - and
+  // the fallback stayed suppressed, so packages/ was never scanned at all.
+  const hasPrimarySourceRoot = roots.some(
+    (r) => r.kind !== "scripts" && r.kind !== "operations" && r.kind !== "tests",
+  );
   if (!hasPrimarySourceRoot) {
     const covered = new Set(roots.map((r) => r.path));
     const dirs = listDirectSubdirectories(repoPath)
@@ -187,39 +195,14 @@ function discoverSourceRoots(
   return roots;
 }
 
-function expandGlobBraces(pattern: string): string[] {
-  const match = /\{([^{}]*)\}/.exec(pattern);
-  if (!match) return [pattern];
-  const prefix = pattern.slice(0, match.index);
-  const suffix = pattern.slice((match.index ?? 0) + match[0].length);
-  const alternatives = match[1]!.split(",");
-  const result: string[] = [];
-  for (const alt of alternatives) result.push(...expandGlobBraces(`${prefix}${alt}${suffix}`));
-  return result;
-}
-
-function globToRegex(pattern: string): RegExp {
-  let escaped = pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.");
-  // Protect the multi-segment globstar sequences behind placeholders before the
-  // single-`*` replace runs below - otherwise the `*` inside "(?:.*/)?"/"(?:/.*)?"
-  // gets re-matched and mangled by that same replace (e.g. "**/*.test.ts" would wrongly
-  // become "^(?:.[^/]*/)?[^/]*\.test\.ts$" instead of "^(?:.*/)?[^/]*\.test\.ts$",
-  // silently failing to match anything more than one directory level deep).
-  escaped = escaped
-    .replace(/\*\*\//g, "\0GLOBSTAR_SLASH\0")
-    .replace(/\/\*\*/g, "\0SLASH_GLOBSTAR\0")
-    .replace(/\*/g, "[^/]*")
-    .replace(/\0GLOBSTAR_SLASH\0/g, "(?:.*/)?")
-    .replace(/\0SLASH_GLOBSTAR\0/g, "(?:/.*)?");
-  return new RegExp(`^${escaped}$`);
-}
-
 /**
- * Matches a repo-relative (posix) path against a glob pattern that may contain `**`, `*`,
- * and `{a,b,c}` brace alternation (e.g. "**\/*.test.{ts,tsx,js,jsx,mjs,cjs,mts,cts}").
+ * Matches a repo-relative (posix) path against a glob pattern. Delegates to the shared matcher in
+ * test-discovery.ts (Phase 01, 2026-08-26) - this file previously carried its own near-identical
+ * copy, so "is this a test?" had two answers that could and did drift. The shared one additionally
+ * understands the extended-glob syntax that vitest's and jest's own default include globs use.
  */
 function matchesTestGlob(path: string, pattern: string): boolean {
-  return expandGlobBraces(pattern).some((p) => globToRegex(p).test(path));
+  return matchesGlob(path, pattern);
 }
 
 function scanFiles(
@@ -240,20 +223,32 @@ function scanFiles(
   }
 }
 
+/**
+ * Scans the WHOLE repository for test files, not only the discovered source roots (Phase 01,
+ * 2026-08-26).
+ *
+ * Source roots are a guess at where a repository keeps its code, assembled from a fixed list of
+ * top-level directory names. Where a repository keeps its TESTS is exactly the thing that must not
+ * be guessed. Measured cost of the previous behaviour: `facebook/docusaurus` has 241 test files and
+ * DiffCI discovered 2 - the two in the root `__tests__/`. Its top-level `test/` directory counted as
+ * a "primary" source root, which suppressed the fallback that would have scanned `packages/`, where
+ * the other 239 live. Selecting from a test universe that is 1% of the real one is not a coverage
+ * gap, it is a selection built on a false denominator.
+ *
+ * The exclusion set (node_modules, build output, VCS internals, dotfiles) still applies, so this is
+ * bounded by the repository's own committed tree.
+ */
 function discoverTests(
   repoPath: string,
-  roots: SourceRoot[],
   patterns: string[],
   excludeDirs: string[],
 ): { locations: TestLocation[]; filePaths: string[] } {
   const counts = new Map<string, number>();
   const filePaths: string[] = [];
-  const sources = roots.length > 0 ? roots.map((r) => join(repoPath, r.path)) : [repoPath];
   const exclusions = new Set([...IGNORED_DIRS.values(), ...excludeDirs]);
 
-  for (const source of sources) {
-    if (!existsSync(source)) continue;
-    scanFiles(source, repoPath, exclusions, (relPath, fileName) => {
+  if (existsSync(repoPath)) {
+    scanFiles(repoPath, repoPath, exclusions, (relPath) => {
       for (const pattern of patterns) {
         if (!matchesTestGlob(relPath, pattern)) continue;
         counts.set(pattern, (counts.get(pattern) ?? 0) + 1);
@@ -415,15 +410,16 @@ export function analyzeRepository(
 
   const tsconfig = loadTsconfig(repoPath);
   const roots = discoverSourceRoots(repoPath, options.sourceRoots, excludeDirs);
-  // Test universe = defaults + what the repo's own Vitest/Jest configs declare (static read, never executed).
+  // Test universe = DiffCI's conventional defaults, PLUS the default include globs of every test
+  // framework the repository declares, PLUS what its own root Vitest/Jest configs declare explicitly
+  // (static read, never executed). The middle term is Phase 01's addition: a repository that relies
+  // on its runner's defaults - immer, execa - previously contributed nothing at all.
   const testDiscovery = discoverTestRunnerConfigs(repoPath, scripts);
-  const testPatterns = options.testPatterns ?? testDiscovery.patterns;
-  const { locations: tests, filePaths: testFilePaths } = discoverTests(
-    repoPath,
-    roots,
-    testPatterns,
-    excludeDirs,
-  );
+  const declaredFrameworks = detectDeclaredFrameworks(packageJsonRaw);
+  const testPatterns =
+    options.testPatterns ??
+    Array.from(new Set([...testDiscovery.patterns, ...defaultIncludesFor(declaredFrameworks.frameworks)]));
+  const { locations: tests, filePaths: testFilePaths } = discoverTests(repoPath, testPatterns, excludeDirs);
   const workflows = discoverWorkflows(repoPath);
   const configFiles = discoverConfigFiles(repoPath, excludeDirs);
   const entryPoints = classifyEntryPoints(
@@ -467,6 +463,16 @@ export function analyzeRepository(
     testFilePaths,
     testPatterns: [...testPatterns],
     testRunnerConfigs: testDiscovery.configs,
+    testUniverse: {
+      declaredFrameworks: declaredFrameworks.frameworks,
+      frameworkEvidence: declaredFrameworks.evidence,
+      discoveredTestFiles: testFilePaths.length,
+      // A repository that declares a test framework and in which DiffCI can find no test file at all
+      // is a repository DiffCI does not understand. Recorded as a fact here; acted on in
+      // ImpactAnalyzer, which must fall back rather than propose a selection against an empty
+      // universe (Phase 01 F1, 2026-08-26).
+      blindSpot: declaredFrameworks.frameworks.length > 0 && testFilePaths.length === 0,
+    },
     workflows,
     configFiles,
     pathAliases: tsconfig?.pathAliases ?? [],

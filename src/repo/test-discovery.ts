@@ -204,15 +204,57 @@ function expandBraces(pattern: string): string[] {
   return out;
 }
 
+function escapeRegexLiteral(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Extended-glob groups - `?(a|b)`, `*(a|b)`, `+(a|b)`, `@(a|b)` - are not exotic: they appear in the
+ * published default include globs of both vitest (`**\/*.{test,spec}.?(c|m)[jt]s?(x)`) and jest, and
+ * in every config that copies them. Passed through to `RegExp` unchanged, `?(x)` reads as "an
+ * optional preceding character, then a literal x", so `__tests__/base.js` matched nothing at all.
+ * Measured cost before this fix (Phase 01 baseline, 2026-08-26): immerjs/immer discovered ZERO test
+ * files from its own explicit `include: ["**\/__tests__\/**\/*.[jt]s?(x)"]`, while still classifying
+ * 5 of 5 commits SELECTIVE at COMPLETE confidence.
+ *
+ * `!(...)` (negation) is deliberately not modelled - it needs real parsing to be correct. It is
+ * widened to "any single path segment", which OVER-includes. Over-inclusion counts extra files as
+ * tests; under-inclusion silently empties the test universe. The former is the safe direction.
+ *
+ * A bare `?` outside a group is a single-character wildcard (`[^/]`), which it also was not: it
+ * previously reached the regex as a quantifier over whatever preceded it.
+ */
 function globToRegex(pattern: string): RegExp {
-  let escaped = pattern.replace(/\\/g, "\\\\").replace(/\./g, "\\.");
-  escaped = escaped
+  // Extglob bodies contain `*`, `?` and `|` that must not be rewritten by the wildcard rules below,
+  // so they are lifted out behind placeholders first and restored last.
+  const groups: string[] = [];
+  let working = pattern.replace(/([?*+@!])\(([^()]*)\)/g, (_match, operator: string, body: string) => {
+    const alternatives = body.split("|").map(escapeRegexLiteral).join("|");
+    const source =
+      operator === "!"
+        ? "[^/]*"
+        : `(?:${alternatives})${operator === "?" ? "?" : operator === "*" ? "*" : operator === "+" ? "+" : ""}`;
+    groups.push(source);
+    return `\0X${groups.length - 1}\0`;
+  });
+
+  working = working.replace(/\\/g, "\\\\").replace(/\./g, "\\.");
+  working = working
     .replace(/\*\*\//g, "\0GS\0")
     .replace(/\/\*\*/g, "\0SG\0")
     .replace(/\*/g, "[^/]*")
+    .replace(/\?/g, "[^/]")
     .replace(/\0GS\0/g, "(?:.*/)?")
     .replace(/\0SG\0/g, "(?:/.*)?");
-  return new RegExp(`^${escaped}$`);
+  working = working.replace(/\0X(\d+)\0/g, (_match, index: string) => groups[Number(index)]!);
+  return new RegExp(`^${working}$`);
+}
+
+/** Matches a repo-relative posix path against one glob, with brace and extglob support. Exported so
+ * analyzer discovery, graph node flags and impact classification all share ONE definition of a
+ * match rather than the two near-identical copies that existed before Phase 01. */
+export function matchesGlob(path: string, pattern: string): boolean {
+  return expandBraces(pattern).some((p) => globToRegex(p).test(path));
 }
 
 export interface TestFileMatcher {

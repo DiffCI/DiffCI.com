@@ -1,3 +1,4 @@
+import type { KnownTestFramework } from "./test-framework.js";
 import type { TestRunnerConfig } from "./test-discovery.js";
 export type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "unknown";
 
@@ -70,6 +71,19 @@ export interface RepositoryProfile {
   testPatterns?: string[];
   /** Test-runner configs found at the repo root, with their include globs, invoking scripts and family. */
   testRunnerConfigs?: TestRunnerConfig[];
+  /** What the repository declares it tests with, and whether DiffCI could actually see any of it
+   * (Phase 01, 2026-08-26). Optional for fixture compatibility; absent means "not evaluated", which
+   * is treated as no blind spot rather than as one. */
+  testUniverse?: {
+    declaredFrameworks: KnownTestFramework[];
+    /** How each framework was detected - "dependency:<pkg>" or "script:<name>". */
+    frameworkEvidence: Record<string, string>;
+    discoveredTestFiles: number;
+    /** True when the repository declares a test framework and zero test files were discovered - the
+     * engine does not understand this repository's test layout, and must not propose a selection
+     * against an empty universe. */
+    blindSpot: boolean;
+  };
   workflows: Workflow[];
   configFiles: string[];
   pathAliases: PathAlias[];

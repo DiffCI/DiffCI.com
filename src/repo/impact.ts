@@ -203,6 +203,19 @@ export class ImpactAnalyzer {
       fallbackReasons.push(message);
     }
 
+    // Phase 01 F1 (2026-08-26): a repository that declares a test framework and in which discovery
+    // found no test file at all is a repository whose test layout the engine does not understand.
+    // Every downstream consumer reads an empty selection as "nothing needs to run", so without this
+    // the engine is at its most confident exactly where it is most blind. Measured on immerjs/immer,
+    // whose entire `__tests__/` suite was invisible: graph confidence COMPLETE, 5 of 5 commits
+    // SELECTIVE, zero tests. Fails closed to FULL instead.
+    if (profile.testUniverse?.blindSpot === true) {
+      const declared = profile.testUniverse.declaredFrameworks.join(", ");
+      const message = `Repository declares ${declared} but no test files were discovered; full validation required`;
+      riskSignals.push({ level: "critical", reason: "TEST_UNIVERSE_EMPTY", message });
+      if (!fallbackReasons.includes(message)) fallbackReasons.push(message);
+    }
+
     if (delta.files.length === 0) {
       riskSignals.push({ level: "info", reason: "EMPTY_DELTA", message: "Empty delta; nothing to analyze" });
     }
