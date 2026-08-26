@@ -40,8 +40,7 @@ import { buildDependencyGraph } from "../src/repo/graph.js";
 import { ImpactAnalyzer } from "../src/repo/impact.js";
 import { discoverTestRunnerConfigs } from "../src/repo/test-discovery.js";
 import { collectMetadata } from "../src/research/repository/collector.js";
-import { generateSelectiveTestCommandSpecs } from "../src/planner/selective-commands.js";
-import { commandSpecToString } from "../src/planner/selective-commands.js";
+import { commandSpecToString, planSelectiveTestCommands } from "../src/planner/test-command.js";
 import type { ResearchRepository } from "../src/research/types.js";
 
 const CLONE_DEPTH = 10;
@@ -327,6 +326,7 @@ async function probeRepository(repository: string, probeDir: string, commitSampl
     try {
       const analyzer = new ImpactAnalyzer();
       const commands = new Set<string>();
+      const commandRefusals = new Set<string>();
       let full = 0;
       let selective = 0;
       let affectedTests = 0;
@@ -346,9 +346,9 @@ async function probeRepository(repository: string, probeDir: string, commitSampl
           for (const reason of impact.fallbackReasons) fallbackReasons.add(reason);
         } else {
           selective++;
-          for (const spec of generateSelectiveTestCommandSpecs(impact.affectedTests.map((t) => t.path))) {
-            commands.add(commandSpecToString(spec));
-          }
+          const commandPlan = planSelectiveTestCommands(graphResult.profile, impact.affectedTests.map((t) => t.path));
+          if (commandPlan.refusalReason) commandRefusals.add(commandPlan.refusalReason);
+          for (const spec of commandPlan.commands) commands.add(commandSpecToString(spec));
         }
       }
       result.impact = {
@@ -368,9 +368,11 @@ async function probeRepository(repository: string, probeDir: string, commitSampl
       result.commandFrameworkMismatch = mismatch;
       result.stages.command = mismatch
         ? { status: "REFUSED", detail: mismatch }
-        : result.emittedCommands.length === 0
-          ? { status: "SKIPPED", detail: "every sampled commit fell back to FULL - no selective command emitted" }
-          : { status: "OK", detail: result.emittedCommands[0]! };
+        : commandRefusals.size > 0
+          ? { status: "REFUSED", detail: Array.from(commandRefusals)[0]! }
+          : result.emittedCommands.length === 0
+            ? { status: "SKIPPED", detail: "every sampled commit fell back to FULL - no selective command emitted" }
+            : { status: "OK", detail: result.emittedCommands[0]! };
     } catch (err) {
       result.stages.impact = { status: "ERROR", detail: (err as Error).message.split("\n")[0] };
     }

@@ -1,6 +1,6 @@
 import type { ImpactResult } from "../repo/impact-types.js";
 import type { RepositoryProfile } from "../repo/types.js";
-import { generateSelectiveTestCommandSpecs } from "./selective-commands.js";
+import { planSelectiveTestCommands } from "./test-command.js";
 import type { CITaskDefinition, TaskRegistry } from "./task-registry.js";
 import type { CIPlanner, CIPlannerInput, ExecutionPlan, PlanEvidence, TaskDecision, TaskStatus } from "./types.js";
 
@@ -59,14 +59,36 @@ export class DefaultCIPlanner implements CIPlanner {
   plan(input: CIPlannerInput): ExecutionPlan {
     const { delta, impact, profile } = input;
     const changedPaths = delta.files.map((f) => toPosix(f.path));
-    const fallbackRequired = impact.fallbackRequired;
-    const mode = fallbackRequired ? "FULL" : "SELECTIVE";
     const allTestPaths = this.allTestPaths(profile);
+
+    const fallbackRequired = impact.fallbackRequired;
+    const fallbackReasons = impact.fallbackReasons;
+    const mode = fallbackRequired ? "FULL" : "SELECTIVE";
     const selectedTests = fallbackRequired ? allTestPaths : impact.affectedTests.map((t) => t.path);
     const skippedTests = fallbackRequired ? [] : allTestPaths.filter((p) => !selectedTests.includes(p));
-    const tasks = this.buildTasks(fallbackRequired, changedPaths, impact, selectedTests, allTestPaths);
+    const tasks = this.buildTasks(fallbackRequired, fallbackReasons, changedPaths, impact, selectedTests, allTestPaths);
     const alwaysRunTasks = tasks.filter((t) => t.status === "ALWAYS_RUN").map((t) => t.id);
-    const commandSpecs = fallbackRequired ? [] : generateSelectiveTestCommandSpecs(selectedTests);
+
+    // Phase 01 (2026-08-26): the command is derived from the TARGET repository's own runners and
+    // configs (test-command.ts) instead of this repository's `tsx --test` layout.
+    //
+    // Deliberately kept separate from `mode`. "Which tests does this change require?" and "can DiffCI
+    // write a command that runs them here?" are different questions, and a first version of this
+    // conflated them - forcing FULL whenever no command could be built, which would have thrown away
+    // a correct selection in shadow mode, where nothing is executed at all. The defect being fixed
+    // was never that a command was missing; it was that a WRONG one was emitted and looked right. So
+    // when the command cannot be constructed, none is emitted and `commandSynthesis` says why. Any
+    // caller that intends to EXECUTE a plan must check that field - an empty command list means
+    // "DiffCI cannot run this subset here", never "there is nothing to run".
+    const commandPlan = fallbackRequired
+      ? undefined
+      : planSelectiveTestCommands(profile, selectedTests);
+    const commandSpecs = commandPlan?.commands ?? [];
+    const commandSynthesis: ExecutionPlan["commandSynthesis"] = fallbackRequired
+      ? { status: "NOT_APPLICABLE", reason: "full fallback: the repository's own full test command applies" }
+      : commandPlan?.refusalReason !== undefined
+        ? { status: "UNAVAILABLE", reason: commandPlan.refusalReason }
+        : { status: "OK", groups: commandPlan?.groups.map((g) => ({ runnerId: g.runnerId, label: g.label, paths: g.paths })) };
 
     return {
       version: PLAN_VERSION,
@@ -75,7 +97,7 @@ export class DefaultCIPlanner implements CIPlanner {
       selectedTests,
       skippedTests,
       alwaysRunTasks,
-      fallbackReasons: impact.fallbackReasons,
+      fallbackReasons,
       evidence: this.collectEvidence(impact),
       safety: {
         // Stage 1B fix (2026-08-21): this previously checked impact.changedFiles[].reasons for
@@ -92,6 +114,7 @@ export class DefaultCIPlanner implements CIPlanner {
         fallbackRequired,
       },
       commandSpecs,
+      commandSynthesis,
     };
   }
 
@@ -112,7 +135,7 @@ export class DefaultCIPlanner implements CIPlanner {
     return evidence;
   }
 
-  private buildTasks(fallbackRequired: boolean, changedPaths: string[], impact: ImpactResult, selectedTests: string[], allTestPaths: string[]): TaskDecision[] {
+  private buildTasks(fallbackRequired: boolean, fallbackReasons: string[], changedPaths: string[], impact: ImpactResult, selectedTests: string[], allTestPaths: string[]): TaskDecision[] {
     return this.taskRegistry.all().map((task) => {
       const alwaysRun = this.alwaysRunIds.has(task.id);
       let status: TaskStatus;
@@ -121,7 +144,7 @@ export class DefaultCIPlanner implements CIPlanner {
 
       if (fallbackRequired) {
         status = alwaysRun ? "ALWAYS_RUN" : "FULL_FALLBACK";
-        reason = `Full fallback triggered: ${impact.fallbackReasons.join("; ") || "global risk signal"}`;
+        reason = `Full fallback triggered: ${fallbackReasons.join("; ") || "global risk signal"}`;
       } else if (alwaysRun) {
         status = "ALWAYS_RUN";
         reason = `Always-run policy: ${task.description || task.id}`;

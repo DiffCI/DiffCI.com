@@ -67,6 +67,14 @@ export interface ExecutionPlan {
   evidence: PlanEvidence[];
   safety: PlanSafety;
   commandSpecs: CommandSpec[];
+  /** Whether DiffCI could construct commands that would actually run `selectedTests` in THIS
+   * repository (Phase 01, 2026-08-26). An empty `commandSpecs` with status `UNAVAILABLE` means
+   * DiffCI cannot run the subset here - it never means there is nothing to run. */
+  commandSynthesis?: {
+    status: "OK" | "UNAVAILABLE" | "NOT_APPLICABLE";
+    reason?: string;
+    groups?: Array<{ runnerId: string; label: string; paths: string[] }>;
+  };
 }
 
 export interface CIPlannerInput {
