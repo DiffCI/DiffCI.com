@@ -71,3 +71,39 @@ attractive savings figure. An uncomfortable classified fraction on a large monor
 
 Public-repository enrollment is **validation, not adoption**: these maintainers have not installed
 anything and are not customers. Customer recruitment proceeds separately.
+
+---
+
+## Ramp log — findings during the window
+
+### `vitest-dev/vitest` — `STRUCTURALLY_INELIGIBLE_ROOT_TSCONFIG_REQUIRED`
+
+Paused 2026-08-26 (~05:40Z), after 4 consecutive failed polls.
+
+DiffCI's collector (`src/research/repository/collector.ts`) requires a `tsconfig.json` at the repository
+root. Vitest is a monorepo with per-package tsconfigs, so every poll returned
+`clone-excluded: DiffCI cannot analyze this repository: no tsconfig.json found at the repository root`.
+
+**Deliberately NOT fixed during this window.** The engine, estimator and classifier are frozen for the
+duration; the finding is preserved blind and categorised rather than tuned away. It is a genuine
+engine-coverage boundary and likely excludes a large class of real monorepos — which is precisely what
+this cohort was enrolled to discover.
+
+The repository is **not replaced** in-cohort during the predeclared window. Its errors and incurred
+launches are retained in `shadow_cron_runs`.
+
+### Cost-control defect — the ceiling counted successes, not launches
+
+The exclusion is raised *inside* the container after the clone, so each failed poll spent a full
+`standard-2` container. The original ceiling summed `json_array_length(repos_polled)`, which only records
+successes, so those launches were invisible: the ceiling read 1/60 while ~144 container launches a day
+were being incurred.
+
+Corrected to atomic per-launch reservation (`shadow_analysis_launches`, `PRIMARY KEY (day, slot_no)`).
+Every container launch now consumes exactly one slot regardless of outcome.
+
+### Consequence for this window
+
+With vitest paused, the cohort is a single active repository (`unjs/nitro`). This window must therefore be
+recorded as an **operational ramp with insufficient evidence density** — it validates infrastructure
+behaviour, and is **not** a valid pass/fail evaluation of the 20-observation / 5-SELECTIVE evidence gate.
