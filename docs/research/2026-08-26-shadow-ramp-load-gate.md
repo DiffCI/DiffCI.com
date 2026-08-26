@@ -107,3 +107,44 @@ Every container launch now consumes exactly one slot regardless of outcome.
 With vitest paused, the cohort is a single active repository (`unjs/nitro`). This window must therefore be
 recorded as an **operational ramp with insufficient evidence density** — it validates infrastructure
 behaviour, and is **not** a valid pass/fail evaluation of the 20-observation / 5-SELECTIVE evidence gate.
+
+---
+
+## Window-close protocol (predeclared, before the window ends)
+
+Report **three independent outcomes**. They must not be collapsed into a single pass/fail, because they
+can and currently do disagree.
+
+| Question | Status |
+|---|---|
+| Is containment working? | Confirmed live — two clean sweeps, `last_head_check_at` frozen pre-pause |
+| Is atomic launch accounting working? | Unit-proven; production-unexercised |
+| Did the cohort produce enough selection evidence? | No — insufficient evidence density |
+
+**Do not manufacture a `unjs/nitro` change to populate the ledger during the frozen window.** Forcing a
+launch would fabricate the very evidence the verification is supposed to supply. If no natural head change
+occurs, production verification is marked **PENDING**, not failed and not assumed.
+
+### Post-window canary (only if no natural launch occurred)
+
+A single controlled launch, run after the window closes, validating:
+
+1. exactly one slot reserved;
+2. success/failure outcome reconciled onto that slot;
+3. ledger totals and cron run counters agree
+   (`attempted == allowed + refusedByCeiling`, `allowed == succeeded + failed`);
+4. no duplicate reservation for the same launch;
+5. head observation remains independent of the launch path.
+
+### Expansion prerequisite
+
+Either **one natural production launch reconciles correctly**, or **a post-window canary does**. Only then
+add repositories 3–5 (`vitejs/vite`, `withastro/astro`, `nuxt/nuxt`) — and without changing the frozen
+engine, estimator, or classifier.
+
+### Note on how these defects were found
+
+They were **not** inherently impossible to find with unit tests. The real ramp exposed scenarios the
+original tests and assumptions did not cover — a repository that is deterministically ineligible, and a
+failure path that incurs container cost without producing a success record. Both are now covered by
+regression tests. The lesson is about the coverage of the assumptions, not about the limits of testing.
