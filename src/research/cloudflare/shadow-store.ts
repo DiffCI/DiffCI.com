@@ -6,6 +6,8 @@
  * payload. INSERT ... ON CONFLICT DO NOTHING everywhere for idempotency, matching the same precedent.
  */
 
+import type { RepositoryLivenessUpdate } from "./shadow-cron.js";
+
 // Duplicated minimal shape rather than exported from validation-worker.ts - keeps this module
 // independently importable/testable without pulling in the whole Worker file.
 export interface D1Binding {
@@ -171,6 +173,8 @@ export interface CronRunInput {
 }
 
 export interface ShadowStore {
+  /** M3.2 liveness facts for the repositories examined in one sweep. */
+  recordRepositoryLiveness(updates: RepositoryLivenessUpdate[]): Promise<void>;
   /** Idempotent - does nothing if the repository is already enrolled. `language` only applies to the
    * initial enrollment insert; it never overwrites an existing row's value. */
   ensureRepository(repository: string, observationSource: ObservationSource, language?: string): Promise<void>;
@@ -212,6 +216,39 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .prepare(`INSERT INTO shadow_repositories (repository, state, observation_source, enrolled_at, language) VALUES (?, 'VALIDATING', ?, ?, ?) ON CONFLICT(repository) DO NOTHING`)
         .bind(repository, observationSource, now, language)
         .run();
+    },
+
+    /** M3.2 liveness. Advances last_head_check_at for EVERY repository examined this sweep - including
+     * one skipped for an unchanged head, because a skip proves the poller ran. That is precisely the fact
+     * last_polled_at could not express, and reading last_polled_at as a liveness clock is what produced
+     * the 2026-08-26 "five-day outage" that never happened. last_head_changed_at moves only when the
+     * upstream head genuinely differs; the error counters reset to 0 on success so they mean
+     * "consecutive", never "ever". */
+    async recordRepositoryLiveness(updates: RepositoryLivenessUpdate[]) {
+      for (const u of updates) {
+        const sets: string[] = ["last_head_check_at = ?"];
+        const binds: unknown[] = [u.headCheckAt];
+        if (u.observedHeadSha) {
+          sets.push("last_observed_head_sha = ?");
+          binds.push(u.observedHeadSha);
+        }
+        if (u.headChanged) {
+          sets.push("last_head_changed_at = ?");
+          binds.push(u.headCheckAt);
+        }
+        if (u.pollAttempted) {
+          sets.push("last_poll_attempt_at = ?");
+          binds.push(u.headCheckAt);
+        }
+        if (u.pollSucceeded) {
+          sets.push("last_poll_success_at = ?");
+          binds.push(u.headCheckAt);
+        }
+        sets.push(`consecutive_head_check_errors = ${u.headCheckFailed ? "consecutive_head_check_errors + 1" : "0"}`);
+        if (u.pollAttempted) sets.push(`consecutive_poll_errors = ${u.pollSucceeded ? "0" : "consecutive_poll_errors + 1"}`);
+        binds.push(u.repository);
+        await db.prepare(`UPDATE shadow_repositories SET ${sets.join(", ")} WHERE repository = ?`).bind(...binds).run();
+      }
     },
 
     async listPollableRepositories() {

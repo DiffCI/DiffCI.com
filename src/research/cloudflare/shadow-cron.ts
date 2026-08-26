@@ -56,7 +56,25 @@ export interface ShadowCronRunRecord {
   sourceIntegrityStatus?: string;
 }
 
+/** Per-repository liveness facts observed during one sweep (M3.2). Deliberately separates a HEAD CHECK
+ * (cheap, happens every sweep, and is what proves observation is alive) from an ANALYSIS POLL (expensive,
+ * only when the head moved). Conflating the two is what made a healthy-but-quiet repository look like a
+ * five-day outage on 2026-08-26. */
+export interface RepositoryLivenessUpdate {
+  repository: string;
+  headCheckAt: string;
+  observedHeadSha?: string;
+  /** True when the observed head differs from the last head DiffCI analysed. */
+  headChanged: boolean;
+  headCheckFailed: boolean;
+  pollAttempted: boolean;
+  pollSucceeded: boolean;
+}
+
 export interface ShadowCronDeps {
+  /** Optional (M3.2): persists the liveness facts above. Absent in older fakes/tests, which simply do not
+   * record liveness - never a reason to fail a sweep. */
+  recordRepositoryLiveness?(updates: RepositoryLivenessUpdate[]): Promise<void>;
   /** Enrolled cloudflare-poll repositories in a pollable state, oldest-polled first (store-side order
    * is advisory; selection re-sorts defensively). */
   listPollableRepositories(): Promise<PollableRepository[]>;
@@ -140,26 +158,46 @@ export async function runShadowCronOnce(
   // Head pre-check walks the full ordered candidate list until maxPollsPerRun repositories actually
   // NEED a container - a repository skipped for an unchanged head must not consume a poll slot.
   const toPoll: PollableRepository[] = [];
+  const liveness = new Map<string, RepositoryLivenessUpdate>();
+  const livenessFor = (repository: string): RepositoryLivenessUpdate => {
+    let u = liveness.get(repository);
+    if (!u) {
+      u = { repository, headCheckAt: deps.now().toISOString(), headChanged: false, headCheckFailed: false, pollAttempted: false, pollSucceeded: false };
+      liveness.set(repository, u);
+    }
+    return u;
+  };
+
   for (const repo of candidates) {
     if (toPoll.length >= config.maxPollsPerRun) break;
+    // Recorded for EVERY candidate examined, including one skipped for an unchanged head - a skip is the
+    // poller working, not the poller idle, and that distinction is the whole point of this telemetry.
+    const live = livenessFor(repo.repository);
     if (repo.lastPolledSha) {
       try {
         const head = await deps.fetchRemoteHead(repo.repository);
         if (head && "gone" in head) {
+          live.headCheckFailed = true;
           errors.push(`${repo.repository}: remote head check says repository is gone (${head.gone}) - skipped, consider PAUSED`);
           continue;
         }
+        if (head) live.observedHeadSha = head.sha;
         if (head && head.sha === repo.lastPolledSha) {
           headChecksSkipped++;
           continue;
         }
+        if (head) live.headChanged = true;
       } catch (error: unknown) {
         // Pre-check failure is never a reason to stop observing - fall through and poll.
+        live.headCheckFailed = true;
         deps.log(`shadow-cron: head pre-check failed for ${repo.repository}, polling anyway: ${error instanceof Error ? error.message : String(error)}`);
       }
+    } else {
+      live.headChanged = true; // never analysed before
     }
     toPoll.push(repo);
   }
+  for (const repo of toPoll) livenessFor(repo.repository).pollAttempted = true;
 
   if (toPoll.length > 0) {
     let verified: VerifiedSourceArchive | undefined;
@@ -196,6 +234,7 @@ export async function runShadowCronOnce(
           continue;
         }
         reposPolled.push(r.repo.repository);
+        livenessFor(r.repo.repository).pollSucceeded = true;
         predictionsRecorded += r.result.predictionsRecorded;
         errors.push(...r.result.errors.map((e) => `poll ${r.repo.repository}: ${e}`));
       }
@@ -230,6 +269,15 @@ export async function runShadowCronOnce(
     groundTruthReconciled += r.result.reconciled;
     stillPending += r.result.stillPending;
     errors.push(...r.result.errors.map((e) => `reconcile ${r.repo.repository}: ${e}`));
+  }
+
+  if (deps.recordRepositoryLiveness && liveness.size > 0) {
+    try {
+      await deps.recordRepositoryLiveness([...liveness.values()]);
+    } catch (error: unknown) {
+      // Telemetry must never take down observation itself.
+      errors.push(`record-liveness: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   const record: ShadowCronRunRecord = {

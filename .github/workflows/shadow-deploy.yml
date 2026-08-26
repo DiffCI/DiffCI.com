@@ -25,18 +25,20 @@
 
 name: Deploy shadow research Worker
 
+# DISABLED-BY-DEFAULT until the three secrets below exist. Enabling the push trigger before then would
+# knowingly fail every push to main, so the push block is commented out rather than left armed. Uncomment
+# it once the secrets are configured - that is the only change needed.
 on:
-  push:
-    branches: [main]
-    # Only revisions that can actually change analysis behaviour. A docs-only commit does not invalidate
-    # the deployed analyzer, so redeploying for one would add risk and CI time for no integrity benefit.
-    paths:
-      - "src/**"
-      - "scripts/**"
-      - "wrangler.research-sandbox.jsonc"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/shadow-deploy.yml"
+  # push:
+  #   branches: [main]
+  #   # Only revisions that can actually change analysis behaviour.
+  #   paths:
+  #     - "src/**"
+  #     - "scripts/**"
+  #     - "wrangler.research-sandbox.jsonc"
+  #     - "package.json"
+  #     - "package-lock.json"
+  #     - ".github/workflows/shadow-deploy.yml"
   workflow_dispatch: {}
 
 # A second deploy racing the first would upload an archive for one SHA while the Worker expects another,

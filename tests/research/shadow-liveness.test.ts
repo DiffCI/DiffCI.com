@@ -14,10 +14,12 @@ function facts(overrides: Partial<ShadowLivenessFacts> = {}): ShadowLivenessFact
   return {
     cronEnabled: true,
     sourceIntegrityStatus: "CURRENT",
-    lastPollAttemptAt: "2026-08-26T03:50:00Z", // 10 minutes ago
-    lastPredictionAt: "2026-08-21T03:00:00Z",
-    upstreamHeadSha: "abc123",
-    lastAnalysedHeadSha: "def456", // upstream has moved on
+    lastHeadCheckAt: "2026-08-26T03:50:00Z", // 10 minutes ago
+    lastObservedHeadSha: "abc123",
+    lastHeadChangedAt: "2026-08-26T03:45:00Z", // upstream moved AFTER our last success
+    lastPollAttemptAt: "2026-08-21T03:00:00Z",
+    lastPollSuccessAt: "2026-08-21T03:00:00Z",
+    consecutiveHeadCheckErrors: 0,
     consecutivePollErrors: 0,
     expectedPollIntervalMs: TEN_MIN,
     now: NOW,
@@ -34,7 +36,7 @@ describe("assessShadowLiveness", () => {
 
   // THE regression this module exists for.
   it("IDLE_UPSTREAM - a healthy poller against a quiet repository is NOT an outage", () => {
-    const a = assessShadowLiveness(facts({ upstreamHeadSha: "same", lastAnalysedHeadSha: "same" }));
+    const a = assessShadowLiveness(facts({ lastHeadChangedAt: "2026-08-20T15:45:00Z" }));
     assert.equal(a.state, "IDLE_UPSTREAM");
     assert.equal(a.evidenceAccumulating, false, "evidence genuinely is not growing...");
     assert.ok(a.reason.includes("no new default-branch commits"), "...but the reason must point upstream, not at DiffCI");
@@ -45,26 +47,26 @@ describe("assessShadowLiveness", () => {
     // The exact shape of the 2026-08-26 misdiagnosis: unjs/h3 had not produced a prediction since Aug 21,
     // while the cron had run 144 times a day throughout with zero errors.
     const a = assessShadowLiveness(
-      facts({ lastPredictionAt: "2026-08-21T03:00:00Z", lastPollAttemptAt: "2026-08-26T03:50:00Z", upstreamHeadSha: "same", lastAnalysedHeadSha: "same" }),
+      facts({ lastPollSuccessAt: "2026-08-21T03:00:00Z", lastHeadCheckAt: "2026-08-26T03:50:00Z", lastHeadChangedAt: "2026-08-20T15:45:00Z" }),
     );
     assert.equal(a.state, "IDLE_UPSTREAM");
-    assert.ok((a.msSinceLastPrediction ?? 0) > 4 * 24 * 3600 * 1000, "prediction age is real and reported...");
-    assert.ok((a.msSinceLastPollAttempt ?? 0) < TEN_MIN * 2, "...but sweep age is what decides liveness");
+    assert.ok((a.msSinceLastPollSuccess ?? 0) > 4 * 24 * 3600 * 1000, "analysis age is real and reported...");
+    assert.ok((a.msSinceLastHeadCheck ?? 0) < TEN_MIN * 2, "...but head-check age is what decides liveness");
   });
 
   it("STALE when no sweep has completed within the tolerated number of intervals", () => {
-    const a = assessShadowLiveness(facts({ lastPollAttemptAt: "2026-08-26T02:00:00Z" })); // 2h > 3x10min
+    const a = assessShadowLiveness(facts({ lastHeadCheckAt: "2026-08-26T02:00:00Z" })); // 2h > 3x10min
     assert.equal(a.state, "STALE");
     assert.equal(a.evidenceAccumulating, false);
   });
 
   it("tolerates ordinary scheduler jitter without declaring an outage", () => {
-    const a = assessShadowLiveness(facts({ lastPollAttemptAt: "2026-08-26T03:38:00Z" })); // 22 min, under 3x
+    const a = assessShadowLiveness(facts({ lastHeadCheckAt: "2026-08-26T03:38:00Z" })); // 22 min, under 3x
     assert.notEqual(a.state, "STALE");
   });
 
   it("STALE when a sweep has never run at all", () => {
-    assert.equal(assessShadowLiveness(facts({ lastPollAttemptAt: undefined })).state, "STALE");
+    assert.equal(assessShadowLiveness(facts({ lastHeadCheckAt: undefined })).state, "STALE");
   });
 
   it("STALE when the cron is disabled outright", () => {
@@ -97,8 +99,8 @@ describe("assessShadowLiveness", () => {
     const vetoes: Partial<ShadowLivenessFacts>[] = [
       { sourceIntegrityStatus: "STALE" },
       { consecutivePollErrors: 1 },
-      { lastPollAttemptAt: "2026-08-25T00:00:00Z" },
-      { upstreamHeadSha: "same", lastAnalysedHeadSha: "same" },
+      { lastHeadCheckAt: "2026-08-25T00:00:00Z" },
+      { lastHeadChangedAt: "2026-08-20T15:45:00Z" },
     ];
     for (const veto of vetoes) {
       const a = assessShadowLiveness(facts({ cronEnabled: true, ...veto }));

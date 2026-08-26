@@ -38,20 +38,31 @@ export type ShadowLivenessState =
 
 export interface ShadowLivenessFacts {
   cronEnabled: boolean;
-  /** computeSourceIntegrity()'s status: "CURRENT" | "STALE" | "MISSING" | "UNKNOWN". */
+  /** computeSourceIntegrity()'s status: "CURRENT" | "STALE" | "MISSING" | "UNKNOWN", or undefined when
+   * this sweep never consulted the archive. NOTE: this fact did NOT detect the 2026-08-26 liveness
+   * ambiguity and must not be credited with doing so - it was never consulted during head-check-only
+   * sweeps and was never observed non-CURRENT. It is retained because the invariant it protects is worth
+   * keeping, not because it caught anything here. */
   sourceIntegrityStatus: string | undefined;
-  /** When the cron last completed a sweep at all - a head-check-only sweep counts, because the poller
-   * genuinely ran. This is the fact last_polled_at was mistakenly used for. */
+
+  /** When DiffCI last CHECKED this repository's upstream head. A head-check that skips an unchanged
+   * repository still counts - the poller genuinely ran. This, not lastPollSuccessAt, is what decides
+   * whether observation is alive, and confusing the two is what produced the original misdiagnosis. */
+  lastHeadCheckAt: string | undefined;
+  /** The upstream head DiffCI most recently saw. */
+  lastObservedHeadSha: string | undefined;
+  /** When that upstream head last actually MOVED. Old means the repository is quiet, never that DiffCI
+   * is broken. */
+  lastHeadChangedAt: string | undefined;
+  /** When DiffCI last attempted a full analysis poll (as opposed to a cheap head check). */
   lastPollAttemptAt: string | undefined;
-  /** When a poll last actually analysed this repository and produced predictions. */
-  lastPredictionAt: string | undefined;
-  /** The repository's current upstream head, and the head DiffCI last analysed. Equal means "nothing new
-   * upstream", which is the difference between IDLE_UPSTREAM and a real problem. */
-  upstreamHeadSha: string | undefined;
-  lastAnalysedHeadSha: string | undefined;
-  /** Consecutive recent sweeps that ended in errors for this repository. */
+  /** When such a poll last SUCCEEDED. */
+  lastPollSuccessAt: string | undefined;
+
+  consecutiveHeadCheckErrors: number;
   consecutivePollErrors: number;
-  /** How often a sweep is expected, in ms. A sweep older than a small multiple of this means STALE. */
+
+  /** How often a head check is expected, in ms. Older than a small multiple of this means STALE. */
   expectedPollIntervalMs: number;
   now: Date;
 }
@@ -62,8 +73,9 @@ export interface ShadowLivenessAssessment {
   reason: string;
   /** Whether savings evidence can currently accumulate. False for every state except LIVE. */
   evidenceAccumulating: boolean;
-  msSinceLastPollAttempt: number | undefined;
-  msSinceLastPrediction: number | undefined;
+  msSinceLastHeadCheck: number | undefined;
+  msSinceLastPollSuccess: number | undefined;
+  msSinceHeadChanged: number | undefined;
 }
 
 /** A sweep is considered missing after this many expected intervals - tolerates ordinary scheduler jitter
@@ -77,20 +89,21 @@ function msSince(iso: string | undefined, now: Date): number | undefined {
 }
 
 export function assessShadowLiveness(facts: ShadowLivenessFacts): ShadowLivenessAssessment {
-  const msSinceLastPollAttempt = msSince(facts.lastPollAttemptAt, facts.now);
-  const msSinceLastPrediction = msSince(facts.lastPredictionAt, facts.now);
-  const base = { msSinceLastPollAttempt, msSinceLastPrediction };
+  const msSinceLastHeadCheck = msSince(facts.lastHeadCheckAt, facts.now);
+  const msSinceLastPollSuccess = msSince(facts.lastPollSuccessAt, facts.now);
+  const msSinceHeadChanged = msSince(facts.lastHeadChangedAt, facts.now);
+  const base = { msSinceLastHeadCheck, msSinceLastPollSuccess, msSinceHeadChanged };
 
   // Ordered by severity: a cause that stops observation outright outranks one that merely degrades it.
   if (!facts.cronEnabled) {
     return { state: "STALE", reason: "Autonomous shadow polling is disabled.", evidenceAccumulating: false, ...base };
   }
 
-  const sweepOverdue = msSinceLastPollAttempt === undefined || msSinceLastPollAttempt > facts.expectedPollIntervalMs * MISSED_SWEEP_TOLERANCE;
+  const sweepOverdue = msSinceLastHeadCheck === undefined || msSinceLastHeadCheck > facts.expectedPollIntervalMs * MISSED_SWEEP_TOLERANCE;
   if (sweepOverdue) {
     return {
       state: "STALE",
-      reason: facts.lastPollAttemptAt ? `No shadow sweep has completed since ${facts.lastPollAttemptAt}.` : "No shadow sweep has ever completed for this repository.",
+      reason: facts.lastHeadCheckAt ? `DiffCI has not checked this repository since ${facts.lastHeadCheckAt}.` : "DiffCI has never checked this repository.",
       evidenceAccumulating: false,
       ...base,
     };
@@ -109,10 +122,11 @@ export function assessShadowLiveness(facts: ShadowLivenessFacts): ShadowLiveness
     };
   }
 
-  if (facts.consecutivePollErrors > 0) {
+  const errors = facts.consecutivePollErrors + facts.consecutiveHeadCheckErrors;
+  if (errors > 0) {
     return {
       state: "DEGRADED",
-      reason: `Shadow sweeps are running, but analysis has failed ${facts.consecutivePollErrors} time(s) in a row for this repository.`,
+      reason: `DiffCI is checking this repository, but has failed ${errors} time(s) in a row (${facts.consecutiveHeadCheckErrors} head check, ${facts.consecutivePollErrors} analysis).`,
       evidenceAccumulating: false,
       ...base,
     };
@@ -121,8 +135,13 @@ export function assessShadowLiveness(facts: ShadowLivenessFacts): ShadowLiveness
   // The distinction this module exists for. Polling is healthy and up to date; there is simply nothing
   // new upstream to analyse. Reporting this as an outage sends an operator hunting a bug that is not
   // there - which is precisely what happened before this state existed.
-  const upToDateWithUpstream = facts.upstreamHeadSha !== undefined && facts.upstreamHeadSha === facts.lastAnalysedHeadSha;
-  if (upToDateWithUpstream) {
+  // Nothing new upstream since DiffCI last successfully analysed this repository. Expressed against the
+  // head-change timestamp rather than a SHA comparison, so it stays true even when a head moves and moves
+  // back, and so the report can say HOW LONG the repository has been quiet.
+  const analysedAt = facts.lastPollSuccessAt ? new Date(facts.lastPollSuccessAt).getTime() : undefined;
+  const changedAt = facts.lastHeadChangedAt ? new Date(facts.lastHeadChangedAt).getTime() : undefined;
+  const nothingNewUpstream = analysedAt !== undefined && (changedAt === undefined || changedAt <= analysedAt);
+  if (nothingNewUpstream) {
     return {
       state: "IDLE_UPSTREAM",
       reason: "DiffCI is observing normally, but this repository has produced no new default-branch commits to analyse.",
