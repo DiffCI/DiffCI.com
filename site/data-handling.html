@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data handling — DiffCI</title>
+<meta name="description" content="What DiffCI reads, what it stores, how long it keeps it, and how to have it deleted.">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◧</text></svg>">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="/">Diff<span>CI</span></a>
+    <nav>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#limits">Limits</a>
+      <a href="/#pilot">Pilot</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<article class="wrap">
+
+  <a class="backlink" href="/#pilot">← The pilot</a>
+
+  <p class="eyebrow">Commitments, not marketing</p>
+  <h1>Data handling</h1>
+
+  <div class="todo">
+    <b>Unfinished — do not launch this page yet</b>
+    The retention commitments below describe the intended behavior. The automated deletion path
+    (uninstall-triggered erasure and the 90-day cap) is <strong>not implemented yet</strong>. Until it is,
+    this page must not be published, because it would be promising something the system cannot currently
+    perform. Deletion on request is honored manually in the meantime.
+  </div>
+
+  <h2 class="no-rule">What DiffCI can see</h2>
+  <p>
+    The DiffCI Shadow GitHub App requests exactly five permissions, all read-only: metadata, contents,
+    Actions, checks, and pull requests. It has no write permission of any kind. It cannot push, comment,
+    label, open or close anything, change a check status, cancel a workflow, or alter a branch.
+  </p>
+  <p>
+    That is a structural property of the installation, not a promise about our conduct. Even if the code
+    tried to write to your repository, GitHub would refuse it.
+  </p>
+
+  <h2>What it reads</h2>
+  <ul>
+    <li><strong>Push and workflow events</strong> for the repositories you install it on.</li>
+    <li>
+      <strong>Your repository's source, at the specific commits it analyzes.</strong> A shallow clone is
+      made inside an ephemeral container, the dependency graph is computed, and the container is
+      destroyed. The clone does not outlive the analysis.
+    </li>
+    <li>
+      <strong>The results and timings of CI runs that have already finished</strong> — the same
+      information the Actions tab shows you.
+    </li>
+  </ul>
+
+  <h2>What it stores</h2>
+  <div class="table-scroll">
+    <table>
+      <tr><th>Kept</th><th>Not kept</th></tr>
+      <tr>
+        <td>
+          Analysis records: commit SHAs, changed file paths, which tests would have been selected,
+          confidence and fallback reasons, and the reconciled CI outcome and timings.
+        </td>
+        <td>
+          A copy of your source tree. It exists only inside the analysis container and is destroyed with
+          it.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Evidence archives for the analyses themselves, so a result can be audited later rather than
+          taken on trust.
+        </td>
+        <td>
+          Credentials, tokens, or secrets of yours. DiffCI never receives any, and the analysis
+          environment is built from an allowlist rather than inherited from the surrounding process.
+        </td>
+      </tr>
+      <tr>
+        <td>Which repositories are installed, and when.</td>
+        <td>Anything from private repositories you did not install it on.</td>
+      </tr>
+    </table>
+  </div>
+  <p>
+    Storage is Cloudflare D1 and R2, on infrastructure operated solely for DiffCI. Nothing is sold, shared
+    with third parties, or used to train anything.
+  </p>
+
+  <h2>How long</h2>
+  <ul>
+    <li>
+      <strong>Uninstalling deletes it.</strong> Removing the App from a repository deletes that
+      repository's analysis records and evidence archives.
+    </li>
+    <li>
+      <strong>90 days maximum, regardless.</strong> Nothing is kept beyond 90 days from the analysis that
+      produced it, whether or not the App is still installed.
+    </li>
+    <li>
+      <strong>Ask, and it goes sooner.</strong> A deletion request is honored without asking why.
+    </li>
+  </ul>
+  <p>
+    Aggregate statistics that cannot identify a repository — for example, "measured selection ratios across
+    all observed repositories" — may outlive the underlying records. Nothing that names your repository,
+    your commits, or your file paths does.
+  </p>
+
+  <h2>What we may publish</h2>
+  <p>
+    Nothing naming your repository, without your explicit written agreement to that specific text. Not the
+    name, not the numbers, not "an unnamed fintech with a large monorepo" if the description would identify
+    you.
+  </p>
+  <p>
+    The case studies on this site cover public repositories analyzed entirely from public data, and each
+    one says so on its own page. A pilot participant is in a different position, and is treated
+    differently.
+  </p>
+
+  <h2>Contact</h2>
+  <p style="color: var(--text-faint)">
+    [TODO before launch: legal entity, jurisdiction, and a contact address for deletion requests and
+    security reports.]
+  </p>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p>
+    <p>
+      <a href="/case-studies/calcom">cal.com</a> ·
+      <a href="/case-studies/deepseek-harness">deepseek-harness</a> ·
+      <a href="/case-studies/diffci-own-ci">our own CI</a> ·
+      <a href="/data-handling">Data handling</a>
+    </p>
+    <p style="color: var(--text-faint)">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+  </div>
+</footer>
+
+</body>
+</html>

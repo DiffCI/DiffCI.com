@@ -1,0 +1,22 @@
+{
+  // The public site at diffci.com. Static assets only - no Worker script, no bindings, no secrets.
+  // Deliberately its own Worker: this is the one internet-facing surface with no access to D1, R2,
+  // GitHub App keys, or any research/runner state, and it should stay that way.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "diffci-site",
+  // Held at a date the locally-installed wrangler's workerd binary supports, so `npm run site:dev`
+  // works offline. Irrelevant to behaviour here - this Worker runs no code, it only serves files.
+  "compatibility_date": "2026-08-08",
+  "assets": {
+    "directory": "./site",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "observability": {
+    "enabled": true
+  }
+  // NOTE: no "routes" entry yet. Deploying this publishes to *.workers.dev only; pointing diffci.com
+  // at it is a separate, deliberate step, and must not happen before the TODOs on the site itself
+  // (legal entity, contact, App install slug, and the deletion path promised in data-handling.html)
+  // are resolved.
+}

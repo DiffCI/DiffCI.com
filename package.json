@@ -33,7 +33,9 @@
     "shadow:report": "tsx scripts/generate-shadow-report.ts",
     "shadow:freshness": "tsx scripts/check-deployment-freshness.ts",
     "shadow:missed-commits": "tsx scripts/derive-missed-commits.ts",
-    "github-runner:deploy": "wrangler deploy --config wrangler.github-runner.jsonc"
+    "github-runner:deploy": "wrangler deploy --config wrangler.github-runner.jsonc",
+    "site:dev": "wrangler dev --config wrangler.site.jsonc --port 8788",
+    "site:deploy": "wrangler deploy --config wrangler.site.jsonc"
   },
   "dependencies": {
     "typescript": "^5.8.3",
