@@ -69,6 +69,13 @@ export interface RepositoryProfile {
    * definition of "is this a test?" shared by analyzer discovery, graph node flags and impact
    * classification (src/repo/test-discovery.ts). Optional for fixture compatibility; absent = defaults. */
   testPatterns?: string[];
+  /** Default exclude globs of the frameworks this repository declares (e.g. ava's `**\/fixtures\/**`).
+   * They disqualify only files that a framework's DEFAULT includes pulled in - never one the
+   * repository itself named. Absent = no exclusions. */
+  testExcludePatterns?: string[];
+  /** The subset of `testPatterns` whose match is final: DiffCI's conventional `.test.`/`.spec.`
+   * globs and every glob the repository declared explicitly in its own runner config. */
+  testAuthoritativePatterns?: string[];
   /** Test-runner configs found at the repo root, with their include globs, invoking scripts and family. */
   testRunnerConfigs?: TestRunnerConfig[];
   /** What the repository declares it tests with, and whether DiffCI could actually see any of it

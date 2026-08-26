@@ -114,11 +114,40 @@ export function detectDeclaredFrameworks(packageJson: PackageJsonLike | undefine
   return { frameworks, evidence };
 }
 
+/**
+ * Each framework's own published default EXCLUDES, transcribed - the other half of the defaults, and
+ * not optional. ava's defaults exclude `**\/fixtures\/**` and `**\/helpers\/**`; without that,
+ * `sindresorhus/execa` reports 337 test files where 193 of them are process fixtures ava would never
+ * run (measured 2026-08-26). An inflated test universe is a wrong denominator in every downstream
+ * savings figure, so "over-include and move on" is not good enough here.
+ *
+ * These apply only to files a framework's DEFAULT includes pulled in. A file that matches DiffCI's
+ * conventional `.test.`/`.spec.` patterns, or a glob the repository declared explicitly in its own
+ * config, is a test regardless of where it sits - the repository said so.
+ */
+export const FRAMEWORK_DEFAULT_EXCLUDES: Record<KnownTestFramework, readonly string[]> = {
+  vitest: ["**/node_modules/**", "**/dist/**", "**/cypress/**"],
+  jest: ["**/node_modules/**"],
+  mocha: ["**/node_modules/**"],
+  ava: ["**/fixtures/**", "**/helpers/**", "**/__helper__/**", "**/node_modules/**"],
+  tap: ["**/fixtures/**", "**/node_modules/**"],
+  "node:test": ["**/node_modules/**"],
+};
+
 /** The union of every declared framework's default include globs. */
 export function defaultIncludesFor(frameworks: readonly KnownTestFramework[]): string[] {
   const patterns = new Set<string>();
   for (const framework of frameworks) {
     for (const pattern of FRAMEWORK_DEFAULT_INCLUDES[framework]) patterns.add(pattern);
+  }
+  return Array.from(patterns);
+}
+
+/** The union of every declared framework's default exclude globs. */
+export function defaultExcludesFor(frameworks: readonly KnownTestFramework[]): string[] {
+  const patterns = new Set<string>();
+  for (const framework of frameworks) {
+    for (const pattern of FRAMEWORK_DEFAULT_EXCLUDES[framework]) patterns.add(pattern);
   }
   return Array.from(patterns);
 }

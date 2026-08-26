@@ -442,3 +442,47 @@ describe("directlyChangedExecutableTests", () => {
     ]);
   });
 });
+
+describe("empty test universe fails closed (Phase 01, 2026-08-26)", () => {
+  // Measured on immerjs/immer: its entire `__tests__/` suite was invisible to discovery, so the
+  // analyzer saw a repository with zero tests, found nothing to select, and reported
+  // SAFE_TO_PROPOSE at COMPLETE confidence for 5 of 5 commits. An empty selection reads downstream
+  // as "nothing needs to run", which makes the engine most confident exactly where it is blindest.
+  const graph = makeGraph(["src/lib/util.ts", "src/app/main.ts"], [["src/app/main.ts", "src/lib/util.ts"]]);
+  const delta = makeDelta("a", "b", [{ path: "src/lib/util.ts", changeType: "modified", isBinary: false }], {});
+
+  it("falls back when a framework is declared and no test file was discovered", () => {
+    const profile = makeProfile();
+    profile.testUniverse = {
+      declaredFrameworks: ["vitest"],
+      frameworkEvidence: { vitest: "dependency:vitest" },
+      discoveredTestFiles: 0,
+      blindSpot: true,
+    };
+    const result = analyzer.analyze(delta, makeDependencyGraphResult(graph), profile);
+
+    assert.equal(result.fallbackRequired, true);
+    assert.equal(result.analysisStatus, "FALLBACK");
+    assert.ok(result.fallbackReasons.some((r) => r.includes("no test files were discovered")));
+    assert.ok(result.riskSignals.some((s) => s.reason === "TEST_UNIVERSE_EMPTY" && s.level === "critical"));
+  });
+
+  it("does not fall back when the repository's tests were found", () => {
+    const profile = makeProfile();
+    profile.testUniverse = {
+      declaredFrameworks: ["vitest"],
+      frameworkEvidence: { vitest: "dependency:vitest" },
+      discoveredTestFiles: 12,
+      blindSpot: false,
+    };
+    const result = analyzer.analyze(delta, makeDependencyGraphResult(graph), profile);
+
+    assert.ok(!result.riskSignals.some((s) => s.reason === "TEST_UNIVERSE_EMPTY"));
+  });
+
+  it("treats an absent testUniverse as not-evaluated rather than as a blind spot", () => {
+    // Fixture profiles predating Phase 01 must keep their existing verdicts.
+    const result = analyzer.analyze(delta, makeDependencyGraphResult(graph), makeProfile());
+    assert.ok(!result.riskSignals.some((s) => s.reason === "TEST_UNIVERSE_EMPTY"));
+  });
+});

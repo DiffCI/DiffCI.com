@@ -1,5 +1,5 @@
 import { existsSync, readdirSync } from "node:fs";
-import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER, DEFAULT_TEST_PATTERNS, type TestFileMatcher } from "./test-discovery.js";
+import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER, testFileMatcherForProfile, type TestFileMatcher } from "./test-discovery.js";
 import { isBuiltin } from "node:module";
 import { dirname, extname, join, normalize, relative, resolve, sep } from "node:path";
 import ts from "typescript";
@@ -745,7 +745,7 @@ export async function buildDependencyGraph(
     if (!internalSourcePaths.has(testPath) && !assetPaths.has(testPath)) internalSourcePaths.add(testPath);
   }
 
-  const graph = new DependencyGraphImpl(internalSourcePaths, assetPaths, edges, repoPath, createTestFileMatcher(profile.testPatterns ?? DEFAULT_TEST_PATTERNS));
+  const graph = new DependencyGraphImpl(internalSourcePaths, assetPaths, edges, repoPath, testFileMatcherForProfile(profile));
 
   for (const node of graph.nodes) {
     node.isEntryPoint = entryPointPaths.has(node.path);

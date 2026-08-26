@@ -10,8 +10,8 @@ import type {
   Workflow,
 } from "./types.js";
 
-import { discoverTestRunnerConfigs, matchesGlob } from "./test-discovery.js";
-import { defaultIncludesFor, detectDeclaredFrameworks } from "./test-framework.js";
+import { createTestFileMatcher, discoverTestRunnerConfigs, matchesGlob, type TestFileMatcherOptions } from "./test-discovery.js";
+import { defaultExcludesFor, defaultIncludesFor, detectDeclaredFrameworks } from "./test-framework.js";
 
 const IGNORED_DIRS = new Set([
   "node_modules",
@@ -242,19 +242,20 @@ function discoverTests(
   repoPath: string,
   patterns: string[],
   excludeDirs: string[],
+  matcherOptions: TestFileMatcherOptions = {},
 ): { locations: TestLocation[]; filePaths: string[] } {
   const counts = new Map<string, number>();
   const filePaths: string[] = [];
   const exclusions = new Set([...IGNORED_DIRS.values(), ...excludeDirs]);
+  const isTest = createTestFileMatcher(patterns, matcherOptions);
 
   if (existsSync(repoPath)) {
     scanFiles(repoPath, repoPath, exclusions, (relPath) => {
-      for (const pattern of patterns) {
-        if (!matchesTestGlob(relPath, pattern)) continue;
-        counts.set(pattern, (counts.get(pattern) ?? 0) + 1);
-        filePaths.push(relPath);
-        break;
-      }
+      if (!isTest(relPath)) return;
+      // Attribute the file to the first pattern that explains it, for the `tests` glob summary.
+      const pattern = patterns.find((p) => matchesTestGlob(relPath, p)) ?? patterns[0];
+      if (pattern !== undefined) counts.set(pattern, (counts.get(pattern) ?? 0) + 1);
+      filePaths.push(relPath);
     });
   }
 
@@ -416,10 +417,20 @@ export function analyzeRepository(
   // on its runner's defaults - immer, execa - previously contributed nothing at all.
   const testDiscovery = discoverTestRunnerConfigs(repoPath, scripts);
   const declaredFrameworks = detectDeclaredFrameworks(packageJsonRaw);
+  // `testDiscovery.patterns` is authoritative: DiffCI's conventional globs plus whatever the
+  // repository declared explicitly. A framework's own defaults are added on top, and are the only
+  // patterns its default excludes are allowed to veto.
+  const authoritativePatterns = options.testPatterns ?? testDiscovery.patterns;
   const testPatterns =
     options.testPatterns ??
-    Array.from(new Set([...testDiscovery.patterns, ...defaultIncludesFor(declaredFrameworks.frameworks)]));
-  const { locations: tests, filePaths: testFilePaths } = discoverTests(repoPath, testPatterns, excludeDirs);
+    Array.from(new Set([...authoritativePatterns, ...defaultIncludesFor(declaredFrameworks.frameworks)]));
+  const testExcludePatterns = options.testPatterns ? [] : defaultExcludesFor(declaredFrameworks.frameworks);
+  const { locations: tests, filePaths: testFilePaths } = discoverTests(
+    repoPath,
+    testPatterns,
+    excludeDirs,
+    { excludePatterns: testExcludePatterns, authoritativePatterns },
+  );
   const workflows = discoverWorkflows(repoPath);
   const configFiles = discoverConfigFiles(repoPath, excludeDirs);
   const entryPoints = classifyEntryPoints(
@@ -462,6 +473,8 @@ export function analyzeRepository(
     tests,
     testFilePaths,
     testPatterns: [...testPatterns],
+    testExcludePatterns: [...testExcludePatterns],
+    testAuthoritativePatterns: [...authoritativePatterns],
     testRunnerConfigs: testDiscovery.configs,
     testUniverse: {
       declaredFrameworks: declaredFrameworks.frameworks,

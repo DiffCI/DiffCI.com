@@ -262,13 +262,50 @@ export interface TestFileMatcher {
   readonly patterns: readonly string[];
 }
 
+export interface TestFileMatcherOptions {
+  /** Globs that disqualify a file, from the declared frameworks' own default excludes. */
+  excludePatterns?: readonly string[];
+  /** Globs whose match wins over any exclude - DiffCI's conventional patterns and anything the
+   * repository declared explicitly in its own config. A repository that names a file a test has
+   * settled the question; only files pulled in by a framework's DEFAULT includes are subject to
+   * that framework's default excludes (Phase 01, 2026-08-26). */
+  authoritativePatterns?: readonly string[];
+}
+
+function compile(patterns: readonly string[]): RegExp[] {
+  return patterns.flatMap((p) => expandBraces(p.includes("/") ? p : `**/${p}`)).map(globToRegex);
+}
+
 /** Builds a matcher over repo-relative posix paths. Patterns without a slash (bare filename globs)
  * are treated as `**\/<pattern>` so a config's `*.spec.ts` still means "anywhere". */
-export function createTestFileMatcher(patterns: readonly string[]): TestFileMatcher {
-  const regexes = patterns.flatMap((p) => expandBraces(p.includes("/") ? p : `**/${p}`)).map(globToRegex);
-  const fn = ((path: string) => regexes.some((r) => r.test(path))) as TestFileMatcher;
+export function createTestFileMatcher(
+  patterns: readonly string[],
+  options: TestFileMatcherOptions = {},
+): TestFileMatcher {
+  const regexes = compile(patterns);
+  const excludes = compile(options.excludePatterns ?? []);
+  const authoritative = compile(options.authoritativePatterns ?? []);
+  const fn = ((path: string) => {
+    if (authoritative.some((r) => r.test(path))) return true;
+    if (excludes.some((r) => r.test(path))) return false;
+    return regexes.some((r) => r.test(path));
+  }) as TestFileMatcher;
   Object.defineProperty(fn, "patterns", { value: Object.freeze([...patterns]) });
   return fn;
+}
+
+/** The one place that turns a profile into a matcher, so analyzer discovery, graph node flags and
+ * impact classification cannot disagree about what a test is. */
+export function testFileMatcherForProfile(profile: {
+  testPatterns?: readonly string[];
+  testExcludePatterns?: readonly string[];
+  testAuthoritativePatterns?: readonly string[];
+}): TestFileMatcher {
+  if (!profile.testPatterns) return DEFAULT_TEST_FILE_MATCHER;
+  return createTestFileMatcher(profile.testPatterns, {
+    excludePatterns: profile.testExcludePatterns,
+    authoritativePatterns: profile.testAuthoritativePatterns,
+  });
 }
 
 /** The pre-2026-08-23 behaviour, kept as the fallback when no profile is available. */

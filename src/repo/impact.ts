@@ -3,7 +3,7 @@ import type { ChangedFile, GitDelta } from "../git/types.js";
 import type { DependencyGraph, DependencyGraphNode, DependencyGraphResult, EntryPoint, RepositoryProfile } from "./types.js";
 import type { ChangedImpact, EntryPointImpact, ImpactEvidence, ImpactEvidencePath, ImpactReason, ImpactResult, ImpactRiskSignal, TestImpact } from "./impact-types.js";
 import { refineConfidenceForDelta } from "./graph.js";
-import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER } from "./test-discovery.js";
+import { DEFAULT_TEST_FILE_MATCHER, testFileMatcherForProfile } from "./test-discovery.js";
 import { resolveTestFixtureOwners } from "./test-fixture-ownership.js";
 
 const SOURCE_EXTENSIONS = new Set([".ts",".tsx",".js",".jsx",".mjs",".cjs",".mts",".cts"]);
@@ -182,7 +182,7 @@ export class ImpactAnalyzer {
   analyze(delta: GitDelta, graphResult: DependencyGraphResult, profile: RepositoryProfile, options: ImpactAnalyzeOptions = {}): ImpactResult {
     const start = process.hrtime.bigint();
     const { graph } = graphResult;
-    this.isTestFile = profile.testPatterns ? createTestFileMatcher(profile.testPatterns) : DEFAULT_TEST_FILE_MATCHER;
+    this.isTestFile = testFileMatcherForProfile(profile);
     this.repositoryFiles = options.repositoryFiles;
     const changedImpacts: ChangedImpact[] = delta.files.map((file) => ({ file, category: classifyChangedFile(file, this.isTestFile, options.repositoryFiles), reasons: changedFileReasons(file) }));
     const evidence: ImpactEvidence[] = [];
