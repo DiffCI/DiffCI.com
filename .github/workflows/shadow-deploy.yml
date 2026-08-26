@@ -4,11 +4,18 @@
 #   the autonomous system only ever analyses using code whose identity is known and current.
 #
 # src/research/cloudflare/shadow-source-integrity.ts pauses autonomous polling whenever the deployed
-# Worker's EXPECTED_SOURCE_SHA stops matching the uploaded source archive. That guard exists because of a
+# Worker's EXPECTED_SOURCE_SHA stops matching the UPLOADED SOURCE ARCHIVE. That guard exists because of a
 # real incident (the cron silently kept running a commit four revisions behind main), and it is correct.
-# Its operational cost is that any push to main which touches the shadow pipeline can pause observation
-# until someone remembers to redeploy - which, during a pilot, is exactly when continuous observation
-# matters most.
+#
+# CORRECTION (2026-08-26): a later commit on main does NOT trip that guard. expectedSha and archiveSha are
+# both stamped by the same deploy, so they stay equal and sourceIntegrity stays CURRENT while the
+# deployment merely falls BEHIND main. Deployment lag and integrity mismatch are different conditions and
+# must not be conflated - sourceIntegrity is not overloaded with freshness. Freshness is reported
+# separately by scripts/check-deployment-freshness.ts (deployedSha vs mainSha).
+#
+# What this workflow is actually for: keeping the deployed analyzer CLOSE to main, so the autonomous
+# system analyses current code - not because staleness would pause it, but because analysing months-old
+# logic while believing otherwise is its own hazard.
 #
 # The remedy is to make the redeploy automatic rather than to relax the guard: deploy on every main
 # revision, stamp EXPECTED_SOURCE_SHA to that revision, and verify sourceIntegrity=CURRENT afterwards.
