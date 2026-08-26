@@ -6,13 +6,13 @@
 <title>Our own CI — DiffCI case study</title>
 <meta name="description" content="DiffCI's own suite runs on ephemeral Cloudflare containers at ~$0.004 a job — and the bug our own green CI was hiding.">
 <link rel="stylesheet" href="/styles.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◧</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
 </head>
 <body>
 
 <header class="masthead">
   <div class="wrap">
-    <a class="wordmark" href="/">Diff<span>CI</span></a>
+    <a class="wordmark" href="/">DiffCI</a>
     <nav>
       <a href="/#evidence">Evidence</a>
       <a href="/#limits">Limits</a>
@@ -33,6 +33,13 @@
     This is the one case study where the repository being analyzed is ours, so nothing here needs a
     permission disclaimer — and nothing here should be read as evidence about anyone else's repository.
     Its value is different: it is the part of the story where the tool was pointed at its authors.
+  </div>
+
+  <div class="figures">
+    <div><b>$0.004</b><span>per CI job</span></div>
+    <div><b>1,357</b><span>tests across 290 suites, green</span></div>
+    <div><b>0</b><span>GitHub Actions minutes billed</span></div>
+    <div><b>0.696</b><span>our own preflight recall</span></div>
   </div>
 
   <h2 class="no-rule">What runs where</h2>
@@ -133,13 +140,13 @@
 <footer>
   <div class="wrap">
     <p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p>
-    <p>
-      <a href="/case-studies/calcom">cal.com</a> ·
-      <a href="/case-studies/deepseek-harness">deepseek-harness</a> ·
-      <a href="/case-studies/diffci-own-ci">our own CI</a> ·
+    <nav>
+      <a href="/case-studies/calcom">cal.com</a>
+      <a href="/case-studies/deepseek-harness">deepseek-harness</a>
+      <a href="/case-studies/diffci-own-ci">our own CI</a>
       <a href="/data-handling">Data handling</a>
-    </p>
-    <p style="color: var(--text-faint)">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+    </nav>
+    <p class="fine">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
   </div>
 </footer>
 

@@ -6,13 +6,13 @@
 <title>deepseek-harness — DiffCI case study</title>
 <meta name="description" content="Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.">
 <link rel="stylesheet" href="/styles.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◧</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
 </head>
 <body>
 
 <header class="masthead">
   <div class="wrap">
-    <a class="wordmark" href="/">Diff<span>CI</span></a>
+    <a class="wordmark" href="/">DiffCI</a>
     <nav>
       <a href="/#evidence">Evidence</a>
       <a href="/#limits">Limits</a>
@@ -34,6 +34,14 @@
     public CI. Everything below was produced by analyzing its public source and replaying its own test
     suite in DiffCI's sandbox. Nobody associated with the project was contacted, and nothing here is an
     endorsement. No change was ever proposed to, or made in, its real CI.
+  </div>
+
+  <div class="figures">
+    <div><b>83.5–94.3%</b><span>test-stage reduction, net</span></div>
+    <div><b>79.5–89.5%</b><span>complete-job reduction, net</span></div>
+    <div><b>3 of 3</b><span>measurable regressions caught</span></div>
+    <div><b>1 of 5</b><span>results withheld, not counted</span></div>
+    <div><b>16–18</b><span>tests failing before any change</span></div>
   </div>
 
   <h2 class="no-rule">Why this repository</h2>
@@ -182,13 +190,13 @@
 <footer>
   <div class="wrap">
     <p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p>
-    <p>
-      <a href="/case-studies/calcom">cal.com</a> ·
-      <a href="/case-studies/deepseek-harness">deepseek-harness</a> ·
-      <a href="/case-studies/diffci-own-ci">our own CI</a> ·
+    <nav>
+      <a href="/case-studies/calcom">cal.com</a>
+      <a href="/case-studies/deepseek-harness">deepseek-harness</a>
+      <a href="/case-studies/diffci-own-ci">our own CI</a>
       <a href="/data-handling">Data handling</a>
-    </p>
-    <p style="color: var(--text-faint)">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+    </nav>
+    <p class="fine">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
   </div>
 </footer>
 
