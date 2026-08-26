@@ -132,7 +132,7 @@ async function main() {
   const parsedWorkflows = parseRepositoryWorkflows(profile, repoPath);
   const taskRegistry = buildGenericTaskRegistry(profile, "typescript", parsedWorkflows);
   const analysis = await runDiffCIAnalysis({ repoPath, commitDelta: identity, taskRegistry, timeoutMs: 180_000 });
-  const pathBaseline = runPathBaseline(analysis.profile.testFilePaths, gitResult.delta.files);
+  const pathBaseline = runPathBaseline(analysis.profile.testFilePaths, gitResult.delta.files, analysis.profile);
 
   const fullTests = analysis.profile.testFilePaths;
   const pathTests = pathBaseline.selectedTests;

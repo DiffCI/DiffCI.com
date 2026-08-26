@@ -146,7 +146,7 @@ export async function analyzeCommit(
     // reinventing test-level selection in the research harness.
     const testsTotal = analysis.profile.testFilePaths.length;
     const testsSelectedByDiffci = analysis.plan.selectedTests.length;
-    const testPathBaseline = runPathBaseline(analysis.profile.testFilePaths, analysis.identity.gitDelta.files);
+    const testPathBaseline = runPathBaseline(analysis.profile.testFilePaths, analysis.identity.gitDelta.files, analysis.profile);
     const testsSelectedByPath = testPathBaseline.selectedTests.length;
 
     // Invariant check (Stage 1A, 2026-08-21): 0 <= selected <= total must always hold. Deliberately NOT

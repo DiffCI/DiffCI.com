@@ -27,7 +27,7 @@
 import type { PackageManager, RepositoryProfile } from "../repo/types.js";
 import type { TestRunnerConfig } from "../repo/test-discovery.js";
 import { matchesGlob } from "../repo/test-discovery.js";
-import type { KnownTestFramework } from "../repo/test-framework.js";
+import { END_TO_END_FRAMEWORKS, type KnownTestFramework } from "../repo/test-framework.js";
 import type { CommandSpec } from "./types.js";
 
 export interface SelectiveTestCommandGroup {
@@ -48,14 +48,28 @@ export interface SelectiveTestCommandPlan {
   refusalReason?: string;
 }
 
+interface RunnerInvocation {
+  binary: string;
+  leadingArgs: string[];
+  configFlag?: string;
+  /** How the runner takes the list of files. Most accept them positionally; cypress wants a single
+   * comma-separated `--spec`, and getting that wrong produces a command that runs the wrong specs
+   * rather than one that fails loudly. */
+  pathStyle?: "positional" | "comma-separated-spec-flag";
+}
+
 /** How each runner takes a list of test files, and whether it accepts a config file. */
-const RUNNER_INVOCATION: Record<KnownTestFramework, { binary: string; leadingArgs: string[]; configFlag?: string }> = {
+const RUNNER_INVOCATION: Record<KnownTestFramework, RunnerInvocation> = {
   vitest: { binary: "vitest", leadingArgs: ["run"], configFlag: "--config" },
   jest: { binary: "jest", leadingArgs: [], configFlag: "--config" },
   mocha: { binary: "mocha", leadingArgs: [], configFlag: "--config" },
   ava: { binary: "ava", leadingArgs: [] },
   tap: { binary: "tap", leadingArgs: [] },
   "node:test": { binary: "node", leadingArgs: ["--test"] },
+  jasmine: { binary: "jasmine", leadingArgs: [] },
+  "bun:test": { binary: "bun", leadingArgs: ["test"] },
+  playwright: { binary: "playwright", leadingArgs: ["test"], configFlag: "--config" },
+  cypress: { binary: "cypress", leadingArgs: ["run"], configFlag: "--config-file", pathStyle: "comma-separated-spec-flag" },
 };
 
 /**
@@ -79,9 +93,10 @@ function execPrefix(packageManager: PackageManager, binary: string): { executabl
   }
 }
 
-/** `node --test` is not a dependency, so it is invoked directly rather than through a package manager. */
+/** Runners that are the runtime itself rather than an installed dependency, so they are invoked
+ * directly rather than through a package manager's binary resolution. */
 function isDirectlyInvoked(framework: KnownTestFramework): boolean {
-  return framework === "node:test";
+  return framework === "node:test" || framework === "bun:test";
 }
 
 function frameworkOfConfig(config: TestRunnerConfig): KnownTestFramework {
@@ -96,12 +111,14 @@ function buildCommand(
 ): CommandSpec {
   const invocation = RUNNER_INVOCATION[framework];
   const configArgs = configFile && invocation.configFlag ? [invocation.configFlag, configFile] : [];
+  const pathArgs =
+    invocation.pathStyle === "comma-separated-spec-flag" ? ["--spec", paths.join(",")] : [...paths];
 
   if (isDirectlyInvoked(framework)) {
-    return { executable: invocation.binary, args: [...invocation.leadingArgs, ...configArgs, ...paths] };
+    return { executable: invocation.binary, args: [...invocation.leadingArgs, ...configArgs, ...pathArgs] };
   }
   const prefix = execPrefix(packageManager, invocation.binary);
-  return { executable: prefix.executable, args: [...prefix.args, ...invocation.leadingArgs, ...configArgs, ...paths] };
+  return { executable: prefix.executable, args: [...prefix.args, ...invocation.leadingArgs, ...configArgs, ...pathArgs] };
 }
 
 /**
@@ -149,9 +166,14 @@ export function planSelectiveTestCommands(
     });
   }
 
-  // Everything else goes to the repository's primary framework under its default configuration.
+  // Everything else goes to the repository's primary framework under its default configuration. A
+  // repository with both vitest and playwright has two real frameworks; routing an unclaimed unit
+  // test to the e2e runner would produce a command that runs nothing, so e2e runners are only ever
+  // chosen when the repository declares nothing else.
   if (remaining.size > 0) {
-    const primary = frameworks[0] ?? (configs[0] ? frameworkOfConfig(configs[0]) : undefined);
+    const unitFrameworks = frameworks.filter((f) => !END_TO_END_FRAMEWORKS.has(f));
+    const primary =
+      unitFrameworks[0] ?? frameworks[0] ?? (configs[0] ? frameworkOfConfig(configs[0]) : undefined);
     if (primary === undefined) {
       return {
         commands: groups.map((g) => g.commandSpec),

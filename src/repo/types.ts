@@ -1,3 +1,4 @@
+import type { DiffCiRepositoryConfig } from "./repo-config.js";
 import type { KnownTestFramework } from "./test-framework.js";
 import type { TestRunnerConfig } from "./test-discovery.js";
 export type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "unknown";
@@ -78,6 +79,9 @@ export interface RepositoryProfile {
   testAuthoritativePatterns?: string[];
   /** Test-runner configs found at the repo root, with their include globs, invoking scripts and family. */
   testRunnerConfigs?: TestRunnerConfig[];
+  /** What this repository declares about how DiffCI should treat it (src/repo/repo-config.ts).
+   * Absent means the repository has declared nothing, which is not the same as a default. */
+  diffciConfig?: DiffCiRepositoryConfig;
   /** What the repository declares it tests with, and whether DiffCI could actually see any of it
    * (Phase 01, 2026-08-26). Optional for fixture compatibility; absent means "not evaluated", which
    * is treated as no blind spot rather than as one. */

@@ -1,5 +1,5 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { buildBenchmarkReport, fromShadowRecord } from "../src/shadow/benchmark.js";
 import type { ShadowRunRecord } from "../src/shadow/types.js";
 import { resolveDentalPresenceRepoPath } from "./target-repo.js";

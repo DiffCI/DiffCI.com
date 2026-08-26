@@ -41,6 +41,7 @@ import { ImpactAnalyzer } from "../src/repo/impact.js";
 import { discoverTestRunnerConfigs } from "../src/repo/test-discovery.js";
 import { collectMetadata } from "../src/research/repository/collector.js";
 import { commandSpecToString, planSelectiveTestCommands } from "../src/planner/test-command.js";
+import { runPathBaseline } from "../src/planner/path-baseline.js";
 import type { ResearchRepository } from "../src/research/types.js";
 
 const CLONE_DEPTH = 10;
@@ -89,6 +90,8 @@ export interface ProbeResult {
     affectedTests: number;
     analysisStatus: string;
   };
+  /** How the PATH baseline - the comparator DiffCI measures savings against - behaved on the same commits. */
+  pathBaseline?: { selectiveCount: number; fullCount: number; matchedRules: string[] };
   /** Test files the engine itself discovered (profile.testFilePaths), not what the repo claims. */
   discoveredTestFiles?: number;
   /** The command DiffCI would actually execute for the selected tests, and whether it is plausible
@@ -327,6 +330,9 @@ async function probeRepository(repository: string, probeDir: string, commitSampl
       const analyzer = new ImpactAnalyzer();
       const commands = new Set<string>();
       const commandRefusals = new Set<string>();
+      const baselineRules = new Set<string>();
+      let baselineFull = 0;
+      let baselineSelective = 0;
       let full = 0;
       let selective = 0;
       let affectedTests = 0;
@@ -350,6 +356,15 @@ async function probeRepository(repository: string, probeDir: string, commitSampl
           if (commandPlan.refusalReason) commandRefusals.add(commandPlan.refusalReason);
           for (const spec of commandPlan.commands) commands.add(commandSpecToString(spec));
         }
+
+        // The PATH baseline is what DiffCI's savings are measured AGAINST - a simple path-rule CI.
+        // If it falls back to the full suite on every commit of a repository, every savings figure
+        // computed against it is measured against a strawman, so its own fallback rate is as much a
+        // property to check as DiffCI's.
+        const baseline = runPathBaseline(graphResult.profile.testFilePaths, entry.delta.delta.files, graphResult.profile);
+        if (baseline.fallbackRequired) baselineFull++;
+        else baselineSelective++;
+        for (const rule of baseline.matchedRules) baselineRules.add(rule);
       }
       result.impact = {
         commitsAnalysed: full + selective,
@@ -360,6 +375,7 @@ async function probeRepository(repository: string, probeDir: string, commitSampl
         affectedTests,
         analysisStatus: lastStatus,
       };
+      result.pathBaseline = { selectiveCount: baselineSelective, fullCount: baselineFull, matchedRules: Array.from(baselineRules) };
       result.stages.impact = { status: "OK", detail: `${selective} SELECTIVE / ${full} FULL over ${full + selective} commits` };
 
       // 6. command synthesis - what would actually be executed
@@ -442,6 +458,9 @@ function renderTable(results: ProbeResult[]): string {
       lines.push(
         `  graph stats  nodes=${r.graph.nodes} source=${r.graph.sourceNodes} test=${r.graph.testNodes} edges=${r.graph.edges} confidence=${r.graph.confidence} ${r.graph.durationMs}ms`,
       );
+    }
+    if (r.pathBaseline) {
+      lines.push(`  baseline     ${r.pathBaseline.selectiveCount} SELECTIVE / ${r.pathBaseline.fullCount} FULL - rules: ${r.pathBaseline.matchedRules.join("; ") || "none matched"}`);
     }
     if (r.impact && r.impact.fallbackReasons.length > 0) {
       for (const reason of r.impact.fallbackReasons) lines.push(`  fallback     ${reason}`);

@@ -12,6 +12,7 @@ import type {
 
 import { createTestFileMatcher, discoverTestRunnerConfigs, matchesGlob, type TestFileMatcherOptions } from "./test-discovery.js";
 import { defaultExcludesFor, defaultIncludesFor, detectDeclaredFrameworks } from "./test-framework.js";
+import { readRepositoryConfig } from "./repo-config.js";
 
 const IGNORED_DIRS = new Set([
   "node_modules",
@@ -117,7 +118,7 @@ function loadTsconfig(repoPath: string): RepositoryProfile["tsconfig"] | undefin
 function inferRootKind(name: string): SourceRoot["kind"] {
   if (name === "src" || name === "lib") return "source";
   if (name === "app" || name === "pages") return "app";
-  if (name === "scripts") return "scripts";
+  if (name === "scripts" || name === "tools" || name === "bin") return "scripts";
   if (name === "ops") return "operations";
   if (name === "tests" || name === "test") return "tests";
   if (name === "api") return "api";
@@ -159,6 +160,11 @@ function discoverSourceRoots(
   tryRoot("pages", "app");
   tryRoot("lib", "source");
   tryRoot("scripts", "scripts");
+  // Phase 01 follow-up (2026-08-26): "scripts" is not the only conventional name for build and
+  // release tooling. Recognising tools/ and bin/ is what lets impact classification derive "is this
+  // auxiliary code?" from the repository instead of assuming DiffCI's own two directory names.
+  tryRoot("tools", "scripts");
+  tryRoot("bin", "scripts");
   tryRoot("ops", "operations");
   tryRoot("tests", "tests");
   tryRoot("test", "tests");
@@ -417,6 +423,7 @@ export function analyzeRepository(
   // on its runner's defaults - immer, execa - previously contributed nothing at all.
   const testDiscovery = discoverTestRunnerConfigs(repoPath, scripts);
   const declaredFrameworks = detectDeclaredFrameworks(packageJsonRaw);
+  const diffciConfig = readRepositoryConfig(repoPath, packageJsonRaw as Record<string, unknown> | undefined);
   // `testDiscovery.patterns` is authoritative: DiffCI's conventional globs plus whatever the
   // repository declared explicitly. A framework's own defaults are added on top, and are the only
   // patterns its default excludes are allowed to veto.
@@ -476,6 +483,7 @@ export function analyzeRepository(
     testExcludePatterns: [...testExcludePatterns],
     testAuthoritativePatterns: [...authoritativePatterns],
     testRunnerConfigs: testDiscovery.configs,
+    diffciConfig,
     testUniverse: {
       declaredFrameworks: declaredFrameworks.frameworks,
       frameworkEvidence: declaredFrameworks.evidence,

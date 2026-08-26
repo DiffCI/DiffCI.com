@@ -34,7 +34,7 @@ export function createBenchmarkRun(
     tasksTotal: registry.all().length,
   };
 
-  const pathBaseline = runPathBaseline(allTestPaths, delta.files);
+  const pathBaseline = runPathBaseline(allTestPaths, delta.files, profile);
 
   const testsSelected = plan.selectedTests.length;
   const tasksSelected = plan.tasks.filter(

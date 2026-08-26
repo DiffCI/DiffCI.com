@@ -169,7 +169,7 @@ async function main() {
 
       // Individual-test-level PATH comparison (not the coarse task-level one) - reuses the real
       // production PATH baseline, same as the Stage 0 benchmark runner (runner.ts).
-      const pathBaseline = runPathBaseline(analysis.profile.testFilePaths, gitResult.delta.files);
+      const pathBaseline = runPathBaseline(analysis.profile.testFilePaths, gitResult.delta.files, analysis.profile);
       const testsSelectedByPath = pathBaseline.selectedTests.length;
 
       // SEPARATELY, task-level PATH selection (which of the task-registry's jobs PATH would run) - this

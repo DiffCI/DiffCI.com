@@ -3,7 +3,8 @@ import type { ChangedFile, GitDelta } from "../git/types.js";
 import type { DependencyGraph, DependencyGraphNode, DependencyGraphResult, EntryPoint, RepositoryProfile } from "./types.js";
 import type { ChangedImpact, EntryPointImpact, ImpactEvidence, ImpactEvidencePath, ImpactReason, ImpactResult, ImpactRiskSignal, TestImpact } from "./impact-types.js";
 import { refineConfidenceForDelta } from "./graph.js";
-import { DEFAULT_TEST_FILE_MATCHER, testFileMatcherForProfile } from "./test-discovery.js";
+import { repositoryLayout, UNKNOWN_REPOSITORY_LAYOUT, type RepositoryLayout } from "./layout.js";
+import { DEFAULT_TEST_FILE_MATCHER, matchesGlob as matchesTestGlob, testFileMatcherForProfile } from "./test-discovery.js";
 import { resolveTestFixtureOwners } from "./test-fixture-ownership.js";
 
 const SOURCE_EXTENSIONS = new Set([".ts",".tsx",".js",".jsx",".mjs",".cjs",".mts",".cts"]);
@@ -15,8 +16,13 @@ function isAssetFilePath(filePath: string): boolean { return ASSET_EXTENSIONS.ha
 // "Is this a test?" is answered by the profile's test patterns (src/repo/test-discovery.ts) - one shared
 // definition with analyzer discovery and graph node flags. Module-level helpers receive it explicitly.
 type IsTestFile = (filePath: string) => boolean;
-function isScriptFile(filePath: string): boolean { return filePath.startsWith("scripts/") || filePath.startsWith("ops/"); }
-function isDocumentationFile(filePath: string): boolean { const ext = extname(filePath).toLowerCase(); return ext === ".md" || ext === ".mdx" || filePath.startsWith("docs/"); }
+// Phase 01 follow-up (2026-08-26): "is this auxiliary code?" and "is this documentation?" are answered
+// from the repository's own discovered layout (src/repo/layout.ts), not from DiffCI's directory names.
+// These previously read `startsWith("scripts/") || startsWith("ops/")` and `startsWith("docs/")`, which
+// classified nothing in a repository organised any other way and could never fire in one without those
+// exact directories.
+function isScriptFile(filePath: string, layout: RepositoryLayout): boolean { return layout.isScriptPath(filePath); }
+function isDocumentationFile(filePath: string, layout: RepositoryLayout): boolean { return layout.isDocumentationPath(filePath); }
 function isConfigFile(filePath: string): boolean {
   const CONFIG_FILE_NAMES = new Set(["package.json","package-lock.json","yarn.lock","pnpm-lock.yaml","bun.lockb","bun.lock","tsconfig.json","tsconfig.base.json","tsconfig.build.json","jsconfig.json"]);
   const base = posix.basename(filePath);
@@ -37,17 +43,27 @@ function isConfigFile(filePath: string): boolean {
 }
 function isInfrastructureFile(filePath: string): boolean { const INFRA_DIRS = new Set(["ops","terraform","cloudformation","pulumi","cdktf","deploy","deployments","kubernetes","k8s","helm","docker"]); if (filePath.startsWith("ops/")) return true; const first = filePath.split("/")[0]; if (first && INFRA_DIRS.has(first)) return true; if (posix.basename(filePath).includes("Dockerfile")) return true; return false; }
 function isDatabaseFile(filePath: string): boolean { const DATABASE_DIRS = new Set(["database","migrations","prisma","drizzle","supabase","schema"]); if (filePath.startsWith("database/")) return true; const first = filePath.split("/")[0]; return first ? DATABASE_DIRS.has(first) : false; }
-function classifyNextEntryPoint(filePath: string): EntryPoint["kind"] | undefined { if (!isSourceFilePath(filePath)) return undefined; const base = posix.basename(filePath, extname(filePath)); const lower = base.toLowerCase(); if (lower === "page") return "next-page"; if (lower === "layout") return "next-layout"; if (lower === "route") return "next-route"; if (lower === "api" && filePath.includes("/api/")) return "next-api"; if (lower === "loading") return "next-loading"; if (lower === "error") return "next-error"; if (lower === "template") return "next-template"; if (lower === "not-found") return "next-error"; if (lower === "middleware") return "next-api"; return undefined; }
+/**
+ * Next.js file-name conventions, applied ONLY to repositories that are Next.js applications.
+ *
+ * Phase 01 follow-up (2026-08-26): this took no layout argument and was called unconditionally, so
+ * every repository got Next.js semantics for any file named `page`, `layout`, `route`, `error`,
+ * `template` or `middleware`. Measured across the Phase 01 cohort it mislabelled files in five of
+ * nine repositories - `unjs/h3` has seven, where `route` and `error` are HTTP concepts with nothing
+ * to do with Next. The effect was conservative (entry points widen selection) but the plan asserted
+ * something false about the repository, and a wrong reason is not made acceptable by a safe outcome.
+ */
+function classifyNextEntryPoint(filePath: string, layout: RepositoryLayout): EntryPoint["kind"] | undefined { if (!layout.isNextApp) return undefined; if (!isSourceFilePath(filePath)) return undefined; const base = posix.basename(filePath, extname(filePath)); const lower = base.toLowerCase(); if (lower === "page") return "next-page"; if (lower === "layout") return "next-layout"; if (lower === "route") return "next-route"; if (lower === "api" && filePath.includes("/api/")) return "next-api"; if (lower === "loading") return "next-loading"; if (lower === "error") return "next-error"; if (lower === "template") return "next-template"; if (lower === "not-found") return "next-error"; if (lower === "middleware") return "next-api"; return undefined; }
 function allChangePaths(file: ChangedFile): string[] { return file.oldPath ? [file.path, file.oldPath] : [file.path]; }
 function nodeByPath(graph: DependencyGraph, path: string): DependencyGraphNode | undefined { return graph.nodes.find((n) => n.path === path); }
 function hasNode(graph: DependencyGraph, path: string): boolean { return nodeByPath(graph, path) !== undefined; }
 function isEntryPoint(profile: RepositoryProfile, path: string): EntryPoint | undefined { return profile.entryPoints.find((e) => e.path === path); }
-function isPotentialNextEntryPoint(path: string): boolean { if (!isSourceFilePath(path)) return false; const base = posix.basename(path, extname(path)).toLowerCase(); return NEXT_ENTRY_NAMES.has(base); }
-function isNextLayoutProfile(profile: RepositoryProfile): boolean { return !!profile.nextConfig?.exists; }
-function isNextLayoutEntry(profile: RepositoryProfile, filePath: string): boolean { if (!isNextLayoutProfile(profile)) return false; const base = posix.basename(filePath, extname(filePath)).toLowerCase(); return base === "layout"; }
+function isPotentialNextEntryPoint(path: string, layout: RepositoryLayout): boolean { if (!layout.isNextApp) return false; if (!isSourceFilePath(path)) return false; const base = posix.basename(path, extname(path)).toLowerCase(); return NEXT_ENTRY_NAMES.has(base); }
+function isNextLayoutProfile(layout: RepositoryLayout): boolean { return layout.isNextApp; }
+function isNextLayoutEntry(layout: RepositoryLayout, filePath: string): boolean { if (!isNextLayoutProfile(layout)) return false; const base = posix.basename(filePath, extname(filePath)).toLowerCase(); return base === "layout"; }
 function parentRouteDirectory(filePath: string): string | undefined { const idx = filePath.lastIndexOf("/"); if (idx <= 0) return undefined; return filePath.slice(0, idx); }
 function isDescendantOf(parentDir: string, candidateFile: string): boolean { const parent = parentDir.endsWith("/") ? parentDir : `${parentDir}/`; return candidateFile.startsWith(parent); }
-function collectDescendantEntryPoints(profile: RepositoryProfile, layoutPath: string): EntryPoint[] { const layoutDir = parentRouteDirectory(layoutPath); if (!layoutDir) return []; return profile.entryPoints.filter((ep) => { if (ep.path === layoutPath) return false; if (!isPotentialNextEntryPoint(ep.path)) return false; return isDescendantOf(layoutDir, ep.path); }); }
+function collectDescendantEntryPoints(profile: RepositoryProfile, layout: RepositoryLayout, layoutPath: string): EntryPoint[] { const layoutDir = parentRouteDirectory(layoutPath); if (!layoutDir) return []; return profile.entryPoints.filter((ep) => { if (ep.path === layoutPath) return false; if (!isPotentialNextEntryPoint(ep.path, layout)) return false; return isDescendantOf(layoutDir, ep.path); }); }
 
 function shortestPathBFS(graph: DependencyGraph, start: string, target: string, direction: "dependents" | "dependencies", maxDepth = 8): string[] | undefined {
   if (start === target) return [start];
@@ -77,10 +93,10 @@ function shortestDependentPathToTest(graph: DependencyGraph, changedFilePath: st
   if (!path) return undefined;
   return { changedFile: changedFilePath, path, pathKind: "dependents" };
 }
-function collectScriptsAmong(candidates: Iterable<string>, isTestFile: IsTestFile): string[] { const result: string[] = []; for (const path of candidates) { if (isScriptFile(path) && !isTestFile(path)) result.push(path); } return result.sort(); }
+function collectScriptsAmong(candidates: Iterable<string>, isTestFile: IsTestFile, layout: RepositoryLayout): string[] { const result: string[] = []; for (const path of candidates) { if (isScriptFile(path, layout) && !isTestFile(path)) result.push(path); } return result.sort(); }
 function makeEvidence(reason: ImpactReason, changedFile: string, message: string, affectedFile?: string, path?: ImpactEvidencePath): ImpactEvidence { return { reason, changedFile, affectedFile, message, path }; }
 
-function classifyChangedFile(file: ChangedFile, isTestFile: IsTestFile, repositoryFiles?: ReadonlySet<string>): ChangedImpact["category"] {
+function classifyChangedFile(file: ChangedFile, isTestFile: IsTestFile, layout: RepositoryLayout, repositoryFiles?: ReadonlySet<string>): ChangedImpact["category"] {
   const path = file.path;
   const oldPath = file.oldPath;
   if (isConfigFile(path) || (oldPath && isConfigFile(oldPath))) return "config";
@@ -88,12 +104,12 @@ function classifyChangedFile(file: ChangedFile, isTestFile: IsTestFile, reposito
   if (isDatabaseFile(path) || (oldPath && isDatabaseFile(oldPath))) return "database";
   if (isSourceFilePath(path)) {
     if (isTestFile(path)) return "test";
-    if (isScriptFile(path)) return "script";
-    if (classifyNextEntryPoint(path)) return "entry-point";
+    if (isScriptFile(path, layout)) return "script";
+    if (classifyNextEntryPoint(path, layout)) return "entry-point";
     return "source";
   }
   if (isAssetFilePath(path)) return "asset";
-  if (isDocumentationFile(path)) return "docs";
+  if (isDocumentationFile(path, layout)) return "docs";
   if (isTranslatedDocumentationCompanion(path, repositoryFiles)) return "docs";
   // Recorded test inputs under <scope>/tests/<snapshots|fixtures>/ are owned by the tests beside them
   // (src/repo/test-fixture-ownership.ts). Only claimed when an owner can actually be resolved at HEAD.
@@ -166,16 +182,49 @@ function changedFileReasons(file: ChangedFile): ImpactReason[] {
   }
 }
 
-export interface AlwaysRunCheck { name: string; reason: ImpactReason; patterns: RegExp[]; }
-export const DEFAULT_ALWAYS_RUN_CHECKS: AlwaysRunCheck[] = [
-  { name: "security", reason: "ALWAYS_RUN_POLICY", patterns: [/test-security\.js$/i, /security\.test\./i, /scripts[\/]test-security/i] },
-  { name: "api-guardrails", reason: "ALWAYS_RUN_POLICY", patterns: [/test-api-guardrails/i, /api-guardrails/i] },
-  { name: "architecture-validations", reason: "ALWAYS_RUN_POLICY", patterns: [/scripts[\/].*\.test\.mjs$/i, /verify-.*\.test\./i, /validate-.*\.test\./i] },
-];
+export interface AlwaysRunCheck {
+  name: string;
+  reason: ImpactReason;
+  /** Regular expressions, for checks constructed in code. */
+  patterns: RegExp[];
+  /** Globs, for checks a repository declares about itself (src/repo/repo-config.ts). */
+  globs?: string[];
+}
+
+/**
+ * No always-run policy by default (Phase 01 follow-up, 2026-08-26).
+ *
+ * This was a list of three checks matching `test-security.js`, `test-api-guardrails`, `verify-*.test.`
+ * and `scripts/*.test.mjs` - DiffCI's and DentalPresence's own file names, compiled into the engine and
+ * applied to every repository analysed. On any other repository they matched nothing, so the policy was
+ * a repo-specific default that was also dead weight everywhere else.
+ *
+ * The policy is worth having; the list belongs to the repository. A repository declares its own via
+ * `diffci.alwaysRunTests` in package.json or a `diffci.json` (src/repo/repo-config.ts), and this
+ * repository declares its three there. Absent configuration means no always-run policy rather than a
+ * guessed one.
+ */
+export const DEFAULT_ALWAYS_RUN_CHECKS: AlwaysRunCheck[] = [];
+
+/** Turns the repository's declared always-run globs into a check, so the policy is applied by exactly
+ * the same code path as an explicitly-constructed one. */
+function alwaysRunChecksFromProfile(profile: RepositoryProfile): AlwaysRunCheck[] {
+  const globs = profile.diffciConfig?.alwaysRunTests ?? [];
+  if (globs.length === 0) return [];
+  return [
+    {
+      name: "repository-declared",
+      reason: "ALWAYS_RUN_POLICY",
+      patterns: [],
+      globs: [...globs],
+    },
+  ];
+}
 
 export class ImpactAnalyzer {
   private alwaysRunChecks: AlwaysRunCheck[];
   private isTestFile: IsTestFile = DEFAULT_TEST_FILE_MATCHER;
+  private layout: RepositoryLayout = UNKNOWN_REPOSITORY_LAYOUT;
   private repositoryFiles: ReadonlySet<string> | undefined;
   constructor(alwaysRunChecks: AlwaysRunCheck[] = DEFAULT_ALWAYS_RUN_CHECKS) { this.alwaysRunChecks = alwaysRunChecks; }
 
@@ -183,8 +232,9 @@ export class ImpactAnalyzer {
     const start = process.hrtime.bigint();
     const { graph } = graphResult;
     this.isTestFile = testFileMatcherForProfile(profile);
+    this.layout = repositoryLayout(profile);
     this.repositoryFiles = options.repositoryFiles;
-    const changedImpacts: ChangedImpact[] = delta.files.map((file) => ({ file, category: classifyChangedFile(file, this.isTestFile, options.repositoryFiles), reasons: changedFileReasons(file) }));
+    const changedImpacts: ChangedImpact[] = delta.files.map((file) => ({ file, category: classifyChangedFile(file, this.isTestFile, this.layout, options.repositoryFiles), reasons: changedFileReasons(file) }));
     const evidence: ImpactEvidence[] = [];
     const riskSignals: ImpactRiskSignal[] = [];
     const fallbackReasons: string[] = [];
@@ -385,7 +435,7 @@ export class ImpactAnalyzer {
     evidence: ImpactEvidence[],
   ): void {
     if (!hasNode(graph, sourcePath)) {
-      if (isPotentialNextEntryPoint(sourcePath) || isScriptFile(sourcePath)) {
+      if (isPotentialNextEntryPoint(sourcePath, this.layout) || isScriptFile(sourcePath, this.layout)) {
         this.addAffectedEntryPoint(sourcePath, profile, affectedEntryPoints, "NEW_ENTRY_POINT", sourcePath, evidence);
       }
       return;
@@ -395,7 +445,7 @@ export class ImpactAnalyzer {
       if (!affectedSources.has(sourcePath)) affectedSources.set(sourcePath, []);
       affectedSources.get(sourcePath)!.push(makeEvidence("DIRECT_CHANGE", sourcePath, `Changed source: ${sourcePath}`));
     }
-    if (isEntryPoint(profile, sourcePath) || classifyNextEntryPoint(sourcePath)) {
+    if (isEntryPoint(profile, sourcePath) || classifyNextEntryPoint(sourcePath, this.layout)) {
       this.addAffectedEntryPoint(sourcePath, profile, affectedEntryPoints, "NEXT_ENTRY_POINT", sourcePath, evidence);
     }
 
@@ -414,7 +464,7 @@ export class ImpactAnalyzer {
     }
 
     const reachable = new Set([sourcePath, ...dependents]);
-    for (const scriptPath of collectScriptsAmong(reachable, this.isTestFile)) {
+    for (const scriptPath of collectScriptsAmong(reachable, this.isTestFile, this.layout)) {
       if (!affectedScripts.has(scriptPath)) affectedScripts.set(scriptPath, []);
       affectedScripts.get(scriptPath)!.push(makeEvidence("DEPENDENCY", sourcePath, `${sourcePath} affects script ${scriptPath}`, scriptPath));
     }
@@ -481,7 +531,7 @@ export class ImpactAnalyzer {
     evidence: ImpactEvidence[],
   ): void {
     const ep = isEntryPoint(profile, path);
-    const kind = ep?.kind ?? classifyNextEntryPoint(path) ?? "unknown";
+    const kind = ep?.kind ?? classifyNextEntryPoint(path, this.layout) ?? "unknown";
     const existing = affectedEntryPoints.get(path);
     if (existing) {
       if (!existing.reasons.includes(reason)) existing.reasons.push(reason);
@@ -522,8 +572,8 @@ export class ImpactAnalyzer {
     for (const changedImpact of changedImpacts) {
       if (changedImpact.category !== "entry-point") continue;
       for (const path of allChangePaths(changedImpact.file)) {
-        if (!isNextLayoutEntry(profile, path)) continue;
-        const descendants = collectDescendantEntryPoints(profile, path);
+        if (!isNextLayoutEntry(this.layout, path)) continue;
+        const descendants = collectDescendantEntryPoints(profile, this.layout, path);
         for (const desc of descendants) {
           this.addAffectedEntryPoint(desc.path, profile, affectedEntryPoints, "NEXT_LAYOUT_ANCESTOR", path, evidence);
           if (!affectedSources.has(desc.path)) affectedSources.set(desc.path, []);
@@ -560,9 +610,9 @@ export class ImpactAnalyzer {
     const result: Array<{ path: string; kind: NonNullable<EntryPoint["kind"] | "script" | "test"> }> = [];
     for (const file of delta.files) {
       if (file.changeType !== "added") continue;
-      const kind = classifyNextEntryPoint(file.path);
+      const kind = classifyNextEntryPoint(file.path, this.layout);
       if (kind) result.push({ path: file.path, kind });
-      else if (file.path.startsWith("scripts/")) result.push({ path: file.path, kind: "script" });
+      else if (isScriptFile(file.path, this.layout)) result.push({ path: file.path, kind: "script" });
       else if (this.isTestFile(file.path)) result.push({ path: file.path, kind: "test" });
     }
     return result;
@@ -583,11 +633,10 @@ export class ImpactAnalyzer {
         }
       }
     }
-    for (const check of this.alwaysRunChecks) {
+    for (const check of [...this.alwaysRunChecks, ...alwaysRunChecksFromProfile(profile)]) {
       for (const path of knownTestPaths) {
-        for (const pattern of check.patterns) {
-          if (pattern.test(path)) { alwaysRunPaths.add(path); break; }
-        }
+        if (check.patterns.some((pattern) => pattern.test(path))) { alwaysRunPaths.add(path); continue; }
+        if (check.globs?.some((glob) => matchesTestGlob(path, glob))) alwaysRunPaths.add(path);
       }
     }
     for (const testPath of alwaysRunPaths) {

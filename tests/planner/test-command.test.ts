@@ -140,3 +140,45 @@ describe("selective test command synthesis", () => {
     assert.ok(rendered.includes("\\;"));
   });
 });
+
+describe("frameworks added 2026-08-26", () => {
+  function profile(frameworks: KnownTestFramework[], packageManager: RepositoryProfile["packageManager"] = "npm"): RepositoryProfile {
+    return {
+      packageManager,
+      packageJson: { name: "fixture", scripts: {}, dependencies: [], devDependencies: [] },
+      sourceRoots: [], tests: [], testFilePaths: [], workflows: [], configFiles: [], pathAliases: [], entryPoints: [],
+      testUniverse: { declaredFrameworks: frameworks, frameworkEvidence: {}, discoveredTestFiles: 1, blindSpot: false },
+      stats: { sourceFiles: 0, testFiles: 0, workflowFiles: 0, configFiles: 0 },
+    };
+  }
+
+  it("invokes each new runner the way that runner expects", () => {
+    const render = (frameworks: KnownTestFramework[], paths: string[], pm: RepositoryProfile["packageManager"] = "npm") =>
+      commandSpecToString(planSelectiveTestCommands(profile(frameworks, pm), paths).commands[0]!);
+
+    assert.equal(render(["jasmine"], ["spec/a.spec.js"]), "npx --no-install jasmine spec/a.spec.js");
+    assert.equal(render(["bun:test"], ["src/a.test.ts"], "bun"), "bun test src/a.test.ts");
+    assert.equal(render(["playwright"], ["e2e/login.spec.ts"]), "npx --no-install playwright test e2e/login.spec.ts");
+  });
+
+  it("gives cypress a single comma-separated --spec, not positional paths", () => {
+    // Cypress reads positional arguments as something else entirely, so passing paths that way would
+    // produce a command that runs the wrong specs rather than one that fails loudly.
+    const rendered = commandSpecToString(
+      planSelectiveTestCommands(profile(["cypress"]), ["cypress/e2e/a.cy.ts", "cypress/e2e/b.cy.ts"]).commands[0]!,
+    );
+    assert.equal(rendered, "npx --no-install cypress run --spec cypress/e2e/a.cy.ts,cypress/e2e/b.cy.ts");
+  });
+
+  it("never routes an unclaimed unit test to an end-to-end runner", () => {
+    // A repository with both declares two real frameworks. Routing src/lib.test.ts to playwright
+    // would emit a command that runs nothing and reports success.
+    const plan = planSelectiveTestCommands(profile(["vitest", "playwright"]), ["src/lib.test.ts"]);
+    assert.equal(commandSpecToString(plan.commands[0]!), "npx --no-install vitest run src/lib.test.ts");
+  });
+
+  it("still uses an e2e runner when it is the only framework the repository declares", () => {
+    const plan = planSelectiveTestCommands(profile(["playwright"]), ["e2e/a.spec.ts"]);
+    assert.equal(commandSpecToString(plan.commands[0]!), "npx --no-install playwright test e2e/a.spec.ts");
+  });
+});

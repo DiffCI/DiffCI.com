@@ -27,7 +27,31 @@
  * eligible to be selected. Under-inclusion does the opposite in both respects and is what silently
  * emptied the test universe above.
  */
-export type KnownTestFramework = "vitest" | "jest" | "mocha" | "ava" | "tap" | "node:test";
+/**
+ * Frameworks the engine recognises.
+ *
+ * Extended 2026-08-26 with playwright, cypress, jasmine and bun:test. What is still NOT covered, so
+ * the boundary is stated rather than discovered later: karma, testcafe, web-test-runner, and any
+ * runner outside the Node/TypeScript ecosystem entirely (pytest, go test, cargo test, JUnit). A
+ * repository using only an unrecognised framework declares nothing here, so its tests fall back to
+ * the conventional `.test.`/`.spec.` globs - and if that finds nothing, the blind-spot rule in
+ * ImpactAnalyzer forces FULL rather than proposing a selection against an empty universe.
+ */
+export type KnownTestFramework =
+  | "vitest"
+  | "jest"
+  | "mocha"
+  | "ava"
+  | "tap"
+  | "node:test"
+  | "jasmine"
+  | "bun:test"
+  | "playwright"
+  | "cypress";
+
+/** End-to-end runners. They are real test frameworks, but a unit-test file that no config claims
+ * should not be routed to one, so they are never chosen as a repository's primary runner. */
+export const END_TO_END_FRAMEWORKS: ReadonlySet<KnownTestFramework> = new Set(["playwright", "cypress"]);
 
 export interface DeclaredTestFrameworks {
   /** Frameworks the repository declares, in a stable order. Empty for a repository with none. */
@@ -60,6 +84,14 @@ export const FRAMEWORK_DEFAULT_INCLUDES: Record<KnownTestFramework, readonly str
   // node:test: the runner's own default discovery is **\/*.test.?(c|m)[jt]s plus files under a
   // test/ directory.
   "node:test": ["**/*.test.?(c|m)[jt]s", "test/**/*.{js,cjs,mjs,ts,mts,cts}"],
+  // jasmine: `spec_files` defaults to "**\/*[sS]pec.?(m)js", resolved under `spec_dir` ("spec").
+  jasmine: ["spec/**/*[sS]pec.?(m)js", "**/*[sS]pec.{js,mjs,ts}"],
+  // bun test: discovers *.test.{js,jsx,ts,tsx}, *_test.*, *.spec.* and *_spec.*
+  "bun:test": ["**/*.{test,spec}.{js,jsx,ts,tsx}", "**/*_{test,spec}.{js,jsx,ts,tsx}"],
+  // playwright: `testMatch` defaults to **\/*.@(spec|test).?(c|m)[jt]s?(x)
+  playwright: ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+  // cypress: `specPattern` defaults to cypress/e2e/**\/*.cy.{js,jsx,ts,tsx}
+  cypress: ["cypress/e2e/**/*.cy.{js,jsx,ts,tsx}", "**/*.cy.{js,jsx,ts,tsx}"],
 };
 
 interface FrameworkMarker {
@@ -77,6 +109,11 @@ const MARKERS: readonly FrameworkMarker[] = [
   { framework: "ava", packages: ["ava"], script: /(?:^|[\s;&|/])ava(?:$|[\s;&|])/ },
   { framework: "tap", packages: ["tap", "libtap"], script: /(?:^|[\s;&|/])tap(?:$|[\s;&|])/ },
   { framework: "node:test", packages: [], script: /(?:node|tsx)\s[^;&|]*--test(?:$|[\s;&|=])/ },
+  { framework: "jasmine", packages: ["jasmine", "jasmine-core"], script: /(?:^|[\s;&|/])jasmine(?:$|[\s;&|])/ },
+  { framework: "bun:test", packages: [], script: /(?:^|[\s;&|])bun\s+test(?:$|[\s;&|])/ },
+  // End-to-end runners last, so that a repository with both gets a unit-test runner as its primary.
+  { framework: "playwright", packages: ["@playwright/test", "playwright"], script: /(?:^|[\s;&|/])playwright(?:$|[\s;&|])/ },
+  { framework: "cypress", packages: ["cypress"], script: /(?:^|[\s;&|/])cypress(?:$|[\s;&|])/ },
 ];
 
 export interface PackageJsonLike {
@@ -132,6 +169,10 @@ export const FRAMEWORK_DEFAULT_EXCLUDES: Record<KnownTestFramework, readonly str
   ava: ["**/fixtures/**", "**/helpers/**", "**/__helper__/**", "**/node_modules/**"],
   tap: ["**/fixtures/**", "**/node_modules/**"],
   "node:test": ["**/node_modules/**"],
+  jasmine: ["**/node_modules/**"],
+  "bun:test": ["**/node_modules/**"],
+  playwright: ["**/node_modules/**"],
+  cypress: ["**/node_modules/**", "**/cypress/support/**", "**/cypress/fixtures/**"],
 };
 
 /** The union of every declared framework's default include globs. */
