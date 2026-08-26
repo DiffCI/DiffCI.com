@@ -137,13 +137,52 @@ corrupts every local run, which is exactly how Phase 01's own verification would
 
 ## Phase 01 work items, in dependency order
 
-| # | Item | Closes |
-|---|---|---|
-| 1 | Test universe: model runner default includes + `__tests__` convention; fix the primary-root heuristic; **fail closed** when a framework is declared but zero tests are discovered | F1 |
-| 2 | Derive the test command from the target repository's own runner and scripts, not this repo's layout | F2 |
-| 3 | Align the eligibility gate (and the screener) with the graph's real nested-tsconfig capability | F3 |
-| 4 | Derive a task registry from the target repository (`package.json` scripts + workflows); demote the DentalPresence registry to a fixture | F4 |
-| 5 | Clamp tsconfig discovery to the repository root | F5 |
-| 6 | Re-run this probe; add a guard test asserting no repository identifier appears in the engine path | exit criterion |
+| # | Item | Closes | Status |
+|---|---|---|---|
+| 1 | Test universe: model runner default includes and excludes; scan the whole tree; **fail closed** when a framework is declared but zero tests are discovered | F1 | done |
+| 2 | Derive the test command from the target repository's own runner and scripts, not this repo's layout | F2 | done |
+| 3 | Align the eligibility gate (and the screener) with the graph's real nested-tsconfig capability | F3 | done |
+| 4 | Derive a task registry from the target repository; move the DentalPresence registry to a fixture | F4 | done |
+| 5 | Clamp tsconfig discovery to the repository root | F5 | done |
+| 6 | Re-run this probe; add a guard test asserting no repository identifier appears in the engine path | exit criterion | done |
 
-Item 1 is a safety fix and comes first regardless of the rest.
+Item 1 is a safety fix and came first regardless of the rest.
+
+## After
+
+Same nine repositories, same probe, same five-commit sample per repository, re-run after items 1–6.
+
+| Repository | Framework | elig | S/F | tests discovered (before → after) | command DiffCI would run |
+|---|---|---|---|---|---|
+| `unjs/defu` | vitest | OK | 1/4 | 2 → 2 | *(all sampled commits FULL)* |
+| `unjs/h3` | vitest | OK | 1/4 | 70 → 70 | `pnpm exec vitest run test/security.test.ts` |
+| `unjs/nitro` | vitest | OK | 4/1 | 58 → 58 | `pnpm exec vitest run --config vitest.config.ts …` |
+| `nestjs/nest` | vitest | OK | 3/2 | 467 → 467 | *(all sampled commits FULL)* |
+| `vitest-dev/vitest` | vitest | **OK** | 0/5 | 1052 → 1068 | *(all sampled commits FULL)* |
+| `facebook/docusaurus` | vitest | **OK** | 1/4 | **2 → 193** | `pnpm exec vitest run __tests__/…` |
+| `typeorm/typeorm` | mocha | OK | 5/0 | 944 → 961 | `pnpm exec mocha test/…` |
+| `sindresorhus/execa` | ava | OK | 0/5 | **0 → 151** | *(all sampled commits FULL)* |
+| `immerjs/immer` | vitest | OK | 5/0 | **0 → 23** | `yarn run vitest run --config vitest.config.ts __tests__/…` |
+
+Every stage now clears on every repository. Against the exit criterion:
+
+- **5 external repositories** — nine, none of them this repository or its origin.
+- **2 test frameworks** — three run end-to-end (vitest, mocha, ava), each producing the command
+  its own repository would use, through its own package manager.
+- **Zero per-repo code** — enforced by `tests/planner/repo-agnostic-engine.test.ts`, which reads
+  `src/git`, `src/repo`, `src/planner` and `src/shadow` and fails on any specific repository named in
+  executable source. It found one I had not listed: `src/shadow/task-mapping.ts` mapped CI step names
+  through a hardcoded table of DentalPresence's own step names.
+
+### What these numbers do not say
+
+A `--` in the command column means every sampled commit fell back to FULL, so no selective command
+was needed. That is an honest result, not a hidden failure — and on four of nine repositories it is
+the whole result. The dominant causes are unchanged and out of Phase 01's scope: `UNSAFE` graph
+confidence from ordinary unresolved imports, and non-TypeScript changed files (`.vue`,
+`pnpm-workspace.yaml`) correctly failing closed. **Phase 01 made the engine work on other people's
+repositories; it did not make it save them anything yet.** How often DiffCI can safely propose a
+subset on a real monorepo is the next question, and this table is the honest starting point for it.
+
+`typeorm/typeorm` selects 5/5 SELECTIVE but names a very large fraction of its 961 tests — selection
+breadth, not repo-agnosticism, and also not measured here.
