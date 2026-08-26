@@ -17,20 +17,23 @@
  *
  * Job-spec shape (all fields required unless noted):
  *   {
- *     steps: [{ executable: string, args: string[], cwd?: string }],  // each already
- *       policy-validated server-side against the SAME allowlist as src/runner/command-policy.ts
+ *     steps: [{ executable: string, args: string[], cwd?: string, expectedStdout?: string }],  // each
+ *       already policy-validated server-side against the SAME allowlist as src/runner/command-policy.ts
  *       (this file keeps its own copy of the allowlist as a deliberate, disclosed duplication - see
  *       the comment on ALLOWED_EXECUTABLES below - so this file remains a real, standalone safety
- *       backstop even if a bug ever let an unvalidated step reach it)
- *     env: Record<string,string>,        // ALREADY sanitized server-side (src/runner/env-policy.ts) -
- *       this file does its own belt-and-suspenders forbidden-key check anyway before ever using it
+ *       backstop even if a bug ever let an unvalidated step reach it). `expectedStdout`, when set
+ *       (R2 Part 11), is compared against the step's OWN trimmed stdout - a mismatch is treated as a
+ *       real step failure even if the process itself exited 0 (e.g. `git rev-parse HEAD` succeeding
+ *       is not enough; it must echo the EXACT requested commit SHA, or acquisition is rejected before
+ *       any dependency install or test execution ever runs).
  *     uid: number, gid: number,           // the unprivileged diffci-runner identity to drop to
  *     timeoutMsPerStep: number,
  *     maxOutputBytes: number,
  *   }
  *
  * Result (the ONLY thing printed to this process's own stdout, one JSON line):
- *   { steps: [{ executable, exitCode, signal, timedOut, outputTruncated, durationMs, stdout, stderr }],
+ *   { steps: [{ executable, exitCode, signal, timedOut, outputTruncated, durationMs, stdout, stderr,
+ *               expectedStdoutMismatch? }],
  *     failedAtStep: number | null }      // index of the first non-final step that failed, if any
  */
 const { spawn } = require("node:child_process");
@@ -43,6 +46,9 @@ const { readFileSync } = require("node:fs");
 // server already validated everything upstream.
 const ALLOWED_EXECUTABLES = new Set(["node", "npm", "npx", "git"]);
 const FORBIDDEN_ENV_KEY_SUBSTRINGS = ["TOKEN", "SECRET", "PASSWORD", "CREDENTIAL", "API_KEY", "APIKEY", "PRIVATE_KEY", "AUTH"];
+// Deliberately duplicated from src/runner/env-policy.ts's SAFE_ENV_ALLOWLIST - same no-build-step
+// reasoning as ALLOWED_EXECUTABLES above.
+const SAFE_ENV_ALLOWLIST = ["PATH", "HOME", "LANG", "LC_ALL", "TZ", "NODE_ENV", "NPM_CONFIG_CACHE"];
 
 function validateStep(step) {
   if (!step || typeof step.executable !== "string" || !ALLOWED_EXECUTABLES.has(step.executable)) {
@@ -56,13 +62,22 @@ function validateStep(step) {
   }
 }
 
-function validateEnv(env) {
-  for (const key of Object.keys(env || {})) {
+/** Builds the workload's environment from THIS process's own process.env (the bootstrap agent's real
+ * environment, including DIFFCI_RUNNER_TOKEN) - by construction, ONLY allowlisted keys are ever copied
+ * out (R2 Part 8/18): the token, and anything else not explicitly listed, simply never reaches this
+ * object, regardless of what else is present in the agent's own env. */
+function buildWorkloadEnv() {
+  const result = { CI: "true" };
+  for (const key of SAFE_ENV_ALLOWLIST) {
+    if (process.env[key] !== undefined) result[key] = process.env[key];
+  }
+  for (const key of Object.keys(result)) {
     const upper = key.toUpperCase();
     if (FORBIDDEN_ENV_KEY_SUBSTRINGS.some((f) => upper.includes(f))) {
-      throw new Error(`workload-runner: refusing to use env key "${key}" - matches a forbidden credential-shaped pattern`);
+      throw new Error(`workload-runner: refusing to include env key "${key}" - matches a forbidden credential-shaped pattern (this should be structurally impossible given SAFE_ENV_ALLOWLIST's own contents - a real bug if it ever fires)`);
     }
   }
+  return result;
 }
 
 /** Runs one step with a hard timeout, a bounded output cap, and (on POSIX) kills the WHOLE process
@@ -159,18 +174,23 @@ async function main() {
     process.exit(2);
   }
   const spec = JSON.parse(readFileSync(specPath, "utf8"));
-  validateEnv(spec.env);
   for (const step of spec.steps) validateStep(step);
+  const workloadEnv = buildWorkloadEnv();
 
   const results = [];
   let failedAtStep = null;
   for (let i = 0; i < spec.steps.length; i++) {
-    const result = await runStep(spec.steps[i], spec.env, spec.uid, spec.gid, spec.timeoutMsPerStep, spec.maxOutputBytes);
+    const step = spec.steps[i];
+    const result = await runStep(step, workloadEnv, spec.uid, spec.gid, spec.timeoutMsPerStep, spec.maxOutputBytes);
+    if (step.expectedStdout !== undefined) {
+      result.expectedStdoutMismatch = result.stdout.trim() !== step.expectedStdout;
+    }
     results.push(result);
     const isLastStep = i === spec.steps.length - 1;
-    if (!isLastStep && result.exitCode !== 0) {
+    const stepFailed = result.exitCode !== 0 || result.expectedStdoutMismatch === true;
+    if (!isLastStep && stepFailed) {
       failedAtStep = i;
-      break; // acquisition/setup failed - no point running later steps (the test itself never even attempted)
+      break; // acquisition/setup failed (or SHA verification mismatched) - no point running later steps
     }
   }
 

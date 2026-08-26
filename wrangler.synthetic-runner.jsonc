@@ -34,6 +34,16 @@
       // "standard-2". Reverted back to "lite" now that the diagnosis is done and applied to
       // wrangler.github-runner.jsonc, which is where standard-2 actually belongs (Part 19's synthetic
       // jobs here stay trivial and don't need it).
+      //
+      // Briefly bumped to "basic" on 2026-08-23 (R2.1 Part C.14) to diagnose the real R2
+      // deepseek-ai/deepseek-harness `pnpm install --filter` exit-137 kill on "lite" (474s elapsed, real
+      // progress, no timeout hit). RESULT (real, reproduced after ruling out deploy-propagation lag on a
+      // first, confounded attempt): "basic" succeeded cleanly - exit 0, pnpm install done in 1m35s, real
+      // ~1.2GB memory available (vs. lite's 256 MiB) - where "lite" was SIGKILLed after 474s of real but
+      // incomplete progress. Strongly supports (not conclusively proves - basic raises both memory AND
+      // vCPU at once) the resource-exhaustion hypothesis for R2's dependency-install step. Reverted back
+      // to "lite" now that the diagnostic is complete - this Worker's real job stays the trivial echo
+      // command; see docs/research/2026-08-23-r2-basic-diagnostic-preregistration.md for the full record.
       "instance_type": "lite",
       "max_instances": 3, // low ceiling deliberately - this Worker exists to prove the orchestration model (Part 12), not to run production workload volume
       "rollout_step_percentage": [100]

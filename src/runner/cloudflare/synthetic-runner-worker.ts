@@ -87,7 +87,12 @@ export default {
     if (request.method === "POST" && url.pathname === "/v1/runner/start") {
       const body = (await request.json().catch(() => null)) as { runnerId?: string; apiUrl?: string; runnerToken?: string; timeoutMs?: number } | null;
       if (!body?.runnerId || !body.apiUrl || !body.runnerToken) return json({ ok: false, error: "runnerId, apiUrl, and runnerToken are required" }, 400);
-      const execTimeoutMs = Math.min(body.timeoutMs ?? 30_000, 5 * 60_000);
+      // R2: raised from 5 to 10 minutes - a real, measured finding (2026-08-22) that even a pnpm
+      // --filter'd install against a large real-world monorepo (234 workspace packages) can genuinely
+      // need several minutes just to resolve the full dependency graph from a cold cache, well before
+      // any test even runs. Still a hard ceiling, not unbounded - R2's own workload-runner.cjs applies
+      // its own separate, tighter per-step timeout on top of this outer container-level bound.
+      const execTimeoutMs = Math.min(body.timeoutMs ?? 30_000, 10 * 60_000);
       const runnerId = body.runnerId;
       const apiUrl = body.apiUrl;
       const runnerToken = body.runnerToken;
@@ -136,7 +141,12 @@ export default {
       // Default stays short (synthetic jobs are seconds-long by design - Part 19); a caller
       // investigating something genuinely longer-running (e.g. a real package install/diagnostic probe,
       // not a "synthetic job" in the Part 19 sense) may opt into a longer budget explicitly, capped at 5 min.
-      const execTimeoutMs = Math.min(body.timeoutMs ?? 30_000, 5 * 60_000);
+      // R2: raised from 5 to 10 minutes - a real, measured finding (2026-08-22) that even a pnpm
+      // --filter'd install against a large real-world monorepo (234 workspace packages) can genuinely
+      // need several minutes just to resolve the full dependency graph from a cold cache, well before
+      // any test even runs. Still a hard ceiling, not unbounded - R2's own workload-runner.cjs applies
+      // its own separate, tighter per-step timeout on top of this outer container-level bound.
+      const execTimeoutMs = Math.min(body.timeoutMs ?? 30_000, 10 * 60_000);
 
       const provisionStartedAt = Date.now();
       const sandbox = getSandbox(env.SYNTHETIC_RUNNER, body.runnerId, { enableDefaultSession: false, keepAlive: false, sleepAfter: "6m", transport: "rpc" });

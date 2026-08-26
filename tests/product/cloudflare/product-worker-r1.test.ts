@@ -98,8 +98,10 @@ describe("product-worker.ts R1 wiring - real end-to-end route composition", () =
     // 4. Claim - gets back the real trivial command.
     const claimRes = await productWorker.fetch(new Request("https://product.example/v1/runner/claim", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: rawToken }) }), env as never, ctx);
     assert.equal(claimRes.status, 200);
-    const claimBody = (await claimRes.json()) as { ok: boolean; data: { command: string } };
-    assert.match(claimBody.data.command, /diffci-runner-ok/);
+    const claimBody = (await claimRes.json()) as { ok: boolean; data: { steps: Array<{ executable: string; args: string[] }> } };
+    assert.equal(claimBody.data.steps.length, 1);
+    assert.equal(claimBody.data.steps[0]!.executable, "node");
+    assert.match(claimBody.data.steps[0]!.args.join(" "), /diffci-runner-ok/);
 
     // 5. Submit the result - triggers real termination in the background (ctx.waitUntil()).
     const resultRes = await productWorker.fetch(

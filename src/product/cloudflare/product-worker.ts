@@ -45,7 +45,7 @@ import { createMockRunnerProvider } from "../../runner/mock-provider.js";
 import { createCloudflareContainerRunnerProvider } from "../../runner/cloudflare-container-provider.js";
 import { createCloudflareContainerAsyncRunnerProvider } from "../../runner/cloudflare-container-async-provider.js";
 import { makeD1RunnerTokenStore } from "../../runner/token.js";
-import { handleRegister, handleHeartbeat, handleClaim, handleResult, type AgentApiDeps } from "../../runner/agent-api.js";
+import { handleRegister, handleHeartbeat, handleClaim, handleResult, type AgentApiDeps, type ClaimStep } from "../../runner/agent-api.js";
 import { buildRunnerResourceTags } from "../../runner/tags.js";
 import { createCloudflareContainersLiteCostModel, createDefaultComputeCostModel } from "../../usage/cost-model.js";
 import { createDefaultClimateImpactModel } from "../../usage/climate-model.js";
@@ -350,12 +350,12 @@ export default {
     }
 
     if (request.method === "POST" && url.pathname === "/v1/runner/result") {
-      const body = (await request.json().catch(() => null)) as { token?: string; exitCode?: number; stdout?: string; stderr?: string; durationMs?: number } | null;
+      const body = (await request.json().catch(() => null)) as { token?: string; exitCode?: number; stdout?: string; stderr?: string; durationMs?: number; timedOut?: boolean } | null;
       if (!body?.token || body.exitCode === undefined || body.stdout === undefined || body.durationMs === undefined) {
         return json({ ok: false, error: "token, exitCode, stdout, and durationMs are required" }, 400);
       }
       const deps = agentApiDepsFromEnv(env);
-      const result = await handleResult({ token: body.token, exitCode: body.exitCode, stdout: body.stdout, stderr: body.stderr, durationMs: body.durationMs }, deps);
+      const result = await handleResult({ token: body.token, exitCode: body.exitCode, stdout: body.stdout, stderr: body.stderr, durationMs: body.durationMs, timedOut: body.timedOut }, deps);
       if (!result.ok) return json(result, 401);
 
       // Part 9/26: request real teardown right after a genuine (non-duplicate) completion - R1's own
@@ -469,7 +469,11 @@ export default {
         if (!provider || !env.DIFFCI_API_ORIGIN) return json({ ok: false, error: "R1 real runner is not configured in this environment (SYNTHETIC_RUNNER_URL/RUNNER_CONTROL_TOKEN/DIFFCI_API_ORIGIN)" }, 503);
 
         const tokenStore = makeD1RunnerTokenStore(env.PRODUCT_DB);
-        const item = await queueStore.enqueue({ organizationId, jobReference: 'node -e "console.log(\'diffci-runner-ok\')"', requestedResourceClass: "lite" });
+        // R2 Part 3: structured, never a bare shell string - the fixed, DiffCI-only synthetic step,
+        // policy-valid by construction (node is allowlisted, the array form goes through
+        // command-policy.ts's own validateCommand() again inside handleClaim before ever being served).
+        const syntheticSteps: ClaimStep[] = [{ executable: "node", args: ["-e", "console.log('diffci-runner-ok')"] }];
+        const item = await queueStore.enqueue({ organizationId, jobReference: JSON.stringify(syntheticSteps), requestedResourceClass: "lite" });
         await store.recordAuditEvent({ organizationId, actorUserId: userId, action: "runner.job_queue_created", targetType: "queue_item", targetId: item.id });
 
         const outcomes = await scheduleNext(
@@ -586,5 +590,15 @@ export default {
       // this sweep is purely additive telemetry, not safety-critical.
       logEvent("duration_capture.sweep_failed", { error: err instanceof Error ? err.message : String(err) });
     }
+
+    // NOTE (2026-08-25): shadow-economics capture deliberately does NOT run here. It briefly did, and
+    // failed live on every single commit - this Worker holds no GitHub credential (only
+    // RUNNER_CONTROL_TOKEN), so its GitHub reads were unauthenticated: 60 req/hour against a Cloudflare
+    // egress IP shared across tenants. The sweep now runs in the research-sandbox Worker, which already
+    // owns GITHUB_TOKEN and the Shadow App keys, and writes to shadow_economics_observations in
+    // diffci-research (see src/research/cloudflare/schema-migration-2026-08-25-shadow-economics.sql).
+    // Copying the App private key into this internet-facing Worker was considered and rejected: it can
+    // mint tokens for every installed repository. The product layer reads that table through the
+    // existing read-only ShadowReadBoundary, never by writing to diffci-research itself.
   },
 };

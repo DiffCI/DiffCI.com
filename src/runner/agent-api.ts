@@ -20,6 +20,7 @@ import type { RunnerStore } from "./store.js";
 import type { ExecutionQueueStore } from "../execution-queue/store.js";
 import type { UsageStore } from "../usage/store.js";
 import type { ComputeCostModel } from "../usage/cost-model.js";
+import { validateCommand, type ExecutionCommand } from "./command-policy.js";
 
 export interface AgentApiDeps {
   tokenStore: RunnerTokenStore;
@@ -68,12 +69,17 @@ export async function handleHeartbeat(rawToken: string, deps: AgentApiDeps): Pro
 
 // --- claim ---------------------------------------------------------------------------------------------
 
+export type ClaimStep = ExecutionCommand & { expectedStdout?: string };
+
 export interface ClaimResultData {
   runnerId: string;
   jobId: string;
-  /** The exact, trivial, deterministic command to execute (R1 Part 15) - sourced from the queue item's
-   * own jobReference field (reused as-is, no new column - the smallest change that carries this data). */
-  command: string;
+  /** R2 Part 3: a structured step sequence, never a bare shell string - sourced from the queue item's
+   * own jobReference field, which now holds a JSON-encoded ClaimStep[] (reused as-is, no new column -
+   * the smallest change that carries this data). Each step is re-validated against
+   * src/runner/command-policy.ts before ever being returned - a corrupt or policy-violating stored
+   * jobReference is refused here, not passed through to the runner. */
+  steps: ClaimStep[];
 }
 
 export async function handleClaim(rawToken: string, deps: AgentApiDeps): Promise<AgentApiResult<ClaimResultData>> {
@@ -86,11 +92,27 @@ export async function handleClaim(rawToken: string, deps: AgentApiDeps): Promise
   const queueItem = await deps.queueStore.getItem(verified.record.jobId);
   if (!queueItem) return { ok: false, error: "job_not_found" };
 
+  let steps: ClaimStep[];
+  try {
+    const parsed = JSON.parse(queueItem.jobReference);
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("jobReference is not a non-empty step array");
+    for (const step of parsed) {
+      const validation = validateCommand(step);
+      if (!validation.ok) throw new Error(`stored step failed policy validation: ${validation.violation}`);
+    }
+    steps = parsed;
+  } catch (err) {
+    return { ok: false, error: "job_not_found" }; // a corrupt/invalid stored job spec is treated the same as "no such job" - never partially trusted
+  }
+
   await deps.runnerStore.transitionRunnerStatus(verified.record.runnerId, "busy");
   await deps.runnerStore.recordHeartbeat(verified.record.runnerId);
+  // R2 Part 23: the queue item moves to 'running' the moment real execution actually starts - closes
+  // the R1 gap where nothing past 'assigned' was ever reachable.
+  await deps.queueStore.updateStatus(verified.record.jobId, "running");
   await deps.recordAuditEvent({ organizationId: verified.record.organizationId, action: "runner.execution_started", targetType: "runner", targetId: verified.record.runnerId, metadata: { jobId: verified.record.jobId } });
 
-  return { ok: true, data: { runnerId: verified.record.runnerId, jobId: verified.record.jobId, command: queueItem.jobReference } };
+  return { ok: true, data: { runnerId: verified.record.runnerId, jobId: verified.record.jobId, steps } };
 }
 
 // --- result ----------------------------------------------------------------------------------------------
@@ -101,6 +123,9 @@ export interface SubmitResultInput {
   stdout: string;
   stderr?: string;
   durationMs: number;
+  /** R2 Part 20/23: set true when the workload was killed for exceeding its execution timeout - the
+   * queue item's terminal state must reflect this distinctly from a plain non-zero exit. */
+  timedOut?: boolean;
 }
 
 export interface SubmitResultData {
@@ -128,6 +153,12 @@ export async function handleResult(input: SubmitResultInput, deps: AgentApiDeps)
   const cost = deps.costModel.estimateCost({ computeSeconds: runtimeSeconds });
 
   await deps.runnerStore.transitionRunnerStatus(verified.record.runnerId, "completed", { runtimeSeconds, costEstimateUsd: cost.estimatedUsd, costBasis: cost.basis });
+
+  // R2 Part 23: the queue item reaches its own real terminal state here - never left stranded at
+  // 'assigned'/'running' once the runner itself is done. timed_out is distinguished from a plain
+  // non-zero exit (failed) so a caller can tell "the job ran and failed" from "the job never finished."
+  const queueTerminalStatus = input.timedOut ? "timed_out" : input.exitCode === 0 ? "completed" : "failed";
+  await deps.queueStore.updateStatus(verified.record.jobId, queueTerminalStatus);
 
   // Part 29: provider-independent usage, idempotent by construction (recordUsageEventIfNew's own
   // idempotency key + the markResultSubmitted single-use gate above are two independent layers).

