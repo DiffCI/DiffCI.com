@@ -42,8 +42,10 @@ function makeDeps(options: {
   reconcileResult?: (repository: string) => Promise<{ reconciled: number; stillPending: number; errors: string[] }>;
   recordThrows?: boolean;
   pollsAlreadyToday?: number;
-}): { deps: ShadowCronDeps; calls: FakeCalls & { transitions: { repository: string; toSha: string; analysed: boolean }[]; slots: { repository: string; slotNo: number; outcome?: string }[] } } {
-  const calls = { polled: [], polledWithSha: [], reconciled: [], headChecked: [], recorded: [], logs: [], transitions: [], slots: [] } as FakeCalls & {
+  priorPollErrors?: Record<string, number>;
+}): { deps: ShadowCronDeps; calls: FakeCalls & { transitions: { repository: string; toSha: string; analysed: boolean }[]; slots: { repository: string; slotNo: number; outcome?: string }[]; paused: { repository: string; reason: string }[] } } {
+  const calls = { polled: [], polledWithSha: [], reconciled: [], headChecked: [], recorded: [], logs: [], transitions: [], slots: [], paused: [] } as FakeCalls & {
+    paused: { repository: string; reason: string }[];
     transitions: { repository: string; toSha: string; analysed: boolean }[];
     slots: { repository: string; slotNo: number; outcome?: string }[];
   };
@@ -68,6 +70,10 @@ function makeDeps(options: {
       if (options.recordThrows) throw new Error("d1 write failed");
       calls.recorded.push(run);
     },
+    pauseRepository: async (repository, reason) => {
+      calls.paused.push({ repository, reason });
+    },
+    consecutivePollErrors: async (repository) => options.priorPollErrors?.[repository] ?? 0,
     reserveLaunchSlot: async (repository, maxPerDay) => {
       // Mirrors the D1 PRIMARY KEY (day, slot_no) arbiter: a slot number can only be taken once.
       const next = (options.pollsAlreadyToday ?? 0) + calls.slots.length + 1;
@@ -115,7 +121,7 @@ describe("runShadowCronOnce", () => {
   it("polls up to maxPollsPerRun and reconciles every pollable repository", async () => {
     const repos = [repo({ repository: "a/one" }), repo({ repository: "b/two" }), repo({ repository: "c/three" }), repo({ repository: "d/four" })];
     const { deps, calls } = makeDeps({ repos });
-    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, reconcileLimitPerRepo: 10 });
+    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 });
 
     assert.deepEqual(calls.polled, ["a/one", "b/two"]);
     assert.deepEqual(calls.reconciled, ["a/one", "b/two", "c/three", "d/four"]);
@@ -135,7 +141,7 @@ describe("runShadowCronOnce", () => {
       repos,
       heads: { "a/unchanged": { sha: "same-sha" }, "b/moved": { sha: "new-sha" }, "c/also-moved": { sha: "new-sha" } },
     });
-    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, reconcileLimitPerRepo: 10 });
+    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 });
 
     // a/unchanged was skipped, so BOTH moved repositories fit within maxPollsPerRun=2.
     assert.deepEqual(calls.polled, ["b/moved", "c/also-moved"]);
@@ -320,7 +326,7 @@ describe("runShadowCronOnce", () => {
 });
 
 describe("daily launch ceiling", () => {
-  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, reconcileLimitPerRepo: 10 };
+  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 };
 
   it("NEVER suppresses head checks when the ceiling is spent - observation must continue", async () => {
     // The bug this pins: gating the ceiling before the head check made a repository whose head HAD moved
@@ -386,7 +392,7 @@ describe("daily launch ceiling", () => {
 });
 
 describe("atomic launch-slot accounting", () => {
-  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, reconcileLimitPerRepo: 10 };
+  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 };
 
   // (1) The defect vitest-dev/vitest exposed live: a clone-excluded poll still burned a real container,
   // yet the old success-counting ceiling read 1/60 while it happened every ten minutes.
@@ -529,5 +535,56 @@ describe("atomic launch-slot accounting", () => {
     const run = await runShadowCronOnce(deps, CFG, "cron");
     assert.equal(run.launchesAttempted, (run.launchesAllowed ?? 0) + (run.dailyCeilingRefusals ?? 0));
     assert.equal(run.launchesAllowed, (run.launchesSucceeded ?? 0) + (run.launchesFailed ?? 0));
+  });
+});
+
+describe("explicit refusal for persistently failing repositories", () => {
+  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 };
+
+  it("auto-pauses a repository that reaches the consecutive-failure threshold", async () => {
+    // The vitest-dev/vitest shape: deterministically ineligible, so it re-fails every sweep at real
+    // container cost until something stops it.
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/ineligible", lastPolledSha: "old", lastPolledAt: "2026-08-21T09:00:00Z" })],
+      heads: { "a/ineligible": { sha: "new" } },
+      priorPollErrors: { "a/ineligible": 4 }, // this failure is the 5th
+      pollResult: async () => {
+        throw new Error("clone-excluded: no tsconfig.json found at the repository root");
+      },
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(calls.paused.length, 1);
+    assert.equal(calls.paused[0]?.repository, "a/ineligible");
+    assert.match(calls.paused[0]?.reason ?? "", /AUTO_PAUSED after 5 consecutive failed polls/);
+    assert.deepEqual(run.autoPaused, ["a/ineligible"], "the pause is recorded loudly, never silent");
+  });
+
+  it("does NOT pause a repository below the threshold - transient failures are tolerated", async () => {
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/flaky", lastPolledSha: "old", lastPolledAt: "2026-08-21T09:00:00Z" })],
+      heads: { "a/flaky": { sha: "new" } },
+      priorPollErrors: { "a/flaky": 1 },
+      pollResult: async () => {
+        throw new Error("transient: GitHub API 502");
+      },
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(calls.paused.length, 0);
+    assert.equal(run.autoPaused?.length ?? 0, 0);
+    assert.equal(run.launchesFailed, 1, "the failure is still counted and still spends its slot");
+  });
+
+  it("a failing repository still spends its slot before being paused - the container ran", async () => {
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/ineligible", lastPolledSha: "old", lastPolledAt: "2026-08-21T09:00:00Z" })],
+      heads: { "a/ineligible": { sha: "new" } },
+      priorPollErrors: { "a/ineligible": 4 },
+      pollResult: async () => {
+        throw new Error("clone-excluded");
+      },
+    });
+    await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(calls.slots.length, 1);
+    assert.equal(calls.slots[0]?.outcome, "failed");
   });
 });

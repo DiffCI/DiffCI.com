@@ -1017,6 +1017,8 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
     // told apart. Without it both look identical - no new predictions and a frozen timestamp.
     recordRepositoryLiveness: (updates) => store.recordRepositoryLiveness(updates),
     // Hard daily ceiling on analysis launches - maxPollsPerRun bounds a sweep, never the day's spend.
+    pauseRepository: (repository, reason) => store.pauseRepository(repository, reason),
+    consecutivePollErrors: (repository) => store.consecutivePollErrors(repository),
     reserveLaunchSlot: (repository, maxPerDay) => store.reserveLaunchSlot(repository, maxPerDay),
     recordLaunchOutcome: (slotNo, outcome) => store.recordLaunchOutcome(slotNo, outcome),
     recordHeadTransition: (t) => store.recordHeadTransition(t),

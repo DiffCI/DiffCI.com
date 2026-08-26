@@ -47,6 +47,9 @@ export interface ShadowCronRunRecord {
   dailyCeilingRefusals?: number;
   /** Head transitions detected this sweep, whether or not they were analysed. */
   headTransitionsDetected?: number;
+  /** Repositories auto-paused this sweep for persistent failure. Recorded loudly: a repository silently
+   * dropping out of observation is exactly the ambiguity M3.2 exists to prevent. */
+  autoPaused?: string[];
   /** Container-launch accounting. attempted = launches this sweep wanted; allowed = slots granted;
    * succeeded/failed = how those granted launches finished. attempted always equals
    * allowed + refusedByCeiling, and allowed always equals succeeded + failed. These are deliberately
@@ -97,6 +100,11 @@ export interface ShadowCronDeps {
   reserveLaunchSlot?(repository: string, maxPerDay: number): Promise<{ granted: boolean; slotNo?: number }>;
   /** Optional: records how a reserved launch finished. Never frees the slot. */
   recordLaunchOutcome?(slotNo: number, outcome: "succeeded" | "failed"): Promise<void>;
+  /** Optional: pauses a repository that keeps failing, with a durable reason. Explicit refusal - the
+   * repository stops costing containers, its finding is preserved, and re-enabling it is a data change. */
+  pauseRepository?(repository: string, reason: string): Promise<void>;
+  /** Optional: consecutive prior poll failures per repository, for the refusal threshold. */
+  consecutivePollErrors?(repository: string): Promise<number>;
   /** Optional: append-only record of an observed head transition. Written for EVERY detected change,
    * including ones the daily ceiling defers - a deferred transition is still a real observation, and
    * discarding it would destroy the missed-commit measurement. */
@@ -148,6 +156,13 @@ export interface ShadowCronConfig {
    * bill.
    */
   maxPollsPerDay: number;
+  /**
+   * Consecutive failed analysis polls after which a repository is automatically PAUSED with a recorded
+   * reason - explicit refusal rather than engine expansion. vitest-dev/vitest showed why: a
+   * deterministically ineligible repository re-fails every sweep, and each failure costs a real container.
+   * Reset to zero on any success, so this only fires on persistent failure, never on a transient one.
+   */
+  maxConsecutivePollErrors: number;
   /** Head checks per sweep. Bounds the cheap GitHub call independently of container launches, so the
    * launch ceiling can never suppress observation. */
   maxHeadChecksPerRun: number;
@@ -162,6 +177,7 @@ export const DEFAULT_SHADOW_CRON_CONFIG: ShadowCronConfig = {
   // the previously-unbounded 432/day.
   maxPollsPerDay: 60,
   maxHeadChecksPerRun: 25,
+  maxConsecutivePollErrors: 5,
 };
 
 const POLLABLE_STATES = new Set(["VALIDATING", "SHADOW_ACTIVE", "SHADOW_LIMITED"]);
@@ -194,6 +210,7 @@ export async function runShadowCronOnce(
   let groundTruthReconciled = 0;
   let stillPending = 0;
   let sourceIntegrityStatus: string | undefined;
+  const autoPaused: string[] = [];
   let launchesSucceeded = 0;
   let launchesFailed = 0;
 
@@ -335,6 +352,22 @@ export async function runShadowCronOnce(
         const slotNo = slotByRepository.get(r.repo.repository);
         if ("error" in r) {
           launchesFailed++;
+          // Explicit refusal: a repository failing persistently is paused rather than left to re-fail
+          // every sweep at container cost. Bounded by maxConsecutivePollErrors, and only ever reached
+          // after that many CONSECUTIVE failures, since any success resets the counter.
+          if (deps.pauseRepository && deps.consecutivePollErrors) {
+            try {
+              const priorFailures = await deps.consecutivePollErrors(r.repo.repository);
+              if (priorFailures + 1 >= config.maxConsecutivePollErrors) {
+                const reason = `AUTO_PAUSED after ${priorFailures + 1} consecutive failed polls. Last error: ${String(r.error).slice(0, 200)}`;
+                await deps.pauseRepository(r.repo.repository, reason);
+                autoPaused.push(r.repo.repository);
+                deps.log(`shadow-cron: auto-paused ${r.repo.repository} - ${reason}`);
+              }
+            } catch (error: unknown) {
+              errors.push(`auto-pause ${r.repo.repository}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+          }
           // The slot stays consumed: the container ran and cost real compute even though it failed.
           if (deps.recordLaunchOutcome && typeof slotNo === "number") {
             try {
@@ -415,6 +448,7 @@ export async function runShadowCronOnce(
     errors,
     dailyCeilingRefusals,
     headTransitionsDetected: changedNeedingAnalysis.length,
+    autoPaused,
     launchesAttempted,
     launchesAllowed: toPoll.length,
     launchesSucceeded,

@@ -176,6 +176,10 @@ export interface ShadowStore {
   /** Append-only head-transition log. Preserves the SEQUENCE of observed heads, which
    * last_observed_head_sha (overwritten state) cannot. */
   recordHeadTransition(t: { repository: string; fromSha?: string; toSha: string; detectedAt: string; analysed: boolean }): Promise<void>;
+  /** Pauses a repository with a durable reason - explicit refusal, reversible by a data change. */
+  pauseRepository(repository: string, reason: string): Promise<void>;
+  /** Consecutive prior poll failures for a repository. */
+  consecutivePollErrors(repository: string): Promise<number>;
   /** Atomically reserves one daily launch slot. Granted:false when the day's budget is spent. */
   reserveLaunchSlot(repository: string, maxPerDay: number): Promise<{ granted: boolean; slotNo?: number }>;
   /** Records how a reserved launch finished. Never frees the slot. */
@@ -236,6 +240,15 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .prepare(`INSERT INTO shadow_head_transitions (repository, from_sha, to_sha, detected_at, analysed) VALUES (?, ?, ?, ?, ?)`)
         .bind(t.repository, t.fromSha ?? null, t.toSha, t.detectedAt, t.analysed ? 1 : 0)
         .run();
+    },
+
+    async pauseRepository(repository: string, reason: string) {
+      await db.prepare(`UPDATE shadow_repositories SET state = 'PAUSED', notes = ? WHERE repository = ?`).bind(reason, repository).run();
+    },
+
+    async consecutivePollErrors(repository: string) {
+      const row = await db.prepare(`SELECT consecutive_poll_errors as n FROM shadow_repositories WHERE repository = ?`).bind(repository).first<{ n: number }>();
+      return row?.n ?? 0;
     },
 
     async reserveLaunchSlot(repository: string, maxPerDay: number) {
