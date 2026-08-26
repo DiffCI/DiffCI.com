@@ -1,10 +1,43 @@
+# Dependencies and build output
 node_modules/
 dist/
+*.tsbuildinfo
+
+# Logs and coverage
 *.log
-.DS_Store
 coverage/
+
+# Generated audit artifacts - regenerate them, never commit them. A committed audit is a
+# snapshot of one machine's run masquerading as a fact about the repository.
 graph-audit.json
 impact-audit.json
+diffci-graph-audit-*.json
+diffci-impact-audit-*.json
+
+# Session scratch - one-off probe scripts, request payloads, captured stdout. Anything from
+# here that is worth keeping is written up under docs/research/ instead.
+.scratch/
+scratch/
+
+# Local operator state and credentials. .research/ holds real dispatch tokens; keeping this
+# entry correct is a security control, not tidiness.
 .research/
 .diffci/
+.env
+.env.*
+!.env.example
+*.pem
+*.private-key.pem
+
+# Tooling caches
 .wrangler/
+.turbo/
+.tmp/
+tmp/
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.swp
