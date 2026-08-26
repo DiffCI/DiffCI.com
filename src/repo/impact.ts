@@ -41,8 +41,10 @@ function isConfigFile(filePath: string): boolean {
   if (filePath.startsWith("docker")) return true;
   return false;
 }
-function isInfrastructureFile(filePath: string): boolean { const INFRA_DIRS = new Set(["ops","terraform","cloudformation","pulumi","cdktf","deploy","deployments","kubernetes","k8s","helm","docker"]); if (filePath.startsWith("ops/")) return true; const first = filePath.split("/")[0]; if (first && INFRA_DIRS.has(first)) return true; if (posix.basename(filePath).includes("Dockerfile")) return true; return false; }
-function isDatabaseFile(filePath: string): boolean { const DATABASE_DIRS = new Set(["database","migrations","prisma","drizzle","supabase","schema"]); if (filePath.startsWith("database/")) return true; const first = filePath.split("/")[0]; return first ? DATABASE_DIRS.has(first) : false; }
+// The "ops" prefix test that used to lead this was redundant - "ops" is in the set below - and it
+// was the shape a hardcoded layout assumption takes, so the set alone now decides.
+function isInfrastructureFile(filePath: string): boolean { const INFRA_DIRS = new Set(["ops","terraform","cloudformation","pulumi","cdktf","deploy","deployments","kubernetes","k8s","helm","docker"]); const first = filePath.split("/")[0]; if (first && INFRA_DIRS.has(first)) return true; if (posix.basename(filePath).includes("Dockerfile")) return true; return false; }
+function isDatabaseFile(filePath: string): boolean { const DATABASE_DIRS = new Set(["database","migrations","prisma","drizzle","supabase","schema"]); const first = filePath.split("/")[0]; return first ? DATABASE_DIRS.has(first) : false; }
 /**
  * Next.js file-name conventions, applied ONLY to repositories that are Next.js applications.
  *

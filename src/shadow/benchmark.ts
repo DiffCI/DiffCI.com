@@ -59,7 +59,7 @@ export function createBenchmarkRun(
     recordedAt: new Date().toISOString(),
     diffciVersion: DIFFCI_VERSION,
     commit,
-    commitCategory: categorizeCommit(delta.files.map((f) => f.path)),
+    commitCategory: categorizeCommit(delta.files.map((f) => f.path), profile),
     changedFiles: delta.files.map((f) => f.path),
     plan,
     baseline,

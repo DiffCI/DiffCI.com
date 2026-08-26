@@ -1,4 +1,10 @@
+import { repositoryLayout, UNKNOWN_REPOSITORY_LAYOUT } from "../repo/layout.js";
+import type { RepositoryProfile } from "../repo/types.js";
+
 import type { BenchmarkRun, CategoryStats, CommitCategory } from "./types.js";
+
+const DATABASE_DIRECTORIES = new Set(["database", "migrations", "prisma", "drizzle", "supabase", "schema"]);
+const CONVENTIONAL_SOURCE_DIRECTORIES = new Set(["src", "lib", "app", "pages", "api", "packages"]);
 
 function percentile(sorted: number[], p: number): number {
   if (sorted.length === 0) return 0;
@@ -77,15 +83,42 @@ export function computeAggregateStats(runs: BenchmarkRun[]): AggregateStats {
   };
 }
 
-export function categorizeCommit(changedFiles: string[]): CommitCategory {
+/**
+ * Which kind of change is this? Used to group benchmark runs, so a wrong answer quietly files a
+ * commit under the wrong heading in every aggregate.
+ *
+ * Phase 01 follow-up (2026-08-26): this categorised by `startsWith("src/")`, `"scripts/"`, `"ops/"`
+ * and `"docs/"` - this project's directory names. On a monorepo every commit fell through all four
+ * and came back "unknown", so the category breakdown for an external repository was a single bucket
+ * that said nothing. The structural guard in tests/planner/repo-agnostic-engine.test.ts found this
+ * one; the name-based guard never could, because nothing here names a repository.
+ *
+ * A profile makes the answer repository-specific; without one the layout-dependent categories are
+ * simply not offered, rather than being answered wrongly.
+ */
+export function categorizeCommit(changedFiles: string[], profile?: RepositoryProfile): CommitCategory {
   const paths = changedFiles.map((p) => p.replace(/\\/g, "/"));
-  const isDoc = paths.every((p) => p.endsWith(".md") || p.endsWith(".mdx") || p.startsWith("docs/") || p.startsWith("README"));
+  const layout = profile ? repositoryLayout(profile) : UNKNOWN_REPOSITORY_LAYOUT;
+
+  const isDoc = paths.every((p) => layout.isDocumentationPath(p) || p.startsWith("README"));
   if (isDoc) return "docs-only";
 
-  const hasSrc = paths.some((p) => p.startsWith("src/"));
-  const hasScripts = paths.some((p) => p.startsWith("scripts/"));
-  const hasOps = paths.some((p) => p.startsWith("ops/"));
-  const hasDb = paths.some((p) => p.startsWith("database/"));
+  const isUnder = (p: string, root: string): boolean => p === root || p.startsWith(`${root}/`);
+  const declaredSourceRoots = (profile?.sourceRoots ?? [])
+    .filter((r) => r.kind === "source" || r.kind === "app" || r.kind === "api")
+    .map((r) => r.path.replace(/\\/g, "/").replace(/\/+$/, ""));
+
+  // `fromShadowRecord()` categorises a stored record that carries no profile, so the repository's
+  // real roots are unavailable there. Falling back to conventional source-directory NAMES keeps that
+  // path working without reintroducing a hardcoded layout: the names are ecosystem-wide, and they
+  // are matched as a set against the first path segment rather than as this project's prefixes.
+  const hasSrc =
+    declaredSourceRoots.length > 0
+      ? paths.some((p) => declaredSourceRoots.some((root) => isUnder(p, root)))
+      : paths.some((p) => CONVENTIONAL_SOURCE_DIRECTORIES.has(p.split("/")[0] ?? ""));
+  const hasScripts = paths.some((p) => layout.isScriptPath(p));
+  const hasOps = paths.some((p) => layout.isScriptPath(p) && layout.scriptRoots.some((r) => isUnder(p, r) && r === "ops"));
+  const hasDb = paths.some((p) => DATABASE_DIRECTORIES.has(p.split("/")[0] ?? ""));
   const hasConfig = paths.some((p) => /(package\.json|package-lock\.json|tsconfig|next\.config|tailwind\.config|eslint\.config|\.github\/workflows)/.test(p));
   const hasTest = paths.some((p) => /\.(test|spec)\./.test(p));
 

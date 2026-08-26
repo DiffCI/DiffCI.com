@@ -38,6 +38,7 @@
  */
 import type { ChangedFile } from "../git/types.js";
 import type { RepositoryProfile } from "../repo/types.js";
+import { repositoryLayout, UNKNOWN_REPOSITORY_LAYOUT } from "../repo/layout.js";
 
 export interface PathBaselineResult {
   strategy: "PATH_BASELINE";
@@ -129,13 +130,8 @@ export function runPathBaseline(
   const changedPaths = changedFiles.map((f) => toPosix(f.path));
   const matchedRules: string[] = [];
 
-  const docsOnly = changedPaths.every(
-    (p) =>
-      p.endsWith(".md") ||
-      p.endsWith(".mdx") ||
-      p.startsWith("docs/") ||
-      p.startsWith("README"),
-  );
+  const layout = profile ? repositoryLayout(profile) : UNKNOWN_REPOSITORY_LAYOUT;
+  const docsOnly = changedPaths.every((p) => layout.isDocumentationPath(p) || p.startsWith("README"));
   if (docsOnly) {
     matchedRules.push("docs-only -> skip tests");
     return { strategy: "PATH_BASELINE", selectedTests: [], fallbackRequired: false, fallbackReasons: [], matchedRules };

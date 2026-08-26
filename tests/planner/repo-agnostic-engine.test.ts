@@ -103,6 +103,39 @@ describe("the engine describes no particular repository (Phase 01 exit criterion
     );
   });
 
+  it("encodes no particular repository's directory layout in executable engine source", () => {
+    // The name-based check above passed for weeks while the engine still described DiffCI
+    // STRUCTURALLY: `startsWith("scripts/") || startsWith("ops/")` meant "is this a script",
+    // `startsWith("docs/")` meant documentation, and the PATH baseline scoped changes with
+    // `src/**`, `scripts/**`, `ops/**`. None of those name a repository; all of them are one.
+    //
+    // A prefix test against a layout directory is the shape that mistake takes, so it is the shape
+    // this forbids. Directory names that classify a file by PURPOSE rather than by where this
+    // project happens to put code - infrastructure, database, CI configuration - are allowed, since
+    // those are ecosystem-wide conventions and are used as name SETS, not path prefixes.
+    const layoutDirectories = ["src", "lib", "app", "pages", "scripts", "ops", "tools", "bin", "tests", "test", "docs"];
+    const violations: string[] = [];
+
+    for (const dir of ENGINE_DIRECTORIES) {
+      for (const file of sourceFilesUnder(dir)) {
+        const code = stripComments(readFileSync(file, "utf8"));
+        for (const layoutDir of layoutDirectories) {
+          for (const form of [`startsWith("${layoutDir}/")`, `"${layoutDir}/**"`, `'${layoutDir}/'`]) {
+            if (code.includes(form)) {
+              violations.push(`${relative(REPO_ROOT, file)}: ${form} - hardcodes one repository's layout`);
+            }
+          }
+        }
+      }
+    }
+
+    assert.deepEqual(
+      violations,
+      [],
+      `engine source must derive layout from the repository (src/repo/layout.ts), not assume it:\n  ${violations.join("\n  ")}`,
+    );
+  });
+
   it("keeps the DentalPresence task list out of src/ entirely", () => {
     // It lived in src/planner/task-registry.ts and was what src/shadow/runner.ts planned every
     // repository against. It is now a test fixture, and nothing under src/ may reach it.
