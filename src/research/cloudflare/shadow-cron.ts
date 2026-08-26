@@ -40,6 +40,10 @@ export interface PollableRepository {
 }
 
 export interface ShadowCronRunRecord {
+  /** Analysis launches refused this sweep because the daily ceiling was already reached. Recorded rather
+   * than silent: a sweep that quietly declines to observe looks identical to a quiet repository, which is
+   * the same confusion M3.2 exists to prevent. */
+  dailyCeilingRefusals?: number;
   startedAt: string;
   finishedAt: string;
   trigger: "cron" | "manual";
@@ -72,6 +76,8 @@ export interface RepositoryLivenessUpdate {
 }
 
 export interface ShadowCronDeps {
+  /** Optional: analysis launches already performed since the given ISO instant, for the daily ceiling. */
+  countPollsSince?(sinceIso: string): Promise<number>;
   /** Optional (M3.2): persists the liveness facts above. Absent in older fakes/tests, which simply do not
    * record liveness - never a reason to fail a sweep. */
   recordRepositoryLiveness?(updates: RepositoryLivenessUpdate[]): Promise<void>;
@@ -109,12 +115,26 @@ export interface ShadowCronConfig {
   /** Pending-prediction rows attempted per reconciled repository (the existing /v1/shadow/reconcile
    * limit semantics). */
   reconcileLimitPerRepo: number;
+  /**
+   * HARD ceiling on analysis launches per UTC day, across all repositories and all sweeps.
+   *
+   * maxPollsPerRun bounds one sweep; it does not bound daily spend. At 144 sweeps/day and
+   * maxPollsPerRun 3 the uncapped worst case is 432 container launches per day - a number nobody had ever
+   * chosen, and which only stayed small because the enrolled repositories were dormant. Enrolling active
+   * repositories makes that ceiling real, so it is declared explicitly here rather than discovered on a
+   * bill.
+   */
+  maxPollsPerDay: number;
 }
 
 export const DEFAULT_SHADOW_CRON_CONFIG: ShadowCronConfig = {
   maxPollsPerRun: 3,
   maxReconcilesPerRun: 10,
   reconcileLimitPerRepo: 10,
+  // Predeclared for the 2-repository ramp (vitest, nitro): ~5-10 real head changes per repository per
+  // day expected, so 60 leaves generous headroom while capping the worst case at roughly one seventh of
+  // the previously-unbounded 432/day.
+  maxPollsPerDay: 60,
 };
 
 const POLLABLE_STATES = new Set(["VALIDATING", "SHADOW_ACTIVE", "SHADOW_LIMITED"]);
@@ -157,6 +177,26 @@ export async function runShadowCronOnce(
 
   // Head pre-check walks the full ordered candidate list until maxPollsPerRun repositories actually
   // NEED a container - a repository skipped for an unchanged head must not consume a poll slot.
+  // Daily ceiling, applied BEFORE any head check spends an API call. Failure to read the count is
+  // deliberately fail-open on the per-run cap (observation continues) but is recorded as an error.
+  let perRunCap = config.maxPollsPerRun;
+  let dailyCeilingRefusals = 0;
+  if (deps.countPollsSince) {
+    try {
+      const startOfDay = new Date(deps.now());
+      startOfDay.setUTCHours(0, 0, 0, 0);
+      const usedToday = await deps.countPollsSince(startOfDay.toISOString());
+      const remaining = Math.max(0, config.maxPollsPerDay - usedToday);
+      if (remaining < perRunCap) {
+        dailyCeilingRefusals = perRunCap - remaining;
+        perRunCap = remaining;
+        deps.log(`shadow-cron: daily analysis ceiling reached (${usedToday}/${config.maxPollsPerDay}) - ${dailyCeilingRefusals} launch(es) refused this sweep`);
+      }
+    } catch (error: unknown) {
+      errors.push(`daily-ceiling-check: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   const toPoll: PollableRepository[] = [];
   const liveness = new Map<string, RepositoryLivenessUpdate>();
   const livenessFor = (repository: string): RepositoryLivenessUpdate => {
@@ -169,7 +209,7 @@ export async function runShadowCronOnce(
   };
 
   for (const repo of candidates) {
-    if (toPoll.length >= config.maxPollsPerRun) break;
+    if (toPoll.length >= perRunCap) break;
     // Recorded for EVERY candidate examined, including one skipped for an unchanged head - a skip is the
     // poller working, not the poller idle, and that distinction is the whole point of this telemetry.
     const live = livenessFor(repo.repository);
@@ -292,6 +332,7 @@ export async function runShadowCronOnce(
     groundTruthReconciled,
     stillPending,
     errors,
+    dailyCeilingRefusals,
     sourceIntegrityStatus,
   };
 

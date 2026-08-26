@@ -97,7 +97,7 @@ describe("runShadowCronOnce", () => {
   it("polls up to maxPollsPerRun and reconciles every pollable repository", async () => {
     const repos = [repo({ repository: "a/one" }), repo({ repository: "b/two" }), repo({ repository: "c/three" }), repo({ repository: "d/four" })];
     const { deps, calls } = makeDeps({ repos });
-    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, reconcileLimitPerRepo: 10 });
+    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, reconcileLimitPerRepo: 10 });
 
     assert.deepEqual(calls.polled, ["a/one", "b/two"]);
     assert.deepEqual(calls.reconciled, ["a/one", "b/two", "c/three", "d/four"]);
@@ -117,7 +117,7 @@ describe("runShadowCronOnce", () => {
       repos,
       heads: { "a/unchanged": { sha: "same-sha" }, "b/moved": { sha: "new-sha" }, "c/also-moved": { sha: "new-sha" } },
     });
-    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, reconcileLimitPerRepo: 10 });
+    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, reconcileLimitPerRepo: 10 });
 
     // a/unchanged was skipped, so BOTH moved repositories fit within maxPollsPerRun=2.
     assert.deepEqual(calls.polled, ["b/moved", "c/also-moved"]);

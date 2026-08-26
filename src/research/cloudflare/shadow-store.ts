@@ -173,6 +173,9 @@ export interface CronRunInput {
 }
 
 export interface ShadowStore {
+  /** Analysis launches recorded since an instant - the daily-ceiling counter. Counts entries across each
+   * run's repos_polled array, so it measures real container launches rather than sweeps. */
+  countPollsSince(sinceIso: string): Promise<number>;
   /** M3.2 liveness facts for the repositories examined in one sweep. */
   recordRepositoryLiveness(updates: RepositoryLivenessUpdate[]): Promise<void>;
   /** Idempotent - does nothing if the repository is already enrolled. `language` only applies to the
@@ -224,6 +227,14 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
      * the 2026-08-26 "five-day outage" that never happened. last_head_changed_at moves only when the
      * upstream head genuinely differs; the error counters reset to 0 on success so they mean
      * "consecutive", never "ever". */
+    async countPollsSince(sinceIso: string) {
+      const row = await db
+        .prepare(`SELECT COALESCE(SUM(json_array_length(repos_polled)), 0) as n FROM shadow_cron_runs WHERE started_at >= ?`)
+        .bind(sinceIso)
+        .first<{ n: number }>();
+      return row?.n ?? 0;
+    },
+
     async recordRepositoryLiveness(updates: RepositoryLivenessUpdate[]) {
       for (const u of updates) {
         const sets: string[] = ["last_head_check_at = ?"];

@@ -1016,6 +1016,8 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
     // M3.2: persists per-repository liveness so "DiffCI is broken" and "this repository is quiet" can be
     // told apart. Without it both look identical - no new predictions and a frozen timestamp.
     recordRepositoryLiveness: (updates) => store.recordRepositoryLiveness(updates),
+    // Hard daily ceiling on analysis launches - maxPollsPerRun bounds a sweep, never the day's spend.
+    countPollsSince: (sinceIso) => store.countPollsSince(sinceIso),
     listReconcilableRepositories: () => store.listReconcilableRepositories(),
     // Per-repo token so the head pre-check also works on private repositories with an App
     // installation; githubTokenForRepo degrades to GITHUB_TOKEN/anonymous for everything else.
