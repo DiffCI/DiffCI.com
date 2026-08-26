@@ -186,3 +186,91 @@ subset on a real monorepo is the next question, and this table is the honest sta
 
 `typeorm/typeorm` selects 5/5 SELECTIVE but names a very large fraction of its 961 tests — selection
 breadth, not repo-agnosticism, and also not measured here.
+
+---
+
+## Follow-up, same day: the assumptions the name-based guard could not see
+
+The exit criterion above was met and the guard test passed, while the engine still described this
+project *structurally*. Five findings, all fixed; the numbers below are from the same probe over the
+same nine repositories.
+
+### The comparator was a strawman
+
+`runPathBaseline()` is what every savings figure is measured against. Its scoping rules were literally
+`src/** -> tests under src/`, `scripts/** -> ...`, `ops/** -> ...`. Measured before the rewrite:
+
+| Repository | Baseline commits scoped (of 5) |
+|---|---|
+| `nestjs/nest` | 0 — every one "no matching path rule -> run all tests" |
+| `facebook/docusaurus` | 0 |
+| `typeorm/typeorm` | 1 |
+| `immerjs/immer` | 2 — both merely docs-only skips |
+
+On a monorepo nothing matched. Even with a top-level `src/` the rule selected tests whose path
+*starts with* `src/`, which is empty for any project keeping tests in `test/` — including this one. So
+DiffCI was being compared against running the entire suite, and the difference called a saving.
+
+Rewritten around two patterns derived from the repository's own tree: **colocated** (tests under the
+deepest ancestor of the changed file that holds any test — resolves `packages/core` on a monorepo) and
+**mirrored** (`src/repo/x.ts` ↔ `tests/repo/`, this repository's own shape).
+
+| Repository | DiffCI S/F | Baseline S/F before | Baseline S/F after |
+|---|---|---|---|
+| `unjs/defu` | 1/4 | 1/4 | 1/4 |
+| `unjs/h3` | 1/4 | 1/4 | 1/4 |
+| `unjs/nitro` | 4/1 | 2/3 | 3/2 |
+| `nestjs/nest` | 3/2 | 0/5 | 2/3 |
+| `vitest-dev/vitest` | 0/5 | — | **5/0** |
+| `facebook/docusaurus` | 1/4 | 0/5 | 1/4 |
+| `typeorm/typeorm` | 5/0 | 1/4 | 5/0 |
+| `sindresorhus/execa` | 0/5 | — | **2/5** |
+| `immerjs/immer` | 5/0 | 2/3 | 3/2 |
+
+**On `vitest-dev/vitest` the simple path baseline now scopes all five commits while DiffCI falls back
+on all five. On `sindresorhus/execa` it scopes two where DiffCI scopes none.** A stronger comparator
+makes DiffCI look worse, and that is the point of having an honest one. Any savings number computed
+before today was measured against a comparator that mostly ran everything.
+
+### Next.js semantics applied to every repository
+
+`classifyNextEntryPoint()` was called with no check that the repository is a Next.js app, so any file
+named `page`, `route`, `layout`, `error`, `template` or `middleware` acquired Next.js meaning.
+Measured across the cohort: **7** mislabelled files in `unjs/h3` (where `route` and `error` are HTTP
+concepts), 6 in `vitest`, 4 each in `nitro` and `execa`, 1 in `typeorm` — 5 of 9 repositories. The
+effect was conservative; the assertion was false.
+
+### Three more, and how they were found
+
+Directory vocabulary (`scripts/`, `ops/`, `docs/` as fixed prefixes) and the always-run policy (three
+checks matching this project's own file names) were on the list. Two were not, and were found by
+extending the guard to forbid the *shape* rather than the name — a prefix test against a layout
+directory:
+
+- `src/shadow/stats.ts` split commits into categories by `src/`, `scripts/`, `ops/`, `docs/`. On a
+  monorepo every commit fell through all four and came back `unknown`, so the category breakdown for
+  any external repository was one bucket that said nothing.
+- `src/planner/path-baseline.ts` — rewritten hours earlier in this same pass — still had
+  `startsWith("docs/")` in its docs-only rule.
+
+The always-run policy now lives where it belongs: a repository declares its own via
+`diffci.alwaysRunTests`, and this repository declares its six patterns in its `package.json`. Absent
+configuration means no policy rather than a guessed one.
+
+### Also found: scripts were never typechecked
+
+`scripts/**` was not in the tsconfig `include`, so no script had ever been typechecked — including
+the probe this whole phase is verified with. Added; it surfaced one real pre-existing bug (a missing
+`dirname` import in `scripts/benchmark-dentalpresence.ts`). "Typecheck clean" now covers `src`,
+`tests` and `scripts`.
+
+### Still not repo-agnostic
+
+Stated so it is not discovered later:
+
+- **TypeScript/JavaScript only.** Python, Go, Rust and Java repositories are refused at the gate. That
+  is a different graph builder, not a Phase 01 fix.
+- **Ten test frameworks** (vitest, jest, mocha, ava, tap, node:test, jasmine, bun:test, playwright,
+  cypress). Not karma, testcafe, web-test-runner, or anything outside the Node ecosystem.
+- **The guard is still coarse.** It catches names and layout-prefix tests. It would not catch a subtler
+  assumption encoded some third way — which is exactly what happened twice today.
