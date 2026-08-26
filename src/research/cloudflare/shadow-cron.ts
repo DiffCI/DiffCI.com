@@ -40,10 +40,13 @@ export interface PollableRepository {
 }
 
 export interface ShadowCronRunRecord {
-  /** Analysis launches refused this sweep because the daily ceiling was already reached. Recorded rather
-   * than silent: a sweep that quietly declines to observe looks identical to a quiet repository, which is
-   * the same confusion M3.2 exists to prevent. */
+  /** Head transitions DETECTED this sweep but not analysed because the daily launch ceiling was already
+   * spent. Distinct from headChecksSkipped (nothing changed) and from an error: the change is real, was
+   * observed, and was deliberately deferred. Kept separate so eligible-capture coverage can attribute a
+   * miss to a ceiling rather than to a system failure. */
   dailyCeilingRefusals?: number;
+  /** Head transitions detected this sweep, whether or not they were analysed. */
+  headTransitionsDetected?: number;
   startedAt: string;
   finishedAt: string;
   trigger: "cron" | "manual";
@@ -78,6 +81,10 @@ export interface RepositoryLivenessUpdate {
 export interface ShadowCronDeps {
   /** Optional: analysis launches already performed since the given ISO instant, for the daily ceiling. */
   countPollsSince?(sinceIso: string): Promise<number>;
+  /** Optional: append-only record of an observed head transition. Written for EVERY detected change,
+   * including ones the daily ceiling defers - a deferred transition is still a real observation, and
+   * discarding it would destroy the missed-commit measurement. */
+  recordHeadTransition?(t: { repository: string; fromSha?: string; toSha: string; detectedAt: string; analysed: boolean }): Promise<void>;
   /** Optional (M3.2): persists the liveness facts above. Absent in older fakes/tests, which simply do not
    * record liveness - never a reason to fail a sweep. */
   recordRepositoryLiveness?(updates: RepositoryLivenessUpdate[]): Promise<void>;
@@ -125,6 +132,9 @@ export interface ShadowCronConfig {
    * bill.
    */
   maxPollsPerDay: number;
+  /** Head checks per sweep. Bounds the cheap GitHub call independently of container launches, so the
+   * launch ceiling can never suppress observation. */
+  maxHeadChecksPerRun: number;
 }
 
 export const DEFAULT_SHADOW_CRON_CONFIG: ShadowCronConfig = {
@@ -135,6 +145,7 @@ export const DEFAULT_SHADOW_CRON_CONFIG: ShadowCronConfig = {
   // day expected, so 60 leaves generous headroom while capping the worst case at roughly one seventh of
   // the previously-unbounded 432/day.
   maxPollsPerDay: 60,
+  maxHeadChecksPerRun: 25,
 };
 
 const POLLABLE_STATES = new Set(["VALIDATING", "SHADOW_ACTIVE", "SHADOW_LIMITED"]);
@@ -180,7 +191,6 @@ export async function runShadowCronOnce(
   // Daily ceiling, applied BEFORE any head check spends an API call. Failure to read the count is
   // deliberately fail-open on the per-run cap (observation continues) but is recorded as an error.
   let perRunCap = config.maxPollsPerRun;
-  let dailyCeilingRefusals = 0;
   if (deps.countPollsSince) {
     try {
       const startOfDay = new Date(deps.now());
@@ -188,16 +198,14 @@ export async function runShadowCronOnce(
       const usedToday = await deps.countPollsSince(startOfDay.toISOString());
       const remaining = Math.max(0, config.maxPollsPerDay - usedToday);
       if (remaining < perRunCap) {
-        dailyCeilingRefusals = perRunCap - remaining;
         perRunCap = remaining;
-        deps.log(`shadow-cron: daily analysis ceiling reached (${usedToday}/${config.maxPollsPerDay}) - ${dailyCeilingRefusals} launch(es) refused this sweep`);
+        deps.log(`shadow-cron: daily analysis ceiling reached (${usedToday}/${config.maxPollsPerDay}) - launches capped at ${remaining} this sweep`);
       }
     } catch (error: unknown) {
       errors.push(`daily-ceiling-check: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
-  const toPoll: PollableRepository[] = [];
   const liveness = new Map<string, RepositoryLivenessUpdate>();
   const livenessFor = (repository: string): RepositoryLivenessUpdate => {
     let u = liveness.get(repository);
@@ -208,10 +216,14 @@ export async function runShadowCronOnce(
     return u;
   };
 
+  // Head checks are NEVER gated by the launch ceiling. They are one cheap GitHub call, and suppressing
+  // them would make a repository whose head moved look idle - destroying both the liveness signal and the
+  // missed-commit measurement. The ceiling belongs immediately before a CONTAINER LAUNCH, below.
+  const changedNeedingAnalysis: PollableRepository[] = [];
+  let headChecksDone = 0;
   for (const repo of candidates) {
-    if (toPoll.length >= perRunCap) break;
-    // Recorded for EVERY candidate examined, including one skipped for an unchanged head - a skip is the
-    // poller working, not the poller idle, and that distinction is the whole point of this telemetry.
+    if (headChecksDone >= config.maxHeadChecksPerRun) break;
+    headChecksDone++;
     const live = livenessFor(repo.repository);
     if (repo.lastPolledSha) {
       try {
@@ -228,15 +240,43 @@ export async function runShadowCronOnce(
         }
         if (head) live.headChanged = true;
       } catch (error: unknown) {
-        // Pre-check failure is never a reason to stop observing - fall through and poll.
         live.headCheckFailed = true;
         deps.log(`shadow-cron: head pre-check failed for ${repo.repository}, polling anyway: ${error instanceof Error ? error.message : String(error)}`);
       }
     } else {
       live.headChanged = true; // never analysed before
     }
-    toPoll.push(repo);
+    changedNeedingAnalysis.push(repo);
   }
+
+  // Ceiling applied HERE - at the container launch, not at the observation.
+  const toPoll = changedNeedingAnalysis.slice(0, perRunCap);
+  const dailyCeilingRefusals = changedNeedingAnalysis.length - toPoll.length;
+  if (dailyCeilingRefusals > 0) {
+    deps.log(`shadow-cron: ${dailyCeilingRefusals} observed head change(s) deferred - daily launch ceiling (${config.maxPollsPerDay}) reached; observation continues`);
+  }
+
+  // Every detected transition is recorded, analysed or deferred. Overwritten state cannot answer
+  // "what did the head used to be?", so the sequence is preserved here for later derivation.
+  if (deps.recordHeadTransition) {
+    for (const repo of changedNeedingAnalysis) {
+      const live = liveness.get(repo.repository);
+      const toSha = live?.observedHeadSha;
+      if (!toSha) continue;
+      try {
+        await deps.recordHeadTransition({
+          repository: repo.repository,
+          fromSha: repo.lastPolledSha,
+          toSha,
+          detectedAt: deps.now().toISOString(),
+          analysed: toPoll.some((r) => r.repository === repo.repository),
+        });
+      } catch (error: unknown) {
+        errors.push(`record-head-transition ${repo.repository}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+  }
+
   for (const repo of toPoll) livenessFor(repo.repository).pollAttempted = true;
 
   if (toPoll.length > 0) {
@@ -333,6 +373,7 @@ export async function runShadowCronOnce(
     stillPending,
     errors,
     dailyCeilingRefusals,
+    headTransitionsDetected: changedNeedingAnalysis.length,
     sourceIntegrityStatus,
   };
 

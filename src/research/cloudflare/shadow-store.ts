@@ -173,6 +173,9 @@ export interface CronRunInput {
 }
 
 export interface ShadowStore {
+  /** Append-only head-transition log. Preserves the SEQUENCE of observed heads, which
+   * last_observed_head_sha (overwritten state) cannot. */
+  recordHeadTransition(t: { repository: string; fromSha?: string; toSha: string; detectedAt: string; analysed: boolean }): Promise<void>;
   /** Analysis launches recorded since an instant - the daily-ceiling counter. Counts entries across each
    * run's repos_polled array, so it measures real container launches rather than sweeps. */
   countPollsSince(sinceIso: string): Promise<number>;
@@ -227,6 +230,13 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
      * the 2026-08-26 "five-day outage" that never happened. last_head_changed_at moves only when the
      * upstream head genuinely differs; the error counters reset to 0 on success so they mean
      * "consecutive", never "ever". */
+    async recordHeadTransition(t: { repository: string; fromSha?: string; toSha: string; detectedAt: string; analysed: boolean }) {
+      await db
+        .prepare(`INSERT INTO shadow_head_transitions (repository, from_sha, to_sha, detected_at, analysed) VALUES (?, ?, ?, ?, ?)`)
+        .bind(t.repository, t.fromSha ?? null, t.toSha, t.detectedAt, t.analysed ? 1 : 0)
+        .run();
+    },
+
     async countPollsSince(sinceIso: string) {
       const row = await db
         .prepare(`SELECT COALESCE(SUM(json_array_length(repos_polled)), 0) as n FROM shadow_cron_runs WHERE started_at >= ?`)

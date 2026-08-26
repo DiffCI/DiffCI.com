@@ -41,8 +41,9 @@ function makeDeps(options: {
   pollResult?: (repository: string) => Promise<{ predictionsRecorded: number; errors: string[] }>;
   reconcileResult?: (repository: string) => Promise<{ reconciled: number; stillPending: number; errors: string[] }>;
   recordThrows?: boolean;
-}): { deps: ShadowCronDeps; calls: FakeCalls } {
-  const calls: FakeCalls = { polled: [], polledWithSha: [], reconciled: [], headChecked: [], recorded: [], logs: [] };
+  pollsAlreadyToday?: number;
+}): { deps: ShadowCronDeps; calls: FakeCalls & { transitions: { repository: string; toSha: string; analysed: boolean }[] } } {
+  const calls = { polled: [], polledWithSha: [], reconciled: [], headChecked: [], recorded: [], logs: [], transitions: [] } as FakeCalls & { transitions: { repository: string; toSha: string; analysed: boolean }[] };
   const deps: ShadowCronDeps = {
     listPollableRepositories: async () => options.repos,
     listReconcilableRepositories: async () => options.reconcilable ?? options.repos,
@@ -63,6 +64,10 @@ function makeDeps(options: {
     recordCronRun: async (run) => {
       if (options.recordThrows) throw new Error("d1 write failed");
       calls.recorded.push(run);
+    },
+    countPollsSince: async () => options.pollsAlreadyToday ?? 0,
+    recordHeadTransition: async (t) => {
+      calls.transitions.push({ repository: t.repository, toSha: t.toSha, analysed: t.analysed });
     },
     now: () => new Date("2026-08-21T12:00:00.000Z"),
     log: (m) => calls.logs.push(m),
@@ -97,7 +102,7 @@ describe("runShadowCronOnce", () => {
   it("polls up to maxPollsPerRun and reconciles every pollable repository", async () => {
     const repos = [repo({ repository: "a/one" }), repo({ repository: "b/two" }), repo({ repository: "c/three" }), repo({ repository: "d/four" })];
     const { deps, calls } = makeDeps({ repos });
-    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, reconcileLimitPerRepo: 10 });
+    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, reconcileLimitPerRepo: 10 });
 
     assert.deepEqual(calls.polled, ["a/one", "b/two"]);
     assert.deepEqual(calls.reconciled, ["a/one", "b/two", "c/three", "d/four"]);
@@ -117,7 +122,7 @@ describe("runShadowCronOnce", () => {
       repos,
       heads: { "a/unchanged": { sha: "same-sha" }, "b/moved": { sha: "new-sha" }, "c/also-moved": { sha: "new-sha" } },
     });
-    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, reconcileLimitPerRepo: 10 });
+    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, reconcileLimitPerRepo: 10 });
 
     // a/unchanged was skipped, so BOTH moved repositories fit within maxPollsPerRun=2.
     assert.deepEqual(calls.polled, ["b/moved", "c/also-moved"]);
@@ -298,5 +303,71 @@ describe("runShadowCronOnce", () => {
     const scheduled = await runShadowCronOnce(deps);
     assert.equal(manual.trigger, "manual");
     assert.equal(scheduled.trigger, "cron");
+  });
+});
+
+describe("daily launch ceiling", () => {
+  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, reconcileLimitPerRepo: 10 };
+
+  it("NEVER suppresses head checks when the ceiling is spent - observation must continue", async () => {
+    // The bug this pins: gating the ceiling before the head check made a repository whose head HAD moved
+    // look idle, destroying both the liveness signal and the missed-commit measurement.
+    const repos = [
+      repo({ repository: "a/one", lastPolledSha: "old1", lastPolledAt: "2026-08-21T09:00:00Z" }),
+      repo({ repository: "b/two", lastPolledSha: "old2", lastPolledAt: "2026-08-21T10:00:00Z" }),
+    ];
+    const { deps, calls } = makeDeps({
+      repos,
+      heads: { "a/one": { sha: "new1" }, "b/two": { sha: "new2" } },
+      pollsAlreadyToday: 60, // ceiling fully spent
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+
+    assert.deepEqual(calls.headChecked.sort(), ["a/one", "b/two"], "every repository must still be head-checked");
+    assert.deepEqual(calls.polled, [], "but no container may launch");
+    assert.equal(run.dailyCeilingRefusals, 2, "both real changes deferred, and counted as deferrals");
+    assert.equal(run.headTransitionsDetected, 2, "the changes were genuinely observed");
+    assert.equal(run.headChecksSkipped, 0, "deferred is NOT the same as skipped-unchanged");
+  });
+
+  it("records every observed transition, including deferred ones, so the sequence survives", async () => {
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/one", lastPolledSha: "old1", lastPolledAt: "2026-08-21T09:00:00Z" })],
+      heads: { "a/one": { sha: "new1" } },
+      pollsAlreadyToday: 60,
+    });
+    await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(calls.transitions.length, 1);
+    assert.equal(calls.transitions[0]!.toSha, "new1");
+    assert.equal(calls.transitions[0]!.analysed, false, "deferred transitions must be retained and marked unanalysed");
+  });
+
+  it("caps launches at the remaining daily budget rather than refusing the whole sweep", async () => {
+    const repos = [
+      repo({ repository: "a/one", lastPolledSha: "o1", lastPolledAt: "2026-08-21T09:00:00Z" }),
+      repo({ repository: "b/two", lastPolledSha: "o2", lastPolledAt: "2026-08-21T10:00:00Z" }),
+      repo({ repository: "c/three", lastPolledSha: "o3", lastPolledAt: "2026-08-21T11:00:00Z" }),
+    ];
+    const { deps, calls } = makeDeps({
+      repos,
+      heads: { "a/one": { sha: "n1" }, "b/two": { sha: "n2" }, "c/three": { sha: "n3" } },
+      pollsAlreadyToday: 59, // exactly one launch left
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(calls.polled.length, 1, "exactly the remaining budget is spent");
+    assert.equal(run.dailyCeilingRefusals, 2);
+    assert.equal(calls.headChecked.length, 3, "all three still observed");
+  });
+
+  it("an unchanged head is skipped, not counted as a ceiling deferral", async () => {
+    const { deps, calls } = makeDeps({
+      repos: [repo({ repository: "a/one", lastPolledSha: "same", lastPolledAt: "2026-08-21T09:00:00Z" })],
+      heads: { "a/one": { sha: "same" } },
+      pollsAlreadyToday: 60,
+    });
+    const run = await runShadowCronOnce(deps, CFG, "cron");
+    assert.equal(run.headChecksSkipped, 1);
+    assert.equal(run.dailyCeilingRefusals, 0, "nothing changed, so nothing was deferred");
+    assert.equal(calls.transitions.length, 0, "no transition to record");
   });
 });

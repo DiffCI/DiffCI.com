@@ -1018,6 +1018,7 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
     recordRepositoryLiveness: (updates) => store.recordRepositoryLiveness(updates),
     // Hard daily ceiling on analysis launches - maxPollsPerRun bounds a sweep, never the day's spend.
     countPollsSince: (sinceIso) => store.countPollsSince(sinceIso),
+    recordHeadTransition: (t) => store.recordHeadTransition(t),
     listReconcilableRepositories: () => store.listReconcilableRepositories(),
     // Per-repo token so the head pre-check also works on private repositories with an App
     // installation; githubTokenForRepo degrades to GITHUB_TOKEN/anonymous for everything else.
