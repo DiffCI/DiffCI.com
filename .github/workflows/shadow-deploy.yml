@@ -1,0 +1,104 @@
+# Keeps the autonomous shadow pipeline LIVE across changes to main (External Shadow Pilot M3.2).
+#
+# The invariant this preserves, unchanged and deliberately NOT weakened:
+#   the autonomous system only ever analyses using code whose identity is known and current.
+#
+# src/research/cloudflare/shadow-source-integrity.ts pauses autonomous polling whenever the deployed
+# Worker's EXPECTED_SOURCE_SHA stops matching the uploaded source archive. That guard exists because of a
+# real incident (the cron silently kept running a commit four revisions behind main), and it is correct.
+# Its operational cost is that any push to main which touches the shadow pipeline can pause observation
+# until someone remembers to redeploy - which, during a pilot, is exactly when continuous observation
+# matters most.
+#
+# The remedy is to make the redeploy automatic rather than to relax the guard: deploy on every main
+# revision, stamp EXPECTED_SOURCE_SHA to that revision, and verify sourceIntegrity=CURRENT afterwards.
+# scripts/deploy-research-sandbox.ts already performs and verifies all of this, and exits non-zero if the
+# invariant does not hold - so a failed deploy fails the workflow rather than quietly leaving the pipeline
+# paused.
+#
+# ONE-TIME MANUAL SETUP (repository secrets - add these yourself; they are credentials):
+#   CLOUDFLARE_API_TOKEN      - Workers + D1 + R2 edit rights for the diffci-research-sandbox Worker
+#   CLOUDFLARE_ACCOUNT_ID     - the account owning that Worker
+#   RESEARCH_DISPATCH_TOKEN   - must match the Worker secret of the same name
+# Until those exist this workflow will fail loudly on its first run, which is the intended failure mode:
+# a silently skipped deploy would recreate the exact problem this file exists to prevent.
+
+name: Deploy shadow research Worker
+
+on:
+  push:
+    branches: [main]
+    # Only revisions that can actually change analysis behaviour. A docs-only commit does not invalidate
+    # the deployed analyzer, so redeploying for one would add risk and CI time for no integrity benefit.
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "wrangler.research-sandbox.jsonc"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/shadow-deploy.yml"
+  workflow_dispatch: {}
+
+# A second deploy racing the first would upload an archive for one SHA while the Worker expects another,
+# which computeSourceIntegrity would correctly report as STALE. Never cancel in progress: an interrupted
+# deploy can leave the Worker expecting a SHA whose archive was never uploaded.
+concurrency:
+  group: shadow-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The deploy script refuses a dirty tree and packages an exact commit, so it needs real history
+          # rather than a synthetic merge commit that exists nowhere else.
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      # Typecheck and tests run inside the deploy script too; running them here first means an obviously
+      # broken revision fails before it can touch the deployed Worker at all.
+      - run: npm run typecheck
+      - run: npm test
+
+      - name: Deploy and verify source integrity
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          RESEARCH_DISPATCH_TOKEN: ${{ secrets.RESEARCH_DISPATCH_TOKEN }}
+        # --skip-checks is safe here ONLY because typecheck and test already ran above as separate,
+        # independently-failing steps. It must never be used to bypass them.
+        run: |
+          npx tsx scripts/deploy-research-sandbox.ts \
+            --url https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev \
+            --label "auto-deploy ${GITHUB_SHA::8}" \
+            --skip-checks
+
+      # Independent post-check. The deploy script verifies the invariant itself, but a deploy that reports
+      # success while the pipeline is paused is precisely the failure this workflow exists to prevent, so
+      # it is worth confirming from outside the script that produced it.
+      - name: Confirm shadow polling is not paused
+        env:
+          RESEARCH_DISPATCH_TOKEN: ${{ secrets.RESEARCH_DISPATCH_TOKEN }}
+        run: |
+          status=$(curl -sS -H "Authorization: Bearer $RESEARCH_DISPATCH_TOKEN" \
+            "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/cron-status?limit=1")
+          echo "$status"
+          echo "$status" | node -e '
+            let d = "";
+            process.stdin.on("data", (c) => (d += c)).on("end", () => {
+              const j = JSON.parse(d);
+              const integrity = j.sourceIntegrity && j.sourceIntegrity.status;
+              if (!j.cronEnabled) throw new Error("cron is disabled - shadow observation is not running");
+              if (integrity !== "CURRENT") throw new Error(`sourceIntegrity=${integrity} - shadow analysis is paused`);
+              console.log("shadow pipeline is live: cronEnabled=true sourceIntegrity=CURRENT");
+            });
+          '
