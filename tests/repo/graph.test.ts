@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
@@ -603,5 +603,38 @@ describe("nested-package test visibility (2026-08-24, biomejs/biome finding)", (
     const deps = result.graph.dependenciesOf("packages/js-api/tests/index.test.ts");
     assert.deepStrictEqual(deps, [], "no import edges are fabricated for a program-excluded test file");
     assert.strictEqual(result.graph.nodes.find((n) => n.path === "packages/js-api/tests/index.test.ts")?.isTest, true);
+  });
+});
+
+describe("tsconfig discovery is clamped to the repository (Phase 01 F5, 2026-08-26)", () => {
+  // createProgram() used ts.findConfigFile(repoPath, ...), which starts at repoPath and walks UP. A
+  // repository cloned beneath any directory holding a tsconfig.json was therefore analysed against
+  // that ANCESTOR's project. Known and unfixed since 2026-08-20 (flagged in a comment in
+  // src/research/repository/collector.ts). It never affected the container pipeline, where clones
+  // land at /repos/<name>, but it silently corrupted every local run - including the runs this phase
+  // uses to verify itself.
+  it("does not adopt an ancestor's tsconfig.json when the repository has none", async () => {
+    const outer = mkdtempSync(join(tmpdir(), "diffci-ancestor-"));
+    try {
+      writeFileSync(
+        join(outer, "tsconfig.json"),
+        JSON.stringify({ compilerOptions: { target: "ES2022", moduleResolution: "Bundler", noEmit: true }, include: ["**/*.ts"] }),
+      );
+      writeFileSync(join(outer, "ancestor-only.ts"), "export const fromAncestor = 1;\n");
+
+      const inner = join(outer, "nested-repo");
+      mkdirSync(join(inner, "src"), { recursive: true });
+      writeFileSync(join(inner, "package.json"), JSON.stringify({ name: "nested", version: "1.0.0", type: "module" }));
+      writeFileSync(join(inner, "src/index.ts"), "export const own = 1;\n");
+
+      const result = await buildDependencyGraph({ repoPath: inner });
+
+      assert.ok(
+        !result.graph.nodes.some((n) => n.path.includes("ancestor-only")),
+        `the ancestor's source must never enter this repository's graph: ${result.graph.nodes.map((n) => n.path).join(", ")}`,
+      );
+    } finally {
+      rmSync(outer, { recursive: true, force: true });
+    }
   });
 });

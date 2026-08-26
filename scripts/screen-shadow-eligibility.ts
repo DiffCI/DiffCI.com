@@ -13,13 +13,20 @@
  * outcome for both known cases - unjs/nitro ELIGIBLE (polls successfully) and vitest-dev/vitest
  * INELIGIBLE (clone-excluded) - and caught vitejs/vite as INELIGIBLE before it was ever enrolled.
  *
- * This is a SCREEN, not a guarantee. It mirrors the one condition the collector checks first
- * (src/research/repository/collector.ts: a root tsconfig.json). A repository can still turn out to be
- * unanalysable for other reasons, which is why the in-pipeline refusal (auto-pause after repeated poll
- * failures) exists as the backstop rather than being replaced by this.
+ * UPDATED 2026-08-26 (Phase 01 F3). Those vitest/vite verdicts were faithful to the collector and
+ * WRONG about the engine: the graph builder had already supported per-package tsconfigs since
+ * 2026-08-24, and both repositories build real graphs (2118 and 1131 nodes) once the gate lets them
+ * through. The screen now mirrors the widened rule - a root tsconfig.json OR per-package tsconfigs
+ * anywhere in the tree - and reports the nested case as eligible-with-a-caveat rather than refusing
+ * it, because merged compiler options cap graph confidence at PARTIAL. The cost control this script
+ * was written for is unchanged; only the boundary moved, to where it always should have been.
  *
- * Deliberately NOT an engine change. Monorepo support is a real gap and remains open; this bounds its
- * COST without pretending to close it.
+ * This is a SCREEN, not a guarantee. It mirrors the condition the collector checks first
+ * (src/research/repository/collector.ts, which now delegates to classifyTypeScriptProject()). A
+ * repository can still turn out to be unanalysable for other reasons, which is why the in-pipeline
+ * refusal (auto-pause after repeated poll failures) exists as the backstop rather than being
+ * replaced by this. A repository tree too large to enumerate in one API call is reported UNDETERMINED
+ * rather than INELIGIBLE - an unanswerable question is not a negative answer.
  *
  * Usage: npx tsx scripts/screen-shadow-eligibility.ts owner/repo [owner/repo ...]
  *   GITHUB_TOKEN optional but recommended (60 req/hour unauthenticated).
@@ -37,6 +44,10 @@ export interface EligibilityVerdict {
   defaultBranch?: string;
   commitsLast14d?: number;
   hasActions?: boolean;
+  /** Which TypeScript project layout was found - "nested" repositories are analysable but their
+   * merged compiler options cap graph confidence at PARTIAL. */
+  tsconfigKind?: "root" | "nested" | "none";
+  nestedTsconfigCount?: number;
 }
 
 export async function screenRepository(repository: string, token?: string): Promise<EligibilityVerdict> {
@@ -48,15 +59,43 @@ export async function screenRepository(repository: string, token?: string): Prom
   if (meta.message) return { repository, eligible: false, reason: `repository unreachable: ${meta.message}` };
   if (meta.archived) return { repository, eligible: false, reason: "repository is archived - it will never produce new commits" };
 
-  // The exact condition the collector checks first, and the one that excluded vitest.
-  const tsconfig = await fetch(`https://api.github.com/repos/${repository}/contents/tsconfig.json`, { headers: H(token), redirect: "follow" });
-  if (tsconfig.status !== 200) {
-    return {
-      repository,
-      eligible: false,
-      reason: `STRUCTURALLY_INELIGIBLE_ROOT_TSCONFIG_REQUIRED - no tsconfig.json at the repository root (HTTP ${tsconfig.status}). Typically a monorepo with per-package tsconfigs.`,
-      defaultBranch: meta.default_branch,
-    };
+  // The condition the collector checks first. Phase 01 (2026-08-26) widened it on both sides to
+  // match what the graph builder can actually do: a root tsconfig.json OR per-package tsconfigs
+  // anywhere in the tree. Refusing the second class is what excluded vitest-dev/vitest and
+  // facebook/docusaurus, both of which build real graphs (2118 and 1131 nodes) once the gate lets
+  // them through - the refusal was a stale gate, not an engine limit.
+  const rootTsconfig = await fetch(`https://api.github.com/repos/${repository}/contents/tsconfig.json`, { headers: H(token), redirect: "follow" });
+  let tsconfigKind: "root" | "nested" | "none" = rootTsconfig.status === 200 ? "root" : "none";
+  let nestedTsconfigCount = 0;
+
+  if (tsconfigKind === "none") {
+    // One tree read answers the nested case for the whole repository. `truncated` means the tree is
+    // too large for a single response, in which case the absence of a match proves nothing and the
+    // screen says so rather than reporting a false INELIGIBLE.
+    const tree = (await (
+      await fetch(`https://api.github.com/repos/${repository}/git/trees/${meta.default_branch}?recursive=1`, { headers: H(token) })
+    ).json()) as { tree?: Array<{ path?: string; type?: string }>; truncated?: boolean };
+
+    const nested = (tree.tree ?? []).filter(
+      (entry) =>
+        entry.type === "blob" &&
+        entry.path?.endsWith("tsconfig.json") &&
+        !entry.path.startsWith("node_modules/") &&
+        !entry.path.includes("/node_modules/"),
+    );
+    nestedTsconfigCount = nested.length;
+    if (nested.length > 0) tsconfigKind = "nested";
+
+    if (tsconfigKind === "none") {
+      return {
+        repository,
+        eligible: false,
+        reason: tree.truncated
+          ? "UNDETERMINED - no root tsconfig.json and the repository tree is too large to enumerate in one request; screen it by cloning rather than trusting this result"
+          : "STRUCTURALLY_INELIGIBLE_NO_TYPESCRIPT_PROJECT - no tsconfig.json anywhere in the repository, so there is nothing for the graph builder to parse",
+        defaultBranch: meta.default_branch,
+      };
+    }
   }
 
   // Not eligibility, but decision-relevant: a repository with no Actions produces no workload telemetry,
@@ -71,13 +110,23 @@ export async function screenRepository(repository: string, token?: string): Prom
     return { repository, eligible: false, reason: "no GitHub Actions runs - there is no CI workload to observe", defaultBranch: meta.default_branch, commitsLast14d, hasActions };
   }
 
+  const layoutNote =
+    tsconfigKind === "nested"
+      ? ` (monorepo layout: ${nestedTsconfigCount} per-package tsconfig.json, no root one - graph confidence is capped at PARTIAL, so expect a higher FULL-fallback rate)`
+      : "";
+
   return {
     repository,
     eligible: true,
-    reason: commitsLast14d === 0 ? "eligible, but DORMANT - no default-branch commits in 14 days, so it will produce no evidence" : "eligible",
+    reason:
+      (commitsLast14d === 0
+        ? "eligible, but DORMANT - no default-branch commits in 14 days, so it will produce no evidence"
+        : "eligible") + layoutNote,
     defaultBranch: meta.default_branch,
     commitsLast14d,
     hasActions,
+    tsconfigKind,
+    nestedTsconfigCount,
   };
 }
 

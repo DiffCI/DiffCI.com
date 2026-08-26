@@ -35,7 +35,7 @@ describe("collectMetadata tsconfig-less-JS exclusion", () => {
 
     const metadata = collectMetadata(repo("javascript"), dir);
 
-    assert.match(metadata.exclusionReason ?? "", /no tsconfig\.json found/);
+    assert.match(metadata.exclusionReason ?? "", /no tsconfig\.json anywhere/);
     assert.equal(metadata.languageSupport.diffciGraphCapable, false);
     assert.match(metadata.languageSupport.reason, /tsconfig/);
   });
@@ -51,21 +51,51 @@ describe("collectMetadata tsconfig-less-JS exclusion", () => {
     assert.equal(metadata.languageSupport.diffciGraphCapable, true);
   });
 
-  it("DOES exclude a repository whose only tsconfig.json is nested in a subdirectory, not at the root", () => {
-    // Real finding, larger-study run 2026-08-20: fastify/fastify (and several other real corpus repos)
-    // have a tsconfig.json nested in an examples/ or fixtures/ subdirectory but none at the repo root.
-    // A first version of this check walked the whole repo tree and found the nested one, reporting
-    // false capability - then every sampled commit failed anyway, because createProgram()'s
-    // ts.findConfigFile() only ever starts at the repo root and walks UP, never down into
-    // subdirectories. This must match that exact behavior, not a more permissive "anywhere in the tree"
-    // search.
+  it("does NOT exclude a monorepo whose tsconfigs are per-package, and says so in the reason", () => {
+    // INVERTED 2026-08-26 (Phase 01 F3). This asserted the opposite, on the grounds that
+    // createProgram()'s ts.findConfigFile() "only ever starts at the repo root and walks UP, never
+    // down into subdirectories". That was true when written and stopped being true on 2026-08-24,
+    // when graph.ts gained nested per-package tsconfig discovery for biome and cal.diy. The gate was
+    // never updated, so it went on refusing repositories the engine could analyse: vitest-dev/vitest
+    // and facebook/docusaurus were both excluded as "cannot analyze" and then built 2118- and
+    // 1131-node graphs. Refusing vitest cost roughly 144 container launches a day, because the
+    // refusal is raised after the clone.
+    //
+    // The gate now delegates to classifyTypeScriptProject() rather than restating a rule beside the
+    // graph builder, so this class of drift cannot recur silently.
     mkdirSync(join(dir, "packages/core"), { recursive: true });
     writeFileSync(join(dir, "packages/core/tsconfig.json"), "{}\n");
     writeFileSync(join(dir, "packages/core/index.ts"), "export {};\n");
 
     const metadata = collectMetadata(repo("typescript"), dir);
 
-    assert.match(metadata.exclusionReason ?? "", /no tsconfig\.json found/);
+    assert.equal(metadata.exclusionReason, undefined);
+    assert.equal(metadata.languageSupport.diffciGraphCapable, true);
+    assert.match(metadata.languageSupport.reason, /per-package tsconfig/);
+    assert.match(metadata.languageSupport.reason, /PARTIAL/, "the confidence cap must be stated, not implied");
+  });
+
+  it("admits the fastify shape - only an examples/ tsconfig - and relies on confidence to contain it", () => {
+    // The original reason for the root-only rule: fastify/fastify has a tsconfig.json nested under
+    // examples/ or fixtures/ and none at the root, so "capable" would be answered by a project that
+    // describes example code rather than the library. That imprecision is real and is NOT claimed to
+    // be solved here - the gate is a cheap structural check, not an analysis.
+    //
+    // What contains it is downstream and load-bearing: a changed source file absent from the graph
+    // classifies as UNKNOWN_FILE and forces FULL, and a repository declaring a test framework with no
+    // discoverable tests is a blind spot that also forces FULL (Phase 01 F1). The failure mode is a
+    // conservative fallback, not a confident wrong selection - which is the trade this gate should be
+    // making, given the alternative is refusing every genuine monorepo.
+    mkdirSync(join(dir, "examples"), { recursive: true });
+    writeFileSync(join(dir, "examples/tsconfig.json"), "{}\n");
+    writeFileSync(join(dir, "examples/demo.ts"), "export {};\n");
+    mkdirSync(join(dir, "lib"), { recursive: true });
+    writeFileSync(join(dir, "lib/index.js"), "module.exports = {};\n");
+
+    const metadata = collectMetadata(repo("javascript"), dir);
+
+    assert.equal(metadata.exclusionReason, undefined);
+    assert.equal(metadata.languageSupport.diffciGraphCapable, true);
   });
 
   it("also excludes a non-TS/JS repository, with the exact language reason (not just tsconfig-less JS)", () => {

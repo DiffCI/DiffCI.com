@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { classifyTypeScriptProject } from "../../repo/graph.js";
 import type { ResearchRepository, RepositoryMetadata } from "../types.js";
 
 /**
@@ -145,18 +146,32 @@ export function collectMetadata(repo: ResearchRepository, localPath: string): Re
   // ANCESTOR tsconfig.json outside the repo entirely when repos are cloned to a path nested inside
   // diffci/ itself, as they are in local runs - a separate, still-unfixed latent bug in graph.ts, not
   // this repository-scoped check).
-  const hasTsconfig = existsSync(resolve(localPath, "tsconfig.json"));
+  // Phase 01 F3 (2026-08-26): ask the graph builder itself what it can handle instead of restating a
+  // rule beside it. The paragraph above describes the ROOT-ONLY check this used to perform, and why
+  // an upward findConfigFile walk was the wrong thing to mirror. Both concerns are now settled inside
+  // classifyTypeScriptProject(), which never walks above the repository root and does recognise the
+  // nested per-package layouts graph.ts has supported since 2026-08-24. Refusing those cost roughly
+  // 144 container launches a day on vitest-dev/vitest, for repositories that then built 2000-node
+  // graphs when the refusal was bypassed.
+  const project = classifyTypeScriptProject(localPath);
   const isTsOrJs = repo.primaryLanguage === "typescript" || repo.primaryLanguage === "javascript";
   if (!isTsOrJs) {
     metadata.languageSupport = { diffciGraphCapable: false, reason: `DiffCI graph parser does not yet support ${repo.primaryLanguage}` };
-  } else if (!hasTsconfig) {
+  } else if (!project.capable) {
     // Real finding, 2026-08-20 small batch: lukeed/kleur (plain JS, no tsconfig.json anywhere in the
     // repo) made every single sampled commit fail outright inside createProgram() ("No tsconfig.json
     // found in ..."), producing zero records and zero fallback rather than an explicit, reported
-    // exclusion - a silent gap, not a safe failure mode.
-    metadata.languageSupport = { diffciGraphCapable: false, reason: "no tsconfig.json found at the repository root" };
+    // exclusion - a silent gap, not a safe failure mode. That case is still excluded; a monorepo with
+    // per-package tsconfigs is not the same case and is no longer treated as one.
+    metadata.languageSupport = { diffciGraphCapable: false, reason: project.reason };
   } else {
-    metadata.languageSupport = { diffciGraphCapable: true, reason: "DiffCI graph parser supports TS/JS source" };
+    metadata.languageSupport = {
+      diffciGraphCapable: true,
+      reason:
+        project.kind === "root"
+          ? "DiffCI graph parser supports TS/JS source"
+          : `DiffCI graph parser supports TS/JS source (${project.reason}; graph confidence is capped at PARTIAL for this layout)`,
+    };
   }
 
   // Every path above that leaves diffciGraphCapable false represents a repository createProgram() will

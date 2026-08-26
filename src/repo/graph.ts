@@ -349,7 +349,7 @@ const NESTED_TSCONFIG_IGNORED_DIRS = FALLBACK_SCAN_IGNORED_DIRS;
  * source-file fallback's own bound - real monorepos have one per package, nowhere near this. */
 const NESTED_TSCONFIG_MAX_FILES = 1_000;
 
-function discoverNestedTsconfigPaths(repoPath: string): string[] {
+export function discoverNestedTsconfigPaths(repoPath: string): string[] {
   const found: string[] = [];
   function walk(dirAbs: string): void {
     if (found.length >= NESTED_TSCONFIG_MAX_FILES) return;
@@ -385,7 +385,15 @@ function createProgram(
   fileNames: readonly string[];
   resolvedViaProjectReferences: boolean;
 } {
-  const configPath = ts.findConfigFile(repoPath, ts.sys.fileExists, "tsconfig.json");
+  // Phase 01 F5 (2026-08-26). This was `ts.findConfigFile(repoPath, ...)`, which starts at repoPath
+  // and walks UP - so a repository cloned beneath any directory containing a tsconfig.json was
+  // silently analysed against that ANCESTOR's project instead of its own. Flagged as a known latent
+  // bug in src/research/repository/collector.ts and left unfixed since. It never bit the container
+  // pipeline (clones land at /repos/<name>, with nothing above them) but it corrupts every local run,
+  // which is precisely how this phase's own verification is done. Clamped to the repository root:
+  // identical behaviour when a root tsconfig exists, and no escape when it does not.
+  const rootConfigCandidate = join(repoPath, "tsconfig.json");
+  const configPath = ts.sys.fileExists(rootConfigCandidate) ? rootConfigCandidate : undefined;
 
   let fileNames: readonly string[] = [];
   let options: ts.CompilerOptions = {};
@@ -815,6 +823,53 @@ export async function buildDependencyGraph(
     confidence,
     integrity,
     resolvedViaProjectReferences,
+  };
+}
+
+export type TypeScriptProjectKind = "root" | "nested" | "none";
+
+export interface TypeScriptProjectCapability {
+  /** Whether createProgram() has any tsconfig at all to build a Program from. */
+  capable: boolean;
+  kind: TypeScriptProjectKind;
+  /** Number of per-package tsconfigs found when `kind` is "nested". */
+  nestedCount: number;
+  reason: string;
+}
+
+/**
+ * Can DiffCI build a dependency graph for this repository? (Phase 01 F3, 2026-08-26.)
+ *
+ * This exists so the eligibility gate cannot drift from what the graph builder can actually do -
+ * which is exactly what happened. `src/repo/graph.ts` gained nested per-package tsconfig support on
+ * 2026-08-24 (for biome and cal.diy); `collectMetadata()` kept refusing anything without a ROOT
+ * tsconfig, with the message "DiffCI cannot analyze this repository". On the Phase 01 baseline both
+ * `vitest-dev/vitest` and `facebook/docusaurus` were refused by that gate and then built real graphs
+ * of 2118 and 1131 nodes. The message was not a limitation, it was out of date - and it cost roughly
+ * 144 container launches a day before the ramp caught it.
+ *
+ * A nested-only layout is capable but not equivalent: createProgram() merges several sub-projects'
+ * compiler options into one approximation, which caps graph confidence at PARTIAL. Callers should
+ * report the kind rather than flatten it to a boolean.
+ */
+export function classifyTypeScriptProject(repoPath: string): TypeScriptProjectCapability {
+  if (existsSync(join(repoPath, "tsconfig.json"))) {
+    return { capable: true, kind: "root", nestedCount: 0, reason: "tsconfig.json at the repository root" };
+  }
+  const nested = discoverNestedTsconfigPaths(repoPath);
+  if (nested.length > 0) {
+    return {
+      capable: true,
+      kind: "nested",
+      nestedCount: nested.length,
+      reason: `no root tsconfig.json, but ${nested.length} per-package tsconfig.json file(s) the graph builder merges`,
+    };
+  }
+  return {
+    capable: false,
+    kind: "none",
+    nestedCount: 0,
+    reason: "no tsconfig.json anywhere in the repository - there is no TypeScript project to build a graph from",
   };
 }
 
