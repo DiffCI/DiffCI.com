@@ -5,7 +5,8 @@ import { buildDependencyGraph } from "../src/repo/graph.js";
 import { ImpactAnalyzer } from "../src/repo/impact.js";
 import type { ImpactResult } from "../src/repo/impact-types.js";
 import { DefaultCIPlanner } from "../src/planner/planner.js";
-import { buildDentalPresenceTaskRegistry } from "../src/planner/task-registry.js";
+import { buildGenericTaskRegistry } from "../src/research/baseline/registry.js";
+import { parseRepositoryWorkflows } from "../src/research/baseline/workflow-parser.js";
 import { explain } from "../src/planner/explain.js";
 import { runShadowAnalysis, runGit } from "../src/shadow/runner.js";
 import { DiffCiPersistence } from "../src/shadow/persistence.js";
@@ -130,7 +131,7 @@ async function runPlan(args: Record<string, string | boolean | string[]>) {
 
   const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
   const impact = new ImpactAnalyzer().analyze(gitResult.delta, graphResult, graphResult.profile, { repositoryFiles: gitResult.inventory?.files });
-  const registry = buildDentalPresenceTaskRegistry();
+  const registry = buildGenericTaskRegistry(graphResult.profile, "typescript", parseRepositoryWorkflows(graphResult.profile, repoPath));
   const planner = new DefaultCIPlanner(registry);
   const plan = planner.plan({ delta: gitResult.delta, impact, profile: graphResult.profile });
 
@@ -183,7 +184,7 @@ async function runExplain(args: Record<string, string | boolean | string[]>) {
 
   const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
   const impact = new ImpactAnalyzer().analyze(gitResult.delta, graphResult, graphResult.profile, { repositoryFiles: gitResult.inventory?.files });
-  const registry = buildDentalPresenceTaskRegistry();
+  const registry = buildGenericTaskRegistry(graphResult.profile, "typescript", parseRepositoryWorkflows(graphResult.profile, repoPath));
   const planner = new DefaultCIPlanner(registry);
   const plan = planner.plan({ delta: gitResult.delta, impact, profile: graphResult.profile });
 

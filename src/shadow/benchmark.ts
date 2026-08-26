@@ -1,7 +1,7 @@
 import type { GitDelta } from "../git/types.js";
 import { DefaultCIPlanner } from "../planner/planner.js";
 import { runPathBaseline } from "../planner/path-baseline.js";
-import { buildDentalPresenceTaskRegistry } from "../planner/task-registry.js";
+import { buildGenericTaskRegistry } from "../research/baseline/registry.js";
 import type { ImpactResult } from "../repo/impact-types.js";
 import type { DependencyGraphResult, RepositoryProfile } from "../repo/types.js";
 import { categorizeCommit, computeAggregateStats, computeCategoryStats } from "./stats.js";
@@ -18,7 +18,11 @@ export function createBenchmarkRun(
   profile: RepositoryProfile,
   timing?: BenchmarkRun["timing"],
 ): BenchmarkRun {
-  const registry = buildDentalPresenceTaskRegistry();
+  // Phase 01 F4 (2026-08-26): derived from the profile of the repository this record came from,
+  // not from DentalPresence's task list. No repository path is available here, so workflow-derived
+  // tasks are unavailable and the registry falls back to what package.json declares - which is
+  // repository-specific in the right way, unlike what it replaced.
+  const registry = buildGenericTaskRegistry(profile, "typescript", []);
   const planner = new DefaultCIPlanner(registry);
   const plan = planner.plan({ delta, impact, profile });
 

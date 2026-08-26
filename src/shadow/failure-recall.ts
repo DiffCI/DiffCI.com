@@ -10,7 +10,7 @@ export function buildFailureRecallRecords(
   failedTestNames?: string[],
 ): FailureRecallRecord[] {
   const records: FailureRecallRecord[] = [];
-  const taskIds = failedTaskIds(baseline);
+  const taskIds = failedTaskIds(baseline, plan.tasks);
   for (const taskId of taskIds) {
     const planTask = plan.tasks.find((t) => t.id === taskId);
     const skipped = planTask?.status === "SKIP_CANDIDATE";

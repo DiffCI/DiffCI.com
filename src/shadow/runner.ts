@@ -5,7 +5,8 @@ import { ImpactAnalyzer } from "../repo/impact.js";
 import type { DependencyGraphResult } from "../repo/types.js";
 import { GraphCache, buildGraphCacheKey, hashFileContents } from "../cache/graph-cache.js";
 import { DefaultCIPlanner } from "../planner/planner.js";
-import { buildDentalPresenceTaskRegistry } from "../planner/task-registry.js";
+import { buildGenericTaskRegistry } from "../research/baseline/registry.js";
+import { parseRepositoryWorkflows } from "../research/baseline/workflow-parser.js";
 import type { ShadowRunRecord, TimingBreakdown } from "./types.js";
 
 export interface ShadowRunOptions {
@@ -110,7 +111,14 @@ export async function runShadowAnalysis(options: ShadowRunOptions): Promise<Shad
   timing.impactAnalysisMs = nowMs() - tImpactStart;
 
   const tPlannerStart = nowMs();
-  const registry = buildDentalPresenceTaskRegistry();
+  // Phase 01 F4 (2026-08-26): this called buildDentalPresenceTaskRegistry(), so every repository it
+  // analysed - any repository, this is the generic shadow entry point - was planned against
+  // DentalPresence's ~20 CI tasks: WordPress plugin linting, AWS account validation, a Next.js
+  // build. For unjs/h3 the resulting plan named tasks that repository has never had. The registry is
+  // now derived from the target repository's own workflows and package.json scripts, which is what
+  // the live cron path (scripts/cloudflare-shadow-poll.ts) had already been doing.
+  const parsedWorkflows = parseRepositoryWorkflows(graphResult.profile, repoPath);
+  const registry = buildGenericTaskRegistry(graphResult.profile, "typescript", parsedWorkflows);
   const planner = new DefaultCIPlanner(registry);
   const plan = planner.plan({ delta, impact, profile: graphResult.profile });
   timing.plannerMs = nowMs() - tPlannerStart;

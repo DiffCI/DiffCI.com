@@ -101,7 +101,7 @@ export async function runShadowExperiment(options: ShadowExperimentOptions): Pro
       baseline = await fetchBaselineEvidence({ repository: options.repository, headSha: options.headSha, token: options.token });
       record.baseline = baseline;
       if (baseline.status === "COMPLETE") {
-        record.taskTimings = buildTaskTimings(record.actualTasks, baseline);
+        record.taskTimings = buildTaskTimings(record.plan.tasks, baseline);
         record.failureRecallRecords = buildFailureRecallRecords(record.plan, baseline, record.changedFiles, identity);
         record.measured = computeMeasuredMetrics(record.plan, baseline, record.timing.totalDiffCiOverheadMs);
         reliability.push(reliabilityEvent("baseline-fetch", true));

@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DiffCI — find out what your CI is wasting</title>
+<meta name="description" content="DiffCI observes your repository's real CI runs and reports how much compute was avoidable, in hindsight, without ever changing your CI.">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◧</text></svg>">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="/">Diff<span>CI</span></a>
+    <nav>
+      <a href="#how">How it works</a>
+      <a href="#evidence">Evidence</a>
+      <a href="#limits">Limits</a>
+      <a href="#pilot">Pilot</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="wrap hero">
+  <h1>Find out what your CI is wasting. Without changing your CI.</h1>
+  <p class="lede">
+    DiffCI watches your repository's real CI runs, works out which tests each change could actually have
+    affected, and reports how much compute was avoidable — in hindsight, against what your CI really did.
+  </p>
+  <p>
+    It has no permission to skip, cancel, or modify anything. That is not a setting. It is the only mode
+    that exists.
+  </p>
+  <p class="hero-note">
+    There is no headline percentage on this page. The honest number is repository-specific: the same
+    selection quality produced ~44% and ~85% job-level reduction on two different real repositories. A
+    single number would be an average of two things that aren't alike.
+  </p>
+</section>
+
+<section class="wrap">
+  <h2>The problem</h2>
+  <p>
+    A twelve-line change to one package re-runs four thousand tests in ninety other packages.
+  </p>
+  <p>
+    Everyone knows this is happening. Almost nobody knows what it costs them, because measuring it means
+    either trusting a tool to start skipping things, or designing an experiment nobody has time for.
+  </p>
+  <p><strong>DiffCI is the measurement, delivered before the risk.</strong></p>
+</section>
+
+<section class="wrap" id="how">
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li>
+      <b>Observe</b>
+      A read-only GitHub App sees pushes and completed workflow runs. Metadata, contents, Actions,
+      checks, pull requests — read-only, all five.
+    </li>
+    <li>
+      <b>Analyze</b>
+      For each change, DiffCI builds a real TypeScript compiler-backed dependency graph, computes what is
+      reachable from the changed files, and produces a confidence-scored plan: which tests a safe system
+      would have run. Changes it cannot reason about — lockfiles, workflow files, root config — force a
+      mandatory fallback to "run everything". That is the default, not the exception path.
+    </li>
+    <li>
+      <b>Reconcile</b>
+      When your CI finishes, DiffCI reads the real outcome and timings and asks the only question that
+      matters in hindsight: <em>would that plan have missed a failure your CI actually caught?</em>
+    </li>
+    <li>
+      <b>Report</b>
+      Runs observed, compute consumed, compute avoidable, missed failures — and, explicitly, what could
+      not be measured.
+    </li>
+  </ol>
+</section>
+
+<section class="wrap">
+  <h2>The report</h2>
+  <div class="report">
+    <div class="report-label">Illustrative layout — placeholder values, not data from any repository</div>
+<pre>Last 7 days · your-org/your-repo
+
+  CI runs observed                    ---
+  Runner-hours consumed               ---   MEASURED
+  Runner-hours potentially avoidable  ---   ESTIMATED
+  Observed missed failures            ---   MEASURED
+  Selected-run execution        not measured</pre>
+  </div>
+  <p>
+    Three labels, and they mean exactly what they say. <span class="tag">MEASURED</span> is a number a
+    clock produced. <span class="tag">ESTIMATED</span> is an inference from a cost model whose weaknesses
+    we will tell you about. <span class="tag">UNKNOWN</span> is where a lesser tool would have guessed.
+  </p>
+  <p>
+    DiffCI will not turn an estimated figure into an invoice. Ever. If it eventually charges for
+    anything, it charges against savings that were executed and timed.
+  </p>
+</section>
+
+<section class="wrap" id="evidence">
+  <h2>Evidence</h2>
+  <p>
+    Nothing on this page comes from a demo. Every figure below was produced by executing real test suites
+    from real repositories on real infrastructure, with the full run and the selected run both timed.
+  </p>
+
+  <div class="card">
+    <h3>cal.com — five predeclared merges, plus one measured six ways</h3>
+    <div class="table-scroll">
+      <table>
+        <tr><td>Test-stage reduction</td><td class="num">86.0% – 91.6% net</td></tr>
+        <tr><td>Complete-job reduction</td><td class="num">44.2% net</td></tr>
+        <tr><td>Selection honored exactly</td><td class="num">8 of 8</td></tr>
+        <tr><td>Mutation recall</td><td class="num">3 of 3 measurable</td></tr>
+      </table>
+    </div>
+    <p>
+      The two reduction figures are the same saving measured against two different denominators.
+      cal.com's install costs about as much as its entire test suite, so cutting the test stage by 91%
+      cuts the job by 44%. We publish both, and lead with the smaller one.
+    </p>
+    <p class="card-more"><a href="/case-studies/calcom.html">Read the cal.com case study →</a></p>
+  </div>
+
+  <div class="card">
+    <h3>deepseek-ai/deepseek-harness — the repository that was allowed to be messy</h3>
+    <div class="table-scroll">
+      <table>
+        <tr><td>Test-stage reduction</td><td class="num">83.5% – 94.3% net</td></tr>
+        <tr><td>Complete-job reduction</td><td class="num">79.5% – 89.5% net</td></tr>
+        <tr><td>Mutation recall</td><td class="num">3 of 3 measurable</td></tr>
+        <tr><td>Selection <em>not</em> honored</td><td class="num">1 of 5</td></tr>
+      </table>
+    </div>
+    <p>
+      This repository has 16–18 failing tests on every run before anyone changes anything. A naive safety
+      check reads that as "the selected run caught the regression" and is wrong every time. DiffCI's
+      recall is computed as a diff against the baseline, which is how this repository's flaws became
+      evidence rather than noise. The merge where the selection was <em>not</em> honored is reported as a
+      limitation, not scored as a win.
+    </p>
+    <p class="card-more"><a href="/case-studies/deepseek-harness.html">Read the deepseek-harness case study →</a></p>
+  </div>
+
+  <div class="card">
+    <h3>DiffCI's own CI</h3>
+    <p>
+      DiffCI's test suite — 1,357 tests across 290 suites, currently green — does not run on
+      GitHub-hosted runners. It runs on ephemeral Cloudflare containers at roughly $0.004 per job, about
+      a minute per run, with zero GitHub Actions minutes billed. We built our own runner fleet because we
+      needed the timing data to be ours.
+    </p>
+    <p class="card-more"><a href="/case-studies/diffci-own-ci.html">Read how →</a></p>
+  </div>
+</section>
+
+<section class="wrap" id="limits">
+  <h2>What we won't tell you</h2>
+  <p>This section is here on purpose, and it is not going to be moved to the footer.</p>
+  <ul>
+    <li>
+      <strong>Nobody's CI has ever been made faster by DiffCI.</strong> Nothing has ever been skipped in a
+      production pipeline. The savings above were measured by executing both paths in our own sandbox.
+    </li>
+    <li>
+      <strong>There are no customers.</strong> cal.com, deepseek-harness and the unjs projects are public
+      repositories analyzed from public data. None of them use DiffCI. None of them have endorsed it.
+    </li>
+    <li>
+      <strong>Our failure prediction is not good yet.</strong> Replayed against 24 of our own historical
+      CI failures, the preflight checks would have caught 16 of 23 evaluable ones — 0.696. Every one it
+      caught was a typecheck or configuration failure. Every unit-test failure in that dataset was a miss.
+    </li>
+    <li>
+      <strong>The external pilot is early.</strong> The shadow cohort is small, and one enrolled
+      repository turned out to be unanalysable and was excluded rather than quietly retried. We are not
+      going to describe that as traction.
+    </li>
+    <li>
+      <strong>Small selections make our estimator optimistic.</strong> A run selecting zero of forty tests
+      still pays the suite's startup cost, and the estimator does not model that. It is being calibrated
+      per repository from real measurement, not patched with a guessed constant.
+    </li>
+  </ul>
+</section>
+
+<section class="wrap" id="pilot">
+  <h2>The pilot</h2>
+  <div class="table-scroll">
+    <table>
+      <tr><th>What you give</th><td>Read-only access to one repository, for seven days.</td></tr>
+      <tr><th>What you get</th><td>A report of what your CI ran, what was avoidable, and whether any change DiffCI would have de-prioritized turned out to break something.</td></tr>
+      <tr><th>What it costs</th><td>Nothing. There is no paid tier to upgrade to. The open question we are paying to answer is whether the report is worth having.</td></tr>
+      <tr><th>What we store</th><td>See <a href="/data-handling.html">data handling</a>.</td></tr>
+    </table>
+  </div>
+
+  <div class="cta">
+    <a class="button" href="https://github.com/apps/diffci-shadow">Install the read-only App</a>
+    <p class="cta-note">
+      DiffCI can only analyze a repository with a <code>tsconfig.json</code> at its root, active GitHub
+      Actions, and recent commits. If yours doesn't qualify it will say so rather than produce a report
+      built on nothing.
+    </p>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="todo">
+    <b>Not ready to launch</b>
+    Three things must be settled before this domain points here: the legal entity and contact address in
+    the footer, the App install slug above (verify it resolves), and the deletion path promised on the
+    data-handling page, which is not implemented yet.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p>
+    <p>
+      <a href="/case-studies/calcom.html">cal.com</a> ·
+      <a href="/case-studies/deepseek-harness.html">deepseek-harness</a> ·
+      <a href="/case-studies/diffci-own-ci.html">our own CI</a> ·
+      <a href="/data-handling.html">Data handling</a>
+    </p>
+    <p style="color: var(--text-faint)">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+  </div>
+</footer>
+
+</body>
+</html>

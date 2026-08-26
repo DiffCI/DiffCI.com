@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cal.com — DiffCI case study</title>
+<meta name="description" content="Six real cal.com merges, executed and timed: 86–91.6% test-stage reduction, 44.2% at job level, 8 of 8 selections honored exactly.">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◧</text></svg>">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="/">Diff<span>CI</span></a>
+    <nav>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#limits">Limits</a>
+      <a href="/#pilot">Pilot</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<article class="wrap">
+
+  <a class="backlink" href="/#evidence">← All evidence</a>
+
+  <p class="eyebrow">Case study</p>
+  <h1>cal.com</h1>
+
+  <div class="disclaimer">
+    <strong>cal.com is not a DiffCI customer.</strong> It is a public open-source repository with public
+    CI. Everything below was produced by analyzing its public source and replaying its own test suite in
+    DiffCI's sandbox. cal.com has not installed DiffCI, has not been contacted about it, and has not
+    endorsed anything here. No change was ever proposed to, or made in, cal.com's real CI.
+  </div>
+
+  <h2 class="no-rule">The short version</h2>
+  <p>
+    Across six real merges from cal.com's history — five of them selected by a rule written down
+    <em>before</em> anyone looked at what they would cost — DiffCI selected between 1 and 5 test files out
+    of ~250, and the selected runs were then actually executed and timed against full-suite runs of the
+    same commit.
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <tr><td>Test-stage reduction, net of DiffCI's own analysis cost</td><td class="num">86.0% – 91.6%</td></tr>
+      <tr><td>Complete-job reduction (install + pretest + test)</td><td class="num">44.2% net</td></tr>
+      <tr><td>Runtime selection honored exactly</td><td class="num">8 of 8</td></tr>
+      <tr><td>Mutation recall</td><td class="num">3 of 3 measurable</td></tr>
+      <tr><td>Infrastructure failures</td><td class="num">0 of 8</td></tr>
+    </table>
+  </div>
+
+  <h2>Why there are two different reduction numbers</h2>
+  <p>
+    This is the most important section of this case study, and it argues <em>against</em> the bigger
+    number.
+  </p>
+  <p>
+    cal.com's test stage took 204–462 seconds to run in full. Its <code>yarn install</code> took 319.7
+    seconds, and <code>prisma generate</code> another 17.1. Install and pretest are paid identically
+    whether you run 250 test files or one — they do not shrink when the test selection does.
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <tr><th>Stage</th><th class="num">Full path</th><th class="num">Selected path</th></tr>
+      <tr><td>install</td><td class="num">319.7s</td><td class="num">319.7s</td></tr>
+      <tr><td>pretest (<code>prisma generate</code>)</td><td class="num">17.1s</td><td class="num">17.1s</td></tr>
+      <tr><td>test</td><td class="num">320.9s</td><td class="num">20.0s</td></tr>
+      <tr><td><strong>Job-equivalent total</strong></td><td class="num"><strong>657.7s</strong></td><td class="num"><strong>356.9s</strong></td></tr>
+    </table>
+  </div>
+
+  <p>
+    Measured against the test stage alone: <strong>90.6% net reduction</strong>. Measured against the
+    whole job: <strong>44.2% net</strong>. Both are true. Both are published. The site leads with 44.2%.
+  </p>
+  <p>
+    Which one applies to a given repository depends on whether install is cached and shared across a job
+    matrix — which is exactly how cal.com's own workflows are structured, and why the test-stage figure
+    is not merely a flattering artifact. But we are not going to assume that about anyone's pipeline, so
+    the smaller number is the headline.
+  </p>
+
+  <h2>The five merges</h2>
+  <p>
+    Selected by a predeclared rule, from a 30-merge blind baseline manifest: every merge marked
+    <code>SAFE_TO_PROPOSE</code> with at least one changed source file (24 of 30 qualified), sorted
+    ascending by DiffCI's own selected-set size, and sampled evenly by rank position. The rule was
+    written before the costs were known and the resulting set was not adjusted afterwards.
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <tr>
+        <th>PR</th><th class="num">Selected / total</th><th class="num">Full test stage</th>
+        <th class="num">Selected</th><th class="num">Net saved</th><th class="num">Reduction</th>
+      </tr>
+      <tr><td>#29529</td><td class="num">1 / 250</td><td class="num">287.8s</td><td class="num">20.7s</td><td class="num">255.8s</td><td class="num">88.9%</td></tr>
+      <tr><td>#29819</td><td class="num">1 / 250</td><td class="num">461.4s</td><td class="num">20.1s</td><td class="num">421.6s</td><td class="num">91.4%</td></tr>
+      <tr><td>#29583</td><td class="num">2 / 250</td><td class="num">300.9s</td><td class="num">20.1s</td><td class="num">266.1s</td><td class="num">88.4%</td></tr>
+      <tr><td>#29541</td><td class="num">3 / 249</td><td class="num">462.3s</td><td class="num">20.1s</td><td class="num">423.6s</td><td class="num">91.6%</td></tr>
+      <tr><td>#28567</td><td class="num">5 / 249</td><td class="num">204.6s</td><td class="num">20.6s</td><td class="num">176.1s</td><td class="num">86.0%</td></tr>
+    </table>
+  </div>
+
+  <p>Two things are visible here that a marketing chart would smooth over:</p>
+  <ul>
+    <li>
+      <strong>The full-suite time swings from 204.6s to 462.3s for the same suite.</strong> That is
+      container scheduling variance, not a per-merge effect, and it is the reason the reduction
+      percentage varies more than the underlying selection quality does.
+    </li>
+    <li>
+      <strong>The selected run has a floor: 20.1–20.7s, every time.</strong> A run of one test file costs
+      almost the same as a run of five, because bootstrap dominates. That floor is precisely why DiffCI
+      refuses to bill from a linear estimate — a model assuming uniform per-test cost would predict a
+      1-of-250 selection costing near zero, and be wrong by twenty seconds every single run.
+    </li>
+  </ul>
+
+  <h2>Did the selection actually get executed?</h2>
+  <p>
+    Selecting tests is easy. Getting a test runner to honor the selection — and <em>proving</em> it did —
+    is where this kind of claim usually falls apart.
+  </p>
+  <p>
+    Every execution recorded a runtime invariant comparing the files DiffCI selected against the files the
+    runner actually ran: <code>HONORED_EXACTLY</code>, <code>HONORED_WITH_FRAMEWORK_EXPANSION</code>, or
+    <code>IGNORED_OR_BROADENED</code>.
+  </p>
+  <p>
+    <strong>8 of 8 cal.com executions came back <code>HONORED_EXACTLY</code></strong>, across 6 different
+    merges, changesets from 1 to 11 files, and selected sets from 1 to 5 tests. Not "we passed a filter
+    and assumed" — the executed file count matched the selected file count exactly.
+  </p>
+  <p>
+    This invariant exists because an earlier run of this work found a real bug where an extra
+    <code>--</code> in the test command silently swallowed the file filter and ran the whole suite while
+    reporting success. The invariant caught it. That is the reason to trust the eight.
+  </p>
+
+  <h2>Would it have caught a real regression?</h2>
+  <p>
+    For each merge, the merge's own change was reverted in a single source file (never a test file), and
+    both the full suite and the selected suite were run against the mutated tree. If the full suite
+    catches a failure the selected suite does not, that is a miss — the thing that actually matters.
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <tr><th>PR</th><th>Measurable?</th><th>Outcome</th></tr>
+      <tr>
+        <td>#29583</td><td>yes</td>
+        <td>Caught. <code>handleCancelBooking.test.ts</code> — the exact test matching the PR's subject. Selected suite caught it identically to the full suite.</td>
+      </tr>
+      <tr>
+        <td>#28567</td><td>yes</td>
+        <td>Caught. 5 tests in <code>EditLocationDialog.test.tsx</code>, all matching the reverted rename. Selected suite caught all 5.</td>
+      </tr>
+      <tr>
+        <td>#29529</td><td>no</td>
+        <td>Full suite caught nothing either — the change had no test coverage anywhere. A coverage gap in the repository, not a DiffCI miss.</td>
+      </tr>
+      <tr>
+        <td>#29819</td><td>no</td>
+        <td>Mutation target was a <em>generated</em> metadata file. No behavioral surface to break.</td>
+      </tr>
+      <tr>
+        <td>#29541</td><td>no</td>
+        <td>The PR was a genuine no-op refactor. Reverting it changes no observable behavior, so no suite could catch it.</td>
+      </tr>
+    </table>
+  </div>
+
+  <p>
+    <strong>2 of 5 mutations were measurable; both were caught, by both suites, with exact
+    attribution.</strong> The other three are reported as <code>recallMeasurable: false</code> rather than
+    scored as passes.
+  </p>
+  <p>
+    Counting the sixth merge — PR #29940, executed repeatedly for variance sampling — cal.com's full
+    record is 3 unique measurable mutation cases, 3 caught, 0 missed, across the 5 of 8 executions where
+    recall was measurable at all. Repeated executions of the same merge are counted once, not eight times.
+  </p>
+  <p class="callout">
+    The temptation here is obvious: "5 of 5 mutations survived without a miss" reads better than "2 of 5
+    were measurable". The harness has an explicit anti-vacuity rule preventing exactly that framing,
+    because a mutation that breaks nothing proves nothing about recall in either direction.
+  </p>
+
+  <h2>What this does not establish</h2>
+  <ul>
+    <li><strong>Not a cal.com-wide savings figure.</strong> Six merges is six merges. It is not "cal.com's CI in general", and this page does not say it is.</li>
+    <li><strong>Not a production result.</strong> Nothing was skipped in cal.com's real CI. Both paths were executed in DiffCI's own sandbox so that both could be timed.</li>
+    <li><strong>Not a general safety guarantee.</strong> Three measurable mutation cases is a small denominator, stated as such.</li>
+    <li><strong>E2E is out of scope.</strong> cal.com does not run E2E in the CI configuration modeled here, so the modeled universe is explicitly partial.</li>
+  </ul>
+
+  <h2>Where this comes from</h2>
+  <p>
+    Thirteen sequential reports plus the raw per-execution JSON records, preserved and never overwritten.
+    They include the failures: an argument-forwarding bug, an anomalous corrected run, and a
+    project-qualified filter that behaved differently than expected. None were removed after the fact.
+  </p>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p>
+    <p>
+      <a href="/case-studies/calcom.html">cal.com</a> ·
+      <a href="/case-studies/deepseek-harness.html">deepseek-harness</a> ·
+      <a href="/case-studies/diffci-own-ci.html">our own CI</a> ·
+      <a href="/data-handling.html">Data handling</a>
+    </p>
+    <p style="color: var(--text-faint)">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+  </div>
+</footer>
+
+</body>
+</html>

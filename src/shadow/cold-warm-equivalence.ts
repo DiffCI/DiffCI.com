@@ -3,7 +3,8 @@ import { buildDependencyGraph, hydrateDependencyGraph } from "../repo/graph.js";
 import { analyzeGitDelta } from "../git/git-diff.js";
 import { ImpactAnalyzer } from "../repo/impact.js";
 import { DefaultCIPlanner } from "../planner/planner.js";
-import { buildDentalPresenceTaskRegistry } from "../planner/task-registry.js";
+import { buildGenericTaskRegistry } from "../research/baseline/registry.js";
+import { parseRepositoryWorkflows } from "../research/baseline/workflow-parser.js";
 import { GraphCache, buildGraphCacheKey, hashFileContents } from "../cache/graph-cache.js";
 import type { ExecutionPlan } from "../planner/types.js";
 
@@ -65,7 +66,8 @@ export async function verifyColdWarmEquivalence(repoPath: string, cacheDir: stri
     }
 
     const impact = new ImpactAnalyzer().analyze(delta, graphResult, graphResult.profile, { repositoryFiles: inventory?.files });
-    const registry = buildDentalPresenceTaskRegistry();
+    // Phase 01 F4 (2026-08-26): derived from the repository under test, not from DentalPresence.
+    const registry = buildGenericTaskRegistry(graphResult.profile, "typescript", parseRepositoryWorkflows(graphResult.profile, repoPath));
     const planner = new DefaultCIPlanner(registry);
     return planner.plan({ delta, impact, profile: graphResult.profile });
   }

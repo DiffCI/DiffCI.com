@@ -1,34 +1,59 @@
 import type { ExecutionPlan } from "../planner/types.js";
 import type { BaselineEvidence, BaselineJobInfo, BaselineStepInfo, ShadowMeasuredMetrics, TaskTiming } from "./types.js";
 
-export function taskIdsForStep(stepName: string): string[] {
-  const n = stepName.toLowerCase();
+/** The subset of a registry task this mapping needs: its id, and how the repository invokes it. */
+export interface MappableTask {
+  id: string;
+  command?: string;
+  npmScript?: string;
+}
+
+function normalize(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+/**
+ * Which of THIS repository's CI tasks does a given GitHub Actions step correspond to?
+ *
+ * Phase 01 F4 (2026-08-26). This was a hardcoded table of DentalPresence's own step names -
+ * "lint:wordpress", "validate:aws", "next build", "api shield" - so for any other repository it
+ * matched nothing (or, worse, matched "build" to a task id that repository has never had). Every
+ * timing and failed-task attribution built on it was therefore meaningless off that one repository.
+ *
+ * The replacement compares each step name against the task ids and script names the repository's own
+ * registry declares. It is approximate by nature - a step name is free text written by a human - and
+ * the approximation is stated rather than hidden: matching is case-insensitive and substring-based in
+ * both directions, and a step that resembles nothing in the registry maps to nothing rather than to a
+ * default. It never invents a task, and it never reports a failure that did not occur.
+ */
+export function taskIdsForStep(stepName: string, tasks: readonly MappableTask[]): string[] {
+  const step = normalize(stepName);
+  if (step === "") return [];
   const matches: string[] = [];
-  if (n.includes("typecheck") || n.includes("tsc")) matches.push("typecheck");
-  if (n.includes("lint:wordpress") || n.includes("wordpress")) matches.push("lint:wordpress");
-  else if (n.includes("lint")) matches.push("lint");
-  if (n.includes("check:unused") || n.includes("unused source")) matches.push("check:unused");
-  if (n.includes("check:links")) matches.push("check:links");
-  if (n.includes("social-utm")) matches.push("check:social-utm");
-  if (n.includes("check:routes") || n.includes("unused routes")) matches.push("check:routes");
-  if (n.includes("cloudflare-api-shield") || n.includes("api shield")) matches.push("check:cloudflare-api-shield");
-  if (n.includes("validate:aws") || n.includes("aws drift")) matches.push("validate:aws-staging-drift");
-  if (n.includes("source tests") || n.includes("test:source")) matches.push("test:source");
-  if (n.includes("script tests") || n.includes("test:scripts")) matches.push("test:scripts");
-  if (n.includes("ops tests") || n.includes("test:ops")) matches.push("test:ops");
-  if (n.includes("test:security") || n.includes("security validation")) matches.push("test:security");
-  if (n.includes("api-guardrails") || n.includes("api guardrails")) matches.push("test:api-guardrails");
-  if (n.includes("next build") || n.includes("build:next") || (n.includes("build") && !n.includes("dry"))) matches.push("build:next");
-  if (n.includes("cloudflare") && n.includes("dry")) matches.push("build:cloudflare-dry-run");
-  if (n.includes("migration") || n.includes("db:check-parity")) matches.push("check:migrations");
+
+  for (const task of tasks) {
+    // Generic registry ids are shaped "<workflowPath>::<jobId>" (src/research/baseline/workflow-
+    // parser.ts); the segment after "::" is what a job or step name usually resembles.
+    const idSegment = normalize(task.id.split("::").pop() ?? task.id);
+    const fullId = normalize(task.id);
+    const script = task.npmScript ? normalize(task.npmScript) : undefined;
+
+    const candidates = [fullId, idSegment, script].filter((c): c is string => c !== undefined && c !== "");
+    const hit = candidates.some((candidate) => step === candidate || step.includes(candidate) || candidate.includes(step));
+    if (hit) matches.push(task.id);
+  }
+
   return Array.from(new Set(matches));
 }
 
-export function flattenSteps(baseline: BaselineEvidence): { jobName: string; step: BaselineStepInfo; taskIds: string[] }[] {
+export function flattenSteps(
+  baseline: BaselineEvidence,
+  tasks: readonly MappableTask[],
+): { jobName: string; step: BaselineStepInfo; taskIds: string[] }[] {
   const out: { jobName: string; step: BaselineStepInfo; taskIds: string[] }[] = [];
   for (const job of baseline.jobs) {
     for (const step of job.steps ?? []) {
-      const ids = taskIdsForStep(step.name);
+      const ids = taskIdsForStep(step.name, tasks);
       if (ids.length) out.push({ jobName: job.jobName, step, taskIds: ids });
     }
   }
@@ -43,9 +68,9 @@ export function stepFailed(step: BaselineStepInfo): boolean {
   return step.conclusion === "failure" || step.status === "failed";
 }
 
-export function failedTaskIds(baseline: BaselineEvidence): string[] {
+export function failedTaskIds(baseline: BaselineEvidence, tasks: readonly MappableTask[]): string[] {
   const failed = new Set<string>();
-  for (const item of flattenSteps(baseline)) {
+  for (const item of flattenSteps(baseline, tasks)) {
     if (stepFailed(item.step)) {
       for (const id of item.taskIds) failed.add(id);
     }
@@ -53,18 +78,18 @@ export function failedTaskIds(baseline: BaselineEvidence): string[] {
   return Array.from(failed);
 }
 
-function taskDuration(baseline: BaselineEvidence, taskId: string): number | undefined {
-  const matches = flattenSteps(baseline).filter((i) => i.taskIds.includes(taskId));
+function taskDuration(baseline: BaselineEvidence, tasks: readonly MappableTask[], taskId: string): number | undefined {
+  const matches = flattenSteps(baseline, tasks).filter((i) => i.taskIds.includes(taskId));
   if (!matches.length) return undefined;
   const durations = matches.map((m) => m.step.durationMs).filter((v): v is number => typeof v === "number" && v > 0);
   if (!durations.length) return undefined;
   return durations.reduce((a, b) => a + b, 0);
 }
 
-export function buildTaskTimings(registryTaskIds: string[], baseline: BaselineEvidence): TaskTiming[] {
-  return registryTaskIds.map((taskId) => {
-    const ms = taskDuration(baseline, taskId);
-    const matchingSteps = flattenSteps(baseline).filter((i) => i.taskIds.includes(taskId));
+export function buildTaskTimings(tasks: readonly MappableTask[], baseline: BaselineEvidence): TaskTiming[] {
+  return tasks.map(({ id: taskId }) => {
+    const ms = taskDuration(baseline, tasks, taskId);
+    const matchingSteps = flattenSteps(baseline, tasks).filter((i) => i.taskIds.includes(taskId));
     const failed = matchingSteps.some((m) => stepFailed(m.step));
     const skipped = matchingSteps.some((m) => m.step.status === "skipped" || m.step.conclusion === "skipped");
     const jobName = matchingSteps[0]?.jobName;
@@ -86,8 +111,7 @@ export function computeMeasuredMetrics(
   baseline: BaselineEvidence,
   diffCiOverheadMs: number,
 ): ShadowMeasuredMetrics {
-  const registryTaskIds = plan.tasks.map((t) => t.id);
-  const timings = buildTaskTimings(registryTaskIds, baseline);
+  const timings = buildTaskTimings(plan.tasks, baseline);
   const baselineDurationMs = baseline.baselineDurationMs;
 
   let retainedDurationMs = 0;

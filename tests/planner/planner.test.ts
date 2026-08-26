@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
 import { DefaultCIPlanner } from "../../src/planner/planner.js";
-import { buildDentalPresenceTaskRegistry } from "../../src/planner/task-registry.js";
+import { buildDentalPresenceTaskRegistry } from "../fixtures/dentalpresence-task-registry.js";
 import type { ChangedFile, GitDelta } from "../../src/git/types.js";
 import type { ImpactResult } from "../../src/repo/impact-types.js";
 import type { RepositoryProfile } from "../../src/repo/types.js";

@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>deepseek-harness — DiffCI case study</title>
+<meta name="description" content="Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>◧</text></svg>">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="/">Diff<span>CI</span></a>
+    <nav>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#limits">Limits</a>
+      <a href="/#pilot">Pilot</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<article class="wrap">
+
+  <a class="backlink" href="/#evidence">← All evidence</a>
+
+  <p class="eyebrow">Case study</p>
+  <h1>deepseek-ai/deepseek-harness</h1>
+
+  <div class="disclaimer">
+    <strong>deepseek-harness is not a DiffCI customer.</strong> It is a public open-source repository with
+    public CI. Everything below was produced by analyzing its public source and replaying its own test
+    suite in DiffCI's sandbox. Nobody associated with the project was contacted, and nothing here is an
+    endorsement. No change was ever proposed to, or made in, its real CI.
+  </div>
+
+  <h2 class="no-rule">Why this repository</h2>
+  <p>
+    cal.com is the well-behaved case: a clean baseline, one test config, a suite that passes. The obvious
+    next question is what happens on a repository that is <em>not</em> like that.
+  </p>
+  <p>
+    deepseek-harness has <strong>16 to 18 failing tests on every run, before anyone changes
+    anything</strong>. It has three separate Vitest configurations (unit, snapshot, e2e). It uses pnpm,
+    whose <code>--</code> argument semantics are inverted relative to yarn's. It was chosen because it
+    breaks assumptions, and it did.
+  </p>
+
+  <h2>The result</h2>
+  <p>
+    Five merges, selected in advance, executed in DiffCI's sandbox with both the full and selected runs
+    timed:
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <tr>
+        <th>PR</th><th class="num">Selection</th><th>Runtime selection</th>
+        <th class="num">Full</th><th class="num">Selected</th><th class="num">Job-level net</th>
+      </tr>
+      <tr><td>#2760</td><td class="num">1 file (0.1%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">721.5s</td><td class="num">20.1s</td><td class="num">89.5%</td></tr>
+      <tr><td>#2808</td><td class="num">4 files (0.4%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">480.9s</td><td class="num">20.0s</td><td class="num">89.1%</td></tr>
+      <tr><td>#1373</td><td class="num">6 files (0.6%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">481.5s</td><td class="num">40.1s</td><td class="num">85.0%</td></tr>
+      <tr><td>#2814</td><td class="num">60 files (5.8%)</td><td>framework expansion</td><td class="num">722.7s</td><td class="num">100.3s</td><td class="num">79.5%</td></tr>
+      <tr><td>#2844</td><td class="num">254 files (24.8%)</td><td><code>IGNORED_OR_BROADENED</code></td><td class="num">482.4s</td><td class="num">—</td><td class="num">withheld</td></tr>
+    </table>
+  </div>
+
+  <p>
+    Test-stage reduction on the four eligible merges: <strong>83.5% – 94.3%</strong> net. Job-level:
+    <strong>79.5% – 89.5%</strong>. DiffCI's own analysis overhead (11.7–21.4s) is subtracted from every
+    one of those figures before the net is reported.
+  </p>
+  <p class="callout">
+    Note how different this looks from cal.com — 79.5–89.5% here versus 44.2% there, with comparable
+    selection quality. The whole difference is install cost: deepseek-harness installs in 23–39 seconds
+    against a 480–723 second test suite, while cal.com's install and test stages are each about 320
+    seconds. Two real repositories, the same tool, a 40-point spread in the number that ends up on an
+    invoice. This is the entire argument for measuring your repository instead of quoting you an industry
+    average.
+  </p>
+
+  <h2>The merge that was not counted</h2>
+  <p>
+    <strong>#2844 selected 254 files across three test families — unit, snapshot, and e2e. The execution
+    harness could only run one of them.</strong> A single <code>pnpm test</code> loads the root Vitest
+    config; the snapshot and e2e configs are separate files that invocation never reads. Exactly 173 files
+    executed: the unit-family count, exactly.
+  </p>
+  <p>
+    So DiffCI's selection was not honored, and the runtime invariant said so. The economics and recall for
+    #2844 are <strong>withheld</strong> — not estimated, not narrowed to the unit family after the fact,
+    not quietly dropped from the denominator.
+  </p>
+  <p>
+    It would have been easy to report "4 of 4 merges show 83–94% savings" and never mention the fifth. The
+    distinction between <em>four of five, and here is the fifth</em> and <em>four of four</em> is the
+    distinction between a measurement and a brochure.
+  </p>
+
+  <h2>The regression check, and why the baseline mattered</h2>
+  <p>
+    The safety test is the same as elsewhere: revert the merge's own change in one source file, run both
+    the full and the selected suite, and check whether the selected run misses a failure the full run
+    catches.
+  </p>
+  <p>
+    <strong>3 of 3 measurable mutation cases were caught, with correct attribution.</strong> Two cases
+    were unmeasurable — one had no valid mutation target, one was unobservable because of the family-scope
+    limitation above — and both were excluded from the recall denominator rather than counted as passes.
+  </p>
+  <p>
+    Getting that right required fixing the recall computation itself. The original version checked whether
+    the mutated run had any failures at all. On this repository, with 16–18 tests failing on every clean
+    run, that check returns "regression caught!" for every mutation, including ones that changed nothing.
+    It is a false positive that never fires on a clean repository — cal.com's baseline had zero failures,
+    which is exactly why the bug survived that far.
+  </p>
+  <p>
+    The fix computes recall as a <strong>diff against the baseline failure set</strong>: the same tests
+    failing is not a catch; a new test failing is. The methodology is more correct everywhere as a result,
+    not just here.
+  </p>
+
+  <h2>Four defects this repository found</h2>
+  <p>
+    All four were found by the mission's own verification discipline, fixed, covered by regression tests,
+    and deployed before any result was trusted:
+  </p>
+  <ol>
+    <li>
+      <strong>A container-name length bug</strong> that stalled execution silently and forever, because
+      the sandbox container identifier bounded the run id but not the repository slug. Found by running a
+      cal.com control probe alongside the stalled run — the control advanced normally, which is what
+      localized the bug to the repository name.
+    </li>
+    <li>
+      <strong>A mutation-targeting bug</strong> where the pathspec excluded test files but not
+      documentation and i18n files, letting an unrelated file outrank the real source change
+      alphabetically.
+    </li>
+    <li>
+      <strong>A second mutation-targeting bug</strong> where a nested workspace <code>package.json</code>
+      could be mutated instead of source, which off-targeted the first canary run onto dependency metadata
+      and produced 16 unrelated failures. The bad canary run is preserved as evidence rather than deleted.
+    </li>
+    <li><strong>The baseline-relative recall bug</strong> described above.</li>
+  </ol>
+  <p>
+    Zero of these produced a misleading published result, because each was caught before the run it would
+    have corrupted was trusted. That is the actual claim being made here: not that the harness was correct
+    on the first attempt, but that it was designed so its errors surfaced as visible contradictions rather
+    than as plausible numbers.
+  </p>
+
+  <h2>What this establishes, and what it does not</h2>
+  <p>
+    <strong>Does:</strong> DiffCI's selection quality holds on a repository with a dirty baseline, multiple
+    test families and a different package manager. The runtime invariant caught a genuinely novel failure
+    mode that never arose on cal.com — which is the point of having an invariant rather than an
+    assumption. The abstention behavior (unmeasurable, withheld economics) works on real data.
+  </p>
+  <p>
+    <strong>Does not:</strong> establish a repository-wide savings figure for deepseek-harness, or any
+    production result — nothing was skipped in its real CI. The modeled universe is explicitly partial:
+    unit tests are modeled and executed, snapshot tests are executable but unselected, e2e is excluded
+    because it is credential-gated. Five merges is five merges.
+  </p>
+
+  <h2>Where this comes from</h2>
+  <p>
+    Nineteen sequential reports plus raw per-execution records. One of them amends an earlier report's own
+    summary where it had been too generous — the amendment sits at the top of the earlier report, not as a
+    silent edit.
+  </p>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p>
+    <p>
+      <a href="/case-studies/calcom.html">cal.com</a> ·
+      <a href="/case-studies/deepseek-harness.html">deepseek-harness</a> ·
+      <a href="/case-studies/diffci-own-ci.html">our own CI</a> ·
+      <a href="/data-handling.html">Data handling</a>
+    </p>
+    <p style="color: var(--text-faint)">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+  </div>
+</footer>
+
+</body>
+</html>
