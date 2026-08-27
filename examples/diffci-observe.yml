@@ -1,0 +1,53 @@
+# Copy this file into .github/workflows/ of the repository being observed.
+#
+# It adds ONE job that does nothing except look. It builds nothing, runs no tests, and is not in any
+# other job's `needs:`, so no other job waits on it, is delayed by it, or fails because of it.
+# `continue-on-error: true` is what keeps a DiffCI failure out of the workflow's own conclusion - the
+# thing a required status check and a merge queue actually read.
+#
+# Verify those properties against your own file rather than taking them on trust. DiffCI is not on npm
+# yet, so this runs from a checkout of DiffCI itself:
+#
+#     git clone https://github.com/adityankale190895/DiffCI.com && cd DiffCI.com && npm ci
+#     npm run verify-workflow -- --repo /path/to/your/repository
+#
+# It exits non-zero, with the specific job named, if anything here could affect the rest of your CI.
+name: DiffCI (observation only)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Nothing in this workflow writes anything, anywhere.
+permissions:
+  contents: read
+
+jobs:
+  diffci:
+    name: DiffCI observation
+    runs-on: ubuntu-latest
+    # A runaway analysis would cost the host repository runner minutes, which is a real cost even
+    # though it changes no result. Bounded here rather than trusted to finish.
+    timeout-minutes: 20
+    # A DiffCI failure must never become your build's failure.
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # DiffCI compares two commits. With the default shallow checkout the base commit is simply
+          # not present locally, and DiffCI will refuse rather than analyse a range it had to guess.
+          # This affects only this job's own checkout.
+          fetch-depth: 0
+
+      - uses: adityankale190895/DiffCI.com@REPLACE_WITH_40_CHARACTER_COMMIT_SHA
+        with:
+          # Replace every file path in the report with a stable 12-character digest. Selection ratios
+          # and per-file trends still work; the paths themselves never leave your runner.
+          redact-paths: "false"
+          # The report is uploaded as a workflow artifact you can download and read in full. It is the
+          # same bytes that would ever be sent anywhere.
+          upload-artifact: "true"
+          artifact-retention-days: "7"

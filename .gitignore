@@ -41,3 +41,6 @@ Thumbs.db
 desktop.ini
 .idea/
 *.swp
+
+# Client observer build output (Phase 02). Built inside the consumer CI by action.yml.
+dist-client/

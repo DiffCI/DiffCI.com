@@ -79,6 +79,9 @@ export interface ProductStore {
     input: { billingStatus: Organization["billingStatus"]; currentPlan?: string; subscriptionStatus?: string; billingCustomerReference?: string },
   ): Promise<void>;
 
+  /** Every organization this user belongs to. The console's first screen cannot be drawn without it. */
+  listOrganizationsForUser(userId: string): Promise<Organization[]>;
+
   addMember(organizationId: string, userId: string, role: OrganizationRole): Promise<void>;
   getMembership(organizationId: string, userId: string): Promise<OrganizationMember | null>;
   listMembers(organizationId: string): Promise<OrganizationMember[]>;
@@ -94,7 +97,23 @@ export interface ProductStore {
     installationId?: string;
   }): Promise<Repository>;
   getRepository(id: string): Promise<Repository | null>;
+  /**
+   * Looked up by GitHub's own immutable numeric id, across every organization (Phase 03 follow-up,
+   * 2026-08-26). Deliberately NOT organization-scoped, and deliberately not usable as a route: it exists
+   * so the App installation flow can answer "is this repository already connected, and to whom?" before
+   * creating a second row for it. A repository already claimed by another organization must be refused,
+   * never silently moved - which is only possible if the flow can see the claim.
+   */
+  getRepositoryByProviderId(providerRepositoryId: string, provider?: "github"): Promise<Repository | null>;
   listRepositories(organizationId: string): Promise<Repository[]>;
+  /** Every repository attached to one GitHub App installation. Used by the uninstall path, which knows
+   * an installation id and nothing else - the webhook that fires carries no organization. */
+  listRepositoriesByInstallation(installationId: string): Promise<Repository[]>;
+  /** Refreshes what GitHub says about a repository after an install or a rename. */
+  updateRepositoryFromProvider(
+    id: string,
+    input: { ownerName?: string; defaultBranch?: string; installationId?: string },
+  ): Promise<void>;
   /** Cross-tenant, NOT organization-scoped - same pattern as RunnerStore.findStaleRunners(), used only by
    * background maintenance sweeps (src/usage/duration-capture-job.ts's cron caller), never by an
    * organization-facing route (which must always go through the scoped listRepositories above). */
@@ -170,6 +189,19 @@ export function makeD1ProductStore(db: D1Binding): ProductStore {
         )
         .bind(billingStatus, currentPlan ?? null, subscriptionStatus ?? null, billingCustomerReference ?? null, nowIso(), id)
         .run();
+    },
+
+    async listOrganizationsForUser(userId) {
+      const { results } = await db
+        .prepare(
+          `SELECT o.* FROM organizations o
+             JOIN organization_members m ON m.organization_id = o.id
+            WHERE m.user_id = ?
+            ORDER BY o.created_at ASC`,
+        )
+        .bind(userId)
+        .all<Record<string, unknown>>();
+      return results.map(rowToOrganization);
     },
 
     async addMember(organizationId, userId, role) {
@@ -249,12 +281,44 @@ export function makeD1ProductStore(db: D1Binding): ProductStore {
       return row ? rowToRepository(row) : null;
     },
 
+    async getRepositoryByProviderId(providerRepositoryId, provider = "github") {
+      const row = await db
+        .prepare(`SELECT * FROM repositories WHERE provider = ? AND provider_repository_id = ?`)
+        .bind(provider, providerRepositoryId)
+        .first<Record<string, unknown>>();
+      return row ? rowToRepository(row) : null;
+    },
+
     async listRepositories(organizationId) {
       const { results } = await db
         .prepare(`SELECT * FROM repositories WHERE organization_id = ? ORDER BY created_at DESC`)
         .bind(organizationId)
         .all<Record<string, unknown>>();
       return results.map(rowToRepository);
+    },
+
+    async listRepositoriesByInstallation(installationId) {
+      const { results } = await db
+        .prepare(`SELECT * FROM repositories WHERE installation_id = ? ORDER BY created_at DESC`)
+        .bind(installationId)
+        .all<Record<string, unknown>>();
+      return results.map(rowToRepository);
+    },
+
+    async updateRepositoryFromProvider(id, input) {
+      // COALESCE rather than a built statement: an absent field must leave the stored value alone, and
+      // "GitHub did not tell us the default branch this time" must never blank one that is already known.
+      await db
+        .prepare(
+          `UPDATE repositories
+              SET owner_name = COALESCE(?, owner_name),
+                  default_branch = COALESCE(?, default_branch),
+                  installation_id = COALESCE(?, installation_id),
+                  updated_at = ?
+            WHERE id = ?`,
+        )
+        .bind(input.ownerName ?? null, input.defaultBranch ?? null, input.installationId ?? null, nowIso(), id)
+        .run();
     },
 
     async listAllRepositories(limit = 100) {

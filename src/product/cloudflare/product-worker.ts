@@ -55,6 +55,37 @@ import { runDurationCaptureSweep } from "../../usage/duration-capture-job.js";
 import { scheduleNext } from "../../execution-queue/scheduler.js";
 import { makeD1ExecutionQueueStore } from "../../execution-queue/store.js";
 import { makeD1ShadowReadBoundary, type D1Binding as ShadowD1Binding } from "../shadow-read-boundary.js";
+import { connectInstallation } from "../../install/github-installation.js";
+import { handleInstallationWebhook } from "../../install/webhook.js";
+import { currentMonth, getMonthlyLedgerForOrganization, type LedgerRouteDeps } from "../../ledger/routes.js";
+import { makeD1InvoiceStore } from "../../billing/invoice-store.js";
+import { DEFAULT_SAVINGS_SHARE_PERCENT } from "../../billing/metered.js";
+import {
+  getInvoiceForOrganization,
+  issueInvoice,
+  listInvoicesForOrganization,
+  markInvoicePaid,
+  prepareInvoiceForMonth,
+  reconcileInvoiceForOrganization,
+  voidInvoiceForOrganization,
+  type InvoiceRouteDeps,
+} from "../../billing/invoice-routes.js";
+import { renderHome, renderInvoices, renderLedger, renderOrganization, renderRepository, renderSignedOut } from "../../ui/pages.js";
+import { makeD1IngestTokenStore } from "../../ingest/token.js";
+import { makeD1ObservationStore } from "../../ingest/store.js";
+import { ingestObservation, MAX_REPORT_BYTES } from "../../ingest/ingest.js";
+import type { IngestRejection } from "../../ingest/types.js";
+import { runRetentionSweep } from "../../ingest/retention.js";
+import {
+  deleteObservationsForOrganization,
+  getInstallInstructionsForRepository,
+  getObservationForOrganization,
+  issueIngestTokenForRepository,
+  listIngestTokensForOrganization,
+  listObservationsForOrganization,
+  revokeIngestToken,
+  type IngestRouteDeps,
+} from "../../ingest/routes.js";
 import {
   getDashboardForOrganization,
   getOrganizationDetails,
@@ -81,6 +112,15 @@ export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   DIFFCI_API_ORIGIN?: string; // this Worker's own public base URL - injected into R1 runners so their
                               // bootstrap script knows where to call back (src/runner/agent-api.ts)
   DIFFCI_ENVIRONMENT_LABEL?: string; // R1 Part 6 resource-tag "environment" value - defaults to "staging"
+  DIFFCI_ACTION_REF?: string; // "owner/repo@<sha>" of the published observer action, for install instructions
+  DIFFCI_SAVINGS_SHARE_PERCENT?: string; // metered price, default 15 - copied onto each invoice at build time
+  // GitHub App (Phase 03 follow-up): repository discovery on install, and erasure on uninstall. All four
+  // are needed together; with any missing, the console says the App is not configured here rather than
+  // offering a button that cannot work.
+  GITHUB_APP_SLUG?: string; // the App's URL slug, e.g. "diffci-observer"
+  GITHUB_APP_ID?: string;
+  GITHUB_APP_PRIVATE_KEY?: string; // PKCS#8 PEM (secret)
+  GITHUB_APP_WEBHOOK_SECRET?: string; // secret
   SYNTHETIC_RUNNER_WORKER?: { fetch(request: Request): Promise<Response> }; // real Service Binding to diffci-synthetic-runner - see wrangler.product.jsonc's own comment on why this exists instead of a plain fetch(SYNTHETIC_RUNNER_URL)
 }
 
@@ -117,6 +157,14 @@ function agentApiDepsFromEnv(env: Env): AgentApiDeps {
     costModel: createCloudflareContainersLiteCostModel(),
     recordAuditEvent: (entry) => store.recordAuditEvent(entry),
   };
+}
+
+/** The console's responses. Never cached: every page is per-session and some of it changes per request. */
+function htmlResponse(body: string, status = 200): Response {
+  return new Response(body, {
+    status,
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
+  });
 }
 
 function json(payload: unknown, status = 200, extraHeaders?: Headers): Response {
@@ -173,6 +221,31 @@ async function requireCsrf(request: Request, env: Env, principal: { sessionId?: 
   return verifyCsrfToken(env.CSRF_SECRET, principal.sessionId, cookieValue, headerValue);
 }
 
+/**
+ * Ingest rejections mapped to HTTP (Phase 03). The distinctions matter to the caller: 401 means "fix
+ * your credential", 403 means "this credential is real but not for this repository", 409 means "the
+ * credential is fine and the repository is not accepting observations", and 4xx generally means the
+ * client should not retry - src/client/submit.ts only retries 5xx and network failures.
+ */
+function ingestRejectionStatus(rejection: IngestRejection): number {
+  switch (rejection) {
+    case "missing_token":
+    case "invalid_token":
+    case "revoked_token":
+    case "expired_token":
+      return 401;
+    case "repository_mismatch":
+      return 403;
+    case "repository_inactive":
+      return 409;
+    case "payload_too_large":
+      return 413;
+    case "malformed_payload":
+    case "unsupported_schema":
+      return 400;
+  }
+}
+
 function outcomeStatus(error: string): number {
   if (error === "unauthorized" || error === "insufficient_role") return 403;
   if (error === "not_found" || error === "organization_not_found") return 404;
@@ -205,6 +278,33 @@ export default {
     const queueStore = makeD1ExecutionQueueStore(env.PRODUCT_DB);
     const shadowBoundary = makeD1ShadowReadBoundary(env.RESEARCH_DB);
     const routeDeps: RouteDeps = { productStore: store, shadowBoundary, runnerStore, queueStore, usageStore };
+
+    // Phase 03 ingest. `actionRef` is what generated install instructions tell a customer to pin; it is
+    // configuration rather than a constant because the published action's SHA changes with every
+    // release, and instructions naming a stale one would be worse than instructions naming none.
+    const ingestTokenStore = makeD1IngestTokenStore(env.PRODUCT_DB);
+    const observationStore = makeD1ObservationStore(env.PRODUCT_DB);
+    const ingestDeps: IngestRouteDeps = {
+      productStore: store,
+      tokenStore: ingestTokenStore,
+      observationStore,
+      actionRef: env.DIFFCI_ACTION_REF ?? "adityankale190895/DiffCI.com@main",
+      apiOrigin: env.DIFFCI_API_ORIGIN ?? url.origin,
+    };
+
+    // Phase 04. No `savingsInput` is supplied: no per-repository duration observation exists for a
+    // client-observed repository yet, so every time and cost figure the ledger produces is UNKNOWN -
+    // which is the honest answer, and the one the ledger is built to give rather than to paper over.
+    const ledgerDeps: LedgerRouteDeps = { productStore: store, observationStore };
+
+    // Phase 05. DIFFCI_SAVINGS_SHARE_PERCENT exists so the rate is configuration rather than a constant
+    // compiled into the pricing code - but the rate that applied is copied ONTO each invoice when it is
+    // built, so changing this never re-prices an invoice anyone has already seen.
+    const invoiceDeps: InvoiceRouteDeps = {
+      ...ledgerDeps,
+      invoiceStore: makeD1InvoiceStore(env.PRODUCT_DB),
+      savingsSharePercent: env.DIFFCI_SAVINGS_SHARE_PERCENT ? Number(env.DIFFCI_SAVINGS_SHARE_PERCENT) : undefined,
+    };
 
     // Real duration-derived cost/carbon savings (2026-08-23), computed lazily - only the two routes that
     // actually surface savings numbers (dashboard, /savings) pay for this extra D1 read, not every
@@ -245,7 +345,189 @@ export default {
         csrfConfigured: Boolean(env.CSRF_SECRET),
         queueSubsystemReachable: dbReachable, // queue/runner/usage all live in the same PRODUCT_DB binding as organizations
         runnerProvider: env.SYNTHETIC_RUNNER_URL && env.RUNNER_CONTROL_TOKEN ? "cloudflare-containers" : "mock",
+        // Phases 03-05 (2026-08-26). Booleans and a rate, never a secret value - these exist so the
+        // deployment runbook can verify each step with one request instead of by trying the flow and
+        // interpreting the failure.
+        githubAppConfigured: Boolean(env.GITHUB_APP_SLUG && env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY),
+        githubAppWebhookConfigured: Boolean(env.GITHUB_APP_WEBHOOK_SECRET),
+        // Whether generated install instructions will name a specific commit rather than a moving ref.
+        actionRefPinned: /@[0-9a-f]{40}$/i.test(env.DIFFCI_ACTION_REF ?? ""),
+        savingsSharePercent: env.DIFFCI_SAVINGS_SHARE_PERCENT ? Number(env.DIFFCI_SAVINGS_SHARE_PERCENT) : DEFAULT_SAVINGS_SHARE_PERCENT,
       });
+    }
+
+    // --- The console (Phase 03 follow-up) ---------------------------------------------------------
+    // Server-rendered HTML, no build step. Every page here reads through the same organization-scoped
+    // route functions the JSON API uses, so a page cannot see anything an API caller could not: there is
+    // no separate "UI query" path, and therefore no second place for a tenancy check to be forgotten.
+    if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/app" || url.pathname === "/app/")) {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) {
+        return htmlResponse(renderSignedOut({ githubConfigured: Boolean(env.GITHUB_OAUTH_CLIENT_ID && env.GITHUB_OAUTH_CLIENT_SECRET) }));
+      }
+      const [user, organizations] = await Promise.all([store.getUser(principal.userId), store.listOrganizationsForUser(principal.userId)]);
+      return htmlResponse(renderHome({ email: user?.email ?? "", organizations }));
+    }
+
+    const consoleInvoicesMatch = url.pathname.match(/^\/app\/orgs\/([^/]+)\/invoices\/?$/);
+    if (request.method === "GET" && consoleInvoicesMatch) {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) return Response.redirect(`${url.origin}/app`, 302);
+      const organizationId = consoleInvoicesMatch[1]!;
+      const [details, invoices] = await Promise.all([
+        getOrganizationDetails(routeDeps, principal.userId, organizationId),
+        listInvoicesForOrganization(invoiceDeps, principal.userId, organizationId),
+      ]);
+      if (!details.ok) return htmlResponse(renderSignedOut({ githubConfigured: true }), outcomeStatus(details.error));
+      if (!invoices.ok) return htmlResponse(renderSignedOut({ githubConfigured: true }), outcomeStatus(invoices.error));
+
+      const reconcileId = url.searchParams.get("reconcile");
+      const reconciliation = reconcileId
+        ? await reconcileInvoiceForOrganization(invoiceDeps, principal.userId, organizationId, reconcileId)
+        : undefined;
+      const [user, membership] = await Promise.all([store.getUser(principal.userId), store.getMembership(organizationId, principal.userId)]);
+      return htmlResponse(
+        renderInvoices({
+          email: user?.email ?? "",
+          organization: details.data.organization,
+          invoices: invoices.data,
+          reconciliation: reconciliation?.ok ? { invoiceId: reconcileId!, result: reconciliation.data.reconciliation } : undefined,
+          canManage: membership?.role === "owner" || membership?.role === "admin",
+        }),
+      );
+    }
+
+    const consoleLedgerMatch = url.pathname.match(/^\/app\/orgs\/([^/]+)\/ledger\/?$/);
+    if (request.method === "GET" && consoleLedgerMatch) {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) return Response.redirect(`${url.origin}/app`, 302);
+      const organizationId = consoleLedgerMatch[1]!;
+      const month = url.searchParams.get("month") ?? currentMonth();
+      const [details, ledger] = await Promise.all([
+        getOrganizationDetails(routeDeps, principal.userId, organizationId),
+        getMonthlyLedgerForOrganization(ledgerDeps, principal.userId, organizationId, month),
+      ]);
+      if (!details.ok) return htmlResponse(renderSignedOut({ githubConfigured: true }), outcomeStatus(details.error));
+      if (!ledger.ok) return htmlResponse(renderSignedOut({ githubConfigured: true }), outcomeStatus(ledger.error));
+      const user = await store.getUser(principal.userId);
+      return htmlResponse(renderLedger({ email: user?.email ?? "", organization: details.data.organization, ledger: ledger.data }));
+    }
+
+    const consoleOrgMatch = url.pathname.match(/^\/app\/orgs\/([^/]+)(?:\/repos\/([^/]+))?\/?$/);
+    if (request.method === "GET" && consoleOrgMatch) {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) return Response.redirect(`${url.origin}/app`, 302);
+      const organizationId = consoleOrgMatch[1]!;
+      const repositoryId = consoleOrgMatch[2];
+
+      const details = await getOrganizationDetails(routeDeps, principal.userId, organizationId);
+      if (!details.ok) return htmlResponse(renderSignedOut({ githubConfigured: true }), outcomeStatus(details.error));
+      const user = await store.getUser(principal.userId);
+      const email = user?.email ?? "";
+
+      if (repositoryId) {
+        const install = await getInstallInstructionsForRepository(ingestDeps, principal.userId, organizationId, repositoryId);
+        if (!install.ok) return htmlResponse(renderSignedOut({ githubConfigured: true }), outcomeStatus(install.error));
+        const [repository, tokens, observations] = await Promise.all([
+          store.getRepository(repositoryId),
+          listIngestTokensForOrganization(ingestDeps, principal.userId, organizationId),
+          listObservationsForOrganization(ingestDeps, principal.userId, organizationId, { repositoryId, limit: 20 }),
+        ]);
+        if (!repository) return htmlResponse(renderSignedOut({ githubConfigured: true }), 404);
+        return htmlResponse(
+          renderRepository({
+            email,
+            organization: details.data.organization,
+            repository,
+            install: install.data,
+            tokens: (tokens.ok ? tokens.data : []).filter((token) => token.repositoryId === repositoryId),
+            observations: observations.ok ? observations.data.observations : [],
+          }),
+        );
+      }
+
+      const [repositories, tokens, observations] = await Promise.all([
+        listRepositoriesForOrganization(routeDeps, principal.userId, organizationId),
+        listIngestTokensForOrganization(ingestDeps, principal.userId, organizationId),
+        listObservationsForOrganization(ingestDeps, principal.userId, organizationId, { limit: 10 }),
+      ]);
+      return htmlResponse(
+        renderOrganization({
+          email,
+          organization: details.data.organization,
+          repositories: repositories.ok ? repositories.data : [],
+          tokens: tokens.ok ? tokens.data : [],
+          summary: observations.ok ? observations.data.summary : { total: 0, observed: 0, refused: 0, errored: 0, selective: 0, full: 0, worktreeUnchanged: 0, distinctRepositories: 0 },
+          recent: observations.ok ? observations.data.observations : [],
+          installUrl: env.GITHUB_APP_SLUG ? `/app/install?organizationId=${encodeURIComponent(organizationId)}` : undefined,
+        }),
+      );
+    }
+
+    // Start of the App installation flow. The state is server-generated and single-use (the same
+    // oauth_states table the login flow uses), so the installation that comes back can only be attached
+    // to the organization whose owner started this - not to one named in a link somebody was sent.
+    if (request.method === "GET" && url.pathname === "/app/install") {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) return Response.redirect(`${url.origin}/app`, 302);
+      const organizationId = url.searchParams.get("organizationId") ?? "";
+      if (!(await store.isMember(organizationId, principal.userId))) return json({ ok: false, error: "unauthorized" }, 403);
+      if (!env.GITHUB_APP_SLUG) return json({ ok: false, error: "the GitHub App is not configured in this environment" }, 503);
+      const state = await oauthStore.createState(10 * 60 * 1000, `/app/orgs/${organizationId}`);
+      return Response.redirect(`https://github.com/apps/${env.GITHUB_APP_SLUG}/installations/new?state=${encodeURIComponent(state)}`, 302);
+    }
+
+    // Where GitHub sends the installer back (the App's Setup URL).
+    if (request.method === "GET" && url.pathname === "/app/install/callback") {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) return Response.redirect(`${url.origin}/app`, 302);
+      const installationId = url.searchParams.get("installation_id");
+      const state = url.searchParams.get("state");
+      if (!installationId || !state) return json({ ok: false, error: "invalid callback: missing installation_id or state" }, 400);
+
+      const consumed = await oauthStore.consumeState(state);
+      const organizationId = consumed?.redirectTo?.replace("/app/orgs/", "");
+      if (!consumed || !organizationId) {
+        logEvent("installation.state_rejected", {});
+        return json({ ok: false, error: "invalid or already-used installation state" }, 400);
+      }
+      // Membership is re-checked here, not assumed from the state: the state proves the flow started
+      // here, not that this particular session may act for that organization.
+      if (!(await store.isMember(organizationId, principal.userId))) return json({ ok: false, error: "unauthorized" }, 403);
+      if (!env.GITHUB_APP_ID || !env.GITHUB_APP_PRIVATE_KEY) return json({ ok: false, error: "the GitHub App is not configured in this environment" }, 503);
+
+      const result = await connectInstallation(
+        { productStore: store, credentials: { appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY } },
+        { organizationId, userId: principal.userId, installationId },
+      );
+      logEvent("installation.connected", { organizationId, connected: result.connected, updated: result.updated, refused: result.refused });
+      return Response.redirect(`${url.origin}/app/orgs/${organizationId}`, 302);
+    }
+
+    // Uninstall and repository-removal deliveries. This is the route that ERASES data, so the signature
+    // check inside handleInstallationWebhook is the whole of its authentication.
+    if (request.method === "POST" && url.pathname === "/v1/webhooks/github/installation") {
+      if (!env.GITHUB_APP_WEBHOOK_SECRET) return json({ ok: false, error: "webhooks are not configured in this environment" }, 503);
+      const rawBody = await request.text();
+      const result = await handleInstallationWebhook(
+        { rawBody, signature: request.headers.get("X-Hub-Signature-256"), event: request.headers.get("X-GitHub-Event") },
+        {
+          productStore: store,
+          observationStore,
+          tokenStore: ingestTokenStore,
+          webhookSecret: env.GITHUB_APP_WEBHOOK_SECRET,
+          connectDeps:
+            env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY
+              ? { credentials: { appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY } }
+              : undefined,
+        },
+      );
+      if (!result.ok) {
+        logEvent("installation_webhook.rejected", { error: result.error });
+        return json({ ok: false, error: result.error }, result.error === "bad_signature" ? 401 : 400);
+      }
+      logEvent("installation_webhook.handled", { ...result });
+      return json(result, 200);
     }
 
     // --- GitHub OAuth login (Part 6) --------------------------------------------------------------
@@ -389,6 +671,33 @@ export default {
       return json(result, 200);
     }
 
+    // --- Ingest (Phase 03) ------------------------------------------------------------------------
+    // The only write path here reachable by a machine in someone else's infrastructure. Authenticated
+    // by an ingest token, NOT by a session: there is no human, no cookie and no CSRF token in a CI job.
+    // Everything about which organization this belongs to comes from the credential; nothing comes from
+    // the payload (see src/ingest/ingest.ts).
+    if (request.method === "POST" && url.pathname === "/v1/ingest/observations") {
+      const declaredLength = Number(request.headers.get("content-length") ?? "0");
+      if (Number.isFinite(declaredLength) && declaredLength > MAX_REPORT_BYTES) {
+        // Refused on the declared length so an oversized body is never read into memory at all.
+        return json({ ok: false, rejection: "payload_too_large", error: `Report exceeds the ${MAX_REPORT_BYTES}-byte limit.` }, 413);
+      }
+      const body = await request.text();
+      const result = await ingestObservation(
+        { authorization: request.headers.get("authorization"), body },
+        { tokenStore: ingestTokenStore, observationStore, productStore: store, usageStore },
+      );
+      if (!result.ok) {
+        logEvent("ingest.rejected", { rejection: result.rejection });
+        return json({ ok: false, rejection: result.rejection, error: result.message }, ingestRejectionStatus(result.rejection));
+      }
+      logEvent("ingest.accepted", { duplicate: result.duplicate, status: result.record.status, organizationId: result.record.organizationId });
+      return json(
+        { ok: true, duplicate: result.duplicate, observationId: result.record.id, receivedAt: result.record.receivedAt },
+        result.duplicate ? 200 : 201,
+      );
+    }
+
     if (request.method === "POST" && url.pathname === "/v1/organizations") {
       const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
       if (!principal) return json({ ok: false, error: "unauthorized" }, 401);
@@ -517,6 +826,125 @@ export default {
         return outcome.ok ? json({ ok: true, item: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
       }
 
+      // --- Ingest credentials, install instructions and stored observations (Phase 03) ------------
+      // Every one of these goes through src/ingest/routes.ts, which checks membership AND that the
+      // repository named belongs to this organization. Mutating ones additionally require CSRF, the
+      // same as every other state-changing route in this Worker.
+      const ingestTokenIssueMatch = subPath.match(/^\/repositories\/([^/]+)\/ingest-tokens$/);
+      if (request.method === "POST" && ingestTokenIssueMatch) {
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const body = (await request.json().catch(() => null)) as { name?: string; ttlMs?: number } | null;
+        const outcome = await issueIngestTokenForRepository(ingestDeps, userId, organizationId, ingestTokenIssueMatch[1]!, {
+          name: body?.name,
+          ttlMs: typeof body?.ttlMs === "number" ? body.ttlMs : undefined,
+        });
+        if (!outcome.ok) return json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+        // The only response in this Worker that carries a live credential. It is returned once, is
+        // never stored in raw form, and cannot be read back by any route.
+        return json({ ok: true, token: outcome.data.token, tokenRecord: outcome.data.record, install: outcome.data.install }, 201);
+      }
+
+      const installMatch = subPath.match(/^\/repositories\/([^/]+)\/install$/);
+      if (request.method === "GET" && installMatch) {
+        const outcome = await getInstallInstructionsForRepository(ingestDeps, userId, organizationId, installMatch[1]!);
+        return outcome.ok ? json({ ok: true, install: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      if (request.method === "GET" && subPath === "/ingest-tokens") {
+        const outcome = await listIngestTokensForOrganization(ingestDeps, userId, organizationId);
+        return outcome.ok ? json({ ok: true, tokens: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      const ingestTokenMatch = subPath.match(/^\/ingest-tokens\/([^/]+)$/);
+      if (request.method === "DELETE" && ingestTokenMatch) {
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const outcome = await revokeIngestToken(ingestDeps, userId, organizationId, ingestTokenMatch[1]!);
+        return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      // --- Metered invoices (Phase 05) -----------------------------------------------------------
+      if (request.method === "GET" && subPath === "/invoices") {
+        const outcome = await listInvoicesForOrganization(invoiceDeps, userId, organizationId);
+        return outcome.ok ? json({ ok: true, invoices: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      // Prepares the month's invoice, or returns the one that already exists. Never re-prices.
+      if (request.method === "POST" && subPath === "/invoices") {
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const body = (await request.json().catch(() => null)) as { month?: string } | null;
+        const outcome = await prepareInvoiceForMonth(invoiceDeps, userId, organizationId, body?.month ?? currentMonth());
+        return outcome.ok
+          ? json({ ok: true, invoice: outcome.data.invoice, created: outcome.data.created }, outcome.data.created ? 201 : 200)
+          : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      const invoiceMatch = subPath.match(/^\/invoices\/([^/]+)$/);
+      if (request.method === "GET" && invoiceMatch) {
+        const outcome = await getInvoiceForOrganization(invoiceDeps, userId, organizationId, invoiceMatch[1]!);
+        return outcome.ok ? json({ ok: true, invoice: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      // Recomputes the invoice from today's ledger, line by line. Open to any member on purpose: the
+      // customer checking the bill is the reason this endpoint exists.
+      const reconcileMatch = subPath.match(/^\/invoices\/([^/]+)\/reconcile$/);
+      if (request.method === "GET" && reconcileMatch) {
+        const outcome = await reconcileInvoiceForOrganization(invoiceDeps, userId, organizationId, reconcileMatch[1]!);
+        return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      const issueMatch = subPath.match(/^\/invoices\/([^/]+)\/issue$/);
+      if (request.method === "POST" && issueMatch) {
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const outcome = await issueInvoice(invoiceDeps, userId, organizationId, issueMatch[1]!);
+        return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      const payMatch = subPath.match(/^\/invoices\/([^/]+)\/paid$/);
+      if (request.method === "POST" && payMatch) {
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const body = (await request.json().catch(() => null)) as { reference?: string } | null;
+        if (!body?.reference) return json({ ok: false, error: "a payment reference is required - something that proves this was paid" }, 400);
+        const outcome = await markInvoicePaid(invoiceDeps, userId, organizationId, payMatch[1]!, body.reference);
+        return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      const voidMatch = subPath.match(/^\/invoices\/([^/]+)\/void$/);
+      if (request.method === "POST" && voidMatch) {
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const outcome = await voidInvoiceForOrganization(invoiceDeps, userId, organizationId, voidMatch[1]!);
+        return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      // Phase 04: the month, as JSON. Same data the console's ledger page renders.
+      if (request.method === "GET" && subPath === "/ledger") {
+        const outcome = await getMonthlyLedgerForOrganization(ledgerDeps, userId, organizationId, url.searchParams.get("month") ?? currentMonth());
+        return outcome.ok ? json({ ok: true, ledger: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      if (request.method === "GET" && subPath === "/observations") {
+        const outcome = await listObservationsForOrganization(ingestDeps, userId, organizationId, {
+          limit: url.searchParams.has("limit") ? Number(url.searchParams.get("limit")) : undefined,
+          since: url.searchParams.get("since") ?? undefined,
+          repositoryId: url.searchParams.get("repositoryId") ?? undefined,
+        });
+        return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      const observationMatch = subPath.match(/^\/observations\/([^/]+)$/);
+      if (request.method === "GET" && observationMatch) {
+        const outcome = await getObservationForOrganization(ingestDeps, userId, organizationId, observationMatch[1]!);
+        return outcome.ok ? json({ ok: true, observation: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
+      // Erasure on request - site/data-handling.html's "ask, and it goes sooner", as a route.
+      if (request.method === "DELETE" && subPath === "/observations") {
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const outcome = await deleteObservationsForOrganization(ingestDeps, userId, organizationId, {
+          repositoryId: url.searchParams.get("repositoryId") ?? undefined,
+        });
+        return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
+      }
+
       if (request.method === "GET" && subPath === "/dashboard") {
         const outcome = await getDashboardForOrganization(await routeDepsWithSavings(), userId, organizationId);
         return outcome.ok ? json({ ok: true, dashboard: outcome.data }) : json({ ok: false, error: outcome.error }, outcomeStatus(outcome.error));
@@ -589,6 +1017,19 @@ export default {
       // Never let a duration-capture failure affect orphan cleanup's own success/failure signal above -
       // this sweep is purely additive telemetry, not safety-critical.
       logEvent("duration_capture.sweep_failed", { error: err instanceof Error ? err.message : String(err) });
+    }
+
+    // Phase 03 retention sweep. site/data-handling.html promises "90 days maximum, regardless" and
+    // carries a banner saying the page must not be published because the automated deletion path does
+    // not exist. For observations, it now does, and it runs on this same cron rather than depending on
+    // a webhook, a session, or anyone remembering. Wrapped so a failure here cannot affect the sweeps
+    // above - but logged loudly, because a retention sweep that silently stops running is a broken
+    // public commitment, not a missing metric.
+    try {
+      const result = await runRetentionSweep(makeD1ObservationStore(env.PRODUCT_DB));
+      logEvent("observations.retention_sweep_completed", { ...result });
+    } catch (err) {
+      logEvent("observations.retention_sweep_failed", { error: err instanceof Error ? err.message : String(err) });
     }
 
     // NOTE (2026-08-25): shadow-economics capture deliberately does NOT run here. It briefly did, and

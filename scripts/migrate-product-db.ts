@@ -29,6 +29,8 @@ const MIGRATION_FILES = [
   "src/usage/cloudflare/schema.sql", // usage_events references organizations(id), repositories(id)
   "src/runner/cloudflare/schema.sql", // runners references organizations(id), repositories(id)
   "src/execution-queue/cloudflare/schema.sql", // execution_queue_items references organizations(id), repositories(id), runners(id)
+  "src/ingest/cloudflare/schema.sql", // ingest_tokens/observations reference organizations(id), repositories(id), users(id)
+  "src/billing/cloudflare/schema-metered-invoices.sql", // invoices/invoice_lines reference organizations(id), repositories(id)
 ];
 
 function run(): void {

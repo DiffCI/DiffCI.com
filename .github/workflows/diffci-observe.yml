@@ -1,0 +1,37 @@
+# DiffCI observing itself through the same action a third-party repository would install
+# (Phase 02, 2026-08-26).
+#
+# This is the dogfood installation. It uses `./` - the action.yml at this repository's root - so every
+# change to the observer is exercised by the observer on the next push, in a real workflow, on the same
+# runner fleet as the rest of this repository's CI, before it is ever pointed at somebody else's repo.
+#
+# It is a separate job from `check` in ci.yml and nothing depends on it, so it cannot delay, block or
+# fail the real build. It costs one extra container launch per run (~$0.004 on the Cloudflare-backed
+# fleet); if that is not wanted, deleting this file removes it and affects nothing else.
+name: DiffCI observation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  observe:
+    name: Observe this repository
+    runs-on: [self-hosted, cloudflare]
+    # A runaway analysis would cost the host repository runner minutes, which is a real cost even
+    # though it changes no result. Bounded here rather than trusted to finish.
+    timeout-minutes: 20
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./
+        with:
+          artifact-name: diffci-self-observation
