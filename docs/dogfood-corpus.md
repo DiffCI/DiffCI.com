@@ -1,0 +1,244 @@
+# The dogfood corpus
+
+**Started 2026-08-27.** The packaged proprietary agent, run against real repositories, in observation
+mode. Nothing is skipped; DiffCI records what it *would* have selected while full CI still decides.
+
+## Method
+
+    private source → build → npm pack → exact .tgz → clean install → real repository → observation
+
+`npm run dogfood` installs the tarball into a fresh prefix and executes **that** binary. It never
+imports `src/client`. This matters: the packaging exercise found four defects — a missing shebang, an
+install that dirtied the observed worktree, unparseable generated YAML, and a guard that silently
+checked nothing — none of which a source-tree run could have surfaced.
+
+`npm run dogfood:report` summarises a corpus. It reports safety and refusals first and the flattering
+efficiency number last, on purpose.
+
+## The corpus constraint, stated plainly
+
+**Two repositories are owned, both private, both TypeScript.** The five-way stress matrix (monorepo,
+different framework, unusual CI, unsupported language) cannot be built from owned repositories alone.
+
+The two halves of testing have different requirements, and separating them removes the blocker:
+
+| | Needs ownership? | Why |
+|---|---|---|
+| Local `.tgz` observation | **No** | The agent analyses a checkout. With no `api-url` configured nothing is transmitted anywhere. Any clonable repository is valid corpus. |
+| CI-integrated test on a real runner | **Yes** | Requires committing a workflow and holding secrets. Limited to the two owned repositories. |
+
+So the stress matrix is built from public repositories analysed locally, and the runner-integration
+test is done on an owned repository. Neither waits for the other.
+
+## Run 1 — DiffCI.com, 12 commits, agent 0.1.0
+
+| | |
+|---|---|
+| Safety violations | **0** — non-interference held, privacy boundary held, every report written outside the checkout |
+| Decisions | 6 FULL, 6 SELECTIVE |
+| Versus a path-rule comparator | 9 fewer, 3 identical, **0 worse** |
+| Analysis overhead | median 3.2s, p90 3.6s, max 5.2s per commit |
+| SELECTIVE decisions falsified | **0 of 6 — and none were falsifiable. See below.** |
+
+Four SELECTIVE decisions selected zero tests. All four were checked by hand and are genuine: one
+CSS-only commit and three docs-only commits. Correct behaviour, not a blind spot — but the harness
+flags them every time, because "selected nothing" and "failed to see anything" look identical in a
+summary table.
+
+## Finding 1 — green history cannot falsify a selective decision
+
+This is the most important result of the run, and it is methodological rather than a defect.
+
+A SELECTIVE decision is falsified when a test *outside* the selection changes outcome between base and
+head. On a green-to-green history no test changes outcome, so running the full suite at those commits
+proves nothing: every non-selected test passes, exactly as it did before, whether or not DiffCI's
+reasoning was sound.
+
+**A corpus of clean merges therefore cannot support a safety claim, no matter how large it gets.**
+Scaling to 10 repositories × 30 merges would produce 300 unfalsifiable rows.
+
+Falsification needs one of:
+
+1. **Real red commits.** Find history where CI genuinely failed, and check whether the failing test was
+   inside DiffCI's proposed selection. Scarce, and biased toward the failures people commit.
+2. **Deliberate mutation.** Introduce a change with a known blast radius, then check DiffCI selected the
+   tests that detect it. This repository already has the machinery — `src/analysis-fanout/mutation.ts`
+   and the differential-baseline gates — built for exactly this question.
+3. **Execute the non-selected set on red commits only.** The narrow, cheap version of (1).
+
+Recommendation: mutation is the only one that produces evidence on demand. The corpus should carry both
+— observed decisions for coverage and cost, mutation for safety — and the report should never let the
+first stand in for the second.
+
+## Finding 2 — `.html` is unclassifiable, so a static-site change forces a full run
+
+`ASSET_EXTENSIONS` in [`src/repo/impact.ts`](../src/repo/impact.ts) contains `.css`, `.scss`, `.svg`,
+`.png`, `.md`, `.txt` and more — but not `.html`. A commit touching only `site/*.html` produces
+`Unknown changed file` and falls back to FULL, while a commit touching only `site/styles.css` correctly
+selects nothing. Two commits in this run hit it.
+
+**This is not obviously a bug, and it should not be fixed reflexively.** On this repository HTML cannot
+affect a TypeScript test, so FULL is over-conservative. On a static-site-generator repository with
+snapshot tests over rendered HTML, treating `.html` as an inert asset would be exactly the kind of
+unsafe assumption the repo-agnosticism guard exists to prevent. The safe generalisation is probably
+"an asset is inert if nothing in the graph reads it", derived per repository, not a longer hardcoded
+list.
+
+Recorded and deliberately left unfixed: changing engine behaviour mid-corpus would contaminate the
+evidence the corpus exists to collect.
+
+## Finding 3 — the same shell-quoting bug, three times
+
+`shell: true` on Windows concatenates arguments, and this repository's own path contains a space. It
+broke the esbuild call in the agent build, the `tar` call in the package inspector, and the `npm
+install` in this harness. Each was fixed at the point of use — the API instead of the CLI, an
+in-process reader instead of `tar`, a relative filename instead of an absolute path.
+
+Three occurrences is a pattern, not bad luck. Any future code spawning a process with a
+path-containing argument on Windows should assume this until proven otherwise.
+
+## What this run does not establish
+
+- Nothing about repositories that are not this one. Same framework, same layout, same author.
+- Nothing about safety, per Finding 1.
+- Nothing about real CI: no runner, no network submission, no authentication, no platform differences.
+- Nothing about economics beyond analysis overhead — no test durations were measured, so there is no
+  saved-time figure and none should be quoted.
+
+## Next
+
+1. Broaden the corpus with public repositories analysed locally, chosen to stress the matrix: a
+   monorepo, a jest repository, a `node:test` repository, an unusual CI layout, and a
+   non-TypeScript repository that must return FULL rather than guess.
+2. Add the mutation pass, so SELECTIVE decisions become falsifiable.
+3. Then the runner-integration test on one owned repository: install from the registry, analyse,
+   submit, full CI continues. That is where authentication, platform differences and non-interference
+   under real CI get tested.
+4. Only after all three are stable is selective execution worth enabling anywhere.
+
+---
+
+# The mutation-recall pass
+
+**Added 2026-08-27**, in response to Finding 1: an observation corpus cannot support a safety claim,
+so the corpus needed a second, falsifiable axis.
+
+    historical merge → full baseline → controlled mutation → full mutated run
+                     → DiffCI selection → selected mutated run → classification
+
+`npm run dogfood:mutate -- --repo <scratch clone> --reports <dir>`
+
+## The mutation
+
+Whole-file revert of a source file the merge itself changed, back to its exact pre-merge content
+(reusing [`src/analysis-fanout/mutation.ts`](../src/analysis-fanout/mutation.ts), which was built for
+this question). "If this change were undone, would the suite notice?" is exactly the regression the
+merge's own tests exist to catch. It needs no per-case authoring, generalises to any repository, and
+cannot produce a syntactically invalid file because the base version was itself real.
+
+## Classification
+
+| Full mutated run | Selected mutated run | Class |
+|---|---|---|
+| detects | detects | `RECALL_CONFIRMED` |
+| detects | misses | `FALSE_GREEN` |
+| does not detect | — | `RECALL_UNMEASURABLE` |
+| baseline already red | — | `ENVIRONMENT_DIRTY` |
+| harness failed | — | `INVALID_RUN` |
+
+The full mutated run is a **gate**, not a data point. A mutation the whole suite cannot see measures
+nothing about DiffCI, and counting those as successes would inflate recall with cases where recall was
+never at stake.
+
+**Primary safety metric: false greens / recall-measurable selective decisions.** Not over all commits.
+
+Selection correctness is kept separate from economics throughout. No mutation is chosen to make DiffCI
+look good or to produce a large saving; its only job is to establish whether an affected behaviour is
+detectable outside the proposed selection.
+
+## Run 2 — DiffCI.com, 2 candidates, after Finding 4 was fixed
+
+| | |
+|---|---|
+| RECALL_CONFIRMED | 2 |
+| FALSE_GREEN | 0 |
+| RECALL_UNMEASURABLE | 0 |
+| ENVIRONMENT_DIRTY | 0 |
+| INVALID_RUN | 0 |
+| **False greens / measurable** | **0/2 = 0.0%** |
+
+| Commit | Attempted | Measurable via | Full failures | Selected failures | Missed |
+|---|---|---|---|---|---|
+| `1d57eb33c` | 1 | `src/planner/path-baseline.ts` | 1 | 1 | 0 |
+| `77685fe31` | 2 | `src/repo/graph.ts` | 4 | 4 | 0 |
+
+In both cases DiffCI's selection caught **every** failure the full suite saw — `missedBySelection` is
+empty, which is the specific evidence behind RECALL_CONFIRMED rather than an inference from a count.
+
+**n = 2. The 0.0% is honest and statistically meaningless, and must not be quoted as a safety result.**
+What runs 1 and 2 establish is that the pipeline works end to end, can produce every one of the five
+classes, and now extracts the evidence a merge actually contains.
+
+Cost: roughly 2 minutes per measurable candidate, plus about 40 seconds for each unmeasurable file
+tried along the way.
+
+## Finding 4 — fixed: the harness gave up on the first mutation target
+
+An earlier version stopped at the merge's first changed source file. For `77685fe31` that was
+`scripts/screen-shadow-eligibility.ts`, a script with no test coverage, so the case died as
+RECALL_UNMEASURABLE. Trying the next file — `src/repo/graph.ts` — produced 4 failures and a clean
+RECALL_CONFIRMED.
+
+**Measurable yield went from 1/2 to 2/2 on the same corpus.** The old number said more about the
+harness than about DiffCI.
+
+Every row now records `attemptedFiles`, so the search is visible rather than implicit, and the search
+is capped (`--max-attempts`, default 5) with capped cases saying so in their reason instead of looking
+like merges with nothing measurable in them.
+
+**The sampling shift, stated rather than buried.** This moves the population from "a merge's first
+changed file" to "any measurable file in a merge". It is not cherry-picking — only files the merge
+itself changed are eligible, and the full-suite gate is unchanged, so nothing can be counted that the
+suite cannot see. But it is a different question being answered, and results should say which.
+
+## Finding 5 — `.html` frozen as a known conservative fallback
+
+Recorded and deliberately unfixed for the duration of this corpus:
+
+    SAFE_CONSERVATIVE_FALLBACK / HTML_DEPENDENCY_UNKNOWN
+
+FULL is safe. The eventual fix is not a longer hardcoded extension list but a graph-derived answer to
+"does anything in this repository read this file?" — which belongs to the intelligence layer, not to
+`ASSET_EXTENSIONS`.
+
+## Engineering invariant, promoted
+
+> **No child process receiving repository-controlled or path-derived arguments may execute through a
+> shell.**
+
+Four occurrences: three found by failure (agent build, package inspector, dogfood harness) and one by
+audit — [`scripts/diffci-execution-validation.ts`](../scripts/diffci-execution-validation.ts) passed
+test file paths discovered inside a cloned repository straight through `shell: true` on Windows, which
+would corrupt silently for any repository with a space in a path.
+
+Enforced by [`tests/scripts/shell-invocation-invariant.test.ts`](../tests/scripts/shell-invocation-invariant.test.ts):
+any file in `src/` or `scripts/` that spawns through a shell must also call `assertShellSafeArgs`.
+The guard cannot tell which arguments are path-derived, so it enforces the procedure instead — a new
+shell spawn fails the suite until someone has thought about it.
+
+Where a shell is genuinely unavoidable (npm, npx and corepack are `.cmd` shims that Node refuses to
+spawn directly since CVE-2024-27980), the split is: fixed literals may go through a shell after
+assertion; repository-derived arguments may not, and are invoked through the runner's real JS entry
+under `node` instead.
+
+## Order from here
+
+1. ~~Mutation harness~~ — done, end to end.
+2. Raise measurable yield (Finding 4), then re-run to get n above 1.
+3. Diverse public corpus — 4–6 repositories chosen to attack different assumptions: Vitest, Jest,
+   `node:test`, monorepo/workspaces, unusual layout, and one unsupported ecosystem expected to FULL.
+4. Owned-repo real CI with the packaged agent.
+5. Only then selective execution anywhere.
+
+Two independent evidence axes, kept separate: **safety** is mutation recall on measurable cases;
+**generalisation** is how often an unseen repository can be understood without adaptation.

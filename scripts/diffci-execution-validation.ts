@@ -13,6 +13,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, appendFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { assertShellSafeArgs } from "./shell-safety.js";
 import { analyzeGitDelta } from "../src/git/git-diff.js";
 import { buildDependencyGraph } from "../src/repo/graph.js";
 import { ImpactAnalyzer } from "../src/repo/impact.js";
@@ -28,6 +29,10 @@ const isWin = process.platform === "win32";
 const PNPM = isWin ? "corepack.cmd" : "corepack";
 
 function sh(cmd: string, cmdArgs: string[], cwd: string, timeoutMs: number, env: Record<string, string> = {}) {
+  // This one takes REPOSITORY-DERIVED arguments - test file paths discovered in a cloned repo - and on
+  // Windows it needs a shell to reach corepack.cmd. A path with a space in any analysed repository
+  // would silently split into two arguments. Refuse loudly instead.
+  if (isWin) assertShellSafeArgs(cmdArgs, "execution-validation: " + cmd);
   const t0 = Date.now();
   const r = spawnSync(cmd, cmdArgs, { cwd, encoding: "utf8", timeout: timeoutMs, maxBuffer: 512 * 1024 * 1024, shell: isWin, env: { ...process.env, CI: "1", FORCE_COLOR: "0", ...env } });
   return { status: r.status, signal: r.signal, timedOut: !!r.error && /ETIMEDOUT/.test(String(r.error)), wallMs: Date.now() - t0, stdout: r.stdout ?? "", stderr: r.stderr ?? "" };

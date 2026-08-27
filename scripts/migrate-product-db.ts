@@ -19,6 +19,7 @@
  * D1 binding whose database_name is "diffci-product".
  */
 import { execFileSync } from "node:child_process";
+import { assertShellSafeArgs } from "./shell-safety.js";
 
 // Fixed order - each entry's comment states the dependency reason it must come after the previous ones.
 export const MIGRATION_FILES = [
@@ -53,7 +54,9 @@ function run(): void {
     // shell:true on Windows because Node >=18.20/20.12 refuses to spawn a .cmd shim directly
     // (CVE-2024-27980) and throws EINVAL. Safe here: every argument below is a fixed literal or a
     // repo-relative path from MIGRATION_FILES above - none contain spaces or shell metacharacters.
-    execFileSync(process.platform === "win32" ? "npx.cmd" : "npx", ["wrangler", "d1", "execute", "diffci-product", mode, `--file=${file}`, "--config", "wrangler.product.jsonc"], {
+    const args = ["wrangler", "d1", "execute", "diffci-product", mode, `--file=${file}`, "--config", "wrangler.product.jsonc"];
+    assertShellSafeArgs(args, "migrate-product-db");
+    execFileSync(process.platform === "win32" ? "npx.cmd" : "npx", args, {
       stdio: "inherit",
       shell: process.platform === "win32",
     });

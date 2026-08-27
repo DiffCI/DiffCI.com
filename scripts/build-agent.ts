@@ -19,6 +19,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { buildSync } from "esbuild";
+import { assertShellSafeArgs } from "./shell-safety.js";
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
@@ -159,7 +160,9 @@ function packAndReport(version: string): void {
   // No path arguments. `npm pack` writes into its own cwd by default, so nothing containing a space
   // is ever concatenated into the command line that shell:true builds on Windows - the same bug that
   // broke the esbuild call above, avoided here by not passing --pack-destination at all.
-  const output = execFileSync(process.platform === "win32" ? "npm.cmd" : "npm", ["pack", "--json"], {
+  const packArgs = ["pack", "--json"];
+  assertShellSafeArgs(packArgs, "build-agent: npm pack");
+  const output = execFileSync(process.platform === "win32" ? "npm.cmd" : "npm", packArgs, {
     cwd: outDir,
     encoding: "utf8",
     shell: process.platform === "win32",

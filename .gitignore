@@ -46,3 +46,4 @@ desktop.ini
 dist-client/
 dist-agent/
 *.tgz
+.dogfood/
