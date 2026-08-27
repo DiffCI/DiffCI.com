@@ -21,7 +21,7 @@
 import { execFileSync } from "node:child_process";
 
 // Fixed order - each entry's comment states the dependency reason it must come after the previous ones.
-const MIGRATION_FILES = [
+export const MIGRATION_FILES = [
   "src/product/cloudflare/schema.sql", // base: users, organizations, organization_members, repositories, audit_log - no dependencies
   "src/billing/cloudflare/schema.sql", // billing_customers/subscriptions/billing_events reference organizations(id)
   "src/auth/cloudflare/schema.sql", // sessions references users(id)
@@ -31,7 +31,14 @@ const MIGRATION_FILES = [
   "src/execution-queue/cloudflare/schema.sql", // execution_queue_items references organizations(id), repositories(id), runners(id)
   "src/ingest/cloudflare/schema.sql", // ingest_tokens/observations reference organizations(id), repositories(id), users(id)
   "src/billing/cloudflare/schema-metered-invoices.sql", // invoices/invoice_lines reference organizations(id), repositories(id)
+  "src/install/cloudflare/schema-installations.sql", // pending_installations references users(id), organizations(id); webhook_deliveries has no FK
 ];
+
+/**
+ * Every argument this script hands to a child process, so the shell-safety property below can be
+ * asserted by a test rather than argued in a comment. Exported for exactly that reason.
+ */
+export const MIGRATION_ARGUMENT_LITERALS = ["wrangler", "d1", "execute", "diffci-product", "--remote", "--local", "--config", "wrangler.product.jsonc"] as const;
 
 function run(): void {
   const mode = process.argv.includes("--remote") ? "--remote" : process.argv.includes("--local") ? "--local" : undefined;
@@ -43,11 +50,15 @@ function run(): void {
   console.log(`Applying ${MIGRATION_FILES.length} migration files to diffci-product (${mode})...`);
   for (const file of MIGRATION_FILES) {
     console.log(`  -> ${file}`);
+    // shell:true on Windows because Node >=18.20/20.12 refuses to spawn a .cmd shim directly
+    // (CVE-2024-27980) and throws EINVAL. Safe here: every argument below is a fixed literal or a
+    // repo-relative path from MIGRATION_FILES above - none contain spaces or shell metacharacters.
     execFileSync(process.platform === "win32" ? "npx.cmd" : "npx", ["wrangler", "d1", "execute", "diffci-product", mode, `--file=${file}`, "--config", "wrangler.product.jsonc"], {
       stdio: "inherit",
+      shell: process.platform === "win32",
     });
   }
   console.log("Migration complete.");
 }
 
-run();
+if (process.argv[1] && process.argv[1].endsWith("migrate-product-db.ts")) run();

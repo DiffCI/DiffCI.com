@@ -35,6 +35,7 @@ import {
   type IngestRouteDeps,
 } from "../../src/ingest/routes.js";
 import { makeD1ProductStore } from "../../src/product/store.js";
+import { TEST_PINNED_AGENT } from "../helpers/agent-artifact.js";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -78,7 +79,7 @@ async function twoTenants() {
     productStore,
     tokenStore,
     observationStore,
-    actionRef: `owner/DiffCI.com@${"0".repeat(40)}`,
+    agentArtifact: TEST_PINNED_AGENT,
     apiOrigin: "https://api.diffci.test",
   };
   return {

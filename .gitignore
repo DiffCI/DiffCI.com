@@ -44,3 +44,5 @@ desktop.ini
 
 # Client observer build output (Phase 02). Built inside the consumer CI by action.yml.
 dist-client/
+dist-agent/
+*.tgz

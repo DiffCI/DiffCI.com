@@ -26,7 +26,13 @@ export interface RouteDeps {
   savingsOptions?: SavingsOptions;
 }
 
-export type RouteOutcome<T> = { ok: true; data: T } | { ok: false; error: "unauthorized" | "not_found" };
+/**
+ * `agent_not_pinned` (2026-08-27) is an ENVIRONMENT fault, not a caller fault: the request was
+ * authorized and well-formed, but this deployment has no pinned, integrity-verifiable DIFFCI_AGENT_ARTIFACT, so it cannot
+ * honestly hand anyone a workflow. It maps to 503, alongside the other "configured, but not here"
+ * refusals, rather than to a 4xx that would invite the caller to retry differently.
+ */
+export type RouteOutcome<T> = { ok: true; data: T } | { ok: false; error: "unauthorized" | "not_found" | "agent_not_pinned" };
 
 async function requireMembership(deps: RouteDeps, organizationId: string, userId: string): Promise<Organization | null> {
   const isMember = await deps.productStore.isMember(organizationId, userId);

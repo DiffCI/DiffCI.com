@@ -57,6 +57,8 @@ import { makeD1ExecutionQueueStore } from "../../execution-queue/store.js";
 import { makeD1ShadowReadBoundary, type D1Binding as ShadowD1Binding } from "../shadow-read-boundary.js";
 import { connectInstallation } from "../../install/github-installation.js";
 import { handleInstallationWebhook } from "../../install/webhook.js";
+import { makeD1PendingInstallationStore, claimInstallation } from "../../install/pending.js";
+import { makeD1WebhookDeliveryStore } from "../../install/delivery-log.js";
 import { currentMonth, getMonthlyLedgerForOrganization, type LedgerRouteDeps } from "../../ledger/routes.js";
 import { makeD1InvoiceStore } from "../../billing/invoice-store.js";
 import { DEFAULT_SAVINGS_SHARE_PERCENT } from "../../billing/metered.js";
@@ -70,8 +72,10 @@ import {
   voidInvoiceForOrganization,
   type InvoiceRouteDeps,
 } from "../../billing/invoice-routes.js";
-import { renderHome, renderInvoices, renderLedger, renderOrganization, renderRepository, renderSignedOut } from "../../ui/pages.js";
+import { renderClaimInstallation, renderHome, renderInvoices, renderLedger, renderOrganization, renderRepository, renderSignedOut } from "../../ui/pages.js";
 import { makeD1IngestTokenStore } from "../../ingest/token.js";
+import { parseAgentArtifact } from "../../ingest/agent-artifact.js";
+import { decideRepositoryAdmission, EARLY_ACCESS_ENABLED } from "../../billing/repository-admission.js";
 import { makeD1ObservationStore } from "../../ingest/store.js";
 import { ingestObservation, MAX_REPORT_BYTES } from "../../ingest/ingest.js";
 import type { IngestRejection } from "../../ingest/types.js";
@@ -112,7 +116,7 @@ export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   DIFFCI_API_ORIGIN?: string; // this Worker's own public base URL - injected into R1 runners so their
                               // bootstrap script knows where to call back (src/runner/agent-api.ts)
   DIFFCI_ENVIRONMENT_LABEL?: string; // R1 Part 6 resource-tag "environment" value - defaults to "staging"
-  DIFFCI_ACTION_REF?: string; // "owner/repo@<sha>" of the published observer action, for install instructions
+  DIFFCI_AGENT_ARTIFACT?: string; // "npm:@diffci/observer@1.4.2#sha512-..." - the pinned agent onboarding installs
   DIFFCI_SAVINGS_SHARE_PERCENT?: string; // metered price, default 15 - copied onto each invoice at build time
   // GitHub App (Phase 03 follow-up): repository discovery on install, and erasure on uninstall. All four
   // are needed together; with any missing, the console says the App is not configured here rather than
@@ -249,6 +253,9 @@ function ingestRejectionStatus(rejection: IngestRejection): number {
 function outcomeStatus(error: string): number {
   if (error === "unauthorized" || error === "insufficient_role") return 403;
   if (error === "not_found" || error === "organization_not_found") return 404;
+  // The deployment is misconfigured, not the request. Same class as the 503s returned when OAuth or
+  // the App is unconfigured: nothing the caller can change will make it succeed.
+  if (error === "agent_not_pinned") return 503;
   return 400;
 }
 
@@ -282,13 +289,23 @@ export default {
     // Phase 03 ingest. `actionRef` is what generated install instructions tell a customer to pin; it is
     // configuration rather than a constant because the published action's SHA changes with every
     // release, and instructions naming a stale one would be worse than instructions naming none.
+    const parsedAgentArtifact = parseAgentArtifact(env.DIFFCI_AGENT_ARTIFACT);
+    // B3 + replay dedup (2026-08-27). Both back the installation webhook: one parks an installation
+    // that arrived without a session to attribute it to, the other stops a redelivered destructive
+    // event being applied twice.
+    const pendingInstallationStore = makeD1PendingInstallationStore(env.PRODUCT_DB);
+    const webhookDeliveryStore = makeD1WebhookDeliveryStore(env.PRODUCT_DB);
     const ingestTokenStore = makeD1IngestTokenStore(env.PRODUCT_DB);
     const observationStore = makeD1ObservationStore(env.PRODUCT_DB);
     const ingestDeps: IngestRouteDeps = {
       productStore: store,
       tokenStore: ingestTokenStore,
       observationStore,
-      actionRef: env.DIFFCI_ACTION_REF ?? "adityankale190895/DiffCI.com@main",
+      // NO FALLBACK, deliberately. The predecessor of this line defaulted to a branch ref, which meant
+      // the DEFAULT configuration generated customer workflows naming something mutable - whoever
+      // controlled that branch would control what ran in every customer's CI, forever. An unparseable
+      // or unset value yields null, and every route that would emit a workflow refuses instead.
+      agentArtifact: parsedAgentArtifact.ok ? parsedAgentArtifact.artifact : null,
       apiOrigin: env.DIFFCI_API_ORIGIN ?? url.origin,
     };
 
@@ -351,7 +368,11 @@ export default {
         githubAppConfigured: Boolean(env.GITHUB_APP_SLUG && env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY),
         githubAppWebhookConfigured: Boolean(env.GITHUB_APP_WEBHOOK_SECRET),
         // Whether generated install instructions will name a specific commit rather than a moving ref.
-        actionRefPinned: /@[0-9a-f]{40}$/i.test(env.DIFFCI_ACTION_REF ?? ""),
+        // Same parser the routes use, not a second check that could drift from it. When this is false,
+        // install-instruction generation is refused - the flag and the behaviour cannot disagree.
+        agentArtifactPinned: parsedAgentArtifact.ok,
+        agentArtifactRejection: parsedAgentArtifact.ok ? undefined : parsedAgentArtifact.rejection,
+        agentArtifact: parsedAgentArtifact.ok ? parsedAgentArtifact.artifact.display : undefined,
         savingsSharePercent: env.DIFFCI_SAVINGS_SHARE_PERCENT ? Number(env.DIFFCI_SAVINGS_SHARE_PERCENT) : DEFAULT_SAVINGS_SHARE_PERCENT,
       });
     }
@@ -483,7 +504,16 @@ export default {
       if (!principal) return Response.redirect(`${url.origin}/app`, 302);
       const installationId = url.searchParams.get("installation_id");
       const state = url.searchParams.get("state");
-      if (!installationId || !state) return json({ ok: false, error: "invalid callback: missing installation_id or state" }, 400);
+      if (!installationId) return json({ ok: false, error: "invalid callback: missing installation_id" }, 400);
+
+      // B3 (2026-08-27): the install-first arrival. Someone who installed from GitHub's own App page
+      // never passed through /app/install, so there is no state to consume - and before this, they got
+      // a bare 400 and no way forward. There is still nothing here that authorises attaching the
+      // installation to a tenant, so this does NOT connect anything: it sends them to the claim screen,
+      // where they choose an organization and the claim is authorised properly. See install/pending.ts.
+      if (!state) {
+        return Response.redirect(`${url.origin}/app/install/claim?installation_id=${encodeURIComponent(installationId)}`, 302);
+      }
 
       const consumed = await oauthStore.consumeState(state);
       const organizationId = consumed?.redirectTo?.replace("/app/orgs/", "");
@@ -506,15 +536,78 @@ export default {
 
     // Uninstall and repository-removal deliveries. This is the route that ERASES data, so the signature
     // check inside handleInstallationWebhook is the whole of its authentication.
+    // B3: the claim screen. Lists the organizations this signed-in user could attach the parked
+    // installation to. Deliberately shows nothing about the installation beyond what they already know
+    // (they just performed it) until the claim itself proves they are the installer.
+    if (request.method === "GET" && url.pathname === "/app/install/claim") {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) return Response.redirect(`${url.origin}/app`, 302);
+      const installationId = url.searchParams.get("installation_id") ?? "";
+      if (!installationId) return json({ ok: false, error: "missing installation_id" }, 400);
+      const [user, organizations, pending] = await Promise.all([
+        store.getUser(principal.userId),
+        store.listOrganizationsForUser(principal.userId),
+        pendingInstallationStore.get(installationId),
+      ]);
+      return htmlResponse(
+        renderClaimInstallation({
+          email: user?.email ?? "",
+          installationId,
+          accountLogin: pending?.accountLogin,
+          // A claimed installation is reported as claimed rather than as missing: "unknown" would send
+          // someone re-installing to fix a problem they do not have.
+          alreadyClaimed: Boolean(pending?.claimedAt),
+          known: Boolean(pending),
+          organizations,
+        }),
+      );
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/installations/claim") {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) return json({ ok: false, error: "unauthorized" }, 401);
+      if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+      if (!env.GITHUB_APP_ID || !env.GITHUB_APP_PRIVATE_KEY) return json({ ok: false, error: "the GitHub App is not configured in this environment" }, 503);
+      const body = (await request.json().catch(() => null)) as { installationId?: string; organizationId?: string } | null;
+      if (!body?.installationId || !body?.organizationId) return json({ ok: false, error: "installationId and organizationId are required" }, 400);
+
+      const outcome = await claimInstallation(
+        {
+          pendingStore: pendingInstallationStore,
+          productStore: store,
+          oauthStore,
+          connectDeps: { credentials: { appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY } },
+        },
+        { installationId: body.installationId, userId: principal.userId, organizationId: body.organizationId },
+      );
+      if (!outcome.ok) {
+        logEvent("installation.claim_refused", { refusal: outcome.refusal });
+        // Every refusal is 403 except "no such installation". Distinguishing "not yours" from
+        // "already taken" with different statuses would let someone probe which installation ids exist.
+        return json({ ok: false, error: outcome.refusal }, outcome.refusal === "unknown_installation" ? 404 : 403);
+      }
+      logEvent("installation.claimed", { organizationId: body.organizationId, connected: outcome.result.connected, refused: outcome.result.refused });
+      return json({ ok: true, ...outcome.result }, 200);
+    }
+
     if (request.method === "POST" && url.pathname === "/v1/webhooks/github/installation") {
       if (!env.GITHUB_APP_WEBHOOK_SECRET) return json({ ok: false, error: "webhooks are not configured in this environment" }, 503);
       const rawBody = await request.text();
       const result = await handleInstallationWebhook(
-        { rawBody, signature: request.headers.get("X-Hub-Signature-256"), event: request.headers.get("X-GitHub-Event") },
+        {
+          rawBody,
+          signature: request.headers.get("X-Hub-Signature-256"),
+          event: request.headers.get("X-GitHub-Event"),
+          // Replay/duplicate suppression key. GitHub retries anything that did not get a timely 2xx,
+          // and any delivery can be redelivered by hand from the App's settings page months later.
+          deliveryId: request.headers.get("X-GitHub-Delivery"),
+        },
         {
           productStore: store,
           observationStore,
           tokenStore: ingestTokenStore,
+          pendingStore: pendingInstallationStore,
+          deliveryStore: webhookDeliveryStore,
           webhookSecret: env.GITHUB_APP_WEBHOOK_SECRET,
           connectDeps:
             env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY
@@ -737,8 +830,12 @@ export default {
         if (!detailsOutcome.ok) return json({ ok: false, error: detailsOutcome.error }, outcomeStatus(detailsOutcome.error));
         const { entitlements } = detailsOutcome.data;
         const currentCount = (await store.listRepositories(organizationId)).length;
-        if (entitlements.maxRepositories >= 0 && currentCount >= entitlements.maxRepositories) {
-          return json({ ok: false, error: "repository limit reached for current plan", maxRepositories: entitlements.maxRepositories }, 402);
+        // One policy, stated once (see billing/repository-admission.ts). This path is "manual": the
+        // repository id came out of a request body and nothing outside DiffCI vouches for it, so it is
+        // held to the plan limit even during early access.
+        const admission = decideRepositoryAdmission({ entitlements, currentRepositoryCount: currentCount, source: "manual", earlyAccess: EARLY_ACCESS_ENABLED });
+        if (!admission.admit) {
+          return json({ ok: false, error: "repository limit reached for current plan", maxRepositories: admission.maxRepositories }, 402);
         }
         const body = (await request.json().catch(() => null)) as { providerRepositoryId?: string; ownerName?: string; defaultBranch?: string } | null;
         if (!body?.providerRepositoryId || !body?.ownerName) return json({ ok: false, error: "providerRepositoryId and ownerName are required" }, 400);

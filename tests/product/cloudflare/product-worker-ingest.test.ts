@@ -16,7 +16,8 @@ import { makeReport } from "../../ingest/report-fixture.js";
 import productWorker from "../../../src/product/cloudflare/product-worker.js";
 
 const ORIGIN = "https://product.example";
-const PINNED_ACTION = `adityankale190895/DiffCI.com@${"b".repeat(40)}`;
+const TEST_INTEGRITY = `sha512-${"A".repeat(86)}==`;
+const PINNED_AGENT = `npm:@diffci/observer@1.4.2#${TEST_INTEGRITY}`;
 
 function buildEnv(db: ReturnType<typeof freshProductDb>) {
   const d1 = makeD1(db);
@@ -28,7 +29,7 @@ function buildEnv(db: ReturnType<typeof freshProductDb>) {
     DIFFCI_ALLOW_DEV_HEADER_AUTH: "true",
     DIFFCI_SESSION_TTL_MS: "2592000000",
     DIFFCI_API_ORIGIN: ORIGIN,
-    DIFFCI_ACTION_REF: PINNED_ACTION,
+    DIFFCI_AGENT_ARTIFACT: PINNED_AGENT,
     // Present so the console renders its real signed-out state. No OAuth call is made by any test here.
     GITHUB_OAUTH_CLIENT_ID: "test-client-id",
     GITHUB_OAUTH_CLIENT_SECRET: "test-client-secret",
@@ -72,10 +73,12 @@ describe("product-worker.ts - self-serve install, ingest, and isolation", () => 
     // 2. Ask what to install. This is the entire onboarding surface.
     const install = await call(env, "GET", `/v1/organizations/${acme.org.id}/repositories/${repositoryId}/install`, { headers: acme.headers });
     assert.equal(install.status, 200);
-    const instructions = install.body.install as { workflowYaml: string; ingestUrl: string; warning?: string };
+    const instructions = install.body.install as { workflowYaml: string; ingestUrl: string };
     assert.equal(instructions.ingestUrl, `${ORIGIN}/v1/ingest/observations`);
-    assert.equal(instructions.warning, undefined, "a pinned DIFFCI_ACTION_REF should produce no warning");
-    assert.ok(instructions.workflowYaml.includes(PINNED_ACTION));
+    assert.ok(instructions.workflowYaml.includes("@diffci/observer@1.4.2"));
+    // B2 (2026-08-27): there is no `warning` field any longer. An unpinned ref does not produce
+    // instructions-with-a-caveat; it produces no instructions at all. See the refusal test below.
+    assert.equal(instructions.workflowYaml.includes("@main"), false);
 
     // 3. Mint a credential. Returned exactly once.
     const issued = await call(env, "POST", `/v1/organizations/${acme.org.id}/repositories/${repositoryId}/ingest-tokens`, {
@@ -236,5 +239,81 @@ describe("product-worker.ts - self-serve install, ingest, and isolation", () => 
     const rejected = await call(env, "POST", "/v1/ingest/observations", { token, body: makeReport({ repository: { provider: "github", ownerName: "acme/checkout", providerRepositoryId: "111" } }) });
     assert.equal(rejected.status, 401);
     assert.equal(rejected.body.rejection, "revoked_token");
+  });
+});
+
+/**
+ * The pinned-agent invariant, asserted where a customer would actually hit it: through the Worker, over
+ * HTTP.
+ *
+ * An earlier version of this Worker defaulted to a mutable branch ref when the artifact was unset, so
+ * the DEFAULT deployment generated customer workflows naming something that could be repointed. The
+ * distribution mechanism has changed since - DiffCI ships as an authenticated package, not a public
+ * Action - but the failure mode it guards against has not. These tests fail if it ever returns.
+ */
+describe("onboarding refuses to hand out an unpinned agent", () => {
+  function envWithAgentArtifact(db: ReturnType<typeof freshProductDb>, agentArtifact: string | undefined) {
+    const env = buildEnv(db) as Record<string, unknown>;
+    if (agentArtifact === undefined) delete env.DIFFCI_AGENT_ARTIFACT;
+    else env.DIFFCI_AGENT_ARTIFACT = agentArtifact;
+    return env;
+  }
+
+  for (const [label, agentArtifact] of [
+    ["unset", undefined],
+    ["a dist-tag", `npm:@diffci/observer@latest#${TEST_INTEGRITY}`],
+    ["a caret range", `npm:@diffci/observer@^1.4.2#${TEST_INTEGRITY}`],
+    ["a wildcard range", `npm:@diffci/observer@1.x#${TEST_INTEGRITY}`],
+    ["an exact version with no integrity hash", "npm:@diffci/observer@1.4.2"],
+    ["a container tag rather than a digest", "oci:ghcr.io/diffci/observer:v1"],
+    ["not an artifact specifier at all", "diffci/diffci-action@" + "b".repeat(40)],
+  ] as const) {
+    it(`refuses install instructions when DIFFCI_AGENT_ARTIFACT is ${label}`, async () => {
+      const db = freshProductDb(["ingest"]);
+      const env = envWithAgentArtifact(db, agentArtifact);
+      const acme = await tenant(db, { email: "dev@acme.test", slug: "acme" });
+      const connected = await call(env, "POST", `/v1/organizations/${acme.org.id}/repositories`, {
+        headers: acme.headers,
+        body: { providerRepositoryId: "111", ownerName: "acme/checkout" },
+      });
+      const repositoryId = (connected.body.repository as { id: string }).id;
+
+      const install = await call(env, "GET", `/v1/organizations/${acme.org.id}/repositories/${repositoryId}/install`, { headers: acme.headers });
+      assert.equal(install.status, 503, "a deployment that cannot pin cannot onboard");
+      assert.equal(install.body.error, "agent_not_pinned");
+      assert.equal(JSON.stringify(install.body).includes("workflowYaml"), false, "a refusal must not carry a workflow anyway");
+    });
+
+    it(`refuses to mint an ingest token when DIFFCI_AGENT_ARTIFACT is ${label}`, async () => {
+      const db = freshProductDb(["ingest"]);
+      const env = envWithAgentArtifact(db, agentArtifact);
+      const acme = await tenant(db, { email: "dev@acme.test", slug: "acme" });
+      const connected = await call(env, "POST", `/v1/organizations/${acme.org.id}/repositories`, {
+        headers: acme.headers,
+        body: { providerRepositoryId: "111", ownerName: "acme/checkout" },
+      });
+      const repositoryId = (connected.body.repository as { id: string }).id;
+
+      // Checked before issuance on purpose: handing someone a live credential and then refusing to say
+      // what to do with it leaves a secret in their hands and an unrevoked row in the database.
+      const issued = await call(env, "POST", `/v1/organizations/${acme.org.id}/repositories/${repositoryId}/ingest-tokens`, { headers: acme.headers, body: {} });
+      assert.equal(issued.status, 503);
+      assert.equal(issued.body.error, "agent_not_pinned");
+      assert.equal(issued.body.token, undefined, "no credential may be minted that cannot be used");
+
+      const listed = await call(env, "GET", `/v1/organizations/${acme.org.id}/repositories/${repositoryId}/ingest-tokens`, { headers: acme.headers });
+      assert.deepEqual(listed.body.tokens ?? [], [], "and none may be left behind in the database");
+    });
+  }
+
+  it("reports the same fact on /health that it enforces on the routes", async () => {
+    const db = freshProductDb(["ingest"]);
+    const unpinned = await call(envWithAgentArtifact(db, `npm:@diffci/observer@^1.4.2#${TEST_INTEGRITY}`), "GET", "/health");
+    assert.equal(unpinned.body.agentArtifactPinned, false);
+    assert.equal(unpinned.body.agentArtifactRejection, "not_immutable");
+
+    const pinned = await call(envWithAgentArtifact(db, PINNED_AGENT), "GET", "/health");
+    assert.equal(pinned.body.agentArtifactPinned, true);
+    assert.equal(pinned.body.agentArtifactRejection, undefined);
   });
 });

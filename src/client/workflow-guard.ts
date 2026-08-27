@@ -97,6 +97,35 @@ function listWorkflowFiles(repoPath: string): string[] {
  * local form would report "no job runs the DiffCI action" for the one installation we control - and
  * silently check nothing.
  */
+/**
+ * Does this step run DiffCI via a `run:` command rather than `uses:`?
+ *
+ * Since DiffCI became a proprietary package rather than a public Action, the generated workflow
+ * installs and invokes the agent with `run:` steps. A guard that only understood `uses:` reported
+ * "no job runs DiffCI" for the installation the product itself generates - and therefore checked
+ * nothing at all, while still returning a clean result. That is the worst possible failure for a
+ * safety check, so it is matched explicitly here.
+ */
+function runReferencesDiffCi(run: string, actionPattern: RegExp): boolean {
+  return actionPattern.test(run);
+}
+
+/**
+ * Returns the offending specifier if a `run:` command installs DiffCI at anything other than an exact
+ * version or an image digest. This is the `run:`-shaped equivalent of the commit-SHA rule above: a
+ * customer who edits the generated "1.4.2" into "latest" has re-opened exactly the hole the generated
+ * workflow was written to close, and should be told so rather than getting a clean report.
+ */
+function findMutableAgentReference(run: string): string | undefined {
+  for (const match of run.matchAll(/(@?[A-Za-z0-9._/-]*diffci[A-Za-z0-9._/-]*)@([^\s"']+)/gi)) {
+    const version = match[2]!;
+    if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) continue;
+    if (/^sha256:[0-9a-f]{64}$/.test(version)) continue;
+    return match[0];
+  }
+  return undefined;
+}
+
 function referencesDiffCi(uses: string, repoPath: string, actionPattern: RegExp): boolean {
   if (actionPattern.test(uses)) return true;
   if (!uses.startsWith("./")) return false;
@@ -148,7 +177,8 @@ export function auditWorkflows(repoPath: string, options: WorkflowGuardOptions =
       if (!isRecord(rawJob)) continue;
       const steps = asArray(rawJob.steps).filter(isRecord);
       const isDiffCiStep = (step: Record<string, unknown>): boolean =>
-        typeof step.uses === "string" && referencesDiffCi(step.uses, repoPath, actionPattern);
+        (typeof step.uses === "string" && referencesDiffCi(step.uses, repoPath, actionPattern)) ||
+        (typeof step.run === "string" && runReferencesDiffCi(step.run, actionPattern));
       const diffciSteps = steps.filter(isDiffCiStep);
       if (diffciSteps.length === 0) continue;
 
@@ -181,9 +211,14 @@ export function auditWorkflows(repoPath: string, options: WorkflowGuardOptions =
 
       // 3. The observer must be alone in its job.
       const foreignSteps = steps.filter((step) => {
+        // DiffCI's own steps are never foreign, whichever form they take. This has to come first: since
+        // DiffCI became a package rather than an Action it invokes itself with `run:`, and the rule
+        // below - "any run: step is real work" - was written when that could not happen. Leaving the
+        // order the other way round made the product's own generated workflow fail its own guard.
+        if (isDiffCiStep(step)) return false;
+        // Any other shell step in this job IS real work, and DiffCI must not share a job with it.
         if (typeof step.run === "string") return true;
         if (typeof step.uses !== "string") return false;
-        if (isDiffCiStep(step)) return false;
         return !ALLOWED_STEP_ACTIONS.some((allowed) => step.uses === allowed || (step.uses as string).startsWith(`${allowed}@`));
       });
       if (foreignSteps.length > 0) {
@@ -208,17 +243,35 @@ export function auditWorkflows(repoPath: string, options: WorkflowGuardOptions =
         });
       }
 
-      // 5. A mutable action reference means the code that runs can change without the repo changing.
+      // 5. A mutable reference means the code that runs here can change without this repository
+      // changing. Two forms have to be checked, because DiffCI is invoked both ways: a `uses:` step
+      // must name a commit SHA, and a `run:` step installing the agent must name an exact version.
+      // Checking only the first would let someone edit the generated "1.4.2" into "latest" and still
+      // get a clean report - which is the same hole, reopened by hand.
       for (const step of diffciSteps) {
-        const uses = step.uses as string;
-        if (!isPinnedToSha(uses)) {
-          findings.push({
-            severity: "WARNING",
-            code: "ACTION_NOT_PINNED",
-            message: `"${uses}" is not pinned to a 40-character commit SHA, so what runs here can change without this repository changing.`,
-            workflow: relativePath,
-            job: jobId,
-          });
+        if (typeof step.uses === "string") {
+          if (!isPinnedToSha(step.uses)) {
+            findings.push({
+              severity: "WARNING",
+              code: "ACTION_NOT_PINNED",
+              message: `"${step.uses}" is not pinned to a 40-character commit SHA, so what runs here can change without this repository changing.`,
+              workflow: relativePath,
+              job: jobId,
+            });
+          }
+          continue;
+        }
+        if (typeof step.run === "string") {
+          const mutable = findMutableAgentReference(step.run);
+          if (mutable) {
+            findings.push({
+              severity: "WARNING",
+              code: "AGENT_NOT_PINNED",
+              message: `"${mutable}" is not an exact version, so the DiffCI agent running here can change without this repository changing.`,
+              workflow: relativePath,
+              job: jobId,
+            });
+          }
         }
       }
 

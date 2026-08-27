@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
-export type SchemaModule = "product" | "billing" | "auth" | "usage" | "runner" | "execution-queue" | "ingest";
+export type SchemaModule = "product" | "billing" | "auth" | "usage" | "runner" | "execution-queue" | "ingest" | "install";
 
 // 'auth' applies BOTH auth files - schema.sql (sessions) and schema-oauth.sql (provider_identities,
 // oauth_states) - since every real deployment applies them together (see scripts/migrate-product-db.ts).
@@ -22,6 +22,8 @@ const SCHEMA_FILES: Record<SchemaModule, string[]> = {
   runner: ["src/runner/cloudflare/schema.sql"],
   "execution-queue": ["src/execution-queue/cloudflare/schema.sql"],
   ingest: ["src/ingest/cloudflare/schema.sql"],
+  // B3 + replay dedup (2026-08-27): pending_installations and webhook_deliveries.
+  install: ["src/install/cloudflare/schema-installations.sql"],
 };
 
 export function freshProductDb(modules: SchemaModule[] = ["product"]): DatabaseSync {

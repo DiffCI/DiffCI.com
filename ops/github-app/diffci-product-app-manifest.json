@@ -1,0 +1,18 @@
+{
+  "name": "DiffCI",
+  "url": "https://diffci.com",
+  "description": "Change-aware CI observation. DiffCI reports which tests a change actually needs, running entirely inside your own CI. It never runs, skips, cancels or re-orders anything, and never writes to your repository.",
+  "public": true,
+  "default_permissions": {
+    "metadata": "read"
+  },
+  "default_events": ["installation", "installation_repositories"],
+  "hook_attributes": {
+    "url": "https://app.diffci.com/v1/webhooks/github/installation",
+    "active": true
+  },
+  "redirect_url": "https://app.diffci.com/auth/github/callback",
+  "setup_url": "https://app.diffci.com/app/install/callback",
+  "setup_on_update": false,
+  "request_oauth_on_install": false
+}

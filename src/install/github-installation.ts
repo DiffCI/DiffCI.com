@@ -15,6 +15,7 @@
  * claim stands with whoever connected first, and the newcomer is told plainly.
  */
 import { exchangeInstallationToken, signAppJwt } from "../shadow/github-app.js";
+import { decideRepositoryAdmission, EARLY_ACCESS_ENABLED } from "../billing/repository-admission.js";
 import type { ProductStore } from "../product/store.js";
 import type { Repository } from "../product/types.js";
 
@@ -92,7 +93,9 @@ export type ConnectedOutcome =
   /** Already this organization's; installation id and metadata refreshed. */
   | { result: "updated"; repository: Repository }
   /** Connected to a DIFFERENT organization. Left exactly as it was. */
-  | { result: "claimed_elsewhere"; ownerName: string; providerRepositoryId: string };
+  | { result: "claimed_elsewhere"; ownerName: string; providerRepositoryId: string }
+  /** Not connected: the organization is at its plan limit and this deployment is not in early access. */
+  | { result: "plan_limit_reached"; ownerName: string; providerRepositoryId: string };
 
 export interface ConnectInstallationDeps {
   productStore: ProductStore;
@@ -100,6 +103,14 @@ export interface ConnectInstallationDeps {
   fetchFn?: typeof fetch;
   /** Injected in tests so the flow can be exercised without a real App key or a network. */
   listRepositories?: (installationId: string) => Promise<InstallationRepository[]>;
+  /**
+   * The organization's plan limit. Defaults to unlimited, which is what early access means in practice
+   * for this path - see src/billing/repository-admission.ts for why the installation path is the one
+   * that gets the exemption.
+   */
+  maxRepositories?: number;
+  /** Defaults to the deployment-wide flag. Present so tests can exercise the post-early-access world. */
+  earlyAccess?: boolean;
 }
 
 export interface ConnectInstallationResult {
@@ -108,6 +119,8 @@ export interface ConnectInstallationResult {
   connected: number;
   updated: number;
   refused: number;
+  /** Repositories not connected because the organization is at its plan limit (never during early access). */
+  planLimited: number;
 }
 
 /**
@@ -157,6 +170,22 @@ export async function connectInstallation(
       continue;
     }
 
+    // This path used to bypass the plan limit entirely, while the typed route enforced it - so early
+    // access worked by inconsistency rather than by decision. The policy is now named and asserted
+    // (src/billing/repository-admission.ts): installation-sourced connections are admitted during early
+    // access because GitHub has already proved the installer controls the repository. Nothing about the
+    // 15% savings-share model changes; this only decides admission, never price.
+    const admission = decideRepositoryAdmission({
+      entitlements: { maxRepositories: deps.maxRepositories ?? -1 },
+      currentRepositoryCount: (await deps.productStore.listRepositories(input.organizationId)).length,
+      source: "installation",
+      earlyAccess: deps.earlyAccess ?? EARLY_ACCESS_ENABLED,
+    });
+    if (!admission.admit) {
+      outcomes.push({ result: "plan_limit_reached", ownerName: repository.ownerName, providerRepositoryId: repository.providerRepositoryId });
+      continue;
+    }
+
     const created = await deps.productStore.createRepository({
       organizationId: input.organizationId,
       providerRepositoryId: repository.providerRepositoryId,
@@ -171,6 +200,7 @@ export async function connectInstallation(
   const connected = outcomes.filter((o) => o.result === "connected").length;
   const updated = outcomes.filter((o) => o.result === "updated").length;
   const refused = outcomes.filter((o) => o.result === "claimed_elsewhere").length;
+  const planLimited = outcomes.filter((o) => o.result === "plan_limit_reached").length;
 
   await deps.productStore.recordAuditEvent({
     organizationId: input.organizationId,
@@ -181,5 +211,5 @@ export async function connectInstallation(
     metadata: { connected, updated, refused },
   });
 
-  return { installationId: input.installationId, outcomes, connected, updated, refused };
+  return { installationId: input.installationId, outcomes, connected, updated, refused, planLimited };
 }

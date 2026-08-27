@@ -27,6 +27,10 @@ function buildEnv(db: ReturnType<typeof freshProductDb>) {
     PRODUCT_DB: d1,
     RESEARCH_DB: d1,
     DIFFCI_PRODUCT_ENABLED: "true",
+    // A Worker with no pinned agent artifact refuses to issue ingest tokens, because it
+    // cannot tell the customer what to do with one. Tests that exercise the onboarding path therefore
+    // have to model a properly-configured deployment.
+    DIFFCI_AGENT_ARTIFACT: `npm:@diffci/observer@1.4.2#sha512-${"A".repeat(86)}==`,
     DIFFCI_ENVIRONMENT: "development",
     DIFFCI_ALLOW_DEV_HEADER_AUTH: "true",
     DIFFCI_SESSION_TTL_MS: "2592000000",

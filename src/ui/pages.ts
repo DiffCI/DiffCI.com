@@ -185,7 +185,10 @@ export function renderRepository(data: RepositoryPageData): string {
         default branch <code>${data.repository.defaultBranch}</code> · ${data.repository.status}
       </p>
 
-      ${data.install.warning ? html`<p class="notice">${data.install.warning}</p>` : ""}
+      <!-- There is deliberately no "this action is not pinned" notice here any more (B2, 2026-08-27).
+           A page that renders a workflow naming a mutable ref, with a warning above it, is still a page
+           handing someone a mutable ref. The instructions either exist and are SHA-pinned, or this page
+           is never reached because the route refused with action_not_pinned. -->
 
       <h2>1. Create an ingest token</h2>
       <div class="card">
@@ -445,4 +448,81 @@ function renderObservationsTable(observations: ObservationRecord[]): SafeHtml {
       )}
     </tbody>
   </table>`;
+}
+
+/**
+ * The claim screen (B3, 2026-08-27).
+ *
+ * Reached by anyone who installed the App from GitHub's own page rather than from inside the console -
+ * which is most people, because that is the link the App's public URL and the marketing site both hand
+ * out. Before this existed, that arrival was a bare 400 and a dead end.
+ *
+ * The page deliberately does NOT show what the installation covers. Repository names are not shown
+ * until the claim has proved the viewer is the account that performed the install; until then, the only
+ * facts on screen are ones they already supplied by arriving here.
+ */
+export function renderClaimInstallation(data: {
+  email: string;
+  installationId: string;
+  accountLogin?: string;
+  alreadyClaimed: boolean;
+  known: boolean;
+  organizations: Organization[];
+}): string {
+  const body = (() => {
+    if (data.alreadyClaimed) {
+      return html`<p class="notice">
+          This installation is already connected to an organization. If that was not you, or you expected
+          it somewhere else, remove the App from the repository on GitHub and install it again.
+        </p>
+        <p><a href="/app">Back to your organizations</a></p>`;
+    }
+    if (!data.known) {
+      // Honest about the most common cause rather than implying the person did something wrong: the
+      // webhook is what records an installation, and it can be late or unconfigured.
+      return html`<p class="notice">
+          DiffCI has not received this installation yet. GitHub delivers it separately from this redirect,
+          so it can arrive a moment later - reload in a few seconds. If it never appears, the App's
+          webhook is not reaching DiffCI, which is a configuration problem on our side, not yours.
+        </p>
+        <p><a href="/app">Back to your organizations</a></p>`;
+    }
+    if (data.organizations.length === 0) {
+      return html`<p class="empty">
+          You need an organization before an installation can be attached to one. Create one, then come
+          back to this page.
+        </p>
+        <p><a href="/app">Create an organization</a></p>`;
+    }
+    return html`<p class="lede">
+        Choose which organization this installation belongs to. Repositories already connected to a
+        different organization are not moved - they stay where they are, and are reported as refused.
+      </p>
+      <form method="post" action="/v1/installations/claim" data-installation-id="${data.installationId}">
+        <table>
+          <thead>
+            <tr><th>Organization</th><th>Plan</th><th></th></tr>
+          </thead>
+          <tbody>
+            ${data.organizations.map(
+              (organization) => html`<tr>
+                <td>${organization.name}</td>
+                <td>${organization.currentPlan}</td>
+                <td><button type="submit" name="organizationId" value="${organization.id}">Attach here</button></td>
+              </tr>`,
+            )}
+          </tbody>
+        </table>
+      </form>`;
+  })();
+
+  return layout({
+    title: "Connect your installation",
+    subtitle: data.email,
+    signedIn: true,
+    body: html`
+      <h1>Connect your installation</h1>
+      ${data.accountLogin ? html`<p class="muted">Installed on <code>${data.accountLogin}</code>.</p>` : ""} ${body}
+    `,
+  });
 }

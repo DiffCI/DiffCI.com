@@ -13,6 +13,7 @@ import { escapeHtml, html, renderSafe } from "../../src/ui/render.js";
 import { renderHome, renderLedger, renderOrganization, renderRepository, renderSignedOut } from "../../src/ui/pages.js";
 import { buildMonthlyLedger } from "../../src/ledger/ledger.js";
 import { buildInstallInstructions } from "../../src/ingest/install.js";
+import { TEST_PINNED_AGENT } from "../helpers/agent-artifact.js";
 import type { Organization, Repository } from "../../src/product/types.js";
 import type { ObservationRecord } from "../../src/ingest/types.js";
 
@@ -63,7 +64,7 @@ const observation: ObservationRecord = {
   report: {},
 };
 
-const install = buildInstallInstructions({ repository, actionRef: `owner/DiffCI.com@${"a".repeat(40)}`, apiOrigin: "https://api.diffci.test" });
+const install = buildInstallInstructions({ repository, agentArtifact: TEST_PINNED_AGENT, apiOrigin: "https://api.diffci.test" });
 
 describe("HTML escaping", () => {
   it("escapes every interpolated value by default", () => {
@@ -206,9 +207,15 @@ describe("console pages", () => {
     assert.match(page, /class="num bad">-35/);
   });
 
-  it("shows the unpinned-action warning where the person installing will see it", () => {
-    const unpinned = buildInstallInstructions({ repository, actionRef: "owner/DiffCI.com@main", apiOrigin: "https://api.diffci.test" });
-    const page = renderRepository({ email: "dev@acme.test", organization, repository, install: unpinned, tokens: [], observations: [] });
-    assert.match(page, /not pinned/);
+  // Was: "shows the unpinned-action warning where the person installing will see it". The warning is
+  // gone because the state it warned about is unreachable - the route refuses before this page renders.
+  // What replaces it is the stronger property: whatever this page shows a customer to copy names an
+  // exact, immutable agent version, and nothing that could resolve to something newer.
+  it("never renders a mutable agent reference for the customer to copy", () => {
+    const page = renderRepository({ email: "dev@acme.test", organization, repository, install, tokens: [], observations: [] });
+    assert.match(page, /@diffci\/observer@1\.4\.2/);
+    for (const mutable of ["@latest", "@next", "@beta", "^1.", "~1.", "1.x"]) {
+      assert.equal(page.includes(mutable), false, `the console must never render "${mutable}"`);
+    }
   });
 });

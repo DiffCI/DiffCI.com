@@ -17,6 +17,7 @@ import type { ProductStore } from "../product/store.js";
 import type { RouteOutcome } from "../product/routes.js";
 import type { Repository } from "../product/types.js";
 import { buildInstallInstructions, type InstallInstructions } from "./install.js";
+import type { PinnedAgentArtifact } from "./agent-artifact.js";
 import type { ObservationStore, ObservationSummary } from "./store.js";
 import type { IngestTokenRecord, IngestTokenStore } from "./token.js";
 import type { ObservationRecord } from "./types.js";
@@ -25,8 +26,13 @@ export interface IngestRouteDeps {
   productStore: ProductStore;
   tokenStore: IngestTokenStore;
   observationStore: ObservationStore;
-  /** `owner/repo@ref` of the published DiffCI action, for generated install instructions. */
-  actionRef: string;
+  /**
+   * The DiffCI agent to install, pinned and integrity-verifiable - or null when this environment has
+   * no valid DIFFCI_AGENT_ARTIFACT configured. Null is not a degraded mode: every route that would
+   * hand a customer a workflow refuses with `agent_not_pinned` rather than emitting one that names a
+   * version range or a dist-tag. See ./agent-artifact.ts for why this is a type, not a validation call.
+   */
+  agentArtifact: PinnedAgentArtifact | null;
   /** Public origin of this API, e.g. "https://diffci-product.example.workers.dev". */
   apiOrigin: string;
 }
@@ -62,6 +68,11 @@ export async function issueIngestTokenForRepository(
   if (!(await requireMembership(deps, organizationId, userId))) return { ok: false, error: "unauthorized" };
   const repository = await requireRepository(deps, organizationId, userId, repositoryId);
   if (!repository) return { ok: false, error: "not_found" };
+  // Checked BEFORE the token is minted. Issuing a live credential and then refusing to say what to
+  // do with it would leave the customer holding a secret with no instructions, and would leave a
+  // revocable-but-never-revoked token in the database on every attempt.
+  const agentArtifact = deps.agentArtifact;
+  if (!agentArtifact) return { ok: false, error: "agent_not_pinned" };
 
   const { raw, record } = await deps.tokenStore.issue({
     organizationId,
@@ -86,7 +97,7 @@ export async function issueIngestTokenForRepository(
     data: {
       token: raw,
       record,
-      install: buildInstallInstructions({ repository, actionRef: deps.actionRef, apiOrigin: deps.apiOrigin }),
+      install: buildInstallInstructions({ repository, agentArtifact, apiOrigin: deps.apiOrigin }),
     },
   };
 }
@@ -131,7 +142,10 @@ export async function getInstallInstructionsForRepository(
   if (!repository) {
     return { ok: false, error: (await requireMembership(deps, organizationId, userId)) ? "not_found" : "unauthorized" };
   }
-  return { ok: true, data: buildInstallInstructions({ repository, actionRef: deps.actionRef, apiOrigin: deps.apiOrigin }) };
+  // Authorization is settled first so that an unauthorized caller learns nothing about this
+  // environment's configuration - "not pinned" is an operator-facing fact, not a public one.
+  if (!deps.agentArtifact) return { ok: false, error: "agent_not_pinned" };
+  return { ok: true, data: buildInstallInstructions({ repository, agentArtifact: deps.agentArtifact, apiOrigin: deps.apiOrigin }) };
 }
 
 export async function listObservationsForOrganization(

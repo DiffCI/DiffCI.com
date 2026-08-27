@@ -1,0 +1,98 @@
+DIFFCI OBSERVER — PROPRIETARY SOFTWARE LICENCE
+
+>>> DRAFT. NOT LEGAL ADVICE. REVIEW BEFORE ANY PUBLICATION. <<<
+>>> Every [BRACKETED] value must be replaced, and the whole document should be read by a lawyer
+>>> before the first customer receives a copy. It exists so the build has terms to ship and so the
+>>> intent is written down, not because it is finished.
+
+Copyright (c) 2026 [LEGAL ENTITY NAME]. All rights reserved.
+
+1. DEFINITIONS
+
+   "Software" means the DiffCI observer agent distributed in this package, including the compiled
+   bundle and any accompanying files.
+
+   "You" means the individual or entity that lawfully obtained the Software from [LEGAL ENTITY NAME]
+   or its authorised registry.
+
+   "Service" means the DiffCI hosted service operated by [LEGAL ENTITY NAME].
+
+2. GRANT
+
+   Subject to Your compliance with these terms and with any separate written agreement between You and
+   [LEGAL ENTITY NAME], You are granted a non-exclusive, non-transferable, revocable, worldwide licence
+   to install and execute the Software within Your own continuous-integration environments, for the
+   sole purpose of analysing Your own repositories in connection with the Service.
+
+   No other rights are granted. The Software is licensed, not sold.
+
+3. RESTRICTIONS
+
+   You may not:
+
+   (a) copy the Software except as strictly necessary to execute it as permitted above;
+   (b) distribute, sublicense, sell, rent, lease, or otherwise make the Software available to any
+       third party;
+   (c) modify the Software or create derivative works from it;
+   (d) reverse engineer, decompile, or disassemble the Software, or attempt to derive its source code
+       or underlying algorithms, except to the extent this restriction is unenforceable under
+       applicable law;
+   (e) use the Software, or any information derived from it, to develop, train, or improve a competing
+       product or service;
+   (f) remove or obscure this notice or any proprietary marking.
+
+   >>> NOTE ON 3(d): in several jurisdictions, including the EU and the UK, a contractual ban on
+   >>> reverse engineering for interoperability purposes is void. The carve-out above is deliberate.
+   >>> Confirm the wording for the jurisdictions You intend to sell into.
+
+4. OWNERSHIP
+
+   [LEGAL ENTITY NAME] retains all right, title and interest in the Software, including all
+   intellectual property rights. The Software is confidential and proprietary. This licence transfers
+   no ownership.
+
+5. THIRD-PARTY COMPONENTS
+
+   The Software depends at runtime on third-party packages that npm installs into Your environment
+   directly from the public registry. Those components are NOT distributed by [LEGAL ENTITY NAME] and
+   are licensed to You by their respective authors under their own terms:
+
+     typescript   Apache License 2.0
+     yaml         ISC License
+
+   Nothing in this licence alters Your rights or obligations in respect of those components.
+
+6. DATA
+
+   The Software analyses Your repository locally. What it transmits to the Service, and what it does
+   not, is described in the accompanying README and in the Service's data-handling documentation.
+   Configuring transmission is Your choice; with no endpoint and credential configured, the Software
+   transmits nothing.
+
+7. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+   NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NON-INFRINGEMENT.
+
+8. LIMITATION OF LIABILITY
+
+   TO THE MAXIMUM EXTENT PERMITTED BY LAW, [LEGAL ENTITY NAME] SHALL NOT BE LIABLE FOR ANY INDIRECT,
+   INCIDENTAL, SPECIAL, CONSEQUENTIAL OR EXEMPLARY DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA
+   OR USE, ARISING OUT OF OR RELATING TO THE SOFTWARE.
+
+   >>> The Software is observation-only and is designed so that a failure falls back to running Your
+   >>> full test suite. That design intent does not substitute for a liability cap that Your counsel
+   >>> considers adequate. [CAP AMOUNT / FORMULA] to be settled.
+
+9. TERMINATION
+
+   This licence terminates automatically if You breach it, and may be terminated by [LEGAL ENTITY NAME]
+   on termination of Your agreement for the Service. On termination You must cease all use of the
+   Software and remove it from Your environments.
+
+10. GOVERNING LAW
+
+   This licence is governed by the laws of [JURISDICTION], without regard to conflict-of-laws rules.
+
+Contact: [LEGAL/COMMERCIAL CONTACT]
