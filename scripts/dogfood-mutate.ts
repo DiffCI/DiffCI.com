@@ -112,6 +112,14 @@ interface RepoCommands {
   testModule: string;
   /** Arguments before any file list. e.g. ["run"] for vitest. */
   testArgs: string[];
+  /**
+   * Optional build, run after install and before any test run.
+   *
+   * Needed more often than it looks. Every zod candidate came back ENVIRONMENT_DIRTY because its
+   * treeshaking tests fail with "Run `pnpm build` first" unless the workspace packages are built -
+   * the harness correctly refusing to measure, for a reason that was configuration rather than code.
+   */
+  build?: string[];
 }
 
 const DEFAULT_COMMANDS: RepoCommands = {
@@ -255,6 +263,14 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number):
   if (install.status !== 0) {
     const detail = (install.stderr.trim() || install.stdout.trim()).split("\n").filter(Boolean).slice(-1)[0] ?? `exit ${install.status}`;
     return { ...base, reason: `dependency install failed: ${detail.slice(0, 200)}` };
+  }
+
+  if (commands.build) {
+    const built = runShellCommand(commands.build, candidate.repoPath, 20 * 60_000);
+    if (built.status !== 0) {
+      const detail = (built.stderr.trim() || built.stdout.trim()).split("\n").filter(Boolean).slice(-1)[0] ?? `exit ${built.status}`;
+      return { ...base, reason: `build failed: ${detail.slice(0, 200)}` };
+    }
   }
 
   // 1. BASELINE. The suite must be green before mutation, or nothing after it can be attributed.

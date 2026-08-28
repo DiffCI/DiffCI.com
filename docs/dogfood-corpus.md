@@ -343,3 +343,73 @@ mean anything.
 2. More measurable candidates. 62 observations have produced 3 measurable cases; candidate supply is
    the binding constraint, not harness capability.
 3. Owned-repo real CI with the packaged agent.
+
+---
+
+# zod mutation — no measurement, and why that is the result
+
+**2026-08-27.** All 9 candidates: `ENVIRONMENT_DIRTY`. 43–44 tests already failing before any mutation
+was applied, so nothing after it could be attributed to DiffCI.
+
+**The harness refusing to measure is the correct outcome, not a failure.** Had it scored these, every
+row would have been noise dressed as evidence.
+
+## Root cause
+
+Two causes, both environmental:
+
+1. **A missing build step.** zod's treeshaking tests fail outright with `Run \`pnpm build\` first` —
+   the workspace packages must be built before the suite is meaningful. The harness ran
+   `pnpm install --ignore-scripts` and went straight to tests. `RepoCommands` now takes an optional
+   `build`, run between install and the first test.
+2. **Historical commits do not stay green.** At HEAD with `CI=1` the suite shows 4 failures. At the
+   nine historical commits it shows 43–44. Old code resolved against today's dependency versions and
+   today's Node does not reproduce the environment those commits were green in.
+
+## Finding 9 — green baselines are the real scaling constraint
+
+Mutation recall requires a green baseline. Cause 2 above is not specific to zod: **any actively
+maintained repository's older commits are liable to fail in a current environment**, and the further
+back the corpus reaches, the worse it gets.
+
+That has a direct consequence for the target of 30–50 measurable cases:
+
+- Prefer **recent** commits. Depth into history is actively harmful here, which is the opposite of the
+  intuition that a bigger corpus means more evidence.
+- Expect `ENVIRONMENT_DIRTY` to be a large fraction of any historical corpus, and report it rather
+  than quietly dropping those rows — the denominator is measurable mutations, and this is precisely
+  what makes a commit unmeasurable.
+- Reproducing a commit's original toolchain (its Node, its lockfile, its package manager version) is
+  the only real fix, and it is a substantial piece of work in itself.
+
+## A methodological error of my own, recorded
+
+The zod output file contains **13 rows for 9 candidates**, four of them with `baselineFailures`
+undefined. A first attempt at this run was killed at a 10-minute foreground limit; its Node process
+outlived the kill and kept appending while the backgrounded second run had already truncated and was
+writing the same `--out` path. Two processes, one file.
+
+The classification summary quoted above comes from the second run's own in-memory counts and is
+sound, but **the JSONL is contaminated and must not be aggregated**. The harness should take a lock,
+or refuse to write to a path another run is holding. Recorded rather than quietly deleted, because a
+corpus whose provenance cannot be trusted is worth less than no corpus.
+
+## What zod did NOT tell us
+
+The two questions it was chosen to answer are both still open:
+
+- Does DiffCI preserve recall when its graph gets broad?
+- Why does knowing more about the dependency graph sometimes cause it to execute more than a path rule?
+
+The observation data still says selection is overbroad there — 124 of 192 on nearly every commit,
+against a comparator that managed 24 on one. But **overbroad-and-safe versus overbroad-and-unsafe is
+exactly what the mutation pass exists to separate, and on zod it has not yet run.**
+
+## Next
+
+1. Re-run zod with `--build "corepack|pnpm|build"`, restricted to the most recent commits where a
+   green baseline is plausible.
+2. If baselines still will not go green, drop zod as a mutation target and keep it as observation-only
+   evidence for Finding 8 — a repository can be informative about efficiency without being measurable
+   for safety.
+3. Broaden measurable candidates from repositories whose recent history is green.
