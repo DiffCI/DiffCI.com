@@ -340,8 +340,9 @@ mean anything.
 
 1. Mutation on zod — the monorepo where Finding 8 says selection is weakest, and therefore where a
    false green is most likely.
-2. More measurable candidates. 62 observations have produced 3 measurable cases; candidate supply is
-   the binding constraint, not harness capability.
+2. More measurable candidates. Target: 30-50 recall-measurable mutations across at least 3 unfamiliar
+   supported repositories, with baseline qualification reported separately - NOT a historical-commit
+   count, which Finding 9 shows optimises for the wrong thing.
 3. Owned-repo real CI with the packaged agent.
 
 ---
@@ -413,3 +414,70 @@ exactly what the mutation pass exists to separate, and on zod it has not yet run
    evidence for Finding 8 — a repository can be informative about efficiency without being measurable
    for safety.
 3. Broaden measurable candidates from repositories whose recent history is green.
+
+---
+
+# zod qualification — abandoned, per the decision tree
+
+**2026-08-28.** `--qualify-only`, recent commits, build step requested. Result: **0 qualified, 9
+`ENVIRONMENT_DIRTY`**, 43–44 failures.
+
+## The run was invalid, and the manifest is how that was discovered
+
+The failure counts came back *identical* to the previous run — 43, 44, 44, 44, 43, 43. Identical
+counts across a supposedly different configuration is not a result, it is a smell, and the run
+manifest settled it in one look:
+
+```json
+"commands": { "install": ["corepack","pnpm","install","--frozen-lockfile"],
+              "testModule": "node_modules/vitest/vitest.mjs", "testArgs": ["run"] }
+```
+
+No `build`. **`--build` was never wired into `main()`** — the flag was accepted on the command line,
+silently ignored, and the "qualification run with a build step" was byte-identical to the run it was
+meant to differ from. Now fixed.
+
+This is the provenance mechanism paying for itself on its first outing. Without the manifest the
+obvious conclusion — "zod is dirty even with a build" — would have been recorded as a finding and was
+simply false.
+
+## Why zod is being abandoned anyway
+
+With the flag fixed, the build still does not work here. zod's build script is:
+
+    pnpm run -r --filter zod build
+
+Invoked as `corepack pnpm build`, the outer command succeeds and the script fails inside, because it
+calls bare `pnpm` and nothing on PATH answers to that name. Making it work means provisioning
+package-manager shims into a directory and prepending that to every child's PATH.
+
+**That is historical environment reconstruction, which is explicitly out of scope.** It is also
+unbounded: the next repository will need a different toolchain, a different manager version, and its
+own set of assumptions about what is on PATH.
+
+## Decision, per the agreed tree
+
+**zod contributes ZERO safety evidence.** It is removed as a mutation target.
+
+**Its efficiency evidence stands.** Finding 8 — DiffCI selecting 124 of 192 tests where a path rule
+selected 24 — came from the observation pass, which needs no green baseline, no install and no
+toolchain. That finding is unaffected by anything here.
+
+The two questions zod was chosen to answer remain open, and will have to be answered by a
+tightly-coupled monorepo whose recent commits build with a mainstream toolchain:
+
+- Does DiffCI preserve recall when its graph gets broad?
+- Why does knowing more about the dependency graph sometimes cause more execution than a path rule?
+
+## Finding 10 — a repository can be observable but not measurable
+
+These are separate qualifications and should be tracked separately:
+
+| | Needs | zod |
+|---|---|---|
+| **Observation** — decisions, efficiency, refusal behaviour | a checkout | qualifies |
+| **Mutation** — safety, recall | install + build + green baseline + toolchain | does not qualify |
+
+A corpus entry should carry both verdicts. Reporting "5 repositories in the corpus" without saying how
+many are mutation-qualified would overstate the evidence considerably — today it is 5 observable and
+2 mutation-qualified.

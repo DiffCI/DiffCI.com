@@ -26,6 +26,7 @@
  * detectable outside the proposed selection.
  */
 import { spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { selectFileToMutate } from "../src/analysis-fanout/mutation.js";
@@ -44,7 +45,15 @@ export type Classification =
   /** The suite was not green before the mutation - nothing measured here can be attributed to DiffCI. */
   | "ENVIRONMENT_DIRTY"
   /** The harness itself failed: install error, timeout, no revertible file, missing selection. */
-  | "INVALID_RUN";
+  | "INVALID_RUN"
+  /**
+   * Baseline is green; this commit MAY be mutated. Only produced by a `--qualify-only` run.
+   *
+   * Qualification exists because discovering a dirty baseline after ten minutes of install, build and
+   * a mutation loop is ten minutes wasted. A repository earns the right to contribute safety evidence
+   * BEFORE any mutation is generated, not after.
+   */
+  | "BASELINE_QUALIFIED";
 
 /**
  * How much execution the selection authorised, relative to the comparator DiffCI itself carries.
@@ -159,6 +168,9 @@ function run(command: string, args: string[], cwd: string, timeoutMs: number): {
  * literal, and asserted rather than assumed. This is exactly the split the invariant describes: a
  * shell is acceptable when nothing repository-derived is concatenated into the command line.
  */
+/** Extra directory prepended to PATH for child processes - where package-manager shims are placed. */
+let shimDir: string | undefined;
+
 function runShellCommand(args: string[], cwd: string, timeoutMs: number): { status: number | null; stdout: string; stderr: string; ms: number } {
   assertShellSafeArgs(args, "dogfood-mutate: install");
   const started = Date.now();
@@ -237,7 +249,7 @@ function mutationTargets(changedFiles: string[]): string[] {
   return changedFiles.filter((path) => /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(path) && !/\.(test|spec)\./.test(path) && !path.startsWith("tests/"));
 }
 
-function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number): MutationResult {
+function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number, qualifyOnly: boolean): MutationResult {
   const { commands } = candidate;
   const testExec = process.execPath;
   const testModulePath = join(candidate.repoPath, commands.testModule);
@@ -279,6 +291,13 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number):
   if (baselineParsed.failures === undefined) return { ...base, reason: "could not parse the baseline run's failure count" };
   if (baselineParsed.failures > 0) {
     return { ...base, classification: "ENVIRONMENT_DIRTY", reason: `${baselineParsed.failures} test(s) already failing before mutation`, baselineFailures: baselineParsed.failures };
+  }
+
+  // The qualification gate. A candidate reaches mutation only from here, and a --qualify-only run
+  // stops at exactly this point - the whole purpose being to reject a repository cheaply rather than
+  // after a mutation loop has already spent the time.
+  if (qualifyOnly) {
+    return { ...base, classification: "BASELINE_QUALIFIED", reason: "baseline is green; this commit may be mutated", baselineFailures: 0 };
   }
 
   // 2. MUTATE. Each changed source file is tried in turn until one produces a full-suite failure.
@@ -391,7 +410,25 @@ function main(): void {
   const corpusPath = resolve(flag("corpus") ?? join(repoRoot, ".dogfood", "corpus.jsonl"));
   const reportsDir = resolve(flag("reports") ?? "");
   const repoPath = resolve(flag("repo") ?? "");
-  const outPath = resolve(flag("out") ?? join(repoRoot, ".dogfood", "mutation.jsonl"));
+  const qualifyOnly = args.includes("--qualify-only");
+
+  /**
+   * Every invocation gets its own immutable run directory, and refuses to reuse one.
+   *
+   * The predecessor took a `--out` path, truncated it and appended. A run killed at a foreground time
+   * limit outlived the kill and kept appending while a backgrounded rerun had already truncated the
+   * same file: two processes, one file, thirteen rows for nine candidates, and a corpus whose
+   * provenance could not be established. `mkdirSync` without `recursive` is an atomic exclusive
+   * create, so a second process asking for the same identity fails immediately rather than silently
+   * co-authoring a fictional experiment.
+   */
+  const runsDir = resolve(flag("runs-dir") ?? join(repoRoot, ".dogfood", "runs"));
+  const startedAt = new Date().toISOString();
+  const runId = `${startedAt.replace(/[:.]/g, "-")}-${(flag("repository") ?? "adhoc").replace(/[^A-Za-z0-9]/g, "-")}-${randomBytes(3).toString("hex")}`;
+  const runDir = join(runsDir, runId);
+  mkdirSync(runsDir, { recursive: true });
+  mkdirSync(runDir); // deliberately not recursive: fails if this identity already exists
+  const outPath = join(runDir, "results.jsonl");
   const timeoutMs = Number(flag("timeout") ?? 20 * 60_000);
   // Each attempt costs one full-suite run, so the search is bounded. A capped case says so in its
   // reason rather than silently looking like a merge with no measurable files.
@@ -412,6 +449,10 @@ function main(): void {
     install: flag("install") ? flag("install")!.split("|") : DEFAULT_COMMANDS.install,
     testModule: flag("test-module") ?? DEFAULT_COMMANDS.testModule,
     testArgs: flag("test-args") ? flag("test-args")!.split("|") : DEFAULT_COMMANDS.testArgs,
+    // This was omitted once, and the run manifest is the only reason anyone noticed: a qualification
+    // run passed --build, the flag was never read, and the result was byte-identical to the run it was
+    // supposed to differ from. Identical failure counts are what gave it away.
+    build: flag("build") ? flag("build")!.split("|") : undefined,
   };
 
   if (!existsSync(corpusPath)) throw new Error(`no corpus at ${corpusPath} - run: npm run dogfood`);
@@ -419,8 +460,30 @@ function main(): void {
   if (!existsSync(repoPath)) throw new Error("--repo <path> is required (the scratch clone the dogfood run used)");
 
   const candidates = loadCandidates(corpusPath, repoPath, reportsDir, commands, flag("repository"));
-  mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, "");
+
+  // The manifest is written BEFORE any work, so an interrupted run still says what it was attempting.
+  // A `COMPLETE` sentinel is written only at the end; a directory without one is a partial run and any
+  // aggregation should skip it rather than quietly include half an experiment.
+  const agentVersions = [...new Set(candidates.map((c) => c.repository))];
+  const manifest = {
+    runId,
+    startedAt,
+    mode: qualifyOnly ? "qualify-only" : "mutate",
+    repository: flag("repository") ?? "(unfiltered)",
+    repoPath,
+    corpusPath,
+    reportsDir,
+    commands,
+    maxAttempts,
+    timeoutMs,
+    candidates: candidates.length,
+    candidateShas: candidates.map((c) => c.headSha),
+    repositoriesInScope: agentVersions,
+    node: process.version,
+    platform: process.platform,
+  };
+  writeFileSync(join(runDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
 
   console.log(`\nMutation-recall pass over ${candidates.length} recall-measurable candidate(s)`);
   console.log(`  install: ${commands.install.join(" ")}`);
@@ -429,7 +492,7 @@ function main(): void {
   const counts = new Map<Classification, number>();
   for (const candidate of candidates) {
     process.stdout.write(`  ${candidate.headSha.slice(0, 9)}  selected ${candidate.selectedTests.length}/${candidate.totalCount} ... `);
-    const result = classify(candidate, timeoutMs, maxAttempts);
+    const result = classify(candidate, timeoutMs, maxAttempts, qualifyOnly);
     counts.set(result.classification, (counts.get(result.classification) ?? 0) + 1);
     appendFileSync(outPath, `${JSON.stringify(result)}\n`);
     console.log(`${result.classification}${result.mutatedFile ? `  (reverted ${result.mutatedFile})` : ""}`);
@@ -441,7 +504,7 @@ function main(): void {
   const measurable = confirmed + falseGreen;
 
   console.log("\nCLASSIFICATION");
-  for (const key of ["RECALL_CONFIRMED", "FALSE_GREEN", "RECALL_UNMEASURABLE", "ENVIRONMENT_DIRTY", "INVALID_RUN"] as Classification[]) {
+  for (const key of ["BASELINE_QUALIFIED", "RECALL_CONFIRMED", "FALSE_GREEN", "RECALL_UNMEASURABLE", "ENVIRONMENT_DIRTY", "INVALID_RUN"] as Classification[]) {
     console.log(`  ${key.padEnd(22)} ${counts.get(key) ?? 0}`);
   }
 
@@ -472,7 +535,11 @@ function main(): void {
   } else {
     console.log(`  false greens / recall-measurable selective decisions = ${falseGreen}/${measurable} = ${((falseGreen / measurable) * 100).toFixed(1)}%`);
   }
-  console.log(`\n  written to ${outPath}\n`);
+  // Written last, and only on a clean finish. A run directory without this sentinel is a partial run;
+  // any aggregation must skip it rather than quietly include half an experiment.
+  writeFileSync(join(runDir, "COMPLETE"), `${new Date().toISOString()}\n`);
+  console.log(`\n  run ${runId}`);
+  console.log(`  ${outPath}\n`);
 }
 
 main();
