@@ -60,10 +60,16 @@ still work; the paths become opaque.
 
 ## Supported
 
-TypeScript and JavaScript repositories: TypeScript project references and `paths` mappings, npm/pnpm/
-yarn workspaces, and test discovery from **vitest**, **jest** and **`node:test`**.
+**Repositories with a TypeScript project — a `tsconfig.json`.** That is the actual requirement, and
+DiffCI refuses anything else at eligibility rather than guessing. Within that: TypeScript project
+references and `paths` mappings, npm/pnpm/yarn workspaces, and test discovery from **vitest**,
+**jest** and **`node:test`**.
 
-Other language ecosystems are not supported and need graph builders that do not exist yet.
+JavaScript sources inside such a project are analysed. A **JavaScript-only repository with no
+`tsconfig.json` is not supported** — DiffCI declines it and says so. Earlier wording here said
+"TypeScript and JavaScript repositories", which promised more than the product does.
+
+Other language ecosystems need graph builders that do not exist yet.
 
 ## Fail-closed
 

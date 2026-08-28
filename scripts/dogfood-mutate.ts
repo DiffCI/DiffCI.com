@@ -46,11 +46,41 @@ export type Classification =
   /** The harness itself failed: install error, timeout, no revertible file, missing selection. */
   | "INVALID_RUN";
 
+/**
+ * How much execution the selection authorised, relative to the comparator DiffCI itself carries.
+ *
+ * DELIBERATELY INDEPENDENT OF RECALL. A RECALL_CONFIRMED verdict says the selection contained the
+ * test that catches the mutation; it says nothing about the other 123 tests it also ran. On a
+ * tightly-coupled monorepo DiffCI has been observed selecting ~65% of a suite where a simple path
+ * rule selected far less - safe, and economically worse than knowing nothing. Reporting a single
+ * verdict would let "we caught it" quietly stand in for "this was worth running", so the two are
+ * scored separately and printed separately.
+ */
+export type Efficiency =
+  /** Fewer tests than the path-rule comparator. DiffCI earned its place. */
+  | "EFFICIENT"
+  /** Within a test or two of the comparator - the graph bought nothing measurable either way. */
+  | "COMPARABLE"
+  /** MORE tests than the comparator. Safe, and worse than a rule that knows nothing about the graph. */
+  | "SELECTION_OVERBROAD";
+
 interface MutationResult {
   repository: string;
   headSha: string;
   baseSha: string;
   classification: Classification;
+  /** Scored only when the safety question was answerable; undefined otherwise. */
+  efficiency?: Efficiency;
+  /** The evidence behind `efficiency`, so the verdict can be re-derived rather than trusted. */
+  selection?: {
+    selected: number;
+    total: number;
+    baselineSelected: number | undefined;
+    /** Positive means DiffCI ran MORE than the comparator. */
+    versusBaseline: number | undefined;
+    /** Selected tests that actually failed. Everything else selected was unnecessary for THIS mutation. */
+    detecting: number;
+  };
   reason: string;
   mutatedFile?: string;
   selectedCount?: number;
@@ -101,6 +131,8 @@ interface Candidate {
   totalCount: number;
   changedFiles: string[];
   commands: RepoCommands;
+  /** What the path-rule comparator selected for this same commit, carried from the observation row. */
+  baselineSelected: number | undefined;
 }
 
 /**
@@ -152,7 +184,14 @@ function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string
   const rows = readFileSync(corpusPath, "utf8")
     .split("\n")
     .filter((line) => line.trim().length > 0)
-    .map((line) => JSON.parse(line) as { identity: { repository: string; baseSha: string; headSha: string }; decision: { mode: string; selected: number | "unknown"; total: number | "unknown" } });
+    .map(
+      (line) =>
+        JSON.parse(line) as {
+          identity: { repository: string; baseSha: string; headSha: string };
+          decision: { mode: string; selected: number | "unknown"; total: number | "unknown" };
+          counterfactual?: { baselineSelected: number | "unknown" };
+        },
+    );
 
   const candidates: Candidate[] = [];
   for (const row of rows) {
@@ -179,6 +218,7 @@ function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string
       totalCount: typeof row.decision.total === "number" ? row.decision.total : 0,
       changedFiles: report.result.changedFiles ?? [],
       commands,
+      baselineSelected: typeof row.counterfactual?.baselineSelected === "number" ? row.counterfactual.baselineSelected : undefined,
     });
   }
   return candidates;
@@ -278,9 +318,20 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number):
       const missed = fullParsed.failedNames.filter((name) => !selectedParsed.failedNames.includes(name));
       const detected = selectedParsed.failures > 0;
 
+      // Efficiency is judged against the comparator DiffCI carries in its own report, never against
+      // the full suite - "fewer than everything" is trivially true and tells nobody anything. The
+      // +/-2 band exists because a one-test difference is noise, not a verdict.
+      const selectedCount = candidate.selectedTests.length;
+      const comparatorSelected = candidate.baselineSelected;
+      const versusBaseline = comparatorSelected === undefined ? undefined : selectedCount - comparatorSelected;
+      const efficiency: Efficiency =
+        versusBaseline === undefined || Math.abs(versusBaseline) <= 2 ? "COMPARABLE" : versusBaseline > 0 ? "SELECTION_OVERBROAD" : "EFFICIENT";
+
       return {
         ...base,
         classification: detected ? "RECALL_CONFIRMED" : "FALSE_GREEN",
+        efficiency,
+        selection: { selected: selectedCount, total: candidate.totalCount, baselineSelected: comparatorSelected, versusBaseline, detecting: selectedParsed.failures },
         reason: detected
           ? `reverting ${mutation.path} failed the full suite and DiffCI's selection caught it`
           : `reverting ${mutation.path} failed the full suite but NOT DiffCI's ${candidate.selectedTests.length}-test selection`,
@@ -376,6 +427,26 @@ function main(): void {
   console.log("\nCLASSIFICATION");
   for (const key of ["RECALL_CONFIRMED", "FALSE_GREEN", "RECALL_UNMEASURABLE", "ENVIRONMENT_DIRTY", "INVALID_RUN"] as Classification[]) {
     console.log(`  ${key.padEnd(22)} ${counts.get(key) ?? 0}`);
+  }
+
+  // Printed BEFORE the safety metric and never merged into it. A RECALL_CONFIRMED that also ran 124
+  // of 192 tests is two facts, and collapsing them into one verdict is how "we caught it" comes to
+  // stand in for "this was worth running".
+  const scored = readFileSync(outPath, "utf8")
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as MutationResult)
+    .filter((row) => row.efficiency !== undefined);
+
+  if (scored.length > 0) {
+    console.log("\nEFFICIENCY - scored independently of recall");
+    for (const key of ["EFFICIENT", "COMPARABLE", "SELECTION_OVERBROAD"] as Efficiency[]) {
+      console.log(`  ${key.padEnd(20)} ${scored.filter((row) => row.efficiency === key).length}`);
+    }
+    for (const row of scored.filter((r) => r.efficiency === "SELECTION_OVERBROAD")) {
+      const s = row.selection!;
+      console.log(`    ${row.headSha.slice(0, 9)}  ran ${s.selected}/${s.total} against a comparator's ${s.baselineSelected} (+${s.versusBaseline}); ${s.detecting} test(s) actually detected the mutation`);
+    }
   }
 
   console.log("\nPRIMARY SAFETY METRIC");
