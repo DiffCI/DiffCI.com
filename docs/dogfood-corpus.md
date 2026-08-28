@@ -588,3 +588,59 @@ deliberately.
 That last clause is not hedging. A `RECALL_CONFIRMED` obtained over a flaky suite is exactly the
 false-confidence this corpus exists to prevent, and the qualification that would have ruled it out did
 not yet exist when those three cases were run.
+
+---
+
+# hono qualifies — and contradicts the graph-explosion hypothesis
+
+**2026-08-28.** `honojs/hono` passed the two-run gate (green on both), confirming its earlier single
+failure was a flake. Second mutation-qualified repository.
+
+Then the observation pass over 25 commits produced a result that undercuts a hypothesis I had already
+half-adopted.
+
+## The hypothesis, and why it is now in doubt
+
+After zod, the working explanation for overbreadth was **transitive reachability exploding in tightly
+coupled monorepos**: a change anywhere reaches most packages through the graph, so DiffCI selects most
+of the suite. It predicted that a loosely coupled single-package library would not show the problem.
+
+hono is that control. It is not a monorepo. And DiffCI selected **more tests than the path-rule
+comparator on 14 of 25 commits — 56%, worse than zod's 5 of 10.**
+
+| | hono |
+|---|---|
+| Mutation candidates available | 22 |
+| Overbroad vs path rule | 14 / 25 |
+| DiffCI selection ratio | 1% min, **15% median**, 67% max |
+| Path-rule comparator | **median 8** of 136 |
+
+## What the numbers actually say
+
+DiffCI's median selection here is 15% of the suite — in absolute terms, good. The comparator's median
+is **8 tests**. hono's directory layout maps so cleanly onto its tests that a rule knowing nothing
+about imports scopes better than a dependency graph does, most of the time.
+
+So the pattern is not "monorepos break the graph". It is closer to:
+
+> **DiffCI's value depends on whether a simple path rule already scopes well — and where a repository
+> has clean directory-to-test correspondence, it usually does.**
+
+That is a harder problem than graph explosion, because it is not a bug to fix. On h3 DiffCI won (46
+against 70). On DiffCI.com it won 9 of 12. On hono and zod it lost. The differentiator is a property
+of the repository, not of the algorithm — which suggests the product question is *which repositories
+is this worth running on*, and that DiffCI should be able to answer it from a repository's own
+structure before anyone pays for it.
+
+**This is efficiency evidence only.** Nothing here says DiffCI is unsafe on hono; safety is what the
+mutation pass measures, and on hono it has 22 candidates waiting.
+
+## Method note: the mutation run is deliberately NOT started yet
+
+A tightly-coupled-monorepo qualification (`TanStack/query`) is already running. Starting hono's
+mutation pass alongside it would put two full test suites on one machine at once.
+
+That is not merely slow — **it risks inducing the exact flakiness Finding 11 was written about.**
+Timing-sensitive tests fail under CPU contention, a flake during a mutated run manufactures a
+`RECALL_CONFIRMED`, and the corpus would record fiction. Heavy runs are serialised for the same reason
+the flakiness gate exists.

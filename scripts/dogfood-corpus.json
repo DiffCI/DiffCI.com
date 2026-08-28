@@ -13,10 +13,21 @@
     "observationQualified": "yes",
     "mutationQualified": "no",
     "mutationQualificationReason": "Its build script shells out to a bare `pnpm` that this harness does not put on PATH. Environmental, and unqualified under THIS harness environment rather than intrinsically unsuitable - the harness was deliberately not expanded to reproduce it.",
-    "install": ["corepack", "pnpm", "install", "--frozen-lockfile"],
-    "build": ["corepack", "pnpm", "build"],
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "build": [
+      "corepack",
+      "pnpm",
+      "build"
+    ],
     "testModule": "node_modules/vitest/vitest.mjs",
-    "testArgs": ["run"]
+    "testArgs": [
+      "run"
+    ]
   },
   {
     "source": "unjs/h3",
@@ -25,9 +36,17 @@
     "observationQualified": "yes",
     "mutationQualified": "yes",
     "mutationQualificationReason": "Produced a RECALL_CONFIRMED via src/utils/static.ts under corepack pnpm + vitest.",
-    "install": ["corepack", "pnpm", "install", "--frozen-lockfile", "--ignore-scripts"],
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile",
+      "--ignore-scripts"
+    ],
     "testModule": "node_modules/vitest/vitest.mjs",
-    "testArgs": ["run"]
+    "testArgs": [
+      "run"
+    ]
   },
   {
     "source": "expressjs/express",
@@ -45,17 +64,25 @@
     "mutationQualified": "no",
     "mutationQualificationReason": "Refused at eligibility; nothing to mutate."
   },
-
   {
     "//": "CANDIDATES for the third mutation-qualified repository. Chosen for tight cross-package coupling on a mainstream toolchain - the structural class zod identified as interesting - and deliberately NOT chosen for whether DiffCI is expected to do well. A repository earns its place by being able to DISPROVE the selector.",
     "source": "TanStack/query",
     "stresses": "Tightly coupled TS monorepo, pnpm + vitest, heavy cross-package imports between core and framework adapters. Structurally the class where DiffCI was observed selecting ~65% of a suite.",
     "commits": 10,
     "observationQualified": "unknown",
-    "mutationQualified": "unknown",
-    "install": ["corepack", "pnpm", "install", "--frozen-lockfile"],
+    "mutationQualified": "no",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
     "testModule": "node_modules/vitest/vitest.mjs",
-    "testArgs": ["run"]
+    "testArgs": [
+      "run"
+    ],
+    "mutationQualificationReason": "install failed:     at process.processTimers (node:internal/timers:541:7)",
+    "mutationQualifiedAt": "2026-08-28T15:05:36.702Z"
   },
   {
     "source": "vuejs/core",
@@ -63,18 +90,34 @@
     "commits": 10,
     "observationQualified": "unknown",
     "mutationQualified": "unknown",
-    "install": ["corepack", "pnpm", "install", "--frozen-lockfile"],
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
     "testModule": "node_modules/vitest/vitest.mjs",
-    "testArgs": ["run"]
+    "testArgs": [
+      "run"
+    ]
   },
   {
     "source": "honojs/hono",
     "stresses": "TS with vitest and a committed lockfile, no services or credentials, moderate internal coupling. A control for the monorepo cases.",
     "commits": 10,
     "observationQualified": "unknown",
-    "mutationQualified": "unknown",
-    "install": ["npm", "install", "--no-audit", "--no-fund"],
+    "mutationQualified": "yes",
+    "install": [
+      "npm",
+      "install",
+      "--no-audit",
+      "--no-fund"
+    ],
     "testModule": "node_modules/vitest/vitest.mjs",
-    "testArgs": ["run"]
+    "testArgs": [
+      "run"
+    ],
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence",
+    "mutationQualifiedAt": "2026-08-28T14:59:07.259Z"
   }
 ]
