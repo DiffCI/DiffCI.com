@@ -774,7 +774,9 @@ What must be captured alongside duration:
 
 - **runner shape** — vCPU count, memory, instance class
 - **CPU-seconds** where the environment can measure them, in preference to wall-clock
-- the **analysis overhead DiffCI itself adds**, which is charged to DiffCI and not netted out silently
+- the **analysis overhead DiffCI itself adds**. It belongs inside DiffCI total compute - it is part of
+  the net calculation, not an adjustment made afterwards - and it is kept as a separate raw component
+  so a negative incremental result can be attributed to over-selection, to overhead, or to both
 
 Observed overhead so far is 1.1s median on the public corpus and 3.2s median on this repository — small
 against a full suite, and not negligible against a selection of eight tests.
@@ -795,3 +797,83 @@ measurement pipeline would end up producing a dishonest number.
 No CO₂e figure should be produced from anything measured so far. Selection counts are not energy, and
 `src/usage/climate-model.ts` must not be pointed at them. This sits after the Linux image and the
 monorepo qualification in the sequence.
+
+---
+
+# The hono frozen funnel — safe, and negative-value
+
+**2026-08-28.** Run `2026-08-28T15-17-45-366Z-honojs-hono-cc009a`, frozen before it was read, checksums
+verified independently (full file coverage, all hashes match).
+
+```
+  candidates                22
+  baseline-qualified        15
+  environment-dirty          3
+  invalid runs               4
+  recall-unmeasurable        2
+  recall-MEASURABLE         13
+    recall confirmed        13
+    FALSE GREEN              0
+
+  false greens / measurable   0/13
+
+  EFFICIENCY (independent of recall)
+    efficient                2
+    comparable               3
+    selection overbroad      8
+```
+
+## Safety evidence advanced materially
+
+**13 measurable cases**, up from 3 — and unlike the earlier three, these were collected with the
+flakiness gate in place. Three candidates hit the known hono flake and were refused as
+`ENVIRONMENT_DIRTY` rather than contributing apparent recall, which is the behaviour Finding 11
+predicted and demanded.
+
+> **Safety validation: 16 recall-measurable mutation cases across 2 mutation-qualified repositories;
+> 0 observed false greens; 13 of the 16 collected under flakiness controls.**
+
+Still not a reliability estimate. Still one repository shape.
+
+## The result that matters more: safe and worth less than free
+
+**8 of the 13 measurable cases are simultaneously `RECALL_CONFIRMED` and `SELECTION_OVERBROAD`.** The
+combination the corpus was built to detect has now been observed on a real repository:
+
+| Commit | DiffCI ran | Comparator | Tests that actually detected the mutation |
+|---|---|---|---|
+| `531e9c5a3` | 83 / 136 | 18 | **3** |
+| `2059584f8` | 20 / 136 | 3 | 3 |
+| `499c35ebd` | 18 / 136 | 3 | 10 |
+| `c4a44071e` | 18 / 136 | 3 | **1** |
+
+Aggregated across all 13 measurable cases, in test counts:
+
+| | | |
+|---|---|---|
+| **Gross** | full → DiffCI | **1375 (77.8%)** |
+| **Baseline** | full → comparator | **1461 (82.6%)** |
+| **Incremental** | comparator → DiffCI | **−86 (−4.9%)** |
+
+DiffCI lost to the free comparator on **9 of 13** commits.
+
+"DiffCI avoided 77.8% of test executions" is true, verifiable from the frozen bundle, and would be
+**dishonest as a headline**. The free alternative avoided 82.6%. The incremental contribution is
+negative.
+
+This is precisely what the three-number split was built to expose, and the first time real data has
+produced it. Had only the gross figure been recorded, hono would read as a strong success.
+
+## What this does not say
+
+- **Nothing about safety being in doubt.** Recall was 13/13. DiffCI is safe here and not worth running
+  here; those are independent findings and the schema keeps them independent.
+- **Nothing about monorepos.** hono is a single-package library. The structural class where a graph
+  should matter most remains unmeasured for safety.
+- **Nothing in compute or carbon.** These are test counts. No CO₂e figure follows from them.
+
+## Harness attrition worth fixing later
+
+4 of 22 candidates were lost to `could not check out <sha>` — 18% attrition for a reason that is not
+evidence. The clone is shared with the observation pass and something left those commits unreachable.
+Recorded, not chased: the Linux image is next, and it rebuilds the clone path anyway.
