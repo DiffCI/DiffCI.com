@@ -63,6 +63,30 @@ docker run --rm \
 The named cache volume keeps corepack downloads and package-manager stores warm between runs — the
 difference between a four-minute qualification and a twenty-minute one.
 
+## Recording which image produced the evidence
+
+Pass the image digest in, so every run manifest identifies the environment that produced it:
+
+```bash
+DIGEST=$(docker image inspect diffci-validation --format '{{.Id}}')
+
+docker run --rm \
+  -e DIFFCI_VALIDATION_IMAGE="$DIGEST" \
+  -v "$PWD:/work" \
+  -v diffci-validation-cache:/root/.cache \
+  diffci-validation \
+  npm run dogfood:mutate -- --repository unjs/h3 --repo /work/.dogfood/clones/h3
+```
+
+`Node 22 on Linux` stops being a reproducible description the moment the image is rebuilt with
+different transitive system packages. The chain safety evidence must identify is:
+
+    repository SHA + agent digest + validation-image digest + commands + mutation + results
+
+A manifest with `validationImage: null` records a run from a developer host. That is not a defect, but
+those results are **not interchangeable** with results from the image, and the manifest says so rather
+than leaving a reader to assume.
+
 ## What to run, in order
 
 1. `dogfood:qualify` for `colinhacks/zod` and `TanStack/query`. Full clone is now the default, so the

@@ -87,6 +87,8 @@ export interface CorpusEntry {
   /** Why the mutation verdict is what it is - environmental reasons are recorded, not hidden. */
   mutationQualificationReason?: string;
   mutationQualifiedAt?: string;
+  /** Which environment produced the verdict - the image digest, or a host description if not in it. */
+  mutationQualifiedIn?: string;
   /** The documented sequence. Absent means "npm install, no build" was assumed. */
   install?: string[];
   build?: string[];
@@ -250,7 +252,13 @@ function main(): void {
   const corpus = JSON.parse(readFileSync(corpusPath, "utf8")) as CorpusEntry[];
   const scratch = mkdtempSync(join(tmpdir(), "diffci-qualify-"));
 
-  console.log(`\nRepository qualification - can this repository contribute SAFETY evidence?\n  scratch: ${scratch}\n`);
+  // A verdict is only meaningful alongside the environment that produced it. A repository that fails
+  // on a developer host and passes in the canonical image has not changed; the environment has.
+  const validationImage = process.env.DIFFCI_VALIDATION_IMAGE ?? null;
+  console.log("\nRepository qualification - can this repository contribute SAFETY evidence?");
+  console.log(`  scratch: ${scratch}`);
+  console.log(`  environment: ${validationImage ?? `${process.platform}, node ${process.version} (NOT the canonical validation image)`}`);
+  console.log("");
 
   for (const entry of corpus) {
     if (only && entry.source !== only) continue;
@@ -264,6 +272,7 @@ function main(): void {
       entry.mutationQualified = verdict.mutationQualified;
       entry.mutationQualificationReason = verdict.reason;
       entry.mutationQualifiedAt = new Date().toISOString();
+      entry.mutationQualifiedIn = validationImage ?? `${process.platform}/node${process.version}`;
     }
   }
 

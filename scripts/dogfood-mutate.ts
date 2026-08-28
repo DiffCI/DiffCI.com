@@ -502,6 +502,19 @@ function main(): void {
     repositoriesInScope: agentVersions,
     node: process.version,
     platform: process.platform,
+    /**
+     * The environment the evidence was produced in.
+     *
+     * "Node 22 on Linux" stops being a reproducible description the moment the image is rebuilt with
+     * different transitive system packages. Safety evidence has to identify the whole chain -
+     * repository SHA, agent digest, validation-image digest, commands, mutation, results - or a
+     * reviewer six weeks later cannot tell whether a result would still reproduce.
+     *
+     * null means the run was NOT executed inside the canonical validation image, which is itself worth
+     * recording: results from a developer host and results from the image are not interchangeable.
+     */
+    validationImage: process.env.DIFFCI_VALIDATION_IMAGE ?? null,
+    insideValidationImage: Boolean(process.env.DIFFCI_VALIDATION_IMAGE),
   };
   writeFileSync(join(runDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
 
