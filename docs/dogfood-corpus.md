@@ -242,3 +242,104 @@ under `node` instead.
 
 Two independent evidence axes, kept separate: **safety** is mutation recall on measurable cases;
 **generalisation** is how often an unseen repository can be understood without adaptation.
+
+---
+
+# The public corpus — 5 repositories, 50 observations
+
+**2026-08-27.** Framework adapters for the failure parser, per-repository install and test commands,
+and the first run against repositories nobody here wrote.
+
+## Safety held everywhere
+
+**Zero** non-interference violations, zero privacy-boundary violations, zero reports written inside a
+checkout — across 50 observations on 5 unseen repositories.
+
+## Decisions
+
+| | | |
+|---|---|---|
+| SELECTIVE | 24 | 48% |
+| REFUSED | 20 | 40% |
+| FULL | 6 | 12% |
+
+Analysis overhead: median 1.1s, p90 2.9s, max 3.2s.
+
+## Finding 6 — refusal works, and the harness was hiding it
+
+`expressjs/express` and `pallets/flask` produced `status: REFUSED` at `stage: eligibility` on all 20
+commits, with the reason:
+
+> DiffCI can only analyse TypeScript/JavaScript projects today: no `tsconfig.json` anywhere in the
+> repository — there is no TypeScript project to build a graph from
+
+That is the single most important result in the run: pointed at a Python project and a plain-JS
+project, DiffCI declined, said why, and did not guess.
+
+**The harness rendered all 20 as `unknown`.** A REFUSED report carries no `result`, so every column
+read empty and the best outcome the corpus can produce looked like missing data. Fixed: REFUSED is now
+a first-class decision with its reason recorded.
+
+## Finding 7 — the package README overclaims support
+
+The README says DiffCI supports "TypeScript and JavaScript repositories". Express is JavaScript, and
+it is refused, because eligibility keys on the presence of a `tsconfig.json`. A JS-only project with
+no tsconfig gets nothing.
+
+The behaviour is defensible — refusing beats guessing — but the documentation promises something the
+product does not do, and a customer would find out only after installing. **Fix the README, not the
+engine**, unless JS-without-tsconfig becomes a supported case deliberately.
+
+## Finding 8 — DiffCI is WORSE than a path rule on a monorepo
+
+On `colinhacks/zod`, DiffCI selected **more** tests than the simple path-rule comparator on 5 of 10
+commits:
+
+| Commit | DiffCI | Path rule |
+|---|---|---|
+| `24cdb7fdc` | 124 | 24 |
+| `8d896186c` | 124 | 113 |
+| `43f729db4` | 120 | 105 |
+| `97edaf7dc` | 124 | 112 |
+| `9d5b20ef6` | 124 | 112 |
+
+DiffCI selects roughly 124 of 192 tests — about 65% of the suite — on nearly every zod commit,
+because a change almost anywhere in a tightly-coupled monorepo reaches most packages through the
+graph. The path rule, knowing less, sometimes scopes better.
+
+Run 1 on DiffCI.com reported "0 worse" and that reading did not survive contact with an unseen
+repository. **On monorepos of this shape the value proposition is unproven at best.** This is exactly
+what the corpus was built to find, and it should not be smoothed over in any customer-facing number.
+
+## Mutation on a vitest repository
+
+The parser adapters (node:test, vitest, jest, mocha) and per-repository commands were built for this.
+`unjs/h3`, installed with `corepack pnpm` and tested through `node node_modules/vitest/vitest.mjs run`:
+
+| | |
+|---|---|
+| RECALL_CONFIRMED | 1 — `baef4b94a`, via `src/utils/static.ts` |
+| RECALL_UNMEASURABLE | 1 — neither revertible file was covered |
+| INVALID_RUN | 1 — the merge changed no non-test source file |
+| **False greens / measurable** | **0/1** |
+
+The pipeline now works on a second runner, a second package manager, and a repository nobody here
+wrote. Combined with DiffCI.com: **0 false greens out of 3 measurable cases.** Still far too small to
+mean anything.
+
+## Two harness defects found by using it
+
+- **Corpus rows were not filtered by repository.** Pointing the mutation pass at one checkout while
+  handing it a five-repository corpus attempted every other repository's commits against the wrong
+  tree: 18 spurious INVALID_RUNs burying 3 real classifications. Added `--repository`.
+- **The default install command lost its executable** in the per-repo refactor, so the harness tried
+  to run a program called `install` and reported INVALID_RUN for everything. Caught by re-running the
+  known-good DiffCI.com case as a regression before trusting the new path.
+
+## Next
+
+1. Mutation on zod — the monorepo where Finding 8 says selection is weakest, and therefore where a
+   false green is most likely.
+2. More measurable candidates. 62 observations have produced 3 measurable cases; candidate supply is
+   the binding constraint, not harness capability.
+3. Owned-repo real CI with the packaged agent.

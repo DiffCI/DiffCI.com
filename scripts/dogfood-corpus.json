@@ -1,0 +1,27 @@
+[
+  {
+    "source": "sindresorhus/ky",
+    "stresses": "Small, modern TS library with a flat layout. Establishes the packaged-agent baseline on a repository nobody here wrote.",
+    "commits": 10
+  },
+  {
+    "source": "colinhacks/zod",
+    "stresses": "Monorepo with workspaces and TypeScript project references. Exercises graph construction across package boundaries.",
+    "commits": 10
+  },
+  {
+    "source": "unjs/h3",
+    "stresses": "Vitest, unusual layout, HTTP vocabulary that previously caused entry-point misclassification (route.ts, error.ts).",
+    "commits": 10
+  },
+  {
+    "source": "expressjs/express",
+    "stresses": "Plain JavaScript with mocha - a framework the engine does not claim to support. Expected to refuse rather than guess.",
+    "commits": 10
+  },
+  {
+    "source": "pallets/flask",
+    "stresses": "Python. No TypeScript graph builder exists, so the only correct answer is FULL. A repository that refuses well is as valuable as one that selects well.",
+    "commits": 10
+  }
+]

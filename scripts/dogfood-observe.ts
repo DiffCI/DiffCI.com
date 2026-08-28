@@ -204,6 +204,13 @@ function observeCommit(agent: { bin: string; version: string; integrity: string 
   const netVersusBaseline = typeof selected === "number" && typeof baselineSelected === "number" ? baselineSelected - selected : ("unknown" as const);
 
   const fallbackReasons = Array.isArray(result.fallbackReasons) ? (result.fallbackReasons as string[]) : [];
+  // A REFUSED report carries no `result` at all, so mode/selected/total are legitimately absent. An
+  // earlier version rendered that as "unknown" in every column, which buried the single most important
+  // outcome the corpus can produce: DiffCI declining to analyse a repository it does not understand,
+  // with a reason, instead of guessing. REFUSED is a decision and is reported as one.
+  const refusal = str(report.refusal);
+  const decisionMode = str(report.status) === "REFUSED" ? "REFUSED" : str(result.mode);
+  const decisionReason = str(report.status) === "REFUSED" ? refusal : fallbackReasons.length > 0 ? fallbackReasons.join("; ") : str(result.analysisStatus);
 
   // The whole point of the corpus is to find these, so they are surfaced rather than averaged away.
   if (bool(nonInterference.worktreeUnchanged) === false) notes.push("NON-INTERFERENCE VIOLATED: the agent changed the worktree");
@@ -233,8 +240,8 @@ function observeCommit(agent: { bin: string; version: string; integrity: string 
     decision: {
       status: str(report.status),
       stage: str(report.stage),
-      mode: str(result.mode),
-      reason: fallbackReasons.length > 0 ? fallbackReasons.join("; ") : str(result.analysisStatus),
+      mode: decisionMode,
+      reason: decisionReason,
       selected,
       total: num(result.totalTestCount),
     },

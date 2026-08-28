@@ -30,6 +30,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { dirname, join, resolve } from "node:path";
 import { selectFileToMutate } from "../src/analysis-fanout/mutation.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
+import { parseTestOutput } from "./test-output-parsers.js";
 
 const repoRoot = resolve(dirname(import.meta.filename), "..");
 
@@ -65,6 +66,32 @@ interface MutationResult {
   observedAt: string;
 }
 
+/**
+ * How to install and test one repository.
+ *
+ * Two commands, not one, and deliberately shaped differently. INSTALL may go through a shell because
+ * its arguments are fixed literals - corepack and pnpm are .cmd shims on Windows and cannot be spawned
+ * any other way. TEST may NOT, because the selected run appends repository-derived test paths, so it
+ * invokes the runner's own JS entry point under `node` instead. That split is the shell invariant in
+ * practice rather than in prose.
+ */
+interface RepoCommands {
+  /** e.g. ["corepack", "pnpm", "install", "--frozen-lockfile"]. Fixed literals only. */
+  install: string[];
+  /** Path, relative to the repository, of the test runner's JS entry. e.g. node_modules/vitest/vitest.mjs */
+  testModule: string;
+  /** Arguments before any file list. e.g. ["run"] for vitest. */
+  testArgs: string[];
+}
+
+const DEFAULT_COMMANDS: RepoCommands = {
+  // args[0] is the executable, so the package manager has to be named here. Omitting it made the
+  // harness try to run a command called "install" and report INVALID_RUN for every candidate.
+  install: ["npm", "install", "--no-audit", "--no-fund", "--silent"],
+  testModule: "node_modules/tsx/dist/cli.mjs",
+  testArgs: ["--test", "tests/**/*.test.ts"],
+};
+
 interface Candidate {
   repository: string;
   repoPath: string;
@@ -73,6 +100,7 @@ interface Candidate {
   selectedTests: string[];
   totalCount: number;
   changedFiles: string[];
+  commands: RepoCommands;
 }
 
 /**
@@ -91,10 +119,14 @@ function run(command: string, args: string[], cwd: string, timeoutMs: number): {
  * literal, and asserted rather than assumed. This is exactly the split the invariant describes: a
  * shell is acceptable when nothing repository-derived is concatenated into the command line.
  */
-function runNpm(args: string[], cwd: string, timeoutMs: number): { status: number | null; stdout: string; stderr: string; ms: number } {
-  assertShellSafeArgs(args, "dogfood-mutate: npm");
+function runShellCommand(args: string[], cwd: string, timeoutMs: number): { status: number | null; stdout: string; stderr: string; ms: number } {
+  assertShellSafeArgs(args, "dogfood-mutate: install");
   const started = Date.now();
-  const result = spawnSync(process.platform === "win32" ? "npm.cmd" : "npm", args, {
+  const [exec, ...rest] = args;
+  // npm, npx, pnpm and corepack are all .cmd shims on Windows. Resolving the suffix here keeps the
+  // corpus configuration platform-neutral.
+  const resolved = process.platform === "win32" && !exec!.endsWith(".cmd") ? `${exec}.cmd` : exec!;
+  const result = spawnSync(resolved, rest, {
     cwd,
     encoding: "utf8",
     timeout: timeoutMs,
@@ -106,17 +138,17 @@ function runNpm(args: string[], cwd: string, timeoutMs: number): { status: numbe
 }
 
 /**
- * Counts failures from a `node:test` TAP-ish summary. Deliberately conservative: if the count cannot
- * be parsed the caller treats the run as INVALID_RUN rather than assuming zero, because "no failures
- * found" and "could not tell" must never be the same answer in a safety measurement.
+ * Delegates to the per-runner adapters in ./test-output-parsers.ts, which understand node:test,
+ * vitest, jest and mocha. The contract that matters is preserved there and relied on here:
+ * unrecognised output yields `undefined`, never `0`, so a run that proved nothing can never be
+ * classified as a run that proved something.
  */
 function parseFailures(output: string): { failures: number | undefined; failedNames: string[] } {
-  const match = /^# fail (\d+)$/m.exec(output) ?? /^ℹ fail (\d+)$/m.exec(output);
-  const failedNames = [...output.matchAll(/^not ok \d+ - (.+)$/gm)].map((m) => m[1]!.trim());
-  return { failures: match ? Number(match[1]) : undefined, failedNames };
+  const parsed = parseTestOutput(output);
+  return { failures: parsed.failures, failedNames: parsed.failedNames };
 }
 
-function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string): Candidate[] {
+function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string, commands: RepoCommands, onlyRepository?: string): Candidate[] {
   const rows = readFileSync(corpusPath, "utf8")
     .split("\n")
     .filter((line) => line.trim().length > 0)
@@ -127,6 +159,10 @@ function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string
     // Only SELECTIVE decisions that actually selected something. A SELECTIVE-with-zero decision on a
     // docs or asset commit is excluded on purpose: mutating a file that commit did not touch would
     // test an artificial relationship the real commit does not contain.
+    // A corpus may hold several repositories; this pass has exactly one checkout. Without this filter
+    // every other repository’s candidates are attempted against the wrong tree and come back
+    // INVALID_RUN - noise that buries the real classifications.
+    if (onlyRepository !== undefined && row.identity.repository !== onlyRepository) continue;
     if (row.decision.mode !== "SELECTIVE") continue;
     if (typeof row.decision.selected !== "number" || row.decision.selected === 0) continue;
 
@@ -142,6 +178,7 @@ function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string
       selectedTests: report.result.selectedTests ?? [],
       totalCount: typeof row.decision.total === "number" ? row.decision.total : 0,
       changedFiles: report.result.changedFiles ?? [],
+      commands,
     });
   }
   return candidates;
@@ -152,7 +189,14 @@ function mutationTargets(changedFiles: string[]): string[] {
   return changedFiles.filter((path) => /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(path) && !/\.(test|spec)\./.test(path) && !path.startsWith("tests/"));
 }
 
-function classify(candidate: Candidate, fullCommand: string[], timeoutMs: number, maxAttempts: number): MutationResult {
+function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number): MutationResult {
+  const { commands } = candidate;
+  const testExec = process.execPath;
+  const testModulePath = join(candidate.repoPath, commands.testModule);
+  const fullArgs = [testModulePath, ...commands.testArgs];
+  // The selected run is the SAME runner with file paths appended - never a different runner, which
+  // would measure the runner rather than the selection.
+  const selectedArgs = [testModulePath, ...commands.testArgs.filter((a) => !a.includes("*")), ...candidate.selectedTests];
   const base: MutationResult = {
     repository: candidate.repository,
     headSha: candidate.headSha,
@@ -167,14 +211,14 @@ function classify(candidate: Candidate, fullCommand: string[], timeoutMs: number
   const checkout = run("git", ["checkout", "--quiet", "--force", candidate.headSha], candidate.repoPath, 60_000);
   if (checkout.status !== 0) return { ...base, reason: `could not check out ${candidate.headSha.slice(0, 9)}` };
 
-  const install = runNpm(["install", "--no-audit", "--no-fund", "--silent"], candidate.repoPath, 15 * 60_000);
+  const install = runShellCommand(commands.install, candidate.repoPath, 20 * 60_000);
   if (install.status !== 0) {
     const detail = (install.stderr.trim() || install.stdout.trim()).split("\n").filter(Boolean).slice(-1)[0] ?? `exit ${install.status}`;
     return { ...base, reason: `dependency install failed: ${detail.slice(0, 200)}` };
   }
 
   // 1. BASELINE. The suite must be green before mutation, or nothing after it can be attributed.
-  const baseline = run(fullCommand[0]!, fullCommand.slice(1), candidate.repoPath, timeoutMs);
+  const baseline = run(testExec, fullArgs, candidate.repoPath, timeoutMs);
   const baselineParsed = parseFailures(baseline.stdout + baseline.stderr);
   if (baselineParsed.failures === undefined) return { ...base, reason: "could not parse the baseline run's failure count" };
   if (baselineParsed.failures > 0) {
@@ -216,7 +260,7 @@ function classify(candidate: Candidate, fullCommand: string[], timeoutMs: number
 
     try {
       // 3. FULL MUTATED. The gate: if the whole suite cannot see this, recall was never at stake.
-      const fullMutated = run(fullCommand[0]!, fullCommand.slice(1), candidate.repoPath, timeoutMs);
+      const fullMutated = run(testExec, fullArgs, candidate.repoPath, timeoutMs);
       const fullParsed = parseFailures(fullMutated.stdout + fullMutated.stderr);
       if (fullParsed.failures === undefined) {
         return { ...base, reason: `could not parse the full mutated run's failure count for ${mutation.path}`, mutatedFile: mutation.path, attemptedFiles };
@@ -225,7 +269,7 @@ function classify(candidate: Candidate, fullCommand: string[], timeoutMs: number
       if (fullParsed.failures === 0) continue;
 
       // 4. SELECTED MUTATED. Only DiffCI's chosen tests. This is the measurement.
-      const selectedMutated = run(fullCommand[0]!, [...fullCommand.slice(1, fullCommand.length - 1), ...candidate.selectedTests], candidate.repoPath, timeoutMs);
+      const selectedMutated = run(testExec, selectedArgs, candidate.repoPath, timeoutMs);
       const selectedParsed = parseFailures(selectedMutated.stdout + selectedMutated.stderr);
       if (selectedParsed.failures === undefined) {
         return { ...base, reason: `could not parse the selected mutated run's failure count for ${mutation.path}`, mutatedFile: mutation.path, attemptedFiles };
@@ -288,27 +332,37 @@ function main(): void {
   // The repository's own test command. Full runs use it as-is; selected runs replace its final
   // argument (the glob) with the selected files, so both sides use the SAME runner - comparing a
   // vitest full run against a node --test selected run would measure the runner, not the selection.
-  // Deliberately not "npx tsx ...": npx is a .cmd shim on Windows, which would drag a shell into the
-  // one spawn whose arguments are repository-derived. Invoking the runner's real JS entry through
-  // `node` keeps execve semantics for the test paths. Pipe-separated so a path may contain a space.
-  const defaultCommand = [process.execPath, join(repoPath, "node_modules", "tsx", "dist", "cli.mjs"), "--test", "tests/**/*.test.ts"];
-  const fullCommand = flag("test-command") ? flag("test-command")!.split("|") : defaultCommand;
+  // Per-repository, because every project installs and tests differently. Pipe-separated rather than
+  // space-separated so a value may itself contain a space.
+  //
+  //   --install "corepack|pnpm|install|--frozen-lockfile"
+  //   --test-module "node_modules/vitest/vitest.mjs"  --test-args "run"
+  //
+  // The install command may reach a .cmd shim through a shell (fixed literals, asserted). The test
+  // module is invoked through `node` so the selected run can append repository-derived paths without
+  // one. That asymmetry is the shell invariant, applied.
+  const commands: RepoCommands = {
+    install: flag("install") ? flag("install")!.split("|") : DEFAULT_COMMANDS.install,
+    testModule: flag("test-module") ?? DEFAULT_COMMANDS.testModule,
+    testArgs: flag("test-args") ? flag("test-args")!.split("|") : DEFAULT_COMMANDS.testArgs,
+  };
 
   if (!existsSync(corpusPath)) throw new Error(`no corpus at ${corpusPath} - run: npm run dogfood`);
   if (!existsSync(reportsDir)) throw new Error("--reports <dir> is required (the dogfood run prints where it kept them)");
   if (!existsSync(repoPath)) throw new Error("--repo <path> is required (the scratch clone the dogfood run used)");
 
-  const candidates = loadCandidates(corpusPath, repoPath, reportsDir);
+  const candidates = loadCandidates(corpusPath, repoPath, reportsDir, commands, flag("repository"));
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, "");
 
   console.log(`\nMutation-recall pass over ${candidates.length} recall-measurable candidate(s)`);
-  console.log(`  runner: ${fullCommand.join(" ")}\n`);
+  console.log(`  install: ${commands.install.join(" ")}`);
+  console.log(`  runner:  node ${commands.testModule} ${commands.testArgs.join(" ")}\n`);
 
   const counts = new Map<Classification, number>();
   for (const candidate of candidates) {
     process.stdout.write(`  ${candidate.headSha.slice(0, 9)}  selected ${candidate.selectedTests.length}/${candidate.totalCount} ... `);
-    const result = classify(candidate, fullCommand, timeoutMs, maxAttempts);
+    const result = classify(candidate, timeoutMs, maxAttempts);
     counts.set(result.classification, (counts.get(result.classification) ?? 0) + 1);
     appendFileSync(outPath, `${JSON.stringify(result)}\n`);
     console.log(`${result.classification}${result.mutatedFile ? `  (reverted ${result.mutatedFile})` : ""}`);
