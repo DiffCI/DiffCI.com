@@ -754,3 +754,44 @@ not against running everything, exactly as the ledger already insists for money.
 
 This is not a new rule. It is the existing "never invoice from an ESTIMATED figure" discipline applied
 to carbon, and it needs stating before any external claim is made.
+
+---
+
+# When economics moves from counts to compute (not yet built)
+
+The attribution arithmetic is unit-agnostic, so replacing test counts with compute is a substitution
+rather than a redesign. But the substitution has a trap, and it is recorded here before anyone reaches
+for it.
+
+## Wall-clock seconds are not compute
+
+A 60-second job on 4 vCPUs and a 60-second job on 1 vCPU are not the same amount of compute, and
+converting either to energy with the same coefficient is wrong. Substituting seconds for test counts
+would replace one convenient proxy with another and lose the honesty the attribution split was built
+for.
+
+What must be captured alongside duration:
+
+- **runner shape** — vCPU count, memory, instance class
+- **CPU-seconds** where the environment can measure them, in preference to wall-clock
+- the **analysis overhead DiffCI itself adds**, which is charged to DiffCI and not netted out silently
+
+Observed overhead so far is 1.1s median on the public corpus and 3.2s median on this repository — small
+against a full suite, and not negligible against a selection of eight tests.
+
+## The chain, in order
+
+    FULL measured compute − comparator measured compute   = free-baseline saving
+    comparator compute − (DiffCI compute + analysis overhead) = incremental, attributable to DiffCI
+    incremental compute → energy → CO₂e
+
+**If incremental compute is negative, the climate contribution is negative or zero** — depending on the
+accounting definition chosen, which is itself a decision to make deliberately. It is never quietly
+replaced by the gross FULL→DiffCI figure. That substitution is the single most likely way an honest
+measurement pipeline would end up producing a dishonest number.
+
+## Not built, deliberately
+
+No CO₂e figure should be produced from anything measured so far. Selection counts are not energy, and
+`src/usage/climate-model.ts` must not be pointed at them. This sits after the Linux image and the
+monorepo qualification in the sequence.
