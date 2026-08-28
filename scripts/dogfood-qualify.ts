@@ -30,6 +30,26 @@ import { dirname, join, resolve } from "node:path";
 import { assertShellSafeArgs } from "./shell-safety.js";
 import { parseTestOutput } from "./test-output-parsers.js";
 
+
+/**
+ * Environment for every child process this harness spawns.
+ *
+ * COREPACK_ENABLE_DOWNLOAD_PROMPT is the one that mattered. Corepack asks for confirmation before
+ * downloading a package manager it does not yet have cached; spawned with no usable stdin, that
+ * prompt fails and the install dies. TanStack/query was recorded as "install failed" for this reason
+ * while the identical command succeeded by hand against a warm cache - a spurious disqualification
+ * that would have removed the most structurally interesting repository from the corpus.
+ *
+ * CI=1 keeps runners non-interactive and out of watch mode; FORCE_COLOR=0 keeps ANSI escapes out of
+ * the output the failure parsers read.
+ */
+const NON_INTERACTIVE_ENV = {
+  CI: "1",
+  FORCE_COLOR: "0",
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0",
+  npm_config_yes: "true",
+} as const;
+
 const repoRoot = resolve(dirname(import.meta.filename), "..");
 
 export type Capability = "yes" | "no" | "unknown";
@@ -85,7 +105,7 @@ function runShell(args: string[], cwd: string, timeoutMs: number): { status: num
     timeout: timeoutMs,
     maxBuffer: 256 * 1024 * 1024,
     shell: process.platform === "win32",
-    env: { ...process.env, CI: "1", FORCE_COLOR: "0" },
+    env: { ...process.env, ...NON_INTERACTIVE_ENV },
   });
   return { status: result.status, out: `${result.stdout ?? ""}${result.stderr ?? ""}`, ms: Date.now() - started };
 }
@@ -99,7 +119,7 @@ function runTests(repoPath: string, entry: CorpusEntry, timeoutMs: number): { st
     encoding: "utf8",
     timeout: timeoutMs,
     maxBuffer: 256 * 1024 * 1024,
-    env: { ...process.env, CI: "1", FORCE_COLOR: "0" },
+    env: { ...process.env, ...NON_INTERACTIVE_ENV },
   });
   return { status: result.status, out: `${result.stdout ?? ""}${result.stderr ?? ""}`, ms: Date.now() - started };
 }
@@ -187,8 +207,21 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
   return { source: entry.source, mutationQualified: "no", reason: `${counts[0]} test(s) failing at HEAD on every run (${counts.join(", ")})`, failures: counts[0], framework, durations, observedFailures: observed };
 }
 
+/**
+ * The most informative line of a failure, which is rarely the last one.
+ *
+ * TanStack/query recorded its verdict as `install failed: at process.processTimers` - a stack frame,
+ * carrying no information about what went wrong. A qualification reason that a future reader cannot
+ * act on is barely better than no reason, so this prefers lines that actually name an error and falls
+ * back to the tail only when nothing does.
+ */
 function lastLine(output: string): string {
-  return (output.trim().split("\n").filter(Boolean).pop() ?? "no output").slice(0, 180);
+  const lines = output.trim().split("\n").map((line) => line.trim()).filter(Boolean);
+  if (lines.length === 0) return "no output";
+
+  const meaningful = lines.filter((line) => !/^at\s/.test(line) && !/^\s*\d+\s*\|/.test(line));
+  const named = meaningful.find((line) => /\b(ERR_|ERROR|Error:|ELIFECYCLE|ENOENT|EACCES|ETIMEDOUT|failed|not found|Cannot find|unsupported|Unsupported)\b/i.test(line));
+  return (named ?? meaningful[meaningful.length - 1] ?? lines[lines.length - 1]!).slice(0, 200);
 }
 
 function main(): void {

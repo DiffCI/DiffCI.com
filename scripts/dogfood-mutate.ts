@@ -33,6 +33,26 @@ import { selectFileToMutate } from "../src/analysis-fanout/mutation.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
 import { parseTestOutput } from "./test-output-parsers.js";
 
+
+/**
+ * Environment for every child process this harness spawns.
+ *
+ * COREPACK_ENABLE_DOWNLOAD_PROMPT is the one that mattered. Corepack asks for confirmation before
+ * downloading a package manager it does not yet have cached; spawned with no usable stdin, that
+ * prompt fails and the install dies. TanStack/query was recorded as "install failed" for this reason
+ * while the identical command succeeded by hand against a warm cache - a spurious disqualification
+ * that would have removed the most structurally interesting repository from the corpus.
+ *
+ * CI=1 keeps runners non-interactive and out of watch mode; FORCE_COLOR=0 keeps ANSI escapes out of
+ * the output the failure parsers read.
+ */
+const NON_INTERACTIVE_ENV = {
+  CI: "1",
+  FORCE_COLOR: "0",
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0",
+  npm_config_yes: "true",
+} as const;
+
 const repoRoot = resolve(dirname(import.meta.filename), "..");
 
 export type Classification =
@@ -184,7 +204,7 @@ function runShellCommand(args: string[], cwd: string, timeoutMs: number): { stat
     timeout: timeoutMs,
     maxBuffer: 256 * 1024 * 1024,
     shell: process.platform === "win32",
-    env: { ...process.env, CI: "1", FORCE_COLOR: "0" },
+    env: { ...process.env, ...NON_INTERACTIVE_ENV },
   });
   return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "", ms: Date.now() - started };
 }
