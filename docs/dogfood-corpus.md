@@ -644,3 +644,62 @@ That is not merely slow — **it risks inducing the exact flakiness Finding 11 w
 Timing-sensitive tests fail under CPU contention, a flake during a mutated run manufactures a
 `RECALL_CONFIRMED`, and the corpus would record fiction. Heavy runs are serialised for the same reason
 the flakiness gate exists.
+
+---
+
+# Finding 12 — the interesting repositories are the expensive ones
+
+**2026-08-28.** `TanStack/query` installs cleanly once corepack stops prompting, and then fails
+**59 tests at HEAD on both runs** — deterministically dirty, not flaky. The gate answered cleanly.
+
+The cause is not Windows and not the repository being broken:
+
+    Failed to resolve entry for package "@tanstack/svelte-query"
+
+Workspace packages are not built. **Exactly the same class as zod.**
+
+Its documented build is `nx affected --target=build`, which computes what changed relative to a git
+base — and qualification uses a shallow clone, which has no history to compute against. Making it work
+means a deeper clone, an nx base ref, and a full monorepo build. That is environment engineering, and
+the boundary says stop.
+
+## The pattern across five qualification attempts
+
+| Repository | Shape | Mutation-qualified | Blocker |
+|---|---|---|---|
+| `unjs/h3` | single package | **yes** | — |
+| `honojs/hono` | single package | **yes** | — (one flake, caught) |
+| `colinhacks/zod` | monorepo | no | needs a build; build shells to bare `pnpm` |
+| `TanStack/query` | monorepo | no | needs a build; build needs git history |
+| `expressjs/express` | single package, JS | no | DiffCI correctly refuses it |
+
+**Both single-package repositories qualified. Both monorepos did not, for the same reason.**
+
+Tightly coupled monorepos require their workspace packages to be built before tests run, and the build
+is where reproducibility gets expensive. This is a structural bias in the methodology, and it points
+the wrong way:
+
+> **The repositories most interesting for the graph-explosion question are precisely the ones whose
+> baselines are hardest to reproduce.**
+
+Safety evidence is therefore currently obtainable only from the class of repository where the question
+is least pressing. That is worth stating plainly rather than letting a corpus of single-package
+libraries stand in for the general case.
+
+## What this does not change
+
+The efficiency finding does not depend on any of this. Observation needs only a checkout, so zod and
+TanStack still contribute — and zod already showed DiffCI selecting 124 of 192 where a path rule
+selected 24. Efficiency evidence from monorepos is available; safety evidence from monorepos is not.
+
+## The honest options
+
+1. **Accept the bias and state it.** Safety evidence from single-package repositories; efficiency
+   evidence from both. Say so wherever the numbers appear.
+2. **Run the corpus on Linux with a warm toolchain.** Not per-commit reconstruction — just a normal
+   Linux environment where these builds are routine. Bounded, and it would likely unlock both monorepos.
+3. **Build environment reproduction.** Explicitly rejected: unbounded, and unnecessary to answer the
+   immediate question.
+
+Option 2 is the only one that removes the bias, and it is a one-time cost rather than a per-repository
+one. It is not being done now; it is recorded as the decision point.

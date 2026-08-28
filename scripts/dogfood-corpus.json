@@ -81,8 +81,8 @@
     "testArgs": [
       "run"
     ],
-    "mutationQualificationReason": "install failed:     at process.processTimers (node:internal/timers:541:7)",
-    "mutationQualifiedAt": "2026-08-28T15:05:36.702Z"
+    "mutationQualificationReason": "Installs cleanly, but 59 tests fail at HEAD on every run because workspace packages are not built (\"Failed to resolve entry for package @tanstack/svelte-query\"). Its documented build is `nx affected --target=build`, which needs git history to compute what is affected and therefore does not work against the shallow clone qualification uses. Same class as zod: a tightly coupled monorepo whose tests require built package outputs. Deterministically dirty, not flaky - 59 on both runs.",
+    "mutationQualifiedAt": "2026-08-28T15:15:52.660Z"
   },
   {
     "source": "vuejs/core",
