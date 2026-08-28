@@ -481,3 +481,66 @@ These are separate qualifications and should be tracked separately:
 A corpus entry should carry both verdicts. Reporting "5 repositories in the corpus" without saying how
 many are mutation-qualified would overstate the evidence considerably — today it is 5 observable and
 2 mutation-qualified.
+
+---
+
+# Corpus schema: two independent qualifications
+
+**2026-08-28.** Finding 10 is now part of the corpus schema rather than a note, because the failure
+mode it prevents is a claim nobody would make deliberately: *"tested on 20 repositories"* implying
+twenty repositories contributed safety evidence.
+
+Every corpus entry carries two independent capabilities:
+
+| Capability | Requires | Yields |
+|---|---|---|
+| **observation-qualified** | a checkout | decisions, efficiency versus the comparator, refusal behaviour |
+| **mutation-qualified** | install + build + a green baseline + a working toolchain | **safety evidence, and nothing else does** |
+
+`npm run dogfood:qualify` establishes the second, cheaply and at HEAD: clone shallow, run the
+documented install, run the documented build, run the suite once, ask whether it is green. A
+repository that cannot pass at HEAD will not pass at ten historical commits, and learning that here
+costs one install instead of ten mutation loops.
+
+Unreadable runner output is treated as **not qualified**, never as zero failures — the same rule the
+mutation classifier follows, for the same reason.
+
+## Current corpus
+
+| Repository | Observation | Mutation | Why |
+|---|---|---|---|
+| `unjs/h3` | yes | **yes** | Produced a RECALL_CONFIRMED |
+| `sindresorhus/ky` | yes | unknown | Uses ava; no adapter yet |
+| `colinhacks/zod` | yes | **no** | Build shells out to a bare `pnpm` this harness does not put on PATH |
+| `expressjs/express` | yes | no | Refused at eligibility — no selection to measure |
+| `pallets/flask` | yes | no | Refused at eligibility — nothing to mutate |
+
+**zod is mutation-unqualified under this harness environment, not intrinsically unsuitable.** The
+failure is environmental, and the harness was deliberately not expanded to reproduce it. That
+distinction is recorded in the corpus entry itself so a future reader does not mistake a scope
+boundary for a property of the repository.
+
+## How the standing evidence must be stated
+
+> **Safety validation: 3 recall-measurable mutation cases across 2 mutation-qualified repositories;
+> 0 observed false greens.**
+
+Not "DiffCI has a 0% false-green rate". The first is evidence. The second is a reliability estimate
+that 3 cases cannot support, and the difference is the whole discipline of this exercise.
+
+## The next experiment, and what each outcome means
+
+One tightly coupled TypeScript monorepo on a mainstream toolchain — the structural class zod
+identified — chosen for its ability to **disprove** the selector rather than to flatter it.
+
+Target: **10 measurable mutations on a third repository.** Not 30–50 yet.
+
+| Outcome | Meaning |
+|---|---|
+| 0/10 false greens, mostly efficient selections | Expand the corpus |
+| 0/10 false greens, overbroad selections | Safety and economics have cleanly separated. Investigate graph explosion — this is the intelligence-layer question |
+| ≥1 reproducible false green | **Stop scaling.** That failure becomes the highest-priority engine problem |
+| Almost nothing measurable | Candidate selection is still the bottleneck; fix that before adding repositories |
+
+Candidates queued: `TanStack/query`, `vuejs/core` (both tightly coupled pnpm/vitest monorepos with
+heavy cross-package imports) and `honojs/hono` as a less-coupled control.

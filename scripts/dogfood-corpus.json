@@ -2,26 +2,79 @@
   {
     "source": "sindresorhus/ky",
     "stresses": "Small, modern TS library with a flat layout. Establishes the packaged-agent baseline on a repository nobody here wrote.",
-    "commits": 10
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "unknown"
   },
   {
     "source": "colinhacks/zod",
-    "stresses": "Monorepo with workspaces and TypeScript project references. Exercises graph construction across package boundaries.",
-    "commits": 10
+    "stresses": "Monorepo with workspaces and TypeScript project references. Exercises graph construction across package boundaries, and produced the finding that DiffCI can select MORE than a path rule.",
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "no",
+    "mutationQualificationReason": "Its build script shells out to a bare `pnpm` that this harness does not put on PATH. Environmental, and unqualified under THIS harness environment rather than intrinsically unsuitable - the harness was deliberately not expanded to reproduce it.",
+    "install": ["corepack", "pnpm", "install", "--frozen-lockfile"],
+    "build": ["corepack", "pnpm", "build"],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": ["run"]
   },
   {
     "source": "unjs/h3",
     "stresses": "Vitest, unusual layout, HTTP vocabulary that previously caused entry-point misclassification (route.ts, error.ts).",
-    "commits": 10
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "yes",
+    "mutationQualificationReason": "Produced a RECALL_CONFIRMED via src/utils/static.ts under corepack pnpm + vitest.",
+    "install": ["corepack", "pnpm", "install", "--frozen-lockfile", "--ignore-scripts"],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": ["run"]
   },
   {
     "source": "expressjs/express",
-    "stresses": "Plain JavaScript with mocha - a framework the engine does not claim to support. Expected to refuse rather than guess.",
-    "commits": 10
+    "stresses": "Plain JavaScript with mocha and no tsconfig.json. Expected to refuse rather than guess - and does.",
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "no",
+    "mutationQualificationReason": "DiffCI refuses it at eligibility, so there is no selection to measure recall against."
   },
   {
     "source": "pallets/flask",
-    "stresses": "Python. No TypeScript graph builder exists, so the only correct answer is FULL. A repository that refuses well is as valuable as one that selects well.",
-    "commits": 10
+    "stresses": "Python. No TypeScript graph builder exists, so the only correct answer is to refuse. A repository that refuses well is as valuable as one that selects well.",
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "no",
+    "mutationQualificationReason": "Refused at eligibility; nothing to mutate."
+  },
+
+  {
+    "//": "CANDIDATES for the third mutation-qualified repository. Chosen for tight cross-package coupling on a mainstream toolchain - the structural class zod identified as interesting - and deliberately NOT chosen for whether DiffCI is expected to do well. A repository earns its place by being able to DISPROVE the selector.",
+    "source": "TanStack/query",
+    "stresses": "Tightly coupled TS monorepo, pnpm + vitest, heavy cross-package imports between core and framework adapters. Structurally the class where DiffCI was observed selecting ~65% of a suite.",
+    "commits": 10,
+    "observationQualified": "unknown",
+    "mutationQualified": "unknown",
+    "install": ["corepack", "pnpm", "install", "--frozen-lockfile"],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": ["run"]
+  },
+  {
+    "source": "vuejs/core",
+    "stresses": "Tightly coupled TS monorepo, pnpm + vitest, packages that import each other constantly (compiler-core, runtime-core, reactivity). Maximal transitive reachability.",
+    "commits": 10,
+    "observationQualified": "unknown",
+    "mutationQualified": "unknown",
+    "install": ["corepack", "pnpm", "install", "--frozen-lockfile"],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": ["run"]
+  },
+  {
+    "source": "honojs/hono",
+    "stresses": "TS with vitest and a committed lockfile, no services or credentials, moderate internal coupling. A control for the monorepo cases.",
+    "commits": 10,
+    "observationQualified": "unknown",
+    "mutationQualified": "unknown",
+    "install": ["npm", "install", "--no-audit", "--no-fund"],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": ["run"]
   }
 ]

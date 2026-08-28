@@ -28,6 +28,7 @@
     "dogfood": "tsx scripts/dogfood-observe.ts",
     "dogfood:report": "tsx scripts/dogfood-report.ts",
     "dogfood:mutate": "tsx scripts/dogfood-mutate.ts",
+    "dogfood:qualify": "tsx scripts/dogfood-qualify.ts",
     "shadow": "tsx scripts/diffci-shadow.ts",
     "shadow-report": "tsx scripts/diffci-shadow-report.ts",
     "audit:dentalpresence": "tsx scripts/audit-dentalpresence-graph.ts",
