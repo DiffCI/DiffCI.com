@@ -135,15 +135,23 @@ interface Verdict {
   observedFailures?: Array<number | undefined>;
 }
 
-function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselineRuns: number): Verdict {
+function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselineRuns: number, cloneDepth: number): Verdict {
   const durations = { clone: 0, install: 0, build: 0, test: 0 };
   const dest = join(scratch, entry.source.replace("/", "__"));
 
   const cloneStarted = Date.now();
   if (!existsSync(dest)) {
-    // Shallow: qualification only ever looks at HEAD, and full history on a large monorepo is minutes
-    // of download that answers nothing.
-    const cloned = spawnSync("git", ["clone", "--quiet", "--depth", "1", `https://github.com/${entry.source}.git`, dest], { encoding: "utf8" });
+    // FULL clone by default, reversing an earlier shortcut.
+    //
+    // Qualification only reads HEAD, so a shallow clone looked like free speed. It is not: TanStack's
+    // documented build is `nx affected --target=build`, which computes what changed relative to a git
+    // base and therefore needs history. Shallow-cloning it produced a disqualification that said more
+    // about the harness than the repository.
+    //
+    // Giving a git-dependent build actual git history is a normal property of that build, not
+    // historical environment reconstruction. `--clone-depth` still allows shallow where it is safe.
+    const depth = cloneDepth > 0 ? ["--depth", String(cloneDepth)] : [];
+    const cloned = spawnSync("git", ["clone", "--quiet", ...depth, `https://github.com/${entry.source}.git`, dest], { encoding: "utf8" });
     if (cloned.status !== 0) {
       durations.clone = Date.now() - cloneStarted;
       return { source: entry.source, mutationQualified: "no", reason: "could not clone", durations };
@@ -236,6 +244,8 @@ function main(): void {
   const write = args.includes("--write");
   const timeoutMs = Number(flag("timeout") ?? 25 * 60_000);
   const baselineRuns = Number(flag("baseline-runs") ?? DEFAULT_BASELINE_RUNS);
+  // 0 means a full clone. Builds that ask git what changed need history to answer.
+  const cloneDepth = Number(flag("clone-depth") ?? 0);
 
   const corpus = JSON.parse(readFileSync(corpusPath, "utf8")) as CorpusEntry[];
   const scratch = mkdtempSync(join(tmpdir(), "diffci-qualify-"));
@@ -245,7 +255,7 @@ function main(): void {
   for (const entry of corpus) {
     if (only && entry.source !== only) continue;
     process.stdout.write(`  ${entry.source.padEnd(28)} `);
-    const verdict = qualify(entry, scratch, timeoutMs, baselineRuns);
+    const verdict = qualify(entry, scratch, timeoutMs, baselineRuns, cloneDepth);
     const seconds = Object.values(verdict.durations).reduce((a, b) => a + b, 0) / 1000;
     console.log(`${verdict.mutationQualified === "yes" ? "MUTATION-QUALIFIED" : "not qualified"}  (${seconds.toFixed(0)}s)`);
     console.log(`      ${verdict.reason}`);

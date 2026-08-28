@@ -703,3 +703,54 @@ selected 24. Efficiency evidence from monorepos is available; safety evidence fr
 
 Option 2 is the only one that removes the bias, and it is a one-time cost rather than a per-repository
 one. It is not being done now; it is recorded as the decision point.
+
+---
+
+# The validation environment, and two consequences of Finding 12
+
+**2026-08-28.** Finding 12's bias is being removed rather than accepted:
+[`ops/validation-env/`](../ops/validation-env/) defines one canonical Linux environment — fixed Node,
+corepack enabled, npm/pnpm/yarn available by name, git with full history, a native-module toolchain.
+
+The contract is deliberately narrow. **Permitted:** a full clone with real history, the repository's
+declared package manager, its documented install, its documented build, two green baseline runs.
+**Not permitted, ever:** databases, external services, credentials, historical Node versions, or
+patching a repository to make its suite pass. A repository needing any of those is reported unqualified
+with the reason — a finding about reproducibility, not a task.
+
+Qualification now does a **full clone by default**. TanStack's build is `nx affected --target=build`,
+which asks git what changed; shallow-cloning it produced a disqualification that described the harness
+rather than the repository. Giving a git-dependent build git history is a property of that build.
+
+## Consequence 1 — a product feature the corpus argues for
+
+hono made this concrete: DiffCI's median selection was 15% of the suite, which sounds good, while the
+path-rule comparator's median was 8 tests, which is better. DiffCI lost on 14 of 25 commits.
+
+The pattern across four repositories is that **DiffCI's value is a property of the repository**, not of
+the algorithm — clean directory-to-test correspondence means a cheap rule already wins. Shadow mode is
+already computing both numbers on every observation, so the product can say so before anyone pays:
+
+    Optimization opportunity: HIGH
+    Graph-based selection materially outperforms this repository's own path-rule baseline.
+
+    Optimization opportunity: LOW
+    This repository's structure already permits inexpensive path-based selection.
+
+That is a better product than applying one optimisation strategy everywhere, and it is honest in a way
+a savings pitch is not. It also needs no new measurement — only reporting what the comparator already
+records.
+
+## Consequence 2 — the climate model must not extrapolate past this
+
+`src/usage/climate-model.ts` converts avoided compute into avoided CO₂e. Finding 8 and the hono result
+say plainly that **avoided compute is not uniform across repository structures**, and on some
+repositories a trivial path rule captures most of the same benefit at no cost.
+
+Extrapolating DiffCI's gross reduction to a population of repositories would therefore overstate the
+*incremental* saving — the part attributable to DiffCI rather than to an optimisation the customer
+could have had for free. Any climate or cost figure must be computed against the path-rule comparator,
+not against running everything, exactly as the ledger already insists for money.
+
+This is not a new rule. It is the existing "never invoice from an ESTIMATED figure" discipline applied
+to carbon, and it needs stating before any external claim is made.
