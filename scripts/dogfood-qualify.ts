@@ -34,6 +34,25 @@ const repoRoot = resolve(dirname(import.meta.filename), "..");
 
 export type Capability = "yes" | "no" | "unknown";
 
+/**
+ * WHY QUALIFICATION RUNS THE SUITE MORE THAN ONCE.
+ *
+ * hono failed this gate with exactly one failing test, and a re-run was completely green: 147 files,
+ * 4961 tests, nothing failing. It is not dirty. It has a flaky test.
+ *
+ * Flakiness is a WORSE problem for mutation recall than dirtiness, and the difference matters:
+ *
+ *   A dirty baseline produces ENVIRONMENT_DIRTY. That is an honest refusal to measure.
+ *   A flaky baseline produces a CLASSIFICATION, and the classification may be wrong. A flake during
+ *   the mutated run reads as "the mutation was detected" and manufactures a RECALL_CONFIRMED; a flake
+ *   during the selected run reads as detection where the selection actually missed. Either way the
+ *   safety number is fiction, and nothing downstream can tell.
+ *
+ * So a repository qualifies only if its suite is green on CONSECUTIVE runs. One green run says
+ * nothing about the second.
+ */
+const DEFAULT_BASELINE_RUNS = 2;
+
 export interface CorpusEntry {
   source: string;
   stresses: string;
@@ -92,9 +111,11 @@ interface Verdict {
   failures?: number;
   framework?: string;
   durations: { clone: number; install: number; build: number; test: number };
+  /** Failure count from each baseline run, in order. Differing values are the flakiness signal. */
+  observedFailures?: Array<number | undefined>;
 }
 
-function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number): Verdict {
+function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselineRuns: number): Verdict {
   const durations = { clone: 0, install: 0, build: 0, test: 0 };
   const dest = join(scratch, entry.source.replace("/", "__"));
 
@@ -124,20 +145,46 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number): Verdic
     }
   }
 
-  const tested = runTests(dest, entry, timeoutMs);
-  durations.test = tested.ms;
-  const parsed = parseTestOutput(tested.out);
+  const observed: Array<number | undefined> = [];
+  let framework: string | undefined;
+  for (let attempt = 0; attempt < baselineRuns; attempt++) {
+    const tested = runTests(dest, entry, timeoutMs);
+    durations.test += tested.ms;
+    const parsed = parseTestOutput(tested.out);
+    framework ??= parsed.framework;
+    observed.push(parsed.failures);
 
-  // Unparseable output is NOT zero failures. A repository whose runner this harness cannot read is
-  // unqualified, because every later classification would rest on a number nobody could produce.
-  if (parsed.failures === undefined) {
-    return { source: entry.source, mutationQualified: "no", reason: `could not read a failure count from the runner: ${lastLine(tested.out)}`, durations };
-  }
-  if (parsed.failures > 0) {
-    return { source: entry.source, mutationQualified: "no", reason: `${parsed.failures} test(s) failing at HEAD`, failures: parsed.failures, framework: parsed.framework, durations };
+    // Unparseable output is NOT zero failures. A repository whose runner this harness cannot read is
+    // unqualified, because every later classification would rest on a number nobody could produce.
+    if (parsed.failures === undefined) {
+      return { source: entry.source, mutationQualified: "no", reason: `run ${attempt + 1}: could not read a failure count from the runner: ${lastLine(tested.out)}`, durations, observedFailures: observed };
+    }
   }
 
-  return { source: entry.source, mutationQualified: "yes", reason: "suite is green at HEAD under the documented sequence", failures: 0, framework: parsed.framework, durations };
+  const counts = observed as number[];
+  const allGreen = counts.every((c) => c === 0);
+  const anyGreen = counts.some((c) => c === 0);
+
+  if (allGreen) {
+    return { source: entry.source, mutationQualified: "yes", reason: `suite green on ${baselineRuns} consecutive runs under the documented sequence`, failures: 0, framework, durations, observedFailures: observed };
+  }
+
+  // Green once and red once is the dangerous case, and it is called out by name rather than folded
+  // into "dirty" - the remedy is different. A dirty repository needs its environment fixed; a flaky
+  // one needs its unstable tests identified and excluded, or it must not contribute safety evidence.
+  if (anyGreen) {
+    return {
+      source: entry.source,
+      mutationQualified: "no",
+      reason: `FLAKY: failure counts differed across runs (${counts.join(", ")}). A flaky baseline does not merely refuse to measure - it produces classifications that may be wrong.`,
+      failures: Math.max(...counts),
+      framework,
+      durations,
+      observedFailures: observed,
+    };
+  }
+
+  return { source: entry.source, mutationQualified: "no", reason: `${counts[0]} test(s) failing at HEAD on every run (${counts.join(", ")})`, failures: counts[0], framework, durations, observedFailures: observed };
 }
 
 function lastLine(output: string): string {
@@ -155,6 +202,7 @@ function main(): void {
   const only = flag("only");
   const write = args.includes("--write");
   const timeoutMs = Number(flag("timeout") ?? 25 * 60_000);
+  const baselineRuns = Number(flag("baseline-runs") ?? DEFAULT_BASELINE_RUNS);
 
   const corpus = JSON.parse(readFileSync(corpusPath, "utf8")) as CorpusEntry[];
   const scratch = mkdtempSync(join(tmpdir(), "diffci-qualify-"));
@@ -164,7 +212,7 @@ function main(): void {
   for (const entry of corpus) {
     if (only && entry.source !== only) continue;
     process.stdout.write(`  ${entry.source.padEnd(28)} `);
-    const verdict = qualify(entry, scratch, timeoutMs);
+    const verdict = qualify(entry, scratch, timeoutMs, baselineRuns);
     const seconds = Object.values(verdict.durations).reduce((a, b) => a + b, 0) / 1000;
     console.log(`${verdict.mutationQualified === "yes" ? "MUTATION-QUALIFIED" : "not qualified"}  (${seconds.toFixed(0)}s)`);
     console.log(`      ${verdict.reason}`);

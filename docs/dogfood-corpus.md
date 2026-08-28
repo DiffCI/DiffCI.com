@@ -544,3 +544,47 @@ Target: **10 measurable mutations on a third repository.** Not 30–50 yet.
 
 Candidates queued: `TanStack/query`, `vuejs/core` (both tightly coupled pnpm/vitest monorepos with
 heavy cross-package imports) and `honojs/hono` as a less-coupled control.
+
+---
+
+# Finding 11 — flakiness is a worse threat than dirtiness
+
+**2026-08-28.** `honojs/hono` failed qualification with **one** failing test. A re-run was completely
+green: 147 files, 4,961 tests, nothing failing.
+
+hono is not dirty. It has a flaky test — and that is the more dangerous condition:
+
+| Baseline state | What the harness produces | Is the answer trustworthy? |
+|---|---|---|
+| Dirty | `ENVIRONMENT_DIRTY` | Yes — an honest refusal to measure |
+| **Flaky** | **a classification** | **No — and nothing downstream can tell** |
+
+A flake during the *mutated* run reads as "the mutation was detected" and manufactures a
+`RECALL_CONFIRMED`. A flake during the *selected* run reads as detection where the selection actually
+missed. Either way the safety number is fiction, and it is fiction that looks exactly like evidence.
+
+Dirtiness costs a measurement. Flakiness costs the truth of one.
+
+## The gate now requires consecutive green runs
+
+Qualification runs the suite **twice** (`--baseline-runs`, default 2) and demands green on both. Green
+once and red once is reported as `FLAKY` by name rather than folded into "dirty", because the remedy
+differs: a dirty repository needs its environment fixed; a flaky one needs its unstable tests
+identified and excluded, or it must not contribute safety evidence at all.
+
+Two runs do not prove stability — they detect the flakiest cases cheaply. A repository that passes
+twice can still flake on the fifth run, and the mutation pass remains exposed to that. The honest
+statement is that this raises the bar, not that it closes the hole.
+
+## What this implies for the existing evidence
+
+The three standing recall-measurable cases were measured **without** a flakiness gate. Neither h3 nor
+DiffCI.com showed differing counts across the runs they did get, but neither was checked for it
+deliberately.
+
+> **Safety validation: 3 recall-measurable mutation cases across 2 mutation-qualified repositories;
+> 0 observed false greens; flakiness not controlled for at the time of measurement.**
+
+That last clause is not hedging. A `RECALL_CONFIRMED` obtained over a flaky suite is exactly the
+false-confidence this corpus exists to prevent, and the qualification that would have ruled it out did
+not yet exist when those three cases were run.
