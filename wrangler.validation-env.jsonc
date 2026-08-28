@@ -1,0 +1,60 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "diffci-validation-env",
+  "main": "./src/validation-env/cloudflare/validation-env-worker.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  // Same account as every other DiffCI Worker (two zones: dentalpresence.in and diffci.com).
+  "account_id": "571ba9bf90457be28a492d139c055e54",
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  //
+  // No route. This is an internal experiment host driven from a laptop by
+  // scripts/diffci-validation-cli.ts over its workers.dev URL - it serves no customer traffic and has no
+  // reason to occupy a diffci.com hostname.
+  //
+  // No `vars` block: VALIDATION_CONTROL_TOKEN is set with
+  // `wrangler secret put VALIDATION_CONTROL_TOKEN --config wrangler.validation-env.jsonc`.
+  // The control plane fails CLOSED when it is unset, so an unconfigured deploy is unusable, not open.
+  "containers": [
+    {
+      "class_name": "ValidationContainer",
+      // The same public image the analysis-fanout execution shards already use in production, where it
+      // has cloned, installed and tested real repositories including cal.com (~3600 packages, ~20 minute
+      // install). Chosen over ops/validation-env/Dockerfile for one decisive reason: it deploys with NO
+      // local build step. Docker Desktop on the development host never starts, which is exactly what
+      // blocked the pinned node:22.14.0-bookworm-slim image this environment was originally specified as.
+      //
+      // The trade-off is stated rather than hidden: this image's Node version is Cloudflare's choice,
+      // not ours. Every run therefore records `node --version` from inside the container (see
+      // ValidationRecord.environment) so the evidence identifies the toolchain that produced it instead
+      // of asserting one.
+      "image": "docker.io/cloudflare/sandbox:0.12.5",
+      // Installs are heavy and the harness runs whole test suites - the shape the execution shards
+      // settled on for the same work.
+      "instance_type": "standard-4",
+      // One container per validation run. Runs are started deliberately, one experiment at a time, so
+      // this bounds a mistake rather than a workload.
+      "max_instances": 4,
+      "rollout_step_percentage": [100]
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "VALIDATION_SHARD", "class_name": "ValidationShard" },
+      { "name": "VALIDATION_CONTAINER", "class_name": "ValidationContainer" }
+    ]
+  },
+  "r2_buckets": [
+    // Dedicated bucket, not the analysis-fanout one: validation evidence and execution-validation
+    // evidence answer different questions, and keeping their provenance separate means a later reader
+    // never has to work out which run wrote a key.
+    { "binding": "VALIDATION_BUCKET", "bucket_name": "diffci-validation-env" }
+  ],
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ValidationShard", "ValidationContainer"] }
+  ]
+}

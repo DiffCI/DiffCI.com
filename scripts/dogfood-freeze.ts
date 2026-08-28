@@ -133,8 +133,16 @@ function main(): void {
     copyFileSync(join(runDir, file), join(frozenDir, file));
   }
 
+  // The corpus the run actually consumed. A run directory collected from the canonical Linux
+  // environment carries its own copy, because the manifest's `corpusPath` names a path inside a
+  // container that does not exist on the machine doing the freezing (2026-08-28). Preferring the local
+  // copy is what keeps a container-produced bundle structurally identical to a locally-produced one -
+  // without it the Linux bundle would silently lack the corpus and stop being comparable to the very
+  // evidence it was produced to be compared against. The manifest itself is never rewritten.
+  const collectedCorpus = join(runDir, "corpus.jsonl");
   const corpusPath = typeof manifest.corpusPath === "string" ? manifest.corpusPath : undefined;
-  if (corpusPath && existsSync(corpusPath)) copyFileSync(corpusPath, join(frozenDir, "corpus.jsonl"));
+  if (existsSync(collectedCorpus)) copyFileSync(collectedCorpus, join(frozenDir, "corpus.jsonl"));
+  else if (corpusPath && existsSync(corpusPath)) copyFileSync(corpusPath, join(frozenDir, "corpus.jsonl"));
 
   const corpusDefinition = join(repoRoot, "scripts", "dogfood-corpus.json");
   if (existsSync(corpusDefinition)) copyFileSync(corpusDefinition, join(frozenDir, "corpus-definition.json"));
