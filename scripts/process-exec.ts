@@ -39,6 +39,9 @@ export interface BoundedExecResult {
   status: number | null;
   /** stdout and stderr concatenated, which is what the output parsers read. */
   out: string;
+  /** Kept separate as well, because a runner that dies rather than reports puts the reason on stderr. */
+  stdout: string;
+  stderr: string;
   /** Wall time actually taken. Compared against the bound by the calibration suite. */
   ms: number;
   /** True when the process was killed for exceeding `timeoutMs`. */
@@ -79,6 +82,8 @@ export function execBounded(command: string, argv: string[], options: BoundedExe
   return {
     status: result.status,
     out: `${result.stdout ?? ""}${result.stderr ?? ""}`,
+    stdout: result.stdout ?? "",
+    stderr: result.stderr ?? "",
     ms: Date.now() - started,
     // Node reports ETIMEDOUT on the error object when it killed the child for exceeding `timeout`.
     timedOut: (result.error as NodeJS.ErrnoException | undefined)?.code === "ETIMEDOUT",

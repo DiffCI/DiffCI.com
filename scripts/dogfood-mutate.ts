@@ -25,33 +25,14 @@
  * produce large savings. The mutation's only job is to establish whether an affected behaviour is
  * detectable outside the proposed selection.
  */
-import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { selectFileToMutate } from "../src/analysis-fanout/mutation.js";
+import { execBounded } from "./process-exec.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
 import { parseTestOutput } from "./test-output-parsers.js";
 
-
-/**
- * Environment for every child process this harness spawns.
- *
- * COREPACK_ENABLE_DOWNLOAD_PROMPT is the one that mattered. Corepack asks for confirmation before
- * downloading a package manager it does not yet have cached; spawned with no usable stdin, that
- * prompt fails and the install dies. TanStack/query was recorded as "install failed" for this reason
- * while the identical command succeeded by hand against a warm cache - a spurious disqualification
- * that would have removed the most structurally interesting repository from the corpus.
- *
- * CI=1 keeps runners non-interactive and out of watch mode; FORCE_COLOR=0 keeps ANSI escapes out of
- * the output the failure parsers read.
- */
-const NON_INTERACTIVE_ENV = {
-  CI: "1",
-  FORCE_COLOR: "0",
-  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0",
-  npm_config_yes: "true",
-} as const;
 
 const repoRoot = resolve(dirname(import.meta.filename), "..");
 
@@ -192,9 +173,14 @@ interface Candidate {
  * arguments are repository-derived test file paths and must reach the process verbatim.
  */
 function run(command: string, args: string[], cwd: string, timeoutMs: number): { status: number | null; stdout: string; stderr: string; ms: number } {
-  const started = Date.now();
-  const result = spawnSync(command, args, { cwd, encoding: "utf8", timeout: timeoutMs, maxBuffer: 256 * 1024 * 1024, env: { ...process.env, CI: "1", FORCE_COLOR: "0" } });
-  return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "", ms: Date.now() - started };
+  // Through execBounded, the same primitive qualification uses and the calibration suite measures. It
+  // also fixes a divergence that lived here unnoticed: this path - the one that executes TEST SUITES,
+  // and therefore the one that produced every mutation classification so far - set only CI and
+  // FORCE_COLOR, while the install path beside it set the full non-interactive environment. Two
+  // definitions of "how this harness runs a process" inside one script is exactly the gap a shared
+  // primitive exists to close. The two additional variables (corepack's download prompt, npm's
+  // auto-yes) have no effect on a test runner, so this does not disturb evidence already collected.
+  return execBounded(command, args, { cwd, timeoutMs });
 }
 
 /**
@@ -208,20 +194,11 @@ let shimDir: string | undefined;
 
 function runShellCommand(args: string[], cwd: string, timeoutMs: number): { status: number | null; stdout: string; stderr: string; ms: number } {
   assertShellSafeArgs(args, "dogfood-mutate: install");
-  const started = Date.now();
   const [exec, ...rest] = args;
   // npm, npx, pnpm and corepack are all .cmd shims on Windows. Resolving the suffix here keeps the
   // corpus configuration platform-neutral.
   const resolved = process.platform === "win32" && !exec!.endsWith(".cmd") ? `${exec}.cmd` : exec!;
-  const result = spawnSync(resolved, rest, {
-    cwd,
-    encoding: "utf8",
-    timeout: timeoutMs,
-    maxBuffer: 256 * 1024 * 1024,
-    shell: process.platform === "win32",
-    env: { ...process.env, ...NON_INTERACTIVE_ENV },
-  });
-  return { status: result.status, stdout: result.stdout ?? "", stderr: result.stderr ?? "", ms: Date.now() - started };
+  return execBounded(resolved, rest, { cwd, timeoutMs, shell: process.platform === "win32" });
 }
 
 /**
