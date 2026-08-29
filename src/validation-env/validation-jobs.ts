@@ -29,6 +29,31 @@ export const SCRATCH_ROOT = `${WORKSPACE}/tmp`;
 export const JOB_CORPUS_PATH = `${WORKSPACE}/job-corpus.json`;
 /** The observation output, and the mutation pass's input. */
 export const OBSERVED_CORPUS_PATH = `${WORKSPACE}/corpus.jsonl`;
+/** A shard's own slice of the observed corpus. Only written when a run is sharded. */
+export const SHARD_CORPUS_PATH = `${WORKSPACE}/shard-corpus.jsonl`;
+
+/**
+ * The most shards one run may be split into.
+ *
+ * Bounded because each shard is a whole container that clones and installs the target independently -
+ * past a point the fixed setup cost per shard exceeds the per-candidate work it saves, and the run gets
+ * slower AND more expensive. It also bounds the blast radius of a mistake in a request.
+ */
+export const MAX_SHARDS = 12;
+
+/**
+ * Which shard owns a candidate, by its position in the observed corpus.
+ *
+ * Round-robin rather than contiguous blocks: candidate cost varies by several multiples (a commit whose
+ * mutation is found on the first attempted file costs a fraction of one that walks several), and
+ * contiguous blocks would let one shard draw all the expensive ones and set the wall clock alone.
+ *
+ * Deterministic and position-based, so re-running the same job with the same shard count reproduces the
+ * same assignment - a sharded run stays as re-runnable as an unsharded one.
+ */
+export function assignShard(candidateIndex: number, shardCount: number): number {
+  return candidateIndex % shardCount;
+}
 /** Immutable run directories, collected into R2 at the end. */
 export const RUNS_DIR = `${WORKSPACE}/runs`;
 
@@ -148,14 +173,14 @@ export function observeArgv(): string[] {
  * mkdtemp directory) and are validated by the caller before they get here - they are the only
  * non-literals, and they are paths this DO created the parent of, never anything a request supplied.
  */
-export function mutateArgv(job: ValidationJob, scratch: string, clonePath: string): string[] {
+export function mutateArgv(job: ValidationJob, scratch: string, clonePath: string, corpusPath: string = OBSERVED_CORPUS_PATH): string[] {
   return [
     "run",
     "dogfood:mutate",
     "--",
     "--repository", job.repository,
     "--repo", clonePath,
-    "--corpus", OBSERVED_CORPUS_PATH,
+    "--corpus", corpusPath,
     "--reports", `${scratch}/reports`,
     "--runs-dir", RUNS_DIR,
     "--max-attempts", String(job.mutate.maxAttempts),

@@ -23,7 +23,7 @@
 import { Sandbox } from "@cloudflare/sandbox";
 
 import type { R2BucketLike } from "../../analysis-fanout/sandbox-like.js";
-import { getValidationJob, listValidationJobs } from "../validation-jobs.js";
+import { MAX_SHARDS, getValidationJob, listValidationJobs } from "../validation-jobs.js";
 import { ValidationShard } from "./validation-shard-do.js";
 
 export { Sandbox as ValidationContainer };
@@ -59,6 +59,16 @@ function authorized(request: Request, expected?: string): boolean {
 /** Run ids name a Durable Object and appear in R2 keys, so the character set is restricted. */
 function isRunId(value: unknown): value is string {
   return typeof value === "string" && /^[A-Za-z0-9._-]{1,128}$/.test(value);
+}
+
+/**
+ * The Durable Object name for one shard.
+ *
+ * An unsharded run keeps the bare runId it has always used, so runs started before sharding existed
+ * remain addressable by exactly the same name.
+ */
+function shardName(runId: string, index: number, shardCount: number): string {
+  return shardCount > 1 ? `${runId}-s${index}` : runId;
 }
 
 /** Only the artefacts the shard itself writes are readable back. */
@@ -104,20 +114,63 @@ export default {
           return Response.json({ ok: false, error: "sourceTarballSha256 must be 64 lowercase hex" }, { status: 400 });
         }
 
-        const stub = env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName(runId));
-        return stub.fetch(
-          new Request("https://do/start", {
-            method: "POST",
-            body: JSON.stringify({ runId, jobId, sourceTarballKey, sourceTarballSha256, agentTarballKey }),
+        // Sharding splits the CANDIDATES, not the observation: every shard observes the full pinned
+        // corpus (deterministic once history is fixed) and mutates only its own slice. More shards is
+        // not automatically faster - each one clones and installs the target independently, so past a
+        // point the fixed setup dominates. See MAX_SHARDS.
+        const shardCount = body.shards === undefined ? 1 : Number(body.shards);
+        if (!Number.isInteger(shardCount) || shardCount < 1 || shardCount > MAX_SHARDS) {
+          return Response.json({ ok: false, error: `shards must be an integer 1..${MAX_SHARDS}` }, { status: 400 });
+        }
+
+        const seeded = await Promise.all(
+          Array.from({ length: shardCount }, async (_unused, index) => {
+            const stub = env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName(shardName(runId, index, shardCount)));
+            const res = await stub.fetch(
+              new Request("https://do/start", {
+                method: "POST",
+                body: JSON.stringify({
+                  runId,
+                  jobId,
+                  sourceTarballKey,
+                  sourceTarballSha256,
+                  agentTarballKey,
+                  shardIndex: index,
+                  shardCount,
+                }),
+              }),
+            );
+            return res.json();
           }),
         );
+
+        return Response.json({ ok: true, runId, shardCount, shards: seeded });
       }
 
       if (request.method === "GET" && url.pathname === "/v1/state") {
         const runId = url.searchParams.get("runId");
         if (!isRunId(runId)) return Response.json({ ok: false, error: "invalid-run-id" }, { status: 400 });
-        const stub = env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName(runId));
-        return stub.fetch(new Request("https://do/state"));
+
+        // The caller should not have to remember how a run was sharded. An unsharded run answers under
+        // its bare name; otherwise shard 0's own record carries the shard count, which is enough to find
+        // the rest.
+        const unsharded = await env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName(runId)).fetch(new Request("https://do/state"));
+        if (unsharded.ok) return unsharded;
+
+        const first = await env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName(shardName(runId, 0, 2))).fetch(new Request("https://do/state"));
+        if (!first.ok) return Response.json({ ok: false, error: "not-found" }, { status: 404 });
+        const firstRecord = (await first.json()) as { shardCount?: number };
+        const shardCount = firstRecord.shardCount ?? 1;
+
+        const shards = await Promise.all(
+          Array.from({ length: shardCount }, async (_unused, index) => {
+            const res = await env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName(shardName(runId, index, shardCount))).fetch(
+              new Request("https://do/state"),
+            );
+            return res.ok ? await res.json() : { shardIndex: index, step: "missing" };
+          }),
+        );
+        return Response.json({ ok: true, runId, shardCount, shards });
       }
 
       if (request.method === "POST" && url.pathname === "/v1/cancel") {
@@ -134,7 +187,18 @@ export default {
         if (!COLLECTED_FILES.has(file)) {
           return Response.json({ ok: false, error: `unknown-file (allowed: ${[...COLLECTED_FILES].join(", ")})` }, { status: 400 });
         }
-        const object = await env.VALIDATION_BUCKET.get(`validation/${runId}/${file}`);
+        // `shard` addresses one shard's artefacts; omitted reads an unsharded run's flat layout.
+        const shardParam = url.searchParams.get("shard");
+        let prefix = `validation/${runId}`;
+        if (shardParam !== null) {
+          const shard = Number(shardParam);
+          if (!Number.isInteger(shard) || shard < 0 || shard >= MAX_SHARDS) {
+            return Response.json({ ok: false, error: `shard must be an integer 0..${MAX_SHARDS - 1}` }, { status: 400 });
+          }
+          prefix = `validation/${runId}/shards/${shard}`;
+        }
+
+        const object = await env.VALIDATION_BUCKET.get(`${prefix}/${file}`);
         if (!object) return Response.json({ ok: false, error: "not-found" }, { status: 404 });
         return new Response(await object.text(), { headers: { "content-type": "text/plain; charset=utf-8" } });
       }

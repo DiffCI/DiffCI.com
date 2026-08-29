@@ -33,9 +33,11 @@ import {
   JOB_CORPUS_PATH,
   OBSERVED_CORPUS_PATH,
   PINNED_CLONE,
+  SHARD_CORPUS_PATH,
   RUNS_DIR,
   SCRATCH_ROOT,
   WORKSPACE,
+  assignShard,
   buildJobCorpus,
   getValidationJob,
   isPinnedSha,
@@ -75,6 +77,10 @@ export type ValidationStep =
 export interface ValidationRecord {
   runId: string;
   jobId: string;
+  /** 0-based position of this shard. 0 with shardCount 1 means an unsharded run. */
+  shardIndex: number;
+  /** How many shards this run was split into. 1 means unsharded. */
+  shardCount: number;
   step: ValidationStep;
   startedAt: number;
   heartbeatAt: number;
@@ -100,8 +106,10 @@ export interface ValidationRecord {
   runDirName?: string;
   resultKeys?: string[];
   observedRows?: number;
-  /** Observations the mutation pass will actually accept, computed before it runs. */
+  /** Observations the mutation pass will accept in THIS shard, computed before it runs. */
   selectableCandidates?: number;
+  /** Selectable candidates across the whole run, identical in every shard. The merge checks it. */
+  totalSelectableCandidates?: number;
   /** Rows the mutation pass classified. Zero is a failure, not a result. */
   resultRows?: number;
   errorClass?: string;
@@ -128,6 +136,18 @@ function shq(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
+/**
+ * Where a run's artefacts live in R2.
+ *
+ * An unsharded run keeps the flat layout it has always had, so runs already collected stay readable.
+ * A sharded run nests under `shards/<i>/`, because the merge has to distinguish a MISSING shard from
+ * one that legitimately wrote nothing - and a flat layout would let shards silently overwrite each
+ * other's results.jsonl, the same contamination the immutable run directories were introduced to stop.
+ */
+function resultPrefix(record: ValidationRecord): string {
+  return record.shardCount > 1 ? `validation/${record.runId}/shards/${record.shardIndex}` : `validation/${record.runId}`;
+}
+
 function fail(record: ValidationRecord, errorClass: string, error: string): ValidationStepResult {
   record.step = "failed";
   record.errorClass = errorClass;
@@ -142,12 +162,14 @@ function tail(result: { stdout?: string; stderr?: string }, n = 1500): string {
 export function seedValidationRecord(
   runId: string,
   job: ValidationJob,
-  keys: { sourceTarballKey: string; sourceTarballSha256: string; agentTarballKey: string },
+  keys: { sourceTarballKey: string; sourceTarballSha256: string; agentTarballKey: string; shardIndex?: number; shardCount?: number },
   now: number,
 ): ValidationRecord {
   return {
     runId,
     jobId: job.id,
+    shardIndex: keys.shardIndex ?? 0,
+    shardCount: keys.shardCount ?? 1,
     step: "bootstrapping",
     startedAt: now,
     heartbeatAt: now,
@@ -407,17 +429,18 @@ async function locate(record: ValidationRecord, deps: ValidationStepDeps): Promi
     } catch (err) {
       return fail(record, "corpus-unreadable", err instanceof Error ? err.message : String(err));
     }
-    const observed = corpus
-      .split("\n")
-      .filter((line) => line.trim().length > 0)
-      .map((line) => JSON.parse(line) as { identity: { repository: string }; decision: { mode: string; selected: number | string } });
+    const lines = corpus.split("\n").filter((line) => line.trim().length > 0);
+    const observed = lines.map((line) => ({
+      line,
+      row: JSON.parse(line) as { identity: { repository: string }; decision: { mode: string; selected: number | string } },
+    }));
 
     record.observedRows = observed.length;
     if (observed.length === 0) return fail(record, "no-observations", "the observation pass wrote an empty corpus");
 
-    const matching = observed.filter((r) => r.identity.repository === deps.job.repository);
+    const matching = observed.filter((o) => o.row.identity.repository === deps.job.repository);
     if (matching.length === 0) {
-      const seen = [...new Set(observed.map((r) => r.identity.repository))].join(", ");
+      const seen = [...new Set(observed.map((o) => o.row.identity.repository))].join(", ");
       return fail(
         record,
         "corpus-identity-mismatch",
@@ -426,11 +449,33 @@ async function locate(record: ValidationRecord, deps: ValidationStepDeps): Promi
     }
 
     // The candidates the mutation pass will actually accept: SELECTIVE, having selected something.
-    const selectable = matching.filter((r) => r.decision.mode === "SELECTIVE" && typeof r.decision.selected === "number" && r.decision.selected > 0);
+    const selectable = matching.filter(
+      (o) => o.row.decision.mode === "SELECTIVE" && typeof o.row.decision.selected === "number" && o.row.decision.selected > 0,
+    );
     if (selectable.length === 0) {
       return fail(record, "no-candidates", `${matching.length} observation(s) for ${deps.job.repository}, but none were SELECTIVE with a non-empty selection`);
     }
-    record.selectableCandidates = selectable.length;
+    record.totalSelectableCandidates = selectable.length;
+
+    if (record.shardCount > 1) {
+      // Each shard observes the whole corpus (the observation is deterministic once history is pinned)
+      // and then mutates only its own slice. Slicing the CORPUS rather than adding a shard flag to the
+      // harness keeps the command shape identical to an unsharded run - the only difference is which
+      // file `--corpus` points at.
+      const mine = selectable.filter((_, index) => assignShard(index, record.shardCount) === record.shardIndex);
+      if (mine.length === 0) {
+        // Legitimate when shards outnumber candidates. Recorded as done with nothing to do, rather than
+        // failed - a shard with no work must not look like a shard that broke.
+        record.selectableCandidates = 0;
+        record.resultRows = 0;
+        record.step = "done";
+        return { record, nextAlarmDelayMs: null };
+      }
+      await sandbox.writeFile(SHARD_CORPUS_PATH, `${mine.map((o) => o.line).join("\n")}\n`);
+      record.selectableCandidates = mine.length;
+    } else {
+      record.selectableCandidates = selectable.length;
+    }
 
     record.scratchDir = scratch;
     record.clonePath = `${scratch}/${clones[0]!}`;
@@ -444,7 +489,8 @@ async function locate(record: ValidationRecord, deps: ValidationStepDeps): Promi
 async function mutate(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   if (!record.scratchDir || !record.clonePath) return fail(record, "locate-missing", "mutation reached without a located scratch directory");
   const t0 = record.processStartedAt ?? deps.now();
-  return runHarnessPass(record, deps, mutateArgv(deps.job, record.scratchDir, record.clonePath), "mutate", (r) => {
+  const corpusPath = record.shardCount > 1 ? SHARD_CORPUS_PATH : OBSERVED_CORPUS_PATH;
+  return runHarnessPass(record, deps, mutateArgv(deps.job, record.scratchDir, record.clonePath, corpusPath), "mutate", (r) => {
     r.timings.mutateMs = deps.now() - t0;
     r.step = "collecting";
     return { record: r, nextAlarmDelayMs: 0 };
@@ -478,7 +524,7 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
         if (required) throw new Error(`could not read ${path}: ${err instanceof Error ? err.message : String(err)}`);
         return false;
       }
-      const key = `validation/${record.runId}/${name}`;
+      const key = `${resultPrefix(record)}/${name}`;
       await bucket.put(key, content);
       keys.push(key);
       return true;
@@ -510,6 +556,10 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
       jobId: record.jobId,
       reproduces: deps.job.reproduces ?? null,
       runDirName,
+      shardIndex: record.shardIndex,
+      shardCount: record.shardCount,
+      selectableCandidates: record.selectableCandidates ?? null,
+      totalSelectableCandidates: record.totalSelectableCandidates ?? null,
       observedRows: record.observedRows ?? null,
       environment: record.environment ?? null,
       timings: record.timings,
@@ -517,17 +567,17 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
       sourceTarballSha256: record.sourceTarballSha256,
       agentTarballKey: record.agentTarballKey,
     };
-    const envKey = `validation/${record.runId}/environment.json`;
+    const envKey = `${resultPrefix(record)}/environment.json`;
     await bucket.put(envKey, `${JSON.stringify(environment, null, 2)}\n`);
     keys.push(envKey);
 
     if (record.logs?.observe) {
-      const k = `validation/${record.runId}/observe.log`;
+      const k = `${resultPrefix(record)}/observe.log`;
       await bucket.put(k, record.logs.observe);
       keys.push(k);
     }
     if (record.logs?.mutate) {
-      const k = `validation/${record.runId}/mutate.log`;
+      const k = `${resultPrefix(record)}/mutate.log`;
       await bucket.put(k, record.logs.mutate);
       keys.push(k);
     }
@@ -595,6 +645,8 @@ export class ValidationShard {
           sourceTarballKey: string;
           sourceTarballSha256: string;
           agentTarballKey: string;
+          shardIndex?: number;
+          shardCount?: number;
         };
         const job = getValidationJob(body.jobId);
         if (!job) return Response.json({ ok: false, error: `unknown-job: ${body.jobId}` }, { status: 400 });

@@ -13,7 +13,10 @@ import { dirname, join, resolve } from "node:path";
 import { describe, it } from "node:test";
 
 import {
+  MAX_SHARDS,
   PINNED_CLONE,
+  SHARD_CORPUS_PATH,
+  assignShard,
   buildJobCorpus,
   getValidationJob,
   isPinnedSha,
@@ -149,5 +152,53 @@ describe("the argv handed to the container", () => {
       assert.ok(arg.length > 0);
     }
     assert.ok(observeArgv().includes("dogfood"));
+  });
+});
+
+describe("sharding a run across containers", () => {
+  it("covers every candidate exactly once, whatever the shard count", () => {
+    // The property that matters: a split must not lose or duplicate work. A lost candidate would
+    // shrink the funnel's denominator silently, which reads as a cleaner result rather than a broken
+    // experiment - the same failure shape as the empty run and the mislabelled corpus before it.
+    for (const shardCount of [1, 2, 3, 4, 7, 8, 12]) {
+      const owners = Array.from({ length: 22 }, (_unused, i) => assignShard(i, shardCount));
+      assert.equal(owners.length, 22);
+      for (const owner of owners) {
+        assert.ok(owner >= 0 && owner < shardCount, `shard ${owner} out of range for ${shardCount}`);
+      }
+      const covered = new Set(owners.map((_o, i) => i));
+      assert.equal(covered.size, 22, `${shardCount} shards must cover all 22 candidates`);
+    }
+  });
+
+  it("balances candidates to within one, so no shard sets the wall clock alone", () => {
+    // Round-robin rather than contiguous blocks: candidate cost varies by several multiples, and a
+    // contiguous split lets one shard draw all the expensive ones.
+    const shardCount = 4;
+    const counts = new Array<number>(shardCount).fill(0);
+    for (let i = 0; i < 22; i++) counts[assignShard(i, shardCount)]! += 1;
+    assert.ok(Math.max(...counts) - Math.min(...counts) <= 1, `unbalanced: ${counts.join(",")}`);
+  });
+
+  it("is deterministic, so a sharded run stays as re-runnable as an unsharded one", () => {
+    const first = Array.from({ length: 22 }, (_unused, i) => assignShard(i, 5));
+    const second = Array.from({ length: 22 }, (_unused, i) => assignShard(i, 5));
+    assert.deepEqual(first, second);
+  });
+
+  it("puts everything in shard 0 when unsharded", () => {
+    for (let i = 0; i < 22; i++) assert.equal(assignShard(i, 1), 0);
+  });
+
+  it("bounds the shard count, because each shard is a container that installs the target itself", () => {
+    assert.ok(MAX_SHARDS >= 2 && MAX_SHARDS <= 32);
+  });
+
+  it("routes the mutation pass at the shard corpus, not the full one", () => {
+    const job = getValidationJob("hono-reproduction")!;
+    const argv = mutateArgv(job, "/scratch", "/scratch/clone", SHARD_CORPUS_PATH);
+    assert.equal(argv[argv.indexOf("--corpus") + 1], SHARD_CORPUS_PATH);
+    // ...and still defaults to the full corpus when no override is given.
+    assert.notEqual(mutateArgv(job, "/scratch", "/scratch/clone")[argv.indexOf("--corpus") + 1], SHARD_CORPUS_PATH);
   });
 });

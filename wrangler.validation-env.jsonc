@@ -36,9 +36,11 @@
       // Installs are heavy and the harness runs whole test suites - the shape the execution shards
       // settled on for the same work.
       "instance_type": "standard-4",
-      // One container per validation run. Runs are started deliberately, one experiment at a time, so
-      // this bounds a mistake rather than a workload.
-      "max_instances": 4,
+      // One container per SHARD. A run may be split so its candidates are mutated concurrently - the
+      // measured work is ~86% full-suite execution, which parallelises cleanly because candidates are
+      // independent by construction. Must be at least MAX_SHARDS (validation-jobs.ts) or a sharded run
+      // would queue against its own cap and lose the speedup it was split to gain.
+      "max_instances": 12,
       "rollout_step_percentage": [100]
     }
   ],

@@ -132,71 +132,172 @@ async function cmdStart(args: Record<string, string>): Promise<void> {
   const sourceTarballSha256 = args["source-sha256"] ?? fail("start requires --source-sha256 (from pack)");
   const agentTarballKey = args["agent-key"] ?? fail("start requires --agent-key (from pack)");
 
+  const shards = args.shards ? Number(args.shards) : 1;
   const res = await api(args, "/v1/start", {
     method: "POST",
-    body: JSON.stringify({ runId, jobId, sourceTarballKey, sourceTarballSha256, agentTarballKey }),
+    body: JSON.stringify({ runId, jobId, sourceTarballKey, sourceTarballSha256, agentTarballKey, shards }),
   });
   console.log(await res.text());
 }
 
-async function cmdStatus(args: Record<string, string>): Promise<void> {
-  const runId = args["run-id"] ?? fail("status requires --run-id");
+interface ShardState {
+  shardIndex?: number;
+  step?: string;
+  errorClass?: string;
+  error?: string;
+  environment?: Record<string, unknown>;
+  observedRows?: number;
+  selectableCandidates?: number;
+  totalSelectableCandidates?: number;
+  resultRows?: number;
+  timings?: Record<string, number>;
+  heartbeatAt?: number;
+}
+
+/** Resolves a run to its shards, whether it was sharded or not. */
+async function fetchState(args: Record<string, string>, runId: string): Promise<{ shardCount: number; shards: ShardState[] }> {
   const res = await api(args, `/v1/state?runId=${encodeURIComponent(runId)}`);
   const text = await res.text();
-  try {
-    const record = JSON.parse(text) as Record<string, unknown>;
-    const timings = (record.timings ?? {}) as Record<string, number>;
-    console.log(`step        ${String(record.step)}`);
-    if (record.errorClass) console.log(`error       ${String(record.errorClass)}: ${String(record.error ?? "")}`);
-    if (record.environment) console.log(`environment ${JSON.stringify(record.environment)}`);
-    if (record.observedRows !== undefined && record.observedRows !== null) console.log(`observed    ${String(record.observedRows)} rows`);
-    if (Object.keys(timings).length > 0) console.log(`timings     ${JSON.stringify(timings)}`);
-    if (record.heartbeatAt) console.log(`heartbeat   ${new Date(Number(record.heartbeatAt)).toISOString()}`);
-  } catch {
-    console.log(text);
+  if (!res.ok) fail(`state for ${runId}: ${res.status} ${text}`);
+  const body = JSON.parse(text) as ShardState & { shardCount?: number; shards?: ShardState[] };
+  if (Array.isArray(body.shards)) return { shardCount: body.shardCount ?? body.shards.length, shards: body.shards };
+  return { shardCount: 1, shards: [body] };
+}
+
+async function cmdStatus(args: Record<string, string>): Promise<void> {
+  const runId = args["run-id"] ?? fail("status requires --run-id");
+  const { shardCount, shards } = await fetchState(args, runId);
+
+  if (shardCount === 1) {
+    const r = shards[0]!;
+    console.log(`step        ${String(r.step)}`);
+    if (r.errorClass) console.log(`error       ${r.errorClass}: ${r.error ?? ""}`);
+    if (r.environment) console.log(`environment ${JSON.stringify(r.environment)}`);
+    if (r.observedRows !== undefined) console.log(`observed    ${r.observedRows} rows`);
+    if (r.timings && Object.keys(r.timings).length > 0) console.log(`timings     ${JSON.stringify(r.timings)}`);
+    if (r.heartbeatAt) console.log(`heartbeat   ${new Date(Number(r.heartbeatAt)).toISOString()}`);
+    return;
   }
+
+  console.log(`\n  ${shardCount} shards\n`);
+  console.log(`    ${"shard".padEnd(7)} ${"step".padEnd(14)} ${"cands".padEnd(6)} ${"rows".padEnd(5)} error`);
+  for (const r of shards) {
+    const err = r.errorClass ? `${r.errorClass}: ${(r.error ?? "").slice(0, 80)}` : "";
+    console.log(
+      `    ${String(r.shardIndex ?? "?").padEnd(7)} ${String(r.step ?? "?").padEnd(14)} ` +
+        `${String(r.selectableCandidates ?? "-").padEnd(6)} ${String(r.resultRows ?? "-").padEnd(5)} ${err}`,
+    );
+  }
+  const done = shards.filter((r) => r.step === "done").length;
+  const failed = shards.filter((r) => r.step === "failed").length;
+  console.log(`\n  ${done}/${shardCount} done, ${failed} failed\n`);
 }
 
 /**
- * Pull the collected run down into the same shape a local run produces, so `dogfood:freeze` reads it
+ * Pull a collected run down into the same shape a local run produces, so `dogfood:freeze` reads it
  * without knowing it came from a container.
  *
- * `manifest.json` is written EXACTLY as the container produced it - including its container-side
- * `corpusPath`. Rewriting that path to a local one would make the manifest describe a run that never
- * happened, which is the class of quiet mutation the immutable-run-directory work exists to prevent.
+ * A SHARDED run is merged here, and the merge is where the danger is. A shard that died quietly would
+ * simply contribute no rows, the funnel's denominator would shrink, and eighteen candidates would read
+ * as a clean result rather than a broken experiment - the same shape of failure as the empty run and
+ * the mislabelled corpus before it. So every shard must be present, every shard must be `done`, the
+ * merged row count must equal the sum of what the shards said they would attempt, and every shard must
+ * report the same environment. Any of those failing refuses the collection outright.
  */
 async function cmdCollect(args: Record<string, string>): Promise<void> {
   const runId = args["run-id"] ?? fail("collect requires --run-id");
   const files = ["manifest.json", "results.jsonl", "COMPLETE", "corpus.jsonl", "environment.json", "observe.log", "mutate.log"];
 
-  const fetched: Record<string, string> = {};
-  for (const file of files) {
-    const res = await api(args, `/v1/result?runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}`);
-    if (res.status === 404) continue;
-    if (!res.ok) fail(`fetching ${file} failed: ${res.status} ${await res.text()}`);
-    fetched[file] = await res.text();
-  }
-  for (const required of ["manifest.json", "results.jsonl", "COMPLETE"]) {
-    if (fetched[required] === undefined) fail(`run ${runId} is missing ${required} - it did not complete`);
+  const { shardCount, shards } = await fetchState(args, runId);
+
+  const missing = shards.filter((r) => r.step !== "done");
+  if (missing.length > 0) {
+    const detail = missing.map((r) => `shard ${r.shardIndex ?? "?"}: ${r.step ?? "missing"}${r.errorClass ? ` (${r.errorClass})` : ""}`).join("; ");
+    fail(`refusing to collect ${runId}: ${missing.length} of ${shardCount} shard(s) did not finish - ${detail}`);
   }
 
-  // Defence in depth against the failure this harness can produce most convincingly: a COMPLETE run
-  // that classified nothing. The shard refuses it too, but a run collected from an older shard, or one
-  // whose results were truncated in transit, must not become a frozen bundle reporting a clean zero.
-  const resultRows = fetched["results.jsonl"]!.split("\n").filter((l) => l.trim().length > 0).length;
-  if (resultRows === 0) {
-    fail(`run ${runId} completed but classified nothing (results.jsonl is empty). That is a silent no-op, not a result - refusing to collect it as evidence.`);
+  const perShard: { index: number; fetched: Record<string, string> }[] = [];
+  for (let index = 0; index < shardCount; index++) {
+    const suffix = shardCount > 1 ? `&shard=${index}` : "";
+    const fetched: Record<string, string> = {};
+    for (const file of files) {
+      const res = await api(args, `/v1/result?runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}${suffix}`);
+      if (res.status === 404) continue;
+      if (!res.ok) fail(`fetching ${file} for shard ${index} failed: ${res.status} ${await res.text()}`);
+      fetched[file] = await res.text();
+    }
+    for (const required of ["manifest.json", "results.jsonl", "COMPLETE"]) {
+      if (fetched[required] === undefined) fail(`shard ${index} of ${runId} is missing ${required} - it did not complete`);
+    }
+    perShard.push({ index, fetched });
   }
 
-  const manifest = JSON.parse(fetched["manifest.json"]!) as { runId?: string };
-  const localRunId = manifest.runId ?? runId;
+  const rows = perShard.flatMap((s) => s.fetched["results.jsonl"]!.split("\n").filter((l) => l.trim().length > 0));
+
+  // A COMPLETE run that classified nothing is a silent no-op, not a result.
+  if (rows.length === 0) {
+    fail(`run ${runId} completed but classified nothing (no result rows across ${shardCount} shard(s)). Refusing to collect it as evidence.`);
+  }
+
+  // The merge guard. Each shard declared how many candidates it would attempt before it ran; the merged
+  // rows must account for all of them.
+  const expected = shards.reduce((sum, r) => sum + (r.selectableCandidates ?? 0), 0);
+  if (expected > 0 && rows.length !== expected) {
+    fail(`refusing to collect ${runId}: shards declared ${expected} candidate(s) but the merge produced ${rows.length} row(s). Evidence is missing and the funnel would silently under-report.`);
+  }
+  const declaredTotal = shards.map((r) => r.totalSelectableCandidates).find((t) => typeof t === "number");
+  if (typeof declaredTotal === "number" && expected !== declaredTotal) {
+    fail(`refusing to collect ${runId}: shards cover ${expected} of ${declaredTotal} selectable candidate(s) - the split lost work.`);
+  }
+
+  // Evidence from two different toolchains is not one experiment.
+  const envs = new Set(
+    perShard
+      .map((s) => (s.fetched["environment.json"] ? (JSON.parse(s.fetched["environment.json"]) as { environment?: { image?: string; node?: string } }).environment : undefined))
+      .filter(Boolean)
+      .map((e) => `${e!.image} / ${e!.node}`),
+  );
+  if (envs.size > 1) {
+    fail(`refusing to collect ${runId}: shards ran in different environments (${[...envs].join(" | ")}). Their rows are not one experiment.`);
+  }
+
+  const baseManifest = JSON.parse(perShard[0]!.fetched["manifest.json"]!) as Record<string, unknown>;
+  const localRunId = shardCount > 1 ? `${runId}-merged` : String(baseManifest.runId ?? runId);
   const outDir = resolve(args.out ?? join(REPO_ROOT, ".dogfood", "runs", localRunId));
   mkdirSync(outDir, { recursive: true });
-  for (const [name, content] of Object.entries(fetched)) writeFileSync(join(outDir, name), content);
 
-  console.log(`\nCollected ${Object.keys(fetched).length} file(s) into ${outDir}\n`);
-  const env = fetched["environment.json"] ? (JSON.parse(fetched["environment.json"]!) as Record<string, unknown>) : undefined;
-  if (env?.environment) console.log(`  environment: ${JSON.stringify(env.environment)}`);
+  writeFileSync(join(outDir, "results.jsonl"), `${rows.join("\n")}\n`);
+  writeFileSync(join(outDir, "COMPLETE"), perShard[0]!.fetched["COMPLETE"]!);
+  if (perShard[0]!.fetched["corpus.jsonl"]) writeFileSync(join(outDir, "corpus.jsonl"), perShard[0]!.fetched["corpus.jsonl"]!);
+
+  if (shardCount === 1) {
+    // Written EXACTLY as the container produced it, container-side corpusPath and all. Rewriting that
+    // would make the manifest describe a run that never happened.
+    writeFileSync(join(outDir, "manifest.json"), perShard[0]!.fetched["manifest.json"]!);
+  } else {
+    // A merged run had no single process, so it gets a manifest that says so and carries every shard's
+    // own manifest verbatim, rather than one shard's manifest pretending to describe all of them.
+    const merged = {
+      ...baseManifest,
+      runId: localRunId,
+      merged: true,
+      shardCount,
+      candidates: rows.length,
+      shardManifests: perShard.map((s) => JSON.parse(s.fetched["manifest.json"]!) as unknown),
+      note: "Merged from independent shard runs. Each shard observed the full pinned corpus and mutated its own slice; timings are per shard and are not additive.",
+    };
+    writeFileSync(join(outDir, "manifest.json"), `${JSON.stringify(merged, null, 2)}\n`);
+  }
+
+  for (const s of perShard) {
+    if (s.fetched["environment.json"]) writeFileSync(join(outDir, shardCount > 1 ? `environment.${s.index}.json` : "environment.json"), s.fetched["environment.json"]);
+    for (const log of ["observe.log", "mutate.log"]) {
+      if (s.fetched[log]) writeFileSync(join(outDir, shardCount > 1 ? `${log}.${s.index}` : log), s.fetched[log]!);
+    }
+  }
+
+  console.log(`\nCollected ${rows.length} row(s) from ${shardCount} shard(s) into ${outDir}\n`);
+  console.log(`  environment: ${[...envs][0] ?? "(not recorded)"}`);
   console.log(`\nFreeze it with:\n  npm run dogfood:freeze -- --run ${outDir}\n`);
 }
 
