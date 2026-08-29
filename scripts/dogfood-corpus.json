@@ -12,7 +12,7 @@
     "commits": 10,
     "observationQualified": "yes",
     "mutationQualified": "no",
-    "mutationQualificationReason": "Its build script shells out to a bare `pnpm` that this harness does not put on PATH. Environmental, and unqualified under THIS harness environment rather than intrinsically unsuitable - the harness was deliberately not expanded to reproduce it.",
+    "mutationQualificationReason": "NO CONCLUSION - qualification infrastructure timeout (run zod-qualify-01, 2026-08-29). The canonical environment cleared the original blocker: corepack was enabled, so the bare-pnpm-not-on-PATH failure did not recur, and the run reached the qualifying stage and stayed there. The harness process ran as a single process for 3 hours and was killed by the external DO-level guard (maxRunMs 10800000ms, elapsed 10800429ms) without ever producing a verdict. This says NOTHING about whether zod suite is green or dirty. It is a statement about the laboratory, not the repository. Unresolved: the run exceeded the sum of its four internally bounded stages (4 x 25 min = 100 min), which the then-unbounded clone stage cannot plausibly account for.",
     "install": [
       "corepack",
       "pnpm",
@@ -27,7 +27,9 @@
     "testModule": "node_modules/vitest/vitest.mjs",
     "testArgs": [
       "run"
-    ]
+    ],
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "no verdict produced - killed by external guard before completion (harness predates qualifier 2.0.0)"
   },
   {
     "source": "unjs/h3",
