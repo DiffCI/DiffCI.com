@@ -87,13 +87,19 @@ repository mutation-measurable would additionally require a way to run an arbitr
 within nx's project context. That is a real limitation of the harness against orchestrated monorepos, and
 it is recorded here rather than discovered later.
 
-### Run 2 outcome — `tanstack-qualify-02` — REPORTED QUALIFIED, NOT RECORDED
+### Run 2 outcome — `tanstack-qualify-02` — **INVALID VERDICT**
 
 The run returned `mutationQualified: "yes"`, `"suite green on 2 consecutive runs under the documented
 sequence"`. That sentence was the entire artefact — the harness discarded the runner's output on the
 qualification path, so nothing could confirm or refute it.
 
-Per the risk registered in advance, it was not accepted. It was **wrong**, and Run 3 proves it.
+Per the risk registered in advance, it was not accepted. Run 3 proves it was wrong.
+
+**Its permanent classification is INVALID VERDICT — the qualification harness ignored authoritative
+process exit status.** Not "qualified, later superseded". The distinction is deliberate and load-bearing:
+it preserves the fact that DiffCI's own validation machinery came one verdict away from admitting bad
+evidence into the safety corpus. Rewriting it as a superseded result would delete exactly the thing
+worth remembering.
 
 ---
 
@@ -124,8 +130,9 @@ read the first summary — a two-test project that passed — and concluded zero
 
 ### What this establishes
 
-1. **TanStack/query is NOT mutation-qualified** under its documented nx test semantics. nx exits 1;
-   tasks failed across the run.
+1. **TanStack/query is NOT mutation-qualified** under its documented orchestrated test command,
+   because nx exits non-zero. nx ran 26 projects and reported that the target failed. **No test-failure
+   count is attached to this verdict**, because the evidence does not support one.
 2. **Run 2's "qualified" was a defect in DiffCI's harness, not a state of the repository.** Same
    command, same commit, same environment — the verdict changed because the harness stopped trusting a
    per-project summary as if it described the whole run.

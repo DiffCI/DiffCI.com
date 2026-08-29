@@ -83,7 +83,7 @@
       "--target=test:lib",
       "--exclude=examples/**"
     ],
-    "mutationQualificationReason": "NOT QUALIFIED under documented nx semantics (run tanstack-qualify-03, 2026-08-29): nx run-many --target=test:lib --exclude=examples/** exits 1 - \"Running target test:lib for 26 projects and 9 tasks they depend on failed\". Many projects pass individually; the failure count is unknowable because this harness parses a single summary line and nx emits one per project. An earlier run of the identical command (tanstack-qualify-02) reported QUALIFIED and was wrong - the harness was trusting the first project summary as the whole run. See docs/tanstack-qualification-record.md.",
+    "mutationQualificationReason": "NOT QUALIFIED under its documented orchestrated test command (run tanstack-qualify-03, 2026-08-29): nx run-many --target=test:lib --exclude=examples/** exits non-zero - nx ran 26 projects and reported the target failed. No test-failure count is attached: the evidence does not support one, because this harness parses a single summary line and nx emits one per project. An earlier run of the identical command (tanstack-qualify-02) is permanently classified INVALID VERDICT - the qualification harness ignored authoritative process exit status - NOT \"qualified then superseded\". See docs/tanstack-qualification-record.md.",
     "mutationQualifiedAt": "2026-08-28T15:15:52.660Z",
     "build": [
       "corepack",

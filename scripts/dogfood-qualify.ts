@@ -28,6 +28,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { assertShellSafeArgs } from "./shell-safety.js";
+import { classifyExecution, explainExecution } from "./execution-verdict.js";
 import { parseTestOutput, stripAnsi } from "./test-output-parsers.js";
 
 
@@ -112,7 +113,6 @@ function runShell(args: string[], cwd: string, timeoutMs: number): { status: num
   return { status: result.status, out: `${result.stdout ?? ""}${result.stderr ?? ""}`, ms: Date.now() - started };
 }
 
-/** No shell: the runner is invoked through `node` so nothing repository-derived is concatenated. */
 /**
  * Summary-shaped lines from a runner's output, wherever they appear.
  *
@@ -128,6 +128,7 @@ function summaryLines(output: string): string[] {
     .slice(-25);
 }
 
+/** No shell: the runner is invoked through `node` so nothing repository-derived is concatenated. */
 function runTests(repoPath: string, entry: CorpusEntry, timeoutMs: number): { status: number | null; out: string; ms: number } {
   const started = Date.now();
   const module = join(repoPath, entry.testModule ?? "node_modules/vitest/vitest.mjs");
@@ -178,7 +179,14 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
     // Giving a git-dependent build actual git history is a normal property of that build, not
     // historical environment reconstruction. `--clone-depth` still allows shallow where it is safe.
     const depth = cloneDepth > 0 ? ["--depth", String(cloneDepth)] : [];
-    const cloned = spawnSync("git", ["clone", "--quiet", ...depth, `https://github.com/${entry.source}.git`, dest], { encoding: "utf8" });
+    // Bounded like every other stage (2026-08-29). This was the one command in the qualification
+    // sequence with NO timeout at all, so a stalled clone could hold a run open indefinitely while
+    // every "each command is capped" statement about the harness remained technically true and
+    // practically wrong.
+    const cloned = spawnSync("git", ["clone", "--quiet", ...depth, `https://github.com/${entry.source}.git`, dest], {
+      encoding: "utf8",
+      timeout: timeoutMs,
+    });
     if (cloned.status !== 0) {
       durations.clone = Date.now() - cloneStarted;
       return { source: entry.source, mutationQualified: "no", reason: "could not clone", durations };
@@ -216,17 +224,13 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
       return { source: entry.source, mutationQualified: "no", reason: `run ${attempt + 1}: could not read a failure count from the runner: ${lastLine(tested.out)}`, durations, observedFailures: observed, evidence };
     }
 
-    // THE RUNNER'S OWN EXIT STATUS OUTRANKS THE PARSED COUNT (2026-08-29). The parsers here find the
-    // first summary line in the output. That is the whole run for a single-project runner and one
-    // project's result for an orchestrator like nx or turbo, which emit a summary per project - so a
-    // passing early project can mask a failing later one and produce a green verdict for a red run.
-    // A non-zero exit with zero parsed failures is a contradiction, and the honest response is to
-    // refuse rather than to trust the more convenient of the two signals.
-    if (parsed.failures === 0 && tested.status !== 0) {
+    // The exit status outranks the parsed count - see scripts/execution-verdict.ts for the invariant
+    // and the real false green that produced it.
+    if (classifyExecution(tested.status, parsed.failures) === "CONTRADICTORY_EXECUTION_EVIDENCE") {
       return {
         source: entry.source,
         mutationQualified: "no",
-        reason: `run ${attempt + 1}: the runner exited ${tested.status} but the summary this harness could read reported 0 failures. The output cannot be trusted to describe the whole run - likely an orchestrator reporting per project. Refusing to qualify on a contradiction.`,
+        reason: `run ${attempt + 1}: ${explainExecution(tested.status, parsed.failures)}`,
         durations,
         observedFailures: observed,
         evidence,
