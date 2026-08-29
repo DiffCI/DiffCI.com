@@ -308,7 +308,15 @@ async function runHarnessPass(
     if (!record.processId) {
       // TMPDIR is what makes the harness's own mkdtemp scratch directory discoverable afterwards; the
       // mutation pass needs the clone and reports the observation pass created inside it.
-      const cmd = `cd ${DIFFCI_DIR} && TMPDIR=${SCRATCH_ROOT} npm ${argv.map(shq).join(" ")}`;
+      //
+      // DIFFCI_VALIDATION_IMAGE is what stops the resulting bundle from lying about where it came
+      // from. The harness records it into the run manifest, and dogfood-freeze prints "Produced on a
+      // developer host, NOT the canonical validation image" when it is absent. Omitting it (2026-08-29)
+      // produced a frozen bundle from a Cloudflare container carrying exactly that caveat - the precise
+      // opposite of the truth, and a worse failure than having no bundle at all. The node version is
+      // included because the image tag alone does not identify the toolchain that produced the evidence.
+      const validationImage = `${record.environment?.image ?? "unknown-image"} node=${record.environment?.node ?? "unknown"}`;
+      const cmd = `cd ${DIFFCI_DIR} && TMPDIR=${SCRATCH_ROOT} DIFFCI_VALIDATION_IMAGE=${shq(validationImage)} npm ${argv.map(shq).join(" ")}`;
       const proc = await sandbox.startProcess(cmd, { cwd: DIFFCI_DIR, autoCleanup: false });
       record.processId = proc.id;
       record.processStartedAt = deps.now();
