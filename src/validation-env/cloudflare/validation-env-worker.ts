@@ -73,13 +73,21 @@ function shardName(runId: string, index: number, shardCount: number): string {
 
 /** Only the artefacts the shard itself writes are readable back. */
 const COLLECTED_FILES: ReadonlySet<string> = new Set([
+  // Reproduction runs.
   "manifest.json",
   "results.jsonl",
   "COMPLETE",
   "corpus.jsonl",
-  "environment.json",
   "observe.log",
   "mutate.log",
+  // Qualification runs. The updated corpus registry IS the verdict, and the log carries the reason a
+  // failed qualification failed - which is the whole point of running one. Omitting these (2026-08-29)
+  // left a completed run whose artefacts were written to R2 and then unreadable through the only route
+  // that can read them.
+  "corpus-definition.json",
+  "qualify.log",
+  // Both.
+  "environment.json",
 ]);
 
 export default {
