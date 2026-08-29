@@ -83,6 +83,16 @@ export interface ValidationJob {
   /** Mutation-pass commands, verbatim from the run being reproduced. Required for `reproduce`. */
   mutate?: {
     install: string[];
+    /**
+     * Run after install and before every test run, when the repository needs one.
+     *
+     * Absent for hono, which needs none. REQUIRED for any repository that qualified with a build:
+     * zod's tests import workspace package outputs, so a mutation pass without its build would produce
+     * a dirty baseline on every candidate and a funnel that says nothing about DiffCI. An earlier
+     * incarnation of this flag existed in the harness but was never passed by its caller, and the two
+     * runs it silently made identical were only caught by a run manifest.
+     */
+    build?: string[];
     testModule: string;
     testArgs: string[];
     maxAttempts: number;
@@ -197,6 +207,49 @@ const JOBS: Record<string, ValidationJob> = {
     expectedAgentIntegrity: "sha512-mj4GQJLruQTexqkKybpP4KXGSZsqfs5vD7UbeMPQzV5LfqaR7HwKjuT2l7AP6o8yzyk3fC9aeGSWuyk3+CH7Kw==",
     // Larger than zod's: an nx run-many build across every workspace package, then two full baselines.
     maxRunMs: 4 * 60 * 60_000,
+  },
+
+  /**
+   * The zod mutation pass (2026-08-29). The first mutation evidence from a MONOREPO.
+   *
+   * hono established that DiffCI's selection preserves mutation-detection recall on a single-package
+   * library, reproduced across environments. The open question is whether that survives a large
+   * monorepo with a 7,808-test universe - the repository class the earlier evidence could not reach,
+   * and the one where graph reasoning should have the most to offer and the most room to go wrong.
+   *
+   * PRE-REGISTERED, so the result is not chosen after the fact:
+   *   - one pass, existing candidate-generation methodology, selector unchanged
+   *   - whatever N comes out measurable is what gets analysed - no topping up a flattering denominator
+   *   - freeze before interpreting
+   *   - a FALSE_GREEN stops everything and is investigated, not averaged
+   *
+   * The commands are zod's own, exactly as qualification ran them (zod-qualify-02: 573 files, 7808
+   * tests, green twice, exit 0 twice). `build` is present and load-bearing: zod's tests import
+   * workspace package outputs, so omitting it would make every baseline dirty and the funnel
+   * meaningless.
+   *
+   * `commits: 25` matches the hono run that produced the canonical evidence, not the registry's 10,
+   * so the two mutation passes are generated the same way.
+   */
+  "zod-mutation": {
+    id: "zod-mutation",
+    description: "First monorepo mutation pass: colinhacks/zod in the canonical Linux environment.",
+    mode: "reproduce",
+    repository: "colinhacks/zod",
+    pinnedHeadSha: "e6b6ab347675cd2bd54b1bdbed16f98c59be82a9",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mj4GQJLruQTexqkKybpP4KXGSZsqfs5vD7UbeMPQzV5LfqaR7HwKjuT2l7AP6o8yzyk3fC9aeGSWuyk3+CH7Kw==",
+    mutate: {
+      install: ["corepack", "pnpm", "install", "--frozen-lockfile"],
+      build: ["corepack", "pnpm", "build"],
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // Qualification measured baselines at 77s and 56s against hono's ~32s. Each candidate runs a build
+    // plus up to three suite executions, so this is a materially heavier pass than hono's 42 minutes.
+    maxRunMs: 8 * 60 * 60_000,
   },
 
   /**
@@ -347,6 +400,7 @@ export function mutateArgv(job: ValidationJob, scratch: string, clonePath: strin
     "--runs-dir", RUNS_DIR,
     "--max-attempts", String(mutate.maxAttempts),
     "--timeout", String(mutate.timeoutMs),
+    ...(mutate.build ? ["--build", mutate.build.join("|")] : []),
     "--install", mutate.install.join("|"),
     "--test-module", mutate.testModule,
     "--test-args", mutate.testArgs.join("|"),

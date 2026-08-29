@@ -230,3 +230,32 @@ describe("job modes", () => {
     assert.ok(argv.includes("--write"));
   });
 });
+
+describe("the zod mutation pass", () => {
+  const job = getValidationJob("zod-mutation")!;
+
+  it("passes the build the repository qualified with, or every baseline would be dirty", () => {
+    // zod's tests import workspace package outputs. dogfood-mutate accepts --build, but an earlier
+    // incarnation of that flag was never passed by its caller and silently made two runs identical.
+    assert.deepEqual(job.mutate!.build, ["corepack", "pnpm", "build"]);
+    const argv = mutateArgv(job, "/scratch", "/scratch/clone");
+    assert.equal(argv[argv.indexOf("--build") + 1], "corepack|pnpm|build");
+  });
+
+  it("omits --build entirely for a repository that needs none", () => {
+    // hono qualified without a build; emitting an empty --build would change what it runs.
+    const hono = getValidationJob("hono-reproduction")!;
+    assert.equal(hono.mutate!.build, undefined);
+    assert.equal(mutateArgv(hono, "/scratch", "/scratch/clone").includes("--build"), false);
+  });
+
+  it("runs zod with the commands qualification actually used", () => {
+    assert.deepEqual(job.mutate!.install, ["corepack", "pnpm", "install", "--frozen-lockfile"]);
+    assert.equal(job.mutate!.testModule, "node_modules/vitest/vitest.mjs");
+    assert.deepEqual(job.mutate!.testArgs, ["run"]);
+  });
+
+  it("generates candidates the same way the canonical hono evidence was generated", () => {
+    assert.equal(job.commits, getValidationJob("hono-reproduction")!.commits);
+  });
+});
