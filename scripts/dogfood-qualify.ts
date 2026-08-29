@@ -148,6 +148,17 @@ interface Verdict {
   evidence?: Array<{ run: number; exitStatus: number | null; failures: number | undefined; summary: string[] }>;
 }
 
+/**
+ * Progress printed as each stage COMPLETES, not collected and printed at the end.
+ *
+ * zod-qualify-01 was killed at a three-hour ceiling having printed nothing, so which stage consumed
+ * the time is unknowable. A run that gets killed is precisely the run whose partial progress matters,
+ * and progress that only exists in a return value never survives the kill.
+ */
+function stage(name: string, ms: number): void {
+  console.log(`      [stage] ${name.padEnd(12)} ${(ms / 1000).toFixed(1)}s`);
+}
+
 function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselineRuns: number, cloneDepth: number): Verdict {
   const durations = { clone: 0, install: 0, build: 0, test: 0 };
   const evidence: NonNullable<Verdict["evidence"]> = [];
@@ -176,9 +187,11 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
     }
   }
   durations.clone = Date.now() - cloneStarted;
+  stage("clone", durations.clone);
 
   const install = runShell(entry.install ?? ["npm", "install", "--no-audit", "--no-fund"], dest, timeoutMs);
   durations.install = install.ms;
+  stage("install", install.ms);
   if (install.status !== 0) {
     return { source: entry.source, mutationQualified: "no", reason: `install failed: ${lastLine(install.out)}`, durations };
   }
@@ -186,6 +199,7 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
   if (entry.build) {
     const built = runShell(entry.build, dest, timeoutMs);
     durations.build = built.ms;
+    stage("build", built.ms);
     if (built.status !== 0) {
       return { source: entry.source, mutationQualified: "no", reason: `build failed: ${lastLine(built.out)}`, durations };
     }
@@ -196,6 +210,7 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
   for (let attempt = 0; attempt < baselineRuns; attempt++) {
     const tested = runTests(dest, entry, timeoutMs);
     durations.test += tested.ms;
+    stage(`baseline ${attempt + 1}`, tested.ms);
     const parsed = parseTestOutput(tested.out);
     framework ??= parsed.framework;
     observed.push(parsed.failures);

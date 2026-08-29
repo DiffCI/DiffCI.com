@@ -387,6 +387,16 @@ async function runHarnessPass(
     if (!(status && TERMINAL_PROCESS.has(status))) {
       const elapsed = deps.now() - (record.processStartedAt ?? deps.now());
       if (elapsed > job.maxRunMs) {
+        // Capture BEFORE killing, and before failing. zod-qualify-01 was killed by this guard after
+        // three hours and taught us nothing about where those hours went, because the output was
+        // discarded on the way out - the timeout path was the one exit that threw away its evidence.
+        // A run that hits its ceiling is exactly the run whose log is most worth having.
+        try {
+          const logs = await sandbox.getProcessLogs(record.processId);
+          record.logs = { ...(record.logs ?? {}), [label]: `${logs.stdout ?? ""}\n${logs.stderr ?? ""}`.slice(-12_000) };
+        } catch {
+          /* diagnostic only; the run fails below regardless */
+        }
         try {
           await sandbox.killProcess(record.processId);
         } catch {
