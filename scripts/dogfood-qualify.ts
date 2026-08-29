@@ -74,6 +74,25 @@ export type Capability = "yes" | "no" | "unknown";
  */
 const DEFAULT_BASELINE_RUNS = 2;
 
+/**
+ * Which qualifier produced a verdict. Bumped whenever the RULES for reaching one change.
+ *
+ * Not decoration. A verdict from before 2026-08-29 was produced by a qualifier that ignored the
+ * runner's exit status and recorded no evidence, and one of those verdicts was a false green
+ * (tanstack-qualify-02, permanently classified INVALID VERDICT). Such a result may still be preserved -
+ * a red or flaky verdict from the old qualifier is not made wrong by the guard's absence, and it can
+ * still exclude a repository from the safety denominator - but it is NOT as auditable as a
+ * corrected-harness result, and nothing should treat the two as interchangeable.
+ *
+ * The source tarball's sha256 already identifies the exact code that ran. This says what that code
+ * GUARANTEED, which is the part a later reader actually needs.
+ *
+ *   1.x  parsed failure counts only. No exit-status check, no recorded evidence.
+ *   2.0  exit status is authoritative (CONTRADICTORY_EXECUTION_EVIDENCE), per-run evidence recorded,
+ *        every stage including clone bounded by a timeout.
+ */
+export const QUALIFIER_VERSION = "2.0.0";
+
 export interface CorpusEntry {
   source: string;
   stresses: string;
@@ -90,6 +109,8 @@ export interface CorpusEntry {
   mutationQualifiedAt?: string;
   /** Which environment produced the verdict - the image digest, or a host description if not in it. */
   mutationQualifiedIn?: string;
+  /** Which qualifier produced it, and therefore what the verdict guaranteed. See QUALIFIER_VERSION. */
+  mutationQualifiedBy?: string;
   /** The documented sequence. Absent means "npm install, no build" was assumed. */
   install?: string[];
   build?: string[];
@@ -305,6 +326,7 @@ function main(): void {
   console.log("\nRepository qualification - can this repository contribute SAFETY evidence?");
   console.log(`  scratch: ${scratch}`);
   console.log(`  environment: ${validationImage ?? `${process.platform}, node ${process.version} (NOT the canonical validation image)`}`);
+  console.log(`  qualifier:   ${QUALIFIER_VERSION}`);
   console.log("");
 
   for (const entry of corpus) {
@@ -328,6 +350,7 @@ function main(): void {
       entry.mutationQualificationReason = verdict.reason;
       entry.mutationQualifiedAt = new Date().toISOString();
       entry.mutationQualifiedIn = validationImage ?? `${process.platform}/node${process.version}`;
+      entry.mutationQualifiedBy = `qualifier ${QUALIFIER_VERSION}`;
     }
   }
 
