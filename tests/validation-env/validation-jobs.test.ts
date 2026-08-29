@@ -24,6 +24,7 @@ import {
   listValidationJobs,
   mutateArgv,
   observeArgv,
+  qualifyArgv,
 } from "../../src/validation-env/validation-jobs.js";
 
 const repoRoot = resolve(dirname(import.meta.filename), "..", "..");
@@ -47,7 +48,7 @@ describe("the validation job allowlist", () => {
       const job = getValidationJob(id)!;
       assert.ok(isPinnedSha(job.pinnedHeadSha), `${id} must pin a full 40-hex sha`);
       assert.ok(isRepositorySlug(job.repository), `${id} must name owner/name`);
-      assert.ok(job.commits > 0, `${id} must observe at least one commit`);
+      assert.ok((job.commits ?? 0) > 0 || job.mode === "qualify", `${id} must observe at least one commit`);
       assert.ok(job.maxRunMs > 0, `${id} must bound its own runtime`);
     }
   });
@@ -100,11 +101,11 @@ describe("the hono reproduction matches the evidence it reproduces", () => {
       maxAttempts: number;
       timeoutMs: number;
     };
-    assert.deepEqual(job.mutate.install, manifest.commands.install);
-    assert.equal(job.mutate.testModule, manifest.commands.testModule);
-    assert.deepEqual(job.mutate.testArgs, manifest.commands.testArgs);
-    assert.equal(job.mutate.maxAttempts, manifest.maxAttempts);
-    assert.equal(job.mutate.timeoutMs, manifest.timeoutMs);
+    assert.deepEqual(job.mutate!.install, manifest.commands.install);
+    assert.equal(job.mutate!.testModule, manifest.commands.testModule);
+    assert.deepEqual(job.mutate!.testArgs, manifest.commands.testArgs);
+    assert.equal(job.mutate!.maxAttempts, manifest.maxAttempts);
+    assert.equal(job.mutate!.timeoutMs, manifest.timeoutMs);
   });
 });
 
@@ -200,5 +201,30 @@ describe("sharding a run across containers", () => {
     assert.equal(argv[argv.indexOf("--corpus") + 1], SHARD_CORPUS_PATH);
     // ...and still defaults to the full corpus when no override is given.
     assert.notEqual(mutateArgv(job, "/scratch", "/scratch/clone")[argv.indexOf("--corpus") + 1], SHARD_CORPUS_PATH);
+  });
+});
+
+describe("job modes", () => {
+  it("gives every reproduce job the commands and commit count its pass needs", () => {
+    for (const id of listValidationJobs()) {
+      const job = getValidationJob(id)!;
+      if (job.mode !== "reproduce") continue;
+      assert.ok(job.mutate, `${id} is a reproduce job and must define mutation commands`);
+      assert.ok((job.commits ?? 0) > 0, `${id} is a reproduce job and must say how many commits to observe`);
+    }
+  });
+
+  it("refuses to build mutation argv for a qualification job, rather than emitting \"undefined\"", () => {
+    const zod = getValidationJob("zod-qualification")!;
+    assert.equal(zod.mode, "qualify");
+    assert.throws(() => mutateArgv(zod, "/scratch", "/scratch/clone"), /defines no mutation commands/);
+  });
+
+  it("qualifies with a full clone, because a shallow one cannot answer what a build asks git", () => {
+    const argv = qualifyArgv(getValidationJob("zod-qualification")!);
+    assert.equal(argv[argv.indexOf("--clone-depth") + 1], "0");
+    assert.equal(argv[argv.indexOf("--only") + 1], "colinhacks/zod");
+    // --write is what turns a console verdict into a collectable artefact.
+    assert.ok(argv.includes("--write"));
   });
 });

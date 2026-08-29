@@ -60,18 +60,28 @@ export const RUNS_DIR = `${WORKSPACE}/runs`;
 export interface ValidationJob {
   id: string;
   description: string;
+  /**
+   * What this job does in the container.
+   *
+   * `reproduce` runs observe -> mutate and produces a mutation funnel.
+   * `qualify` runs the qualification pass alone - clone, install, documented build, two green baselines
+   * - and answers only whether the repository can contribute safety evidence at all. A repository must
+   * qualify before mutating it means anything, because a mutation pass against a suite that was never
+   * green attributes failures to the mutation that were already there.
+   */
+  mode: "reproduce" | "qualify";
   /** The frozen bundle this job reproduces, when it is a reproduction rather than new evidence. */
   reproduces?: string;
   /** "owner/name" - cloned from GitHub over https, no credentials. */
   repository: string;
   /** The exact commit the corpus was derived from. 40 lowercase hex. */
   pinnedHeadSha: string;
-  /** How many head/base pairs to observe. Must match the run being reproduced. */
-  commits: number;
+  /** How many head/base pairs to observe. Required for `reproduce`; unused by `qualify`. */
+  commits?: number;
   /** The packaged agent that produced the original evidence. Asserted before anything is measured. */
   expectedAgentIntegrity: string;
-  /** Mutation-pass commands, verbatim from the run being reproduced. */
-  mutate: {
+  /** Mutation-pass commands, verbatim from the run being reproduced. Required for `reproduce`. */
+  mutate?: {
     install: string[];
     testModule: string;
     testArgs: string[];
@@ -103,6 +113,7 @@ const JOBS: Record<string, ValidationJob> = {
   "hono-reproduction": {
     id: "hono-reproduction",
     description: "Reproduce the frozen honojs/hono mutation funnel in the canonical Linux environment.",
+    mode: "reproduce",
     reproduces: "2026-08-28T15-17-45-366Z-honojs-hono-cc009a",
     repository: "honojs/hono",
     pinnedHeadSha: "e2740d5a1bd0b4254e517e3af8b60789284bc7bd",
@@ -119,6 +130,40 @@ const JOBS: Record<string, ValidationJob> = {
     // run took hours; a ceiling well above it bounds a genuinely hung run without truncating a healthy
     // slow one.
     maxRunMs: 8 * 60 * 60_000,
+  },
+
+  /**
+   * zod qualification (2026-08-29).
+   *
+   * THE QUESTION THIS ANSWERS. zod was recorded as mutation-unqualified on the Windows host for a
+   * reason that was never a property of zod: its build shells out to a bare `pnpm` that the host did
+   * not put on PATH. Both monorepos attempted on that host failed, and both single-package libraries
+   * passed, so the corpus was accumulating safety evidence only from the class of repository where the
+   * graph-explosion question matters least. This asks whether the canonical environment removes that
+   * bias.
+   *
+   * It runs the qualification pass ALONE - clone, install, documented build, two green baselines - and
+   * nothing is mutated here. The commands come from `scripts/dogfood-corpus.json`, which the harness
+   * reads for itself; they are not restated here, so there is exactly one place they can drift from.
+   *
+   * NOT AN ACCOMMODATION: the environment enables corepack generally, which the validation contract
+   * explicitly permits ("the repository's own declared package manager, through corepack"). If zod
+   * still fails, the reason is recorded and zod stays unqualified. The image must not grow a branch
+   * for one project's quirk.
+   */
+  "zod-qualification": {
+    id: "zod-qualification",
+    description: "Qualify colinhacks/zod in the canonical Linux environment: install, build, two green baselines.",
+    mode: "qualify",
+    repository: "colinhacks/zod",
+    // main as of 2026-08-29. Pinned for the same reason every job here is: an unpinned qualification
+    // verdict describes whatever was on main that morning and cannot be compared to anything later.
+    pinnedHeadSha: "e6b6ab347675cd2bd54b1bdbed16f98c59be82a9",
+    expectedAgentIntegrity: "sha512-mj4GQJLruQTexqkKybpP4KXGSZsqfs5vD7UbeMPQzV5LfqaR7HwKjuT2l7AP6o8yzyk3fC9aeGSWuyk3+CH7Kw==",
+    // A monorepo install plus a workspace build plus two full baselines. Generous, because the failure
+    // this bounds is a hung command, not a slow one - and calling a slow honest run a timeout would
+    // manufacture exactly the environmental verdict this job exists to test for.
+    maxRunMs: 3 * 60 * 60_000,
   },
 };
 
@@ -169,11 +214,50 @@ export function observeArgv(): string[] {
 }
 
 /**
+ * Qualification-pass argv.
+ *
+ * `--write` so the verdict lands in the container's own copy of `scripts/dogfood-corpus.json`, which is
+ * then collected. The harness has no other structured output - without this the verdict would exist
+ * only as console text, and a qualification result that can only be read by a human is not evidence.
+ *
+ * `--clone-depth 0` is a full clone. Builds that ask git what changed cannot answer from a shallow one,
+ * which is precisely how TanStack/query was disqualified on the developer host.
+ */
+export function qualifyArgv(job: ValidationJob): string[] {
+  return ["run", "dogfood:qualify", "--", "--only", job.repository, "--clone-depth", "0", "--write"];
+}
+
+/** Where the qualification verdict is written inside the container. */
+export const CORPUS_DEFINITION_PATH = "scripts/dogfood-corpus.json";
+
+/**
  * Mutation pass argv. `scratch` and `clonePath` are discovered at runtime (the harness names its own
  * mkdtemp directory) and are validated by the caller before they get here - they are the only
  * non-literals, and they are paths this DO created the parent of, never anything a request supplied.
  */
+/**
+ * A reproduce job's mutation commands, or a loud failure.
+ *
+ *  is optional on the shared job type because a qualification job has no mutation pass. Reading
+ * it without checking would silently produce argv containing "undefined", and the harness would then
+ * run with a wrong install command rather than refusing - the class of failure where a run completes and
+ * means nothing.
+ */
+/**
+ * A reproduce job's mutation commands, or a loud failure.
+ *
+ * `mutate` is optional on the shared job type because a qualification job has no mutation pass. Reading
+ * it unchecked would put the string "undefined" into argv, and the harness would then run with a wrong
+ * install command rather than refusing - the class of failure where a run completes and means nothing,
+ * which this corpus has already produced twice.
+ */
+export function requireMutationCommands(job: ValidationJob): NonNullable<ValidationJob["mutate"]> {
+  if (!job.mutate) throw new Error(`job "${job.id}" has mode "${job.mode}" and defines no mutation commands`);
+  return job.mutate;
+}
+
 export function mutateArgv(job: ValidationJob, scratch: string, clonePath: string, corpusPath: string = OBSERVED_CORPUS_PATH): string[] {
+  const mutate = requireMutationCommands(job);
   return [
     "run",
     "dogfood:mutate",
@@ -183,10 +267,10 @@ export function mutateArgv(job: ValidationJob, scratch: string, clonePath: strin
     "--corpus", corpusPath,
     "--reports", `${scratch}/reports`,
     "--runs-dir", RUNS_DIR,
-    "--max-attempts", String(job.mutate.maxAttempts),
-    "--timeout", String(job.mutate.timeoutMs),
-    "--install", job.mutate.install.join("|"),
-    "--test-module", job.mutate.testModule,
-    "--test-args", job.mutate.testArgs.join("|"),
+    "--max-attempts", String(mutate.maxAttempts),
+    "--timeout", String(mutate.timeoutMs),
+    "--install", mutate.install.join("|"),
+    "--test-module", mutate.testModule,
+    "--test-args", mutate.testArgs.join("|"),
   ];
 }

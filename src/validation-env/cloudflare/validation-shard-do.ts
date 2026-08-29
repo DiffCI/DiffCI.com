@@ -38,12 +38,14 @@ import {
   SCRATCH_ROOT,
   WORKSPACE,
   assignShard,
+  CORPUS_DEFINITION_PATH,
   buildJobCorpus,
   getValidationJob,
   isPinnedSha,
   isRepositorySlug,
   mutateArgv,
   observeArgv,
+  qualifyArgv,
   type ValidationJob,
 } from "../validation-jobs.js";
 
@@ -67,6 +69,7 @@ export type ValidationStep =
   | "bootstrapping"
   | "preparing"
   | "observing"
+  | "qualifying"
   | "locating"
   | "mutating"
   | "collecting"
@@ -114,7 +117,7 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
-  logs?: { observe?: string; mutate?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string };
   timings: Record<string, number>;
 }
 
@@ -221,6 +224,18 @@ async function bootstrap(record: ValidationRecord, deps: ValidationStepDeps): Pr
       if (!tools.success) return fail(record, "toolchain-missing", tail(tools));
     }
 
+    // The sandbox image ships Node WITHOUT corepack's shims enabled, so `pnpm` and `yarn` are absent
+    // from PATH even though corepack itself is present. That is exactly how colinhacks/zod was
+    // disqualified on the developer host - its build shells out to a bare `pnpm`, which was not a
+    // property of zod. Enabling corepack is permitted by the validation contract ("the repository's own
+    // declared package manager, through corepack"), and it is done for the ENVIRONMENT rather than for
+    // any one repository - this image must not grow per-project branches. Best-effort: a repository
+    // that needs no package manager beyond npm is unaffected either way.
+    await sandbox.exec(
+      "(corepack enable >/dev/null 2>&1 || (npm install -g corepack --silent && corepack enable)) >/dev/null 2>&1 || true",
+      { timeout: 180_000 },
+    );
+
     const agent = await bucket.get(record.agentTarballKey);
     if (!agent) return fail(record, "agent-missing", `agent tarball missing in R2: ${record.agentTarballKey}`);
     // `installAgent()` requires exactly one .tgz in dist-agent, so the directory is cleared first: a
@@ -307,10 +322,15 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
     const rewrite = await sandbox.exec(`git config --global url.${PINNED_CLONE}.insteadOf ${remote}`, { timeout: 30_000 });
     if (!rewrite.success) return fail(record, "pin-rewrite-failed", tail(rewrite));
 
-    await sandbox.writeFile(JOB_CORPUS_PATH, JSON.stringify(buildJobCorpus(job), null, 2));
+    // Only the reproduction pass needs a corpus definition; qualification reads the repository's
+    // entry from scripts/dogfood-corpus.json inside the source tarball, so the commands live in exactly
+    // one place and cannot drift between the job and the registry.
+    if (job.mode === "reproduce") {
+      await sandbox.writeFile(JOB_CORPUS_PATH, JSON.stringify(buildJobCorpus(job), null, 2));
+    }
 
     record.timings.prepareMs = deps.now() - t0;
-    record.step = "observing";
+    record.step = job.mode === "qualify" ? "qualifying" : "observing";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {
     return fail(record, "prepare-failed", err instanceof Error ? err.message : String(err));
@@ -322,7 +342,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate",
+  label: "observe" | "mutate" | "qualify",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -385,6 +405,21 @@ async function runHarnessPass(
   } catch (err) {
     return fail(record, `${label}-failed`, err instanceof Error ? err.message : String(err));
   }
+}
+
+/**
+ * The qualification pass: clone, install, documented build, two green baselines.
+ *
+ * Nothing is mutated. This answers only whether the repository can contribute safety evidence at all -
+ * mutating a suite that was never green attributes pre-existing failures to the mutation.
+ */
+async function qualifyStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const t0 = record.processStartedAt ?? deps.now();
+  return runHarnessPass(record, deps, qualifyArgv(deps.job), "qualify", (r) => {
+    r.timings.qualifyMs = deps.now() - t0;
+    r.step = "collecting";
+    return { record: r, nextAlarmDelayMs: 0 };
+  });
 }
 
 async function observe(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
@@ -509,6 +544,8 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, bucket } = deps;
   const t0 = deps.now();
   try {
+    if (deps.job.mode === "qualify") return collectQualification(record, deps, t0);
+
     const runs = await sandbox.exec(`ls -1 ${RUNS_DIR} 2>/dev/null || true`, { timeout: 30_000 });
     const dirs = runs.stdout.split("\n").map((s) => s.trim()).filter(Boolean);
     if (dirs.length !== 1) return fail(record, "run-dir-ambiguous", `expected exactly one run directory, found ${dirs.length}: ${dirs.join(", ")}`);
@@ -592,6 +629,76 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   }
 }
 
+/**
+ * Collect a qualification verdict.
+ *
+ * The qualification harness has no run directory and no results.jsonl - its structured output is the
+ * corpus registry it updates in place with `--write`. That file is the verdict: mutationQualified, the
+ * reason, and the environment it was qualified in. The console log is collected alongside it because a
+ * FAILED qualification's reason is the whole point of running it, and a reason recorded only as console
+ * text is not evidence.
+ */
+async function collectQualification(record: ValidationRecord, deps: ValidationStepDeps, t0: number): Promise<ValidationStepResult> {
+  const { sandbox, bucket } = deps;
+  const keys: string[] = [];
+
+  let corpus: string;
+  try {
+    corpus = (await sandbox.readFile(`${DIFFCI_DIR}/${CORPUS_DEFINITION_PATH}`)).content;
+  } catch (err) {
+    return fail(record, "verdict-unreadable", err instanceof Error ? err.message : String(err));
+  }
+
+  // The verdict must actually name the repository this job qualified, or something has gone wrong
+  // upstream of the answer and the file describes some other run.
+  let verdict: { mutationQualified?: string; mutationQualificationReason?: string } | undefined;
+  try {
+    const entries = JSON.parse(corpus) as Array<{ source: string; mutationQualified?: string; mutationQualificationReason?: string }>;
+    verdict = entries.find((e) => e.source === deps.job.repository);
+  } catch (err) {
+    return fail(record, "verdict-unparseable", err instanceof Error ? err.message : String(err));
+  }
+  if (!verdict) {
+    return fail(record, "verdict-missing", `the collected corpus has no entry for ${deps.job.repository}`);
+  }
+
+  const corpusKey = `${resultPrefix(record)}/corpus-definition.json`;
+  await bucket.put(corpusKey, corpus);
+  keys.push(corpusKey);
+
+  if (record.logs?.qualify) {
+    const logKey = `${resultPrefix(record)}/qualify.log`;
+    await bucket.put(logKey, record.logs.qualify);
+    keys.push(logKey);
+  }
+
+  const envKey = `${resultPrefix(record)}/environment.json`;
+  await bucket.put(
+    envKey,
+    `${JSON.stringify(
+      {
+        runId: record.runId,
+        jobId: record.jobId,
+        mode: "qualify",
+        repository: deps.job.repository,
+        pinnedHeadSha: deps.job.pinnedHeadSha,
+        mutationQualified: verdict.mutationQualified ?? null,
+        reason: verdict.mutationQualificationReason ?? null,
+        environment: record.environment ?? null,
+        timings: record.timings,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  keys.push(envKey);
+
+  record.resultKeys = keys;
+  record.timings.collectMs = deps.now() - t0;
+  record.step = "done";
+  return { record, nextAlarmDelayMs: null };
+}
+
 /** The pure state machine, injectable for tests exactly like the analysis shards. */
 export async function stepValidation(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   switch (record.step) {
@@ -601,6 +708,8 @@ export async function stepValidation(record: ValidationRecord, deps: ValidationS
       return prepare(record, deps);
     case "observing":
       return observe(record, deps);
+    case "qualifying":
+      return qualifyStep(record, deps);
     case "locating":
       return locate(record, deps);
     case "mutating":
