@@ -180,6 +180,14 @@ async function cmdCollect(args: Record<string, string>): Promise<void> {
     if (fetched[required] === undefined) fail(`run ${runId} is missing ${required} - it did not complete`);
   }
 
+  // Defence in depth against the failure this harness can produce most convincingly: a COMPLETE run
+  // that classified nothing. The shard refuses it too, but a run collected from an older shard, or one
+  // whose results were truncated in transit, must not become a frozen bundle reporting a clean zero.
+  const resultRows = fetched["results.jsonl"]!.split("\n").filter((l) => l.trim().length > 0).length;
+  if (resultRows === 0) {
+    fail(`run ${runId} completed but classified nothing (results.jsonl is empty). That is a silent no-op, not a result - refusing to collect it as evidence.`);
+  }
+
   const manifest = JSON.parse(fetched["manifest.json"]!) as { runId?: string };
   const localRunId = manifest.runId ?? runId;
   const outDir = resolve(args.out ?? join(REPO_ROOT, ".dogfood", "runs", localRunId));

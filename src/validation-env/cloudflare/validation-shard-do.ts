@@ -100,6 +100,10 @@ export interface ValidationRecord {
   runDirName?: string;
   resultKeys?: string[];
   observedRows?: number;
+  /** Observations the mutation pass will actually accept, computed before it runs. */
+  selectableCandidates?: number;
+  /** Rows the mutation pass classified. Zero is a failure, not a result. */
+  resultRows?: number;
   errorClass?: string;
   error?: string;
   logs?: { observe?: string; mutate?: string };
@@ -260,14 +264,26 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
     if (!isRepositorySlug(job.repository)) return fail(record, "invalid-repository", job.repository);
     if (!isPinnedSha(job.pinnedHeadSha)) return fail(record, "invalid-pinned-sha", job.pinnedHeadSha);
 
-    const clone = await sandbox.exec(
-      `rm -rf ${PINNED_CLONE} && git clone --quiet https://github.com/${job.repository}.git ${PINNED_CLONE}`,
-      { timeout: 20 * 60_000 },
-    );
+    const remote = `https://github.com/${job.repository}.git`;
+
+    // Clear any rewrite left by an earlier job before cloning, or this clone would be served from the
+    // previous job's mirror.
+    await sandbox.exec(`git config --global --unset-all url.${PINNED_CLONE}.insteadOf || true`, { timeout: 30_000 });
+
+    const clone = await sandbox.exec(`rm -rf ${PINNED_CLONE} && git clone --quiet ${remote} ${PINNED_CLONE}`, { timeout: 20 * 60_000 });
     if (!clone.success) return fail(record, "clone-failed", tail(clone));
 
+    // `checkout -B` (a branch, not a detached HEAD) because the harness re-clones this mirror, and a
+    // clone of a repository whose HEAD is detached does not reliably reproduce that checkout.
     const pin = await sandbox.exec(`cd ${PINNED_CLONE} && git checkout -B diffci-validation ${job.pinnedHeadSha}`, { timeout: 5 * 60_000 });
     if (!pin.success) return fail(record, "pin-failed", `could not pin ${job.repository} at ${job.pinnedHeadSha}: ${tail(pin)}`);
+
+    // The pin, without lying about identity. `dogfood-observe` records `identity.repository` as the
+    // corpus entry's `source` verbatim, so the corpus must name "owner/name" - but that same string is
+    // what it hands to `git clone`. This rewrite lets both be true: the harness clones the real slug,
+    // git serves it from the mirror above, and the observed history is fixed at `pinnedHeadSha`.
+    const rewrite = await sandbox.exec(`git config --global url.${PINNED_CLONE}.insteadOf ${remote}`, { timeout: 30_000 });
+    if (!rewrite.success) return fail(record, "pin-rewrite-failed", tail(rewrite));
 
     await sandbox.writeFile(JOB_CORPUS_PATH, JSON.stringify(buildJobCorpus(job), null, 2));
 
@@ -373,9 +389,40 @@ async function locate(record: ValidationRecord, deps: ValidationStepDeps): Promi
       return fail(record, "clone-ambiguous", `expected exactly one clone in ${scratch}, found ${clones.length}: ${clones.join(", ")}`);
     }
 
-    const rows = await sandbox.exec(`wc -l < ${OBSERVED_CORPUS_PATH}`, { timeout: 30_000 });
-    record.observedRows = Number(rows.stdout.trim()) || 0;
-    if (record.observedRows === 0) return fail(record, "no-observations", "the observation pass wrote an empty corpus");
+    // Parsed rather than counted. On 2026-08-29 a run observed 25 rows and still produced zero
+    // candidates, because every row was labelled with the pinned clone's PATH instead of "owner/name"
+    // and the mutation pass's `--repository` filter then matched none of them. A line count cannot see
+    // that; it reported 25 and the run went on to write an empty, COMPLETE, successful-looking result.
+    let corpus: string;
+    try {
+      corpus = (await sandbox.readFile(OBSERVED_CORPUS_PATH)).content;
+    } catch (err) {
+      return fail(record, "corpus-unreadable", err instanceof Error ? err.message : String(err));
+    }
+    const observed = corpus
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .map((line) => JSON.parse(line) as { identity: { repository: string }; decision: { mode: string; selected: number | string } });
+
+    record.observedRows = observed.length;
+    if (observed.length === 0) return fail(record, "no-observations", "the observation pass wrote an empty corpus");
+
+    const matching = observed.filter((r) => r.identity.repository === deps.job.repository);
+    if (matching.length === 0) {
+      const seen = [...new Set(observed.map((r) => r.identity.repository))].join(", ");
+      return fail(
+        record,
+        "corpus-identity-mismatch",
+        `the mutation pass filters on repository "${deps.job.repository}", but the ${observed.length} observed row(s) are labelled: ${seen}. Every candidate would be silently discarded.`,
+      );
+    }
+
+    // The candidates the mutation pass will actually accept: SELECTIVE, having selected something.
+    const selectable = matching.filter((r) => r.decision.mode === "SELECTIVE" && typeof r.decision.selected === "number" && r.decision.selected > 0);
+    if (selectable.length === 0) {
+      return fail(record, "no-candidates", `${matching.length} observation(s) for ${deps.job.repository}, but none were SELECTIVE with a non-empty selection`);
+    }
+    record.selectableCandidates = selectable.length;
 
     record.scratchDir = scratch;
     record.clonePath = `${scratch}/${clones[0]!}`;
@@ -435,6 +482,20 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
     await put("results.jsonl", `${runDir}/results.jsonl`, true);
     await put("COMPLETE", `${runDir}/COMPLETE`, true);
     await put("corpus.jsonl", OBSERVED_CORPUS_PATH, true);
+
+    // COMPLETE means the harness finished, NOT that it measured anything. A mutation pass whose
+    // candidate list came out empty finishes almost instantly and writes COMPLETE over zero rows - a
+    // failure shaped exactly like a success, and the one this whole environment exists to avoid
+    // producing. Observed for real on 2026-08-29: 30 seconds, COMPLETE, zero rows, step "done".
+    const resultRows = (await sandbox.readFile(`${runDir}/results.jsonl`)).content.split("\n").filter((l) => l.trim().length > 0).length;
+    if (resultRows === 0) {
+      return fail(
+        record,
+        "empty-results",
+        `the mutation pass completed but classified nothing (0 rows) despite ${record.selectableCandidates ?? "?"} selectable candidate(s) - this is not a result, it is a silent no-op`,
+      );
+    }
+    record.resultRows = resultRows;
 
     const environment = {
       runId: record.runId,

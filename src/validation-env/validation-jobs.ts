@@ -116,14 +116,22 @@ export function isRepositorySlug(repository: string): boolean {
 }
 
 /**
- * The corpus definition handed to `dogfood-observe`. `source` is the PINNED clone on local disk, which
- * `materialise()` re-clones into its own scratch - so the harness still never checks commits out in the
- * tree this DO controls, and the observed history is fixed regardless of what upstream `main` does.
+ * The corpus definition handed to `dogfood-observe`.
+ *
+ * `source` MUST be the "owner/name" slug, never the pinned clone's path, because `dogfood-observe`
+ * records `identity.repository` as `entry.source` verbatim (scripts/dogfood-observe.ts). Pointing it at
+ * a local path was tried on 2026-08-29 and produced 25 observations all labelled
+ * `/workspace/target-src`; the mutation pass then filtered on `--repository honojs/hono`, matched
+ * nothing, and wrote a COMPLETE run with ZERO rows in 30 seconds. It reported success.
+ *
+ * Pinning is achieved instead by a git `insteadOf` rewrite in the container (see the shard's `prepare`
+ * step), so the harness clones this exact slug while git silently serves it from a local mirror parked
+ * at `pinnedHeadSha`. Identity stays honest and history stays fixed, without the harness changing.
  */
 export function buildJobCorpus(job: ValidationJob): unknown[] {
   return [
     {
-      source: PINNED_CLONE,
+      source: job.repository,
       stresses: `${job.description} (pinned at ${job.pinnedHeadSha})`,
       commits: job.commits,
     },

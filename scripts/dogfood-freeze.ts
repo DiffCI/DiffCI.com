@@ -125,6 +125,14 @@ function main(): void {
     .filter((line) => line.trim().length > 0)
     .map((line) => JSON.parse(line) as MutationRow);
 
+  // COMPLETE says the harness finished; it does not say it measured anything. A mutation pass whose
+  // candidate list came out empty finishes in seconds and writes COMPLETE over zero rows (observed for
+  // real on 2026-08-29, when a repository-identity mismatch silently discarded all 22 candidates).
+  // Freezing that would mint an evidence bundle whose funnel reads 0/0 with a clean checksum over it.
+  if (rows.length === 0) {
+    throw new Error(`${runDir} completed but classified nothing - an empty run is a silent no-op, not evidence, and must not be frozen`);
+  }
+
   const outRoot = resolve(flag("out") ?? join(repoRoot, ".dogfood", "frozen"));
   const frozenDir = join(outRoot, String(manifest.runId ?? "unknown-run"));
   mkdirSync(frozenDir, { recursive: true });

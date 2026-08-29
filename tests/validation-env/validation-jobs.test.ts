@@ -108,11 +108,25 @@ describe("the hono reproduction matches the evidence it reproduces", () => {
 describe("the argv handed to the container", () => {
   const job = getValidationJob("hono-reproduction")!;
 
-  it("points the observation pass at the pinned clone, never at the live repository", () => {
+  it("labels the corpus with owner/name, because that string becomes the recorded repository identity", () => {
+    // Regression guard for 2026-08-29. `dogfood-observe` writes `identity.repository` as the corpus
+    // entry's `source` verbatim, and `dogfood-mutate` filters candidates on it. Setting `source` to the
+    // pinned clone's PATH produced 25 observations labelled "/workspace/target-src", a `--repository
+    // honojs/hono` filter that matched none of them, and a COMPLETE run with zero rows that reported
+    // success in 30 seconds. Pinning is done by a git insteadOf rewrite instead, not by this string.
     const corpus = buildJobCorpus(job) as Array<{ source: string; commits: number }>;
     assert.equal(corpus.length, 1);
-    assert.equal(corpus[0]!.source, PINNED_CLONE);
+    assert.equal(corpus[0]!.source, job.repository);
+    assert.notEqual(corpus[0]!.source, PINNED_CLONE, "a filesystem path here silently discards every candidate");
     assert.equal(corpus[0]!.commits, job.commits);
+  });
+
+  it("filters the mutation pass on the same string the corpus will be labelled with", () => {
+    // The two must agree or every candidate is dropped without an error. This asserts the agreement
+    // directly rather than trusting that both were updated together.
+    const corpus = buildJobCorpus(job) as Array<{ source: string }>;
+    const argv = mutateArgv(job, "/scratch", "/scratch/clone");
+    assert.equal(argv[argv.indexOf("--repository") + 1], corpus[0]!.source);
   });
 
   it("passes the mutation pass the repository filter, without which other repositories are attempted against the wrong tree", () => {
