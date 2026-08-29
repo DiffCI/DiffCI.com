@@ -103,8 +103,8 @@
   },
   {
     "source": "honojs/hono",
-    "stresses": "TS with vitest and a committed lockfile, no services or credentials, moderate internal coupling. A control for the monorepo cases.",
-    "commits": 10,
+    "stresses": "TS with vitest, multi-project config (main, jsx-runtime-default, jsx-runtime-dom, plus runtime-tests/* which resolve on Linux and not on Windows), coverage enabled in config, no services or credentials. A control for the monorepo cases.",
+    "commits": 25,
     "observationQualified": "unknown",
     "mutationQualified": "yes",
     "install": [
@@ -117,7 +117,9 @@
     "testArgs": [
       "run"
     ],
-    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence",
-    "mutationQualifiedAt": "2026-08-28T14:59:07.259Z"
+    "mutationQualificationReason": "20/22 candidates recall-measurable and confirmed, 0 false greens, in the canonical Linux environment (runs hono-linux-05 and -06, identical funnels). On the Windows developer host the same corpus yielded 13 measurable, with 4 candidates unreachable (shallow clone lacked the commits) and 3 baselines already failing.",
+    "mutationQualifiedAt": "2026-08-28T14:59:07.259Z",
+    "lockfile": "NONE. Verified 2026-08-29 at e2740d5a: package-lock.json, pnpm-lock.yaml, bun.lockb and yarn.lock are all absent, and package.json declares packageManager bun@1.2.20 while this harness installs with npm. The dependency tree is therefore NOT reproducible across time or machines. An earlier entry here claimed a committed lockfile; that was wrong.",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2"
   }
 ]
