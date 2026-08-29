@@ -52,7 +52,8 @@
     "validation:pack": "tsx scripts/diffci-validation-cli.ts pack",
     "validation:start": "tsx scripts/diffci-validation-cli.ts start",
     "validation:status": "tsx scripts/diffci-validation-cli.ts status",
-    "validation:collect": "tsx scripts/diffci-validation-cli.ts collect"
+    "validation:collect": "tsx scripts/diffci-validation-cli.ts collect",
+    "dogfood:compare": "tsx scripts/dogfood-compare.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",
