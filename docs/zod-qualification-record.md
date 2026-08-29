@@ -60,3 +60,63 @@ place the discrepancy has ever been observed.
 This run used the harness as it stood before `QUALIFIER_VERSION` 2.0.0 — no exit-status invariant, no
 recorded per-run evidence, unbounded clone. That does not affect this outcome, because no verdict was
 produced to be trusted. Any future zod qualification must run under 2.0.0 or later.
+
+---
+
+# Run `zod-qualify-02`, 2026-08-29 — MUTATION-QUALIFIED
+
+Same pinned commit, same environment, same commands. Qualifier 2.0.0: bounded clone, exit-status
+invariant, recorded evidence, shared execution primitive, per-stage progress.
+
+```
+[stage] clone        0.1s
+[stage] install     16.7s
+[stage] build       15.9s
+[stage] baseline 1  77.3s
+[stage] baseline 2  55.9s
+MUTATION-QUALIFIED  (166s)
+
+run 1: exit=0 parsedFailures=0
+  | Test Files  573 passed (573)
+  | Tests  7808 passed (7808)
+run 2: exit=0 parsedFailures=0
+  | Test Files  573 passed (573)
+  | Tests  7808 passed (7808)
+```
+
+## Why this green is trustworthy where TanStack's was not
+
+**Exit status 0 on both runs**, not merely a parsed count of zero. The invariant that caught the
+TanStack false green — a non-zero exit outranks any summary the parser can read — is satisfied here
+rather than bypassed. zod's test command is bare `vitest run`, which emits a single summary describing
+the whole run, so there is no orchestrator aggregation for the parser to misread. Both runs agree
+exactly: 573 files, 7808 tests.
+
+The evidence is in the log, so this verdict can be checked by someone who was not present.
+
+## The unexplained discrepancy, which this run does NOT resolve
+
+`zod-qualify-01` ran **180 minutes** and was killed by the external guard without producing a verdict.
+`zod-qualify-02` completed the same work in **166 seconds** — a factor of about 65.
+
+Nothing established here explains that. What changed between the runs was the harness's *bookkeeping* —
+a bounded clone, a shared execution primitive, recorded evidence, stage logging — none of which should
+alter how long an install, a build or a test run takes. The calibration suite passed 12/12 inside this
+same environment, including the process-tree bounding cases, so the timeout mechanism itself is not
+implicated.
+
+The most likely remaining candidates are environmental and transient — a degraded container, a slow
+package registry — but **no cause is established, and none is claimed**. `zod-qualify-01` remains
+`QUALIFICATION_TIMEOUT / cause unknown`, preserved separately and not reinterpreted by this result.
+
+That a run can consume three hours and yield nothing, while the same work elsewhere takes under three
+minutes, is itself a fact worth carrying into any future claim about this laboratory's reliability.
+
+## What it changes about the corpus
+
+zod is the **first monorepo to qualify**. The bias that motivated building this environment — both
+monorepos attempted on the developer host failed, both single-package libraries passed, so safety
+evidence was accumulating only where the graph-explosion question matters least — is now broken by
+evidence rather than by argument.
+
+Mutation-qualified repositories: `honojs/hono`, `unjs/h3`, `colinhacks/zod`.

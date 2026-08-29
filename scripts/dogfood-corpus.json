@@ -11,8 +11,8 @@
     "stresses": "Monorepo with workspaces and TypeScript project references. Exercises graph construction across package boundaries, and produced the finding that DiffCI can select MORE than a path rule.",
     "commits": 10,
     "observationQualified": "yes",
-    "mutationQualified": "no",
-    "mutationQualificationReason": "NO CONCLUSION - qualification infrastructure timeout (run zod-qualify-01, 2026-08-29). The canonical environment cleared the original blocker: corepack was enabled, so the bare-pnpm-not-on-PATH failure did not recur, and the run reached the qualifying stage and stayed there. The harness process ran as a single process for 3 hours and was killed by the external DO-level guard (maxRunMs 10800000ms, elapsed 10800429ms) without ever producing a verdict. This says NOTHING about whether zod suite is green or dirty. It is a statement about the laboratory, not the repository. Unresolved: the observed 180-minute runtime is inconsistent with the expected aggregate bounds (4 x 25 min = 100 min) unless substantial time was spent in the then-unbounded clone stage. The responsible stage is not established.",
+    "mutationQualified": "yes",
+    "mutationQualificationReason": "MUTATION-QUALIFIED (run zod-qualify-02, 2026-08-29, qualifier 2.0.0). Suite green on 2 consecutive runs: 573 test files, 7808 tests, exit status 0 on BOTH runs with 0 parsed failures - so the exit-status invariant is satisfied, not merely the parsed count. Stages: clone 0.1s, install 16.7s, build 15.9s, baseline 1 77.3s, baseline 2 55.9s, total 166s. NOTE the unexplained discrepancy with zod-qualify-01, which ran the same commands in the same environment for 180 minutes and was killed by the external guard without producing a verdict. Cause of that run remains unknown; this run does not explain it, it only shows the same work completing in 166 seconds.",
     "install": [
       "corepack",
       "pnpm",
@@ -29,7 +29,8 @@
       "run"
     ],
     "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
-    "mutationQualifiedBy": "no verdict produced - killed by external guard before completion (harness predates qualifier 2.0.0)"
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "mutationQualifiedAt": "2026-08-29T09:34:28.587Z"
   },
   {
     "source": "unjs/h3",
