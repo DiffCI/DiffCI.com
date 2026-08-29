@@ -23,6 +23,34 @@ export interface ParsedTestOutput {
   framework: string | undefined;
 }
 
+/**
+ * Removes ANSI escape sequences before any adapter sees the output.
+ *
+ * WHY THIS IS NOT COSMETIC. Every adapter here anchors its summary line with `^\s*`. A coloured runner
+ * emits that line starting with an escape sequence rather than whitespace, so the anchor fails, the
+ * parser correctly reports "cannot understand this output", and a perfectly good run is recorded as
+ * INVALID_RUN.
+ *
+ * Found on 2026-08-29: honojs/hono in the canonical Linux environment returned INVALID_RUN for all 22
+ * mutation candidates. Every suite had actually PASSED - exit 0, 147 files, 4961 tests - and the summary
+ * line was present and correct, wrapped in colour codes. The same repository parsed fine on the Windows
+ * host, which emitted the identical summary uncoloured. So it presented as an environment disagreement
+ * and was really a parser that could not read its own runner in colour. `FORCE_COLOR=0` is already set
+ * by the harness and did not prevent it, because `CI=1` is set alongside and vitest colourises under CI.
+ *
+ * SAFE WITH RESPECT TO EXISTING EVIDENCE: stripping is a no-op on output containing no escape
+ * sequences, so any result previously parsed from uncoloured output is unchanged, and the frozen
+ * developer-host bundles stay valid rather than needing to be re-derived.
+ *
+ * Handles CSI sequences (colour, cursor movement) and OSC sequences (hyperlinks, window title,
+ * terminated by BEL or ST), which is the full set a test runner realistically emits.
+ */
+export function stripAnsi(output: string): string {
+  const OSC = /\x1B\][^\x07\x1B]*(?:\x07|\x1B\\)/g;
+  const CSI = /\x1B\[[0-9;?]*[ -/]*[@-~]/g;
+  return output.replace(OSC, "").replace(CSI, "");
+}
+
 interface Adapter {
   name: string;
   /** Returns a failure count if this adapter recognises the output, otherwise undefined. */
@@ -92,10 +120,11 @@ const ADAPTERS: Adapter[] = [
  * its summary line is the most specific - `# fail N` appears in no other runner's output.
  */
 export function parseTestOutput(output: string): ParsedTestOutput {
+  const plain = stripAnsi(output);
   for (const adapter of ADAPTERS) {
-    const failures = adapter.failures(output);
+    const failures = adapter.failures(plain);
     if (failures === undefined) continue;
-    return { failures, failedNames: adapter.names(output), framework: adapter.name };
+    return { failures, failedNames: adapter.names(plain), framework: adapter.name };
   }
   return { failures: undefined, failedNames: [], framework: undefined };
 }

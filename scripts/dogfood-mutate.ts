@@ -122,6 +122,21 @@ interface MutationResult {
   /** Every file this pass reverted, in order. Records how hard it had to look for a measurable one. */
   attemptedFiles?: string[];
   durations?: { install: number; baseline: number; fullMutated: number; selectedMutated: number };
+  /**
+   * What the runner actually printed when its output could not be parsed (2026-08-29).
+   *
+   * Added after a canonical-environment run returned INVALID_RUN for all 22 candidates with the single
+   * reason "could not parse the baseline run's failure count" and NOTHING ELSE - no exit status, no
+   * output, no way to tell a crashed runner from a missing module from a timeout without re-running the
+   * whole experiment. The refusal to parse was correct; discarding the evidence of WHY was not. This is
+   * diagnostic only and is recorded on the failure path, so it cannot influence any classification.
+   */
+  diagnostics?: {
+    stage: "baseline" | "full-mutated" | "selected-mutated";
+    exitStatus: number | null;
+    /** Tail, not the whole log - enough to identify the failure, bounded so a run stays readable. */
+    outputTail: string;
+  };
   observedAt: string;
 }
 
@@ -220,6 +235,38 @@ function parseFailures(output: string): { failures: number | undefined; failedNa
   return { failures: parsed.failures, failedNames: parsed.failedNames };
 }
 
+/**
+ * The tail of what a runner printed, for the record rows that could not parse it.
+ *
+ * stderr first: when a runner dies rather than reports (a missing module, a config error, a killed
+ * process), the reason is on stderr, and stdout is usually empty or a banner. An empty tail is itself
+ * informative - it distinguishes "printed something we do not understand" from "printed nothing at
+ * all", which are different failures with different fixes.
+ */
+function outputTail(result: { stdout: string; stderr: string }, limit = 800): string {
+  const stderr = result.stderr.trim();
+  const stdout = result.stdout.trim();
+  const combined = [stderr && `[stderr] ${stderr}`, stdout && `[stdout] ${stdout}`].filter(Boolean).join("\n");
+  if (combined.length === 0) return "(no output on either stream)";
+
+  // A plain tail is not enough. hono's suite ends with a coverage table hundreds of lines long, so the
+  // last 800 characters showed the coverage report and nothing about whether a summary line existed at
+  // all (2026-08-29). Summary-shaped lines are extracted by content, wherever they appear, because
+  // "printed a summary we could not parse" and "printed no summary" are different failures.
+  const summary = combined
+    .split(/\r?\n/)
+    .filter((l) => /Test Files|^\s*Tests\s|No test files|\d+ (passed|failed|skipped)|FAIL|Error:/i.test(l))
+    .slice(-20)
+    .join("\n");
+
+  return [
+    `--- summary-shaped lines (${summary ? summary.split("\n").length : 0}) ---`,
+    summary || "(none found - the runner printed no line resembling a test summary)",
+    `--- last ${limit} chars ---`,
+    combined.slice(-limit),
+  ].join("\n");
+}
+
 function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string, commands: RepoCommands, onlyRepository?: string): Candidate[] {
   const rows = readFileSync(corpusPath, "utf8")
     .split("\n")
@@ -308,7 +355,13 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number, 
   // 1. BASELINE. The suite must be green before mutation, or nothing after it can be attributed.
   const baseline = run(testExec, fullArgs, candidate.repoPath, timeoutMs);
   const baselineParsed = parseFailures(baseline.stdout + baseline.stderr);
-  if (baselineParsed.failures === undefined) return { ...base, reason: "could not parse the baseline run's failure count" };
+  if (baselineParsed.failures === undefined) {
+    return {
+      ...base,
+      reason: "could not parse the baseline run's failure count",
+      diagnostics: { stage: "baseline", exitStatus: baseline.status, outputTail: outputTail(baseline) },
+    };
+  }
   if (baselineParsed.failures > 0) {
     return { ...base, classification: "ENVIRONMENT_DIRTY", reason: `${baselineParsed.failures} test(s) already failing before mutation`, baselineFailures: baselineParsed.failures };
   }
