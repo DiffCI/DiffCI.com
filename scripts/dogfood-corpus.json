@@ -30,7 +30,8 @@
     ],
     "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
     "mutationQualifiedBy": "qualifier 2.0.0",
-    "mutationQualifiedAt": "2026-08-29T09:34:28.587Z"
+    "mutationQualifiedAt": "2026-08-29T09:34:28.587Z",
+    "mutationEvidence": "zod-mutation-01 (2026-08-29, canonical Linux): 11 candidates, 0 dirty, 0 invalid, 6 recall-unmeasurable, 5 recall-measurable, 5 confirmed, 0 false greens. Efficiency 4 EFFICIENT / 0 COMPARABLE / 1 SELECTION_OVERBROAD. Across the five confirmed: 629 tests selected vs 761 path-rule comparator vs 967 FULL. DEFENSIBLE WORDING: DiffCI executed 17% fewer tests than the comparator while preserving mutation detection; whether that translates into incremental COMPUTE savings has not been measured. n=5 cannot support a reliability estimate. Open observation: selection is near-constant at 125-127 while the comparator swings 113-193 - preserved, not optimised away before measurement."
   },
   {
     "source": "unjs/h3",
