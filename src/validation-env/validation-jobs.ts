@@ -165,6 +165,39 @@ const JOBS: Record<string, ValidationJob> = {
     // manufacture exactly the environmental verdict this job exists to test for.
     maxRunMs: 3 * 60 * 60_000,
   },
+
+  /**
+   * TanStack/query qualification (2026-08-29).
+   *
+   * Its recorded disqualification had two causes, and the canonical environment addresses both:
+   *
+   *   1. 59 tests failed at HEAD because workspace package outputs were missing
+   *      ("Failed to resolve entry for package @tanstack/svelte-query"). Deterministic, not flaky - 59
+   *      on both baseline runs. The registry entry carried NO build command at all.
+   *   2. Its documented build is nx-affected-based, which needs git history the shallow clone did not
+   *      have. Qualification here uses a full clone.
+   *
+   * The registry now carries `corepack pnpm build:all`. That is a choice between two of the
+   * repository's OWN documented scripts, recorded with its reason in the corpus entry: `build` is
+   * `nx affected`, which computes nothing on an unmodified tree and so leaves exactly the outputs the
+   * tests import missing; `build:all` is `nx run-many`, which builds every package. It is not a
+   * command invented for this harness.
+   *
+   * If it still fails, the reason is recorded and TanStack stays unqualified. That would itself be a
+   * finding worth having - that a tightly coupled monorepo is not reproducible under a reasonable
+   * modern CI environment - and it is worth more than narrowing the corpus to what happens to work.
+   */
+  "tanstack-qualification": {
+    id: "tanstack-qualification",
+    description: "Qualify TanStack/query in the canonical Linux environment: install, full workspace build, two green baselines.",
+    mode: "qualify",
+    repository: "TanStack/query",
+    // main as of 2026-08-29.
+    pinnedHeadSha: "2969edf32f7e0c48e2a108d84712d6e01edfde21",
+    expectedAgentIntegrity: "sha512-mj4GQJLruQTexqkKybpP4KXGSZsqfs5vD7UbeMPQzV5LfqaR7HwKjuT2l7AP6o8yzyk3fC9aeGSWuyk3+CH7Kw==",
+    // Larger than zod's: an nx run-many build across every workspace package, then two full baselines.
+    maxRunMs: 4 * 60 * 60_000,
+  },
 };
 
 export function getValidationJob(id: string): ValidationJob | undefined {

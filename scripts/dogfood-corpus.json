@@ -82,7 +82,13 @@
       "run"
     ],
     "mutationQualificationReason": "Installs cleanly, but 59 tests fail at HEAD on every run because workspace packages are not built (\"Failed to resolve entry for package @tanstack/svelte-query\"). Its documented build is `nx affected --target=build`, which needs git history to compute what is affected and therefore does not work against the shallow clone qualification uses. Same class as zod: a tightly coupled monorepo whose tests require built package outputs. Deterministically dirty, not flaky - 59 on both runs.",
-    "mutationQualifiedAt": "2026-08-28T15:15:52.660Z"
+    "mutationQualifiedAt": "2026-08-28T15:15:52.660Z",
+    "build": [
+      "corepack",
+      "pnpm",
+      "build:all"
+    ],
+    "buildRationale": "The repository documents two build scripts. `build` is `nx affected --target=build`, which computes what changed relative to a base and therefore builds NOTHING on a freshly cloned, unmodified tree - leaving the workspace package outputs its tests import missing. `build:all` is `nx run-many --target=build`, the repository own script for building every package unconditionally, which is what a clean environment needs. Choosing between two of the repository documented scripts, with the reason recorded; not a bespoke command invented for this harness."
   },
   {
     "source": "vuejs/core",
