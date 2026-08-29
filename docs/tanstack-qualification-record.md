@@ -86,3 +86,60 @@ expressed through it. Qualification answers whether the documented test surface 
 repository mutation-measurable would additionally require a way to run an arbitrary subset of test files
 within nx's project context. That is a real limitation of the harness against orchestrated monorepos, and
 it is recorded here rather than discovered later.
+
+### Run 2 outcome — `tanstack-qualify-02` — REPORTED QUALIFIED, NOT RECORDED
+
+The run returned `mutationQualified: "yes"`, `"suite green on 2 consecutive runs under the documented
+sequence"`. That sentence was the entire artefact — the harness discarded the runner's output on the
+qualification path, so nothing could confirm or refute it.
+
+Per the risk registered in advance, it was not accepted. It was **wrong**, and Run 3 proves it.
+
+---
+
+## Run 3 — `tanstack-qualify-03` — NOT QUALIFIED (verdict auditable)
+
+Identical command to Run 2. The only change was to the harness: record each baseline run's exit status
+and summary lines, and refuse to qualify when the runner's exit status contradicts the parsed count.
+
+**Verdict:** `run 1: the runner exited 1 but the summary this harness could read reported 0 failures.`
+
+The evidence, now in the log:
+
+```
+run 1: exit=1 parsedFailures=0
+  | Test Files  2 passed (2)
+  | Tests  2 passed (2)                     <-- the ONLY line the parser saw
+  | > nx run @tanstack/query-broadcast-client-experimental:"test:lib"
+  | Tests  11 passed (11)
+  | > nx run @tanstack/query-codemods:"test:lib"
+  | Tests  17 passed (17)
+  ...
+  | Tests  316 passed | 6 skipped (322)
+  | NX   Running target test:lib for 26 projects and 9 tasks they depend on failed
+```
+
+nx ran **26 projects**, emitted a summary per project, and reported that tasks **failed**. The parser
+read the first summary — a two-test project that passed — and concluded zero failures.
+
+### What this establishes
+
+1. **TanStack/query is NOT mutation-qualified** under its documented nx test semantics. nx exits 1;
+   tasks failed across the run.
+2. **Run 2's "qualified" was a defect in DiffCI's harness, not a state of the repository.** Same
+   command, same commit, same environment — the verdict changed because the harness stopped trusting a
+   per-project summary as if it described the whole run.
+3. **The failure count is unknowable from this output.** Many projects genuinely passed (528, 316, 37,
+   17, 11, 2 tests). Which failed, and how many, cannot be read from an orchestrator's aggregated
+   output by a parser that anchors on a single summary line. So this is not "N tests are dirty" — it is
+   "this harness cannot count failures across an orchestrator, and the orchestrator says something
+   failed."
+
+### Why this was the most valuable run of the three
+
+It is the first time the validation system caught itself about to manufacture misleading evidence at
+the **qualification** level. A false green here is worse than one at the mutation level: it admits a
+repository whose baseline was never green into the corpus, and every safety classification derived from
+it afterwards rests on that baseline. The guard that caught it — the runner's own exit status outranks
+any count this harness parses — is generic, and applies to every orchestrated repository the corpus will
+ever add.

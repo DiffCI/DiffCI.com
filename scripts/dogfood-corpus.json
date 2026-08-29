@@ -83,7 +83,7 @@
       "--target=test:lib",
       "--exclude=examples/**"
     ],
-    "mutationQualificationReason": "Installs cleanly, but 59 tests fail at HEAD on every run because workspace packages are not built (\"Failed to resolve entry for package @tanstack/svelte-query\"). Its documented build is `nx affected --target=build`, which needs git history to compute what is affected and therefore does not work against the shallow clone qualification uses. Same class as zod: a tightly coupled monorepo whose tests require built package outputs. Deterministically dirty, not flaky - 59 on both runs.",
+    "mutationQualificationReason": "NOT QUALIFIED under documented nx semantics (run tanstack-qualify-03, 2026-08-29): nx run-many --target=test:lib --exclude=examples/** exits 1 - \"Running target test:lib for 26 projects and 9 tasks they depend on failed\". Many projects pass individually; the failure count is unknowable because this harness parses a single summary line and nx emits one per project. An earlier run of the identical command (tanstack-qualify-02) reported QUALIFIED and was wrong - the harness was trusting the first project summary as the whole run. See docs/tanstack-qualification-record.md.",
     "mutationQualifiedAt": "2026-08-28T15:15:52.660Z",
     "build": [
       "corepack",
@@ -92,7 +92,8 @@
     ],
     "buildRationale": "The repository documents two build scripts. `build` is `nx affected --target=build`, which computes what changed relative to a base and therefore builds NOTHING on a freshly cloned, unmodified tree - leaving the workspace package outputs its tests import missing. `build:all` is `nx run-many --target=build`, the repository own script for building every package unconditionally, which is what a clean environment needs. Choosing between two of the repository documented scripts, with the reason recorded; not a bespoke command invented for this harness.",
     "previousGenericVerdict": "NOT QUALIFIED under generic bare-Vitest invocation (run tanstack-qualify-01, 2026-08-29): 1413 deterministic failures on both baselines (1413, 1413). Clone, install and build:all all succeeded. That run executed vitest across the whole workspace including examples/** and integrations/**, which TanStack CI excludes, so it does NOT establish that the documented CI test surface is dirty. Preserved permanently; see docs/tanstack-qualification-record.md.",
-    "testCommandRationale": "nx is the orchestrator TanStack tests through, so it is invoked directly rather than approximated with a hand-built vitest exclusion list. run-many rather than affected: nx.json sets defaultBase main and CI supplies NX_BASE/NX_HEAD from a PR diff via nrwl/nx-set-shas, so on an unmodified clone at main affected computes zero projects and runs nothing. run-many is TanStack own non-PR CI form (test = test:ci = nx run-many). Same relationship as build:all to build."
+    "testCommandRationale": "nx is the orchestrator TanStack tests through, so it is invoked directly rather than approximated with a hand-built vitest exclusion list. run-many rather than affected: nx.json sets defaultBase main and CI supplies NX_BASE/NX_HEAD from a PR diff via nrwl/nx-set-shas, so on an unmodified clone at main affected computes zero projects and runs nothing. run-many is TanStack own non-PR CI form (test = test:ci = nx run-many). Same relationship as build:all to build.",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2"
   },
   {
     "source": "vuejs/core",
