@@ -40,11 +40,10 @@ The harness caps each stage at 25 minutes: install, build, and two baseline runs
 ceiling. The process ran for 180.
 
 The clone stage was unbounded at the time this run started — that defect was found and fixed during the
-run — but for the clone to absorb the missing ~80 minutes it would have had to take longer than
-everything else combined, which is not plausible for zod.
+run — so it is the one stage that could have consumed arbitrary time without violating any bound.
 
-So **a bounded stage very likely exceeded its bound inside the container**, and no explanation for that
-is established.
+**The observed 180-minute runtime is inconsistent with the expected aggregate bounds unless substantial
+time was spent in the then-unbounded clone stage. The responsible stage is not established.**
 
 One hypothesis was proposed and **refuted**: that `spawnSync`'s `timeout` fails to bound a process tree
 when a grandchild inherits and holds the stdio pipe. A direct probe killed both a plain hanging child

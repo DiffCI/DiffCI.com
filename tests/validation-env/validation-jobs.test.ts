@@ -46,8 +46,10 @@ describe("the validation job allowlist", () => {
   it("pins every job to an unambiguous commit and repository", () => {
     for (const id of listValidationJobs()) {
       const job = getValidationJob(id)!;
-      assert.ok(isPinnedSha(job.pinnedHeadSha), `${id} must pin a full 40-hex sha`);
-      assert.ok(isRepositorySlug(job.repository), `${id} must name owner/name`);
+      // Calibration measures the laboratory itself: it clones nothing, so it pins nothing.
+      if (job.mode === "calibrate") { assert.equal(job.repository, undefined); assert.equal(job.pinnedHeadSha, undefined); continue; }
+      assert.ok(isPinnedSha(job.pinnedHeadSha!), `${id} must pin a full 40-hex sha`);
+      assert.ok(isRepositorySlug(job.repository!), `${id} must name owner/name`);
       assert.ok((job.commits ?? 0) > 0 || job.mode === "qualify", `${id} must observe at least one commit`);
       assert.ok(job.maxRunMs > 0, `${id} must bound its own runtime`);
     }

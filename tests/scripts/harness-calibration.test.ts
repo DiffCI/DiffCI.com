@@ -10,25 +10,32 @@
  * assertion is about what the harness concludes from it.
  */
 import { strict as assert } from "node:assert";
-import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
 
 import { classifyExecution, isGreenExecution } from "../../scripts/execution-verdict.js";
+import { execNodeScript } from "../../scripts/process-exec.js";
 import { parseTestOutput } from "../../scripts/test-output-parsers.js";
 
 const scratch = mkdtempSync(join(tmpdir(), "diffci-calibration-"));
 after(() => rmSync(scratch, { recursive: true, force: true }));
 
-/** Writes a node script and runs it exactly as the harness runs a test command. */
+/**
+ * Runs a script through the SAME primitive qualification uses - `execNodeScript`, not a local
+ * `spawnSync` call.
+ *
+ * This is the point of the file. A calibration test with its own process-spawning implementation
+ * establishes how Node behaves; it does not establish how this harness behaves, because the two can
+ * differ in exactly the option that matters. `zod-qualify-01` ran for three hours inside a stage the
+ * harness believed it had bounded, so "the harness's own bound holds" is the claim under test, and only
+ * the harness's own code path can support it.
+ */
 function runScript(body: string, timeoutMs = 5000): { status: number | null; out: string; ms: number } {
   const file = join(scratch, `s${Math.abs(hash(body))}.cjs`);
   writeFileSync(file, body);
-  const started = Date.now();
-  const r = spawnSync(process.execPath, [file], { encoding: "utf8", timeout: timeoutMs });
-  return { status: r.status, out: `${r.stdout ?? ""}${r.stderr ?? ""}`, ms: Date.now() - started };
+  return execNodeScript(file, [], { timeoutMs });
 }
 
 function hash(s: string): number {
@@ -96,6 +103,7 @@ process.exit(1);`,
 
   it("a child that hangs is bounded by the timeout, and its verdict is never green", () => {
     const v = verdictOf(`setTimeout(() => {}, 60000);`, 2000);
+    console.log(`      [calibration] hanging child: bound=2000ms actual=${v.ms}ms status=${String(v.status)}`);
     assert.ok(v.ms < 20_000, `expected the timeout to bound the run, took ${v.ms}ms`);
     assert.equal(v.status, null, "a killed process has no exit status");
     assert.equal(v.verdict, "UNREADABLE");
@@ -108,6 +116,7 @@ process.exit(1);`,
     const v = verdictOf(`console.log("      Tests  42 passed (42)"); setTimeout(() => {}, 60000);`, 2000);
     assert.equal(v.parsed.failures, 0);
     assert.equal(v.status, null);
+    console.log(`      [calibration] green-then-hang: bound=2000ms actual=${v.ms}ms status=${String(v.status)}`);
     assert.equal(v.verdict, "CONTRADICTORY_EXECUTION_EVIDENCE", "killed, so it did not succeed");
     assert.equal(isGreenExecution(v.status, v.parsed.failures), false);
   });
@@ -125,6 +134,7 @@ spawn(process.execPath, [${JSON.stringify(grandchild)}], { stdio: "inherit", det
 setTimeout(() => {}, 60000);`,
       2000,
     );
+    console.log(`      [calibration] child+grandchild: bound=2000ms actual=${v.ms}ms status=${String(v.status)}`);
     assert.ok(v.ms < 30_000, `the timeout did not bound the process tree: took ${v.ms}ms`);
     assert.equal(isGreenExecution(v.status, v.parsed.failures), false);
   });

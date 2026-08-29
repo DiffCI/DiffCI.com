@@ -69,13 +69,13 @@ export interface ValidationJob {
    * qualify before mutating it means anything, because a mutation pass against a suite that was never
    * green attributes failures to the mutation that were already there.
    */
-  mode: "reproduce" | "qualify";
+  mode: "reproduce" | "qualify" | "calibrate";
   /** The frozen bundle this job reproduces, when it is a reproduction rather than new evidence. */
   reproduces?: string;
-  /** "owner/name" - cloned from GitHub over https, no credentials. */
-  repository: string;
-  /** The exact commit the corpus was derived from. 40 lowercase hex. */
-  pinnedHeadSha: string;
+  /** "owner/name" - cloned from GitHub over https, no credentials. Unused by `calibrate`. */
+  repository?: string;
+  /** The exact commit the corpus was derived from. 40 lowercase hex. Unused by `calibrate`. */
+  pinnedHeadSha?: string;
   /** How many head/base pairs to observe. Required for `reproduce`; unused by `qualify`. */
   commits?: number;
   /** The packaged agent that produced the original evidence. Asserted before anything is measured. */
@@ -198,6 +198,31 @@ const JOBS: Record<string, ValidationJob> = {
     // Larger than zod's: an nx run-many build across every workspace package, then two full baselines.
     maxRunMs: 4 * 60 * 60_000,
   },
+
+  /**
+   * Calibration of the instrument (2026-08-29).
+   *
+   * Not a repository experiment. It clones nothing and measures nothing about DiffCI's selector - it
+   * asks whether the laboratory's own guarantees hold in the environment that produces evidence:
+   *
+   *   a hanging child is killed at the bound
+   *   a child that prints a green summary and THEN hangs is never green
+   *   a child whose grandchild outlives it is still bounded
+   *   exit status outranks any parsed count
+   *   coloured output does not hide a failure
+   *
+   * Cheap enough to run before trusting any future verdict, which is the point: a minutes-long
+   * synthetic run rather than another multi-hour repository that happens to look wrong.
+   */
+  "harness-calibration": {
+    id: "harness-calibration",
+    description: "Run the harness calibration suite inside the canonical Linux environment.",
+    mode: "calibrate",
+    expectedAgentIntegrity: "sha512-mj4GQJLruQTexqkKybpP4KXGSZsqfs5vD7UbeMPQzV5LfqaR7HwKjuT2l7AP6o8yzyk3fC9aeGSWuyk3+CH7Kw==",
+    // Seconds of real work. A ceiling this low is itself a check: if calibration cannot finish in ten
+    // minutes, something is wrong with the environment rather than with the tests.
+    maxRunMs: 10 * 60_000,
+  },
 };
 
 export function getValidationJob(id: string): ValidationJob | undefined {
@@ -232,6 +257,7 @@ export function isRepositorySlug(repository: string): boolean {
  * at `pinnedHeadSha`. Identity stays honest and history stays fixed, without the harness changing.
  */
 export function buildJobCorpus(job: ValidationJob): unknown[] {
+  if (!job.repository) throw new Error(`job "${job.id}" has mode "${job.mode}" and names no repository`);
   return [
     {
       source: job.repository,
@@ -257,7 +283,23 @@ export function observeArgv(): string[] {
  * which is precisely how TanStack/query was disqualified on the developer host.
  */
 export function qualifyArgv(job: ValidationJob): string[] {
+  if (!job.repository) throw new Error(`job "${job.id}" has mode "${job.mode}" and names no repository`);
   return ["run", "dogfood:qualify", "--", "--only", job.repository, "--clone-depth", "0", "--write"];
+}
+
+/**
+ * Calibration-pass argv.
+ *
+ * Runs the harness's own calibration suite INSIDE the canonical environment. The suite exercises the
+ * same process-execution primitive qualification uses, so what it measures is this harness's bounding
+ * behaviour on this platform - not Node's in general, and not the developer host's.
+ *
+ * It exists because `zod-qualify-01` ran for three hours inside a stage believed to be bounded at
+ * twenty-five minutes, and the only place that discrepancy has ever been observed is Linux/node22 in a
+ * container. A refutation obtained on a Windows laptop has no authority there.
+ */
+export function calibrateArgv(): string[] {
+  return ["run", "test:calibration"];
 }
 
 /** Where the qualification verdict is written inside the container. */
@@ -291,6 +333,9 @@ export function requireMutationCommands(job: ValidationJob): NonNullable<Validat
 
 export function mutateArgv(job: ValidationJob, scratch: string, clonePath: string, corpusPath: string = OBSERVED_CORPUS_PATH): string[] {
   const mutate = requireMutationCommands(job);
+  // Same reason as requireMutationCommands: an absent repository would put the string "undefined" into
+  // the filter, and the mutation pass would then silently match no candidates and complete successfully.
+  if (!job.repository) throw new Error(`job "${job.id}" has mode "${job.mode}" and names no repository`);
   return [
     "run",
     "dogfood:mutate",

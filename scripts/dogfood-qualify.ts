@@ -23,33 +23,14 @@
  * Usage:
  *   npm run dogfood:qualify -- --corpus scripts/dogfood-corpus.json [--only owner/name] [--write]
  */
-import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { assertShellSafeArgs } from "./shell-safety.js";
 import { classifyExecution, explainExecution } from "./execution-verdict.js";
+import { execBounded, execNodeScript } from "./process-exec.js";
 import { parseTestOutput, stripAnsi } from "./test-output-parsers.js";
 
-
-/**
- * Environment for every child process this harness spawns.
- *
- * COREPACK_ENABLE_DOWNLOAD_PROMPT is the one that mattered. Corepack asks for confirmation before
- * downloading a package manager it does not yet have cached; spawned with no usable stdin, that
- * prompt fails and the install dies. TanStack/query was recorded as "install failed" for this reason
- * while the identical command succeeded by hand against a warm cache - a spurious disqualification
- * that would have removed the most structurally interesting repository from the corpus.
- *
- * CI=1 keeps runners non-interactive and out of watch mode; FORCE_COLOR=0 keeps ANSI escapes out of
- * the output the failure parsers read.
- */
-const NON_INTERACTIVE_ENV = {
-  CI: "1",
-  FORCE_COLOR: "0",
-  COREPACK_ENABLE_DOWNLOAD_PROMPT: "0",
-  npm_config_yes: "true",
-} as const;
 
 const repoRoot = resolve(dirname(import.meta.filename), "..");
 
@@ -120,18 +101,10 @@ export interface CorpusEntry {
 
 function runShell(args: string[], cwd: string, timeoutMs: number): { status: number | null; out: string; ms: number } {
   assertShellSafeArgs(args, "dogfood-qualify");
-  const started = Date.now();
   const [exec, ...rest] = args;
+  // .cmd shims on Windows can only be spawned through a shell; the argv here is fixed literals.
   const resolved = process.platform === "win32" && !exec!.endsWith(".cmd") ? `${exec}.cmd` : exec!;
-  const result = spawnSync(resolved, rest, {
-    cwd,
-    encoding: "utf8",
-    timeout: timeoutMs,
-    maxBuffer: 256 * 1024 * 1024,
-    shell: process.platform === "win32",
-    env: { ...process.env, ...NON_INTERACTIVE_ENV },
-  });
-  return { status: result.status, out: `${result.stdout ?? ""}${result.stderr ?? ""}`, ms: Date.now() - started };
+  return execBounded(resolved, rest, { cwd, timeoutMs, shell: process.platform === "win32" });
 }
 
 /**
@@ -151,16 +124,8 @@ function summaryLines(output: string): string[] {
 
 /** No shell: the runner is invoked through `node` so nothing repository-derived is concatenated. */
 function runTests(repoPath: string, entry: CorpusEntry, timeoutMs: number): { status: number | null; out: string; ms: number } {
-  const started = Date.now();
   const module = join(repoPath, entry.testModule ?? "node_modules/vitest/vitest.mjs");
-  const result = spawnSync(process.execPath, [module, ...(entry.testArgs ?? ["run"])], {
-    cwd: repoPath,
-    encoding: "utf8",
-    timeout: timeoutMs,
-    maxBuffer: 256 * 1024 * 1024,
-    env: { ...process.env, ...NON_INTERACTIVE_ENV },
-  });
-  return { status: result.status, out: `${result.stdout ?? ""}${result.stderr ?? ""}`, ms: Date.now() - started };
+  return execNodeScript(module, entry.testArgs ?? ["run"], { cwd: repoPath, timeoutMs });
 }
 
 interface Verdict {
@@ -204,10 +169,7 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
     // sequence with NO timeout at all, so a stalled clone could hold a run open indefinitely while
     // every "each command is capped" statement about the harness remained technically true and
     // practically wrong.
-    const cloned = spawnSync("git", ["clone", "--quiet", ...depth, `https://github.com/${entry.source}.git`, dest], {
-      encoding: "utf8",
-      timeout: timeoutMs,
-    });
+    const cloned = execBounded("git", ["clone", "--quiet", ...depth, `https://github.com/${entry.source}.git`, dest], { timeoutMs });
     if (cloned.status !== 0) {
       durations.clone = Date.now() - cloneStarted;
       return { source: entry.source, mutationQualified: "no", reason: "could not clone", durations };

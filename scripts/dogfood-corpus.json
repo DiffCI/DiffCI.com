@@ -12,7 +12,7 @@
     "commits": 10,
     "observationQualified": "yes",
     "mutationQualified": "no",
-    "mutationQualificationReason": "NO CONCLUSION - qualification infrastructure timeout (run zod-qualify-01, 2026-08-29). The canonical environment cleared the original blocker: corepack was enabled, so the bare-pnpm-not-on-PATH failure did not recur, and the run reached the qualifying stage and stayed there. The harness process ran as a single process for 3 hours and was killed by the external DO-level guard (maxRunMs 10800000ms, elapsed 10800429ms) without ever producing a verdict. This says NOTHING about whether zod suite is green or dirty. It is a statement about the laboratory, not the repository. Unresolved: the run exceeded the sum of its four internally bounded stages (4 x 25 min = 100 min), which the then-unbounded clone stage cannot plausibly account for.",
+    "mutationQualificationReason": "NO CONCLUSION - qualification infrastructure timeout (run zod-qualify-01, 2026-08-29). The canonical environment cleared the original blocker: corepack was enabled, so the bare-pnpm-not-on-PATH failure did not recur, and the run reached the qualifying stage and stayed there. The harness process ran as a single process for 3 hours and was killed by the external DO-level guard (maxRunMs 10800000ms, elapsed 10800429ms) without ever producing a verdict. This says NOTHING about whether zod suite is green or dirty. It is a statement about the laboratory, not the repository. Unresolved: the observed 180-minute runtime is inconsistent with the expected aggregate bounds (4 x 25 min = 100 min) unless substantial time was spent in the then-unbounded clone stage. The responsible stage is not established.",
     "install": [
       "corepack",
       "pnpm",

@@ -44,6 +44,7 @@ import {
   isPinnedSha,
   isRepositorySlug,
   mutateArgv,
+  calibrateArgv,
   observeArgv,
   qualifyArgv,
   type ValidationJob,
@@ -70,6 +71,7 @@ export type ValidationStep =
   | "preparing"
   | "observing"
   | "qualifying"
+  | "calibrating"
   | "locating"
   | "mutating"
   | "collecting"
@@ -117,7 +119,7 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
-  logs?: { observe?: string; mutate?: string; qualify?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string };
   timings: Record<string, number>;
 }
 
@@ -298,8 +300,15 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, job } = deps;
   const t0 = deps.now();
   try {
-    if (!isRepositorySlug(job.repository)) return fail(record, "invalid-repository", job.repository);
-    if (!isPinnedSha(job.pinnedHeadSha)) return fail(record, "invalid-pinned-sha", job.pinnedHeadSha);
+    // Calibration measures the laboratory, not a repository: nothing is cloned and nothing is pinned.
+    if (job.mode === "calibrate") {
+      record.timings.prepareMs = deps.now() - t0;
+      record.step = "calibrating";
+      return { record, nextAlarmDelayMs: 0 };
+    }
+
+    if (!job.repository || !isRepositorySlug(job.repository)) return fail(record, "invalid-repository", String(job.repository));
+    if (!job.pinnedHeadSha || !isPinnedSha(job.pinnedHeadSha)) return fail(record, "invalid-pinned-sha", String(job.pinnedHeadSha));
 
     const remote = `https://github.com/${job.repository}.git`;
 
@@ -342,7 +351,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify",
+  label: "observe" | "mutate" | "qualify" | "calibrate",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -417,6 +426,15 @@ async function qualifyStep(record: ValidationRecord, deps: ValidationStepDeps): 
   const t0 = record.processStartedAt ?? deps.now();
   return runHarnessPass(record, deps, qualifyArgv(deps.job), "qualify", (r) => {
     r.timings.qualifyMs = deps.now() - t0;
+    r.step = "collecting";
+    return { record: r, nextAlarmDelayMs: 0 };
+  });
+}
+
+async function calibrateStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const t0 = record.processStartedAt ?? deps.now();
+  return runHarnessPass(record, deps, calibrateArgv(), "calibrate", (r) => {
+    r.timings.calibrateMs = deps.now() - t0;
     r.step = "collecting";
     return { record: r, nextAlarmDelayMs: 0 };
   });
@@ -544,6 +562,7 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, bucket } = deps;
   const t0 = deps.now();
   try {
+    if (deps.job.mode === "calibrate") return collectCalibration(record, deps, t0);
     if (deps.job.mode === "qualify") return collectQualification(record, deps, t0);
 
     const runs = await sandbox.exec(`ls -1 ${RUNS_DIR} 2>/dev/null || true`, { timeout: 30_000 });
@@ -699,6 +718,48 @@ async function collectQualification(record: ValidationRecord, deps: ValidationSt
   return { record, nextAlarmDelayMs: null };
 }
 
+/**
+ * Collect a calibration run.
+ *
+ * The suite's own stdout IS the result - it prints measured elapsed times against each bound - and the
+ * process exit status says whether every assertion held. Both are recorded, because a calibration that
+ * passed and a calibration nobody can inspect are not the same thing, and this apparatus has already
+ * produced one verdict whose only artefact was a sentence.
+ */
+async function collectCalibration(record: ValidationRecord, deps: ValidationStepDeps, t0: number): Promise<ValidationStepResult> {
+  const { bucket } = deps;
+  const keys: string[] = [];
+
+  const log = record.logs?.calibrate ?? "(no output captured)";
+  const logKey = `${resultPrefix(record)}/calibration.log`;
+  await bucket.put(logKey, log);
+  keys.push(logKey);
+
+  const envKey = `${resultPrefix(record)}/environment.json`;
+  await bucket.put(
+    envKey,
+    `${JSON.stringify(
+      {
+        runId: record.runId,
+        jobId: record.jobId,
+        mode: "calibrate",
+        environment: record.environment ?? null,
+        timings: record.timings,
+        sourceTarballKey: record.sourceTarballKey,
+        sourceTarballSha256: record.sourceTarballSha256,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  keys.push(envKey);
+
+  record.resultKeys = keys;
+  record.timings.collectMs = deps.now() - t0;
+  record.step = "done";
+  return { record, nextAlarmDelayMs: null };
+}
+
 /** The pure state machine, injectable for tests exactly like the analysis shards. */
 export async function stepValidation(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   switch (record.step) {
@@ -710,6 +771,8 @@ export async function stepValidation(record: ValidationRecord, deps: ValidationS
       return observe(record, deps);
     case "qualifying":
       return qualifyStep(record, deps);
+    case "calibrating":
+      return calibrateStep(record, deps);
     case "locating":
       return locate(record, deps);
     case "mutating":

@@ -86,6 +86,8 @@ const COLLECTED_FILES: ReadonlySet<string> = new Set([
   // that can read them.
   "corpus-definition.json",
   "qualify.log",
+  // Calibration runs.
+  "calibration.log",
   // Both.
   "environment.json",
 ]);
