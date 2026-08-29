@@ -28,7 +28,7 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { assertShellSafeArgs } from "./shell-safety.js";
-import { parseTestOutput } from "./test-output-parsers.js";
+import { parseTestOutput, stripAnsi } from "./test-output-parsers.js";
 
 
 /**
@@ -113,6 +113,21 @@ function runShell(args: string[], cwd: string, timeoutMs: number): { status: num
 }
 
 /** No shell: the runner is invoked through `node` so nothing repository-derived is concatenated. */
+/**
+ * Summary-shaped lines from a runner's output, wherever they appear.
+ *
+ * Recorded so a qualification verdict can be audited against what the runner printed. An orchestrator
+ * (nx, turbo) emits one summary per project plus its own aggregate, and seeing all of them is the only
+ * way to tell a genuinely green run from a first-project-passed misread.
+ */
+function summaryLines(output: string): string[] {
+  return stripAnsi(output)
+    .split(/\r?\n/)
+    .filter((l) => /Test Files|^\s*Tests\s|No test files|\d+ (passed|failed|skipped)|Successfully ran|targets? failed|NX /i.test(l))
+    .map((l) => l.trim())
+    .slice(-25);
+}
+
 function runTests(repoPath: string, entry: CorpusEntry, timeoutMs: number): { status: number | null; out: string; ms: number } {
   const started = Date.now();
   const module = join(repoPath, entry.testModule ?? "node_modules/vitest/vitest.mjs");
@@ -135,10 +150,20 @@ interface Verdict {
   durations: { clone: number; install: number; build: number; test: number };
   /** Failure count from each baseline run, in order. Differing values are the flakiness signal. */
   observedFailures?: Array<number | undefined>;
+  /**
+   * What each baseline run actually reported (2026-08-29).
+   *
+   * Added after a qualification returned "suite green on 2 consecutive runs" whose only artefact was
+   * that sentence. The verdict could not be checked against anything, and the parser it rested on reads
+   * the FIRST summary line in the output - which for an orchestrator that runs many projects is one
+   * project's result, not the run's. A verdict nobody can audit is not evidence.
+   */
+  evidence?: Array<{ run: number; exitStatus: number | null; failures: number | undefined; summary: string[] }>;
 }
 
 function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselineRuns: number, cloneDepth: number): Verdict {
   const durations = { clone: 0, install: 0, build: 0, test: 0 };
+  const evidence: NonNullable<Verdict["evidence"]> = [];
   const dest = join(scratch, entry.source.replace("/", "__"));
 
   const cloneStarted = Date.now();
@@ -183,11 +208,29 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
     const parsed = parseTestOutput(tested.out);
     framework ??= parsed.framework;
     observed.push(parsed.failures);
+    evidence.push({ run: attempt + 1, exitStatus: tested.status, failures: parsed.failures, summary: summaryLines(tested.out) });
 
     // Unparseable output is NOT zero failures. A repository whose runner this harness cannot read is
     // unqualified, because every later classification would rest on a number nobody could produce.
     if (parsed.failures === undefined) {
-      return { source: entry.source, mutationQualified: "no", reason: `run ${attempt + 1}: could not read a failure count from the runner: ${lastLine(tested.out)}`, durations, observedFailures: observed };
+      return { source: entry.source, mutationQualified: "no", reason: `run ${attempt + 1}: could not read a failure count from the runner: ${lastLine(tested.out)}`, durations, observedFailures: observed, evidence };
+    }
+
+    // THE RUNNER'S OWN EXIT STATUS OUTRANKS THE PARSED COUNT (2026-08-29). The parsers here find the
+    // first summary line in the output. That is the whole run for a single-project runner and one
+    // project's result for an orchestrator like nx or turbo, which emit a summary per project - so a
+    // passing early project can mask a failing later one and produce a green verdict for a red run.
+    // A non-zero exit with zero parsed failures is a contradiction, and the honest response is to
+    // refuse rather than to trust the more convenient of the two signals.
+    if (parsed.failures === 0 && tested.status !== 0) {
+      return {
+        source: entry.source,
+        mutationQualified: "no",
+        reason: `run ${attempt + 1}: the runner exited ${tested.status} but the summary this harness could read reported 0 failures. The output cannot be trusted to describe the whole run - likely an orchestrator reporting per project. Refusing to qualify on a contradiction.`,
+        durations,
+        observedFailures: observed,
+        evidence,
+      };
     }
   }
 
@@ -196,7 +239,7 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
   const anyGreen = counts.some((c) => c === 0);
 
   if (allGreen) {
-    return { source: entry.source, mutationQualified: "yes", reason: `suite green on ${baselineRuns} consecutive runs under the documented sequence`, failures: 0, framework, durations, observedFailures: observed };
+    return { source: entry.source, mutationQualified: "yes", reason: `suite green on ${baselineRuns} consecutive runs under the documented sequence`, failures: 0, framework, durations, observedFailures: observed, evidence };
   }
 
   // Green once and red once is the dangerous case, and it is called out by name rather than folded
@@ -214,7 +257,7 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
     };
   }
 
-  return { source: entry.source, mutationQualified: "no", reason: `${counts[0]} test(s) failing at HEAD on every run (${counts.join(", ")})`, failures: counts[0], framework, durations, observedFailures: observed };
+  return { source: entry.source, mutationQualified: "no", reason: `${counts[0]} test(s) failing at HEAD on every run (${counts.join(", ")})`, failures: counts[0], framework, durations, observedFailures: observed, evidence };
 }
 
 /**
@@ -267,6 +310,14 @@ function main(): void {
     const seconds = Object.values(verdict.durations).reduce((a, b) => a + b, 0) / 1000;
     console.log(`${verdict.mutationQualified === "yes" ? "MUTATION-QUALIFIED" : "not qualified"}  (${seconds.toFixed(0)}s)`);
     console.log(`      ${verdict.reason}`);
+
+    // The verdict's own working. Printed for EVERY outcome, including a green one - a qualification
+    // whose only artefact is the sentence "suite green on 2 consecutive runs" cannot be audited by
+    // anyone, and that is exactly how a misread orchestrator summary would enter the corpus unchallenged.
+    for (const run of verdict.evidence ?? []) {
+      console.log(`      run ${run.run}: exit=${run.exitStatus} parsedFailures=${String(run.failures)}`);
+      for (const line of run.summary) console.log(`        | ${line}`);
+    }
 
     if (write) {
       entry.mutationQualified = verdict.mutationQualified;
