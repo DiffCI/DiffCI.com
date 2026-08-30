@@ -139,7 +139,7 @@ reporting to an investor with the sample size attached, and it is not a product 
 | 1 | `fastify/fastify` | [`NOT_QUALIFIED`](external-target-01-result.md) — suite not green in the canonical environment |
 | 2 | `date-fns/date-fns` | [`NOT_ADDRESSABLE`](external-target-02-result.md) — real test surface only reachable from a subdirectory |
 | 3 | `chalk/chalk` | [`NOT_ADDRESSABLE`](external-target-03-result.md) — runner unsupported (AVA output unreadable by every adapter) |
-| 4 | `axios/axios` | [selected](external-target-04-selection.md), outcome unknown |
+| 4 | `axios/axios` | [`NOT_QUALIFIED`](external-target-04-result.md) — structurally addressable, baseline red in the canonical environment |
 
 None is a failure of the eligibility rule, which has still not run once out of sample. All three are
 measured coverage limits of the apparatus. Stated as narrowly as the evidence supports, what the
@@ -150,9 +150,11 @@ external assessment currently covers is:
 
 That is materially narrower than "repositories with CI", and it is measured rather than assumed.
 
-Three targets selected before inspection, three stopped before the predictor, three distinct causes.
-On this evidence **the addressable surface, not prediction accuracy, is the binding constraint** — a
-signal rather than a rate, since three is small and the selection was not random.
+Four targets selected before inspection, four stopped before the predictor. There are at least **two
+independent constraints**, not one: two targets were stopped by apparatus limits (runner, monorepo
+scope) and two were structurally addressable but had **red baselines in the canonical container**.
+Fixing the apparatus limits would not have admitted fastify or axios. A signal rather than a rate —
+four is small and the selection was not random.
 
 ## Status
 

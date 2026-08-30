@@ -193,8 +193,8 @@
     "source": "axios/axios",
     "stresses": "EXTERNAL VALIDATION TARGET #4, named by ChatGPT after targets #1-3 closed and before axios's configuration was inspected (docs/external-target-04-selection.md). Single package, no workspaces, vitest 4 with three named projects. axios 1.20.0.",
     "commits": 25,
-    "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "observationQualified": "not attempted",
+    "mutationQualified": "no",
     "install": [
       "npm",
       "ci",
@@ -210,6 +210,11 @@
     "testCommandRationale": "axios's own documented test:vitest:unit script is `vitest run --project unit`. The default `test` script resolves to bare `vitest run`, which would additionally run the `browser` and `browser-headless` projects - both declare browser.enabled with playwright chromium, firefox and webkit, dependencies the validation contract forbids. This is a choice between two of the repository's own documented scripts, decided at eligibility time before any DiffCI data existed - the identical rule applied to vue. No include globs, exclusions or file filters were invented; the `unit` project's own committed config (tests/unit/**/*.test.js) decides the file set.",
     "buildRationale": "No build. Unit tests import lib/ source by relative path, and a full local run of the unit project on an unbuilt tree was green: 58 files, 1062 tests. axios's `build` script exists for distribution artefacts (dist/ is not committed), not for the unit suite.",
     "lockfile": "package-lock.json committed, so `npm ci` installs a pinned tree. Better reproducibility than hono or fastify, both of which had no lockfile at all.",
-    "universeVerification": "COVERAGE CHECKED BEFORE RUNNING, per defect #13. The expected unit universe was established independently three ways before any invocation was trusted: 58 paths matching tests/unit/**/*.test.js in the git tree at the pinned sha, 58 files on disk after clone, and 58 collected by `vitest list --project unit`. A single named repo-relative path (tests/unit/adapters/adapters.test.js) collects exactly that one file, so explicit-file addressability holds with cwd at the clone root - the property date-fns lacked."
+    "universeVerification": "COVERAGE CHECKED BEFORE RUNNING, per defect #13. The expected unit universe was established independently three ways before any invocation was trusted: 58 paths matching tests/unit/**/*.test.js in the git tree at the pinned sha, 58 files on disk after clone, and 58 collected by `vitest list --project unit`. A single named repo-relative path (tests/unit/adapters/adapters.test.js) collects exactly that one file, so explicit-file addressability holds with cwd at the clone root - the property date-fns lacked.",
+    "mutationQualificationReason": "2 test(s) failing at HEAD on every run (2, 2), in tests/unit/adapters/fetch.test.js",
+    "mutationQualifiedAt": "2026-08-30T11:22:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "TARGET #4 - NOT_QUALIFIED (docs/external-target-04-result.md). axios-qualify-01, 2026-08-30: structural checks 1-4 PASSED (single package, root execution, vitest read by both parsers, explicit-file addressable), canonical green baseline FAILED. Two consecutive baselines exit=1 parsedFailures=2, both in tests/unit/adapters/fetch.test.js. Deterministically red UNDER THE TESTED CANONICAL ENVIRONMENT; cause not established and no run spent establishing it. COVERAGE HELD: the run reported 58 test files and 1062 tests, matching the independently established universe exactly, so this verdict describes the repository it names - unlike datefns-qualify-01. A full local run of the identical command was green (58 files, 1062 tests), so a developer-host green is NOT evidence of a canonical green."
   }
 ]
