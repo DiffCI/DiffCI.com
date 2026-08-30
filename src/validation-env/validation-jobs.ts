@@ -378,6 +378,43 @@ const JOBS: Record<string, ValidationJob> = {
   },
 
   /**
+   * Vue ECONOMICS (2026-08-30) - the out-of-sample test of the frozen prediction.
+   *
+   * `docs/vue-prediction-frozen.md`, committed at 243d110 BEFORE this job existed, predicts a NEGATIVE
+   * incremental sign: DiffCI selects 1846 files against the comparator's 591 across 16 candidates, the
+   * inverse of zod.
+   *
+   * Nothing here is tuned for that prediction. Same commands as the observation run, same pin, same
+   * agent, same accounting - the comparator still pays zero analysis CPU. The pre-registration's whole
+   * point is that this job cannot be adjusted now that the prediction is fixed.
+   *
+   * The 148.12 / 183 calibration remains a PREDICTION-MODEL INPUT only. Once this run lands, its three
+   * measured arms supersede that approximation for evaluating Vue; the approximation is never mixed
+   * into the measured result.
+   */
+  "vue-economics": {
+    id: "vue-economics",
+    description: "Compute measurement for vuejs/core under agent B - out-of-sample test of a frozen NEGATIVE prediction.",
+    mode: "reproduce",
+    repository: "vuejs/core",
+    pinnedHeadSha: "d63616ca17de965ed32dcb449a4c5cd9982f15d2",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["corepack", "pnpm", "install", "--frozen-lockfile"],
+      // No build: Vue's unit projects resolve packages through source aliases, confirmed by
+      // vue-qualify-01 going green with no build stage.
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run", "--project", "unit*"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // 16 candidates, each running a baseline plus two economics arms plus up to two mutation attempts
+    // against a ~45s wall / ~148 CPU-s suite.
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
+  /**
    * Calibration of the instrument (2026-08-29).
    *
    * Not a repository experiment. It clones nothing and measures nothing about DiffCI's selector - it
