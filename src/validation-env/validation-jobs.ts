@@ -466,6 +466,26 @@ const JOBS: Record<string, ValidationJob> = {
     expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
     maxRunMs: 3 * 60 * 60_000,
   },
+
+  /**
+   * EXTERNAL VALIDATION TARGET #2 (2026-08-30). See docs/external-target-02-selection.md.
+   *
+   * date-fns/date-fns, named after target #1 closed as NOT_QUALIFIED, and before this repository was
+   * cloned or any date-fns DiffCI data existed. It was named earlier than fastify - as the third
+   * fallback in the repository #3 selection - but has been observed exactly as little: no selection
+   * ratio and no economics figure for it has ever been seen.
+   *
+   * Registration, not new capability. `910969f` remains the implementation under test.
+   */
+  "date-fns-qualification": {
+    id: "date-fns-qualification",
+    description: "Qualify date-fns/date-fns in the canonical Linux environment, and calibrate cost-per-test.",
+    mode: "qualify",
+    repository: "date-fns/date-fns",
+    pinnedHeadSha: "18cbd436f1428d0f45f89f710df65f62546c42f0",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
 };
 
 export function getValidationJob(id: string): ValidationJob | undefined {

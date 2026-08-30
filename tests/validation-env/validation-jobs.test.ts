@@ -342,3 +342,26 @@ describe("external validation target #1: fastify", () => {
     assert.match(corpusEntry("fastify/fastify").lockfile ?? "", /^NONE\./);
   });
 });
+
+describe("external validation target #2: date-fns", () => {
+  it("pins the repository and commit the assessment will be tied to", () => {
+    const job = getValidationJob("date-fns-qualification")!;
+    assert.equal(job.repository, "date-fns/date-fns");
+    assert.equal(job.pinnedHeadSha, "18cbd436f1428d0f45f89f710df65f62546c42f0");
+  });
+
+  it("uses the repository's own root vitest config, and invents no project filter", () => {
+    // The root package.json has no scripts at all, so the root vitest.config.ts - projects: ["pkgs/*"] -
+    // is the only repository-authored statement of "all the tests" there is. Narrowing to pkgs/core
+    // would pre-screen the repository into a friendlier shape.
+    const entry = corpusEntry("date-fns/date-fns");
+    assert.equal(entry.testModule, "node_modules/vitest/vitest.mjs");
+    assert.deepEqual(entry.testArgs, ["run"], "the same bare invocation hono received");
+    assert.equal(entry.build, undefined, "core's exports point at src/index.ts, so nothing needs building");
+  });
+
+  it("installs from the committed lockfile, which this repository actually has", () => {
+    assert.deepEqual(corpusEntry("date-fns/date-fns").install, ["corepack", "pnpm", "install", "--frozen-lockfile"]);
+    assert.match(corpusEntry("date-fns/date-fns").lockfile ?? "", /^pnpm-lock\.yaml committed\./);
+  });
+});

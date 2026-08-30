@@ -163,5 +163,25 @@
     "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
     "mutationQualifiedBy": "qualifier 2.0.0",
     "externalValidation": "TARGET #1 - NOT_QUALIFIED (docs/external-target-01-result.md). fastify-qualify-01, 2026-08-30: two consecutive baselines exited 1, each reporting two failures (exit=1 parsedFailures=2 on both). Deterministically RED UNDER THE TESTED CANONICAL ENVIRONMENT - whether the cause is repository state or an environment requirement was NOT established, and no run was spent establishing it. Failing test names deliberately not retrieved: they do not change the outcome, and learning them invites deciding whether the failures are reasonable to ignore. Never reached calibration, which would have returned NO_ASSESSMENT separately because borp emits no test-FILE count."
+  },
+  {
+    "source": "date-fns/date-fns",
+    "stresses": "EXTERNAL VALIDATION TARGET #2, named after target #1 (fastify) closed as NOT_QUALIFIED, and before the repository was cloned or any date-fns DiffCI data existed (docs/external-target-02-selection.md). pnpm monorepo, workspace pkgs/* (core, tz, utc, docs, dev), vitest 4. Named earlier than fastify as the third fallback in the repository #3 selection, but never observed - no selection ratio or economics figure for it has ever been seen.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "unknown",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ],
+    "testCommandRationale": "The root package.json has NO scripts block at all - CI drives tests through mise tasks - so there is no root script to select. The root ships its own vitest.config.ts declaring projects: [pkgs/*], and bare `vitest run` against it is the repository own declaration of its test surface. This is the identical uniform non-interactive invocation applied to hono. No project filter, exclusion, or include glob was invented: each package own committed config decides its file set. Narrowing to pkgs/core alone was considered and REJECTED - it would pre-screen the repository into a friendlier shape, which is a form of tuning. Checked in advance because the validation contract forbids launching a browser: pkgs/core/vitest.config.ts imports @vitest/browser-playwright but leaves the browser instance commented out (enabled only by the separate test/browser task via --browser), so `vitest run` runs in node.",
+    "buildRationale": "No build. pkgs/core exports map points at ./src/index.ts, so workspace consumers (tz, utc, docs) resolve TypeScript source and vitest transpiles it - the same situation as vue, where a build would have been required only if tests imported package outputs.",
+    "lockfile": "pnpm-lock.yaml committed. Unlike hono and fastify, this repository pins its dependency tree, so two installs a week apart resolve the same versions. No packageManager field, so corepack uses its default pnpm."
   }
 ]
