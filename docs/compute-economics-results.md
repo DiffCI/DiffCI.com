@@ -91,9 +91,79 @@ understated the cost of the full suite by roughly 3×.
 
 ---
 
-## colinhacks/zod — pending
+## colinhacks/zod — `zod-economics-01`, 2026-08-30
 
-Test counts predict the opposite sign: 629 DiffCI-selected against 761 comparator-selected across the
-five safety-measurable cases. If CPU measurement reproduces that qualitative difference — hono negative,
-zod positive — the two results together are considerably stronger than either alone, because the same
-instrument will have distinguished two repositories in the direction an independent signal predicted.
+Frozen `2026-08-30T06-01-05-518Z-colinhacks-zod-3dfe87`, 6/6 checksums verified.
+11/11 compute-measurable. Safety funnel identical to the agent A run: 5/5 confirmed, 0 false greens,
+4 efficient / 0 comparable / 1 overbroad.
+
+```
+full                    2280.10 CPU-s
+comparator selected     1794.18
+diffci selected         1561.15
+joint analysis            49.83   (charged entirely to DiffCI)
+diffci total            1610.98
+
+grossCpu       = 2280.10 - (1561.15 + 49.83) = +669.12
+incrementalCpu = 1794.18 - (1561.15 + 49.83) = +183.20
+```
+
+**Per-candidate incremental sign: 9 positive, 2 negative.**
+
+### The contrast the test counts predicted
+
+| | hono | zod |
+|---|---|---|
+| gross | **+1408.92** (73% of full) | +669.12 (29% of full) |
+| incremental | **−80.90** | **+183.20** |
+| sign split | 4 positive / 18 negative | 9 positive / 2 negative |
+
+The same instrument, on two repositories, produced opposite signs in the direction an independent
+signal predicted. That is worth more than either result alone: a meter reporting DiffCI winning
+everywhere would have been indicted by hono, and one reporting it losing everywhere would have been
+indicted by zod.
+
+Not uniform either — 9 of 11 rather than 11 of 11. Uniformity would have suggested something
+structural rather than earned.
+
+### Gross and incremental rank the two repositories oppositely
+
+hono has by far the larger **gross** saving (73% of full) and a **negative** incremental. zod has a
+modest gross (29%) and a **positive** incremental. Anyone quoting gross would call hono the better
+case; the number that decides whether DiffCI is worth paying for calls it the worse one.
+
+### One rule explains both repositories
+
+DiffCI's selection is comparatively **stable** — ~83 tests on hono, ~125–127 on zod regardless of
+commit — while the path-rule comparator is **volatile**: 1–123 on hono, 113–193 on zod.
+
+```
+commit       fullCpu  compCpu  diffciCpu  analysis     incr   sel(comp/diffci)
+0a69bcb3d     189.02   205.59     124.94      4.37   +76.28   189/126
+9a193aa24     246.54   177.65     133.76      4.10   +39.79   189/126
+773a48676     213.33   130.84     120.84      4.48    +5.52   132/126
+2e1f2b414     211.61   117.00     122.88      4.47   −10.35   113/125
+fb3af01f7     220.35   140.97     160.48      5.28   −24.79   134/127
+```
+
+DiffCI wins exactly when the comparator over-selects, and loses when the comparator is tight. That is
+the same rule that held on hono. The repositories differ only in how often the cheap rule blows up: on
+zod the comparator selected 189+ tests on 7 of 11 candidates; on hono it selected fewer than 20 on 18
+of 22.
+
+**So the product is not "smarter selection" in general. It is a stabiliser that caps the blast radius
+of a cheap rule, and its economics depend on how often that rule over-selects on a given repository.**
+That is falsifiable, and it predicts where DiffCI should and should not be sold.
+
+### Why analysis overhead mattered on hono and not here
+
+zod's analysis toll (~4.5 CPU-s) is a rounding error against selections costing 120–160 CPU-s. hono's
+(~3.3 CPU-s) was decisive because its selections often cost 2–11 CPU-s. **Analysis overhead is only
+significant where the selection is small — which is precisely where a path rule is already good
+enough.**
+
+### What is not claimed
+
+n=11, of which only 5 are also safety-measurable. No verdict label is attached and no reliability
+estimate is offered. +183.20 against a 1794 comparator total is roughly 10%, well outside plausible
+noise — but one repository at n=11 is an indication, not a savings claim.
