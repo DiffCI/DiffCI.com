@@ -1,0 +1,41 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-08-30T14:58:25.437Z",
+  "observer": {
+    "version": "0.0.0",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "7dd15ec0d2327b8ead619a138b16c608e37ff6f4",
+    "headSha": "01869bcace63d17c4bfafedbc29c11965e62360d",
+    "source": "explicit-flags"
+  },
+  "status": "REFUSED",
+  "stage": "eligibility",
+  "reason": "DiffCI can only analyse TypeScript/JavaScript projects today: no tsconfig.json anywhere in the repository - there is no TypeScript project to build a graph from",
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "01869bcace63d17c4bfafedbc29c11965e62360d",
+    "headShaAfter": "01869bcace63d17c4bfafedbc29c11965e62360d",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 315
+  }
+}
