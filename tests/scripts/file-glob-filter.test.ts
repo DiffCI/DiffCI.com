@@ -18,6 +18,29 @@ function isFileGlob(arg: string): boolean {
   return arg.includes("**") || /\.\w+$/.test(arg);
 }
 
+describe("the semantics required before this predicate touches an economics run", () => {
+  // Named explicitly at review, because this predicate is now part of the economics apparatus and a
+  // mistake in it corrupts commands rather than merely widening them.
+  it("preserves flag values", () => {
+    assert.equal(isFileGlob("unit*"), false, "--project unit* : vuejs/core's documented unit entry point");
+    assert.equal(isFileGlob("@vitest/test-*"), false, "a scoped package filter is not a path");
+  });
+
+  it("strips genuine test-file globs", () => {
+    assert.equal(isFileGlob("tests/**/*.test.ts"), true);
+    assert.equal(isFileGlob("src/**/*.spec.ts"), true);
+  });
+
+  it("leaves ambiguous star arguments untouched, which is the conservative direction", () => {
+    // Over-execution makes DiffCI look WORSE. Command corruption manufactures evidence. When it is not
+    // clearly a path pattern, the harness runs more than it needed to rather than running the wrong
+    // thing.
+    for (const ambiguous of ["*", "foo*", "--reporter=json*", "packages/*/src"]) {
+      assert.equal(isFileGlob(ambiguous), false, `${ambiguous} is ambiguous and must survive`);
+    }
+  });
+});
+
 describe("file-glob filtering for subset runs", () => {
   it("strips patterns that would widen the run back to everything", () => {
     for (const pattern of ["src/**/*.test.ts", "**/*.spec.js", "packages/*/__tests__/*.ts", "test/*.test.tsx"]) {

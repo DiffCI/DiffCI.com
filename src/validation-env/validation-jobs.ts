@@ -253,6 +253,33 @@ const JOBS: Record<string, ValidationJob> = {
   },
 
   /**
+   * REPOSITORY #3 (2026-08-30). Named externally after the hypothesis, prediction rule and eligibility
+   * criteria were frozen at e12c207, without access to any DiffCI observation of it.
+   *
+   * `vitest-dev/vitest` was the primary selection and was REJECTED against the frozen criteria without
+   * amending them: it has no root vitest config at all, and its tests are orchestrated by pnpm
+   * workspace filters, so the harness cannot invoke them with explicit file paths. `vuejs/core` is the
+   * mechanical fallback.
+   *
+   * Commands come from the corpus registry, where the reasoning is recorded: Vue's documented
+   * `test-unit` (`vitest --project unit*`) rather than its default `test`, because the default also
+   * runs an e2e-browser project requiring playwright chromium, which the validation contract forbids.
+   *
+   * QUALIFICATION FIRST, and separately, because the pre-registration forbids running economics before
+   * the prediction is frozen. This job also supplies the cost-per-test calibration the prediction rule
+   * needs, since qualification already executes the full suite and now records its CPU.
+   */
+  "vue-qualification": {
+    id: "vue-qualification",
+    description: "Qualify vuejs/core in the canonical Linux environment, and calibrate cost-per-test.",
+    mode: "qualify",
+    repository: "vuejs/core",
+    pinnedHeadSha: "d63616ca17de965ed32dcb449a4c5cd9982f15d2",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
+  /**
    * ECONOMICS RUNS (2026-08-29), under agent generation B.
    *
    * Separate jobs rather than a flag on the safety jobs, because the agent generations must not be able

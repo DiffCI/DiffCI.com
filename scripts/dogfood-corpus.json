@@ -101,8 +101,8 @@
   },
   {
     "source": "vuejs/core",
-    "stresses": "Tightly coupled TS monorepo, pnpm + vitest, packages that import each other constantly (compiler-core, runtime-core, reactivity). Maximal transitive reachability.",
-    "commits": 10,
+    "stresses": "Repository #3, named externally after the hypothesis, prediction rule and eligibility criteria were frozen at e12c207. Large TypeScript monorepo, pnpm, root vitest config with named projects. Unit tests resolve packages through source aliases, so no build is required.",
+    "commits": 25,
     "observationQualified": "unknown",
     "mutationQualified": "unknown",
     "install": [
@@ -113,8 +113,11 @@
     ],
     "testModule": "node_modules/vitest/vitest.mjs",
     "testArgs": [
-      "run"
-    ]
+      "run",
+      "--project",
+      "unit*"
+    ],
+    "testCommandRationale": "Vue documented test-unit script is `vitest --project unit*`, covering the unit, unit-gc and unit-jsdom projects. The default `test` script would additionally run e2e-browser, which requires playwright chromium - a dependency the validation contract forbids. This is a choice between two of the repository own documented scripts, decided at eligibility time before any DiffCI data existed. The prior entry here said [\"run\"], which would have run the browser project. `run` is the harness uniform non-interactive invocation applied identically to hono and zod, not a Vue-specific modification. No additional project exclusions or file filters were invented."
   },
   {
     "source": "honojs/hono",

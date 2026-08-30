@@ -28,7 +28,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { assertShellSafeArgs } from "./shell-safety.js";
 import { classifyExecution, explainExecution } from "./execution-verdict.js";
-import { execBounded, execNodeScript } from "./process-exec.js";
+import { execBounded, execNodeScript, type BoundedExecResult } from "./process-exec.js";
 import { parseTestOutput, stripAnsi } from "./test-output-parsers.js";
 
 
@@ -99,7 +99,7 @@ export interface CorpusEntry {
   testArgs?: string[];
 }
 
-function runShell(args: string[], cwd: string, timeoutMs: number): { status: number | null; out: string; ms: number } {
+function runShell(args: string[], cwd: string, timeoutMs: number): BoundedExecResult {
   assertShellSafeArgs(args, "dogfood-qualify");
   const [exec, ...rest] = args;
   // .cmd shims on Windows can only be spawned through a shell; the argv here is fixed literals.
@@ -123,7 +123,7 @@ function summaryLines(output: string): string[] {
 }
 
 /** No shell: the runner is invoked through `node` so nothing repository-derived is concatenated. */
-function runTests(repoPath: string, entry: CorpusEntry, timeoutMs: number): { status: number | null; out: string; ms: number } {
+function runTests(repoPath: string, entry: CorpusEntry, timeoutMs: number): BoundedExecResult {
   const module = join(repoPath, entry.testModule ?? "node_modules/vitest/vitest.mjs");
   return execNodeScript(module, entry.testArgs ?? ["run"], { cwd: repoPath, timeoutMs });
 }
@@ -145,7 +145,7 @@ interface Verdict {
    * the FIRST summary line in the output - which for an orchestrator that runs many projects is one
    * project's result, not the run's. A verdict nobody can audit is not evidence.
    */
-  evidence?: Array<{ run: number; exitStatus: number | null; failures: number | undefined; summary: string[] }>;
+  evidence?: Array<{ run: number; exitStatus: number | null; failures: number | undefined; summary: string[]; cpuSeconds?: number; wallMs?: number }>;
 }
 
 /**
@@ -214,7 +214,9 @@ function qualify(entry: CorpusEntry, scratch: string, timeoutMs: number, baselin
     const parsed = parseTestOutput(tested.out);
     framework ??= parsed.framework;
     observed.push(parsed.failures);
-    evidence.push({ run: attempt + 1, exitStatus: tested.status, failures: parsed.failures, summary: summaryLines(tested.out) });
+    // CPU recorded here so a qualification run can calibrate cost-per-test for the economics
+    // prediction, without a separate full-suite execution.
+    evidence.push({ run: attempt + 1, exitStatus: tested.status, failures: parsed.failures, summary: summaryLines(tested.out), cpuSeconds: tested.cpuSeconds, wallMs: tested.ms });
 
     // Unparseable output is NOT zero failures. A repository whose runner this harness cannot read is
     // unqualified, because every later classification would rest on a number nobody could produce.
@@ -318,7 +320,7 @@ function main(): void {
     // whose only artefact is the sentence "suite green on 2 consecutive runs" cannot be audited by
     // anyone, and that is exactly how a misread orchestrator summary would enter the corpus unchallenged.
     for (const run of verdict.evidence ?? []) {
-      console.log(`      run ${run.run}: exit=${run.exitStatus} parsedFailures=${String(run.failures)}`);
+      console.log(`      run ${run.run}: exit=${run.exitStatus} parsedFailures=${String(run.failures)} cpu=${run.cpuSeconds === undefined ? "n/a" : run.cpuSeconds.toFixed(2)}s wall=${run.wallMs ?? "n/a"}ms`);
       for (const line of run.summary) console.log(`        | ${line}`);
     }
 
