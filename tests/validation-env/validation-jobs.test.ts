@@ -37,6 +37,7 @@ interface CorpusEntry {
   testModule?: string;
   testArgs?: string[];
   lockfile?: string;
+  universeVerification?: string;
 }
 function corpusEntry(source: string): CorpusEntry {
   const all = JSON.parse(readFileSync(join(repoRoot, "scripts", "dogfood-corpus.json"), "utf8")) as CorpusEntry[];
@@ -363,5 +364,36 @@ describe("external validation target #2: date-fns", () => {
   it("installs from the committed lockfile, which this repository actually has", () => {
     assert.deepEqual(corpusEntry("date-fns/date-fns").install, ["corepack", "pnpm", "install", "--frozen-lockfile"]);
     assert.match(corpusEntry("date-fns/date-fns").lockfile ?? "", /^pnpm-lock\.yaml committed\./);
+  });
+});
+
+/**
+ * External validation target #4.
+ *
+ * The universe assertion is the one that matters: defect #13 was a green qualification over 5% of a
+ * repository, so the expected file count is pinned here from three independent counts made before the
+ * job existed. A run reporting anything else is not to be believed, whatever colour it is.
+ */
+describe("external validation target #4: axios", () => {
+  it("pins the repository and commit", () => {
+    const job = getValidationJob("axios-qualification")!;
+    assert.equal(job.repository, "axios/axios");
+    assert.equal(job.pinnedHeadSha, "fede1d1562e308077da7994305d63fb7722b66ac");
+  });
+
+  it("uses axios's own documented unit script, not the browser-launching default", () => {
+    // Bare `vitest run` also runs the browser and browser-headless projects, which declare playwright
+    // chromium/firefox/webkit - dependencies the validation contract forbids. Same rule applied to vue.
+    const entry = corpusEntry("axios/axios");
+    assert.deepEqual(entry.testArgs, ["run", "--project", "unit"]);
+    assert.equal(entry.build, undefined, "unit tests import lib/ by relative path; no build needed");
+  });
+
+  it("installs from the committed lockfile", () => {
+    assert.deepEqual(corpusEntry("axios/axios").install, ["npm", "ci", "--no-audit", "--no-fund"]);
+  });
+
+  it("records the independently established test universe, so a shortfall is detectable", () => {
+    assert.match(corpusEntry("axios/axios").universeVerification ?? "", /58/);
   });
 });

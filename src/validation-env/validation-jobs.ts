@@ -486,6 +486,29 @@ const JOBS: Record<string, ValidationJob> = {
     expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
     maxRunMs: 3 * 60 * 60_000,
   },
+
+  /**
+   * EXTERNAL VALIDATION TARGET #4 (2026-08-30). See docs/external-target-04-selection.md.
+   *
+   * axios/axios, named before its configuration was inspected. The first external target to pass the
+   * structural checks: single package, root-executable, vitest (a runner both parsers read), and
+   * explicit-file addressable.
+   *
+   * COVERAGE WAS VERIFIED BEFORE THIS JOB EXISTED, because defect #13 was a green qualification over 5%
+   * of a repository. The unit universe is 58 files by three independent counts - the git tree at this
+   * sha, the working tree after clone, and `vitest list --project unit` - and a single named path
+   * collects exactly one file. If this run reports anything other than 58, the coverage assumption is
+   * wrong and the verdict is not to be believed, whatever colour it is.
+   */
+  "axios-qualification": {
+    id: "axios-qualification",
+    description: "Qualify axios/axios in the canonical Linux environment, and calibrate cost-per-test.",
+    mode: "qualify",
+    repository: "axios/axios",
+    pinnedHeadSha: "fede1d1562e308077da7994305d63fb7722b66ac",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
 };
 
 export function getValidationJob(id: string): ValidationJob | undefined {
