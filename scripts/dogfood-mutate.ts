@@ -92,8 +92,22 @@ function measureEconomicArms(
   baseline: { cpuSeconds?: number; ms: number; status: number | null },
   timeoutMs: number,
 ): NonNullable<MutationResult["economics"]> {
-  const { commands, repoPath, comparatorTests, selectedTests } = candidate;
-  const armArgs = (files: string[]): string[] => [...commands.testArgs, ...files];
+  const { repoPath, comparatorTests, selectedTests } = candidate;
+
+  /**
+   * Exactly the shape the safety pass uses for its selected run: the runner's module, then its
+   * arguments, then the files.
+   *
+   * The module path is NOT optional (2026-08-30). Omitting it produced `node run <files>` - node trying
+   * to execute a file called "run" - which exited 1 instantly on all 22 hono candidates. The
+   * measurability guard caught it and reported 22/22 compute-unmeasurable. Had a failed arm defaulted to
+   * zero cost instead, the run would have reported a near-zero DiffCI execution cost against a real
+   * full-suite cost and looked like an extraordinary result.
+   *
+   * Glob arguments are filtered out for the same reason the safety pass filters them: a pattern
+   * alongside explicit file paths widens the run back out and stops it being a subset at all.
+   */
+  const armArgs = (files: string[]): string[] => [...fullArgs.filter((a) => !a.includes("*")), ...files];
 
   const full: ArmCost = { cpuSeconds: baseline.cpuSeconds, wallMs: baseline.ms, exitStatus: baseline.status };
 
@@ -102,7 +116,12 @@ function measureEconomicArms(
   const runArm = (files: string[]): ArmCost =>
     files.length === 0
       ? { cpuSeconds: 0, wallMs: 0, exitStatus: 0 }
-      : ((r) => ({ cpuSeconds: r.cpuSeconds, wallMs: r.ms, exitStatus: r.status }))(run(testExec, armArgs(files), repoPath, timeoutMs));
+      : ((r) => ({
+          cpuSeconds: r.cpuSeconds,
+          wallMs: r.ms,
+          exitStatus: r.status,
+          outputTail: r.status === 0 ? undefined : outputTail(r),
+        }))(run(testExec, armArgs(files), repoPath, timeoutMs));
 
   const comparator = { ...runArm(comparatorTests), selectedCount: comparatorTests.length };
   const diffciSelected = { ...runArm(selectedTests), selectedCount: selectedTests.length };
@@ -143,6 +162,14 @@ interface ArmCost {
   cpuSeconds?: number;
   wallMs: number;
   exitStatus: number | null;
+  /**
+   * What the arm printed, recorded ONLY when it failed.
+   *
+   * An exit status says an arm failed; it does not say why. Diagnosing the 2026-08-30 armArgs defect
+   * required reasoning backwards from a bare exit code across 22 identical rows, which is the same gap
+   * that cost four container runs on the ANSI defect. A failing arm now carries its own explanation.
+   */
+  outputTail?: string;
 }
 
 interface MutationResult {
