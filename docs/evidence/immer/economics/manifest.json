@@ -1,0 +1,40 @@
+{
+  "runId": "2026-08-30T11-48-35-530Z-immerjs-immer-6ccbc3",
+  "startedAt": "2026-08-30T11:48:35.530Z",
+  "mode": "mutate",
+  "repository": "immerjs/immer",
+  "repoPath": "/workspace/tmp/diffci-dogfood-ILhE9J/immerjs__immer",
+  "corpusPath": "/workspace/corpus.jsonl",
+  "reportsDir": "/workspace/tmp/diffci-dogfood-ILhE9J/reports",
+  "commands": {
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ]
+  },
+  "maxAttempts": 2,
+  "timeoutMs": 900000,
+  "candidates": 7,
+  "candidateShas": [
+    "061c2425e1c9dff89e4e4189d42af1b7839dfe0a",
+    "907395ad21aef22ed2c71d11f4fb4172683ab62a",
+    "d2c158f5bac7081a760bbaf501ea5c360b7856e1",
+    "a3be9df762c1dbe9959a011ddbab0ce838cbc468",
+    "e38ad71f256844bf2dc28c1120c33c930c881bb6",
+    "a73672ab76b5d9fd94f278a23c6c1931a03147e5",
+    "4d3d6ff88caa85734a802a91cdb3dbe004d88b17"
+  ],
+  "repositoriesInScope": [
+    "immerjs/immer"
+  ],
+  "node": "v22.23.2",
+  "platform": "linux",
+  "validationImage": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+  "insideValidationImage": true
+}

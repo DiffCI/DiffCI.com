@@ -1,0 +1,45 @@
+
+  immerjs/immer   raw compute components, C:\Users\Swati Kale\OneDrive\Desktop\DiffCI.com\.dogfood\frozen\2026-08-30T11-48-35-530Z-immerjs-immer-6ccbc3
+
+  DENOMINATORS
+    candidates                 7
+    safety-measurable          4
+    compute-attempted          7
+    compute-MEASURABLE         7
+
+  PER-CANDIDATE  (CPU-seconds; tree state: unmutated-baseline)
+
+    commit       fullCpu  compCpu  diffciCpu  analysis    gross     incr   sel(comp/diffci)
+    061c2425e      11.98    11.61       1.72      1.77     8.49     8.12   23/1
+    907395ad2      11.18    11.45       4.42      1.51     5.25     5.52   22/2
+    d2c158f5b      11.24    10.78       3.74      1.49     6.01     5.55   22/1
+    a3be9df76      10.94    11.37       1.79      1.52     7.63     8.06   22/1
+    e38ad71f2      11.47    11.73       2.07      1.43     7.97     8.23   22/1
+    a73672ab7      11.13    11.19       3.88      1.59     5.66     5.72   22/1
+    4d3d6ff88      11.08    11.38       3.99      1.62     5.47     5.77   22/1
+
+  WALL TIME, kept beside CPU and never instead of it (ms)
+
+    commit           full  comparator    diffci
+    061c2425e        6409        3903      1013
+    907395ad2        3829        3892      2471
+    d2c158f5b        3823        3671      2298
+    a3be9df76        3739        3802      1040
+    e38ad71f2        3859        3996      1219
+    a73672ab7        3811        3781      2407
+    4d3d6ff88        3782        3826      2514
+
+  TOTALS over 7 compute-measurable candidate(s), CPU-seconds
+
+    full                       79.02
+    comparator selected        79.51
+    diffci selected            21.61
+    joint analysis             10.93   (charged entirely to DiffCI)
+    diffci total               32.54
+
+    grossCpu       = 79.02 - (21.61 + 10.93) = 46.48
+    incrementalCpu = 79.51 - (21.61 + 10.93) = 46.97
+
+  No verdict is attached to these numbers. There is no established noise threshold for this
+  measurement, and a small difference in either direction is not yet evidence of anything.
+

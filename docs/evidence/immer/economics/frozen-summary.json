@@ -1,0 +1,55 @@
+{
+  "frozenAt": "2026-08-30T11:52:12.905Z",
+  "summariserVersion": "1.0.0",
+  "runId": "2026-08-30T11-48-35-530Z-immerjs-immer-6ccbc3",
+  "repository": "immerjs/immer",
+  "environment": {
+    "validationImage": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "insideValidationImage": true,
+    "node": "v22.23.2",
+    "platform": "linux"
+  },
+  "agent": {
+    "tarball": "diffci-observer-0.1.0.tgz",
+    "sha256": "78a6ac9f99f160e0a5cbb61b558f8c4ce22e9d3845f36c76557de5503fde6160"
+  },
+  "diffciCommit": "6a6cfad6d339e723bf5aec9ab3c2a7038867e811",
+  "diffciTreeClean": true,
+  "commands": {
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ]
+  },
+  "funnel": {
+    "candidates": 7,
+    "baselineQualified": 6,
+    "environmentDirty": 0,
+    "invalidRun": 1,
+    "recallUnmeasurable": 2,
+    "recallMeasurable": 4,
+    "recallConfirmed": 4,
+    "falseGreen": 0,
+    "falseGreenRate": 0,
+    "efficiency": {
+      "efficient": 4,
+      "comparable": 0,
+      "selectionOverbroad": 0,
+      "scored": 4
+    },
+    "compute": {
+      "attempted": 7,
+      "measurable": 7,
+      "unmeasurable": 0
+    }
+  },
+  "caveats": [
+    "Only 4 measurable case(s). Too few to support a reliability estimate."
+  ]
+}

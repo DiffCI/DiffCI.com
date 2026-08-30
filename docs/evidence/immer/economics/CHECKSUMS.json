@@ -1,0 +1,9 @@
+{
+  "frozen-summary.json": "b23f9cbb6004a9c727e9df8c475e8837d8560fd9d3de10b4e5150ef6ceed4ad7",
+  "manifest.json": "f2cbec97b8f052a9183024d40930efb94c3c86b47cbbf7e852c94e358bb1f8b5",
+  "raw-components.txt": "a669f9ae3ca1ee6d1e55641d467b2bb67802b5a1296e2323a5ec3e2996dd29ef",
+  "results.jsonl": "7de17ba2a26a2122228e0f19025ea05a3ebde25c3e033d0d76b39efa55f9f98a",
+  "frozenAt": "2026-08-30",
+  "runId": "immer-economics-01",
+  "note": "RAW economics measurement for external target #5, frozen BEFORE any comparison with the prediction sealed at bae2d00."
+}
