@@ -236,3 +236,15 @@ npm run github-runner:deploy     # deploy the self-hosted-runner dispatcher Work
   checklist (done, status banner updated to match).
 - `docs/research/2026-08-20-stage0-full-experiment-final-report.md` and neighboring
   `2026-08-2{0,1}-stage0-*`/`stage1a-*`/`stage1b-*` files — the full historical-validation story.
+
+## Validation programme (safety, economics, eligibility)
+
+- [`docs/external-validation-protocol.md`](external-validation-protocol.md) — **the live one.** Protocol
+  frozen at `910969f`, no target selected, nothing cloned. Read before touching the eligibility gate.
+- [`docs/economic-eligibility-gate.md`](economic-eligibility-gate.md) — the pre-deployment assessment:
+  what it predicts, from observation alone, and what it deliberately does not do.
+- [`docs/laboratory-defects.md`](laboratory-defects.md) — every defect found in the measuring apparatus,
+  and what each would have produced had it survived. Almost all of them fail toward optimism.
+- [`docs/technical-branch-endpoint.md`](technical-branch-endpoint.md) — why selector work stopped.
+- [`docs/safety-validation-milestone.md`](safety-validation-milestone.md) and
+  [`docs/compute-economics-results.md`](compute-economics-results.md) — the underlying evidence.

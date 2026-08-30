@@ -66,3 +66,6 @@ Another clever internal experiment has diminishing value. The chain that matters
                     -> customer's CI bill -> dollars saved
 
 Anything touching real customers is outward-facing and is not started on my initiative.
+
+The protocol for the first step of that chain is frozen in
+[external-validation-protocol.md](external-validation-protocol.md).
