@@ -421,3 +421,36 @@ describe("external validation target #5: immer", () => {
     assert.match(corpusEntry("immerjs/immer").universeVerification ?? "", /23 files by three independent counts/);
   });
 });
+
+/**
+ * The economics job must measure the SAME thing the frozen prediction was made about.
+ *
+ * A different commit, agent generation or test command would make the comparison meaningless while
+ * still producing a number, which is the failure mode this whole corpus keeps rediscovering.
+ */
+describe("immer economics answers the prediction that was frozen", () => {
+  const observation = getValidationJob("immer-observation")!;
+  const economics = getValidationJob("immer-economics")!;
+
+  it("measures the same repository at the same pinned commit", () => {
+    assert.equal(economics.repository, observation.repository);
+    assert.equal(economics.pinnedHeadSha, observation.pinnedHeadSha);
+    assert.equal(economics.commits, observation.commits);
+  });
+
+  it("runs the same agent generation, so selections are comparable", () => {
+    assert.equal(economics.expectedAgentIntegrity, observation.expectedAgentIntegrity);
+  });
+
+  it("executes the same commands the prediction's calibration was measured with", () => {
+    assert.deepEqual(economics.mutate!.install, observation.mutate!.install);
+    assert.deepEqual(economics.mutate!.testArgs, observation.mutate!.testArgs);
+    assert.equal(economics.mutate!.testModule, observation.mutate!.testModule);
+    assert.equal(economics.mutate!.build, undefined, "immer's source suite qualified with no build");
+  });
+
+  it("actually runs the arms - observeOnly here would silently produce no economics at all", () => {
+    assert.equal(observation.observeOnly, true);
+    assert.notEqual(economics.observeOnly, true);
+  });
+});

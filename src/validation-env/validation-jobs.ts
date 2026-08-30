@@ -565,6 +565,44 @@ const JOBS: Record<string, ValidationJob> = {
     // Observation only - a clone, an install and 25 analyses. Nothing executes a test suite.
     maxRunMs: 2 * 60 * 60_000,
   },
+
+  /**
+   * immer ECONOMICS - the measurement that answers a frozen POSITIVE prediction.
+   *
+   * The prediction was sealed at `bae2d00` (docs/immer-prediction-frozen.md) BEFORE this job existed:
+   * +129.67 CPU-s incremental, from observation alone. Nothing here may be changed to agree with it.
+   *
+   * Same repository, same pinned commit, same agent generation, same commands as `immer-observation`
+   * and `immer-qualification`. The accounting is unchanged and is the one the pre-registration fixed:
+   *
+   *   Incremental = C_comparator - (C_diffci_selected + C_joint_analysis)
+   *
+   * with joint analysis charged ENTIRELY to DiffCI, which is generous to the comparator. Gross versus
+   * FULL stays secondary.
+   *
+   * If this measures negative the outcome is FALSE_POSITIVE_ELIGIBILITY, immer becomes development-set
+   * evidence, and the predictor is NOT repaired against immer and re-run on immer.
+   */
+  "immer-economics": {
+    id: "immer-economics",
+    description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",
+    mode: "reproduce",
+    repository: "immerjs/immer",
+    pinnedHeadSha: "061c2425e1c9dff89e4e4189d42af1b7839dfe0a",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["corepack", "yarn", "install", "--frozen-lockfile"],
+      // No build: immer's source suite went green with no build stage in immer-qualify-01.
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // 25 candidates, each a baseline plus two economics arms plus up to two mutation attempts against
+    // a ~5s wall / ~15 CPU-s suite. Far cheaper per candidate than vue, but the install dominates.
+    maxRunMs: 6 * 60 * 60_000,
+  },
 };
 
 export function getValidationJob(id: string): ValidationJob | undefined {
