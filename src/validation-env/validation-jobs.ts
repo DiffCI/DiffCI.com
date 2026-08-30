@@ -680,6 +680,118 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 3 * 60 * 60_000,
   },
 
+  /**
+   * SURVEY ECONOMICS (2026-08-30) - the five that passed all six gates.
+   *
+   * Interpretation criteria were frozen at `39a3db3` BEFORE these jobs existed, so no threshold here
+   * can be chosen with a result in view.
+   *
+   * Same accounting as every economics run before them, unchanged:
+   *
+   *   Incremental = C_comparator - (C_diffci_selected + C_joint_analysis)
+   *
+   * with joint analysis charged ENTIRELY to DiffCI. Gross versus FULL is reported alongside rather
+   * than instead, because gross, overhead and net are three separate quantities and collapsing them
+   * is how a 300-CPU-second saving and a 1-second saving come to look alike.
+   *
+   * Commands are identical to the ones each repository qualified with. webpack is absent: it is
+   * `not qualified`, and it stays undiagnosed for the duration of this experiment.
+   */
+  "survey-economics-prettier": {
+    id: "survey-economics-prettier",
+    description: "Compute measurement for prettier/prettier under agent B - survey economics.",
+    mode: "reproduce",
+    repository: "prettier/prettier",
+    pinnedHeadSha: "18c4dfb01d61c53a63f9c30ee2257631ed1c5994",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["corepack","yarn","install","--immutable"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: [],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // 1557 files, 35278 tests, ~805 CPU-s and 214s wall per full run - the heaviest workload in the set and the one carrying the most weight. Sharded, because 25 candidates at roughly five suite runs each is over seven hours unsharded.
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
+  "survey-economics-ts-jest": {
+    id: "survey-economics-ts-jest",
+    description: "Compute measurement for kulshekhar/ts-jest under agent B - survey economics.",
+    mode: "reproduce",
+    repository: "kulshekhar/ts-jest",
+    pinnedHeadSha: "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["npm","ci","--no-audit","--no-fund"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: ["-c=jest.config.ts"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // 20 files, 358 tests, ~260 CPU-s and 153s wall per full run.
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
+  "survey-economics-css-loader": {
+    id: "survey-economics-css-loader",
+    description: "Compute measurement for webpack/css-loader under agent B - survey economics.",
+    mode: "reproduce",
+    repository: "webpack/css-loader",
+    pinnedHeadSha: "be04ec290ee57bafbc75f5936c1f6a2532681b49",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["npm","ci","--no-audit","--no-fund"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: [],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // 12 files, 625 tests, ~58 CPU-s per full run. NODE_ENV=test is still not passed - the same apparatus limit recorded at qualification, unchanged here.
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
+  "survey-economics-eslint-config-prettier": {
+    id: "survey-economics-eslint-config-prettier",
+    description: "Compute measurement for prettier/eslint-config-prettier under agent B - survey economics.",
+    mode: "reproduce",
+    repository: "prettier/eslint-config-prettier",
+    pinnedHeadSha: "bd6e6171434c7b34dec3dd0f325aab792c126ec6",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["corepack","yarn","install","--immutable"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: [],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // 4 files, 463 tests, ~32 CPU-s per full run. Expected to be economically marginal or negative; run unchanged, because excluding it on size after seeing the qualification numbers is exactly the adjustment the criteria forbid.
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
+  "survey-economics-cross-env": {
+    id: "survey-economics-cross-env",
+    description: "Compute measurement for kentcdodds/cross-env under agent B - survey economics.",
+    mode: "reproduce",
+    repository: "kentcdodds/cross-env",
+    pinnedHeadSha: "9951937a7d3d4a1ea7bd2ce3133bcfb687125813",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["npm","ci","--no-audit","--no-fund"],
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // 5 files, 63 tests, 3.50 CPU-s per full run - smaller than DiffCI's own per-candidate analysis cost on immer. Expected negative, and that is a wanted result: it locates the break-even boundary rather than invalidating anything.
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
   "immer-economics": {
     id: "immer-economics",
     description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",
