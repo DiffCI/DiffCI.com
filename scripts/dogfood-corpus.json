@@ -146,8 +146,8 @@
     "source": "fastify/fastify",
     "stresses": "EXTERNAL VALIDATION TARGET #1, named by ChatGPT after the external-validation protocol was frozen at 04750a3 and before the repository was cloned or any Fastify-specific DiffCI data existed (docs/external-target-01-selection.md). Mature Node.js HTTP framework, plain CommonJS/ESM, no monorepo, no bundler. Test runner is borp (a node:test runner), which is NEITHER vitest NOR jest - the first target in this corpus whose runner differs from the two the harness was built against.",
     "commits": 25,
-    "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "observationQualified": "not attempted",
+    "mutationQualified": "no",
     "install": [
       "npm",
       "install",
@@ -157,6 +157,11 @@
     "testModule": "node_modules/borp/borp.js",
     "testArgs": [],
     "testCommandRationale": "Fastify documented unit script is `unit`, which is bare `borp`; borp reads .borp.yaml and runs test/**/*.test.{js,mjs}. The default `test` script additionally runs `lint` (eslint) and `test:types` (tstyche), neither of which is a unit test and neither of which is file-selectable, so including them would charge both arms for work no selector can narrow. This is a choice between two of the repository own documented scripts, made at eligibility time before any DiffCI data existed - the same rule applied to vue. No file filters or exclusions were invented: borp own committed config decides the file set. borp takes no arguments here because the config supplies them.",
-    "lockfile": "NONE. fastify has no package-lock.json, pnpm-lock.yaml, yarn.lock or bun.lockb at this commit, and declares no packageManager. Two installs a week apart may not resolve the same dependency versions. Recorded as a known reproducibility weakness, exactly as it was for hono - not corrected by inventing a lockfile."
+    "lockfile": "NONE. fastify has no package-lock.json, pnpm-lock.yaml, yarn.lock or bun.lockb at this commit, and declares no packageManager. Two installs a week apart may not resolve the same dependency versions. Recorded as a known reproducibility weakness, exactly as it was for hono - not corrected by inventing a lockfile.",
+    "mutationQualificationReason": "2 test(s) failing at HEAD on every run (2, 2)",
+    "mutationQualifiedAt": "2026-08-30T10:17:07.950Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "TARGET #1 - NOT_QUALIFIED (docs/external-target-01-result.md). fastify-qualify-01, 2026-08-30: two consecutive baselines exited 1, each reporting two failures (exit=1 parsedFailures=2 on both). Deterministically RED UNDER THE TESTED CANONICAL ENVIRONMENT - whether the cause is repository state or an environment requirement was NOT established, and no run was spent establishing it. Failing test names deliberately not retrieved: they do not change the outcome, and learning them invites deciding whether the failures are reasonable to ignore. Never reached calibration, which would have returned NO_ASSESSMENT separately because borp emits no test-FILE count."
   }
 ]
