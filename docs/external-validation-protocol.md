@@ -159,7 +159,13 @@ four is small and the selection was not random.
 
 ## Status
 
-**Protocol frozen.** Two targets closed without a prediction, neither by tuning anything.
+**Sequence CLOSED** at five targets, as pre-committed before target #5's outcome was known.
+
+One assessment reached, one correct out-of-sample sign prediction, nothing tuned at any point. The
+frozen conclusion is [external-validation-conclusion.md](external-validation-conclusion.md).
+
+The next experiment is the [addressability survey](addressability-survey-preregistration.md), which
+answers a different question — how often the assessment can be reached at all. **Not target #6.**
 
 The first genuinely unseen end-to-end run of `npm run calibrate` has not happened, and that unspent
 state is deliberate.

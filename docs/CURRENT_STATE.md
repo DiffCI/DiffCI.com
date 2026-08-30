@@ -239,8 +239,13 @@ npm run github-runner:deploy     # deploy the self-hosted-runner dispatcher Work
 
 ## Validation programme (safety, economics, eligibility)
 
-- [`docs/external-validation-protocol.md`](external-validation-protocol.md) — **the live one.** Protocol
-  frozen at `910969f`, no target selected, nothing cloned. Read before touching the eligibility gate.
+- [`docs/external-validation-conclusion.md`](external-validation-conclusion.md) — **read this first.**
+  External validation #1, closed: 5 targets, 4 assessability refusals, immer `CONFIRMED_POSITIVE` —
+  the eligibility rule's first out-of-sample sign match. n=1; magnitude NOT validated.
+- [`docs/addressability-survey-preregistration.md`](addressability-survey-preregistration.md) — **the
+  live one.** Pre-registered, not started, no repository named.
+- [`docs/external-validation-protocol.md`](external-validation-protocol.md) — the frozen protocol and
+  the target-by-target outcome table.
 - [`docs/economic-eligibility-gate.md`](economic-eligibility-gate.md) — the pre-deployment assessment:
   what it predicts, from observation alone, and what it deliberately does not do.
 - [`docs/laboratory-defects.md`](laboratory-defects.md) — every defect found in the measuring apparatus,
