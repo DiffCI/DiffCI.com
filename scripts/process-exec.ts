@@ -14,6 +14,8 @@
  */
 import { spawnSync } from "node:child_process";
 
+import { cpuSecondsBetween, readChildCpuTicks } from "./compute-usage.js";
+
 /**
  * Environment for every child process this harness spawns.
  *
@@ -48,6 +50,13 @@ export interface BoundedExecResult {
   timedOut: boolean;
   /** The signal that killed it, when one did. */
   signal: string | null;
+  /**
+   * CPU-seconds this process tree actually consumed, or undefined where it cannot be measured.
+   *
+   * Undefined rather than 0: "could not tell" and "consumed nothing" are different facts, and treating
+   * the first as the second understates cost in the direction that flatters DiffCI.
+   */
+  cpuSeconds?: number;
 }
 
 export interface BoundedExecOptions {
@@ -70,6 +79,7 @@ export interface BoundedExecOptions {
  */
 export function execBounded(command: string, argv: string[], options: BoundedExecOptions): BoundedExecResult {
   const started = Date.now();
+  const cpuBefore = readChildCpuTicks();
   const result = spawnSync(command, argv, {
     cwd: options.cwd,
     encoding: "utf8",
@@ -79,8 +89,11 @@ export function execBounded(command: string, argv: string[], options: BoundedExe
     env: { ...process.env, ...NON_INTERACTIVE_ENV, ...(options.env ?? {}) },
   });
 
+  const cpuAfter = readChildCpuTicks();
+
   return {
     status: result.status,
+    cpuSeconds: cpuSecondsBetween(cpuBefore, cpuAfter),
     out: `${result.stdout ?? ""}${result.stderr ?? ""}`,
     stdout: result.stdout ?? "",
     stderr: result.stderr ?? "",
