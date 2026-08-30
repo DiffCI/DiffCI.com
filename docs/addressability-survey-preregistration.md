@@ -27,8 +27,12 @@ exactly the bias this document exists to prevent.
 **Sample size: N = 40.** Fixed now. Within the 30–50 range agreed, and chosen so that a single failure
 category of ~10% is still visible above sampling noise, without the cost of 50.
 
-**Selection rule:** take ranks in ascending order until 40 repositories are *admitted*. There is no
-judgement at any point — the next rank is taken, always.
+**Selection rule:** the frame is **ranks 1–40**, in source order. Exclusions come out of that 40, so
+the eligible N is smaller than 40. There is no judgement at any point — the ranks are taken as they come.
+
+*(This supersedes an earlier reading, "take ranks until 40 are admitted". The two rules differ and the
+discrepancy is settled in [addressability-survey-frame.md](addressability-survey-frame.md), before any
+inspection. The concrete source is fixed there too.)*
 
 ### Exclusions, and their strict definitions
 
