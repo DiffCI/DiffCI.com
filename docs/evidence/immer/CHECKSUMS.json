@@ -1,0 +1,7 @@
+{
+  "observation-corpus.jsonl": "e9a6feafe8732fbc6862600c8193e99442a9e9893eec1edee4b6e585fa8a3fab",
+  "prediction.txt": "67bf93701a8b0c415c2f5222cabcfa94ac1317fe216a1f33b758947df574b2e8",
+  "environment.json": "39e1ab3a561ac6e7318afdbbfaf6d67d36132ab5cbc96c830d8beb9218099ddc",
+  "frozenAt": "2026-08-30",
+  "note": "Inputs and output of the frozen eligibility rule for external target #5, committed BEFORE any economics arm ran."
+}
