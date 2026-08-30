@@ -29,7 +29,7 @@ import { randomBytes } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { selectFileToMutate } from "../src/analysis-fanout/mutation.js";
-import { execBounded } from "./process-exec.js";
+import { execBounded, type BoundedExecResult } from "./process-exec.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
 import { parseTestOutput } from "./test-output-parsers.js";
 
@@ -74,6 +74,71 @@ export type Efficiency =
   /** MORE tests than the comparator. Safe, and worse than a rule that knows nothing about the graph. */
   | "SELECTION_OVERBROAD";
 
+/**
+ * Runs the comparator's and DiffCI's selections on the unmutated tree and records what each cost.
+ *
+ * WHAT MAKES A CANDIDATE ECONOMICALLY UNMEASURABLE. Any arm that exits non-zero, or whose CPU could not
+ * be read, or whose selection is unavailable. In every one of those cases the arm is recorded with
+ * whatever was observed and `measurable` is false - the missing quantity is NEVER substituted with
+ * zero, because a zero-cost arm is exactly the error that would manufacture savings.
+ *
+ * An empty comparator selection is a legitimate measurement, not a failure: a path rule that selects
+ * nothing genuinely costs nothing to run, and that is a real (and very hard to beat) comparator.
+ */
+function measureEconomicArms(
+  candidate: Candidate,
+  testExec: string,
+  fullArgs: string[],
+  baseline: { cpuSeconds?: number; ms: number; status: number | null },
+  timeoutMs: number,
+): NonNullable<MutationResult["economics"]> {
+  const { commands, repoPath, comparatorTests, selectedTests } = candidate;
+  const armArgs = (files: string[]): string[] => [...commands.testArgs, ...files];
+
+  const full: ArmCost = { cpuSeconds: baseline.cpuSeconds, wallMs: baseline.ms, exitStatus: baseline.status };
+
+  // An empty selection is not executed - there is nothing to run, and spawning a runner with no files
+  // would measure the runner's startup rather than the selection's cost.
+  const runArm = (files: string[]): ArmCost =>
+    files.length === 0
+      ? { cpuSeconds: 0, wallMs: 0, exitStatus: 0 }
+      : ((r) => ({ cpuSeconds: r.cpuSeconds, wallMs: r.ms, exitStatus: r.status }))(run(testExec, armArgs(files), repoPath, timeoutMs));
+
+  const comparator = { ...runArm(comparatorTests), selectedCount: comparatorTests.length };
+  const diffciSelected = { ...runArm(selectedTests), selectedCount: selectedTests.length };
+
+  const problems: string[] = [];
+  if (comparatorTests.length === 0 && candidate.baselineSelected !== 0) {
+    // Agent A produced no identities. Counted, but not executable - so not costable.
+    problems.push("comparator selection unavailable (observed by an agent generation that did not expose pathBaseline.selectedTests)");
+  }
+  for (const [name, arm] of [
+    ["full", full],
+    ["comparator", comparator],
+    ["diffci-selected", diffciSelected],
+  ] as const) {
+    if (arm.exitStatus !== 0) problems.push(`${name} arm exited ${String(arm.exitStatus)}`);
+    if (arm.cpuSeconds === undefined) problems.push(`${name} arm CPU could not be measured`);
+  }
+
+  return {
+    treeState: "unmutated-baseline",
+    measurable: problems.length === 0,
+    unmeasurableReason: problems.length > 0 ? problems.join("; ") : undefined,
+    full,
+    comparator,
+    diffciSelected,
+  };
+}
+
+/** One measured execution arm. CPU is the unit that matters; wall time is kept beside it, never instead. */
+interface ArmCost {
+  /** undefined where CPU could not be measured. Never 0 - see compute-usage.ts. */
+  cpuSeconds?: number;
+  wallMs: number;
+  exitStatus: number | null;
+}
+
 interface MutationResult {
   repository: string;
   headSha: string;
@@ -103,6 +168,32 @@ interface MutationResult {
   /** Every file this pass reverted, in order. Records how hard it had to look for a measurable one. */
   attemptedFiles?: string[];
   durations?: { install: number; baseline: number; fullMutated: number; selectedMutated: number };
+  /**
+   * Raw compute components for the economics question (2026-08-29). No derived percentages here - the
+   * headline is computed after freezing, from these.
+   *
+   * ALL THREE EXECUTION ARMS RUN ON THE UNMUTATED TREE, immediately after the green baseline. That is
+   * the state a customer's CI is actually in day to day, and running the arms in one tree state is what
+   * makes their costs comparable at all. The mutated runs that follow are for SAFETY classification and
+   * are deliberately not reused here.
+   *
+   * `jointAnalysisCpuSeconds` is joint on purpose: the comparator's selection is computed from
+   * `profile`, which is produced BY the dependency-graph build, so it cannot be obtained without the
+   * expensive step DiffCI needs. There is no defensible split, so the whole cost is charged to DiffCI -
+   * which hands the comparator its selection logic free and makes any DiffCI win the stronger claim.
+   *
+   * Any arm that failed, timed out, or could not be measured sets `measurable: false`. A missing arm is
+   * never recorded as zero cost, which is the direction that would flatter DiffCI.
+   */
+  economics?: {
+    treeState: "unmutated-baseline";
+    measurable: boolean;
+    unmeasurableReason?: string;
+    full: ArmCost;
+    comparator: ArmCost & { selectedCount: number };
+    diffciSelected: ArmCost & { selectedCount: number };
+    jointAnalysisCpuSeconds?: number;
+  };
   /**
    * What the runner actually printed when its output could not be parsed (2026-08-29).
    *
@@ -166,13 +257,23 @@ interface Candidate {
   commands: RepoCommands;
   /** What the path-rule comparator selected for this same commit, carried from the observation row. */
   baselineSelected: number | undefined;
+  /**
+   * The comparator's actual test files, so its arm can be EXECUTED rather than only counted.
+   *
+   * Requires agent generation B, which exposes `pathBaseline.selectedTests`. Empty when observed by
+   * generation A, in which case the candidate is economically unmeasurable - never silently costed as
+   * zero.
+   */
+  comparatorTests: string[];
+  /** Joint analysis CPU from the observation row - see the economics block on MutationResult. */
+  jointAnalysisCpuSeconds: number | undefined;
 }
 
 /**
  * Runs a real executable with NO shell. Every test invocation goes through here, because those
  * arguments are repository-derived test file paths and must reach the process verbatim.
  */
-function run(command: string, args: string[], cwd: string, timeoutMs: number): { status: number | null; stdout: string; stderr: string; ms: number } {
+function run(command: string, args: string[], cwd: string, timeoutMs: number): BoundedExecResult {
   // Through execBounded, the same primitive qualification uses and the calibration suite measures. It
   // also fixes a divergence that lived here unnoticed: this path - the one that executes TEST SUITES,
   // and therefore the one that produced every mutation classification so far - set only CI and
@@ -192,7 +293,7 @@ function run(command: string, args: string[], cwd: string, timeoutMs: number): {
 /** Extra directory prepended to PATH for child processes - where package-manager shims are placed. */
 let shimDir: string | undefined;
 
-function runShellCommand(args: string[], cwd: string, timeoutMs: number): { status: number | null; stdout: string; stderr: string; ms: number } {
+function runShellCommand(args: string[], cwd: string, timeoutMs: number): BoundedExecResult {
   assertShellSafeArgs(args, "dogfood-mutate: install");
   const [exec, ...rest] = args;
   // npm, npx, pnpm and corepack are all .cmd shims on Windows. Resolving the suffix here keeps the
@@ -254,6 +355,7 @@ function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string
           identity: { repository: string; baseSha: string; headSha: string };
           decision: { mode: string; selected: number | "unknown"; total: number | "unknown" };
           counterfactual?: { baselineSelected: number | "unknown" };
+          economics?: { jointAnalysisCpuSeconds?: number };
         },
     );
 
@@ -271,7 +373,9 @@ function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string
 
     const reportPath = join(reportsDir, `${row.identity.headSha.slice(0, 12)}.json`);
     if (!existsSync(reportPath)) continue;
-    const report = JSON.parse(readFileSync(reportPath, "utf8")) as { result: { selectedTests?: string[]; changedFiles?: string[] } };
+    const report = JSON.parse(readFileSync(reportPath, "utf8")) as {
+      result: { selectedTests?: string[]; changedFiles?: string[]; pathBaseline?: { selectedTests?: string[] } };
+    };
 
     candidates.push({
       repository: row.identity.repository,
@@ -283,6 +387,8 @@ function loadCandidates(corpusPath: string, repoPath: string, reportsDir: string
       changedFiles: report.result.changedFiles ?? [],
       commands,
       baselineSelected: typeof row.counterfactual?.baselineSelected === "number" ? row.counterfactual.baselineSelected : undefined,
+      comparatorTests: report.result.pathBaseline?.selectedTests ?? [],
+      jointAnalysisCpuSeconds: typeof row.economics?.jointAnalysisCpuSeconds === "number" ? row.economics.jointAnalysisCpuSeconds : undefined,
     });
   }
   return candidates;
@@ -342,6 +448,19 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number, 
   if (baselineParsed.failures > 0) {
     return { ...base, classification: "ENVIRONMENT_DIRTY", reason: `${baselineParsed.failures} test(s) already failing before mutation`, baselineFailures: baselineParsed.failures };
   }
+
+  // 1b. THE ECONOMICS ARMS, measured here and nowhere else.
+  //
+  // On the UNMUTATED tree, immediately after a green baseline. That is the state a customer's CI is in
+  // day to day, and running all three arms in one tree state is what makes their costs comparable. The
+  // mutated runs below exist to answer the SAFETY question and are deliberately not reused for cost:
+  // a failing suite formats errors and stacks that a passing one does not.
+  //
+  // FULL is the baseline run just completed - no need to pay for it twice.
+  // Attached to `base`, so every classification returned below carries its cost measurement - including
+  // the ones that go on to be RECALL_UNMEASURABLE. Safety and economics are independent questions and a
+  // candidate can answer one without the other.
+  base.economics = { ...measureEconomicArms(candidate, testExec, fullArgs, baseline, timeoutMs), jointAnalysisCpuSeconds: candidate.jointAnalysisCpuSeconds };
 
   // The qualification gate. A candidate reaches mutation only from here, and a --qualify-only run
   // stops at exactly this point - the whole purpose being to reject a repository cheaply rather than

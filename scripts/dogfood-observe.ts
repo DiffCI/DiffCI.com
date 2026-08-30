@@ -24,6 +24,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { execBounded } from "./process-exec.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
 
 const repoRoot = resolve(dirname(import.meta.filename), "..");
@@ -81,6 +82,23 @@ interface Observation {
   economics: {
     analysisMs: number | "unknown";
     graphMs: number | "unknown";
+    /**
+     * CPU-seconds the whole observation process consumed - the JOINT analysis cost (2026-08-29).
+     *
+     * Joint, not DiffCI's alone, and deliberately not split. `runPathBaseline` consumes `profile`,
+     * which is produced BY `buildDependencyGraph` - so the comparator's selection cannot be computed
+     * without the expensive graph step having already run. There is no honest way to divide this
+     * number into a DiffCI share and a comparator share, and inventing an allocation would put a
+     * fabricated quantity at the centre of the business case.
+     *
+     * The economics calculation therefore charges ALL of it to DiffCI, which gives the comparator its
+     * selection logic for free. That is deliberately generous to the comparator: if DiffCI still wins
+     * on that basis, the result is stronger than one resting on a split nobody can defend.
+     *
+     * undefined where CPU cannot be measured (no /proc), never 0 - "could not tell" and "consumed
+     * nothing" must not collapse into the same number.
+     */
+    jointAnalysisCpuSeconds?: number;
   };
   /** Non-fatal problems worth a human reading them - a new failure class is the point of this exercise. */
   notes: string[];
@@ -170,16 +188,15 @@ function observeCommit(agent: { bin: string; version: string; integrity: string 
   const checkout = spawnSync("git", ["checkout", "--quiet", "--force", head], { cwd: repoPath, encoding: "utf8" });
   if (checkout.status !== 0) notes.push(`could not check out ${head.slice(0, 12)}: ${(checkout.stderr ?? "").trim().split("\n")[0]}`);
 
-  const started = Date.now();
-  const run = spawnSync(process.execPath, [agent.bin, "observe", "--repo", repoPath, "--base", base, "--head", head, "--out", reportPath], {
-    encoding: "utf8",
-    maxBuffer: 64 * 1024 * 1024,
-    timeout: 10 * 60 * 1000,
+  // Through execBounded, so the analysis arm is measured by the same calibrated meter as every
+  // execution arm - and so the CPU it reports is the whole process tree, not just the direct child.
+  const run = execBounded(process.execPath, [agent.bin, "observe", "--repo", repoPath, "--base", base, "--head", head, "--out", reportPath], {
+    timeoutMs: 10 * 60 * 1000,
   });
-  const wallMs = Date.now() - started;
+  const wallMs = run.ms;
 
-  if (run.status !== 0) notes.push(`agent exited ${run.status}`);
-  if (run.stderr && run.stderr.trim().length > 0) notes.push(`stderr: ${run.stderr.trim().split("\n")[0].slice(0, 200)}`);
+  if (run.status !== 0) notes.push(`agent exited ${String(run.status)}`);
+  if (run.stderr.trim().length > 0) notes.push(`stderr: ${run.stderr.trim().split("\n")[0].slice(0, 200)}`);
 
   let report: Record<string, unknown> = {};
   if (existsSync(reportPath)) {
@@ -260,6 +277,7 @@ function observeCommit(agent: { bin: string; version: string; integrity: string 
     economics: {
       analysisMs: num(timings.totalMs) === "unknown" ? wallMs : num(timings.totalMs),
       graphMs: num(graph.durationMs),
+      jointAnalysisCpuSeconds: run.cpuSeconds,
     },
     notes,
   };
