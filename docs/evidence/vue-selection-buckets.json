@@ -1,0 +1,154 @@
+{
+  "producedAt": "2026-08-30T09:13:01.858Z",
+  "repository": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\ffab3b6b-7eea-4772-827d-31dedbf8a62d\\scratchpad\\vue-buckets",
+  "agentIntegrity": "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+  "platform": "win32 node v24.16.0",
+  "observed": 25,
+  "candidates": 16,
+  "totalTestUniverse": 196,
+  "buckets": [
+    {
+      "bucketSize": 57,
+      "candidateCount": 4,
+      "uniqueSelectionSets": 1,
+      "intersectionSize": 57,
+      "unionSize": 57,
+      "intersectionOverBucketSize": 1,
+      "pairwiseJaccard": {
+        "min": 1,
+        "median": 1,
+        "max": 1
+      },
+      "filesAlwaysSelected": 57,
+      "filesVarying": 0,
+      "commits": [
+        "31da934fc",
+        "6eaecc14d",
+        "22b53eafe",
+        "246846479"
+      ]
+    },
+    {
+      "bucketSize": 97,
+      "candidateCount": 5,
+      "uniqueSelectionSets": 1,
+      "intersectionSize": 97,
+      "unionSize": 97,
+      "intersectionOverBucketSize": 1,
+      "pairwiseJaccard": {
+        "min": 1,
+        "median": 1,
+        "max": 1
+      },
+      "filesAlwaysSelected": 97,
+      "filesVarying": 0,
+      "commits": [
+        "f8d42e1cf",
+        "8654f3511",
+        "b535917d4",
+        "a72036f66",
+        "6e1814aa3"
+      ]
+    },
+    {
+      "bucketSize": 98,
+      "candidateCount": 1,
+      "uniqueSelectionSets": 1,
+      "intersectionSize": 98,
+      "unionSize": 98,
+      "intersectionOverBucketSize": 1,
+      "pairwiseJaccard": null,
+      "filesAlwaysSelected": 98,
+      "filesVarying": 0,
+      "commits": [
+        "cd1974562"
+      ]
+    },
+    {
+      "bucketSize": 162,
+      "candidateCount": 3,
+      "uniqueSelectionSets": 1,
+      "intersectionSize": 162,
+      "unionSize": 162,
+      "intersectionOverBucketSize": 1,
+      "pairwiseJaccard": {
+        "min": 1,
+        "median": 1,
+        "max": 1
+      },
+      "filesAlwaysSelected": 162,
+      "filesVarying": 0,
+      "commits": [
+        "b8543dcf0",
+        "38577161c",
+        "02421cdbc"
+      ]
+    },
+    {
+      "bucketSize": 183,
+      "candidateCount": 3,
+      "uniqueSelectionSets": 1,
+      "intersectionSize": 183,
+      "unionSize": 183,
+      "intersectionOverBucketSize": 1,
+      "pairwiseJaccard": {
+        "min": 1,
+        "median": 1,
+        "max": 1
+      },
+      "filesAlwaysSelected": 183,
+      "filesVarying": 0,
+      "commits": [
+        "ef82a2677",
+        "a2b40db9a",
+        "4e467d7ae"
+      ]
+    }
+  ],
+  "acrossAllCandidates": {
+    "intersectionSize": 57,
+    "unionSize": 184,
+    "filesAlwaysSelected": [
+      "packages/reactivity/__tests__/ref.spec.ts",
+      "packages/runtime-core/__tests__/apiOptions.spec.ts",
+      "packages/runtime-core/__tests__/apiWatch.spec.ts",
+      "packages/runtime-core/__tests__/componentProps.spec.ts",
+      "packages/runtime-core/__tests__/components/Suspense.spec.ts",
+      "packages/runtime-core/__tests__/components/Teleport.spec.ts",
+      "packages/runtime-core/__tests__/helpers/useId.spec.ts",
+      "packages/runtime-core/__tests__/helpers/withMemo.spec.ts",
+      "packages/runtime-core/__tests__/hydration.spec.ts",
+      "packages/runtime-core/__tests__/rendererAttrsFallthrough.spec.ts",
+      "packages/runtime-dom/__tests__/createApp.spec.ts",
+      "packages/runtime-dom/__tests__/customElement.spec.ts",
+      "packages/runtime-dom/__tests__/customizedBuiltIn.spec.ts",
+      "packages/runtime-dom/__tests__/directives/vCloak.spec.ts",
+      "packages/runtime-dom/__tests__/directives/vModel.spec.ts",
+      "packages/runtime-dom/__tests__/directives/vOn.spec.ts",
+      "packages/runtime-dom/__tests__/directives/vShow.spec.ts",
+      "packages/runtime-dom/__tests__/helpers/useCssVars.spec.ts",
+      "packages/runtime-dom/__tests__/nodeOps.spec.ts",
+      "packages/runtime-dom/__tests__/patchAttrs.spec.ts",
+      "packages/runtime-dom/__tests__/patchClass.spec.ts",
+      "packages/runtime-dom/__tests__/patchEvents.spec.ts",
+      "packages/runtime-dom/__tests__/patchProps.spec.ts",
+      "packages/runtime-dom/__tests__/patchStyle.spec.ts",
+      "packages/runtime-dom/__tests__/rendererStaticNode.spec.ts",
+      "packages/server-renderer/__tests__/render.spec.ts",
+      "packages/server-renderer/__tests__/ssrAttrFallthrough.spec.ts",
+      "packages/server-renderer/__tests__/ssrCompilerOptions.spec.ts",
+      "packages/server-renderer/__tests__/ssrComputed.spec.ts",
+      "packages/server-renderer/__tests__/ssrDirectives.spec.ts",
+      "packages/server-renderer/__tests__/ssrDynamicComponent.spec.ts",
+      "packages/server-renderer/__tests__/ssrRender.spec.ts",
+      "packages/server-renderer/__tests__/ssrRenderList.spec.ts",
+      "packages/server-renderer/__tests__/ssrScopeId.spec.ts",
+      "packages/server-renderer/__tests__/ssrSlot.spec.ts",
+      "packages/server-renderer/__tests__/ssrSuspense.spec.ts",
+      "packages/server-renderer/__tests__/ssrTeleport.spec.ts",
+      "packages/server-renderer/__tests__/ssrWatch.spec.ts",
+      "packages/server-renderer/__tests__/webStream.spec.ts",
+      "packages/vue-compat/__tests__/compiler.spec.ts"
+    ]
+  }
+}
