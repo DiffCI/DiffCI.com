@@ -54,7 +54,8 @@
     "validation:status": "tsx scripts/diffci-validation-cli.ts status",
     "validation:collect": "tsx scripts/diffci-validation-cli.ts collect",
     "dogfood:compare": "tsx scripts/dogfood-compare.ts",
-    "test:calibration": "tsx --test \"tests/scripts/harness-calibration.test.ts\" \"tests/scripts/compute-usage.test.ts\""
+    "test:calibration": "tsx --test \"tests/scripts/harness-calibration.test.ts\" \"tests/scripts/compute-usage.test.ts\"",
+    "agent:equivalence": "tsx scripts/agent-equivalence.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",

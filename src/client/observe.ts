@@ -224,6 +224,9 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     const baseline = runPathBaseline(profile.testFilePaths, delta.files, profile);
 
     const selectedTests = impact.affectedTests.map((test) => test.path).sort();
+    // The comparator's own identities, sorted and redacted identically so the two arms of an economics
+    // experiment are executed the same way rather than merely counted the same way.
+    const comparatorSelectedTests = [...baseline.selectedTests].sort().map(hashPath);
     const commandPlan = impact.fallbackRequired
       ? undefined
       : planSelectiveTestCommands(profile, selectedTests);
@@ -251,7 +254,10 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         },
         pathBaseline: {
           mode: baseline.fallbackRequired ? "FULL" : "SELECTIVE",
-          selectedTestCount: baseline.selectedTests.length,
+          // Count and list derived from ONE array, so they cannot disagree. Sorted and redacted exactly
+          // like DiffCI's own `selectedTests` above, so a harness can execute either arm identically.
+          selectedTestCount: comparatorSelectedTests.length,
+          selectedTests: comparatorSelectedTests,
           matchedRules: baseline.matchedRules,
         },
         analysisStatus: impact.analysisStatus,

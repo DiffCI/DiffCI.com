@@ -70,8 +70,8 @@ async function fixture() {
               totalTestCount: options.total,
               pathBaseline:
                 options.baseline === "FULL"
-                  ? { mode: "FULL", selectedTestCount: options.total, matchedRules: ["config/dependency -> full fallback"] }
-                  : { mode: "SELECTIVE", selectedTestCount: options.baseline, matchedRules: ["directory scoping"] },
+                  ? { mode: "FULL", selectedTestCount: options.total, selectedTests: Array.from({ length: options.total }, (_u, i) => `baseline/t${i}.test.ts`), matchedRules: ["config/dependency -> full fallback"] }
+                  : { mode: "SELECTIVE", selectedTestCount: options.baseline, selectedTests: Array.from({ length: options.baseline }, (_u, i) => `baseline/t${i}.test.ts`), matchedRules: ["directory scoping"] },
             },
           }),
         ),
@@ -160,7 +160,7 @@ describe("the ledger through the Worker", () => {
         body: JSON.stringify(
           makeReport({
             repository: { provider: "github", ownerName: "acme/checkout", providerRepositoryId: "111" },
-            result: { ...template.result!, totalTestCount: 30, selectedTests: ["test/a.test.ts"], pathBaseline: { mode: "SELECTIVE", selectedTestCount: 12, matchedRules: ["directory scoping"] } },
+            result: { ...template.result!, totalTestCount: 30, selectedTests: ["test/a.test.ts"], pathBaseline: { mode: "SELECTIVE", selectedTestCount: 12, selectedTests: Array.from({ length: 12 }, (_u, i) => `baseline/t${i}.test.ts`), matchedRules: ["directory scoping"] } },
           }),
         ),
       }),

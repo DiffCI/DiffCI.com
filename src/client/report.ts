@@ -139,6 +139,27 @@ export interface ObservationGraph {
 export interface ObservationBaseline {
   mode: "SELECTIVE" | "FULL";
   selectedTestCount: number;
+  /**
+   * The test files the path-rule comparator actually selected (2026-08-29, agent generation B).
+   *
+   * WHY THE COUNT WAS NOT ENOUGH. The comparator is the cheapest credible alternative to DiffCI, so the
+   * question that decides whether DiffCI is worth paying for is not "did it run fewer tests than
+   * everything" but "did running its choice, plus the analysis that produced it, cost less than running
+   * the comparator's choice". Answering that requires EXECUTING the comparator's selection and measuring
+   * it, and a count cannot be executed.
+   *
+   * These are the identities the comparator itself produced (`runPathBaseline().selectedTests`), carried
+   * through unchanged and given exactly the same sorting and redaction as DiffCI's own `selectedTests`.
+   * They are deliberately NOT reconstructed from `matchedRules`: reconstruction would insert an
+   * interpretation layer between the comparator and the harness measuring it, which is the entire thing
+   * this field exists to eliminate.
+   *
+   * INVARIANT: `selectedTests.length === selectedTestCount`. They are derived from one array at the
+   * point of construction, so divergence is structurally impossible rather than merely unlikely - and
+   * consumers still check, because a count and a list that disagree would silently mismeasure the
+   * comparator arm of every economics experiment.
+   */
+  selectedTests: string[];
   matchedRules: string[];
 }
 

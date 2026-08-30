@@ -171,7 +171,7 @@ describe("the whole loop through the Worker", () => {
       token,
       body: makeReport({
         repository: { provider: "github", ownerName: "acme/checkout", providerRepositoryId: "111" },
-        result: { ...template.result!, totalTestCount: 40, selectedTests: ["test/a.test.ts"], pathBaseline: { mode: "SELECTIVE", selectedTestCount: 25, matchedRules: ["directory scoping"] } },
+        result: { ...template.result!, totalTestCount: 40, selectedTests: ["test/a.test.ts"], pathBaseline: { mode: "SELECTIVE", selectedTestCount: 25, selectedTests: Array.from({ length: 25 }, (_u, i) => `baseline/t${i}.test.ts`), matchedRules: ["directory scoping"] } },
       }),
     });
 

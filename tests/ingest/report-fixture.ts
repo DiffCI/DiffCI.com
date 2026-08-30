@@ -35,7 +35,7 @@ export function makeReport(overrides: Partial<ObservationReport> = {}): Observat
       blindSpot: false,
       riskSignals: [],
       graph: { nodes: 40, edges: 60, confidence: "COMPLETE", effectiveConfidence: "COMPLETE", durationMs: 900 },
-      pathBaseline: { mode: "FULL", selectedTestCount: 12, matchedRules: ["config/dependency -> full fallback"] },
+      pathBaseline: { mode: "FULL", selectedTestCount: 12, selectedTests: Array.from({ length: 12 }, (_u, i) => `baseline/t${i}.test.ts`), matchedRules: ["config/dependency -> full fallback"] },
       analysisStatus: "SAFE_TO_PROPOSE",
     },
     payload: {
