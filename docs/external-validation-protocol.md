@@ -138,9 +138,9 @@ reporting to an investor with the sample size attached, and it is not a product 
 |---|---|---|
 | 1 | `fastify/fastify` | [`NOT_QUALIFIED`](external-target-01-result.md) — suite not green in the canonical environment |
 | 2 | `date-fns/date-fns` | [`NOT_ADDRESSABLE`](external-target-02-result.md) — real test surface only reachable from a subdirectory |
-| 3 | `chalk/chalk` | [selected](external-target-03-selection.md), outcome unknown |
+| 3 | `chalk/chalk` | [`NOT_ADDRESSABLE`](external-target-03-result.md) — runner unsupported (AVA output unreadable by every adapter) |
 
-Neither is a failure of the eligibility rule, which has still not run once out of sample. Both are
+None is a failure of the eligibility rule, which has still not run once out of sample. All three are
 measured coverage limits of the apparatus. Stated as narrowly as the evidence supports, what the
 external assessment currently covers is:
 
@@ -148,6 +148,10 @@ external assessment currently covers is:
 > address by explicit test-file paths.**
 
 That is materially narrower than "repositories with CI", and it is measured rather than assumed.
+
+Three targets selected before inspection, three stopped before the predictor, three distinct causes.
+On this evidence **the addressable surface, not prediction accuracy, is the binding constraint** — a
+signal rather than a rate, since three is small and the selection was not random.
 
 ## Status
 
