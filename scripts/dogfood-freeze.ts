@@ -46,6 +46,8 @@ interface MutationRow {
   reason: string;
   mutatedFile?: string;
   attemptedFiles?: string[];
+  /** Raw compute components. Counted here; the numbers themselves stay in results.jsonl. */
+  economics?: { measurable: boolean };
 }
 
 function sha256OfFile(path: string): string {
@@ -98,6 +100,20 @@ function buildFunnel(rows: MutationRow[]) {
       selectionOverbroad: rows.filter((r) => r.efficiency === "SELECTION_OVERBROAD").length,
       /** Scored only where the safety question was answerable, so this is measurable-case coverage. */
       scored: rows.filter((r) => r.efficiency !== undefined).length,
+    },
+    /**
+     * A SECOND, INDEPENDENT DENOMINATOR. A candidate can carry valid mutation evidence and still fail
+     * compute measurement, because an execution arm failed or CPU accounting was unavailable. Recording
+     * only the compute-measurable count would silently drop those rows and shrink the denominator
+     * without saying so - the same attrition-hiding the recall funnel above exists to prevent.
+     *
+     * Counts only. The raw CPU components stay in results.jsonl, which is copied into this bundle, so
+     * every economics figure can be recomputed from the frozen evidence without trusting any reader.
+     */
+    compute: {
+      attempted: rows.filter((r) => r.economics !== undefined).length,
+      measurable: rows.filter((r) => r.economics?.measurable === true).length,
+      unmeasurable: rows.filter((r) => r.economics?.measurable === false).length,
     },
   };
 }
@@ -212,6 +228,10 @@ function main(): void {
   console.log(`    efficient                 ${funnel.efficiency.efficient}`);
   console.log(`    comparable                ${funnel.efficiency.comparable}`);
   console.log(`    selection overbroad       ${funnel.efficiency.selectionOverbroad}`);
+  console.log("\n  COMPUTE (independent denominator)");
+  console.log(`    attempted                 ${funnel.compute.attempted}`);
+  console.log(`    compute-MEASURABLE        ${funnel.compute.measurable}`);
+  console.log(`    unmeasurable              ${funnel.compute.unmeasurable}`);
   for (const caveat of frozen.caveats) console.log(`\n  CAVEAT: ${caveat}`);
   console.log();
 }

@@ -121,6 +121,12 @@ function measureEconomicArms(
     if (arm.cpuSeconds === undefined) problems.push(`${name} arm CPU could not be measured`);
   }
 
+  // The incremental figure cannot be formed without it, so its absence makes a candidate
+  // compute-unmeasurable just as surely as a failed execution arm does.
+  if (candidate.jointAnalysisCpuSeconds === undefined) {
+    problems.push("joint analysis CPU was not recorded by the observation pass");
+  }
+
   return {
     treeState: "unmutated-baseline",
     measurable: problems.length === 0,

@@ -259,3 +259,35 @@ describe("the zod mutation pass", () => {
     assert.equal(job.commits, getValidationJob("hono-reproduction")!.commits);
   });
 });
+
+describe("agent generations cannot cross between safety and economics jobs", () => {
+  const AGENT_A = "sha512-mj4GQJLruQTexqkKybpP4KXGSZsqfs5vD7UbeMPQzV5LfqaR7HwKjuT2l7AP6o8yzyk3fC9aeGSWuyk3+CH7Kw==";
+  const AGENT_B = "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==";
+
+  it("keeps the safety jobs pinned to agent A", () => {
+    // These produced the frozen safety corpus. Running them under B would silently mix generations.
+    for (const id of ["hono-reproduction", "zod-mutation"]) {
+      assert.equal(getValidationJob(id)!.expectedAgentIntegrity, AGENT_A, `${id} must stay on agent A`);
+    }
+  });
+
+  it("pins the economics jobs to agent B, which alone exposes the comparator's selection", () => {
+    for (const id of ["hono-economics", "zod-economics"]) {
+      assert.equal(getValidationJob(id)!.expectedAgentIntegrity, AGENT_B, `${id} must run on agent B`);
+    }
+  });
+
+  it("keeps the two generations distinct, so the boundary is real rather than nominal", () => {
+    assert.notEqual(AGENT_A, AGENT_B);
+  });
+
+  it("measures the same pinned commits as the safety runs, so the two phases are comparable", () => {
+    assert.equal(getValidationJob("hono-economics")!.pinnedHeadSha, getValidationJob("hono-reproduction")!.pinnedHeadSha);
+    assert.equal(getValidationJob("zod-economics")!.pinnedHeadSha, getValidationJob("zod-mutation")!.pinnedHeadSha);
+  });
+
+  it("carries zod's build into the economics job too, or every baseline would be dirty", () => {
+    assert.deepEqual(getValidationJob("zod-economics")!.mutate!.build, ["corepack", "pnpm", "build"]);
+    assert.equal(getValidationJob("hono-economics")!.mutate!.build, undefined);
+  });
+});

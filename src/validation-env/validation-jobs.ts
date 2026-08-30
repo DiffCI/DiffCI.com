@@ -253,6 +253,66 @@ const JOBS: Record<string, ValidationJob> = {
   },
 
   /**
+   * ECONOMICS RUNS (2026-08-29), under agent generation B.
+   *
+   * Separate jobs rather than a flag on the safety jobs, because the agent generations must not be able
+   * to cross. A safety job asserts agent A's integrity and would refuse to run under B; these assert B
+   * and would refuse under A. The boundary is enforced by the container's own pre-flight check rather
+   * than by remembering which digest belongs to which experiment.
+   *
+   * B differs from A in exactly one respect - it exposes `pathBaseline.selectedTests`, the comparator's
+   * already-computed selection - which is what makes the comparator arm executable rather than merely
+   * countable. Verified by scripts/agent-equivalence.ts across 20 observations and 44 pre-existing
+   * fields with zero differences.
+   *
+   * The safety bundles are NOT regenerated under B. Those conclusions were produced by A and keep
+   * saying so.
+   *
+   * hono runs FIRST. Its test-count evidence says DiffCI was overbroad against the comparator on 12 of
+   * 20 measurable mutations, so it is the closest thing to a negative control this corpus has: if CPU
+   * measurement shows DiffCI winning here too, the meter and the accounting are suspect before the
+   * result is interesting.
+   */
+  "hono-economics": {
+    id: "hono-economics",
+    description: "Compute measurement for honojs/hono under agent B: full, comparator and DiffCI arms on the unmutated tree.",
+    mode: "reproduce",
+    repository: "honojs/hono",
+    pinnedHeadSha: "e2740d5a1bd0b4254e517e3af8b60789284bc7bd",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["npm", "install", "--no-audit", "--no-fund", "--silent"],
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // Two extra suite executions per candidate on top of the safety pass, so a wider ceiling than the
+    // 42 minutes the safety run took.
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
+  "zod-economics": {
+    id: "zod-economics",
+    description: "Compute measurement for colinhacks/zod under agent B: full, comparator and DiffCI arms on the unmutated tree.",
+    mode: "reproduce",
+    repository: "colinhacks/zod",
+    pinnedHeadSha: "e6b6ab347675cd2bd54b1bdbed16f98c59be82a9",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["corepack", "pnpm", "install", "--frozen-lockfile"],
+      build: ["corepack", "pnpm", "build"],
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
+  /**
    * Calibration of the instrument (2026-08-29).
    *
    * Not a repository experiment. It clones nothing and measures nothing about DiffCI's selector - it
