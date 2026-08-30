@@ -65,6 +65,7 @@ Exactly one is recorded. All of them are reportable results; none is a failure o
 | `FALSE_NEGATIVE_ELIGIBILITY` | predicted NEGATIVE, measured incremental > 0 |
 | `NOT_QUALIFIED` | the repository never reached a green full suite in the canonical environment |
 | `NO_ASSESSMENT` | the gate refused to produce a prediction (below) |
+| `NOT_ADDRESSABLE` | the apparatus cannot execute the repository's real test surface, or cannot address the same universe for FULL and selected runs (added 2026-08-30, after `date-fns/date-fns`) |
 
 **`FALSE_POSITIVE_ELIGIBILITY` is the outcome to watch, and it is not symmetric with its counterpart.**
 
@@ -131,9 +132,20 @@ repository it was not developed against. One instance.
 general. One correct out-of-sample prediction on top of vue's makes two. That is a finding worth
 reporting to an investor with the sample size attached, and it is not a product guarantee.
 
+## Targets so far
+
+| # | Repository | Outcome |
+|---|---|---|
+| 1 | `fastify/fastify` | [`NOT_QUALIFIED`](external-target-01-result.md) — suite not green in the canonical environment |
+| 2 | `date-fns/date-fns` | [`NOT_ADDRESSABLE`](external-target-02-result.md) — real test surface only reachable from a subdirectory |
+
+Neither is a failure of the eligibility rule, which has still not run once out of sample. Both are
+measured coverage limits of the apparatus: **the assessment currently requires a repository whose full
+suite is green in a Linux container and runnable from the repository root.**
+
 ## Status
 
-**Protocol frozen. No target selected. Nothing cloned, observed, or measured.**
+**Protocol frozen.** Two targets closed without a prediction, neither by tuning anything.
 
 The first genuinely unseen end-to-end run of `npm run calibrate` has not happened, and that unspent
 state is deliberate.
