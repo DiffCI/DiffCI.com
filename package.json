@@ -58,7 +58,8 @@
     "agent:equivalence": "tsx scripts/agent-equivalence.ts",
     "dogfood:economics": "tsx scripts/dogfood-economics.ts",
     "analyze:buckets": "tsx scripts/analyze-selection-buckets.ts",
-    "trace:selection": "tsx scripts/trace-selection-provenance.ts"
+    "trace:selection": "tsx scripts/trace-selection-provenance.ts",
+    "diagnose:symbols": "tsx scripts/diagnose-symbol-precision.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",
