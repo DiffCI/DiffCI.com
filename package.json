@@ -57,7 +57,8 @@
     "test:calibration": "tsx --test \"tests/scripts/harness-calibration.test.ts\" \"tests/scripts/compute-usage.test.ts\"",
     "agent:equivalence": "tsx scripts/agent-equivalence.ts",
     "dogfood:economics": "tsx scripts/dogfood-economics.ts",
-    "analyze:buckets": "tsx scripts/analyze-selection-buckets.ts"
+    "analyze:buckets": "tsx scripts/analyze-selection-buckets.ts",
+    "trace:selection": "tsx scripts/trace-selection-provenance.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",
