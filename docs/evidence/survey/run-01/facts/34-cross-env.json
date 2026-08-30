@@ -1,0 +1,92 @@
+{
+  "rank": 34,
+  "packageName": "cross-env",
+  "collectedAt": "2026-08-30T12:27:05.547Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/kentcdodds/cross-env.git",
+    "deprecated": false
+  },
+  "repository": "kentcdodds/cross-env",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "9951937a7d3d4a1ea7bd2ce3133bcfb687125813"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [
+      "vitest.config.ts"
+    ],
+    "ciWorkflows": [
+      "auto-format.yml",
+      "validate.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      "e2e",
+      "other",
+      "src"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 5,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 5,
+      "test/** or tests/**": 0,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "ts": 12,
+      "md": 7,
+      "js": 5,
+      "json": 3,
+      "yml": 2,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "npmrc": 1,
+      "prettierignore": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "type": "module",
+    "scripts": {
+      "build": "zshy",
+      "dev": "zshy --watch",
+      "lint": "eslint .",
+      "lint:fix": "eslint . --fix",
+      "format": "prettier --write .",
+      "format:check": "prettier --check .",
+      "typecheck": "tsc --noEmit",
+      "test": "vitest",
+      "test:ui": "vitest --ui",
+      "test:run": "vitest run",
+      "test:coverage": "vitest run --coverage",
+      "test:e2e": "node e2e/test-cross-env.js && node e2e/test-cross-env-shell.js && node e2e/test-default-values.js",
+      "validate": "npm run build && npm run typecheck && npm run lint && npm run format:check && npm run test:run"
+    },
+    "devDependencyNames": [
+      "@epic-web/config",
+      "@types/cross-spawn",
+      "@types/node",
+      "@vitest/coverage-v8",
+      "@vitest/ui",
+      "eslint",
+      "prettier",
+      "typescript",
+      "vitest",
+      "zshy"
+    ],
+    "dependencyNames": [
+      "cross-spawn"
+    ]
+  }
+}

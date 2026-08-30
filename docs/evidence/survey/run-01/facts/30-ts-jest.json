@@ -1,0 +1,163 @@
+{
+  "rank": 30,
+  "packageName": "ts-jest",
+  "collectedAt": "2026-08-30T12:26:56.815Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/kulshekhar/ts-jest.git",
+    "deprecated": false
+  },
+  "repository": "kulshekhar/ts-jest",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "b1a97ac485711377e01e72bac8b115e41a1c17ba"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [
+      "jest.config.ts"
+    ],
+    "ciWorkflows": [
+      "audit.yml",
+      "ci.yml",
+      "docs-deploy.yml",
+      "pr-docs-check.yml",
+      "prepare-cache.yml",
+      "release.yml",
+      "tag-release.yml",
+      "test.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      ".husky",
+      "e2e",
+      "examples",
+      "presets",
+      "scripts",
+      "src",
+      "website"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 1,
+      "*.spec.[jt]s(x)": 39,
+      "__tests__/**": 15,
+      "test/** or tests/**": 2,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "ts": 178,
+      "md": 158,
+      "json": 123,
+      "js": 40,
+      "yml": 15,
+      "snap": 9,
+      "cjs": 8,
+      "tsx": 7,
+      "png": 6,
+      "svg": 4,
+      "css": 4,
+      "gitignore": 3,
+      "editorconfig": 1,
+      "gitattributes": 1,
+      "lintstagedrc": 1,
+      "npmignore": 1,
+      "npmrc": 1,
+      "prettierignore": 1,
+      "prettierrc": 1,
+      "mjs": 1,
+      "properties": 1,
+      "nojekyll": 1,
+      "html": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "type": "commonjs",
+    "scripts": {
+      "prebuild": "rimraf --glob dist coverage *.tgz",
+      "build": "tsc -p tsconfig.build.json",
+      "postbuild": "node scripts/post-build.js",
+      "test": "jest -c=jest.config.ts",
+      "test-e2e-cjs": "jest -c=jest-e2e-cjs.config.ts --no-cache",
+      "test-e2e-esm": "node --experimental-vm-modules --no-warnings node_modules/jest/bin/jest.js -c=jest-e2e-esm.config.ts --no-cache",
+      "test-examples": "node scripts/test-examples.js",
+      "lint": "eslint .",
+      "lint-fix": "eslint --fix .",
+      "lint-prettier": "prettier \"**/*.{yml,yaml,md}\" --write",
+      "lint-prettier-ci": "prettier '**/*.{yml,yaml,md}' --check",
+      "doc": "cd website && npm run start",
+      "doc:build": "cd website && npm run build",
+      "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 1",
+      "prepare": "npm run build",
+      "prepublishOnly": "npm run test",
+      "preversion": "npm run test",
+      "version": "npm run changelog && git add CHANGELOG.md"
+    },
+    "devDependencyNames": [
+      "@commitlint/cli",
+      "@commitlint/config-angular",
+      "@eslint/compat",
+      "@eslint/eslintrc",
+      "@eslint/js",
+      "@jest/globals",
+      "@jest/transform",
+      "@jest/types",
+      "@types/babel__core",
+      "@types/fs-extra",
+      "@types/jest",
+      "@types/js-yaml",
+      "@types/lodash.camelcase",
+      "@types/lodash.memoize",
+      "@types/lodash.set",
+      "@types/micromatch",
+      "@types/node",
+      "@types/semver",
+      "@types/yargs",
+      "@types/yargs-parser",
+      "babel-jest",
+      "conventional-changelog-angular",
+      "conventional-changelog",
+      "esbuild",
+      "eslint",
+      "eslint-config-prettier",
+      "eslint-plugin-import",
+      "eslint-plugin-jest",
+      "eslint-plugin-jsdoc",
+      "eslint-plugin-prettier",
+      "execa",
+      "fast-glob",
+      "fs-extra",
+      "globals",
+      "husky",
+      "jest",
+      "js-yaml",
+      "lint-staged",
+      "memfs",
+      "prettier",
+      "rimraf",
+      "ts-node",
+      "typescript",
+      "typescript-eslint"
+    ],
+    "dependencyNames": [
+      "bs-logger",
+      "fast-json-stable-stringify",
+      "handlebars",
+      "json5",
+      "lodash.memoize",
+      "make-error",
+      "semver",
+      "type-fest",
+      "yargs-parser"
+    ]
+  }
+}

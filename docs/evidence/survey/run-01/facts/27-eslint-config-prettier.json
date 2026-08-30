@@ -1,0 +1,128 @@
+{
+  "rank": 27,
+  "packageName": "eslint-config-prettier",
+  "collectedAt": "2026-08-30T12:26:39.903Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/prettier/eslint-config-prettier.git",
+    "deprecated": false
+  },
+  "repository": "prettier/eslint-config-prettier",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "bd6e6171434c7b34dec3dd0f325aab792c126ec6"
+  },
+  "files": {
+    "lockfiles": [
+      "yarn.lock"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "autofix.yml",
+      "check.yml",
+      "pkg-pr-new.yml",
+      "release.yml",
+      "test.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".changeset",
+      ".github",
+      ".yarn",
+      "bin",
+      "patches",
+      "scripts",
+      "test",
+      "test-lint"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 4,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 6,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 23,
+      "yml": 7,
+      "json": 5,
+      "ts": 5,
+      "md": 3,
+      "mjs": 3,
+      "patch": 3,
+      "cjs": 2,
+      "gitignore": 1,
+      "prettierignore": 1,
+      "renovaterc": 1,
+      "lock": 1,
+      "jsx": 1,
+      "vue": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "type": "commonjs",
+    "packageManager": "yarn@4.18.0",
+    "scripts": {
+      "format": "prettier --write .",
+      "prepare": "patch-package && yarn-berry-deduplicate || exit 0",
+      "release": "clean-pkg-json && changeset publish",
+      "test": "yarn test:prettier && ESLINT_CONFIG_PRETTIER_NO_DEPRECATED=true yarn test:with-env && ESLINT_USE_FLAT_CONFIG=false yarn test:with-env",
+      "test:cli-sanity": "node ./bin/cli.js index.js",
+      "test:cli-sanity-warning": "node ./bin/cli.js react.js ./bin/cli.js",
+      "test:deprecated": "eslint-find-rules --deprecated index.js",
+      "test:eslint": "eslint .",
+      "test:jest": "jest",
+      "test:lint-rules": "eslint index.js --config test-config/.eslintrc.js --format json",
+      "test:lint-rules:flat": "eslint index.js --config test-config/eslint.config.js --format json",
+      "test:lint-verify-fail": "eslint \"test-lint/*.{js,jsx,ts,vue}\" --config .eslintrc.base.js --format json",
+      "test:lint-verify-fail:flat": "eslint \"test-lint/*.{js,jsx,ts,vue}\" --config eslint.base.config.mjs --format json",
+      "test:prettier": "prettier --check .",
+      "test:with-env": "yarn test:eslint && yarn test:jest && yarn test:cli-sanity && yarn test:cli-sanity-warning"
+    },
+    "devDependencyNames": [
+      "@babel/eslint-parser",
+      "@babel/eslint-plugin",
+      "@babel/plugin-syntax-flow",
+      "@babel/plugin-syntax-jsx",
+      "@babel/plugin-transform-react-jsx",
+      "@changesets/changelog-github",
+      "@changesets/cli",
+      "@eslint/compat",
+      "@stylistic/eslint-plugin",
+      "@stylistic/eslint-plugin-js",
+      "@stylistic/eslint-plugin-jsx",
+      "@stylistic/eslint-plugin-plus",
+      "@stylistic/eslint-plugin-ts",
+      "@typescript-eslint/eslint-plugin",
+      "@typescript-eslint/parser",
+      "@unts/patch-package",
+      "clean-pkg-json",
+      "eslint",
+      "eslint-config-google",
+      "eslint-config-prettier",
+      "eslint-find-rules",
+      "eslint-plugin-babel",
+      "eslint-plugin-flowtype",
+      "eslint-plugin-prettier",
+      "eslint-plugin-react",
+      "eslint-plugin-standard",
+      "eslint-plugin-unicorn",
+      "eslint-plugin-vue",
+      "globals",
+      "jest",
+      "prettier",
+      "prettier-plugin-pkg",
+      "typescript",
+      "vue-eslint-parser",
+      "yarn-berry-deduplicate"
+    ],
+    "dependencyNames": []
+  }
+}

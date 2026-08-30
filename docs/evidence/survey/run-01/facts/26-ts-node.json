@@ -1,0 +1,165 @@
+{
+  "rank": 26,
+  "packageName": "ts-node",
+  "collectedAt": "2026-08-30T12:26:38.277Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git://github.com/TypeStrong/ts-node.git",
+    "deprecated": false
+  },
+  "repository": "TypeStrong/ts-node",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "ddb05ef23be92a90c3ecac5a0220435c65ebbd2a"
+  },
+  "files": {
+    "lockfiles": [
+      "yarn.lock"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [
+      "ava.config.cjs"
+    ],
+    "ciWorkflows": [
+      "continuous-integration.yml",
+      "e2e-git-installs.yml",
+      "website.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      ".vscode",
+      ".yarn",
+      "api-extractor",
+      "development-docs",
+      "dist-raw",
+      "esm",
+      "esm-usage-example",
+      "node10",
+      "node12",
+      "node14",
+      "node16",
+      "node18",
+      "node20",
+      "raw",
+      "register",
+      "scripts",
+      "src",
+      "tests",
+      "transpilers",
+      "website"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 22,
+      "__tests__/**": 0,
+      "test/** or tests/**": 263,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "ts": 148,
+      "json": 113,
+      "js": 66,
+      "md": 49,
+      "mjs": 18,
+      "png": 9,
+      "yml": 8,
+      "svg": 8,
+      "cjs": 6,
+      "tsx": 6,
+      "gitignore": 3,
+      "lock": 3,
+      "css": 3,
+      "sh": 3,
+      "jsx": 3,
+      "ico": 2,
+      "editorconfig": 1,
+      "gitattributes": 1,
+      "nojekyll": 1,
+      "pdn": 1,
+      "xml": 1,
+      "html": 1,
+      "webmanifest": 1,
+      "mts": 1,
+      "cts": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "packageManager": "yarn@3.4.1",
+    "scripts": {
+      "lint": "dprint check",
+      "fmt": "dprint fmt",
+      "clean": "rimraf temp dist tsconfig.schema.json tsconfig.schemastore-schema.json tsconfig.tsbuildinfo tests/ts-node-packed.tgz tests/node_modules tests/tmp",
+      "rebuild": "yarn clean && yarn build",
+      "build": "yarn build-nopack && yarn build-pack && yarn build-manifest",
+      "build-nopack": "yarn build-tsc && yarn build-configSchema",
+      "build-tsc": "tsc -b ./tsconfig.build-dist.json",
+      "build-configSchema": "typescript-json-schema --topRef --refs --validationKeywords allOf --out tsconfig.schema.json tsconfig.build-schema.json TsConfigSchema && node --require ./register ./scripts/create-merged-schema",
+      "build-pack": "node ./scripts/build-pack.js",
+      "build-manifest": "node ./scripts/build-manifest.mjs",
+      "test-spec": "ava",
+      "test-cov": "nyc ava",
+      "test": "yarn fmt && yarn build-tsc && yarn build-pack && yarn test-spec",
+      "test-full": "yarn build && yarn lint && yarn test-cov",
+      "pre-debug": "yarn build-tsc && yarn build-pack",
+      "coverage-report": "nyc report --reporter=lcov",
+      "__prepack_template__": "yarn clean && yarn build-nopack",
+      "prepack": "node ./scripts/prepack.mjs",
+      "prepack-worker": "rimraf temp dist tsconfig.schema.json tsconfig.schemastore-schema.json tsconfig.tsbuildinfo tests/ts-node-packed.tgz tests/node_modules tests/tmp && tsc -b ./tsconfig.build-dist.json && typescript-json-schema --topRef --refs --validationKeywords allOf --out tsconfig.schema.json tsconfig.build-schema.json TsConfigSchema && node --require ./register ./scripts/create-merged-schema",
+      "prepare": "workaround-broken-npm-prepack-behavior prepack",
+      "api-extractor": "api-extractor run --local --verbose"
+    },
+    "devDependencyNames": [
+      "@TypeStrong/fs-fixture-builder",
+      "@cspotcode/ava-lib",
+      "@cspotcode/expect-stream",
+      "@microsoft/api-extractor",
+      "@swc/core",
+      "@swc/wasm",
+      "@types/diff",
+      "@types/lodash",
+      "@types/node",
+      "@types/proper-lockfile",
+      "@types/proxyquire",
+      "@types/react",
+      "@types/rimraf",
+      "@types/semver",
+      "ava",
+      "axios",
+      "cross-spawn",
+      "dprint",
+      "expect",
+      "lodash",
+      "nyc",
+      "outdent",
+      "proper-lockfile",
+      "proxyquire",
+      "rimraf",
+      "semver",
+      "throat",
+      "typedoc",
+      "typescript",
+      "typescript-json-schema",
+      "workaround-broken-npm-prepack-behavior"
+    ],
+    "dependencyNames": [
+      "@cspotcode/source-map-support",
+      "@tsconfig/node14",
+      "@tsconfig/node16",
+      "@tsconfig/node18",
+      "@tsconfig/node20",
+      "acorn",
+      "acorn-walk",
+      "arg",
+      "diff",
+      "make-error",
+      "v8-compile-cache-lib"
+    ]
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "rank": 23,
+  "packageName": "@typescript-eslint/eslint-plugin",
+  "collectedAt": "2026-08-30T12:26:31.085Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "https://github.com/typescript-eslint/typescript-eslint.git",
+    "deprecated": false
+  },
+  "repository": "typescript-eslint/typescript-eslint",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "a23069df170bc4f9c35c8aaf3a8634635591844a"
+  },
+  "files": {
+    "lockfiles": [
+      "pnpm-lock.yaml"
+    ],
+    "workspaceConfigs": [
+      "pnpm-workspace.yaml",
+      "nx.json"
+    ],
+    "runnerConfigs": [
+      "vitest.config.mts"
+    ],
+    "ciWorkflows": [
+      "a11y-alt-bot.yml",
+      "breaking-change-validation.yml",
+      "ci.yml",
+      "cleanup-cache.yml",
+      "force-push-bot.yml",
+      "github-actions-security.yml",
+      "nx-migrate.yml",
+      "on-review-status-change.yml",
+      "pr-labels-from-issue.yml",
+      "pr-title-validation.yml",
+      "prettier-update.yml",
+      "release.yml",
+      "slop-detection.yml",
+      "slop-unlink-issues.yml",
+      "sync-review-labels.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".agents",
+      ".github",
+      ".husky",
+      ".vscode",
+      "docs",
+      "packages",
+      "tools",
+      "typings"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 306,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 1372,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "shot": 4193,
+      "ts": 2542,
+      "mdx": 195,
+      "json": 134,
+      "md": 95,
+      "tsx": 85,
+      "js": 58,
+      "css": 37,
+      "mts": 35,
+      "yml": 25,
+      "svg": 17,
+      "snap": 15,
+      "yaml": 11,
+      "png": 11,
+      "mjs": 9,
+      "jpg": 9,
+      "vue": 7,
+      "cts": 3,
+      "jsx": 2,
+      "cjs": 2,
+      "editorconfig": 1,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "lintstagedrc": 1,
+      "markdownlintignore": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "private": true,
+    "type": "commonjs",
+    "packageManager": "pnpm@12.0.0-rc.7",
+    "workspaces": {
+      "packages": [
+        "packages/*"
+      ]
+    },
+    "scripts": {
+      "build": "nx run-many -t build --exclude website website-eslint",
+      "check-clean-workspace-after-install": "git diff --quiet --exit-code",
+      "check-format": "prettier --check .",
+      "check-spelling": "cspell . --no-progress --show-context --show-suggestions",
+      "clean": "nx run-many -t clean --parallel=20",
+      "deduplicate": "pnpm dedupe --check",
+      "format": "prettier --ignore-path=.prettierignore --config=.prettierrc.json --write .",
+      "generate-breaking-changes": "nx run eslint-plugin:generate-breaking-changes",
+      "generate-configs": "tsx tools/scripts/generate-configs.mts",
+      "generate-lib": "tsx tools/scripts/generate-lib.mts",
+      "generate-sponsors": "tsx tools/scripts/generate-sponsors.mts",
+      "generate-website-dts": "nx run website:generate-website-dts",
+      "lint-fix": "pnpm run lint --fix",
+      "lint-markdown-fix": "pnpm run lint-markdown --fix",
+      "lint-markdown": "markdownlint \"**/*.md\" --config=.markdownlint.json --ignore-path=.markdownlintignore",
+      "lint-stylelint": "nx lint website stylelint",
+      "lint-prune-suppressions": "nx run-many -t lint --projects=eslint-plugin-internal,eslint-plugin --prune-suppressions",
+      "lint": "nx run-many -t lint",
+      "attw-check": "nx run-many -t attw-check --exclude repo ast-spec website website-eslint eslint-plugin-internal integration-tests",
+      "postinstall": "tsx tools/scripts/postinstall.mts",
+      "pre-commit": "lint-staged",
+      "release": "tsx tools/release/release.mts",
+      "start": "nx run website:start",
+      "test": "nx run-many -t test --exclude integration-tests website website-eslint",
+      "test-coverage": "pnpm run test --coverage",
+      "test-integration": "nx run integration-tests:test",
+      "typecheck": "nx run-many -t typecheck",
+      "typecheck:tsgo": "nx run-many -t typecheck:tsgo"
+    },
+    "devDependencyNames": [
+      "@arethetypeswrong/cli",
+      "@eslint-community/eslint-plugin-eslint-comments",
+      "@eslint/compat",
+      "@eslint/config-helpers",
+      "@eslint/js",
+      "@nx/devkit",
+      "@nx/js",
+      "@nx/vitest",
+      "@nx/workspace",
+      "@swc/core",
+      "@types/debug",
+      "@types/natural-compare",
+      "@types/node",
+      "@types/semver",
+      "@typescript-eslint/eslint-plugin",
+      "@typescript-eslint/eslint-plugin-internal",
+      "@typescript-eslint/parser",
+      "@typescript-eslint/scope-manager",
+      "@typescript-eslint/types",
+      "@typescript-eslint/typescript-estree",
+      "@typescript-eslint/utils",
+      "@typescript/native",
+      "@vitest/coverage-v8",
+      "@vitest/eslint-plugin",
+      "console-fail-test",
+      "cspell",
+      "eslint",
+      "eslint-plugin-eslint-plugin",
+      "eslint-plugin-import",
+      "eslint-plugin-jsdoc",
+      "eslint-plugin-jsx-a11y",
+      "eslint-plugin-n",
+      "eslint-plugin-perfectionist",
+      "eslint-plugin-react",
+      "eslint-plugin-react-hooks",
+      "eslint-plugin-regexp",
+      "eslint-plugin-unicorn",
+      "execa",
+      "get-github-auth-token",
+      "globals",
+      "husky",
+      "knip",
+      "lint-staged",
+      "markdownlint-cli",
+      "nx",
+      "prettier",
+      "rimraf",
+      "semver",
+      "tsx",
+      "typescript",
+      "typescript-eslint",
+      "vite",
+      "vitest"
+    ],
+    "dependencyNames": []
+  }
+}

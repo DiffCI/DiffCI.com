@@ -1,0 +1,148 @@
+{
+  "rank": 28,
+  "packageName": "webpack-cli",
+  "collectedAt": "2026-08-30T12:26:41.819Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/webpack/webpack-cli.git",
+    "deprecated": false
+  },
+  "repository": "webpack/webpack-cli",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "6e6dd45e5efa58b827326d8ab0725d7a5b30b653"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [
+      "jest.config.js"
+    ],
+    "ciWorkflows": [
+      "dependabot.yml",
+      "dependency-review.yml",
+      "nodejs.yml",
+      "publish-to-pkg-pr-new.yml",
+      "release.yml",
+      "update-docs.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".changeset",
+      ".devcontainer",
+      ".github",
+      ".husky",
+      "packages",
+      "scripts",
+      "smoketests",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 41,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 159,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 133,
+      "tpl": 98,
+      "webpack5": 19,
+      "json": 17,
+      "ts": 16,
+      "md": 14,
+      "yml": 8,
+      "mjs": 6,
+      "lock": 4,
+      "yaml": 4,
+      "editorconfig": 1,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "prettierignore": 1,
+      "keep": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "private": true,
+    "workspaces": [
+      "./packages/*"
+    ],
+    "scripts": {
+      "clean": "del-cli \"*.tsbuildinfo\" \"packages/**/*.tsbuildinfo\" \"packages/*/lib/!(*.tpl)\"",
+      "prebuild": "npm run clean",
+      "prebuild:ci": "npm run clean && node ./scripts/setup-build.js",
+      "build": "tsc --build",
+      "watch": "tsc --build --watch",
+      "lint": "npm run lint:code && npm run lint:spellcheck",
+      "lint:code": "eslint --cache .",
+      "lint:spellcheck": "cspell --cache --no-must-find-files --quiet \"**/*.*\"",
+      "fmt": "npm run fmt:base -- --log-level warn --write",
+      "fmt:check": "npm run fmt:base -- --check",
+      "fmt:base": "prettier --cache --ignore-unknown .",
+      "fix": "npm run fix:code",
+      "fix:code": "npm run lint:code -- --fix",
+      "pretest": "npm run build && npm run lint",
+      "test": "npm run test:base",
+      "test:base": "node --experimental-vm-modules --enable-source-maps ./node_modules/jest-cli/bin/jest --workerThreads",
+      "test:smoketests": "c8 node --enable-source-maps smoketests/index.js",
+      "test:coverage": "c8 npm run test:base",
+      "update:docs": "node ./scripts/update-docs",
+      "version": "changeset version && node ./scripts/sync-changelogs.js",
+      "release": "npm run build && changeset publish",
+      "prepare": "husky"
+    },
+    "devDependencyNames": [
+      "@bomb.sh/tab",
+      "@babel/core",
+      "@babel/preset-env",
+      "@babel/register",
+      "@changesets/cli",
+      "@changesets/get-github-info",
+      "@swc/core",
+      "@swc/jest",
+      "@types/jest",
+      "@types/js-yaml",
+      "@types/node",
+      "@types/rechoir",
+      "c8",
+      "coffeescript",
+      "colorette",
+      "concat-stream",
+      "cspell",
+      "css-loader",
+      "del-cli",
+      "eslint",
+      "eslint-config-webpack",
+      "execa",
+      "get-port",
+      "husky",
+      "jest",
+      "js-yaml",
+      "json5",
+      "lint-staged",
+      "mini-css-extract-plugin",
+      "pkg-pr-new",
+      "prettier",
+      "readable-stream",
+      "sass",
+      "sass-loader",
+      "style-loader",
+      "ts-loader",
+      "ts-node",
+      "tsx",
+      "typescript",
+      "webpack",
+      "webpack-bundle-analyzer",
+      "webpack-dev-server"
+    ],
+    "dependencyNames": []
+  }
+}

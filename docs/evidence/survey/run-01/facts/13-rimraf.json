@@ -1,0 +1,96 @@
+{
+  "rank": 13,
+  "packageName": "rimraf",
+  "collectedAt": "2026-08-30T12:25:54.943Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+ssh://git@github.com/isaacs/rimraf.git",
+    "deprecated": false
+  },
+  "repository": "isaacs/rimraf",
+  "github": {
+    "unknown": false,
+    "archived": false,
+    "fork": false,
+    "language": "TypeScript"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "051e6c72a703854a029344be188d14dbe1b326c7"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [
+      ".taprc"
+    ],
+    "ciWorkflows": [
+      "ci.yml",
+      "typedoc.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      ".tshy",
+      "benchmark",
+      "src",
+      "tap-snapshots",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 24,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "ts": 33,
+      "json": 10,
+      "js": 8,
+      "cjs": 7,
+      "md": 5,
+      "gitignore": 2,
+      "yml": 2,
+      "prettierignore": 1,
+      "taprc": 1,
+      "mts": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "type": "module",
+    "scripts": {
+      "preversion": "npm test",
+      "postversion": "npm publish",
+      "prepublishOnly": "git push origin --follow-tags",
+      "prepare": "tshy",
+      "pretest": "npm run prepare",
+      "presnap": "npm run prepare",
+      "test": "tap",
+      "snap": "tap",
+      "format": "prettier --write . --log-level warn",
+      "benchmark": "node benchmark/index.js",
+      "typedoc": "typedoc --tsconfig .tshy/esm.json ./src/*.ts",
+      "lint": "oxlint --fix src test",
+      "postsnap": "npm run lint",
+      "postlint": "npm run format"
+    },
+    "devDependencyNames": [
+      "@types/node",
+      "oxlint",
+      "oxlint-tsgolint",
+      "prettier",
+      "tap",
+      "tshy",
+      "typedoc"
+    ],
+    "dependencyNames": [
+      "glob",
+      "package-json-from-dist"
+    ]
+  }
+}

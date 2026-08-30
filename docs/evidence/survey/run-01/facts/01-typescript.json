@@ -1,0 +1,118 @@
+{
+  "rank": 1,
+  "packageName": "typescript",
+  "collectedAt": "2026-08-30T12:24:55.019Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/microsoft/TypeScript.git",
+    "deprecated": false
+  },
+  "repository": "microsoft/TypeScript",
+  "github": {
+    "unknown": false,
+    "archived": false,
+    "fork": false,
+    "language": "Go"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "9a8581c393a38961489cc8409ae4dfbe97fc25ec"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "accept-baselines-fix-lints.yaml",
+      "ci.yml",
+      "close-issues.yml",
+      "codeql.yml",
+      "copilot-setup-steps.yml",
+      "create-cherry-pick-pr.yml",
+      "scorecard.yml",
+      "sync-wiki.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".devcontainer",
+      ".github",
+      ".vscode",
+      "packages",
+      "tools",
+      "tsc"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 12944,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 12895,
+      "ts": 12616,
+      "symbols": 12533,
+      "types": 12533,
+      "txt": 7396,
+      "jsonc": 1113,
+      "baseline": 548,
+      "tsx": 351,
+      "json": 152,
+      "map": 149,
+      "md": 48,
+      "contentmapper": 15,
+      "yml": 2,
+      "mjs": 2,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "work": 1,
+      "mod": 1,
+      "sum": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "private": true,
+    "packageManager": "npm@11.17.0+sha512.3eeaf18997b11070d313849268b23766b9db0068997dec9471073170fe43fa17f2b4d0337bf0f52330ee2274e7f5754b21b01052742e48f5c9c74d8b1e32ef43",
+    "workspaces": [
+      "packages/*"
+    ],
+    "scripts": {
+      "build": "hereby build",
+      "build:watch": "hereby build:watch",
+      "build:watch:debug": "hereby build:watch --debug",
+      "test": "hereby test",
+      "lint": "hereby lint",
+      "format": "hereby format",
+      "check:format": "hereby check:format",
+      "generate": "hereby generate",
+      "tidy": "hereby tidy",
+      "extension:build": "npm run -w native-preview build",
+      "extension:watch": "npm run -w native-preview watch",
+      "setup-hooks": "node tools/scripts/link-hooks.mjs"
+    },
+    "devDependencyNames": [
+      "@types/adm-zip",
+      "@types/node",
+      "@types/tmp",
+      "@types/which",
+      "@unicode/unicode-15.1.0",
+      "adm-zip",
+      "chokidar",
+      "dprint",
+      "execa",
+      "glob",
+      "hereby",
+      "p-limit",
+      "picocolors",
+      "tar",
+      "tmp",
+      "typescript",
+      "which"
+    ],
+    "dependencyNames": []
+  }
+}

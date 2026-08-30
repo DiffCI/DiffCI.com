@@ -1,0 +1,99 @@
+{
+  "rank": 18,
+  "packageName": "babel-eslint",
+  "collectedAt": "2026-08-30T12:26:17.662Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/babel/babel-eslint.git",
+    "deprecated": true
+  },
+  "repository": "babel/babel-eslint",
+  "github": {
+    "unknown": false,
+    "archived": true,
+    "fork": false,
+    "language": "JavaScript"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "b5b9a09edbac4350e4e51033a4608dd95dad1f67"
+  },
+  "files": {
+    "lockfiles": [
+      "yarn.lock"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": []
+  },
+  "testSurface": {
+    "rootDirectories": [
+      "lib",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 17,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 29,
+      "md": 3,
+      "yml": 2,
+      "eslintignore": 1,
+      "gitignore": 1,
+      "npmrc": 1,
+      "prettierignore": 1,
+      "prettierrc": 1,
+      "json": 1,
+      "lock": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "scripts": {
+      "test": "npm run lint && npm run test-only",
+      "test-only": "cd test && mocha specs && cd -",
+      "lint": "eslint .",
+      "lint-fix": "npm run lint -- --fix",
+      "precommit": "lint-staged",
+      "preversion": "npm test",
+      "changelog": "git log `git describe --tags --abbrev=0`..HEAD --pretty=format:' * %s (%an)' | grep -v 'Merge pull request'"
+    },
+    "devDependencyNames": [
+      "@babel/core",
+      "@babel/plugin-proposal-class-properties",
+      "@babel/plugin-proposal-decorators",
+      "@babel/plugin-proposal-nullish-coalescing-operator",
+      "@babel/plugin-proposal-optional-chaining",
+      "@babel/plugin-proposal-pipeline-operator",
+      "@babel/plugin-syntax-dynamic-import",
+      "@babel/plugin-syntax-export-default-from",
+      "@babel/plugin-syntax-export-namespace-from",
+      "@babel/plugin-syntax-import-meta",
+      "@babel/plugin-syntax-numeric-separator",
+      "@babel/preset-env",
+      "@babel/preset-flow",
+      "@babel/preset-react",
+      "babel-eslint",
+      "dedent",
+      "eslint",
+      "eslint-config-babel",
+      "eslint-plugin-flowtype",
+      "eslint-plugin-import",
+      "eslint-plugin-prettier",
+      "espree",
+      "husky",
+      "lint-staged",
+      "mocha",
+      "prettier"
+    ],
+    "dependencyNames": [
+      "eslint-scope",
+      "eslint-visitor-keys",
+      "semver"
+    ]
+  }
+}

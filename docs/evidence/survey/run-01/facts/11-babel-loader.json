@@ -1,0 +1,97 @@
+{
+  "rank": 11,
+  "packageName": "babel-loader",
+  "collectedAt": "2026-08-30T12:25:51.363Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "https://github.com/babel/babel-loader.git",
+    "deprecated": false
+  },
+  "repository": "babel/babel-loader",
+  "github": {
+    "unknown": false,
+    "archived": false,
+    "fork": false,
+    "language": "JavaScript"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "778e7c54daa57e30c1d676e243c77f7c00a766d8"
+  },
+  "files": {
+    "lockfiles": [
+      "yarn.lock"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "ci.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      ".yarn",
+      "scripts",
+      "src",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 6,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 16,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 21,
+      "json": 6,
+      "md": 6,
+      "yml": 3,
+      "mjs": 3,
+      "editorconfig": 1,
+      "gitignore": 1,
+      "prettierrc": 1,
+      "lock": 1,
+      "eslintrc": 1,
+      "cjs": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "packageManager": "yarn@4.17.0",
+    "scripts": {
+      "clean": "node ./scripts/rimraf.mjs lib",
+      "build": "babel src/ --out-dir lib/ --copy-files",
+      "format": "prettier --write --trailing-comma all 'src/**/*.js' 'test/**/*.test.js' 'test/helpers/*.js' && prettier --write --trailing-comma es5 'scripts/*.js'",
+      "lint": "eslint src test",
+      "precommit": "lint-staged",
+      "prepublish": "yarn run clean && yarn run build",
+      "preversion": "yarn tsc && yarn run test",
+      "test": "yarn run lint && yarn run build --source-maps && c8 yarn run test-only",
+      "test-only": "node --test test/**/*.test.js"
+    },
+    "devDependencyNames": [
+      "@babel/cli",
+      "@babel/core",
+      "@babel/eslint-parser",
+      "@babel/preset-env",
+      "@eslint/js",
+      "@rspack/core",
+      "@types/node",
+      "c8",
+      "eslint",
+      "eslint-config-prettier",
+      "globals",
+      "husky",
+      "lint-staged",
+      "prettier",
+      "semver",
+      "typescript",
+      "webpack"
+    ],
+    "dependencyNames": [
+      "empathic"
+    ]
+  }
+}

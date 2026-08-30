@@ -1,0 +1,125 @@
+{
+  "rank": 16,
+  "packageName": "lodash",
+  "collectedAt": "2026-08-30T12:26:10.921Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/lodash/lodash.git",
+    "deprecated": false
+  },
+  "repository": "lodash/lodash",
+  "github": {
+    "unknown": false,
+    "archived": false,
+    "fork": false,
+    "language": "JavaScript"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "a666ba591064c8011988275790ad7d625279f09c"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [
+      "playwright.config.js"
+    ],
+    "ciWorkflows": [
+      "browser-testing.yml",
+      "ci-bun.yml",
+      "ci-dist-sync.yml",
+      "ci-docs.yml",
+      "ci-node.yml",
+      "codeql.yml",
+      "renovate.yml",
+      "scorecards.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      "doc",
+      "fp",
+      "lib",
+      "perf",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 1,
+      "__tests__/**": 0,
+      "test/** or tests/**": 10,
+      "test.[jt]s or tests.[jt]s": 1
+    },
+    "extensionCounts": {
+      "js": 27,
+      "jst": 9,
+      "yml": 8,
+      "md": 7,
+      "html": 5,
+      "json": 3,
+      "editorconfig": 1,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "jscsrc": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "private": true,
+    "scripts": {
+      "build": "npm run build:main && npm run build:fp",
+      "build:fp": "node lib/fp/build-dist.js",
+      "build:fp-modules": "node lib/fp/build-modules.js",
+      "build:main": "node lib/main/build-dist.js",
+      "build:main-modules": "node lib/main/build-modules.js",
+      "doc": "node lib/main/build-doc github && npm run test:doc",
+      "doc:fp": "node lib/fp/build-doc",
+      "doc:site": "node lib/main/build-doc site",
+      "doc:sitehtml": "optional-dev-dependency marky-markdown@^9.0.1 && npm run doc:site && node lib/main/build-site",
+      "pretest": "npm run build",
+      "style": "npm run style:main && npm run style:fp && npm run style:perf && npm run style:test",
+      "style:fp": "jscs fp/*.js lib/**/*.js",
+      "style:main": "jscs lodash.js",
+      "style:perf": "jscs perf/*.js perf/**/*.js",
+      "style:test": "jscs test/*.js test/**/*.js",
+      "test": "npm run test:main && npm run test:fp",
+      "test:doc": "markdown-doctest doc/*.md",
+      "test:fp": "node test/test-fp",
+      "test:main": "node test/test",
+      "validate": "npm run style && npm run test"
+    },
+    "devDependencyNames": [
+      "async",
+      "benchmark",
+      "chalk",
+      "cheerio",
+      "codecov.io",
+      "coveralls",
+      "curl-amd",
+      "docdown",
+      "dojo",
+      "ecstatic",
+      "fs-extra",
+      "glob",
+      "istanbul",
+      "jquery",
+      "jscs",
+      "lodash",
+      "lodash-doc-globals",
+      "markdown-doctest",
+      "optional-dev-dependency",
+      "platform",
+      "qunit-extras",
+      "qunitjs",
+      "request",
+      "requirejs",
+      "sauce-tunnel",
+      "uglify-js",
+      "webpack"
+    ],
+    "dependencyNames": []
+  }
+}

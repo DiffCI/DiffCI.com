@@ -1,0 +1,92 @@
+{
+  "rank": 40,
+  "packageName": "autoprefixer",
+  "collectedAt": "2026-08-30T12:27:21.754Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/postcss/autoprefixer.git",
+    "deprecated": false
+  },
+  "repository": "postcss/autoprefixer",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "265521ee8ee3098dcb114e8259259ca614146e00"
+  },
+  "files": {
+    "lockfiles": [
+      "pnpm-lock.yaml"
+    ],
+    "workspaceConfigs": [
+      "pnpm-workspace.yaml"
+    ],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "release.yml",
+      "test.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      "bin",
+      "data",
+      "lib",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 15,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 176,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "css": 160,
+      "js": 94,
+      "md": 3,
+      "ts": 3,
+      "yml": 3,
+      "json": 2,
+      "yaml": 2,
+      "editorconfig": 1,
+      "gitignore": 1,
+      "npmignore": 1,
+      "svg": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "scripts": {
+      "unit": "uvu . '\\.test\\.js$'",
+      "test:coverage": "c8 node node_modules/uvu/bin.js . '\\.test\\.js$'",
+      "test:lint": "oxlint . bin/*",
+      "test:size": "size-limit",
+      "test": "pnpm run /^test:/"
+    },
+    "devDependencyNames": [
+      "@logux/oxc-configs",
+      "@size-limit/preset-small-lib",
+      "actions-up",
+      "c8",
+      "eslint-plugin-prefer-let",
+      "nanospy",
+      "oxlint",
+      "oxlint-tsgolint",
+      "postcss",
+      "size-limit",
+      "typescript",
+      "uvu"
+    ],
+    "dependencyNames": [
+      "browserslist",
+      "caniuse-lite",
+      "fraction.js",
+      "picocolors",
+      "postcss-value-parser"
+    ]
+  }
+}

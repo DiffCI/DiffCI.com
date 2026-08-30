@@ -1,0 +1,65 @@
+{
+  "rank": 25,
+  "packageName": "tslib",
+  "collectedAt": "2026-08-30T12:26:37.068Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/Microsoft/tslib.git",
+    "deprecated": false
+  },
+  "repository": "Microsoft/tslib",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "12bd8a74b320e3acfaba36b0ecb0e14964a9165b"
+  },
+  "files": {
+    "lockfiles": [],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "CI.yml",
+      "codeql.yml",
+      "publish.yaml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      "docs",
+      "modules",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 2,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 18,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 13,
+      "json": 9,
+      "md": 4,
+      "yml": 4,
+      "gitignore": 2,
+      "txt": 2,
+      "ts": 2,
+      "html": 2,
+      "gitattributes": 1,
+      "npmignore": 1,
+      "npmrc": 1,
+      "mjs": 1,
+      "yaml": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "scripts": {},
+    "devDependencyNames": [],
+    "dependencyNames": []
+  }
+}

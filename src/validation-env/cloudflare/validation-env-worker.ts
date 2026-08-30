@@ -88,6 +88,12 @@ const COLLECTED_FILES: ReadonlySet<string> = new Set([
   "qualify.log",
   // Calibration runs.
   "calibration.log",
+  // Addressability survey. Same omission as the qualification artefacts above, made again on
+  // 2026-08-30: the run completed, wrote its funnel to R2, and the only route that can read it
+  // refused. A write path and a read allowlist that are edited separately will keep diverging, so
+  // the facts endpoint below is a prefix match rather than yet another name to forget.
+  "survey-summary.json",
+  "survey.log",
   // Both.
   "environment.json",
 ]);
@@ -194,8 +200,12 @@ export default {
         const runId = url.searchParams.get("runId");
         const file = url.searchParams.get("file") ?? "";
         if (!isRunId(runId)) return Response.json({ ok: false, error: "invalid-run-id" }, { status: 400 });
-        if (!COLLECTED_FILES.has(file)) {
-          return Response.json({ ok: false, error: `unknown-file (allowed: ${[...COLLECTED_FILES].join(", ")})` }, { status: 400 });
+        // `facts/<name>.json` is the survey's per-entry evidence: one file per frame entry, named by
+        // rank and package. A prefix rule rather than 40 allowlist entries, constrained so it cannot
+        // address anything outside that directory.
+        const isSurveyFact = /^facts\/[0-9]{2}-[A-Za-z0-9_.@-]+\.json$/.test(file);
+        if (!COLLECTED_FILES.has(file) && !isSurveyFact) {
+          return Response.json({ ok: false, error: `unknown-file (allowed: ${[...COLLECTED_FILES].join(", ")}, facts/NN-name.json)` }, { status: 400 });
         }
         // `shard` addresses one shard's artefacts; omitted reads an unsharded run's flat layout.
         const shardParam = url.searchParams.get("shard");

@@ -1,0 +1,120 @@
+{
+  "rank": 33,
+  "packageName": "eslint-plugin-prettier",
+  "collectedAt": "2026-08-30T12:27:03.779Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/prettier/eslint-plugin-prettier.git",
+    "deprecated": false
+  },
+  "repository": "prettier/eslint-plugin-prettier",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "5fab0334596d228b4dbd560f2899ec4d854185e9"
+  },
+  "files": {
+    "lockfiles": [
+      "pnpm-lock.yaml"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "autofix.yml",
+      "ci.yml",
+      "pkg-pr-new.yml",
+      "release.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".changeset",
+      ".github",
+      "patches",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 37,
+      "test.[jt]s or tests.[jt]s": 1
+    },
+    "extensionCounts": {
+      "txt": 24,
+      "md": 7,
+      "yml": 6,
+      "prettierrc": 5,
+      "mjs": 4,
+      "json": 4,
+      "js": 3,
+      "ts": 2,
+      "commitlintrc": 1,
+      "editorconfig": 1,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "lintstagedrc": 1,
+      "nvmrc": 1,
+      "prettierignore": 1,
+      "renovaterc": 1,
+      "yaml": 1,
+      "html": 1,
+      "mdx": 1,
+      "pug": 1,
+      "cjs": 1,
+      "svelte": 1,
+      "patch": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "packageManager": "pnpm@7.33.7",
+    "scripts": {
+      "check": "prettier --check . && pnpm lint",
+      "format": "prettier --write . && pnpm lint --fix",
+      "lint": "eslint . --cache --max-warnings 10",
+      "prepare": "simple-git-hooks",
+      "release": "pnpm check && mocha && clean-pkg-json && changeset publish",
+      "test": "pnpm lint && mocha"
+    },
+    "devDependencyNames": [
+      "@1stg/remark-preset",
+      "@changesets/changelog-github",
+      "@changesets/cli",
+      "@commitlint/cli",
+      "@commitlint/config-conventional",
+      "@eslint-community/eslint-plugin-eslint-comments",
+      "@eslint/js",
+      "@eslint/json",
+      "@graphql-eslint/eslint-plugin",
+      "@html-eslint/parser",
+      "@prettier/plugin-pug",
+      "clean-pkg-json",
+      "eslint",
+      "eslint-config-prettier",
+      "eslint-mdx",
+      "eslint-plugin-eslint-plugin",
+      "eslint-plugin-mdx",
+      "eslint-plugin-n",
+      "eslint-plugin-prettier",
+      "eslint-plugin-pug",
+      "eslint-plugin-svelte",
+      "graphql",
+      "lint-staged",
+      "mocha",
+      "prettier",
+      "prettier-plugin-pkg",
+      "prettier-plugin-svelte",
+      "simple-git-hooks",
+      "svelte",
+      "vue-eslint-parser"
+    ],
+    "dependencyNames": [
+      "prettier-linter-helpers",
+      "synckit"
+    ]
+  }
+}

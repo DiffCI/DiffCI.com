@@ -1,0 +1,68 @@
+{
+  "rank": 20,
+  "packageName": "husky",
+  "collectedAt": "2026-08-30T12:26:24.146Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/typicode/husky.git",
+    "deprecated": false
+  },
+  "repository": "typicode/husky",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "3f0023dc10d7003d70f2e31aa56300eab80e76d6"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "deploy.yml",
+      "node.js.yml",
+      "npm_publish.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      ".husky",
+      "docs",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 13,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "md": 23,
+      "sh": 14,
+      "json": 4,
+      "yml": 4,
+      "js": 3,
+      "editorconfig": 1,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "npmignore": 1,
+      "shellcheckrc": 1,
+      "ts": 1,
+      "svg": 1,
+      "mts": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "type": "module",
+    "scripts": {},
+    "devDependencyNames": [],
+    "dependencyNames": []
+  }
+}

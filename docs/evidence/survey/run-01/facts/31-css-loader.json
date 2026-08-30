@@ -1,0 +1,145 @@
+{
+  "rank": 31,
+  "packageName": "css-loader",
+  "collectedAt": "2026-08-30T12:26:58.595Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/webpack/css-loader.git",
+    "deprecated": false
+  },
+  "repository": "webpack/css-loader",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "be04ec290ee57bafbc75f5936c1f6a2532681b49"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [
+      "jest.config.js"
+    ],
+    "ciWorkflows": [
+      "dependency-review.yml",
+      "nodejs.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      ".husky",
+      "src",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 12,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 492,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "css": 231,
+      "js": 214,
+      "png": 27,
+      "snap": 11,
+      "scss": 8,
+      "json": 6,
+      "eot": 3,
+      "svg": 3,
+      "md": 2,
+      "woff": 2,
+      "woff2": 2,
+      "less": 2,
+      "yml": 2,
+      "editorconfig": 1,
+      "eslintignore": 1,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "prettierignore": 1,
+      "styl": 1,
+      "mycss": 1,
+      "ttf": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "scripts": {
+      "start": "npm run build -- -w",
+      "clean": "del-cli dist",
+      "validate:runtime": "es-check es5 \"dist/runtime/**/*.js\"",
+      "prebuild": "npm run clean",
+      "build": "cross-env NODE_ENV=production babel src -d dist --copy-files",
+      "postbuild": "npm run validate:runtime",
+      "commitlint": "commitlint --from=main",
+      "security": "npm audit --production",
+      "lint:prettier": "prettier --cache --list-different .",
+      "lint:js": "eslint --cache .",
+      "lint:spelling": "cspell --cache --no-must-find-files --quiet \"**/*.*\"",
+      "lint": "npm-run-all -l -p \"lint:**\"",
+      "fix:js": "npm run lint:js -- --fix",
+      "fix:prettier": "npm run lint:prettier -- --write",
+      "fix": "npm-run-all -l fix:js fix:prettier",
+      "test:only": "cross-env NODE_ENV=test jest",
+      "test:watch": "npm run test:only -- --watch",
+      "test:coverage": "npm run test:only -- --collectCoverageFrom=\"src/**/*.js\" --coverage",
+      "pretest": "npm run lint",
+      "test": "npm run test:coverage",
+      "prepare": "husky && npm run build",
+      "release": "standard-version"
+    },
+    "devDependencyNames": [
+      "@babel/cli",
+      "@babel/core",
+      "@babel/preset-env",
+      "@commitlint/cli",
+      "@commitlint/config-conventional",
+      "@webpack-contrib/eslint-config-webpack",
+      "babel-jest",
+      "cross-env",
+      "cspell",
+      "del-cli",
+      "es-check",
+      "eslint",
+      "eslint-config-prettier",
+      "eslint-plugin-import",
+      "file-loader",
+      "husky",
+      "jest",
+      "jest-environment-jsdom",
+      "less",
+      "less-loader",
+      "lint-staged",
+      "memfs",
+      "mini-css-extract-plugin",
+      "npm-run-all",
+      "postcss-loader",
+      "postcss-preset-env",
+      "prettier",
+      "sass",
+      "sass-loader",
+      "standard-version",
+      "strip-ansi",
+      "style-loader",
+      "stylus",
+      "stylus-loader",
+      "url-loader",
+      "webpack"
+    ],
+    "dependencyNames": [
+      "icss-utils",
+      "postcss",
+      "postcss-modules-extract-imports",
+      "postcss-modules-local-by-default",
+      "postcss-modules-scope",
+      "postcss-modules-values",
+      "postcss-value-parser",
+      "semver"
+    ]
+  }
+}

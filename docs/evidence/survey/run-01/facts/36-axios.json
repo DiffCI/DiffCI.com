@@ -1,0 +1,155 @@
+{
+  "rank": 36,
+  "packageName": "axios",
+  "collectedAt": "2026-08-30T12:27:12.106Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/axios/axios.git",
+    "deprecated": false
+  },
+  "repository": "axios/axios",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "fede1d1562e308077da7994305d63fb7722b66ac"
+  },
+  "files": {
+    "lockfiles": [
+      "package-lock.json"
+    ],
+    "workspaceConfigs": [],
+    "runnerConfigs": [
+      "vitest.config.js"
+    ],
+    "ciWorkflows": [
+      "bundle-size.yml",
+      "lockfile-lint.yml",
+      "moderator.yml",
+      "publish.yml",
+      "release-branch.yml",
+      "run-ci.yml",
+      "verify-build-reproducibility.yml",
+      "zizmor.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".devcontainer",
+      ".github",
+      ".husky",
+      "docs",
+      "examples",
+      "lib",
+      "sandbox",
+      "scripts",
+      "tests"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 112,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 163,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 192,
+      "md": 160,
+      "ts": 25,
+      "cjs": 22,
+      "json": 18,
+      "yml": 10,
+      "html": 9,
+      "png": 6,
+      "svg": 4,
+      "pem": 2,
+      "lock": 2,
+      "ico": 2,
+      "webmanifest": 2,
+      "mts": 2,
+      "gitignore": 1,
+      "npmrc": 1,
+      "prettierignore": 1,
+      "prettierrc": 1,
+      "cts": 1,
+      "patch": 1,
+      "css": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "type": "module",
+    "scripts": {
+      "build": "gulp clear && cross-env NODE_ENV=production rollup -c",
+      "version": "npm run build && git add package.json",
+      "preversion": "gulp version",
+      "test": "npm run test:vitest",
+      "test:vitest": "vitest run",
+      "test:vitest:unit": "vitest run --project unit",
+      "test:vitest:browser": "vitest run --project browser",
+      "test:vitest:browser:headless": "vitest run --project browser-headless",
+      "test:vitest:watch": "vitest",
+      "test:smoke:cjs:vitest": "npm --prefix tests/smoke/cjs run test:smoke:cjs:mocha",
+      "test:smoke:esm:vitest": "npm --prefix tests/smoke/esm run test:smoke:esm:vitest",
+      "test:smoke:deno": "deno task --cwd tests/smoke/deno test",
+      "test:smoke:bun": "bun test --cwd tests/smoke/bun",
+      "test:module:cjs": "npm --prefix tests/module/cjs run test:module:cjs",
+      "test:module:esm": "npm --prefix tests/module/esm run test:module:esm",
+      "docs:dev": "cd docs && npm run docs:dev",
+      "start": "node ./sandbox/server.js",
+      "examples": "node ./examples/server.js",
+      "lint": "eslint lib/**/*.js",
+      "fix": "eslint --fix lib/**/*.js",
+      "prepare": "husky"
+    },
+    "devDependencyNames": [
+      "@babel/core",
+      "@babel/preset-env",
+      "@commitlint/cli",
+      "@commitlint/config-conventional",
+      "@eslint/js",
+      "@rollup/plugin-alias",
+      "@rollup/plugin-babel",
+      "@rollup/plugin-commonjs",
+      "@rollup/plugin-json",
+      "@rollup/plugin-node-resolve",
+      "@rollup/plugin-terser",
+      "@vitest/browser",
+      "@vitest/browser-playwright",
+      "abortcontroller-polyfill",
+      "acorn",
+      "body-parser",
+      "chalk",
+      "cross-env",
+      "dev-null",
+      "eslint",
+      "express",
+      "formdata-node",
+      "formidable",
+      "fs-extra",
+      "get-stream",
+      "globals",
+      "gulp",
+      "husky",
+      "lint-staged",
+      "minimist",
+      "multer",
+      "playwright",
+      "prettier",
+      "rollup",
+      "rollup-plugin-bundle-size",
+      "selfsigned",
+      "stream-throttle",
+      "typescript",
+      "vitest"
+    ],
+    "dependencyNames": [
+      "follow-redirects",
+      "form-data",
+      "https-proxy-agent",
+      "proxy-from-env"
+    ]
+  }
+}

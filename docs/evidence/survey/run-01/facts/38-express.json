@@ -1,0 +1,123 @@
+{
+  "rank": 38,
+  "packageName": "express",
+  "collectedAt": "2026-08-30T12:27:15.744Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/expressjs/express.git",
+    "deprecated": false
+  },
+  "repository": "expressjs/express",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "023767fe9872e029271df1418f73401bff20ff40"
+  },
+  "files": {
+    "lockfiles": [],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "ci.yml",
+      "codeql.yml",
+      "legacy.yml",
+      "scorecard.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      "examples",
+      "lib",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 112,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 141,
+      "ejs": 20,
+      "txt": 11,
+      "html": 8,
+      "tmpl": 7,
+      "yml": 6,
+      "md": 4,
+      "css": 4,
+      "hbs": 3,
+      "editorconfig": 1,
+      "eslintignore": 1,
+      "gitignore": 1,
+      "npmrc": 1,
+      "json": 1,
+      "name": 1,
+      "send": 1,
+      "gitkeep": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "scripts": {
+      "lint": "eslint .",
+      "lint:fix": "eslint . --fix",
+      "test": "mocha --require test/support/env --reporter spec --check-leaks test/ test/acceptance/",
+      "test-ci": "nyc --exclude examples --exclude test --exclude benchmarks --reporter=lcovonly --reporter=text npm test",
+      "test-cov": "nyc --exclude examples --exclude test --exclude benchmarks --reporter=html --reporter=text npm test",
+      "test-tap": "mocha --require test/support/env --reporter tap --check-leaks test/ test/acceptance/"
+    },
+    "devDependencyNames": [
+      "after",
+      "connect-redis",
+      "cookie-parser",
+      "cookie-session",
+      "ejs",
+      "eslint",
+      "express-session",
+      "hbs",
+      "marked",
+      "method-override",
+      "mocha",
+      "morgan",
+      "nyc",
+      "pbkdf2-password",
+      "supertest",
+      "vhost"
+    ],
+    "dependencyNames": [
+      "accepts",
+      "body-parser",
+      "content-disposition",
+      "content-type",
+      "cookie",
+      "cookie-signature",
+      "debug",
+      "depd",
+      "encodeurl",
+      "escape-html",
+      "etag",
+      "finalhandler",
+      "fresh",
+      "http-errors",
+      "merge-descriptors",
+      "mime-types",
+      "on-finished",
+      "once",
+      "parseurl",
+      "proxy-addr",
+      "qs",
+      "range-parser",
+      "router",
+      "send",
+      "serve-static",
+      "statuses",
+      "type-is",
+      "vary"
+    ]
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "rank": 22,
+  "packageName": "chalk",
+  "collectedAt": "2026-08-30T12:26:29.736Z",
+  "registry": {
+    "resolved": true,
+    "repositoryUrl": "git+https://github.com/chalk/chalk.git",
+    "deprecated": false
+  },
+  "repository": "chalk/chalk",
+  "github": {
+    "unknown": true,
+    "error": "HTTP 403"
+  },
+  "clone": {
+    "ok": true,
+    "headSha": "661317e6f91fe7c90306c2c48ea9354562ee9146"
+  },
+  "files": {
+    "lockfiles": [],
+    "workspaceConfigs": [],
+    "runnerConfigs": [],
+    "ciWorkflows": [
+      "main.yml"
+    ]
+  },
+  "testSurface": {
+    "rootDirectories": [
+      ".github",
+      "examples",
+      "media",
+      "source",
+      "test"
+    ],
+    "patternCounts": {
+      "*.test.[jt]s(x)": 0,
+      "*.spec.[jt]s(x)": 0,
+      "__tests__/**": 0,
+      "test/** or tests/**": 8,
+      "test.[jt]s or tests.[jt]s": 0
+    },
+    "extensionCounts": {
+      "js": 13,
+      "md": 4,
+      "png": 2,
+      "yml": 2,
+      "editorconfig": 1,
+      "gitattributes": 1,
+      "gitignore": 1,
+      "npmrc": 1,
+      "json": 1,
+      "ts": 1,
+      "svg": 1
+    }
+  },
+  "packageJson": {
+    "present": true,
+    "type": "module",
+    "scripts": {
+      "test": "xo && c8 ava && tsc --noEmit --types node source/index.d.ts",
+      "bench": "matcha benchmark.js"
+    },
+    "devDependencyNames": [
+      "@types/node",
+      "ansi-styles",
+      "ava",
+      "c8",
+      "color-convert",
+      "execa",
+      "log-update",
+      "matcha",
+      "typescript",
+      "xo",
+      "yoctodelay"
+    ],
+    "dependencyNames": []
+  }
+}
