@@ -51,7 +51,28 @@ See [safety-validation-milestone.md](safety-validation-milestone.md) and
 | # | Defect | What it would have produced |
 |---|---|---|
 | 14 | **The `/v1/result` allowlist omitted the survey's own artefacts.** `survey-summary.json`, `survey.log` and the per-entry facts were written to R2 and then unreadable through the only route that can read them. | Not a false result - the run completed and the data was safe - but it is **defect #4 recurring identically**, three months on. A write path and a read allowlist edited separately will keep diverging. Fixed, and the facts endpoint is now a constrained prefix rule rather than 40 more names to forget. |
-| 15 | **Sharding had never been executed.** `MAX_SHARDS`, `assignShard()` and the merge guards were built and unit-tested, but every real run to date used `shards: 1`. The first live use was a 6-way and a 4-way run launched together. All ten shards failed, fighting over identical paths: `could not lock config file /workspace/target-src/.git/config: File exists`, `rm -rf /opt/diffci /workspace` failing, `ENOTEMPTY` on rmdir, `npm ci` racing in `/opt/diffci/node_modules`. | Ten wasted containers, and - worse in principle - a sharded run that partly succeeded could have merged a short candidate list into a plausible funnel. The merge guards exist for exactly that and were never reached here, because every shard failed loudly. **Not repaired inside the experiment**: prettier and ts-jest were re-run unsharded under the unchanged apparatus instead, so an infrastructure fix cannot contaminate the two repositories carrying most of the economic information. The inference that shards of one run share a container filesystem is supported by the three unsharded runs executing concurrently without trouble, but it is an inference and no run was spent proving it. |
+| 15 | **Sharding has never been executed successfully.** `MAX_SHARDS`, `assignShard()` and the merge guards were built and unit-tested, but every real run to date used `shards: 1`. The first live use was a 6-way and a 4-way run launched together, and all ten shards failed fighting over identical paths. | Ten wasted containers. **CORRECTED 2026-08-30, and the correction matters more than the defect.** I first reported this as "shards of one run share a container filesystem", inferred from the three unsharded runs succeeding alongside. That inference did not survive: the next round had no sharding at all and four of five unsharded runs died at bootstrap with `The sandbox container stopped while the operation was pending`, including a run launched entirely alone. Every one of those failures clustered within minutes of a `validation:deploy`, and a probe run well clear of a deploy succeeded in 43 seconds. So sharding is **untested, not proven broken** - the sharded attempt may have failed for the same transient reason as everything else that evening. Left open, and not to be diagnosed until the experiment it interrupted has finished. |
+
+## The 2026-08-30 container incident, and three wrong inferences
+
+Kept because the pattern is worse than any single defect: **I proposed a cause three times and was
+wrong three times**, each time on evidence that looked sufficient.
+
+1. *"Shards of one run share a container filesystem."* Refuted by unsharded runs failing the same way.
+2. *"Concurrent container capacity."* Refuted by a single run, launched alone, failing identically.
+3. *"The container platform is down."* The probe I called decisive was **malformed** - it passed a
+   nonexistent agent tarball key, so its failure was evidence of nothing. A correctly-formed probe
+   completed cleanly minutes later.
+
+What the evidence actually supports, stated no wider: the container application is healthy (0 failed,
+5 healthy, no errors); every bootstrap failure fell within minutes of a `validation:deploy`; the
+container application shows `version: 2` updated at 15:02:40; runs launched clear of a deploy succeed.
+A rollout window is the most consistent explanation and **causation is not established.**
+
+The lesson is not about containers. Each inference was offered with a supporting observation, and each
+supporting observation was consistent with a cause I had not considered. The correct output on the
+first failure was "cause unknown, here is what is established" - the same discipline already applied to
+`zod-qualify-01` and to fastify's two red tests, and not applied here.
 
 ## One hypothesis of mine that was wrong, kept for the same reason
 
