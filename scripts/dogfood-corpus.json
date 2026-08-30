@@ -141,5 +141,22 @@
     "mutationQualifiedAt": "2026-08-28T14:59:07.259Z",
     "lockfile": "NONE. Verified 2026-08-29 at e2740d5a: package-lock.json, pnpm-lock.yaml, bun.lockb and yarn.lock are all absent, and package.json declares packageManager bun@1.2.20 while this harness installs with npm. The dependency tree is therefore NOT reproducible across time or machines. An earlier entry here claimed a committed lockfile; that was wrong.",
     "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2"
+  },
+  {
+    "source": "fastify/fastify",
+    "stresses": "EXTERNAL VALIDATION TARGET #1, named by ChatGPT after the external-validation protocol was frozen at 04750a3 and before the repository was cloned or any Fastify-specific DiffCI data existed (docs/external-target-01-selection.md). Mature Node.js HTTP framework, plain CommonJS/ESM, no monorepo, no bundler. Test runner is borp (a node:test runner), which is NEITHER vitest NOR jest - the first target in this corpus whose runner differs from the two the harness was built against.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "unknown",
+    "install": [
+      "npm",
+      "install",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "testModule": "node_modules/borp/borp.js",
+    "testArgs": [],
+    "testCommandRationale": "Fastify documented unit script is `unit`, which is bare `borp`; borp reads .borp.yaml and runs test/**/*.test.{js,mjs}. The default `test` script additionally runs `lint` (eslint) and `test:types` (tstyche), neither of which is a unit test and neither of which is file-selectable, so including them would charge both arms for work no selector can narrow. This is a choice between two of the repository own documented scripts, made at eligibility time before any DiffCI data existed - the same rule applied to vue. No file filters or exclusions were invented: borp own committed config decides the file set. borp takes no arguments here because the config supplies them.",
+    "lockfile": "NONE. fastify has no package-lock.json, pnpm-lock.yaml, yarn.lock or bun.lockb at this commit, and declares no packageManager. Two installs a week apart may not resolve the same dependency versions. Recorded as a known reproducibility weakness, exactly as it was for hono - not corrected by inventing a lockfile."
   }
 ]

@@ -438,6 +438,34 @@ const JOBS: Record<string, ValidationJob> = {
     // minutes, something is wrong with the environment rather than with the tests.
     maxRunMs: 10 * 60_000,
   },
+
+  /**
+   * EXTERNAL VALIDATION TARGET #1 (2026-08-30). See docs/external-target-01-selection.md.
+   *
+   * fastify/fastify, named by ChatGPT after the external-validation protocol was frozen at `04750a3`
+   * and before the repository was cloned or any Fastify-specific DiffCI data existed. This is the first
+   * repository in this corpus that did not participate in developing the rule being tested.
+   *
+   * REGISTRATION, NOT NEW CAPABILITY. A caller names a job and never supplies commands, so a new target
+   * needs an entry here to be runnable at all. The gate, the predictor, `effectiveSelection()` and the
+   * output parsers are untouched at `910969f`, which is the implementation under test.
+   *
+   * ITS RUNNER IS NEITHER VITEST NOR JEST. Fastify runs `borp`, a node:test runner. That was not known
+   * when the target was named, and it is not a reason to adjust anything: the frozen protocol says a
+   * calibration that cannot read a test-file count returns NO_ASSESSMENT, and NO_ASSESSMENT is a result
+   * rather than permission to derive the denominator some other way.
+   */
+  "fastify-qualification": {
+    id: "fastify-qualification",
+    description: "Qualify fastify/fastify in the canonical Linux environment, and calibrate cost-per-test.",
+    mode: "qualify",
+    repository: "fastify/fastify",
+    pinnedHeadSha: "1beaf7e72d24b2fc63a02a7f5806772a00e45454",
+    // Agent generation B, as every economics-phase job uses. An eligibility assessment that ends in a
+    // measurement needs the comparator's selection exposed, and only B exposes it.
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
 };
 
 export function getValidationJob(id: string): ValidationJob | undefined {

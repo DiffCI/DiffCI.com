@@ -28,6 +28,22 @@ import {
 } from "../../src/validation-env/validation-jobs.js";
 
 const repoRoot = resolve(dirname(import.meta.filename), "..", "..");
+
+/** The corpus registry entry for a repository - the file qualification actually reads its commands from. */
+interface CorpusEntry {
+  source: string;
+  install?: string[];
+  build?: string[];
+  testModule?: string;
+  testArgs?: string[];
+  lockfile?: string;
+}
+function corpusEntry(source: string): CorpusEntry {
+  const all = JSON.parse(readFileSync(join(repoRoot, "scripts", "dogfood-corpus.json"), "utf8")) as CorpusEntry[];
+  const entry = all.find((e) => e.source === source);
+  assert.ok(entry, `no corpus registry entry for ${source}`);
+  return entry;
+}
 const FROZEN = join(repoRoot, ".dogfood", "frozen", "2026-08-28T15-17-45-366Z-honojs-hono-cc009a");
 
 describe("the validation job allowlist", () => {
@@ -289,5 +305,40 @@ describe("agent generations cannot cross between safety and economics jobs", () 
   it("carries zod's build into the economics job too, or every baseline would be dirty", () => {
     assert.deepEqual(getValidationJob("zod-economics")!.mutate!.build, ["corepack", "pnpm", "build"]);
     assert.equal(getValidationJob("hono-economics")!.mutate!.build, undefined);
+  });
+});
+
+/**
+ * External validation target #1.
+ *
+ * The value of this target is entirely in the fact that it was named before anything about it was
+ * known. These assertions pin the facts that make that claim checkable later.
+ */
+describe("external validation target #1: fastify", () => {
+  const AGENT_B = "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==";
+
+  it("names the repository and the exact commit the assessment will be pinned to", () => {
+    const job = getValidationJob("fastify-qualification")!;
+    assert.equal(job.repository, "fastify/fastify");
+    assert.equal(job.pinnedHeadSha, "1beaf7e72d24b2fc63a02a7f5806772a00e45454");
+    assert.ok(isPinnedSha(job.pinnedHeadSha!), "an unpinned target observes whatever is on main that day");
+  });
+
+  it("runs on agent B, since an eligibility assessment ends in a comparator measurement", () => {
+    assert.equal(getValidationJob("fastify-qualification")!.expectedAgentIntegrity, AGENT_B);
+  });
+
+  it("uses fastify's own documented unit script, and invents no file filters", () => {
+    // borp reads .borp.yaml from the repository, so the file set is the repository's decision, not ours.
+    const entry = corpusEntry("fastify/fastify");
+    assert.equal(entry.testModule, "node_modules/borp/borp.js");
+    assert.deepEqual(entry.testArgs, [], "bare borp - the committed config supplies the files");
+    assert.deepEqual(entry.install, ["npm", "install", "--no-audit", "--no-fund"]);
+    assert.equal(entry.build, undefined, "fastify's generated lib files are committed; unit tests need no build");
+  });
+
+  it("records that fastify has no lockfile rather than quietly assuming reproducibility", () => {
+    // hono had the same weakness and the registry once wrongly claimed it had a committed lockfile.
+    assert.match(corpusEntry("fastify/fastify").lockfile ?? "", /^NONE\./);
   });
 });
