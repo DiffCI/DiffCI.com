@@ -1,0 +1,10 @@
+{
+  "cross-env.qualify.log": "f2b9934be6d38e780f75df629ea5a97c5b1f96f73dee9133fb5488837e3a661a",
+  "css-loader.qualify.log": "a5fcd4b0c7b1e0deaf74e6c49f7d5da0c1acfb524768db74133c142a40372009",
+  "eslint-config-prettier.qualify.log": "a785c2e708a182710f52d47a69e14ebdf2066524918838c3417fc0a07aaf2a80",
+  "prettier.qualify.log": "75674be1dc42e9274bf49ab6b60ffb0fddfea123d7592567e99280f76cecdc99",
+  "ts-jest.qualify.log": "b397938f921fd73fec3806373487589d35989211ec7198f16595122654967c2f",
+  "webpack.qualify.log": "5945e2aee997462198a5bac77ab223966daf8e8063a2644d03c87f1f9dd6c6a9",
+  "frozenAt": "2026-08-30",
+  "note": "RAW gate 5-6 qualification logs for the six survey survivors. Frozen before interpretation."
+}
