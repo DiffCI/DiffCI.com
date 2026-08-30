@@ -138,10 +138,16 @@ reporting to an investor with the sample size attached, and it is not a product 
 |---|---|---|
 | 1 | `fastify/fastify` | [`NOT_QUALIFIED`](external-target-01-result.md) — suite not green in the canonical environment |
 | 2 | `date-fns/date-fns` | [`NOT_ADDRESSABLE`](external-target-02-result.md) — real test surface only reachable from a subdirectory |
+| 3 | `chalk/chalk` | [selected](external-target-03-selection.md), outcome unknown |
 
 Neither is a failure of the eligibility rule, which has still not run once out of sample. Both are
-measured coverage limits of the apparatus: **the assessment currently requires a repository whose full
-suite is green in a Linux container and runnable from the repository root.**
+measured coverage limits of the apparatus. Stated as narrowly as the evidence supports, what the
+external assessment currently covers is:
+
+> **A green Linux test suite, executable from the repository root, with a runner the apparatus can
+> address by explicit test-file paths.**
+
+That is materially narrower than "repositories with CI", and it is measured rather than assumed.
 
 ## Status
 
