@@ -542,7 +542,9 @@ async function locate(record: ValidationRecord, deps: ValidationStepDeps): Promi
 
     record.scratchDir = scratch;
     record.clonePath = `${scratch}/${clones[0]!}`;
-    record.step = "mutating";
+    // An observation-only run stops here by design: the pre-registration requires the predicted sign to
+    // be committed before any economics arm executes, and mutating would run them as a side effect.
+    record.step = deps.job.observeOnly ? "collecting" : "mutating";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {
     return fail(record, "locate-failed", err instanceof Error ? err.message : String(err));
@@ -572,6 +574,7 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, bucket } = deps;
   const t0 = deps.now();
   try {
+    if (deps.job.observeOnly) return collectObservation(record, deps, t0);
     if (deps.job.mode === "calibrate") return collectCalibration(record, deps, t0);
     if (deps.job.mode === "qualify") return collectQualification(record, deps, t0);
 
@@ -757,6 +760,66 @@ async function collectCalibration(record: ValidationRecord, deps: ValidationStep
         timings: record.timings,
         sourceTarballKey: record.sourceTarballKey,
         sourceTarballSha256: record.sourceTarballSha256,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  keys.push(envKey);
+
+  record.resultKeys = keys;
+  record.timings.collectMs = deps.now() - t0;
+  record.step = "done";
+  return { record, nextAlarmDelayMs: null };
+}
+
+/**
+ * Collect an observation-only run.
+ *
+ * There is no run directory and no results.jsonl, because nothing was mutated. The corpus IS the
+ * result: each row carries the comparator's selection count, DiffCI's, and the measured joint analysis
+ * CPU - the three inputs the frozen prediction rule consumes.
+ */
+async function collectObservation(record: ValidationRecord, deps: ValidationStepDeps, t0: number): Promise<ValidationStepResult> {
+  const { sandbox, bucket } = deps;
+  const keys: string[] = [];
+
+  let corpus: string;
+  try {
+    corpus = (await sandbox.readFile(OBSERVED_CORPUS_PATH)).content;
+  } catch (err) {
+    return fail(record, "corpus-unreadable", err instanceof Error ? err.message : String(err));
+  }
+  const rows = corpus.split("\n").filter((l) => l.trim().length > 0).length;
+  if (rows === 0) return fail(record, "no-observations", "the observation pass wrote an empty corpus");
+
+  const corpusKey = `${resultPrefix(record)}/corpus.jsonl`;
+  await bucket.put(corpusKey, corpus);
+  keys.push(corpusKey);
+
+  if (record.logs?.observe) {
+    const logKey = `${resultPrefix(record)}/observe.log`;
+    await bucket.put(logKey, record.logs.observe);
+    keys.push(logKey);
+  }
+
+  const envKey = `${resultPrefix(record)}/environment.json`;
+  await bucket.put(
+    envKey,
+    `${JSON.stringify(
+      {
+        runId: record.runId,
+        jobId: record.jobId,
+        mode: "observe-only",
+        repository: deps.job.repository ?? null,
+        pinnedHeadSha: deps.job.pinnedHeadSha ?? null,
+        observedRows: record.observedRows ?? null,
+        selectableCandidates: record.selectableCandidates ?? null,
+        environment: record.environment ?? null,
+        timings: record.timings,
+        sourceTarballKey: record.sourceTarballKey,
+        sourceTarballSha256: record.sourceTarballSha256,
+        agentTarballKey: record.agentTarballKey,
       },
       null,
       2,

@@ -98,6 +98,15 @@ export interface ValidationJob {
     maxAttempts: number;
     timeoutMs: number;
   };
+  /**
+   * Stop after observation and collect the corpus, running NO mutation and NO economics arms.
+   *
+   * Exists because the comparator-volatility pre-registration (docs/stabiliser-hypothesis-preregistration.md)
+   * requires the predicted sign to be committed BEFORE any economics measurement. The reproduce pipeline
+   * would otherwise execute the economics arms as a side effect of mutating, which would mean seeing the
+   * answer before recording the prediction - and an unfalsifiable experiment.
+   */
+  observeOnly?: boolean;
   /** Ceiling for the whole harness process. Exceeding it kills the run rather than polling forever. */
   maxRunMs: number;
 }
@@ -277,6 +286,35 @@ const JOBS: Record<string, ValidationJob> = {
     pinnedHeadSha: "d63616ca17de965ed32dcb449a4c5cd9982f15d2",
     expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
     maxRunMs: 3 * 60 * 60_000,
+  },
+
+  /**
+   * Vue OBSERVATION ONLY (2026-08-30). No mutation, no economics arms.
+   *
+   * Produces exactly the three inputs the frozen prediction rule needs: the comparator's selection
+   * count, DiffCI's selection count, and the measured joint analysis CPU - all from the canonical
+   * environment, so they are comparable with hono's and zod's rather than measured on a laptop.
+   *
+   * The predicted sign is computed from this output and committed before any economics run.
+   */
+  "vue-observation": {
+    id: "vue-observation",
+    description: "Observation only for vuejs/core: selection counts and analysis CPU, no economics.",
+    mode: "reproduce",
+    observeOnly: true,
+    repository: "vuejs/core",
+    pinnedHeadSha: "d63616ca17de965ed32dcb449a4c5cd9982f15d2",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["corepack", "pnpm", "install", "--frozen-lockfile"],
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run", "--project", "unit*"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // Observation only - a clone, an install and 25 analyses. Nothing executes a test suite.
+    maxRunMs: 2 * 60 * 60_000,
   },
 
   /**
