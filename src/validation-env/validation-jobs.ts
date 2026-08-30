@@ -608,6 +608,78 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 4 * 60 * 60_000,
   },
 
+  /**
+   * ADDRESSABILITY SURVEY, gates 5 and 6 (2026-08-30).
+   *
+   * The six entries that passed the structural gates in survey-01. Each is pinned at the head sha the
+   * survey itself recorded, so the repository qualified is the one the survey classified - not whatever
+   * is on the default branch when this runs.
+   *
+   * Commands come from the frozen facts, NOT from a fresh inspection. Where the harness cannot carry a
+   * documented script across - node flags, environment variables - the corpus entry records exactly what
+   * was lost, because a red baseline caused by a missing flag is an apparatus limit and must not be
+   * reported as a property of the repository.
+   */
+  "survey-qualify-prettier": {
+    id: "survey-qualify-prettier",
+    description: "Survey gate 5-6: qualify prettier/prettier in the canonical Linux environment.",
+    mode: "qualify",
+    repository: "prettier/prettier",
+    pinnedHeadSha: "18c4dfb01d61c53a63f9c30ee2257631ed1c5994",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
+  "survey-qualify-webpack": {
+    id: "survey-qualify-webpack",
+    description: "Survey gate 5-6: qualify webpack/webpack in the canonical Linux environment.",
+    mode: "qualify",
+    repository: "webpack/webpack",
+    pinnedHeadSha: "17fa705afbd6bf80a4a3e3b5ea90b18bea0bec32",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
+  "survey-qualify-eslint-config-prettier": {
+    id: "survey-qualify-eslint-config-prettier",
+    description: "Survey gate 5-6: qualify prettier/eslint-config-prettier in the canonical Linux environment.",
+    mode: "qualify",
+    repository: "prettier/eslint-config-prettier",
+    pinnedHeadSha: "bd6e6171434c7b34dec3dd0f325aab792c126ec6",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
+  "survey-qualify-ts-jest": {
+    id: "survey-qualify-ts-jest",
+    description: "Survey gate 5-6: qualify kulshekhar/ts-jest in the canonical Linux environment.",
+    mode: "qualify",
+    repository: "kulshekhar/ts-jest",
+    pinnedHeadSha: "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
+  "survey-qualify-css-loader": {
+    id: "survey-qualify-css-loader",
+    description: "Survey gate 5-6: qualify webpack/css-loader in the canonical Linux environment.",
+    mode: "qualify",
+    repository: "webpack/css-loader",
+    pinnedHeadSha: "be04ec290ee57bafbc75f5936c1f6a2532681b49",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
+  "survey-qualify-cross-env": {
+    id: "survey-qualify-cross-env",
+    description: "Survey gate 5-6: qualify kentcdodds/cross-env in the canonical Linux environment.",
+    mode: "qualify",
+    repository: "kentcdodds/cross-env",
+    pinnedHeadSha: "9951937a7d3d4a1ea7bd2ce3133bcfb687125813",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
   "immer-economics": {
     id: "immer-economics",
     description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",
