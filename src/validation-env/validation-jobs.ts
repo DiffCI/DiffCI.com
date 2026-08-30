@@ -69,7 +69,7 @@ export interface ValidationJob {
    * qualify before mutating it means anything, because a mutation pass against a suite that was never
    * green attributes failures to the mutation that were already there.
    */
-  mode: "reproduce" | "qualify" | "calibrate";
+  mode: "reproduce" | "qualify" | "calibrate" | "survey";
   /** The frozen bundle this job reproduces, when it is a reproduction rather than new evidence. */
   reproduces?: string;
   /** "owner/name" - cloned from GitHub over https, no credentials. Unused by `calibrate`. */
@@ -583,6 +583,31 @@ const JOBS: Record<string, ValidationJob> = {
    * If this measures negative the outcome is FALSE_POSITIVE_ELIGIBILITY, immer becomes development-set
    * evidence, and the predictor is NOT repaired against immer and re-run on immer.
    */
+  /**
+   * THE ADDRESSABILITY SURVEY (2026-08-30). See docs/addressability-survey-preregistration.md.
+   *
+   * Not a repository experiment and not a DiffCI measurement. It asks how often the assessment can be
+   * reached at all, over a frame fixed before any repository was inspected, and where it stops when it
+   * cannot.
+   *
+   * Runs unattended in the canonical container so the survey does not depend on an interactive session
+   * staying alive. It clones each frame entry itself rather than using the pinned-clone machinery,
+   * because the subject is 40 repositories rather than one.
+   *
+   * NOTHING IN THE APPARATUS MAY CHANGE WHILE THIS RUNS. The survey measures the product at `af3b355`;
+   * a fix applied midway would mean the repositories evaluated before and after it are no longer the
+   * same experiment, and the resulting rate would describe neither.
+   */
+  "addressability-survey": {
+    id: "addressability-survey",
+    description: "Addressability survey over the frozen frame: which gate stops each repository, and why.",
+    mode: "survey",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    // 40 clones plus registry and GitHub lookups. Structural inspection only - nothing installs
+    // dependencies or executes a test suite at this stage.
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "immer-economics": {
     id: "immer-economics",
     description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",
@@ -684,6 +709,21 @@ export function calibrateArgv(): string[] {
 
 /** Where the qualification verdict is written inside the container. */
 export const CORPUS_DEFINITION_PATH = "scripts/dogfood-corpus.json";
+
+/** Where the survey writes its facts, adjudications and funnel inside the container. */
+export const SURVEY_OUT = `${WORKSPACE}/survey`;
+/** The frozen frame, shipped inside the source tarball so the run cannot silently re-resolve it. */
+export const SURVEY_FRAME_PATH = "docs/evidence/survey/frame-ranks-1-40.json";
+
+/**
+ * Addressability-survey argv.
+ *
+ * The frame is a path into the source tarball rather than a URL, so a re-run measures the same 40
+ * entries even if the upstream ranking moves. A survey whose frame can drift is not reproducible.
+ */
+export function surveyArgv(): string[] {
+  return ["run", "survey", "--", "--frame", SURVEY_FRAME_PATH, "--out", SURVEY_OUT, "--work", `${SURVEY_OUT}/clones`];
+}
 
 /**
  * Mutation pass argv. `scratch` and `clonePath` are discovered at runtime (the harness names its own

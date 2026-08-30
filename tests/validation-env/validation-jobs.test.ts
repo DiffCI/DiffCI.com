@@ -65,6 +65,9 @@ describe("the validation job allowlist", () => {
       const job = getValidationJob(id)!;
       // Calibration measures the laboratory itself: it clones nothing, so it pins nothing.
       if (job.mode === "calibrate") { assert.equal(job.repository, undefined); assert.equal(job.pinnedHeadSha, undefined); continue; }
+      // The survey names no repository either - its subject is a frozen frame of 40, and it clones each
+      // entry itself. Pinning is enforced there by the committed frame file, not by this field.
+      if (job.mode === "survey") { assert.equal(job.repository, undefined); assert.equal(job.pinnedHeadSha, undefined); continue; }
       assert.ok(isPinnedSha(job.pinnedHeadSha!), `${id} must pin a full 40-hex sha`);
       assert.ok(isRepositorySlug(job.repository!), `${id} must name owner/name`);
       assert.ok((job.commits ?? 0) > 0 || job.mode === "qualify", `${id} must observe at least one commit`);

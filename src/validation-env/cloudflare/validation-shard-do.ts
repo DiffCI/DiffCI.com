@@ -47,6 +47,8 @@ import {
   calibrateArgv,
   observeArgv,
   qualifyArgv,
+  surveyArgv,
+  SURVEY_OUT,
   type ValidationJob,
 } from "../validation-jobs.js";
 
@@ -72,6 +74,7 @@ export type ValidationStep =
   | "observing"
   | "qualifying"
   | "calibrating"
+  | "surveying"
   | "locating"
   | "mutating"
   | "collecting"
@@ -119,7 +122,7 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
-  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string };
   timings: Record<string, number>;
 }
 
@@ -307,6 +310,14 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
       return { record, nextAlarmDelayMs: 0 };
     }
 
+    // The survey's subject is 40 repositories named by a frozen frame, so there is no single clone to
+    // pin. It does its own cloning, one entry at a time, and records the head sha it actually saw.
+    if (job.mode === "survey") {
+      record.timings.prepareMs = deps.now() - t0;
+      record.step = "surveying";
+      return { record, nextAlarmDelayMs: 0 };
+    }
+
     if (!job.repository || !isRepositorySlug(job.repository)) return fail(record, "invalid-repository", String(job.repository));
     if (!job.pinnedHeadSha || !isPinnedSha(job.pinnedHeadSha)) return fail(record, "invalid-pinned-sha", String(job.pinnedHeadSha));
 
@@ -351,7 +362,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify" | "calibrate",
+  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -445,6 +456,15 @@ async function calibrateStep(record: ValidationRecord, deps: ValidationStepDeps)
   const t0 = record.processStartedAt ?? deps.now();
   return runHarnessPass(record, deps, calibrateArgv(), "calibrate", (r) => {
     r.timings.calibrateMs = deps.now() - t0;
+    r.step = "collecting";
+    return { record: r, nextAlarmDelayMs: 0 };
+  });
+}
+
+async function surveyStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const t0 = record.processStartedAt ?? deps.now();
+  return runHarnessPass(record, deps, surveyArgv(), "survey", (r) => {
+    r.timings.surveyMs = deps.now() - t0;
     r.step = "collecting";
     return { record: r, nextAlarmDelayMs: 0 };
   });
@@ -576,6 +596,7 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   try {
     if (deps.job.observeOnly) return collectObservation(record, deps, t0);
     if (deps.job.mode === "calibrate") return collectCalibration(record, deps, t0);
+    if (deps.job.mode === "survey") return collectSurvey(record, deps, t0);
     if (deps.job.mode === "qualify") return collectQualification(record, deps, t0);
 
     const runs = await sandbox.exec(`ls -1 ${RUNS_DIR} 2>/dev/null || true`, { timeout: 30_000 });
@@ -739,6 +760,68 @@ async function collectQualification(record: ValidationRecord, deps: ValidationSt
  * passed and a calibration nobody can inspect are not the same thing, and this apparatus has already
  * produced one verdict whose only artefact was a sentence.
  */
+/**
+ * Collect the addressability survey.
+ *
+ * The summary is required and the run fails without it: a survey that produced no funnel produced
+ * nothing, and an empty result reported as success is the exact failure this laboratory has already
+ * made twice. Per-entry facts are collected too, because a classification that cannot be re-derived
+ * from committed evidence cannot be audited.
+ */
+async function collectSurvey(record: ValidationRecord, deps: ValidationStepDeps, t0: number): Promise<ValidationStepResult> {
+  const { sandbox, bucket } = deps;
+  const keys: string[] = [];
+
+  const logKey = `${resultPrefix(record)}/survey.log`;
+  await bucket.put(logKey, record.logs?.survey ?? "(no output captured)");
+  keys.push(logKey);
+
+  let summary: string;
+  try {
+    summary = (await sandbox.readFile(`${SURVEY_OUT}/survey-summary.json`)).content;
+  } catch (err) {
+    return fail(record, "survey-summary-missing", `the survey produced no summary: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  const summaryKey = `${resultPrefix(record)}/survey-summary.json`;
+  await bucket.put(summaryKey, summary);
+  keys.push(summaryKey);
+
+  // Guard, in the same spirit as the empty-corpus refusal: a summary whose chain is empty is not a
+  // result, however well-formed the JSON is, and a short walk is not a completed survey.
+  try {
+    const parsed = JSON.parse(summary) as { chain?: { frameEntries?: number }; adjudications?: unknown[] };
+    if (!parsed.chain?.frameEntries || !Array.isArray(parsed.adjudications) || parsed.adjudications.length === 0) {
+      return fail(record, "survey-empty", "the survey summary contains no adjudications");
+    }
+    if (parsed.adjudications.length !== parsed.chain.frameEntries) {
+      return fail(
+        record,
+        "survey-incomplete",
+        `${parsed.adjudications.length} adjudication(s) for ${parsed.chain.frameEntries} frame entries - the walk did not finish`,
+      );
+    }
+  } catch (err) {
+    return fail(record, "survey-summary-unreadable", err instanceof Error ? err.message : String(err));
+  }
+
+  const listing = await sandbox.exec(`ls -1 ${SURVEY_OUT}/facts 2>/dev/null || true`, { timeout: 60_000 });
+  for (const name of listing.stdout.split("\n").map((s) => s.trim()).filter(Boolean)) {
+    try {
+      const content = (await sandbox.readFile(`${SURVEY_OUT}/facts/${name}`)).content;
+      const key = `${resultPrefix(record)}/facts/${name}`;
+      await bucket.put(key, content);
+      keys.push(key);
+    } catch {
+      // One unreadable facts file must not lose the whole survey; the summary already records the entry.
+    }
+  }
+
+  record.resultKeys = keys;
+  record.timings.collectMs = deps.now() - t0;
+  record.step = "done";
+  return { record, nextAlarmDelayMs: null };
+}
+
 async function collectCalibration(record: ValidationRecord, deps: ValidationStepDeps, t0: number): Promise<ValidationStepResult> {
   const { bucket } = deps;
   const keys: string[] = [];
@@ -846,6 +929,8 @@ export async function stepValidation(record: ValidationRecord, deps: ValidationS
       return qualifyStep(record, deps);
     case "calibrating":
       return calibrateStep(record, deps);
+    case "surveying":
+      return surveyStep(record, deps);
     case "locating":
       return locate(record, deps);
     case "mutating":
