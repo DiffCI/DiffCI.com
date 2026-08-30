@@ -96,6 +96,40 @@ The union of selections across all 16 candidates is 184 of 196 test files; 12 ar
 11 vue-compat      8 vue              5 shared          1 runtime-test
 ```
 
+## Working interpretation, updated — and this investigation is CLOSED
+
+Superseding "coarse selection floor", which the traces have retired. The buckets are neither arbitrary
+nor unexplained conservative fallback; they are a predictable consequence of a **correct file-level
+dependency graph losing symbol-level precision at barrel re-exports**.
+
+**Safety mechanism — intact.** Conservative dependency closure is doing exactly what it is supposed to.
+Every traced selection has provenance; zero unexplained chains and zero fallback selections across the
+representatives. Nothing here weakens the 39/39 safety evidence.
+
+**Economic limitation — named.** File-level granularity loses precision through high-fanout re-export
+nodes. A barrel import is treated as a dependency on the whole barrel, so a re-export hub can produce a
+large reverse-dependency closure even when the changed symbol is irrelevant to most downstream tests.
+
+**Vue consequence.** A change to `packages/shared/src/looseEqual.ts` legitimately reaches
+`shared/src/index.ts`, after which file-level reachability expands to essentially the entire test
+surface — 183 of 196 files.
+
+### A broader hypothesis, recorded and deliberately not pitched
+
+The three-repository economics may no longer be explained by "DiffCI has a coarse floor". A more
+technically grounded candidate:
+
+> DiffCI's incremental economics depend partly on whether a repository's dependency topology contains
+> high-fanout boundaries where file-level impact analysis loses precision.
+
+If that holds it offers two things at once: a **pre-deployment predictor** of when the current product
+works, and a **concrete direction** for improving the cases where it does not. It is one hypothesis
+fitted to three repositories and has not been tested. It is not a claim and must not be presented as one.
+
+**This investigation is complete at `8f7261f`.** No further digging under this hypothesis. Any work on
+symbol precision is a new, separately pre-registered experiment, with the existing selector and the
+frozen Vue economics untouched as the baseline — see `docs/symbol-precision-preregistration.md`.
+
 ## What is deliberately not concluded
 
 Whether any of these selections is *unnecessary* is a separate experiment and is not answered here. A
