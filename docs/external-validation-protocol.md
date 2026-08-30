@@ -140,7 +140,7 @@ reporting to an investor with the sample size attached, and it is not a product 
 | 2 | `date-fns/date-fns` | [`NOT_ADDRESSABLE`](external-target-02-result.md) — real test surface only reachable from a subdirectory |
 | 3 | `chalk/chalk` | [`NOT_ADDRESSABLE`](external-target-03-result.md) — runner unsupported (AVA output unreadable by every adapter) |
 | 4 | `axios/axios` | [`NOT_QUALIFIED`](external-target-04-result.md) — structurally addressable, baseline red in the canonical environment |
-| 5 | `immerjs/immer` | **QUALIFIED** — [prediction frozen POSITIVE](immer-prediction-frozen.md), economics not yet run |
+| 5 | `immerjs/immer` | **[`CONFIRMED_POSITIVE`](external-target-05-result.md)** — predicted POSITIVE, measured POSITIVE (+46.97 CPU-s). First out-of-sample sign match. |
 
 None is a failure of the eligibility rule, which has still not run once out of sample. All three are
 measured coverage limits of the apparatus. Stated as narrowly as the evidence supports, what the
