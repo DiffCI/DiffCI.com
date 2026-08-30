@@ -10,7 +10,8 @@ dangerous category, because a broken selector produces a bad product and a broke
 pessimism gets fixed immediately, because someone is unhappy with the result and goes looking. A
 laboratory that fails toward optimism gets believed.
 
-This file is kept as a record, not as a to-do list. Everything here is fixed.
+This file is kept as a record, not as a to-do list. Everything here is fixed **except #13**, which is
+open: it was found on 2026-08-30 and the correction is a decision, not a patch.
 
 ## The safety phase
 
@@ -41,6 +42,7 @@ See [safety-validation-milestone.md](safety-validation-milestone.md) and
 |---|---|---|
 | 11 | **`FULL` decisions counted at `selected: 0`.** A `FULL` decision did not select a small subset — it declined to narrow and runs the entire universe. Summing the raw field records DiffCI's *most* expensive outcome as its *cheapest*. | **The worst defect in this file.** vuejs/core has 8 such candidates of 25. Counting them at zero moves the prediction from **−861.01 (NEGATIVE)** to **≈ +281 (POSITIVE)** — a sign flip, in DiffCI's own favour, entirely silently. The eligibility product would have recommended deployment on precisely the repository where DiffCI performed worst of the three. Fixed by `effectiveSelection()`, which exists as a named function so the reasoning has one home, and the FULL count now prints with every observation-path verdict. |
 | 12 | **`resolve("")` is the current directory.** A missing `--repo` passed `existsSync` and calibrated against DiffCI.com itself. | A calibration attributed to a repository that was never examined. Found by running the script with no arguments; the guard now checks the flag, not the resolved path. |
+| 13 | **A green qualification that ran 5% of the repository.** The root invocation chosen for `date-fns/date-fns` ran **14 of 269 test files** and excluded `pkgs/core` - the principal package, the actual `date-fns` library, 255 test files - entirely. | **The most dangerous shape in this file: a PASSING result over almost none of the subject.** It reported MUTATION-QUALIFIED, green on two consecutive runs, exit 0, in 3 seconds. Had it been believed, every subsequent observation, prediction and economics figure would have described a repository that is 5% of the one named. Caught by arithmetic, not by a wrong answer: `pkgs/tz` (6 + 5) + `pkgs/utc` (2) + `pkgs/docs` (1) = exactly the 14 reported, and `pkgs/core` contributed nothing. The MECHANISM is not established - core project may have failed to load from the root config, or loaded and matched nothing - and no run was spent distinguishing them. |
 
 ## One hypothesis of mine that was wrong, kept for the same reason
 

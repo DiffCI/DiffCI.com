@@ -168,8 +168,8 @@
     "source": "date-fns/date-fns",
     "stresses": "EXTERNAL VALIDATION TARGET #2, named after target #1 (fastify) closed as NOT_QUALIFIED, and before the repository was cloned or any date-fns DiffCI data existed (docs/external-target-02-selection.md). pnpm monorepo, workspace pkgs/* (core, tz, utc, docs, dev), vitest 4. Named earlier than fastify as the third fallback in the repository #3 selection, but never observed - no selection ratio or economics figure for it has ever been seen.",
     "commits": 25,
-    "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "observationQualified": "not attempted",
+    "mutationQualified": "INVALID - do not use",
     "install": [
       "corepack",
       "pnpm",
@@ -182,6 +182,11 @@
     ],
     "testCommandRationale": "The root package.json has NO scripts block at all - CI drives tests through mise tasks - so there is no root script to select. The root ships its own vitest.config.ts declaring projects: [pkgs/*], and bare `vitest run` against it is the repository own declaration of its test surface. This is the identical uniform non-interactive invocation applied to hono. No project filter, exclusion, or include glob was invented: each package own committed config decides its file set. Narrowing to pkgs/core alone was considered and REJECTED - it would pre-screen the repository into a friendlier shape, which is a form of tuning. Checked in advance because the validation contract forbids launching a browser: pkgs/core/vitest.config.ts imports @vitest/browser-playwright but leaves the browser instance commented out (enabled only by the separate test/browser task via --browser), so `vitest run` runs in node.",
     "buildRationale": "No build. pkgs/core exports map points at ./src/index.ts, so workspace consumers (tz, utc, docs) resolve TypeScript source and vitest transpiles it - the same situation as vue, where a build would have been required only if tests imported package outputs.",
-    "lockfile": "pnpm-lock.yaml committed. Unlike hono and fastify, this repository pins its dependency tree, so two installs a week apart resolve the same versions. No packageManager field, so corepack uses its default pnpm."
+    "lockfile": "pnpm-lock.yaml committed. Unlike hono and fastify, this repository pins its dependency tree, so two installs a week apart resolve the same versions. No packageManager field, so corepack uses its default pnpm.",
+    "mutationQualificationReason": "datefns-qualify-01 (2026-08-30) returned MUTATION-QUALIFIED - green on 2 consecutive runs, exit=0, 14 test files, 222 tests, 4.61 CPU-s. THE VERDICT IS INVALID AS A MEASUREMENT BASIS: the invocation ran 14 of the repository 269 test files and excluded pkgs/core, the principal package, ENTIRELY. pkgs/core holds 255 test files named test.ts; the 14 that ran are exactly pkgs/tz (6 tests.ts + 5 *.test.ts) + pkgs/utc (2 tests.ts) + pkgs/docs (1 tests.ts). The arithmetic is exact, so the effect is established; the mechanism is NOT - core project may have failed to load from the root config, or may have loaded and matched nothing, and no run was spent distinguishing those.",
+    "mutationQualifiedAt": "2026-08-30T10:45:03.693Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "TARGET #2 - qualification returned GREEN but is INVALID as a basis for assessment (see mutationQualificationReason). No observation run, no prediction frozen, nothing burned. The defect is in the command choice recorded here, not in the repository: date-fns test surface IS file-addressable (255 files at pkgs/core/src/*/test.ts). Awaiting a decision on whether the harness invocation is corrected or the target is recorded as unaddressable by the current apparatus. DO NOT observe or measure on this entry as written."
   }
 ]
