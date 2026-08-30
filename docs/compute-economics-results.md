@@ -167,3 +167,95 @@ enough.**
 n=11, of which only 5 are also safety-measurable. No verdict label is attached and no reliability
 estimate is offered. +183.20 against a 1794 comparator total is roughly 10%, well outside plausible
 noise — but one repository at n=11 is an indication, not a savings claim.
+
+---
+
+## vuejs/core — `vue-economics-01`, 2026-08-30 — the out-of-sample test
+
+Frozen `2026-08-30T08-01-32-113Z-vuejs-core-9f5cf3`, 6/6 checksums verified. 16/16 compute-measurable.
+Safety: 14/14 confirmed, 0 false greens. Efficiency: 1 efficient / 0 comparable / **13 overbroad**.
+
+**The prediction was committed at `243d110` before this job existed.**
+
+```
+full                    2050.82 CPU-s
+comparator selected      430.78
+diffci selected         1536.07
+joint analysis            58.04   (charged entirely to DiffCI)
+diffci total            1594.11
+
+grossCpu       = 2050.82 - (1536.07 + 58.04) =  +456.71
+incrementalCpu =  430.78 - (1536.07 + 58.04) = -1163.33
+```
+
+| | |
+|---|---|
+| **Predicted sign** | **NEGATIVE** |
+| **Measured sign** | **NEGATIVE** |
+| Predicted magnitude (modelled) | −1092.54 |
+| Measured magnitude | −1163.33 |
+| Per-candidate | **0 positive, 16 negative** |
+
+The **sign** is what was pre-registered and the sign was correct. The magnitude landed within 6.5%,
+which is interesting but secondary — file costs are heterogeneous and the magnitude model was never the
+claim.
+
+### Three candidates where DiffCI cost more than running everything
+
+```
+ef82a2677   gross = −3.18   DiffCI selected 183/196
+a2b40db9a   gross = −3.15   DiffCI selected 183/196
+4e467d7ae   gross = −5.09   DiffCI selected 183/196
+```
+
+Not merely worse than the cheap comparator — worse than **doing nothing at all**. DiffCI selected 183 of
+196 files and then charged ~3.6 CPU-s of analysis on top. This is only visible because the analysis toll
+is charged rather than assumed away, and because gross is reported rather than treated as self-evidently
+positive.
+
+### The three-repository picture
+
+| Repository | Incremental CPU | Candidate signs | Comparator behaviour |
+|---|---:|---:|---|
+| honojs/hono | −80.90 | 4+ / 18− | usually tight |
+| colinhacks/zod | **+183.20** | 9+ / 2− | often broad |
+| vuejs/core | −1163.33 | 0+ / 16− | tight; DiffCI very broad |
+
+---
+
+# Three conclusions, kept separate
+
+**Safety.** 39/39 canonical recall-measurable cases confirmed across hono, zod and vue, with 0 observed
+false greens. This is a milestone, **not a reliability rate**: 39 cases cannot support one.
+
+**Economics.** DiffCI's incremental economics are **repository-dependent** — positive on zod, negative
+on hono and vue. Benchmarking against FULL alone would have inverted the ranking on all three.
+
+**Prediction.** A pre-registered selection-based rule correctly predicted vue's incremental sign out of
+sample. Evidence across three repositories is consistent with comparator over-selection being predictive
+of whether DiffCI's additional analysis pays for itself.
+
+**The hypothesis is NOT proven.** Three repositories make this interesting and investable as a thesis;
+they do not establish generality. One correct out-of-sample prediction is one correct prediction.
+
+# The open technical question, now the highest-value one
+
+Vue exposed a product problem rather than a benchmark loss. Across sixteen commits DiffCI's selections
+took four dominant sizes — **57, 97, 162, 183** — in a 196-file universe, 13 of 16 candidates classified
+`SELECTION_OVERBROAD`, none was economically positive, and three cost more than the whole suite.
+
+The question to answer next is **not** "how do we make Vue positive". It is:
+
+> **What causes each selection bucket, and does every selected file have an auditable dependency or
+> impact reason for being included?**
+
+Two outcomes, both valuable:
+
+- **The 183 files are genuinely required by the dependency model.** Then Vue is simply a repository
+  where DiffCI is not economically useful — which is acceptable, and the predictor could let the product
+  decline deployment there rather than make a customer's CI more expensive.
+- **The 183 arises from conservative graph collapse, fallback behaviour, package-level widening,
+  unresolved imports or a configuration boundary.** Then this is the next real product bottleneck.
+
+Not started. Repository #4, carbon conversion and selector optimisation are all deliberately deferred
+until this is understood.
