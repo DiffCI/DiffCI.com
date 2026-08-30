@@ -397,3 +397,27 @@ describe("external validation target #4: axios", () => {
     assert.match(corpusEntry("axios/axios").universeVerification ?? "", /58/);
   });
 });
+
+describe("external validation target #5: immer", () => {
+  it("pins the repository and commit", () => {
+    const job = getValidationJob("immer-qualification")!;
+    assert.equal(job.repository, "immerjs/immer");
+    assert.equal(job.pinnedHeadSha, "061c2425e1c9dff89e4e4189d42af1b7839dfe0a");
+  });
+
+  it("uses immer's documented test:src, not the default that builds and type-checks", () => {
+    // `test` is `vitest run && yarn test:build && yarn test:flow`. test:build runs a SECOND vitest pass
+    // against built artefacts, which is not the source unit suite.
+    const entry = corpusEntry("immerjs/immer");
+    assert.deepEqual(entry.testArgs, ["run"]);
+    assert.equal(entry.build, undefined, "the source suite runs green on an unbuilt tree");
+  });
+
+  it("installs from the committed yarn lockfile", () => {
+    assert.deepEqual(corpusEntry("immerjs/immer").install, ["corepack", "yarn", "install", "--frozen-lockfile"]);
+  });
+
+  it("records the independently established test universe, so a shortfall is detectable", () => {
+    assert.match(corpusEntry("immerjs/immer").universeVerification ?? "", /23 files by three independent counts/);
+  });
+});

@@ -509,6 +509,31 @@ const JOBS: Record<string, ValidationJob> = {
     expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
     maxRunMs: 3 * 60 * 60_000,
   },
+
+  /**
+   * EXTERNAL VALIDATION TARGET #5 (2026-08-30), and the LAST of the initial external sequence.
+   * See docs/external-target-05-selection.md.
+   *
+   * immerjs/immer, named before its configuration was inspected. The second target to clear the
+   * structural gates: single package, root-executable, vitest, explicit-file addressable.
+   *
+   * Coverage verified before this job existed, per defect #13: the universe is 23 files by three
+   * independent counts - git tree at this sha, working tree after clone, and `vitest list`. A run
+   * reporting anything else means the coverage assumption is wrong and the verdict is not to be
+   * believed, whatever colour it is.
+   *
+   * If this target stops before a prediction, the sequence STOPS rather than selecting a sixth. An
+   * unbounded search for a repository that passes the gates is a search with a hidden denominator.
+   */
+  "immer-qualification": {
+    id: "immer-qualification",
+    description: "Qualify immerjs/immer in the canonical Linux environment, and calibrate cost-per-test.",
+    mode: "qualify",
+    repository: "immerjs/immer",
+    pinnedHeadSha: "061c2425e1c9dff89e4e4189d42af1b7839dfe0a",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    maxRunMs: 3 * 60 * 60_000,
+  },
 };
 
 export function getValidationJob(id: string): ValidationJob | undefined {

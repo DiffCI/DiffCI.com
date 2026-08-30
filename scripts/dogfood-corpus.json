@@ -216,5 +216,26 @@
     "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
     "mutationQualifiedBy": "qualifier 2.0.0",
     "externalValidation": "TARGET #4 - NOT_QUALIFIED (docs/external-target-04-result.md). axios-qualify-01, 2026-08-30: structural checks 1-4 PASSED (single package, root execution, vitest read by both parsers, explicit-file addressable), canonical green baseline FAILED. Two consecutive baselines exit=1 parsedFailures=2, both in tests/unit/adapters/fetch.test.js. Deterministically red UNDER THE TESTED CANONICAL ENVIRONMENT; cause not established and no run spent establishing it. COVERAGE HELD: the run reported 58 test files and 1062 tests, matching the independently established universe exactly, so this verdict describes the repository it names - unlike datefns-qualify-01. A full local run of the identical command was green (58 files, 1062 tests), so a developer-host green is NOT evidence of a canonical green."
+  },
+  {
+    "source": "immerjs/immer",
+    "stresses": "EXTERNAL VALIDATION TARGET #5 and the last of the initial external sequence, named by ChatGPT after targets #1-4 closed and before immer's configuration was inspected (docs/external-target-05-selection.md). Single package, vitest 3, immer 10.0.3-beta. A `website/` directory exists but is not a workspace: package.json declares no workspaces field.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "unknown",
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ],
+    "testCommandRationale": "immer's own documented test:src script is bare `vitest run`. The default `test` script is `vitest run && yarn test:build && yarn test:flow`, which additionally builds the package with tsup and runs a second vitest pass against vitest.config.build.ts, then runs a flow type check. Neither of those is the source unit suite, and test:build's second pass measures built artefacts rather than source. This is a choice between two of the repository's own documented scripts, made at eligibility time before any DiffCI data existed - the identical rule applied to vue and axios. No include globs or exclusions were invented: vitest.config.ts's own include, **/__tests__/**/*.[jt]s?(x), decides the file set.",
+    "buildRationale": "No build for the source suite. A full local run of `vitest run` on an unbuilt tree was green: 23 files, 3764 passed, 8 skipped. immer's build exists for distribution artefacts and for the separate test:build pass, not for test:src.",
+    "lockfile": "yarn.lock committed (yarn classic; no packageManager field), so `yarn install --frozen-lockfile` pins the tree. Reproducibility comparable to zod and vue, better than hono or fastify, which had no lockfile.",
+    "universeVerification": "COVERAGE CHECKED BEFORE RUNNING, per defect #13. The expected universe is 23 files by three independent counts: paths under __tests__/ matching *.[jt]s?(x) in the git tree at the pinned sha (23; the other 18 files under __tests__/ are .snap snapshots, a .flow stub, .flowconfig, test-data.json and tsconfig.json, none of which match), files on disk after clone (23), and `vitest list --filesOnly` (23). A single named repo-relative path (__tests__/curry.js) collects exactly that one file, so explicit-file addressability holds with cwd at the clone root."
   }
 ]
