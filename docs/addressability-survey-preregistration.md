@@ -131,16 +131,48 @@ INSTALL_FAILED                     n / 40
 SURVEY_ERROR                       n / 40
 ```
 
-The headline number is **`ASSESSABLE` / 40**, reported with a binomial confidence interval and with the
-frame named in the same sentence. No subgroup analysis is pre-registered; any performed later is
-labelled exploratory.
+### The denominator is reported as a chain, never collapsed
+
+```
+40 frame entries  ->  X excluded for pre-registered reasons  ->  N survey-eligible  ->  Y reached assessment
+```
+
+The original 40 is **never silently replaced** by whatever remains after exclusions. Both numbers are
+always shown, and the exclusion list is itemised by repository and reason.
+
+### The primary result is ASSESSMENT REACHABILITY, not "DiffCI addressability"
+
+```
+                          repositories reaching a valid eligibility assessment
+Assessment reach rate  =  ------------------------------------------------------
+                                    eligible surveyed repositories
+```
+
+The wording matters and is fixed here. Some failures — a reproducibly red canonical baseline most
+obviously — **do not establish that DiffCI could not technically operate on the repository.** They
+establish that *this assessment* cannot validly produce an economic eligibility verdict under its
+frozen requirements. `BASELINE_RED` is a statement about the assessment's contract, not about the
+selector's capability.
+
+Reported with a binomial confidence interval and with the frame named in the same sentence. The ordered
+failure taxonomy explains the complement. No subgroup analysis is pre-registered; any performed later
+is labelled exploratory.
+
+### The five external targets are NOT survey observations
+
+fastify, date-fns, chalk, axios and immer were selected under a different mechanism — named one at a
+time by a human, with knowledge of the preceding outcomes. They remain external-validation evidence and
+**must not be pooled into this survey's denominator or numerator.** The 40 are the survey.
 
 **What the survey cannot establish:** whether an assessable repository would receive a *correct*
 prediction. That is the other question, and it has n = 1.
 
 ## Status
 
-**Pre-registered. Not started. No repository named, no rank resolved, no configuration inspected.**
+**Pre-registered and FROZEN. Apparatus and protocol boundary: `af3b355`.**
+
+The survey measures the product and apparatus as they stand at that commit — not what they could be made
+to support after seeing the corpus. Nothing in this document changes once repository #1 is inspected.
 
 The frame, N, exclusions, taxonomy, gate order, cost rule and analysis are all fixed by this document
 before any data exists.
