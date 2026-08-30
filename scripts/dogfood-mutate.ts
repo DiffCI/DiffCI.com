@@ -107,7 +107,7 @@ function measureEconomicArms(
    * Glob arguments are filtered out for the same reason the safety pass filters them: a pattern
    * alongside explicit file paths widens the run back out and stops it being a subset at all.
    */
-  const armArgs = (files: string[]): string[] => [...fullArgs.filter((a) => !a.includes("*")), ...files];
+  const armArgs = (files: string[]): string[] => [...fullArgs.filter((a) => !isFileGlob(a)), ...files];
 
   const full: ArmCost = { cpuSeconds: baseline.cpuSeconds, wallMs: baseline.ms, exitStatus: baseline.status };
 
@@ -154,6 +154,30 @@ function measureEconomicArms(
     comparator,
     diffciSelected,
   };
+}
+
+/**
+ * Is this argument a FILE pattern that would widen a subset run back out to everything?
+ *
+ * The reason the filter exists: a glob like `src/**\/*.test.ts` sitting beside explicit file paths makes
+ * the run match everything again, so it costs the full suite while claiming to cost a selection.
+ *
+ * The reason it is not simply `includes("*")` (2026-08-30): plenty of legitimate FLAG VALUES contain a
+ * star. `vitest --project unit*` is vuejs/core's own documented unit-test invocation, and stripping
+ * `unit*` would leave `--project` to swallow the next argument - a test file path - mangling the command
+ * rather than narrowing it. The FULL arm does not strip, so the arms would stop being comparable while
+ * still producing numbers.
+ *
+ * A file pattern is distinguished by looking like a path: it contains a separator or a test-file
+ * extension. A bare token like `unit*` is a value, not a path.
+ */
+function isFileGlob(arg: string): boolean {
+  if (!arg.includes("*")) return false;
+  // A path pattern either recurses (`**`) or ends in a file extension. A scoped package filter such as
+  // `@vitest/test-*` contains a slash but is neither, which is why a bare slash check is not enough.
+  // Erring toward NOT stripping is the safe direction: an unstripped file glob widens the selected arm
+  // and overstates DiffCI's cost, whereas stripping a flag value mangles the command outright.
+  return arg.includes("**") || /\.\w+$/.test(arg);
 }
 
 /** One measured execution arm. CPU is the unit that matters; wall time is kept beside it, never instead. */
@@ -439,7 +463,7 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number, 
   const fullArgs = [testModulePath, ...commands.testArgs];
   // The selected run is the SAME runner with file paths appended - never a different runner, which
   // would measure the runner rather than the selection.
-  const selectedArgs = [testModulePath, ...commands.testArgs.filter((a) => !a.includes("*")), ...candidate.selectedTests];
+  const selectedArgs = [testModulePath, ...commands.testArgs.filter((a) => !isFileGlob(a)), ...candidate.selectedTests];
   const base: MutationResult = {
     repository: candidate.repository,
     headSha: candidate.headSha,
