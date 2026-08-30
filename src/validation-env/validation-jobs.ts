@@ -792,6 +792,83 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 8 * 60 * 60_000,
   },
 
+  /**
+   * POST-RESULT DIAGNOSTIC runs (2026-08-30). NOT replacements.
+   *
+   * The economics runs se-css-loader-01, se-eslint-config-prettier-01 and se-cross-env-01 each
+   * observed 25 candidates cleanly and were then refused by the `no-candidates` guard: across all 75
+   * observations, not one decision was SELECTIVE with a non-empty selection. Those runs are preserved
+   * exactly as they failed.
+   *
+   * That is already a result about selection applicability - the realised optimisation opportunity is
+   * zero, so incremental economics are negative once analysis is charged, without any mutation being
+   * needed to show it. What is NOT established is WHY DiffCI declined to narrow.
+   *
+   * These jobs answer only that. observeOnly, so nothing executes a suite and no economics arm runs;
+   * the corpus rows carry decision.mode, decision.reason and selected/total for all 25 candidates,
+   * which the failed runs never got to collect. Commands, commit, agent and configuration are
+   * identical to the economics jobs - only the stopping point differs.
+   */
+  "survey-observe-css-loader": {
+    id: "survey-observe-css-loader",
+    description: "Diagnostic observation for webpack/css-loader: decisions and reasons only, no economics.",
+    mode: "reproduce",
+    observeOnly: true,
+    repository: "webpack/css-loader",
+    pinnedHeadSha: "be04ec290ee57bafbc75f5936c1f6a2532681b49",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["npm","ci","--no-audit","--no-fund"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: [],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // A clone, an install and 25 analyses. Nothing executes a test suite.
+    maxRunMs: 2 * 60 * 60_000,
+  },
+
+  "survey-observe-eslint-config-prettier": {
+    id: "survey-observe-eslint-config-prettier",
+    description: "Diagnostic observation for prettier/eslint-config-prettier: decisions and reasons only, no economics.",
+    mode: "reproduce",
+    observeOnly: true,
+    repository: "prettier/eslint-config-prettier",
+    pinnedHeadSha: "bd6e6171434c7b34dec3dd0f325aab792c126ec6",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["corepack","yarn","install","--immutable"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: [],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // A clone, an install and 25 analyses. Nothing executes a test suite.
+    maxRunMs: 2 * 60 * 60_000,
+  },
+
+  "survey-observe-cross-env": {
+    id: "survey-observe-cross-env",
+    description: "Diagnostic observation for kentcdodds/cross-env: decisions and reasons only, no economics.",
+    mode: "reproduce",
+    observeOnly: true,
+    repository: "kentcdodds/cross-env",
+    pinnedHeadSha: "9951937a7d3d4a1ea7bd2ce3133bcfb687125813",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["npm","ci","--no-audit","--no-fund"],
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // A clone, an install and 25 analyses. Nothing executes a test suite.
+    maxRunMs: 2 * 60 * 60_000,
+  },
+
   "immer-economics": {
     id: "immer-economics",
     description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",

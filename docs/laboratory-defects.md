@@ -10,8 +10,10 @@ dangerous category, because a broken selector produces a bad product and a broke
 pessimism gets fixed immediately, because someone is unhappy with the result and goes looking. A
 laboratory that fails toward optimism gets believed.
 
-This file is kept as a record, not as a to-do list. Everything here is fixed **except #13**, which is
-open: it was found on 2026-08-30 and the correction is a decision, not a patch.
+This file is kept as a record, not as a to-do list. Everything here is fixed **except #13 and #15**,
+which are open: #13's correction is a decision rather than a patch, and #15 is deliberately left unfixed
+until the experiment it interrupted has finished, so that an infrastructure repair cannot contaminate a
+result.
 
 ## The safety phase
 
@@ -43,6 +45,13 @@ See [safety-validation-milestone.md](safety-validation-milestone.md) and
 | 11 | **`FULL` decisions counted at `selected: 0`.** A `FULL` decision did not select a small subset — it declined to narrow and runs the entire universe. Summing the raw field records DiffCI's *most* expensive outcome as its *cheapest*. | **The worst defect in this file.** vuejs/core has 8 such candidates of 25. Counting them at zero moves the prediction from **−861.01 (NEGATIVE)** to **≈ +281 (POSITIVE)** — a sign flip, in DiffCI's own favour, entirely silently. The eligibility product would have recommended deployment on precisely the repository where DiffCI performed worst of the three. Fixed by `effectiveSelection()`, which exists as a named function so the reasoning has one home, and the FULL count now prints with every observation-path verdict. |
 | 12 | **`resolve("")` is the current directory.** A missing `--repo` passed `existsSync` and calibrated against DiffCI.com itself. | A calibration attributed to a repository that was never examined. Found by running the script with no arguments; the guard now checks the flag, not the resolved path. |
 | 13 | **Qualification could declare success without verifying coverage of the intended test universe.** Green + exit 0 + zero failures + repeatable does not establish that the intended suite actually ran. Triggered by the root invocation chosen for `date-fns/date-fns`, which collected **14 test files** while `pkgs/core` alone collects **262**, but the dangerous property is generic and not date-fns-specific. | **The most dangerous shape in this file: a PASSING result over almost none of the subject.** `datefns-qualify-01` reported MUTATION-QUALIFIED, green on two consecutive runs, exit 0, in 3 seconds - every conventional signal excellent. Believed, every later observation, prediction and economics figure would have described a fraction of the repository named. Caught by arithmetic against an independently established file count, not by a wrong answer, and later reproduced on a different host. No generic coverage invariant has been built: turning this into new qualification functionality during an external assessment is what the protocol forbids. For this target the frozen record showing 14 against an independently counted 262 was enough. |
+
+## The survey and its economics
+
+| # | Defect | What it would have produced |
+|---|---|---|
+| 14 | **The `/v1/result` allowlist omitted the survey's own artefacts.** `survey-summary.json`, `survey.log` and the per-entry facts were written to R2 and then unreadable through the only route that can read them. | Not a false result - the run completed and the data was safe - but it is **defect #4 recurring identically**, three months on. A write path and a read allowlist edited separately will keep diverging. Fixed, and the facts endpoint is now a constrained prefix rule rather than 40 more names to forget. |
+| 15 | **Sharding had never been executed.** `MAX_SHARDS`, `assignShard()` and the merge guards were built and unit-tested, but every real run to date used `shards: 1`. The first live use was a 6-way and a 4-way run launched together. All ten shards failed, fighting over identical paths: `could not lock config file /workspace/target-src/.git/config: File exists`, `rm -rf /opt/diffci /workspace` failing, `ENOTEMPTY` on rmdir, `npm ci` racing in `/opt/diffci/node_modules`. | Ten wasted containers, and - worse in principle - a sharded run that partly succeeded could have merged a short candidate list into a plausible funnel. The merge guards exist for exactly that and were never reached here, because every shard failed loudly. **Not repaired inside the experiment**: prettier and ts-jest were re-run unsharded under the unchanged apparatus instead, so an infrastructure fix cannot contaminate the two repositories carrying most of the economic information. The inference that shards of one run share a container filesystem is supported by the three unsharded runs executing concurrently without trouble, but it is an inference and no run was spent proving it. |
 
 ## One hypothesis of mine that was wrong, kept for the same reason
 
