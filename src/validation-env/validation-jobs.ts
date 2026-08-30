@@ -534,6 +534,37 @@ const JOBS: Record<string, ValidationJob> = {
     expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
     maxRunMs: 3 * 60 * 60_000,
   },
+
+  /**
+   * immer OBSERVATION ONLY. No mutation, no economics arms.
+   *
+   * The step the external sequence has never reached before. It produces exactly the three inputs the
+   * frozen prediction rule needs - the comparator's selection count, DiffCI's selection count, and the
+   * measured joint analysis CPU - and nothing that would reveal the answer.
+   *
+   * `observeOnly` is what keeps the experiment falsifiable: the reproduce pipeline would otherwise run
+   * the economics arms as a side effect of mutating, which would mean seeing the measurement before the
+   * prediction was committed.
+   */
+  "immer-observation": {
+    id: "immer-observation",
+    description: "Observation only for immerjs/immer: selection counts and analysis CPU, no economics.",
+    mode: "reproduce",
+    observeOnly: true,
+    repository: "immerjs/immer",
+    pinnedHeadSha: "061c2425e1c9dff89e4e4189d42af1b7839dfe0a",
+    commits: 25,
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["corepack", "yarn", "install", "--frozen-lockfile"],
+      testModule: "node_modules/vitest/vitest.mjs",
+      testArgs: ["run"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // Observation only - a clone, an install and 25 analyses. Nothing executes a test suite.
+    maxRunMs: 2 * 60 * 60_000,
+  },
 };
 
 export function getValidationJob(id: string): ValidationJob | undefined {
