@@ -9,7 +9,7 @@
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
 
-import { parseTestOutput, stripAnsi, SUPPORTED_RUNNERS } from "../../scripts/test-output-parsers.js";
+import { parseTestOutput, parseTestFileCount, stripAnsi, SUPPORTED_RUNNERS } from "../../scripts/test-output-parsers.js";
 
 describe("parseTestOutput", () => {
   it("reads node:test, in both TAP and spec-reporter form", () => {
@@ -122,5 +122,40 @@ describe("coloured runner output", () => {
   it("still refuses to guess when the output has no summary at all", () => {
     // The core contract survives the change: unrecognised output is undefined, never 0.
     assert.equal(parseTestOutput("\x1B[32mbuilding...\x1B[39m\nnothing to report\n").failures, undefined);
+  });
+});
+
+/**
+ * Test-FILE counts, which the economic eligibility gate divides a CPU measurement by.
+ *
+ * A wrong denominator silently rescales the entire prediction, so this refuses rather than guesses -
+ * the same rule the failure-count parsers follow, for the same reason.
+ */
+describe("parseTestFileCount", () => {
+  it("takes vitest's parenthesised TOTAL, not the passed count", () => {
+    // The real vuejs/core line. 182 passed but 183 ran; dividing by 182 would misstate cost per file.
+    assert.equal(parseTestFileCount("      Test Files  182 passed | 1 skipped (183)\n"), 183);
+    assert.equal(parseTestFileCount(" Test Files  147 passed (147)\n"), 147);
+    assert.equal(parseTestFileCount(" Test Files  573 passed (573)\n"), 573);
+  });
+
+  it("reads a coloured line, because CI colourises regardless of FORCE_COLOR", () => {
+    assert.equal(parseTestFileCount("\x1B[2m Test Files \x1B[22m \x1B[32m182 passed\x1B[39m | 1 skipped \x1B[90m(183)\x1B[39m\n"), 183);
+  });
+
+  it("reads jest's total", () => {
+    assert.equal(parseTestFileCount("Test Suites: 1 failed, 2 passed, 3 total\n"), 3);
+  });
+
+  it("returns undefined rather than a guess when no count is present", () => {
+    // The gate must refuse to produce a verdict, not proceed on an assumed denominator.
+    assert.equal(parseTestFileCount("      Tests  42 passed (42)\n"), undefined);
+    assert.equal(parseTestFileCount("building...\n"), undefined);
+    assert.equal(parseTestFileCount(""), undefined);
+  });
+
+  it("does not mistake the Tests line for the Test Files line", () => {
+    const both = " Test Files  10 passed (12)\n      Tests  400 passed (405)\n";
+    assert.equal(parseTestFileCount(both), 12, "12 files, not 405 tests");
   });
 });

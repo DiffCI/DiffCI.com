@@ -129,5 +129,42 @@ export function parseTestOutput(output: string): ParsedTestOutput {
   return { failures: undefined, failedNames: [], framework: undefined };
 }
 
+/**
+ * How many test FILES the runner executed, or undefined if it cannot be read.
+ *
+ * The economic eligibility gate divides a full-suite CPU measurement by this to model a cost per test
+ * file. Supplying it by hand works for repositories someone has already studied; it cannot work for a
+ * prospect's repository, which is the only place the gate is commercially useful.
+ *
+ * Undefined, never a guess, for the same reason every other parser here refuses to invent a number: a
+ * wrong denominator silently rescales the whole prediction, and a fabricated one would do so invisibly.
+ * The caller must refuse to produce a verdict rather than proceed on an assumed file count.
+ *
+ * Vitest reports the total in parentheses after the passed/skipped breakdown - `Test Files  182 passed
+ * | 1 skipped (183)` - so the parenthesised figure is the one to take, not the passed count. Jest
+ * reports `Test Suites: 3 passed, 3 total`.
+ */
+export function parseTestFileCount(output: string): number | undefined {
+  const plain = stripAnsi(output);
+
+  const vitest = /^\s*Test Files\s+(.+)$/m.exec(plain);
+  if (vitest) {
+    const total = /\((\d+)\)\s*$/.exec(vitest[1]!.trim());
+    if (total) return Number(total[1]);
+    // No parenthesised total: a single-category line such as "Test Files  4 passed" still states a count.
+    const single = /^(\d+)\s+\w+$/.exec(vitest[1]!.trim());
+    if (single) return Number(single[1]);
+    return undefined;
+  }
+
+  const jest = /^Test Suites:\s+(.+)$/m.exec(plain);
+  if (jest) {
+    const total = /(\d+)\s+total/.exec(jest[1]!);
+    if (total) return Number(total[1]);
+  }
+
+  return undefined;
+}
+
 /** The runners this module can classify. Useful for reporting coverage of a corpus. */
 export const SUPPORTED_RUNNERS = ADAPTERS.map((adapter) => adapter.name);
