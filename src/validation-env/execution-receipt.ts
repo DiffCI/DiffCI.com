@@ -28,6 +28,55 @@
  * This file is that record's first form. It is deliberately mode-agnostic.
  */
 
+/**
+ * THE CAUSALITY INVARIANT.
+ *
+ *     repository outcome  ≠  execution infrastructure outcome
+ *
+ * A run can fail for reasons that say NOTHING about the repository: the registry had no entry for it
+ * (an apparatus gap), a fact file was unreadable through a rank-width assumption (defect 21), a lookup
+ * used the wrong filename separator (my error), or the container platform stopped mid-bootstrap. On
+ * 2026-08-31 one repository accumulated THREE consecutive bootstrap failures, and a known-good
+ * apparatus job then failed identically — proving the fault was never the repository.
+ *
+ * Every one of those, recorded as "this repository failed", would have removed an eligible repository
+ * from a population for a reason with no substance.
+ *
+ * This matters far past one experiment. A learning system trained on these records must never conclude
+ * "this repository is unsafe" or "this work was unnecessary" from a runner or platform failure. Such
+ * rows are either labelled as infrastructure and excluded from impact-model training, or they teach the
+ * model something false about the code.
+ *
+ * So an outcome carries WHERE it happened. A failure before the repository's own install is
+ * infrastructure by construction: none of the repository had run yet.
+ *
+ * Preserve causality before accumulating data.
+ */
+export type OutcomeLayer =
+  /** Platform, container, harness, registry — nothing about the repository was exercised. */
+  | "INFRASTRUCTURE"
+  /** The repository's own install, build or test suite produced the outcome. */
+  | "REPOSITORY"
+  /** The analyser produced the outcome. */
+  | "ANALYSER";
+
+/**
+ * Steps that run before any repository code executes. A failure at one of these is INFRASTRUCTURE by
+ * construction, not a judgement about the repository.
+ */
+const PRE_REPOSITORY_STEPS: ReadonlySet<string> = new Set(["bootstrapping", "preparing", "verifyingUniverse", "registering"]);
+
+/**
+ * Which layer an outcome belongs to.
+ *
+ * Structural rather than heuristic: it asks whether the run had reached the repository's own execution,
+ * not what the error message said.
+ */
+export function outcomeLayer(step: string, failed: boolean): OutcomeLayer {
+  if (!failed) return "REPOSITORY";
+  return PRE_REPOSITORY_STEPS.has(step) ? "INFRASTRUCTURE" : "REPOSITORY";
+}
+
 export interface ApparatusIdentityRecord {
   agentIntegrity?: string;
   image?: string;
@@ -68,7 +117,7 @@ export interface ExecutionReceipt {
   /** Allowlisted harness passes actually executed, in order, with their exit status. */
   commands: Array<{ label: string; argv: string[]; exitStatus: number | null }>;
   timings: Record<string, number>;
-  outcome: { step: string; failed: boolean; errorClass?: string; error?: string };
+  outcome: { step: string; failed: boolean; layer: OutcomeLayer; errorClass?: string; error?: string };
   producedAt: string;
 }
 
@@ -84,6 +133,8 @@ export interface ReceiptSource {
   commands?: Array<{ label: string; argv: string[]; exitStatus: number | null }>;
   timings?: Record<string, number>;
   step: string;
+  /** The step the run was on when it failed. This, not the error text, decides the layer. */
+  stepBeforeFailure?: string;
   errorClass?: string;
   error?: string;
 }
@@ -112,6 +163,9 @@ export function buildExecutionReceipt(source: ReceiptSource, producedAt: string)
     outcome: {
       step: source.step,
       failed: source.step === "failed",
+      // Recorded, never re-derived later. A reader - or a training pipeline - must be able to exclude
+      // infrastructure failures without parsing an error string to guess where the run died.
+      layer: outcomeLayer(source.stepBeforeFailure ?? source.step, source.step === "failed"),
       errorClass: source.errorClass,
       error: source.error,
     },

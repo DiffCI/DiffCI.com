@@ -1246,6 +1246,7 @@ async function writeExecutionReceipt(record: ValidationRecord, deps: ValidationS
         commands: record.commands,
         timings: record.timings,
         step: record.step,
+        stepBeforeFailure: record.stepBeforeFailure,
         errorClass: record.errorClass,
         error: record.error,
       },
