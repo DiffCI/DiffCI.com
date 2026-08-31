@@ -1,0 +1,39 @@
+{
+  "derivationVersion": 1,
+  "source": "jest-community/eslint-plugin-jest",
+  "rule": "docs/e2-registration-rule.md",
+  "ruleFrozenAt": "7d8e213",
+  "evidence": {
+    "lockfilesPresent": [
+      "yarn.lock"
+    ],
+    "packageManagerFrom": "yarn.lock",
+    "runnerFrom": "package.json devDependencies/dependencies",
+    "declaredRunnerVersions": {
+      "jest": "^30.0.0"
+    },
+    "hasBuildScript": true,
+    "testScript": "jest"
+  },
+  "detected": {
+    "packageManager": "yarn",
+    "runner": "node_modules/jest/bin/jest.js"
+  },
+  "derived": {
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--immutable"
+    ],
+    "build": [
+      "corepack",
+      "yarn",
+      "run",
+      "build"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": []
+  },
+  "outcome": "REGISTERED"
+}

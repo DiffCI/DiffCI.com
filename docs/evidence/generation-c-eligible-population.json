@@ -1,0 +1,54 @@
+{
+  "frozenAt": "2026-08-31",
+  "populationSize": 5,
+  "targetN": 5,
+  "rule": "docs/generation-c-frame-continuation-rule.md",
+  "ruleFrozenAt": "ad4b4f6",
+  "registrationRule": "docs/e2-registration-rule.md",
+  "apparatus": "docs/evidence/apparatus-gen-c/APPARATUS_IDENTITY.json",
+  "frame": {
+    "source": "npm-high-impact@1.13.0, export npmTopDependents",
+    "sourcePublished": "2026-06-08T16:53:09.521Z",
+    "totalEntriesInSource": 4687,
+    "windowsTraversed": ["1-40 (exhausted, 0 eligible)", "41-140", "141-153"],
+    "verification": "ranks 1-40 of this export reproduce docs/evidence/survey/frame-ranks-1-40.json EXACTLY, re-checked at each window resolution"
+  },
+  "eligible": [
+    {
+      "rank": 62,
+      "repository": "eslint-community/eslint-plugin-promise",
+      "headSha": "e73585efc03ddf17df0273fa3b8dad0b66c51168",
+      "green": "18 suites, 564 tests",
+      "run": "e2-04-eslint-plugin-promise"
+    },
+    {
+      "rank": 75,
+      "repository": "webpack/postcss-loader",
+      "headSha": "ed3e1f7592a5fea2eb0da2475a3675ceb9371a47",
+      "green": "9 suites, 136 tests (4 skipped), 258 snapshots",
+      "run": "e2-05-postcss-loader"
+    },
+    {
+      "rank": 112,
+      "repository": "ezolenko/rollup-plugin-typescript2",
+      "headSha": "4cff90bbe88a6747d5a0eb52d300cb8bed505277",
+      "green": "11 suites, 44 tests",
+      "run": "e2-07-rollup-plugin-typescript2"
+    },
+    {
+      "rank": 115,
+      "repository": "webpack-contrib/extract-text-webpack-plugin",
+      "headSha": "bc6f9f8f61d708352ea89fd4fc9764ce1e4de409",
+      "green": "5 suites, 40 tests, 27 snapshots",
+      "run": "e2-08-extract-text-webpack-plugin"
+    },
+    {
+      "rank": 153,
+      "repository": "jest-community/eslint-plugin-jest",
+      "headSha": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+      "green": "240 suites, 4809 tests, 9 skipped",
+      "run": "e2-16-eslint-plugin-jest"
+    }
+  ],
+  "notDrawn": "No repository has been drawn. No DiffCI observation, selection, mutation or density analysis has been performed on any of these five."
+}
