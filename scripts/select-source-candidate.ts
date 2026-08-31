@@ -37,8 +37,20 @@ function isTestPath(path: string): boolean {
   return /(^|\/)(tests?|__tests__)\//.test(path) || /\.(test|spec)\.[^/]+$/.test(path) || /jsfmt\.spec\./.test(path);
 }
 
+/**
+ * An ordinary implementation source file, in any `src/` directory rather than only the repository's.
+ *
+ * This read `path.startsWith("src/")` until 2026-08-30, which was shaped by the only repository it had
+ * been used on. Prettier keeps its implementation in a root `src/`; a monorepo keeps it in
+ * `packages/<name>/src/`, so the filter matched NOTHING across 298 typescript-eslint commits and
+ * reported "no candidate" for a repository with hundreds of ordinary source changes.
+ *
+ * Widened before any DiffCI result for any typescript-eslint candidate had been produced - the
+ * ordering matters, and it is preserved: this is a filter that could not match, not a threshold moved
+ * because the answer was inconvenient.
+ */
 function isImplementationSource(path: string): boolean {
-  return path.startsWith("src/") && SOURCE_EXTENSIONS.test(path) && !isTestPath(path);
+  return /(^|\/)src\//.test(path) && SOURCE_EXTENSIONS.test(path) && !isTestPath(path);
 }
 
 function isGlobalRisk(path: string): boolean {

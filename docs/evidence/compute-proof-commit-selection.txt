@@ -1,0 +1,22 @@
+
+  SOURCE-CANDIDATE SELECTION - first match in history order wins
+
+  scanning 300 commits from HEAD
+
+  SELECTED after examining 2 commit(s)
+
+    head     6f5bf24d3110168335532fb15bd40a0ba4b9152e
+    base     a2fccae39c7cb1e516a29b1c746b7767bffa03e2
+    subject  fix(website): respect allowJs playground config (#12744)
+
+    why it qualified:
+      implementation files changed  2  (1-5 required)
+        packages/website/src/components/lib/createCompilerOptions.ts
+        packages/website/src/components/options.ts
+      test files also changed       0  (not test-only)
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      total files in diff           2
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
