@@ -40,6 +40,12 @@ function profileOf(options: {
   };
 }
 
+/** A config fixture with the runner-universe fields defaulted. These tests are about command
+ * routing, not universe narrowing, so they take the conservative non-authoritative defaults. */
+function configOf(c: Pick<TestRunnerConfig, "file" | "runner" | "includes" | "scripts"> & Partial<TestRunnerConfig>): TestRunnerConfig {
+  return { excludeGlobs: [], ignoreRegexSources: [], roots: [], declaresTests: c.includes.length > 0, isDefault: false, authoritative: false, ...c };
+}
+
 describe("selective test command synthesis", () => {
   it("emits a vitest command for a vitest repository (unjs/h3's case)", () => {
     const plan = planSelectiveTestCommands(
@@ -86,8 +92,8 @@ describe("selective test command synthesis", () => {
     // different credentials or browsers. Collapsing them into one invocation would be a different
     // job from the one the repository actually runs.
     const configs: TestRunnerConfig[] = [
-      { file: "vitest.e2e.config.ts", runner: "vitest", includes: ["test/e2e/**/*.test.ts"], scripts: ["test:e2e"], family: "e2e" },
-      { file: "vitest.config.ts", runner: "vitest", includes: ["test/unit/**/*.test.ts"], scripts: ["test"] },
+      configOf({ file: "vitest.e2e.config.ts", runner: "vitest", includes: ["test/e2e/**/*.test.ts"], scripts: ["test:e2e"], family: "e2e" }),
+      configOf({ file: "vitest.config.ts", runner: "vitest", includes: ["test/unit/**/*.test.ts"], scripts: ["test"] }),
     ];
     const plan = planSelectiveTestCommands(
       profileOf({ frameworks: ["vitest"], packageManager: "pnpm", configs }),
@@ -105,7 +111,7 @@ describe("selective test command synthesis", () => {
 
   it("falls through to the primary framework's default configuration for unclaimed files", () => {
     const configs: TestRunnerConfig[] = [
-      { file: "vitest.e2e.config.ts", runner: "vitest", includes: ["test/e2e/**/*.test.ts"], scripts: ["test:e2e"], family: "e2e" },
+      configOf({ file: "vitest.e2e.config.ts", runner: "vitest", includes: ["test/e2e/**/*.test.ts"], scripts: ["test:e2e"], family: "e2e" }),
     ];
     const plan = planSelectiveTestCommands(
       profileOf({ frameworks: ["vitest"], packageManager: "pnpm", configs }),

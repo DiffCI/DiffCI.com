@@ -77,6 +77,12 @@ export interface RepositoryProfile {
   /** The subset of `testPatterns` whose match is final: DiffCI's conventional `.test.`/`.spec.`
    * globs and every glob the repository declared explicitly in its own runner config. */
   testAuthoritativePatterns?: string[];
+  /** Jest `testPathIgnorePatterns` regex sources from the repository own config, when its
+   * declaration is in force. Carried on the profile so analyzer discovery, graph node flags and
+   * impact classification cannot disagree about what the RUNNER can execute (defect 17). */
+  testIgnoreRegexSources?: string[];
+  /** Jest `roots`, likewise. Empty or absent means no root restriction. */
+  testRoots?: string[];
   /** Test-runner configs found at the repo root, with their include globs, invoking scripts and family. */
   testRunnerConfigs?: TestRunnerConfig[];
   /** What this repository declares about how DiffCI should treat it (src/repo/repo-config.ts).

@@ -93,10 +93,19 @@ describe("discoverTestRunnerConfigs on a real directory", () => {
       assert.deepStrictEqual(byFile["vitest.snapshot.config.ts"]!.scripts, ["test:snapshot"]);
       assert.strictEqual(byFile["vitest.web.config.ts"]!.family, undefined, "family of 'web' comes from each file's token");
       assert.deepStrictEqual(byFile["vitest.web.config.ts"]!.scripts, ["test:web"]);
-      assert.deepStrictEqual(byFile["jest.config.js"]!.includes, ["<rootDir>/legacy/**/*.it.js"]);
+      // <rootDir> is jest own repo-root token. Lifting it VERBATIM - which this assertion used to
+      // require - produced a glob that matches no repo-relative path at all, so the declaration was
+      // silently inert and the conventional defaults decided the universe on their own. That is one
+      // half of defect 17; the corrected behaviour strips the token.
+      assert.deepStrictEqual(byFile["jest.config.js"]!.includes, ["legacy/**/*.it.js"]);
       assert.ok(!d.patterns.some((p) => p.includes("should/not/be/read")));
       assert.ok(d.patterns.includes("examples/*/tests/**/*.snapshot.ts"));
-      for (const p of DEFAULT_TEST_PATTERNS) assert.ok(d.patterns.includes(p));
+      // Both DEFAULT configs here (vitest.config.ts, jest.config.js) declare their own globs and are
+      // fully understood, so between them they state exactly what the two runners execute. The
+      // conventional .test./.spec. defaults are therefore DROPPED - keeping them would re-add files
+      // neither runner is configured to run, which is the other half of defect 17.
+      assert.strictEqual(d.replacedDefaults, true);
+      for (const p of DEFAULT_TEST_PATTERNS) assert.ok(!d.patterns.includes(p), `default ${p} must not survive an authoritative declaration`);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 

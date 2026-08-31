@@ -21,6 +21,7 @@
  * unaffected.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { compileIgnoreRegexes, extractTestPatterns, isIgnoredPath, isUnderRoots } from "./runner-universe.js";
 import { join } from "node:path";
 
 export type TestFamily = "unit" | "snapshot" | "e2e" | "integration" | "benchmark";
@@ -37,12 +38,43 @@ export interface TestRunnerConfig {
   /** Family implied by the config's name token ("vitest.e2e.config.ts" -> e2e); undefined for the
    * default config, whose files are classified individually by filename token. */
   family?: TestFamily;
+  /** Vitest `exclude` globs declared by this config. */
+  excludeGlobs: string[];
+  /** Jest `testPathIgnorePatterns` - regex sources, not globs. */
+  ignoreRegexSources: string[];
+  /** Jest `roots`, repo-relative; empty means no restriction. */
+  roots: string[];
+  /** This config declared its own test globs at all. If false it relies on its runner defaults. */
+  declaresTests: boolean;
+  /** The runner DEFAULT config (`jest.config.ts`), not a named variant (`vitest.e2e.config.ts`). */
+  isDefault: boolean;
+  /**
+   * The declaration was COMPLETELY understood, so it may replace DiffCI conventional defaults.
+   *
+   * See the safety note in `runner-universe.ts`: narrowing on a half-read config could hide a test
+   * the runner really executes, and a test DiffCI cannot see is a test it cannot select.
+   */
+  authoritative: boolean;
 }
 
 export interface TestDiscovery {
   configs: TestRunnerConfig[];
-  /** Union of DEFAULT_TEST_PATTERNS and every config include, deduplicated. */
+  /**
+   * The effective test universe: every config include, deduplicated, PLUS DEFAULT_TEST_PATTERNS
+   * unless every discovered config declared its own globs and was fully understood - in which case
+   * the repository has stated exactly what its runner executes (defect 17).
+   */
   patterns: string[];
+  /**
+   * The defaults were dropped in favour of the repository own declaration.
+   *
+   * A caller that adds framework default includes on top MUST honour this, or it re-widens the
+   * universe that was just narrowed and the fix does nothing.
+   */
+  replacedDefaults: boolean;
+  excludeGlobs: string[];
+  ignoreRegexSources: string[];
+  roots: string[];
 }
 
 export const DEFAULT_TEST_PATTERNS: readonly string[] = [
@@ -173,7 +205,6 @@ function scriptsInvoking(scripts: Record<string, string>, runner: "vitest" | "je
 /** Static discovery of test-runner configs at the repository root. Never throws; never executes. */
 export function discoverTestRunnerConfigs(repoPath: string, scripts: Record<string, string> = {}): TestDiscovery {
   const configs: TestRunnerConfig[] = [];
-  const patterns = new Set<string>(DEFAULT_TEST_PATTERNS);
   let entries: string[] = [];
   try { entries = existsSync(repoPath) ? readdirSync(repoPath) : []; } catch { entries = []; }
   for (const name of entries.sort()) {
@@ -184,12 +215,54 @@ export function discoverTestRunnerConfigs(repoPath: string, scripts: Record<stri
     let source = "";
     try { source = readFileSync(full, "utf8"); } catch { continue; }
     const runner = m[1]!.toLowerCase() as "vitest" | "jest";
-    const includes = extractIncludeGlobs(source);
     const isDefault = m[2] === undefined;
-    configs.push({ file: name, runner, includes, scripts: scriptsInvoking(scripts, runner, name, isDefault), family: familyOfConfigName(name) });
-    for (const g of includes) patterns.add(g);
+    const extracted = extractTestPatterns(source);
+    configs.push({
+      file: name,
+      runner,
+      includes: extracted.includes,
+      scripts: scriptsInvoking(scripts, runner, name, isDefault),
+      family: familyOfConfigName(name),
+      excludeGlobs: extracted.excludeGlobs,
+      ignoreRegexSources: extracted.ignoreRegexSources,
+      roots: extracted.roots,
+      declaresTests: extracted.declaresTests,
+      isDefault,
+      authoritative: extracted.declaresTests && extracted.complete && extracted.includes.length > 0,
+    });
   }
-  return { configs, patterns: Array.from(patterns) };
+
+  // THE REPLACEMENT RULE, and it is deliberately narrow.
+  //
+  // Only the DEFAULT config (`jest.config.ts`, `vitest.config.ts`) describes what the bare runner
+  // executes, so only the default config may replace the runner built-in globs. A named variant
+  // (`vitest.e2e.config.ts`) is a SEPARATE job: it ADDS its includes and says nothing about what
+  // plain `vitest` runs. Treating a variant as authority over the default universe would drop every
+  // `*.spec.ts` in a repository whose only config file happens to be an e2e one - narrowing on
+  // evidence that does not bear on the question.
+  //
+  // And the default config must have been COMPLETELY understood. Wrong-wide costs compute;
+  // wrong-narrow can hide a test the runner executes, which is the shape of a false green. Every
+  // ambiguity resolves wide.
+  const defaults = configs.filter((c) => c.isDefault);
+  const replacedDefaults = defaults.length > 0 && defaults.every((c) => c.authoritative);
+
+  const patterns = new Set<string>(replacedDefaults ? [] : DEFAULT_TEST_PATTERNS);
+  for (const c of configs) for (const g of c.includes) patterns.add(g);
+
+  // Excludes, ignores and roots are NARROWING, so they are honoured only from configs whose
+  // declaration was fully understood - and only when the declaration is actually in force.
+  // Narrowing metadata is honoured ONLY from an authoritative DEFAULT config. A variant roots or
+  // ignore list governs that variant own job, and applying it repository-wide would over-narrow.
+  const authoritative = replacedDefaults ? defaults : [];
+  return {
+    configs,
+    patterns: Array.from(patterns),
+    replacedDefaults,
+    excludeGlobs: Array.from(new Set(authoritative.flatMap((c) => c.excludeGlobs))),
+    ignoreRegexSources: Array.from(new Set(authoritative.flatMap((c) => c.ignoreRegexSources))),
+    roots: Array.from(new Set(authoritative.flatMap((c) => c.roots))),
+  };
 }
 
 // --- glob matching (shared by analyzer / graph / impact so "is this a test?" has ONE answer) ---
@@ -286,6 +359,11 @@ export interface TestFileMatcherOptions {
    * settled the question; only files pulled in by a framework's DEFAULT includes are subject to
    * that framework's default excludes (Phase 01, 2026-08-26). */
   authoritativePatterns?: readonly string[];
+  /** Jest `testPathIgnorePatterns`, compiled. A match disqualifies the file outright - the runner
+   * would not execute it, so DiffCI must not model it as executable (defect 17). */
+  ignoreRegexes?: readonly RegExp[];
+  /** Jest `roots`. A file outside every root is outside the runner universe. Empty = no limit. */
+  roots?: readonly string[];
 }
 
 function compile(patterns: readonly string[]): RegExp[] {
@@ -301,7 +379,14 @@ export function createTestFileMatcher(
   const regexes = compile(patterns);
   const excludes = compile(options.excludePatterns ?? []);
   const authoritative = compile(options.authoritativePatterns ?? []);
+  const ignoreRegexes = options.ignoreRegexes ?? [];
+  const roots = options.roots ?? [];
   const fn = ((path: string) => {
+    // Runner-universe vetoes come FIRST, ahead of even the authoritative patterns. A file the
+    // configured runner will not execute is not a test DiffCI can select, however strongly
+    // DiffCI conventions or the repository own include globs say it looks like one.
+    if (!isUnderRoots(path, roots)) return false;
+    if (isIgnoredPath(path, ignoreRegexes)) return false;
     if (authoritative.some((r) => r.test(path))) return true;
     if (excludes.some((r) => r.test(path))) return false;
     return regexes.some((r) => r.test(path));
@@ -316,11 +401,15 @@ export function testFileMatcherForProfile(profile: {
   testPatterns?: readonly string[];
   testExcludePatterns?: readonly string[];
   testAuthoritativePatterns?: readonly string[];
+  testIgnoreRegexSources?: readonly string[];
+  testRoots?: readonly string[];
 }): TestFileMatcher {
   if (!profile.testPatterns) return DEFAULT_TEST_FILE_MATCHER;
   return createTestFileMatcher(profile.testPatterns, {
     excludePatterns: profile.testExcludePatterns,
     authoritativePatterns: profile.testAuthoritativePatterns,
+    ignoreRegexes: compileIgnoreRegexes(profile.testIgnoreRegexSources ?? []),
+    roots: profile.testRoots,
   });
 }
 

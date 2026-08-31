@@ -116,3 +116,15 @@ nothing. Nothing in the current design prevents that.
 Not fixed at the time of recording: the analyser is frozen against the MECHANISM_PROOF_01 result, and
 changing discovery now would mean two results measured by two analysers. It is the first item for the
 next apparatus change.
+
+**FIXED 2026-08-31**, after `89fc236` was frozen and never by amending it. `src/repo/runner-universe.ts`
+now reads the runner declared universe: `<rootDir>/` is stripped, an authoritative DEFAULT config
+REPLACES the conventional globs instead of being unioned with them, and `testPathIgnorePatterns` and
+`roots` are honoured. Verified against the real ts-jest tree at `b1a97ac4`: **20, not 40**, with zero
+files outside `src/`.
+
+The narrowing is gated on COMPLETE understanding of the config, because wrong-narrow can hide a test the
+runner executes and that is the shape of a false green - a spread, an unresolved identifier, an
+interpolated template or a call all leave the wide universe in force. A NAMED variant config
+(`vitest.e2e.config.ts`) never speaks for what the bare runner executes. Regression suite:
+`tests/repo/runner-universe.test.ts`.

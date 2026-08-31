@@ -11,6 +11,7 @@ import type {
 } from "./types.js";
 
 import { createTestFileMatcher, discoverTestRunnerConfigs, matchesGlob, type TestFileMatcherOptions } from "./test-discovery.js";
+import { compileIgnoreRegexes, isIgnoredPath, isUnderRoots } from "./runner-universe.js";
 import { defaultExcludesFor, defaultIncludesFor, detectDeclaredFrameworks } from "./test-framework.js";
 import { readRepositoryConfig } from "./repo-config.js";
 
@@ -428,15 +429,31 @@ export function analyzeRepository(
   // repository declared explicitly. A framework's own defaults are added on top, and are the only
   // patterns its default excludes are allowed to veto.
   const authoritativePatterns = options.testPatterns ?? testDiscovery.patterns;
+  // DEFECT 17. When discovery replaced the defaults, the repository has told us exactly which files
+  // its runner executes - and adding the framework DEFAULT includes back on top here would re-widen
+  // the universe that was just narrowed, making the whole fix a no-op. That is precisely how
+  // ts-jest reported 40 executable tests when jest runs 20.
   const testPatterns =
     options.testPatterns ??
-    Array.from(new Set([...authoritativePatterns, ...defaultIncludesFor(declaredFrameworks.frameworks)]));
-  const testExcludePatterns = options.testPatterns ? [] : defaultExcludesFor(declaredFrameworks.frameworks);
+    (testDiscovery.replacedDefaults
+      ? [...authoritativePatterns]
+      : Array.from(new Set([...authoritativePatterns, ...defaultIncludesFor(declaredFrameworks.frameworks)])));
+  const testExcludePatterns = options.testPatterns
+    ? []
+    : [...defaultExcludesFor(declaredFrameworks.frameworks), ...testDiscovery.excludeGlobs];
   const { locations: tests, filePaths: testFilePaths } = discoverTests(
     repoPath,
     testPatterns,
     excludeDirs,
-    { excludePatterns: testExcludePatterns, authoritativePatterns },
+    {
+      excludePatterns: testExcludePatterns,
+      // When the repository own declaration is in force it is the whole story, so nothing may
+      // override the excludes it also declared. Otherwise DiffCI conventional patterns still win,
+      // as they have since Phase 01.
+      authoritativePatterns: testDiscovery.replacedDefaults ? [] : authoritativePatterns,
+      ignoreRegexes: compileIgnoreRegexes(testDiscovery.ignoreRegexSources),
+      roots: testDiscovery.roots,
+    },
   );
   const workflows = discoverWorkflows(repoPath);
   const configFiles = discoverConfigFiles(repoPath, excludeDirs);
@@ -481,7 +498,9 @@ export function analyzeRepository(
     testFilePaths,
     testPatterns: [...testPatterns],
     testExcludePatterns: [...testExcludePatterns],
-    testAuthoritativePatterns: [...authoritativePatterns],
+    testAuthoritativePatterns: testDiscovery.replacedDefaults ? [] : [...authoritativePatterns],
+    testIgnoreRegexSources: [...testDiscovery.ignoreRegexSources],
+    testRoots: [...testDiscovery.roots],
     testRunnerConfigs: testDiscovery.configs,
     diffciConfig,
     testUniverse: {
