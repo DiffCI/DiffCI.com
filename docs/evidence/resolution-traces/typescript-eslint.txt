@@ -1,0 +1,76 @@
+
+  IMPORT RESOLUTION TRACE
+  repo:              C:\Users\SWATIK~1\AppData\Local\Temp\claude\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\ffab3b6b-7eea-4772-827d-31dedbf8a62d\scratchpad\diag-tseslint
+  graph nodes        310
+  graph edges        1
+  package.json found 21  (workspace package names available to a resolver)
+  sample packages:
+     @typescript-eslint/typescript-eslint       .  main=undefined
+     dummypkg                                   tools/dummypkg  main="./index.js"
+     @typescript-eslint/website-eslint          packages/website-eslint  main=undefined
+     website                                    packages/website  main=undefined
+     @typescript-eslint/visitor-keys            packages/visitor-keys  main=undefined
+     @typescript-eslint/utils                   packages/utils  main=undefined
+
+  test nodes with imports but NO production edge: 308
+
+  ============================================================================
+  TEST  packages/ast-spec/tests/fixtures.test.ts
+  graph dependenciesOf() -> []
+
+    specifier            glob
+      classification     external dependency
+
+    specifier            node:fs/promises
+      classification     node-builtin
+
+    specifier            node:path
+      classification     node-builtin
+
+    specifier            node:url
+      classification     node-builtin
+
+    specifier            vitest/runtime
+      classification     external dependency
+
+    specifier            ./util/parsers/parser-types.js
+      classification     relative
+      expected target    packages/ast-spec/tests/util/parsers/parser-types.ts
+      target in graph    NO
+      edge test->target  NO  <- resolution gap
+
+    specifier            ./util/getErrorLabel.js
+      classification     relative
+      expected target    packages/ast-spec/tests/util/getErrorLabel.ts
+      target in graph    NO
+      edge test->target  NO  <- resolution gap
+
+    specifier            ./util/parsers/babel.js
+      classification     relative
+      expected target    packages/ast-spec/tests/util/parsers/babel.ts
+      target in graph    NO
+      edge test->target  NO  <- resolution gap
+
+  ============================================================================
+  TEST  packages/eslint-plugin-internal/tests/rules/debug-namespace.test.ts
+  graph dependenciesOf() -> []
+
+    specifier            @typescript-eslint/rule-tester
+      classification     WORKSPACE PACKAGE (declared in this repository)
+      package dir        packages/rule-tester
+      main               undefined
+      module             undefined
+      exports            {".":{"types":"./dist/index.d.ts","default":"./dist/index.js"},"./package.json":"./package.json"}
+      source fields      {"publishConfig":{"access":"public"}}
+      expected target    packages/rule-tester/src/index.ts
+      target in graph    NO
+      edge test->target  NO  <- resolution gap
+
+    specifier            ../../src/rules/debug-namespace.js
+      classification     relative
+      expected target    packages/eslint-plugin-internal/src/rules/debug-namespace.ts
+      target in graph    NO
+      edge test->target  NO  <- resolution gap
+
+  ============================================================================
+
