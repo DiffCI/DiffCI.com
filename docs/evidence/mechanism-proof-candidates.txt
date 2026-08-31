@@ -1,0 +1,95 @@
+
+  SOURCE-CANDIDATE SELECTION - first match in history order wins
+
+  scanning 300 commits from HEAD
+
+  CANDIDATE 1 of 5 - selected after examining 29 commit(s)
+
+    head     06c79d4cebfa785749b2f96ef2dbeffc12798c47
+    base     f10746008e512203ad7d8c581e2c58cc7dcd43c8
+    subject  fix: address TypeScript 7 review feedback
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/legacy/compiler/ts-compiler.ts
+      test files also changed       0  (not test-only)
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           excluded: e2e, examples, presets, scripts, website
+      total files in diff           3
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
+  CANDIDATE 2 of 5 - selected after examining 97 commit(s)
+
+    head     39418187515f11b6584d35a4e3ddf50231f74936
+    base     efb3c2f84d3583db0787982a18425d99edadfe25
+    subject  fix: preserve Bundler on the CJS path under TypeScript >= 6
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/legacy/compiler/ts-compiler.ts
+      test files also changed       1  (not test-only)
+        src/legacy/compiler/ts-compiler.spec.ts
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           excluded: e2e, examples, presets, scripts, website
+      total files in diff           2
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
+  CANDIDATE 3 of 5 - selected after examining 106 commit(s)
+
+    head     a82a2b32c4987a5249fd5284283117dd2fa3be47
+    base     6edad687cb69ea62e567dc68b0f3ed67977937e7
+    subject  fix: rebuild Program when consecutive compiles need different module kinds
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/legacy/compiler/ts-compiler.ts
+      test files also changed       1  (not test-only)
+        src/legacy/compiler/ts-compiler.spec.ts
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           excluded: e2e, examples, presets, scripts, website
+      total files in diff           2
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
+  CANDIDATE 4 of 5 - selected after examining 112 commit(s)
+
+    head     8a8fd2fb8446655bba18367db9306a1089490e62
+    base     96d025dd912ea2bceb18b67d2d509ada7a756d9d
+    subject  fix(transformer): use a consistent comparator in hoist-jest sortStatements
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/transformers/hoist-jest.ts
+      test files also changed       2  (not test-only)
+        src/transformers/__snapshots__/hoist-jest.spec.ts.snap
+        src/transformers/hoist-jest.spec.ts
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           excluded: e2e, examples, presets, scripts, website
+      total files in diff           3
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
+  CANDIDATE 5 of 5 - selected after examining 113 commit(s)
+
+    head     96d025dd912ea2bceb18b67d2d509ada7a756d9d
+    base     61a41b5c95c72ef417f8f6b668097a60082e7118
+    subject  fix(transformer): transpile `mjs` files from `node_modules` for CJS mode
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/legacy/ts-jest-transformer.ts
+      test files also changed       1  (not test-only)
+        src/legacy/ts-jest-transformer.spec.ts
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           excluded: e2e, examples, presets, scripts, website
+      total files in diff           3
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+

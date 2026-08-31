@@ -84,6 +84,10 @@ function main(): void {
   // A1: paths the comparator does not execute, comma-separated. Empty means the comparator covers
   // the whole repository, which was true of Prettier and is why this did not exist before.
   const excludedScopes = (flagOf("exclude-scope") ?? "").split(",").map((s2) => s2.trim()).filter(Boolean);
+  // MECHANISM_PROOF_01 needs five candidates rather than one. The RULE is unchanged - still the first
+  // matches in history order - only how many of them are taken. One successful mutant establishes
+  // existence but is fragile; a single lucky selection is not a mechanism.
+  const count = Number(flagOf("count") ?? 1);
 
   const git = (...a: string[]): string => execFileSync("git", ["-C", repo, ...a], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   const shas = git("rev-list", `--max-count=${limit}`, "HEAD").trim().split("\n");
@@ -92,6 +96,7 @@ function main(): void {
   console.log(`  scanning ${shas.length} commits from HEAD\n`);
 
   let examined = 0;
+  let drawn = 0;
   for (const sha of shas) {
     const parents = git("rev-list", "--parents", "-n", "1", sha).trim().split(/\s+/).slice(1);
     if (parents.length !== 1) continue; // merges have no single base
@@ -118,7 +123,8 @@ function main(): void {
 
     if (rejections.length > 0) continue;
 
-    console.log(`  SELECTED after examining ${examined} commit(s)\n`);
+    drawn += 1;
+    console.log(`  CANDIDATE ${drawn} of ${count} - selected after examining ${examined} commit(s)\n`);
     console.log(`    head     ${sha}`);
     console.log(`    base     ${base}`);
     console.log(`    subject  ${subject}`);
@@ -134,10 +140,12 @@ function main(): void {
     );
     console.log(`      total files in diff           ${files.length}`);
     console.log(`\n  Recorded BEFORE any analyser result for this candidate was produced.\n`);
-    return;
+    if (drawn >= count) return;
   }
 
-  console.log(`  NO CANDIDATE matched the filter in ${examined} examined commit(s).\n`);
+  console.log(
+    `  ${drawn === 0 ? "NO CANDIDATE" : `ONLY ${drawn} of ${count} candidates`} matched the filter in ${examined} examined commit(s).\n`,
+  );
 }
 
 main();
