@@ -12,6 +12,7 @@
  *   - is not dependency automation
  *   - is not test-only
  *   - small: 1-5 implementation files changed
+ *   - A1 (2026-08-30): at least one implementation file inside the comparator's execution scope
  *
  * Usage: npm run select:candidate -- --repo <clone> [--limit 400]
  */
@@ -57,6 +58,18 @@ function isGlobalRisk(path: string): boolean {
   return GLOBAL_RISK.some((re) => re.test(path));
 }
 
+/**
+ * Paths the full-suite comparator does not execute (COMPUTE_PROOF_V1 amendment A1).
+ *
+ * A change confined to a package the comparator excludes has ZERO optimisation opportunity by
+ * construction: if no test for that package runs, there is no test compute for DiffCI to avoid, and
+ * the experiment measures nothing about DiffCI. Passed in per repository rather than hard-coded,
+ * because the exclusion is a property of that repository's own test command.
+ */
+function isOutsideComparatorScope(path: string, excludedScopes: readonly string[]): boolean {
+  return excludedScopes.some((scope) => path === scope || path.startsWith(`${scope}/`));
+}
+
 const DEPENDENCY_AUTOMATION = /^(update dependency|update .* to v|lock file maintenance|chore\(deps\)|build\(deps\))/i;
 
 function main(): void {
@@ -68,6 +81,9 @@ function main(): void {
   const repo = resolve(flagOf("repo") ?? "");
   if (!flagOf("repo")) throw new Error("--repo <clone> is required");
   const limit = Number(flagOf("limit") ?? 400);
+  // A1: paths the comparator does not execute, comma-separated. Empty means the comparator covers
+  // the whole repository, which was true of Prettier and is why this did not exist before.
+  const excludedScopes = (flagOf("exclude-scope") ?? "").split(",").map((s2) => s2.trim()).filter(Boolean);
 
   const git = (...a: string[]): string => execFileSync("git", ["-C", repo, ...a], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   const shas = git("rev-list", `--max-count=${limit}`, "HEAD").trim().split("\n");
@@ -86,6 +102,7 @@ function main(): void {
     examined += 1;
 
     const implementation = files.filter(isImplementationSource);
+    const outOfScope = implementation.filter((f) => isOutsideComparatorScope(f, excludedScopes));
     const risky = files.filter(isGlobalRisk);
     const tests = files.filter(isTestPath);
 
@@ -95,6 +112,9 @@ function main(): void {
     if (risky.length > 0) rejections.push(`global-risk file(s): ${risky.slice(0, 4).join(", ")}`);
     if (DEPENDENCY_AUTOMATION.test(subject)) rejections.push("dependency automation");
     if (tests.length === files.length) rejections.push("test-only change");
+    if (implementation.length > 0 && outOfScope.length === implementation.length) {
+      rejections.push(`A1: every implementation file is outside the comparator's scope (${outOfScope.slice(0, 3).join(", ")})`);
+    }
 
     if (rejections.length > 0) continue;
 
@@ -109,6 +129,9 @@ function main(): void {
     for (const f of tests.slice(0, 6)) console.log(`        ${f}`);
     console.log(`      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)`);
     console.log(`      dependency automation         no`);
+    console.log(
+      `      A1 comparator scope           ${excludedScopes.length === 0 ? "whole repository" : `excluded: ${excludedScopes.join(", ")}`}`,
+    );
     console.log(`      total files in diff           ${files.length}`);
     console.log(`\n  Recorded BEFORE any analyser result for this candidate was produced.\n`);
     return;
