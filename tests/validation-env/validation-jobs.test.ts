@@ -73,7 +73,14 @@ describe("the validation job allowlist", () => {
       if (job.mode === "density") { assert.equal(job.repository, undefined); assert.equal(job.pinnedHeadSha, undefined); continue; }
       assert.ok(isPinnedSha(job.pinnedHeadSha!), `${id} must pin a full 40-hex sha`);
       assert.ok(isRepositorySlug(job.repository!), `${id} must name owner/name`);
-      assert.ok((job.commits ?? 0) > 0 || job.mode === "qualify", `${id} must observe at least one commit`);
+      // `observe-pairs` carries no commit COUNT because its candidates are a sealed list in the source
+      // tarball rather than N commits taken from `git log`. That is a stronger guarantee than a count,
+      // not a weaker one: a count would re-derive the candidates at run time and could drift from the
+      // draw the pre-registration froze.
+      assert.ok(
+        (job.commits ?? 0) > 0 || job.mode === "qualify" || job.mode === "observe-pairs",
+        `${id} must observe at least one commit`,
+      );
       assert.ok(job.maxRunMs > 0, `${id} must bound its own runtime`);
     }
   });

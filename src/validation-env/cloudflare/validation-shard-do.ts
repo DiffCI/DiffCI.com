@@ -49,6 +49,7 @@ import {
   qualifyArgv,
   surveyArgv,
   densityArgv,
+  observePairsArgv,
   DENSITY_OUT,
   SURVEY_OUT,
   type ValidationJob,
@@ -78,6 +79,7 @@ export type ValidationStep =
   | "calibrating"
   | "surveying"
   | "measuringDensity"
+  | "observingPairs"
   | "locating"
   | "mutating"
   | "collecting"
@@ -126,7 +128,7 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
-  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string };
   /** Set once evidence preservation has run, so a failure inside it cannot loop. */
   evidencePreserved?: boolean;
   /** The step that actually failed, kept because `step` becomes "preserving" then "failed". */
@@ -385,6 +387,14 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
     }
 
     record.timings.prepareMs = deps.now() - t0;
+    // observe-pairs still needs the pinned clone - its candidates are ancestors of the pinned head -
+    // but reads WHICH commits to observe from the sealed list rather than from git log.
+    if (job.mode === "observe-pairs") {
+      record.timings.prepareMs = deps.now() - t0;
+      record.step = "observingPairs";
+      return { record, nextAlarmDelayMs: 0 };
+    }
+
     record.step = job.mode === "qualify" ? "qualifying" : "observing";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {
@@ -397,7 +407,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density",
+  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -509,6 +519,15 @@ async function surveyStep(record: ValidationRecord, deps: ValidationStepDeps): P
   const t0 = record.processStartedAt ?? deps.now();
   return runHarnessPass(record, deps, surveyArgv(), "survey", (r) => {
     r.timings.surveyMs = deps.now() - t0;
+    r.step = "collecting";
+    return { record: r, nextAlarmDelayMs: 0 };
+  });
+}
+
+async function observePairsStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const t0 = record.processStartedAt ?? deps.now();
+  return runHarnessPass(record, deps, observePairsArgv(), "pairs", (r) => {
+    r.timings.observeMs = deps.now() - t0;
     r.step = "collecting";
     return { record: r, nextAlarmDelayMs: 0 };
   });
@@ -641,7 +660,7 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, bucket } = deps;
   const t0 = deps.now();
   try {
-    if (deps.job.observeOnly) return collectObservation(record, deps, t0);
+    if (deps.job.observeOnly || deps.job.mode === "observe-pairs") return collectObservation(record, deps, t0);
     if (deps.job.mode === "calibrate") return collectCalibration(record, deps, t0);
     if (deps.job.mode === "survey") return collectSurvey(record, deps, t0);
     if (deps.job.mode === "density") return collectDensity(record, deps, t0);
@@ -1082,6 +1101,8 @@ export async function stepValidation(record: ValidationRecord, deps: ValidationS
       return surveyStep(record, deps);
     case "measuringDensity":
       return densityStep(record, deps);
+    case "observingPairs":
+      return observePairsStep(record, deps);
     case "locating":
       return locate(record, deps);
     case "mutating":

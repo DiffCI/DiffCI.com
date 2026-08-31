@@ -69,7 +69,7 @@ export interface ValidationJob {
    * qualify before mutating it means anything, because a mutation pass against a suite that was never
    * green attributes failures to the mutation that were already there.
    */
-  mode: "reproduce" | "qualify" | "calibrate" | "survey" | "density";
+  mode: "reproduce" | "qualify" | "calibrate" | "survey" | "density" | "observe-pairs";
   /** The frozen bundle this job reproduces, when it is a reproduction rather than new evidence. */
   reproduces?: string;
   /** "owner/name" - cloned from GitHub over https, no credentials. Unused by `calibrate`. */
@@ -939,6 +939,33 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 6 * 60 * 60_000,
   },
 
+  /**
+   * MECHANISM_PROOF_01 observation (2026-08-30). See docs/mechanism-proof-01-preregistration.md.
+   *
+   * The claim under test is narrow and different from COMPUTE_PROOF_V1's: does there EXIST a workload
+   * where DiffCI safely saves compute. kulshekhar/ts-jest was selected mechanically at `6590e0c` -
+   * 85.0% mapping density, 40 test files, 77 test-to-production edges, already green twice in this
+   * environment at 260.22 CPU-s.
+   *
+   * Pinned at `b1a97ac4`, the exact tree those baselines were established on, so qualification and
+   * observation describe one tree. The five candidate pairs are ancestors of it and come from the
+   * source tarball rather than from `git log`.
+   *
+   * OBSERVATION ONLY. No mutation, no economics arm, no suite execution. If it yields zero
+   * SELECTIVE-nonempty the sealed rule ends the experiment there - no threshold change, no other
+   * commit, no move to another repository.
+   */
+  "tsjest-mechanism-observation": {
+    id: "tsjest-mechanism-observation",
+    description: "MECHANISM_PROOF_01: observe the five sealed ts-jest candidates. No mutation.",
+    mode: "observe-pairs",
+    repository: "kulshekhar/ts-jest",
+    pinnedHeadSha: "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    // A clone and five analyses. Nothing installs dependencies or executes a test suite.
+    maxRunMs: 2 * 60 * 60_000,
+  },
+
   "immer-economics": {
     id: "immer-economics",
     description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",
@@ -1061,6 +1088,20 @@ export const DENSITY_OUT = `${WORKSPACE}/density`;
  * Same frozen frame file as the addressability survey, from inside the source tarball, so both
  * surveys describe the same forty repositories rather than two drifting lists.
  */
+/** The sealed MECHANISM_PROOF_01 candidate list, shipped inside the source tarball. */
+export const PAIRS_PATH = "docs/evidence/mechanism-proof-pairs.json";
+
+/**
+ * Named-pair observation argv.
+ *
+ * The pair list is a path INTO THE SOURCE TARBALL, so the five candidates observed are the five
+ * sealed at `07bc3d1` and cannot be re-derived from git log at run time. A candidate list that could
+ * drift would make the pre-registration decorative.
+ */
+export function observePairsArgv(): string[] {
+  return ["run", "observe:pairs", "--", "--repo", PINNED_CLONE, "--pairs", PAIRS_PATH, "--out", OBSERVED_CORPUS_PATH, "--reports", `${WORKSPACE}/pair-reports`];
+}
+
 export function densityArgv(): string[] {
   return ["run", "survey:density", "--", "--frame", SURVEY_FRAME_PATH, "--out", DENSITY_OUT, "--work", `${DENSITY_OUT}/clones`];
 }
