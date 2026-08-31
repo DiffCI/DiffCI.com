@@ -153,3 +153,40 @@ produces the refusal.
 
 Generation C is `sha512-eQGRE3ep…`, and `tests/validation-env/apparatus-qualification-gen-c.test.ts`
 asserts it differs from generation B.
+
+## Defect 19 — a declared safety control that never executed
+
+Found 2026-08-31, immediately after `survey-continuation-01` completed.
+
+`requiresApparatus: "gen-c"` refuses to run a job unless the container is the qualified apparatus. The
+check was placed at the **tail of `prepare()`** — but `calibrate`, `survey` and `density` all return
+from `prepare()` *before* that point. For those three modes the control **silently never ran**.
+
+`survey-continuation-01` declared `requiresApparatus: "gen-c"` and completed with the guard never
+executing. I had stated in the same session that the guard would run for it. It did not.
+
+**Actual exposure was small**, and only by luck of a second, older control: `expectedAgentIntegrity` is
+enforced during bootstrap for every mode, so the agent digest — the thing defect 18 threatened — *was*
+verified as generation C. What went unchecked was the image and node version, and E1 screening does not
+use the analyser's selection logic in any case.
+
+**The class of failure is the serious part.** The code was correct and unreachable. A declared control
+that does not execute is worse than no control, because it is reported as protection — by the job
+definition, by the documentation, and by me.
+
+**Fixed:** the guard moved into `bootstrap()`, immediately after `record.environment` is populated,
+which every mode passes through. `tests/validation-env/apparatus-identity.test.ts` now asserts
+*structurally* that the guard's position precedes each early-return branch, because the defect was
+structural rather than logical — no test of the guard's own behaviour could have caught it.
+
+## Defect 20 — an E3 screen that excluded on a bogus match
+
+Found in the same pass, before it affected anything.
+
+The first E3 implementation searched evidence files for the repository name and excluded on any hit.
+`testing-library/jest-dom` was flagged EXCLUDED — because the hit was **my own continuation frame file**,
+which lists the package name. A frame listing is not a DiffCI measurement.
+
+Left uncorrected it would have dropped an eligible repository from the population for a reason with no
+substance, silently shrinking the draw. E3 now matches only artefacts that carry measurement structure
+and explicitly ignores frame and population files. Result: 10 of 10, not 9 of 10.

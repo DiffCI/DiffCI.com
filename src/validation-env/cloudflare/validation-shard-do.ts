@@ -313,6 +313,26 @@ async function bootstrap(record: ValidationRecord, deps: ValidationStepDeps): Pr
       agentIntegrity,
     };
 
+    // A sealed experiment must run on the QUALIFIED apparatus, and is refused otherwise.
+    //
+    // Checked HERE, in bootstrap, and not at the tail of prepare() where it first lived: calibrate,
+    // survey and density all return from prepare() before reaching that point, so the control silently
+    // never ran for them. A declared safety check that does not execute is worse than no check, because
+    // it is reported as protection. Every mode passes through this line.
+    //
+    // It is deliberately redundant with the agent-integrity check above, which catches the wrong
+    // tarball; this also catches the wrong image or node version, and names every mismatch at once.
+    if (job.requiresApparatus === "gen-c") {
+      const problems = apparatusMismatches({
+        agentIntegrity: record.environment.agentIntegrity,
+        image: record.environment.image,
+        node: record.environment.node,
+      });
+      if (problems.length > 0) {
+        return fail(record, "apparatus-mismatch", `this job requires the qualified generation-C apparatus: ${problems.join("; ")}`);
+      }
+    }
+
     const npmCi = await sandbox.exec(`cd ${DIFFCI_DIR} && npm ci --no-audit --no-fund`, { timeout: 15 * 60_000 });
     if (!npmCi.success) return fail(record, "npm-ci-failed", tail(npmCi));
 
@@ -401,20 +421,6 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
 
     // Universe sanity runs BEFORE the suite qualification: if DiffCI models the wrong set of
     // executable tests there is no point measuring how reliably that suite goes green.
-    // A sealed experiment must run on the QUALIFIED apparatus, and is refused otherwise. Pinning the
-    // expected digest on the job catches the wrong tarball; this catches the wrong environment too,
-    // and names every mismatch at once rather than one per run.
-    if (job.requiresApparatus === "gen-c") {
-      const problems = apparatusMismatches({
-        agentIntegrity: record.environment?.agentIntegrity,
-        image: record.environment?.image,
-        node: record.environment?.node,
-      });
-      if (problems.length > 0) {
-        return fail(record, "apparatus-mismatch", `this job requires the qualified generation-C apparatus: ${problems.join("; ")}`);
-      }
-    }
-
     record.step = job.universe ? "verifyingUniverse" : job.mode === "qualify" ? "qualifying" : "observing";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {

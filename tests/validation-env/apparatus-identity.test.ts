@@ -43,3 +43,23 @@ test("the committed identity file agrees with the code", () => {
   assert.equal(file.environment.image, GENERATION_C.image);
   assert.equal(file.supersededGeneration.agentIntegrity, GENERATION_B_AGENT_INTEGRITY);
 });
+
+test("the apparatus guard sits where EVERY mode reaches it", () => {
+  // Defect 19. The guard first lived at the tail of prepare(), which calibrate, survey and density all
+  // return from before reaching - so `requiresApparatus` silently never ran for them, and
+  // survey-continuation-01 completed with the control reported as protection but never executed.
+  // A structural test, because the failure was structural: the code was correct and unreachable.
+  const src = readFileSync("src/validation-env/cloudflare/validation-shard-do.ts", "utf8");
+  const guardAt = src.indexOf("job.requiresApparatus === \"gen-c\"");
+  assert.ok(guardAt > 0, "the guard must exist");
+
+  // Every early return that skips the rest of prepare() must come AFTER the guard.
+  for (const mode of ["calibrate", "survey", "density"]) {
+    const branchAt = src.indexOf(`job.mode === "${mode}"`);
+    assert.ok(branchAt > 0, `the ${mode} branch must exist`);
+    assert.ok(
+      guardAt < branchAt,
+      `the apparatus guard must precede the ${mode} early-return, or the control never runs for it`,
+    );
+  }
+});
