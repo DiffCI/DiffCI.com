@@ -351,5 +351,30 @@
     ],
     "testCommandRationale": "Survey-derived. The adjudicator identified \"test: vitest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: The documented script is bare `vitest`, which is WATCH mode. `run` is the harness's uniform non-interactive invocation, applied identically to hono, vue, axios and immer - not a cross-env-specific modification.",
     "surveyRank": 34
+  },
+  {
+    "source": "typescript-eslint/typescript-eslint",
+    "stresses": "COMPUTE_PROOF_V1 candidate, selected mechanically at 1b84b07 from density-02: highest mapping density among qualifiers (99.7%, 308 tests, 470 test-to-production edges). Solution-style TypeScript monorepo whose graph was unusable before the C1 fix at 645c0eb (310 nodes of which 2 were non-test) and is 1389 nodes / 3848 edges after it.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "unknown",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/nx/bin/nx.js",
+    "testArgs": [
+      "run-many",
+      "-t",
+      "test",
+      "--exclude",
+      "integration-tests",
+      "website",
+      "website-eslint"
+    ],
+    "testCommandRationale": "The repository's OWN documented test script, verbatim. A direct `vitest run` against the root config was considered and REJECTED as not semantically equivalent: measured from the repository, nx excludes integration-tests while root vitest includes it, nx includes types while root vitest excludes it, and root vitest adds tools/ which is not a packages project - 15 effective projects against 16, differing in both directions. Substituting would redefine the full suite for convenience, and the comparator's cost is the denominator of the entire economic claim. Inventing a --project exclusion list to reconcile them is equally disallowed. nx is an orchestrator, which is the shape that produced the false green in defect #5; classifyExecution() and CONTRADICTORY_EXECUTION_EVIDENCE are frozen and decide this on their own terms, with no nx-specific handling added.",
+    "lockfile": "pnpm-lock.yaml committed; packageManager pnpm@12.0.0-rc.7, a release candidate corepack must fetch. Recorded as a reproducibility note, not corrected."
   }
 ]

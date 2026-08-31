@@ -889,6 +889,31 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 4 * 60 * 60_000,
   },
 
+  /**
+   * COMPUTE_PROOF_V1 repository gate (2026-08-30). See docs/compute-proof-v1-preregistration.md.
+   *
+   * typescript-eslint was selected mechanically at `1b84b07` - highest mapping density among the two
+   * qualifiers. `twoGreenBaselines` is a REQUIRED criterion and is not yet established: the
+   * addressability survey classified this repository MONOREPO_SCOPE_UNSUPPORTED on a structural
+   * heuristic, and its documented test command is an nx orchestrator.
+   *
+   * If it does not produce two green baselines it FAILS eligibility and the sealed rule advances to
+   * jestjs/jest. That is a mechanical consequence, not a later choice, and no nx-specific handling is
+   * added to help it pass.
+   *
+   * Pinned at the candidate head so qualification and any subsequent observation describe one tree.
+   */
+  "tseslint-qualification": {
+    id: "tseslint-qualification",
+    description: "COMPUTE_PROOF_V1 gate: qualify typescript-eslint against its own documented nx test command.",
+    mode: "qualify",
+    repository: "typescript-eslint/typescript-eslint",
+    pinnedHeadSha: "a2fccae39c7cb1e516a29b1c746b7767bffa03e2",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    // A pnpm install across 19 packages plus two full nx runs over 15 projects.
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
   "immer-economics": {
     id: "immer-economics",
     description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",
