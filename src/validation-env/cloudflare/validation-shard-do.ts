@@ -528,6 +528,17 @@ async function observePairsStep(record: ValidationRecord, deps: ValidationStepDe
   const t0 = record.processStartedAt ?? deps.now();
   return runHarnessPass(record, deps, observePairsArgv(), "pairs", (r) => {
     r.timings.observeMs = deps.now() - t0;
+
+    // `locate` exists to discover the scratch directory and clone that `dogfood` creates for itself.
+    // This mode creates neither: it analyses the pinned clone in place, at a path fixed before the run.
+    // So the paths are set directly rather than searched for - going through `locate` would look for a
+    // `diffci-dogfood-*` directory that does not exist and fail the run for the wrong reason.
+    if (deps.job.mutate) {
+      r.scratchDir = WORKSPACE;
+      r.clonePath = PINNED_CLONE;
+      r.step = "mutating";
+      return { record: r, nextAlarmDelayMs: 0 };
+    }
     r.step = "collecting";
     return { record: r, nextAlarmDelayMs: 0 };
   });
@@ -660,7 +671,10 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, bucket } = deps;
   const t0 = deps.now();
   try {
-    if (deps.job.observeOnly || deps.job.mode === "observe-pairs") return collectObservation(record, deps, t0);
+    // A pair job that mutates produces results.jsonl, a manifest and run directories like any other
+    // mutation run, so it takes the FULL collect path. Only the observation-only pair job collects just
+    // the corpus.
+    if (deps.job.observeOnly || (deps.job.mode === "observe-pairs" && !deps.job.mutate)) return collectObservation(record, deps, t0);
     if (deps.job.mode === "calibrate") return collectCalibration(record, deps, t0);
     if (deps.job.mode === "survey") return collectSurvey(record, deps, t0);
     if (deps.job.mode === "density") return collectDensity(record, deps, t0);

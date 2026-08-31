@@ -112,26 +112,65 @@ function main(): void {
     const direct = selected.filter((p) => changedTests.has(p));
     const throughImpact = selected.filter((p) => !changedTests.has(p));
 
+    // The STANDARD corpus shape first, so `dogfood-mutate` consumes this file unchanged. Emitting a
+    // bespoke shape and writing a second mutation runner for it is exactly the duplication that gave
+    // this project two glob matchers; the frozen mutation machinery is reused instead.
     const row = {
+      identity: {
+        repository: spec.repository,
+        stresses: `MECHANISM_PROOF_01 candidate ${pair.index}: ${pair.subject ?? ""} (sealed at ${spec.sealedAt})`,
+        baseSha: pair.base,
+        headSha: pair.head,
+        agentVersion: agent.version,
+        agentIntegrity: agent.integrity,
+        observedAt: new Date().toISOString(),
+      },
+      understanding: {
+        framework: result.framework ?? "unknown",
+        testUniverse: total ?? "unknown",
+        graphNodes: result.graph?.nodes ?? "unknown",
+        graphEdges: result.graph?.edges ?? "unknown",
+        graphConfidence: result.graph?.confidence ?? "unknown",
+        changedFiles: Array.isArray(result.changedFiles) ? result.changedFiles.length : "unknown",
+      },
+      decision: {
+        status: report.status ?? "unknown",
+        stage: report.stage ?? "unknown",
+        mode: report.status === "OBSERVED" ? (result.mode ?? "unknown") : "REFUSED",
+        reason: result.analysisStatus ?? report.reason ?? "unknown",
+        selected: selected.length,
+        total: total ?? "unknown",
+      },
+      counterfactual: {
+        baselineMode: result.pathBaseline?.mode ?? "unknown",
+        baselineSelected: result.pathBaseline?.selectedTestCount ?? "unknown",
+        netVersusBaseline:
+          typeof result.pathBaseline?.selectedTestCount === "number" ? result.pathBaseline.selectedTestCount - selected.length : "unknown",
+      },
+      integrity: report.nonInterference ?? {},
+      economics: {
+        analysisMs: report.timings?.totalMs ?? run.ms,
+        graphMs: result.graph?.durationMs ?? "unknown",
+        jointAnalysisCpuSeconds: run.cpuSeconds,
+      },
+
+      // MECHANISM_PROOF_01 additions, carried alongside rather than replacing anything above.
       index: pair.index,
       repository: spec.repository,
+      subject: pair.subject,
       base: pair.base,
       head: pair.head,
-      subject: pair.subject,
       implementationFiles: pair.implementationFiles ?? [],
       changedTestFiles: pair.changedTestFiles ?? [],
       classification,
-      stage: report.stage,
-      reason: report.reason ?? result.fallbackReasons,
       selectedCount: selected.length,
       totalTestCount: total,
       selectedDirectlyChanged: direct.length,
       selectedThroughProductionImpact: throughImpact.length,
       selectedTests: selected,
       comparatorSelected: result.pathBaseline?.selectedTestCount,
-      analysisCpuSeconds: run.cpuSeconds,
+      fallbackReasons: result.fallbackReasons,
       analysisWallMs: run.ms,
-      graph: result.graph,
       analysisStatus: result.analysisStatus,
       notes,
     };

@@ -1,0 +1,26 @@
+{
+  "runId": "tsjest-observe-01",
+  "jobId": "tsjest-mechanism-observation",
+  "mode": "observe-only",
+  "repository": "kulshekhar/ts-jest",
+  "pinnedHeadSha": "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+  "observedRows": null,
+  "selectableCandidates": null,
+  "environment": {
+    "image": "docker.io/cloudflare/sandbox:0.12.5",
+    "node": "v22.23.2",
+    "npm": "10.9.8",
+    "git": "git version 2.34.1",
+    "uname": "Linux cloudchamber 6.18.36-cloudflare-firecracker-2026.6.17 #1 SMP PREEMPT_DYNAMIC Mon Sep 27 00:00:00 UTC 2010 x86_64 x86_64 x86_64 GNU/Linux",
+    "osRelease": "PRETTY_NAME=\"Ubuntu 22.04.5 LTS\" NAME=\"Ubuntu\" VERSION_ID=\"22.04\"",
+    "agentIntegrity": "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g=="
+  },
+  "timings": {
+    "bootstrapMs": 11205,
+    "prepareMs": 24768,
+    "observeMs": 30564
+  },
+  "sourceTarballKey": "sources/diffci-bc70376801f5d200.tgz",
+  "sourceTarballSha256": "bc70376801f5d2008ef6c52eb8d03dbd45d0e36ad1a86e8c1553d6aae41bf502",
+  "agentTarballKey": "agents/observer-78a6ac9f99f160e0.tgz"
+}

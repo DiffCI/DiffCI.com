@@ -955,6 +955,37 @@ const JOBS: Record<string, ValidationJob> = {
    * SELECTIVE-nonempty the sealed rule ends the experiment there - no threshold change, no other
    * commit, no move to another repository.
    */
+  /**
+   * MECHANISM_PROOF_01 mutation. See docs/mechanism-proof-01-mutation-protocol.md, frozen before any
+   * mutation result existed.
+   *
+   * Same five sealed pairs, same pinned tree, same agent. It re-observes them because dogfood-mutate
+   * needs the per-commit agent reports - which carry the selected-test identities - and those were
+   * never collected out of `tsjest-observe-01`. The re-observation is checked against the frozen
+   * classifications at `ddc6151`; divergence is a defect, not something to absorb.
+   *
+   * The mutate block is copied verbatim from `survey-economics-ts-jest`, which established the two
+   * green baselines on this same tree at 260.22 CPU-s. Nothing about the execution recipe is tuned
+   * for this experiment.
+   */
+  "tsjest-mechanism-mutation": {
+    id: "tsjest-mechanism-mutation",
+    description: "MECHANISM_PROOF_01: mutate the five sealed ts-jest candidates under the frozen protocol.",
+    mode: "observe-pairs",
+    repository: "kulshekhar/ts-jest",
+    pinnedHeadSha: "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    mutate: {
+      install: ["npm","ci","--no-audit","--no-fund"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: ["-c=jest.config.ts"],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    // Five candidates, each needing a baseline plus three arms, at ~153s wall per full run.
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
   "tsjest-mechanism-observation": {
     id: "tsjest-mechanism-observation",
     description: "MECHANISM_PROOF_01: observe the five sealed ts-jest candidates. No mutation.",
@@ -1099,7 +1130,7 @@ export const PAIRS_PATH = "docs/evidence/mechanism-proof-pairs.json";
  * drift would make the pre-registration decorative.
  */
 export function observePairsArgv(): string[] {
-  return ["run", "observe:pairs", "--", "--repo", PINNED_CLONE, "--pairs", PAIRS_PATH, "--out", OBSERVED_CORPUS_PATH, "--reports", `${WORKSPACE}/pair-reports`];
+  return ["run", "observe:pairs", "--", "--repo", PINNED_CLONE, "--pairs", PAIRS_PATH, "--out", OBSERVED_CORPUS_PATH, "--reports", `${WORKSPACE}/reports`];
 }
 
 export function densityArgv(): string[] {
