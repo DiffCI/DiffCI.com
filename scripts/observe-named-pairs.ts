@@ -40,6 +40,13 @@ interface Pair {
 }
 
 interface PairsFile {
+  /** Which experiment these pairs belong to. Stamped on every row so an artefact cannot be misread as
+   * belonging to a different experiment - the determinism probe rows were labelled
+   * "MECHANISM_PROOF_01 candidate N" until this existed. */
+  experiment?: string;
+  /** Whether the MECHANISM_PROOF_01 stop rule applies to this list. It does not apply to apparatus
+   * probes, where an all-FULL result is not a stop condition and saying so is simply false. */
+  stopRuleApplies?: boolean;
   repository: string;
   pinnedTree: string;
   sealedAt: string;
@@ -118,7 +125,7 @@ function main(): void {
     const row = {
       identity: {
         repository: spec.repository,
-        stresses: `MECHANISM_PROOF_01 candidate ${pair.index}: ${pair.subject ?? ""} (sealed at ${spec.sealedAt})`,
+        stresses: `${spec.experiment ?? "MECHANISM_PROOF_01"} candidate ${pair.index}: ${pair.subject ?? ""} (sealed at ${spec.sealedAt})`,
         baseSha: pair.base,
         headSha: pair.head,
         agentVersion: agent.version,
@@ -237,10 +244,20 @@ function main(): void {
   console.log(`\n  CLASSIFICATION`);
   for (const [k, v] of Object.entries(counts)) console.log(`    ${k.padEnd(22)} ${v}`);
   console.log(`\n  SELECTIVE-nonempty: ${nonEmpty} of ${rows.length}`);
+  const stopRuleApplies = spec.stopRuleApplies ?? true;
   console.log(
-    nonEmpty === 0
-      ? `\n  STOP. The sealed rule ends MECHANISM_PROOF_01 here: no threshold change, no other commit,\n  no move to another repository, and NOTHING is mutated.\n`
-      : `\n  Observation complete. Mutation is a SEPARATE decision and is not taken here.\n`,
+    !stopRuleApplies
+      ? `
+  (No stop rule applies to this list - it is an apparatus probe, not MECHANISM_PROOF_01.)
+`
+      : nonEmpty === 0
+        ? `
+  STOP. The sealed rule ends MECHANISM_PROOF_01 here: no threshold change, no other commit,
+  no move to another repository, and NOTHING is mutated.
+`
+        : `
+  Observation complete. Mutation is a SEPARATE decision and is not taken here.
+`,
   );
   console.log(`  written to ${outPath}\n`);
 }

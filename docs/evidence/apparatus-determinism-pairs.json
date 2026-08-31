@@ -1,4 +1,6 @@
 {
+  "experiment": "APPARATUS_DETERMINISM_GEN_C",
+  "stopRuleApplies": false,
   "repository": "kulshekhar/ts-jest",
   "pinnedTree": "b1a97ac485711377e01e72bac8b115e41a1c17ba",
   "sealedAt": "apparatus qualification, generation C",

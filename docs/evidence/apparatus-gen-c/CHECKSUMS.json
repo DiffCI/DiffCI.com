@@ -1,9 +1,14 @@
 {
-  "run": "apparatus-qualify-genc-01",
-  "job": "apparatus-qualify-gen-c",
+  "runs": [
+    "apparatus-qualify-genc-01",
+    "apparatus-determinism-genc-02"
+  ],
   "agentGeneration": "C",
   "sha256": {
     "corpus-definition.json": "d5d27d063c23683f8112037cfc772d6ce02b32826b2022d513797a4a2a7f8206",
+    "determinism/corpus.jsonl": "3dd7ab213203a298c143ebbe0fa0b4d359a6a91451572dafc2ba407e72c60d88",
+    "determinism/environment.json": "f75538b138392baa6b36e2cea7af6b4d8a23a13e86216da31e9d903466367f88",
+    "determinism/manifest.json": "f6578700f17f2f39cecda3a992f836ad4cd400d583ad6c46cd3b80217402d33d",
     "environment.json": "6c094812c94a7ae35011104efc819ec69b62a58d82cdb23e2f8c87c5f84c5cf3",
     "manifest.json": "f6578700f17f2f39cecda3a992f836ad4cd400d583ad6c46cd3b80217402d33d",
     "qualify.log": "bbf96f823af3ea2529fc2350fbade0c00b9fddc6be9f1000e000042c40390963",

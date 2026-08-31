@@ -86,3 +86,58 @@ A savings figure derived by comparing CPU from two different runs would be insid
 **Does not establish** anything about DiffCI's selection quality, safety or economics. This is apparatus
 fitness — that the instrument reads correctly — not a result. The next independent draw is what tests
 the Candidate-5 thesis, and it has not been made.
+
+---
+
+## Observation determinism — the last chain link, added 2026-08-31
+
+The qualification above proved determinism at the **discovery** layer: repeated discovery returns
+identical paths. That does not imply the **observation** layer is deterministic — discovery could be
+stable while selection varied. They are different properties and only one had been checked.
+
+Run `apparatus-determinism-genc-02`, agent `sha512-eQGRE3ep…`:
+
+```
+1. b1a97ac48  FULL  selected 12/20  cpu 1.73s
+2. b1a97ac48  FULL  selected 12/20  cpu 1.60s
+
+OBSERVATION DETERMINISM
+  PASS: 1 repeated observation(s) produced identical selections
+```
+
+Identical on classification, the 12 selected paths, the total and the comparator count. It compares
+**selections, not timings** — CPU legitimately varied (1.73s vs 1.60s) between the two runs in one
+container, and requiring that to match would fail for a reason unrelated to determinism. It also
+refuses if no head appears twice, so the assertion cannot pass vacuously.
+
+**The pair** is the pinned tree's own `HEAD~1..HEAD` (`71ce72e2..b1a97ac4`), chosen mechanically and
+verified not to be among the five sealed candidates — a test asserts that exclusion. What it selects is
+never interpreted and never compared against the sealed experiment.
+
+**A third cross-check falls out of it:** the observation reports a universe of **20**. Generation B
+would have reported 40 for this same tree. That is the defect-17 fix visible in the agent's own output,
+through a path independent of both the static reasoning that closed M2 and jest's own suite count.
+
+### A mislabelling defect this run exposed, and its fix
+
+The first attempt (`apparatus-determinism-genc-01`, PASS, superseded) stamped every row
+`MECHANISM_PROOF_01 candidate N` and printed that experiment's stop rule — because the script hardcoded
+the experiment it was first written for. The verdict was unaffected, but the **artefacts were
+mislabelled**: rows from an apparatus probe carried a sealed experiment's name, and an all-`FULL` result
+was reported under a "STOP, the sealed rule ends MECHANISM_PROOF_01 here" banner that does not apply to
+it and is simply false about this run.
+
+Left alone that is how a future reader concludes the mechanism proof failed. The pair list now names its
+own experiment and declares whether the stop rule applies; the run was repeated to produce correctly
+labelled evidence. Both runs passed identically, so nothing about the determinism finding rests on the
+correction.
+
+## Chain complete
+
+```
+clean pinned analyser -> canonical environment -> universe sanity -> install ->
+two green baselines -> deterministic repeated observation
+```
+
+All links proved for generation C. The apparatus is fit to generate new product evidence. **The next
+independent draw has not been made.**
