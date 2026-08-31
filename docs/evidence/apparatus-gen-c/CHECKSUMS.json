@@ -1,0 +1,13 @@
+{
+  "run": "apparatus-qualify-genc-01",
+  "job": "apparatus-qualify-gen-c",
+  "agentGeneration": "C",
+  "sha256": {
+    "corpus-definition.json": "d5d27d063c23683f8112037cfc772d6ce02b32826b2022d513797a4a2a7f8206",
+    "environment.json": "6c094812c94a7ae35011104efc819ec69b62a58d82cdb23e2f8c87c5f84c5cf3",
+    "manifest.json": "f6578700f17f2f39cecda3a992f836ad4cd400d583ad6c46cd3b80217402d33d",
+    "qualify.log": "bbf96f823af3ea2529fc2350fbade0c00b9fddc6be9f1000e000042c40390963",
+    "universe-sanity.json": "a3b5878c513e6c7b9c27ef893c08815a13cc5980ba5b3fbfbbad29b36c3a7273",
+    "universe.log": "8f3c094857c44c677eb9204574b863a41f93d103cce51d6a33e66c404d5fdcff"
+  }
+}

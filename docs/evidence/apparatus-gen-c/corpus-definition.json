@@ -1,0 +1,454 @@
+[
+  {
+    "source": "sindresorhus/ky",
+    "stresses": "Small, modern TS library with a flat layout. Establishes the packaged-agent baseline on a repository nobody here wrote.",
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "unknown"
+  },
+  {
+    "source": "colinhacks/zod",
+    "stresses": "Monorepo with workspaces and TypeScript project references. Exercises graph construction across package boundaries, and produced the finding that DiffCI can select MORE than a path rule.",
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "yes",
+    "mutationQualificationReason": "MUTATION-QUALIFIED (run zod-qualify-02, 2026-08-29, qualifier 2.0.0). Suite green on 2 consecutive runs: 573 test files, 7808 tests, exit status 0 on BOTH runs with 0 parsed failures - so the exit-status invariant is satisfied, not merely the parsed count. Stages: clone 0.1s, install 16.7s, build 15.9s, baseline 1 77.3s, baseline 2 55.9s, total 166s. NOTE the unexplained discrepancy with zod-qualify-01, which ran the same commands in the same environment for 180 minutes and was killed by the external guard without producing a verdict. Cause of that run remains unknown; this run does not explain it, it only shows the same work completing in 166 seconds.",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "build": [
+      "corepack",
+      "pnpm",
+      "build"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ],
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "mutationQualifiedAt": "2026-08-29T09:34:28.587Z",
+    "mutationEvidence": "zod-mutation-01 (2026-08-29, canonical Linux): 11 candidates, 0 dirty, 0 invalid, 6 recall-unmeasurable, 5 recall-measurable, 5 confirmed, 0 false greens. Efficiency 4 EFFICIENT / 0 COMPARABLE / 1 SELECTION_OVERBROAD. Across the five confirmed: 629 tests selected vs 761 path-rule comparator vs 967 FULL. DEFENSIBLE WORDING: DiffCI executed 17% fewer tests than the comparator while preserving mutation detection; whether that translates into incremental COMPUTE savings has not been measured. n=5 cannot support a reliability estimate. Open observation: selection is near-constant at 125-127 while the comparator swings 113-193 - preserved, not optimised away before measurement."
+  },
+  {
+    "source": "unjs/h3",
+    "stresses": "Vitest, unusual layout, HTTP vocabulary that previously caused entry-point misclassification (route.ts, error.ts).",
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "yes",
+    "mutationQualificationReason": "Produced a RECALL_CONFIRMED via src/utils/static.ts under corepack pnpm + vitest.",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile",
+      "--ignore-scripts"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ]
+  },
+  {
+    "source": "expressjs/express",
+    "stresses": "Plain JavaScript with mocha and no tsconfig.json. Expected to refuse rather than guess - and does.",
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "no",
+    "mutationQualificationReason": "DiffCI refuses it at eligibility, so there is no selection to measure recall against."
+  },
+  {
+    "source": "pallets/flask",
+    "stresses": "Python. No TypeScript graph builder exists, so the only correct answer is to refuse. A repository that refuses well is as valuable as one that selects well.",
+    "commits": 10,
+    "observationQualified": "yes",
+    "mutationQualified": "no",
+    "mutationQualificationReason": "Refused at eligibility; nothing to mutate."
+  },
+  {
+    "//": "CANDIDATES for the third mutation-qualified repository. Chosen for tight cross-package coupling on a mainstream toolchain - the structural class zod identified as interesting - and deliberately NOT chosen for whether DiffCI is expected to do well. A repository earns its place by being able to DISPROVE the selector.",
+    "source": "TanStack/query",
+    "stresses": "Tightly coupled TS monorepo, pnpm + vitest, heavy cross-package imports between core and framework adapters. Structurally the class where DiffCI was observed selecting ~65% of a suite.",
+    "commits": 10,
+    "observationQualified": "unknown",
+    "mutationQualified": "no",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/nx/bin/nx.js",
+    "testArgs": [
+      "run-many",
+      "--target=test:lib",
+      "--exclude=examples/**"
+    ],
+    "mutationQualificationReason": "NOT QUALIFIED under its documented orchestrated test command (run tanstack-qualify-03, 2026-08-29): nx run-many --target=test:lib --exclude=examples/** exits non-zero - nx ran 26 projects and reported the target failed. No test-failure count is attached: the evidence does not support one, because this harness parses a single summary line and nx emits one per project. An earlier run of the identical command (tanstack-qualify-02) is permanently classified INVALID VERDICT - the qualification harness ignored authoritative process exit status - NOT \"qualified then superseded\". See docs/tanstack-qualification-record.md.",
+    "mutationQualifiedAt": "2026-08-28T15:15:52.660Z",
+    "build": [
+      "corepack",
+      "pnpm",
+      "build:all"
+    ],
+    "buildRationale": "The repository documents two build scripts. `build` is `nx affected --target=build`, which computes what changed relative to a base and therefore builds NOTHING on a freshly cloned, unmodified tree - leaving the workspace package outputs its tests import missing. `build:all` is `nx run-many --target=build`, the repository own script for building every package unconditionally, which is what a clean environment needs. Choosing between two of the repository documented scripts, with the reason recorded; not a bespoke command invented for this harness.",
+    "previousGenericVerdict": "NOT QUALIFIED under generic bare-Vitest invocation (run tanstack-qualify-01, 2026-08-29): 1413 deterministic failures on both baselines (1413, 1413). Clone, install and build:all all succeeded. That run executed vitest across the whole workspace including examples/** and integrations/**, which TanStack CI excludes, so it does NOT establish that the documented CI test surface is dirty. Preserved permanently; see docs/tanstack-qualification-record.md.",
+    "testCommandRationale": "nx is the orchestrator TanStack tests through, so it is invoked directly rather than approximated with a hand-built vitest exclusion list. run-many rather than affected: nx.json sets defaultBase main and CI supplies NX_BASE/NX_HEAD from a PR diff via nrwl/nx-set-shas, so on an unmodified clone at main affected computes zero projects and runs nothing. run-many is TanStack own non-PR CI form (test = test:ci = nx run-many). Same relationship as build:all to build.",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2"
+  },
+  {
+    "source": "vuejs/core",
+    "stresses": "Repository #3, named externally after the hypothesis, prediction rule and eligibility criteria were frozen at e12c207. Large TypeScript monorepo, pnpm, root vitest config with named projects. Unit tests resolve packages through source aliases, so no build is required.",
+    "commits": 25,
+    "observationQualified": "yes",
+    "mutationQualified": "unknown",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run",
+      "--project",
+      "unit*"
+    ],
+    "testCommandRationale": "Vue documented test-unit script is `vitest --project unit*`, covering the unit, unit-gc and unit-jsdom projects. The default `test` script would additionally run e2e-browser, which requires playwright chromium - a dependency the validation contract forbids. This is a choice between two of the repository own documented scripts, decided at eligibility time before any DiffCI data existed. The prior entry here said [\"run\"], which would have run the browser project. `run` is the harness uniform non-interactive invocation applied identically to hono and zod, not a Vue-specific modification. No additional project exclusions or file filters were invented.",
+    "mutationEvidence": "vue-economics-01 (2026-08-30, canonical Linux, agent B): 16 candidates, 0 dirty, 0 invalid, 2 recall-unmeasurable, 14 recall-measurable, 14 confirmed, 0 false greens. Efficiency 1 EFFICIENT / 0 COMPARABLE / 13 SELECTION_OVERBROAD.",
+    "economicsEvidence": "incrementalCpu = 430.78 - (1536.07 + 58.04) = -1163.33 CPU-s; grossCpu = +456.71. Per-candidate 0 positive / 16 negative. OUT-OF-SAMPLE TEST: the NEGATIVE sign was pre-registered at 243d110 before this run existed and was correct (predicted -1092.54, measured -1163.33). THREE candidates cost MORE than running the entire suite (ef82a2677 -3.18, a2b40db9a -3.15, 4e467d7ae -5.09), each selecting 183/196 files plus analysis. Open question, not investigated: DiffCI selections took four dominant sizes (57, 97, 162, 183) across sixteen commits."
+  },
+  {
+    "source": "honojs/hono",
+    "stresses": "TS with vitest, multi-project config (main, jsx-runtime-default, jsx-runtime-dom, plus runtime-tests/* which resolve on Linux and not on Windows), coverage enabled in config, no services or credentials. A control for the monorepo cases.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "yes",
+    "install": [
+      "npm",
+      "install",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ],
+    "mutationQualificationReason": "20/22 candidates recall-measurable and confirmed, 0 false greens, in the canonical Linux environment (runs hono-linux-05 and -06, identical funnels). On the Windows developer host the same corpus yielded 13 measurable, with 4 candidates unreachable (shallow clone lacked the commits) and 3 baselines already failing.",
+    "mutationQualifiedAt": "2026-08-28T14:59:07.259Z",
+    "lockfile": "NONE. Verified 2026-08-29 at e2740d5a: package-lock.json, pnpm-lock.yaml, bun.lockb and yarn.lock are all absent, and package.json declares packageManager bun@1.2.20 while this harness installs with npm. The dependency tree is therefore NOT reproducible across time or machines. An earlier entry here claimed a committed lockfile; that was wrong.",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2"
+  },
+  {
+    "source": "fastify/fastify",
+    "stresses": "EXTERNAL VALIDATION TARGET #1, named by ChatGPT after the external-validation protocol was frozen at 04750a3 and before the repository was cloned or any Fastify-specific DiffCI data existed (docs/external-target-01-selection.md). Mature Node.js HTTP framework, plain CommonJS/ESM, no monorepo, no bundler. Test runner is borp (a node:test runner), which is NEITHER vitest NOR jest - the first target in this corpus whose runner differs from the two the harness was built against.",
+    "commits": 25,
+    "observationQualified": "not attempted",
+    "mutationQualified": "no",
+    "install": [
+      "npm",
+      "install",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "testModule": "node_modules/borp/borp.js",
+    "testArgs": [],
+    "testCommandRationale": "Fastify documented unit script is `unit`, which is bare `borp`; borp reads .borp.yaml and runs test/**/*.test.{js,mjs}. The default `test` script additionally runs `lint` (eslint) and `test:types` (tstyche), neither of which is a unit test and neither of which is file-selectable, so including them would charge both arms for work no selector can narrow. This is a choice between two of the repository own documented scripts, made at eligibility time before any DiffCI data existed - the same rule applied to vue. No file filters or exclusions were invented: borp own committed config decides the file set. borp takes no arguments here because the config supplies them.",
+    "lockfile": "NONE. fastify has no package-lock.json, pnpm-lock.yaml, yarn.lock or bun.lockb at this commit, and declares no packageManager. Two installs a week apart may not resolve the same dependency versions. Recorded as a known reproducibility weakness, exactly as it was for hono - not corrected by inventing a lockfile.",
+    "mutationQualificationReason": "2 test(s) failing at HEAD on every run (2, 2)",
+    "mutationQualifiedAt": "2026-08-30T10:17:07.950Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "TARGET #1 - NOT_QUALIFIED (docs/external-target-01-result.md). fastify-qualify-01, 2026-08-30: two consecutive baselines exited 1, each reporting two failures (exit=1 parsedFailures=2 on both). Deterministically RED UNDER THE TESTED CANONICAL ENVIRONMENT - whether the cause is repository state or an environment requirement was NOT established, and no run was spent establishing it. Failing test names deliberately not retrieved: they do not change the outcome, and learning them invites deciding whether the failures are reasonable to ignore. Never reached calibration, which would have returned NO_ASSESSMENT separately because borp emits no test-FILE count."
+  },
+  {
+    "source": "date-fns/date-fns",
+    "stresses": "EXTERNAL VALIDATION TARGET #2, named after target #1 (fastify) closed as NOT_QUALIFIED, and before the repository was cloned or any date-fns DiffCI data existed (docs/external-target-02-selection.md). pnpm monorepo, workspace pkgs/* (core, tz, utc, docs, dev), vitest 4. Named earlier than fastify as the third fallback in the repository #3 selection, but never observed - no selection ratio or economics figure for it has ever been seen.",
+    "commits": 25,
+    "observationQualified": "not attempted",
+    "mutationQualified": "INVALID - do not use",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ],
+    "testCommandRationale": "The root package.json has NO scripts block at all - CI drives tests through mise tasks - so there is no root script to select. The root ships its own vitest.config.ts declaring projects: [pkgs/*], and bare `vitest run` against it is the repository own declaration of its test surface. This is the identical uniform non-interactive invocation applied to hono. No project filter, exclusion, or include glob was invented: each package own committed config decides its file set. Narrowing to pkgs/core alone was considered and REJECTED - it would pre-screen the repository into a friendlier shape, which is a form of tuning. Checked in advance because the validation contract forbids launching a browser: pkgs/core/vitest.config.ts imports @vitest/browser-playwright but leaves the browser instance commented out (enabled only by the separate test/browser task via --browser), so `vitest run` runs in node.",
+    "buildRationale": "No build. pkgs/core exports map points at ./src/index.ts, so workspace consumers (tz, utc, docs) resolve TypeScript source and vitest transpiles it - the same situation as vue, where a build would have been required only if tests imported package outputs.",
+    "lockfile": "pnpm-lock.yaml committed. Unlike hono and fastify, this repository pins its dependency tree, so two installs a week apart resolve the same versions. No packageManager field, so corepack uses its default pnpm.",
+    "mutationQualificationReason": "datefns-qualify-01: INVALID VERDICT - qualification exercised only 14 repository test files and omitted the core test surface, which collects 262 on its own. The harness emitted MUTATION-QUALIFIED; that string describes what the broken harness printed and is never this run status. Reproduced independently on a developer host: the same bare root invocation collects the same 14 files.",
+    "mutationQualifiedAt": "2026-08-30T10:45:03.693Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "TARGET #2 - NOT_ADDRESSABLE by the current apparatus (docs/external-target-02-result.md). Path-semantics calibration, run locally before any further container job: FULL passes only with cwd=pkgs/core (262 files); no invocation from the clone root reaches it - --root loads the root config, --config makes dir:src resolve against cwd, and the two combined resolve --config relative to --root. SELECTED passes with core-relative paths (src/addDays/test.ts -> exactly 1 file) and matches ZERO with repo-relative ones. PATH NORMALIZATION FAILS: DiffCI universe is computed by src/repo/analyzer.ts at the clone root and spans the whole monorepo, so honouring a pkgs/core scope would require DROPPING selections outside core - editing the decision under measurement, not normalising a path. Closing with ZERO information about the sign: no selection ratio, comparator count or analysis CPU was ever produced. DO NOT observe or measure."
+  },
+  {
+    "source": "axios/axios",
+    "stresses": "EXTERNAL VALIDATION TARGET #4, named by ChatGPT after targets #1-3 closed and before axios's configuration was inspected (docs/external-target-04-selection.md). Single package, no workspaces, vitest 4 with three named projects. axios 1.20.0.",
+    "commits": 25,
+    "observationQualified": "not attempted",
+    "mutationQualified": "no",
+    "install": [
+      "npm",
+      "ci",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run",
+      "--project",
+      "unit"
+    ],
+    "testCommandRationale": "axios's own documented test:vitest:unit script is `vitest run --project unit`. The default `test` script resolves to bare `vitest run`, which would additionally run the `browser` and `browser-headless` projects - both declare browser.enabled with playwright chromium, firefox and webkit, dependencies the validation contract forbids. This is a choice between two of the repository's own documented scripts, decided at eligibility time before any DiffCI data existed - the identical rule applied to vue. No include globs, exclusions or file filters were invented; the `unit` project's own committed config (tests/unit/**/*.test.js) decides the file set.",
+    "buildRationale": "No build. Unit tests import lib/ source by relative path, and a full local run of the unit project on an unbuilt tree was green: 58 files, 1062 tests. axios's `build` script exists for distribution artefacts (dist/ is not committed), not for the unit suite.",
+    "lockfile": "package-lock.json committed, so `npm ci` installs a pinned tree. Better reproducibility than hono or fastify, both of which had no lockfile at all.",
+    "universeVerification": "COVERAGE CHECKED BEFORE RUNNING, per defect #13. The expected unit universe was established independently three ways before any invocation was trusted: 58 paths matching tests/unit/**/*.test.js in the git tree at the pinned sha, 58 files on disk after clone, and 58 collected by `vitest list --project unit`. A single named repo-relative path (tests/unit/adapters/adapters.test.js) collects exactly that one file, so explicit-file addressability holds with cwd at the clone root - the property date-fns lacked.",
+    "mutationQualificationReason": "2 test(s) failing at HEAD on every run (2, 2), in tests/unit/adapters/fetch.test.js",
+    "mutationQualifiedAt": "2026-08-30T11:22:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "TARGET #4 - NOT_QUALIFIED (docs/external-target-04-result.md). axios-qualify-01, 2026-08-30: structural checks 1-4 PASSED (single package, root execution, vitest read by both parsers, explicit-file addressable), canonical green baseline FAILED. Two consecutive baselines exit=1 parsedFailures=2, both in tests/unit/adapters/fetch.test.js. Deterministically red UNDER THE TESTED CANONICAL ENVIRONMENT; cause not established and no run spent establishing it. COVERAGE HELD: the run reported 58 test files and 1062 tests, matching the independently established universe exactly, so this verdict describes the repository it names - unlike datefns-qualify-01. A full local run of the identical command was green (58 files, 1062 tests), so a developer-host green is NOT evidence of a canonical green."
+  },
+  {
+    "source": "immerjs/immer",
+    "stresses": "EXTERNAL VALIDATION TARGET #5 and the last of the initial external sequence, named by ChatGPT after targets #1-4 closed and before immer's configuration was inspected (docs/external-target-05-selection.md). Single package, vitest 3, immer 10.0.3-beta. A `website/` directory exists but is not a workspace: package.json declares no workspaces field.",
+    "commits": 25,
+    "observationQualified": "yes",
+    "mutationQualified": "yes",
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ],
+    "testCommandRationale": "immer's own documented test:src script is bare `vitest run`. The default `test` script is `vitest run && yarn test:build && yarn test:flow`, which additionally builds the package with tsup and runs a second vitest pass against vitest.config.build.ts, then runs a flow type check. Neither of those is the source unit suite, and test:build's second pass measures built artefacts rather than source. This is a choice between two of the repository's own documented scripts, made at eligibility time before any DiffCI data existed - the identical rule applied to vue and axios. No include globs or exclusions were invented: vitest.config.ts's own include, **/__tests__/**/*.[jt]s?(x), decides the file set.",
+    "buildRationale": "No build for the source suite. A full local run of `vitest run` on an unbuilt tree was green: 23 files, 3764 passed, 8 skipped. immer's build exists for distribution artefacts and for the separate test:build pass, not for test:src.",
+    "lockfile": "yarn.lock committed (yarn classic; no packageManager field), so `yarn install --frozen-lockfile` pins the tree. Reproducibility comparable to zod and vue, better than hono or fastify, which had no lockfile.",
+    "universeVerification": "COVERAGE CHECKED BEFORE RUNNING, per defect #13. The expected universe is 23 files by three independent counts: paths under __tests__/ matching *.[jt]s?(x) in the git tree at the pinned sha (23; the other 18 files under __tests__/ are .snap snapshots, a .flow stub, .flowconfig, test-data.json and tsconfig.json, none of which match), files on disk after clone (23), and `vitest list --filesOnly` (23). A single named repo-relative path (__tests__/curry.js) collects exactly that one file, so explicit-file addressability holds with cwd at the clone root.",
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence",
+    "mutationQualifiedAt": "2026-08-30T11:39:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "calibration": "immer-qualify-01 baseline run 1: fullCpu = 15.04 CPU-s over 23 test files -> 0.6539 CPU-s/file. Run 2 measured 13.99 CPU-s, a 7% spread. Taken from qualification exactly as vue's was (vue-qualify-01 baseline run 1), since qualification already executes the full suite in the canonical environment and records its CPU; no separate calibration container run was spent.",
+    "externalValidation": "TARGET #5 - QUALIFIED (docs/external-target-05-selection.md). immer-qualify-01, 2026-08-30: all five structural and execution gates passed. Green on 2 consecutive runs, exit=0 parsedFailures=0. COVERAGE HELD: 23 test files reported, matching the independently established universe exactly, and 3772 tests matching the local run exactly - so this verdict describes the repository it names. First external target to reach calibration and observation. PREDICTION FROZEN 2026-08-30 at docs/immer-prediction-frozen.md: POSITIVE, +129.67 CPU-s predicted incremental, from 25/25 usable observations. Economics NOT run at the time of freezing. Evidence and checksums in docs/evidence/immer/.",
+    "economicsEvidence": "immer-economics-01 (2026-08-30, canonical Linux, agent B): incrementalCpu = 79.51 - (21.61 + 10.93) = +46.97 CPU-s; grossCpu = +46.48. 7 of 7 compute-measurable candidates individually positive. OUT-OF-SAMPLE TEST: the POSITIVE sign was frozen at bae2d00 before this run existed and was CORRECT - the eligibility rule's first out-of-sample sign match. MAGNITUDE WRONG: the frozen prediction was +129.67 over 25 observations while economics covered only 7 candidates; restricted post-hoc to those 7 the rule predicts +85.19 against +46.97 measured, a 1.8x over-prediction. Cause measured, not assumed: the DiffCI arm cost 21.61 CPU-s for 8 files (~2.7 CPU-s/file) against a modelled 0.6539, because vitest's fixed startup cost dominates at 1-2 file selections. The error direction INFLATES predicted savings. The comparator selected 22-23 of 23 files on every candidate and cost 79.51 against 79.02 for running everything - worse than no selection at all - so DiffCI's win here owes at least as much to the comparator's failure as to its own precision.",
+    "mutationEvidence": "immer-economics-01 (2026-08-30, canonical Linux, agent B): 7 candidates attempted, 4 RECALL_CONFIRMED, 0 FALSE_GREEN, 2 RECALL_UNMEASURABLE, 1 INVALID_RUN (061c2425e - every changed source file newly added, none revertible). Efficiency 4 EFFICIENT / 0 COMPARABLE / 0 SELECTION_OVERBROAD. Only 4 measurable safety cases: too few to support a reliability estimate."
+  },
+  {
+    "source": "prettier/prettier",
+    "stresses": "ADDRESSABILITY SURVEY rank 7: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "yes",
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--immutable"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": [],
+    "testCommandRationale": "Survey-derived. The adjudicator identified \"test: jest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: none",
+    "surveyRank": 7,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (1557 test suites, 35278 tests, cpu 805.04s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 805.04,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
+  },
+  {
+    "source": "webpack/webpack",
+    "stresses": "ADDRESSABILITY SURVEY rank 8: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "no",
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": [],
+    "testCommandRationale": "Survey-derived. The adjudicator identified \"test:base: node --expose-gc --max-old-space-size=4096 --experimental-vm-modules --trace-deprecation node_modules/jest-cli/bin/jest --workerIdleMemoryLimit=512MB --logHeapUsage\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: NODE FLAGS. The documented script runs jest under --expose-gc, --max-old-space-size=4096, --experimental-vm-modules and --trace-deprecation. The harness invokes `node <testModule> <testArgs>` and cannot place flags before the module, so these are lost. --experimental-vm-modules in particular gates jest's ESM support, so a red baseline here may be the apparatus rather than the repository - and that distinction must be preserved, not resolved by adding a flag.",
+    "surveyRank": 8,
+    "mutationQualificationReason": "killed at the 25-minute stage bound, exit=null, cpu 42.46s over 25 min wall",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 42.46,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
+  },
+  {
+    "source": "prettier/eslint-config-prettier",
+    "stresses": "ADDRESSABILITY SURVEY rank 27: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "yes",
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--immutable"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": [],
+    "testCommandRationale": "Survey-derived. The adjudicator identified \"test:jest: jest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: The default `test` script chains test:prettier and two runs of test:with-env under different environment variables. test:jest is the repository's own plain jest script and is the one the survey identified; the env-var variants are not reproducible through this harness.",
+    "surveyRank": 27,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (4 test suites, 463 tests, cpu 32.41s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 32.41,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
+  },
+  {
+    "source": "kulshekhar/ts-jest",
+    "stresses": "ADDRESSABILITY SURVEY rank 30: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "yes",
+    "install": [
+      "npm",
+      "ci",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": [
+      "-c=jest.config.ts"
+    ],
+    "testCommandRationale": "Survey-derived. The adjudicator identified \"test: jest -c=jest.config.ts\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: none",
+    "surveyRank": 30,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence",
+    "mutationQualifiedAt": "2026-08-31T09:51:46.753Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 260.22,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
+  },
+  {
+    "source": "webpack/css-loader",
+    "stresses": "ADDRESSABILITY SURVEY rank 31: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "yes",
+    "install": [
+      "npm",
+      "ci",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": [],
+    "testCommandRationale": "Survey-derived. The adjudicator identified \"test:only: cross-env NODE_ENV=test jest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: NODE_ENV=test. The documented script sets it through cross-env; the harness passes no environment variables. If a red baseline traces to that, it is an apparatus limit and is recorded as one.",
+    "surveyRank": 31,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (12 test suites, 625 tests, cpu 57.66s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 57.66,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
+  },
+  {
+    "source": "kentcdodds/cross-env",
+    "stresses": "ADDRESSABILITY SURVEY rank 34: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "yes",
+    "install": [
+      "npm",
+      "ci",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ],
+    "testCommandRationale": "Survey-derived. The adjudicator identified \"test: vitest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: The documented script is bare `vitest`, which is WATCH mode. `run` is the harness's uniform non-interactive invocation, applied identically to hono, vue, axios and immer - not a cross-env-specific modification.",
+    "surveyRank": 34,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (5 test files, 63 tests, cpu 3.50s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 3.5,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
+  },
+  {
+    "source": "typescript-eslint/typescript-eslint",
+    "stresses": "COMPUTE_PROOF_V1 candidate, selected mechanically at 1b84b07 from density-02: highest mapping density among qualifiers (99.7%, 308 tests, 470 test-to-production edges). Solution-style TypeScript monorepo whose graph was unusable before the C1 fix at 645c0eb (310 nodes of which 2 were non-test) and is 1389 nodes / 3848 edges after it.",
+    "commits": 25,
+    "observationQualified": "not attempted",
+    "mutationQualified": "no",
+    "install": [
+      "corepack",
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "testModule": "node_modules/nx/bin/nx.js",
+    "testArgs": [
+      "run-many",
+      "-t",
+      "test",
+      "--exclude",
+      "integration-tests",
+      "website",
+      "website-eslint"
+    ],
+    "testCommandRationale": "The repository's OWN documented test script, verbatim. A direct `vitest run` against the root config was considered and REJECTED as not semantically equivalent: measured from the repository, nx excludes integration-tests while root vitest includes it, nx includes types while root vitest excludes it, and root vitest adds tools/ which is not a packages project - 15 effective projects against 16, differing in both directions. Substituting would redefine the full suite for convenience, and the comparator's cost is the denominator of the entire economic claim. Inventing a --project exclusion list to reconcile them is equally disallowed. nx is an orchestrator, which is the shape that produced the false green in defect #5; classifyExecution() and CONTRADICTORY_EXECUTION_EVIDENCE are frozen and decide this on their own terms, with no nx-specific handling added.",
+    "lockfile": "pnpm-lock.yaml committed; packageManager pnpm@12.0.0-rc.7, a release candidate corepack must fetch. Recorded as a reproducibility note, not corrected.",
+    "mutationQualificationReason": "install failed: postinstall - NX Failed to load 3 default Nx plugin(s). Never reached a baseline.",
+    "mutationQualifiedAt": "2026-08-30T11:38:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "COMPUTE_PROOF_V1 candidate ELIMINATED at the twoGreenBaselines gate. tse-qualify-01, 2026-08-30: clone 0.6s, install 32.2s, not qualified at 33s. `corepack pnpm install --frozen-lockfile` failed in postinstall where Nx could not load three of its own default plugins - an ORDINARY INSTALL FAILURE, not the contradictory-execution case. Nothing executed, so the frozen execution classifier was never exercised and the nx orchestrator hazard remains untested. twoGreenBaselines is a required criterion, so the sealed rule at 1b84b07 advances to jestjs/jest without intervention, and the provisional draw a2fccae3 is discarded."
+  },
+  {
+    "source": "jestjs/jest",
+    "stresses": "COMPUTE_PROOF_V1 candidate, reached by the sealed rule at 1b84b07 after typescript-eslint failed the twoGreenBaselines gate. 1195 test files, 38.3% test-to-production mapping density, 730 test-to-production edges - the only large repository in the frozen 40 with meaningful connectivity, and the lower density is itself part of what the experiment tests.",
+    "commits": 25,
+    "observationQualified": "not attempted",
+    "mutationQualified": "no",
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--immutable"
+    ],
+    "testModule": "packages/jest-cli/bin/jest.js",
+    "testArgs": [],
+    "testCommandRationale": "The repository's own documented `jest` script, verbatim: `node ./packages/jest-cli/bin/jest.js`. It is a DIRECT runner invocation, not an orchestrator, so no substitution question arises - unlike typescript-eslint, where nx run-many had no equivalent direct form and was run as documented rather than replaced. The default `test` script is `yarn lint && yarn jest`, which additionally runs eslint: not a test, not file-selectable, and it would charge both arms for work no selector can narrow. Choosing between two of the repository's own documented scripts is the rule already applied to vue, axios, immer and fastify. No file filters or exclusions invented; the root jest.config.mjs decides the file set.",
+    "comparatorExcludedScopes": [
+      "website",
+      "examples"
+    ],
+    "comparatorScopeRationale": "COMPUTE_PROOF_V1 amendment A1. jest.config.mjs excludes website via modulePathIgnorePatterns and examples via testPathIgnorePatterns, so a change confined to either has zero optimisation opportunity by construction. Implementation source under packages/*/src IS in scope.",
+    "lockfile": "yarn.lock committed; packageManager yarn@4.18.0.",
+    "build": [
+      "corepack",
+      "yarn",
+      "build"
+    ],
+    "buildRationale": "COMPUTE_PROOF_V1 correction J1. Jest is SELF-HOSTING: packages/jest-cli/bin/jest.js requires ../build/index.js, which Jest's own build produces, so the suite cannot run against an unbuilt tree. jest-qualify-01 exited after 49 ms and 0.05 CPU-seconds with that module missing - qualification was never exercised. The repository documents `build: yarn build:js && yarn build:ts && yarn bundle:ts` and its CI runs `yarn build` before tests (.github/workflows/nodejs.yml:47). The frozen corpus schema already models a build stage and zod already uses it for the same environment-reconstruction purpose. The qualifier runs build ONCE, between install and the baselines; that order is followed unchanged.",
+    "mutationQualificationReason": "999 test(s) failing at HEAD on every run (999, 999)",
+    "mutationQualifiedAt": "2026-08-30T12:22:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "COMPUTE_PROOF_V1 second and final candidate - NOT QUALIFIED. jest-qualify-02 (2026-08-30): clone 0.5s, install 52.9s, build 178.7s, baseline 1 507.6s, baseline 2 351.9s. Reproducibly RED at HEAD: Tests 999 failed, 275 skipped, 5235 passed, 6509 total; Test Suites 29 failed, 520 passed, 549 of 553. Identical on both runs with exit=1, so classifyExecution returned RED rather than CONTRADICTORY_EXECUTION_EVIDENCE. THE 999 WAS VERIFIED against the real bottom-line summary, not taken from the snapshot-diff lines that Jest's own output-asserting tests scatter through the log. J1 worked - install, build and both baselines all executed - so this is a genuine qualification failure, not a registration defect. Full-suite cost measured at ~1680 CPU-s (run 1). Why 999 tests fail was NOT investigated: a red baseline disqualifies under the sealed rule and looking further would be debugging a candidate to keep it selected. COMPUTE_PROOF_V1 closes with its qualifying pool exhausted."
+  }
+]

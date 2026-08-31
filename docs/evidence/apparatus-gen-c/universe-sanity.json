@@ -1,0 +1,60 @@
+{
+  "ok": true,
+  "repoPath": "/workspace/target-src",
+  "expected": 20,
+  "forbidden": [
+    "e2e",
+    "examples",
+    "presets",
+    "scripts",
+    "website"
+  ],
+  "testCount": 20,
+  "patterns": [
+    "src/**/*.spec.ts"
+  ],
+  "paths": [
+    "src/cli/cli.spec.ts",
+    "src/config/paths-to-module-name-mapper.spec.ts",
+    "src/index.spec.ts",
+    "src/legacy/compiler/ts-compiler.spec.ts",
+    "src/legacy/compiler/ts-jest-compiler.spec.ts",
+    "src/legacy/config/config-set.spec.ts",
+    "src/legacy/ts-jest-transformer.spec.ts",
+    "src/presets/create-jest-preset.spec.ts",
+    "src/transformers/hoist-jest.spec.ts",
+    "src/transpilers/typescript/transpile-module.spec.ts",
+    "src/utils/backports.spec.ts",
+    "src/utils/get-package-version.spec.ts",
+    "src/utils/importer.spec.ts",
+    "src/utils/json.spec.ts",
+    "src/utils/jsonable-value.spec.ts",
+    "src/utils/logger.spec.ts",
+    "src/utils/memoize.spec.ts",
+    "src/utils/messages.spec.ts",
+    "src/utils/normalize-slashes.spec.ts",
+    "src/utils/sha1.spec.ts"
+  ],
+  "checks": [
+    {
+      "name": "universe resolves to exactly 20 executable tests",
+      "ok": true,
+      "detail": "found 20"
+    },
+    {
+      "name": "no test under e2e, examples, presets, scripts, website enters the universe",
+      "ok": true,
+      "detail": "none"
+    },
+    {
+      "name": "repeated discovery yields the identical paths",
+      "ok": true,
+      "detail": "identical"
+    },
+    {
+      "name": "fail-wide on a half-understood config",
+      "ok": true,
+      "detail": "kept the wide universe (2 paths) when the declaration could not be fully read"
+    }
+  ]
+}
