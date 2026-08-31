@@ -68,7 +68,8 @@
     "survey:density": "tsx scripts/survey-mapping-density.ts",
     "trace:imports": "tsx scripts/trace-import-resolution.ts",
     "select:compute-proof": "tsx scripts/select-compute-proof.ts",
-    "funnel:qualification": "tsx scripts/qualification-funnel.ts"
+    "funnel:qualification": "tsx scripts/qualification-funnel.ts",
+    "select:mechanism-proof": "tsx scripts/select-mechanism-proof.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",

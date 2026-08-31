@@ -10,22 +10,29 @@ narrower question.
 | stage | n |
 |---|---:|
 | analyser ineligible — no `tsconfig.json` | **8** |
-| never qualified — **no evidence yet** | **21** |
+| never qualified — **no evidence yet** | **17** |
 | install failed | 1 |
 | build failed | 0 |
-| reached a baseline, not green twice | 2 |
-| **green on two consecutive runs** | **0** |
+| reached a baseline, not green twice | 3 |
+| **green on two consecutive runs** | **3** |
 
-**Of the 3 actually attempted, 0 went green twice.** That is 3 attempts, not 32 — the headline number
-this funnel produces is *how little we know*, not a green rate.
+**Of the 7 actually attempted, 3 went green twice.** That is 7 attempts, not 32 — the headline number
+this funnel produces is still *how little we know*, not a green rate.
 
-## The 21 unattempted rows are the finding
+**Corrected 2026-08-30.** The first version of this table read 21 unattempted and 0 green, because the
+gate 5–6 verdicts from the addressability survey were written to the *container's* copy of the registry
+and never carried back to the committed one. Five were transcribed from their committed, checksummed
+logs — `ts-jest`, `css-loader`, `eslint-config-prettier`, `prettier` green; `webpack` red. That is
+transcription from logs that state the verdict, **not** inference: `vuejs/core` is still left `unknown`
+precisely because it has only a narrative economics record and no qualification log.
 
-Twenty-one of thirty-two repositories in the frame have **never been through canonical qualification at
+## The 17 unattempted rows are the finding
+
+Seventeen of thirty-two repositories in the frame have **never been through canonical qualification at
 all**. Until those runs exist, "the green rate" is not a rate — it is one install failure and two red
 baselines out of three attempts.
 
-Completing the funnel costs **one container run each**. That is the price of testing the
+Completing the funnel costs **one container run each for the remaining 17**. That is the price of testing the
 `twoGreenBaselines`-is-binding hypothesis properly, and it should be paid before any V2 is designed
 rather than after.
 
@@ -49,8 +56,9 @@ survey skipped a known answer, not that DiffCI refused the repository.
 
 ## What this does and does not support
 
-**Supports:** the hypothesis that canonical reproducibility is a major constraint is **plausible but not
-yet established**. Three attempts is not a sample. What *is* established is that 8 of 32 fail before
+**Supports:** the hypothesis that canonical reproducibility is a major constraint is **weaker than it
+looked**. Of 7 attempts, 3 went green twice — not the near-zero rate the stale registry implied. Seven
+attempts is still not a sample. What *is* established is that 8 of 32 fail before
 qualification is even reachable, on the `tsconfig.json` requirement alone.
 
 **Does not support:** any claim about DiffCI's economics. No observation, no selection, no compute

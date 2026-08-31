@@ -251,7 +251,7 @@
     "stresses": "ADDRESSABILITY SURVEY rank 7: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
     "commits": 25,
     "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "mutationQualified": "yes",
     "install": [
       "corepack",
       "yarn",
@@ -261,14 +261,20 @@
     "testModule": "node_modules/jest/bin/jest.js",
     "testArgs": [],
     "testCommandRationale": "Survey-derived. The adjudicator identified \"test: jest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: none",
-    "surveyRank": 7
+    "surveyRank": 7,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (1557 test suites, 35278 tests, cpu 805.04s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 805.04,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
   },
   {
     "source": "webpack/webpack",
     "stresses": "ADDRESSABILITY SURVEY rank 8: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
     "commits": 25,
     "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "mutationQualified": "no",
     "install": [
       "corepack",
       "yarn",
@@ -278,14 +284,20 @@
     "testModule": "node_modules/jest/bin/jest.js",
     "testArgs": [],
     "testCommandRationale": "Survey-derived. The adjudicator identified \"test:base: node --expose-gc --max-old-space-size=4096 --experimental-vm-modules --trace-deprecation node_modules/jest-cli/bin/jest --workerIdleMemoryLimit=512MB --logHeapUsage\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: NODE FLAGS. The documented script runs jest under --expose-gc, --max-old-space-size=4096, --experimental-vm-modules and --trace-deprecation. The harness invokes `node <testModule> <testArgs>` and cannot place flags before the module, so these are lost. --experimental-vm-modules in particular gates jest's ESM support, so a red baseline here may be the apparatus rather than the repository - and that distinction must be preserved, not resolved by adding a flag.",
-    "surveyRank": 8
+    "surveyRank": 8,
+    "mutationQualificationReason": "killed at the 25-minute stage bound, exit=null, cpu 42.46s over 25 min wall",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 42.46,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
   },
   {
     "source": "prettier/eslint-config-prettier",
     "stresses": "ADDRESSABILITY SURVEY rank 27: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
     "commits": 25,
     "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "mutationQualified": "yes",
     "install": [
       "corepack",
       "yarn",
@@ -295,14 +307,20 @@
     "testModule": "node_modules/jest/bin/jest.js",
     "testArgs": [],
     "testCommandRationale": "Survey-derived. The adjudicator identified \"test:jest: jest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: The default `test` script chains test:prettier and two runs of test:with-env under different environment variables. test:jest is the repository's own plain jest script and is the one the survey identified; the env-var variants are not reproducible through this harness.",
-    "surveyRank": 27
+    "surveyRank": 27,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (4 test suites, 463 tests, cpu 32.41s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 32.41,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
   },
   {
     "source": "kulshekhar/ts-jest",
     "stresses": "ADDRESSABILITY SURVEY rank 30: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
     "commits": 25,
     "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "mutationQualified": "yes",
     "install": [
       "npm",
       "ci",
@@ -314,14 +332,20 @@
       "-c=jest.config.ts"
     ],
     "testCommandRationale": "Survey-derived. The adjudicator identified \"test: jest -c=jest.config.ts\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: none",
-    "surveyRank": 30
+    "surveyRank": 30,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (20 test suites, 358 tests, cpu 260.22s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 260.22,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
   },
   {
     "source": "webpack/css-loader",
     "stresses": "ADDRESSABILITY SURVEY rank 31: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
     "commits": 25,
     "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "mutationQualified": "yes",
     "install": [
       "npm",
       "ci",
@@ -331,14 +355,20 @@
     "testModule": "node_modules/jest/bin/jest.js",
     "testArgs": [],
     "testCommandRationale": "Survey-derived. The adjudicator identified \"test:only: cross-env NODE_ENV=test jest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: NODE_ENV=test. The documented script sets it through cross-env; the harness passes no environment variables. If a red baseline traces to that, it is an apparatus limit and is recorded as one.",
-    "surveyRank": 31
+    "surveyRank": 31,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (12 test suites, 625 tests, cpu 57.66s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 57.66,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
   },
   {
     "source": "kentcdodds/cross-env",
     "stresses": "ADDRESSABILITY SURVEY rank 34: reached qualification on gates 1-4 in survey-01. Commands derived from the frozen facts at docs/evidence/survey/run-01/, not from a fresh inspection.",
     "commits": 25,
     "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "mutationQualified": "yes",
     "install": [
       "npm",
       "ci",
@@ -350,7 +380,13 @@
       "run"
     ],
     "testCommandRationale": "Survey-derived. The adjudicator identified \"test: vitest\" as the repository's own documented script running a supported runner without a browser, foreign runtime, or service. WHAT THE HARNESS CANNOT CARRY ACROSS: The documented script is bare `vitest`, which is WATCH mode. `run` is the harness's uniform non-interactive invocation, applied identically to hono, vue, axios and immer - not a cross-env-specific modification.",
-    "surveyRank": 34
+    "surveyRank": 34,
+    "mutationQualificationReason": "suite green on 2 consecutive runs under the documented sequence (5 test files, 63 tests, cpu 3.50s)",
+    "mutationQualifiedAt": "2026-08-30T09:00:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "fullSuiteCpuSeconds": 3.5,
+    "registryBackfill": "Transcribed 2026-08-30 from the committed, checksummed gate 5-6 log at docs/evidence/survey/gate56/. The verdict was produced in the container and written to the container's own copy of the registry; it was never carried back to the committed one. Transcription from a log that states the verdict, NOT inference from narrative evidence - which is why vuejs/core is deliberately left as `unknown`."
   },
   {
     "source": "typescript-eslint/typescript-eslint",

@@ -8,8 +8,8 @@
   mochajs/mocha                          135  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
   DefinitelyTyped/DefinitelyTyped        197  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
   jestjs/jest                           1195 38%   730   BASELINE       999 test(s) failing at HEAD on every run (999, 999)
-  prettier/prettier                     1667  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
-  webpack/webpack                        181  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  prettier/prettier                     1667  0%     0   GREEN_TWICE    green on two consecutive runs
+  webpack/webpack                        181  0%     0   BASELINE       killed at the 25-minute stage bound, exit=null, cpu 42.46s over 25 min wall
   babel/babel                             20  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
   babel/babel-loader                      13  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
   import-js/eslint-plugin-import           0   -     -   NOT_ATTEMPTED  no test files discovered - outside the product's scope
@@ -25,11 +25,11 @@
   TypeStrong/ts-node                      29 76%    79   NOT_ATTEMPTED  no canonical qualification run exists
   prettier/eslint-config-prettier          -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
   webpack/webpack-cli                     41  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
-  kulshekhar/ts-jest                      40 85%    77   NOT_ATTEMPTED  no canonical qualification run exists
+  kulshekhar/ts-jest                      40 85%    77   GREEN_TWICE    green on two consecutive runs
   webpack/css-loader                       -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
   jsx-eslint/eslint-plugin-react           1  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
   prettier/eslint-plugin-prettier          -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
-  kentcdodds/cross-env                     5100%     9   NOT_ATTEMPTED  no canonical qualification run exists
+  kentcdodds/cross-env                     5100%     9   GREEN_TWICE    green on two consecutive runs
   axios/axios                              -   -     -   BASELINE       2 test(s) failing at HEAD on every run (2, 2), in tests/unit/adapters/fetch.test.js
   vuejs/core                               -   -     -   NOT_ATTEMPTED  no canonical qualification run exists
   expressjs/express                        -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
@@ -38,16 +38,16 @@
   WHERE REPOSITORIES STOP  (distinct repositories: 32)
 
       8  analyser ineligible - no tsconfig
-     21  never qualified - NO EVIDENCE YET
+     17  never qualified - NO EVIDENCE YET
       1  install failed
       0  build failed
-      2  reached a baseline, not green twice
-      0  GREEN ON TWO CONSECUTIVE RUNS
+      3  reached a baseline, not green twice
+      3  GREEN ON TWO CONSECUTIVE RUNS
 
   Of 32 distinct repositories, 8 are analyser-ineligible and
-  21 have never been through canonical qualification at all.
-  Among the 3 actually attempted: 0 green twice.
+  17 have never been through canonical qualification at all.
+  Among the 7 actually attempted: 3 green twice.
 
-  The 21 unattempted rows are the cost of completing this funnel -
+  The 17 unattempted rows are the cost of completing this funnel -
   one container run each, and until they exist the green rate is not a rate.
 

@@ -1,0 +1,15 @@
+
+  MECHANISM_PROOF_01 SELECTION
+
+    repository                              tests   mapping   edges  green twice   verdict
+    kentcdodds/cross-env                        5    100.0%       9  yes           tests<20
+    typescript-eslint/typescript-eslint       308     99.7%     470  no            disqualified in V1, not green twice
+    kulshekhar/ts-jest                         40     85.0%      77  yes           QUALIFIES
+    TypeStrong/ts-node                         29     75.9%      79  no            no green baselines yet
+    isaacs/rimraf                              24     54.2%      19  no            mapping<70%, no green baselines yet
+    Microsoft/tslib                             2     50.0%       1  no            mapping<70%, tests<20, no green baselines yet
+    microsoft/TypeScript                       14     42.9%      13  no            mapping<70%, tests<20, no green baselines yet
+
+  qualifying: 1
+    SELECTED  kulshekhar/ts-jest  (mapping 85.0%, 40 tests, 77 edges)
+
