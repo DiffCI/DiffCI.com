@@ -200,3 +200,116 @@ describe("buildDependencyGraph nested tsconfig discovery (no root tsconfig.json)
     }
   });
 });
+
+/**
+ * The gate found on 2026-08-30: expansion ran only when the root config yielded ZERO files.
+ *
+ * Real solution-style roots contribute files of their own. `typescript-eslint` has `"files": []` yet
+ * parses to 3 file names and 19 references, so the gate was false, references were never expanded, and
+ * its graph came back with 308 tests and TWO non-test files - the entire source missing. `babel` hit
+ * the same gate with its damage hidden: a broad root `include` gave it 421 of 697 package sources, so
+ * the graph looked plausible while being 40% incomplete.
+ *
+ * The invariant these fix in place is a UNION - root inputs AND recursively resolved reference inputs -
+ * because replacing would have deleted Babel's root-included files the moment expansion started working.
+ */
+describe("project references expand regardless of the root's own file count", () => {
+  it("shape 1 - a pure solution root: referenced sources appear", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-refs-pure-"));
+    try {
+      writeJson(join(dir, "package.json"), { name: "pure-fixture", version: "1.0.0" });
+      writeJson(join(dir, "tsconfig.json"), { files: [], references: [{ path: "./packages/lib" }] });
+      writeJson(join(dir, "packages/lib/tsconfig.json"), {
+        compilerOptions: { target: "ES2022", noEmit: true, composite: true },
+        include: ["src/**/*.ts"],
+      });
+      mkdirSync(join(dir, "packages/lib/src"), { recursive: true });
+      writeFileSync(join(dir, "packages/lib/src/index.ts"), "export const value = 1;\n");
+
+      const result = await buildDependencyGraph({ repoPath: dir, excludeDirs: ["node_modules"] });
+      const paths = result.graph.nodes.map((n) => n.path);
+      assert.ok(paths.includes("packages/lib/src/index.ts"), `referenced source missing from ${JSON.stringify(paths)}`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("shape 2 - a MIXED root keeps its own files AND gains the referenced ones", async () => {
+    // Babel's shape, and the one the union invariant exists for.
+    const dir = mkdtempSync(join(tmpdir(), "diffci-refs-mixed-"));
+    try {
+      writeJson(join(dir, "package.json"), { name: "mixed-fixture", version: "1.0.0" });
+      writeJson(join(dir, "tsconfig.json"), {
+        compilerOptions: { target: "ES2022", noEmit: true },
+        include: ["scripts/**/*.ts"],
+        references: [{ path: "./packages/lib" }],
+      });
+      mkdirSync(join(dir, "scripts"), { recursive: true });
+      writeFileSync(join(dir, "scripts/tool.ts"), "export const tool = 1;\n");
+
+      writeJson(join(dir, "packages/lib/tsconfig.json"), {
+        compilerOptions: { target: "ES2022", noEmit: true, composite: true },
+        include: ["src/**/*.ts", "test/**/*.ts"],
+      });
+      mkdirSync(join(dir, "packages/lib/src"), { recursive: true });
+      mkdirSync(join(dir, "packages/lib/test"), { recursive: true });
+      writeFileSync(join(dir, "packages/lib/src/adder.ts"), "export function add(a: number, b: number) { return a + b; }\n");
+      writeFileSync(join(dir, "packages/lib/test/adder.test.ts"), "import { add } from '../src/adder.js';\nexport const t = add(1, 2);\n");
+
+      const result = await buildDependencyGraph({ repoPath: dir, excludeDirs: ["node_modules"] });
+      const paths = result.graph.nodes.map((n) => n.path);
+
+      assert.ok(paths.includes("scripts/tool.ts"), "the root's OWN file must survive expansion");
+      assert.ok(paths.includes("packages/lib/src/adder.ts"), "referenced package source must appear");
+      assert.ok(paths.includes("packages/lib/test/adder.test.ts"), "referenced package test must appear");
+
+      // Stronger than "the file exists": the relationship must be usable. Files entering the program
+      // while resolution stays broken would look like success and select nothing.
+      assert.deepEqual(
+        result.graph.dependenciesOf("packages/lib/test/adder.test.ts"),
+        ["packages/lib/src/adder.ts"],
+        "the test must actually resolve to the package source",
+      );
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("shape 3 - two levels of nesting: root -> package -> build/spec", async () => {
+    // typescript-eslint's exact shape: the package tsconfig is itself files:[]/include:[] + references.
+    const dir = mkdtempSync(join(tmpdir(), "diffci-refs-nested-"));
+    try {
+      writeJson(join(dir, "package.json"), { name: "nested-fixture", version: "1.0.0" });
+      writeJson(join(dir, "tsconfig.json"), {
+        compilerOptions: { target: "ES2022", noEmit: true },
+        files: [],
+        references: [{ path: "./packages/lib" }],
+      });
+      writeJson(join(dir, "packages/lib/tsconfig.json"), {
+        files: [],
+        include: [],
+        references: [{ path: "./tsconfig.build.json" }, { path: "./tsconfig.spec.json" }],
+      });
+      writeJson(join(dir, "packages/lib/tsconfig.build.json"), {
+        compilerOptions: { target: "ES2022", noEmit: true, composite: true },
+        include: ["src/**/*.ts"],
+      });
+      writeJson(join(dir, "packages/lib/tsconfig.spec.json"), {
+        compilerOptions: { target: "ES2022", noEmit: true, composite: true },
+        include: ["test/**/*.ts"],
+      });
+      mkdirSync(join(dir, "packages/lib/src"), { recursive: true });
+      mkdirSync(join(dir, "packages/lib/test"), { recursive: true });
+      writeFileSync(join(dir, "packages/lib/src/deep.ts"), "export const deep = 1;\n");
+      writeFileSync(join(dir, "packages/lib/test/deep.test.ts"), "import { deep } from '../src/deep.js';\nexport const t = deep;\n");
+
+      const result = await buildDependencyGraph({ repoPath: dir, excludeDirs: ["node_modules"] });
+      const paths = result.graph.nodes.map((n) => n.path);
+      assert.ok(paths.includes("packages/lib/src/deep.ts"), `second-level source missing from ${JSON.stringify(paths)}`);
+      assert.ok(paths.includes("packages/lib/test/deep.test.ts"), "second-level test missing");
+      assert.deepEqual(result.graph.dependenciesOf("packages/lib/test/deep.test.ts"), ["packages/lib/src/deep.ts"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

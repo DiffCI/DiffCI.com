@@ -418,7 +418,25 @@ function createProgram(
     options = parsed.options;
     configFileParsingDiagnostics = parsed.errors;
 
-    if (fileNames.length === 0 && parsed.projectReferences && parsed.projectReferences.length > 0) {
+    // Expand project references whenever the root DECLARES them - not only when the root itself
+    // yielded no files.
+    //
+    // The condition was `fileNames.length === 0`, which assumed a solution-style root contributes
+    // nothing of its own. Real ones do. Measured 2026-08-30:
+    //
+    //   typescript-eslint  root has "files": [] yet parses to 3 file names and 19 references. The gate
+    //                      was false, references were never expanded, and the graph came back with 310
+    //                      nodes of which 308 were tests and TWO were non-test files - the repository's
+    //                      entire source absent, while ast-spec/tsconfig.build.json alone holds 253
+    //                      files two levels down.
+    //   babel              the same gate, masked: its root `include` pulls in ~500 files directly, so
+    //                      the graph looked plausible at 511 nodes while holding 421 of 697
+    //                      packages/*/src files - 60% coverage, silently.
+    //
+    // THE INVARIANT IS A UNION, not a replacement: the program contains the root project's own inputs
+    // AND the recursively resolved reference inputs. Replacing would delete Babel's 421 root-included
+    // files the moment expansion began working for it.
+    if (parsed.projectReferences && parsed.projectReferences.length > 0) {
       const visited = new Set<string>([ts.sys.resolvePath ? ts.sys.resolvePath(configPath) : configPath]);
       const collected: { fileNames: string[]; optionsList: ts.CompilerOptions[] } = { fileNames: [], optionsList: [] };
       for (const ref of parsed.projectReferences) {
@@ -429,12 +447,14 @@ function createProgram(
         collected.optionsList.push(...nested.optionsList);
       }
       if (collected.fileNames.length > 0) {
-        fileNames = Array.from(new Set(collected.fileNames));
-        // Best-effort merge: later-referenced projects' options win on conflict. This is an
-        // approximation (referenced projects can legitimately have different compiler
-        // settings) but is used only for import resolution / AST parsing here, not for type
-        // checking, so it is strictly better than the empty-graph status quo.
-        options = collected.optionsList.reduce((merged, opts) => ({ ...merged, ...opts }), {} as ts.CompilerOptions);
+        fileNames = Array.from(new Set([...fileNames, ...collected.fileNames]));
+        // Best-effort merge, as before: later-referenced projects' options win over earlier ones. The
+        // root's own options are applied LAST so the config the caller actually pointed at still wins -
+        // which is also what keeps a mixed root's existing behaviour unchanged. This is an
+        // approximation (referenced projects can legitimately differ) but it is used only for import
+        // resolution and AST parsing here, not for type checking.
+        const mergedReferences = collected.optionsList.reduce((merged, opts) => ({ ...merged, ...opts }), {} as ts.CompilerOptions);
+        options = { ...mergedReferences, ...options };
         resolvedViaProjectReferences = true;
       }
     }
