@@ -94,6 +94,10 @@ const COLLECTED_FILES: ReadonlySet<string> = new Set([
   // the facts endpoint below is a prefix match rather than yet another name to forget.
   "survey-summary.json",
   "survey.log",
+  // Density survey. Added with the writer, not after it.
+  "density-summary.json",
+  "density-rows.json",
+  "density.log",
   // Both.
   "environment.json",
 ]);

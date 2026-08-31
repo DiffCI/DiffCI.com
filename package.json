@@ -64,7 +64,8 @@
     "calibrate": "tsx scripts/calibrate-repository.ts",
     "survey": "tsx scripts/survey-run.ts",
     "diagnose:candidate": "tsx scripts/diagnose-candidate.ts",
-    "select:candidate": "tsx scripts/select-source-candidate.ts"
+    "select:candidate": "tsx scripts/select-source-candidate.ts",
+    "survey:density": "tsx scripts/survey-mapping-density.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",

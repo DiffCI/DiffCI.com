@@ -48,6 +48,8 @@ import {
   observeArgv,
   qualifyArgv,
   surveyArgv,
+  densityArgv,
+  DENSITY_OUT,
   SURVEY_OUT,
   type ValidationJob,
 } from "../validation-jobs.js";
@@ -75,6 +77,7 @@ export type ValidationStep =
   | "qualifying"
   | "calibrating"
   | "surveying"
+  | "measuringDensity"
   | "locating"
   | "mutating"
   | "collecting"
@@ -123,7 +126,7 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
-  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string };
   /** Set once evidence preservation has run, so a failure inside it cannot loop. */
   evidencePreserved?: boolean;
   /** The step that actually failed, kept because `step` becomes "preserving" then "failed". */
@@ -343,6 +346,13 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
       return { record, nextAlarmDelayMs: 0 };
     }
 
+    // Same shape for the density survey: forty clones, taken by the pass itself.
+    if (job.mode === "density") {
+      record.timings.prepareMs = deps.now() - t0;
+      record.step = "measuringDensity";
+      return { record, nextAlarmDelayMs: 0 };
+    }
+
     if (!job.repository || !isRepositorySlug(job.repository)) return fail(record, "invalid-repository", String(job.repository));
     if (!job.pinnedHeadSha || !isPinnedSha(job.pinnedHeadSha)) return fail(record, "invalid-pinned-sha", String(job.pinnedHeadSha));
 
@@ -387,7 +397,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey",
+  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -481,6 +491,15 @@ async function calibrateStep(record: ValidationRecord, deps: ValidationStepDeps)
   const t0 = record.processStartedAt ?? deps.now();
   return runHarnessPass(record, deps, calibrateArgv(), "calibrate", (r) => {
     r.timings.calibrateMs = deps.now() - t0;
+    r.step = "collecting";
+    return { record: r, nextAlarmDelayMs: 0 };
+  });
+}
+
+async function densityStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const t0 = record.processStartedAt ?? deps.now();
+  return runHarnessPass(record, deps, densityArgv(), "density", (r) => {
+    r.timings.densityMs = deps.now() - t0;
     r.step = "collecting";
     return { record: r, nextAlarmDelayMs: 0 };
   });
@@ -625,6 +644,7 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
     if (deps.job.observeOnly) return collectObservation(record, deps, t0);
     if (deps.job.mode === "calibrate") return collectCalibration(record, deps, t0);
     if (deps.job.mode === "survey") return collectSurvey(record, deps, t0);
+    if (deps.job.mode === "density") return collectDensity(record, deps, t0);
     if (deps.job.mode === "qualify") return collectQualification(record, deps, t0);
 
     const runs = await sandbox.exec(`ls -1 ${RUNS_DIR} 2>/dev/null || true`, { timeout: 30_000 });
@@ -796,6 +816,37 @@ async function collectQualification(record: ValidationRecord, deps: ValidationSt
  * made twice. Per-entry facts are collected too, because a classification that cannot be re-derived
  * from committed evidence cannot be audited.
  */
+/**
+ * Collect the density survey. The summary is required: a run that produced no summary produced
+ * nothing, and an empty result reported as success is the failure this laboratory keeps rediscovering.
+ */
+async function collectDensity(record: ValidationRecord, deps: ValidationStepDeps, t0: number): Promise<ValidationStepResult> {
+  const { sandbox, bucket } = deps;
+  const keys: string[] = [];
+
+  const logKey = `${resultPrefix(record)}/density.log`;
+  await bucket.put(logKey, record.logs?.density ?? "(no output captured)");
+  keys.push(logKey);
+
+  for (const name of ["density-summary.json", "density-rows.json"]) {
+    try {
+      const content = (await sandbox.readFile(`${DENSITY_OUT}/${name}`)).content;
+      const key = `${resultPrefix(record)}/${name}`;
+      await bucket.put(key, content);
+      keys.push(key);
+    } catch (err) {
+      if (name === "density-summary.json") {
+        return fail(record, "density-summary-missing", `the density survey produced no summary: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+  }
+
+  record.resultKeys = keys;
+  record.timings.collectMs = deps.now() - t0;
+  record.step = "done";
+  return { record, nextAlarmDelayMs: null };
+}
+
 async function collectSurvey(record: ValidationRecord, deps: ValidationStepDeps, t0: number): Promise<ValidationStepResult> {
   const { sandbox, bucket } = deps;
   const keys: string[] = [];
@@ -1029,6 +1080,8 @@ export async function stepValidation(record: ValidationRecord, deps: ValidationS
       return calibrateStep(record, deps);
     case "surveying":
       return surveyStep(record, deps);
+    case "measuringDensity":
+      return densityStep(record, deps);
     case "locating":
       return locate(record, deps);
     case "mutating":

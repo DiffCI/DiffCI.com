@@ -69,7 +69,7 @@ export interface ValidationJob {
    * qualify before mutating it means anything, because a mutation pass against a suite that was never
    * green attributes failures to the mutation that were already there.
    */
-  mode: "reproduce" | "qualify" | "calibrate" | "survey";
+  mode: "reproduce" | "qualify" | "calibrate" | "survey" | "density";
   /** The frozen bundle this job reproduces, when it is a reproduction rather than new evidence. */
   reproduces?: string;
   /** "owner/name" - cloned from GitHub over https, no credentials. Unused by `calibrate`. */
@@ -869,6 +869,26 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 2 * 60 * 60_000,
   },
 
+  /**
+   * TEST-TO-PRODUCTION CONNECTIVITY across the frozen 40 (2026-08-30).
+   *
+   * Prettier selected zero tests with a healthy graph: 5 changed files reached 105 affected source
+   * files, but 1,419 of its 1,464 test files contain no import at all - they call a global injected
+   * through jest's setupFiles. A file-level import graph cannot map a test that imports nothing.
+   *
+   * This asks whether that is an outlier or the norm, which is now a candidate ICP variable. It needs
+   * a clone per repository and NO install, because graph construction reads the repository's own
+   * sources - which is what makes forty repositories affordable.
+   */
+  "mapping-density-survey": {
+    id: "mapping-density-survey",
+    description: "Test-to-production connectivity across the frozen 40: import density and mapping density.",
+    mode: "density",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    // Forty clones and forty graph builds. Prettier's graph took 8 s; the largest here may take more.
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "immer-economics": {
     id: "immer-economics",
     description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",
@@ -982,6 +1002,19 @@ export const SURVEY_FRAME_PATH = "docs/evidence/survey/frame-ranks-1-40.json";
  * The frame is a path into the source tarball rather than a URL, so a re-run measures the same 40
  * entries even if the upstream ranking moves. A survey whose frame can drift is not reproducible.
  */
+/** Where the density survey writes its rows and summary inside the container. */
+export const DENSITY_OUT = `${WORKSPACE}/density`;
+
+/**
+ * Density-survey argv.
+ *
+ * Same frozen frame file as the addressability survey, from inside the source tarball, so both
+ * surveys describe the same forty repositories rather than two drifting lists.
+ */
+export function densityArgv(): string[] {
+  return ["run", "survey:density", "--", "--frame", SURVEY_FRAME_PATH, "--out", DENSITY_OUT, "--work", `${DENSITY_OUT}/clones`];
+}
+
 export function surveyArgv(): string[] {
   return ["run", "survey", "--", "--frame", SURVEY_FRAME_PATH, "--out", SURVEY_OUT, "--work", `${SURVEY_OUT}/clones`];
 }
