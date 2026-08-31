@@ -1,0 +1,39 @@
+{
+  "derivationVersion": 1,
+  "source": "ant-design/ant-design",
+  "rule": "docs/e2-registration-rule.md",
+  "ruleFrozenAt": "7d8e213",
+  "evidence": {
+    "lockfilesPresent": [],
+    "packageManagerFrom": "no lockfile - fell through to npm install",
+    "runnerFrom": "package.json devDependencies/dependencies",
+    "declaredRunnerVersions": {
+      "vitest": "^4.1.8",
+      "jest": "^30.4.2"
+    },
+    "hasBuildScript": true,
+    "testScript": "jest --config .jest.js --no-cache"
+  },
+  "detected": {
+    "packageManager": "npm",
+    "runner": "node_modules/vitest/vitest.mjs"
+  },
+  "derived": {
+    "install": [
+      "npm",
+      "install",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "build": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "testModule": "node_modules/vitest/vitest.mjs",
+    "testArgs": [
+      "run"
+    ]
+  },
+  "outcome": "REGISTERED"
+}

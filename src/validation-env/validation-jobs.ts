@@ -1185,6 +1185,25 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 4 * 60 * 60_000,
   },
 
+  /**
+   * E1 screening over the SECOND continuation window, ranks 141-240.
+   *
+   * Ranks 41-140 yielded 4 GREEN of 10 E1 passers - one short of N = 5. The frozen continuation rule
+   * stops at the COUNT, not at a rank ceiling, so the traversal continues from 141 under the same
+   * third-party ordering. No rule changed, N was not lowered, and no RED was revisited.
+   *
+   * E1 only: no observe, no mutate, no density.
+   */
+  "survey-frame-continuation-2": {
+    id: "survey-frame-continuation-2",
+    description: "E1 addressability screening over frame ranks 141-240, under the generation-C apparatus.",
+    mode: "survey",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    surveyFramePath: "docs/evidence/survey/frame-ranks-141-240.json",
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
   "survey-frame-continuation": {
     id: "survey-frame-continuation",
     description: "E1 addressability screening over frame ranks 41-140, under the generation-C apparatus.",
