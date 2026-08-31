@@ -1,0 +1,97 @@
+{
+  "repoPath": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\ffab3b6b-7eea-4772-827d-31dedbf8a62d\\scratchpad\\diag-prettier",
+  "base": "d6316b4e17ccfc2eed28ed1b32d8fe0be22521c8",
+  "head": "18c4dfb01d61c53a63f9c30ee2257631ed1c5994",
+  "producedAt": "2026-08-31T05:03:32.582Z",
+  "platform": "win32 node v24.16.0",
+  "note": "NON-CANONICAL developer-host diagnostic. Valid for decision trace and operation multiplicity; not for economics.",
+  "phases": {
+    "eligibility": {
+      "wallMs": 0.3387,
+      "cpuMs": 0
+    },
+    "gitDelta": {
+      "wallMs": 407.0728,
+      "cpuMs": 78
+    },
+    "graphBuild": {
+      "wallMs": 5653.2728,
+      "cpuMs": 6468
+    },
+    "impactAnalysis": {
+      "wallMs": 156.4087,
+      "cpuMs": 188
+    },
+    "pathBaseline": {
+      "wallMs": 0.3303,
+      "cpuMs": 0
+    }
+  },
+  "totals": {
+    "wallMs": 6218.3655,
+    "cpuMs": 6734,
+    "rssMb": 363.6484375
+  },
+  "funnel": {
+    "changedFiles": 2,
+    "graphNodes": 2201,
+    "graphEdges": 1574,
+    "graphConfidenceRaw": "UNSAFE",
+    "graphConfidenceEffective": "COMPLETE",
+    "affectedSourceFiles": 2,
+    "affectedAssets": 1,
+    "affectedEntryPoints": 0,
+    "testUniverse": 1667,
+    "affectedTests": 0,
+    "analysisStatus": "FALLBACK",
+    "fallbackRequired": true,
+    "finalDecision": "FULL",
+    "finalSelectedTests": 1667,
+    "comparatorSelected": 1667,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Dependency manifest changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "riskSignals": [
+      {
+        "level": "critical",
+        "reason": "CONFIG_GLOBAL"
+      },
+      {
+        "level": "critical",
+        "reason": "DEPENDENCY_MANIFEST"
+      },
+      {
+        "level": "critical",
+        "reason": "LOCKFILE_GLOBAL"
+      }
+    ]
+  },
+  "operations": {
+    "fs.statSync": {
+      "calls": 19277,
+      "totalMs": 1483,
+      "maxMs": 4,
+      "distinct": 2392
+    },
+    "fs.readFileSync": {
+      "calls": 655,
+      "totalMs": 275,
+      "maxMs": 6,
+      "distinct": 651
+    },
+    "fs.readdirSync": {
+      "calls": 103,
+      "totalMs": 22,
+      "maxMs": 1,
+      "distinct": 103
+    },
+    "fs.realpathSync": {
+      "calls": 16,
+      "totalMs": 2,
+      "maxMs": 0,
+      "distinct": 11
+    }
+  }
+}
