@@ -540,7 +540,7 @@ async function verifyUniverse(record: ValidationRecord, deps: ValidationStepDeps
 
 async function observePairsStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   const t0 = record.processStartedAt ?? deps.now();
-  return runHarnessPass(record, deps, observePairsArgv(), "pairs", (r) => {
+  return runHarnessPass(record, deps, observePairsArgv(deps.job), "pairs", (r) => {
     r.timings.observeMs = deps.now() - t0;
 
     // `locate` exists to discover the scratch directory and clone that `dogfood` creates for itself.

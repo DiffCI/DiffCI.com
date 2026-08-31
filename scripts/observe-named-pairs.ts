@@ -187,6 +187,50 @@ function main(): void {
 
   writeFileSync(outPath, `${rows.map((r) => JSON.stringify(r)).join("\n")}\n`);
 
+  // OBSERVATION DETERMINISM (apparatus qualification, generation C).
+  //
+  // Repeated DISCOVERY returning identical paths does not imply repeated OBSERVATION returning
+  // identical selections - discovery could be stable while selection varied. When the pair list names
+  // the same commit pair more than once, every row sharing a head must agree exactly.
+  //
+  // It compares the SELECTIONS, not the timings: CPU and wall time legitimately vary between two runs
+  // in one container, and requiring those to match would fail for a reason that has nothing to do with
+  // the analyser being deterministic.
+  if (process.argv.includes("--assert-identical-repeats")) {
+    const byHead = new Map<string, any[]>();
+    for (const r of rows as any[]) byHead.set(r.head, [...(byHead.get(r.head) ?? []), r]);
+    const divergent: string[] = [];
+    let compared = 0;
+    for (const [head, group] of byHead) {
+      if (group.length < 2) continue;
+      const key = (r: any) =>
+        JSON.stringify({
+          classification: r.classification,
+          selected: [...(r.selectedTests ?? [])].sort(),
+          total: r.totalTestCount,
+          comparator: r.comparatorSelected,
+          status: r.decision?.status,
+          mode: r.decision?.mode,
+        });
+      const first = key(group[0]);
+      compared += group.length - 1;
+      for (const r of group.slice(1)) if (key(r) !== first) divergent.push(`${head.slice(0, 9)}: ${first} !== ${key(r)}`);
+    }
+    console.log(`
+  OBSERVATION DETERMINISM`);
+    if (compared === 0) {
+      console.log(`    REFUSED: --assert-identical-repeats was given but no head appears twice, so nothing was compared.`);
+      process.exit(1);
+    }
+    if (divergent.length > 0) {
+      console.log(`    FAILED: ${divergent.length} repeat(s) diverged`);
+      for (const d of divergent) console.log(`      ${d}`);
+      process.exit(1);
+    }
+    console.log(`    PASS: ${compared} repeated observation(s) produced identical selections
+`);
+  }
+
   const nonEmpty = rows.filter((r: any) => r.classification === "SELECTIVE-nonempty").length;
   const counts: Record<string, number> = {};
   for (const r of rows as any[]) counts[r.classification] = (counts[r.classification] ?? 0) + 1;

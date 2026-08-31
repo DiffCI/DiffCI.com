@@ -1,0 +1,20 @@
+{
+  "repository": "kulshekhar/ts-jest",
+  "pinnedTree": "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+  "sealedAt": "apparatus qualification, generation C",
+  "note": "ONE pair, listed TWICE, so the analyser observes identical input twice in one container and the two reports can be compared. The pair is the pinned tree's own HEAD~1..HEAD, chosen mechanically and verified NOT to be among the five MECHANISM_PROOF_01 candidates. It is a `build:` commit touching dependency declarations; nothing about WHAT it selects is interpreted here, and its selection is never compared against the sealed experiment. The only question asked is whether run 1 equals run 2.",
+  "pairs": [
+    {
+      "index": 1,
+      "base": "71ce72e2b8c71687553732d9a7afed7d7847af3a",
+      "head": "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+      "subject": "build: remove duplicated typescript eslint deps (determinism probe, run 1)"
+    },
+    {
+      "index": 2,
+      "base": "71ce72e2b8c71687553732d9a7afed7d7847af3a",
+      "head": "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+      "subject": "build: remove duplicated typescript eslint deps (determinism probe, run 2)"
+    }
+  ]
+}

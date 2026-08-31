@@ -75,6 +75,10 @@ export interface ValidationJob {
    * Present only on apparatus-qualification jobs. See docs/apparatus-qualification-gen-c.md.
    */
   universe?: { expectedTestCount: number; forbiddenPrefixes: string[] };
+  /** Sealed pair list for observe-pairs jobs. Defaults to the MECHANISM_PROOF_01 five. */
+  pairsPath?: string;
+  /** Require every pair sharing a head to produce an IDENTICAL report - observation determinism. */
+  assertIdenticalRepeats?: boolean;
   /** The frozen bundle this job reproduces, when it is a reproduction rather than new evidence. */
   reproduces?: string;
   /** "owner/name" - cloned from GitHub over https, no credentials. Unused by `calibrate`. */
@@ -1006,6 +1010,30 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 8 * 60 * 60_000,
   },
 
+  /**
+   * OBSERVATION DETERMINISM - the last link of the generation-C qualification chain.
+   *
+   * Repeated DISCOVERY returning identical paths (proved by apparatus-qualify-gen-c) does not imply
+   * repeated OBSERVATION returning identical selections: discovery could be stable while selection
+   * varied. This observes ONE pair TWICE in one container and requires the two reports to agree.
+   *
+   * The pair is the pinned tree own HEAD~1..HEAD, chosen mechanically and verified NOT to be among the
+   * five MECHANISM_PROOF_01 candidates - in particular not candidate 5. WHAT it selects is never
+   * interpreted and never compared against the sealed experiment; the only question is run 1 == run 2.
+   */
+  "apparatus-determinism-gen-c": {
+    id: "apparatus-determinism-gen-c",
+    description: "Apparatus qualification: repeated observation of one non-candidate pair must be identical.",
+    mode: "observe-pairs",
+    repository: "kulshekhar/ts-jest",
+    pinnedHeadSha: "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    pairsPath: "docs/evidence/apparatus-determinism-pairs.json",
+    assertIdenticalRepeats: true,
+    // A clone and two analyses. Nothing installs dependencies or executes a suite.
+    maxRunMs: 2 * 60 * 60_000,
+  },
+
   "tsjest-mechanism-mutation": {
     id: "tsjest-mechanism-mutation",
     description: "MECHANISM_PROOF_01: mutate the five sealed ts-jest candidates under the frozen protocol.",
@@ -1167,8 +1195,15 @@ export const PAIRS_PATH = "docs/evidence/mechanism-proof-pairs.json";
  * sealed at `07bc3d1` and cannot be re-derived from git log at run time. A candidate list that could
  * drift would make the pre-registration decorative.
  */
-export function observePairsArgv(): string[] {
-  return ["run", "observe:pairs", "--", "--repo", PINNED_CLONE, "--pairs", PAIRS_PATH, "--out", OBSERVED_CORPUS_PATH, "--reports", `${WORKSPACE}/reports`];
+export function observePairsArgv(job?: ValidationJob): string[] {
+  return [
+    "run", "observe:pairs", "--",
+    "--repo", PINNED_CLONE,
+    "--pairs", job?.pairsPath ?? PAIRS_PATH,
+    "--out", OBSERVED_CORPUS_PATH,
+    "--reports", `${WORKSPACE}/reports`,
+    ...(job?.assertIdenticalRepeats ? ["--assert-identical-repeats"] : []),
+  ];
 }
 
 export const UNIVERSE_OUT = `${WORKSPACE}/universe-sanity.json`;
