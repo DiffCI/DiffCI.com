@@ -204,8 +204,11 @@ export default {
         // rank and package. A prefix rule rather than 40 allowlist entries, constrained so it cannot
         // address anything outside that directory.
         const isSurveyFact = /^facts\/[0-9]{2}-[A-Za-z0-9_.@-]+\.json$/.test(file);
-        if (!COLLECTED_FILES.has(file) && !isSurveyFact) {
-          return Response.json({ ok: false, error: `unknown-file (allowed: ${[...COLLECTED_FILES].join(", ")}, facts/NN-name.json)` }, { status: 400 });
+        // Evidence preserved from a FAILED run (defect #16). Added here at the same time as the write
+        // path, because #14 was this allowlist lagging behind a writer and #4 was the same thing again.
+        const isPreserved = /^failed\/[A-Za-z0-9_.@-]+\.(json|jsonl|log)$/.test(file);
+        if (!COLLECTED_FILES.has(file) && !isSurveyFact && !isPreserved) {
+          return Response.json({ ok: false, error: `unknown-file (allowed: ${[...COLLECTED_FILES].join(", ")}, facts/NN-name.json, failed/*.{json,jsonl,log})` }, { status: 400 });
         }
         // `shard` addresses one shard's artefacts; omitted reads an unsharded run's flat layout.
         const shardParam = url.searchParams.get("shard");

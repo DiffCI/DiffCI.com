@@ -26,6 +26,7 @@ import {
   observeArgv,
   qualifyArgv,
 } from "../../src/validation-env/validation-jobs.js";
+import { stepValidation } from "../../src/validation-env/cloudflare/validation-shard-do.js";
 
 const repoRoot = resolve(dirname(import.meta.filename), "..", "..");
 
@@ -455,5 +456,66 @@ describe("immer economics answers the prediction that was frozen", () => {
   it("actually runs the arms - observeOnly here would silently produce no economics at all", () => {
     assert.equal(observation.observeOnly, true);
     assert.notEqual(economics.observeOnly, true);
+  });
+});
+
+/**
+ * Defect #16: a failed run must not destroy the evidence that explains why it failed.
+ *
+ * Prettier's 25 observations were lost this way - four hours of work discarded because `locate` refused
+ * before `collect` ran, taking with it the one distribution the experiment existed to measure.
+ */
+describe("a failed run preserves its evidence", () => {
+  const stepOnce = async (record: any, job: any, sandbox: any, bucket: any) =>
+    stepValidation(record, { sandbox, bucket, job, now: () => 1_000 });
+
+  const fakeSandbox = (files: Record<string, string>) => ({
+    async readFile(path: string) {
+      const content = files[path];
+      if (content === undefined) throw new Error(`no such file: ${path}`);
+      return { content };
+    },
+    async exec() {
+      return { success: true, stdout: "", stderr: "", exitCode: 0 };
+    },
+    async writeFile() {},
+  });
+
+  const fakeBucket = () => {
+    const written: Record<string, string> = {};
+    return { written, async put(key: string, value: string) { written[key] = value; } };
+  };
+
+  it("routes a failure through preservation rather than straight to failed", async () => {
+    // `locate` refuses a corpus with no selectable candidate - the exact Prettier failure.
+    const record: any = {
+      runId: "t", jobId: "immer-observation", shardIndex: 0, shardCount: 1,
+      step: "preserving", timings: {}, errorClass: "no-candidates", error: "none were SELECTIVE",
+      logs: { observe: "twenty five observations" },
+    };
+    const bucket = fakeBucket();
+    const result = await stepOnce(record, getValidationJob("immer-observation"), fakeSandbox({ "/workspace/corpus.jsonl": '{"a":1}\n' }), bucket);
+
+    assert.equal(result.record.step, "failed", "still ends failed - preservation never rescues a run");
+    assert.equal(result.record.errorClass, "no-candidates", "the original cause is not overwritten");
+    const keys = Object.keys(bucket.written);
+    assert.ok(keys.some((k) => k.endsWith("/failed/corpus.jsonl")), `corpus preserved, got ${keys.join(", ")}`);
+    assert.ok(keys.some((k) => k.endsWith("/failed/observe.log")), "harness output preserved");
+    assert.ok(keys.some((k) => k.endsWith("/failed/failure.json")), "failure summary preserved");
+  });
+
+  it("terminates rather than looping when preservation itself cannot read anything", async () => {
+    const record: any = {
+      runId: "t", jobId: "immer-observation", shardIndex: 0, shardCount: 1,
+      step: "preserving", timings: {}, errorClass: "boom", error: "boom",
+    };
+    const sandbox = {
+      async readFile() { throw new Error("container is gone"); },
+      async exec() { throw new Error("container is gone"); },
+      async writeFile() {},
+    };
+    const result = await stepOnce(record, getValidationJob("immer-observation"), sandbox, fakeBucket());
+    assert.equal(result.record.step, "failed");
+    assert.equal(result.nextAlarmDelayMs, null, "no further alarm - a dead container must not spin");
   });
 });

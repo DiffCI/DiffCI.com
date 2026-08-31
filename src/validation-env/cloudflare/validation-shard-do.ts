@@ -78,6 +78,7 @@ export type ValidationStep =
   | "locating"
   | "mutating"
   | "collecting"
+  | "preserving"
   | "done"
   | "failed"
   | "cancelled";
@@ -123,6 +124,10 @@ export interface ValidationRecord {
   errorClass?: string;
   error?: string;
   logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string };
+  /** Set once evidence preservation has run, so a failure inside it cannot loop. */
+  evidencePreserved?: boolean;
+  /** The step that actually failed, kept because `step` becomes "preserving" then "failed". */
+  stepBeforeFailure?: ValidationStep;
   timings: Record<string, number>;
 }
 
@@ -156,11 +161,31 @@ function resultPrefix(record: ValidationRecord): string {
   return record.shardCount > 1 ? `validation/${record.runId}/shards/${record.shardIndex}` : `validation/${record.runId}`;
 }
 
+/**
+ * Record a failure - and preserve the evidence that explains it before terminating.
+ *
+ * DEFECT #16. A failed run used to end here, which meant `collect` never ran and everything the
+ * container had produced was discarded with it. On 2026-08-30 that destroyed the single measurement
+ * the Prettier experiment existed to make: 25 observations completed over four hours, `locate` refused
+ * because none was selective, and the corpus carrying the REFUSED/FULL/SELECTIVE distribution went
+ * with the container. The worst case for the product was also the case where the harness threw away
+ * the evidence.
+ *
+ * So a failure now routes through `preserving`, which makes a best-effort copy of whatever exists into
+ * R2 and only then terminates. Preservation is strictly additive: it cannot change a verdict, cannot
+ * rescue a run, and cannot fail it a second time - `evidencePreserved` makes a failure inside
+ * preservation terminate immediately rather than loop.
+ */
 function fail(record: ValidationRecord, errorClass: string, error: string): ValidationStepResult {
-  record.step = "failed";
   record.errorClass = errorClass;
   record.error = error.slice(0, 4000);
-  return { record, nextAlarmDelayMs: null };
+  if (record.step !== "preserving") record.stepBeforeFailure = record.step;
+  if (record.step === "preserving" || record.evidencePreserved === true) {
+    record.step = "failed";
+    return { record, nextAlarmDelayMs: null };
+  }
+  record.step = "preserving";
+  return { record, nextAlarmDelayMs: 0 };
 }
 
 function tail(result: { stdout?: string; stderr?: string }, n = 1500): string {
@@ -474,7 +499,10 @@ async function observe(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const t0 = record.processStartedAt ?? deps.now();
   return runHarnessPass(record, deps, observeArgv(), "observe", (r) => {
     r.timings.observeMs = deps.now() - t0;
-    r.step = "locating";
+    // An observation-only job has nothing to locate and nothing to mutate. Routing it through `locate`
+    // meant it could only ever reach collection when selectable candidates existed - so the one case an
+    // observation run is FOR, explaining why nothing was selected, was the one case it could not report.
+    r.step = deps.job.observeOnly === true ? "collecting" : "locating";
     return { record: r, nextAlarmDelayMs: 0 };
   });
 }
@@ -917,6 +945,76 @@ async function collectObservation(record: ValidationRecord, deps: ValidationStep
 }
 
 /** The pure state machine, injectable for tests exactly like the analysis shards. */
+/**
+ * Best-effort evidence dump for a failed run. Never throws, never changes the verdict.
+ *
+ * Everything is attempted independently and every failure is swallowed: one unreadable artefact must
+ * not cost the others. The run always ends `failed`, carrying the original errorClass and error.
+ */
+async function preserveEvidence(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const { sandbox, bucket } = deps;
+  const keys = record.resultKeys ? [...record.resultKeys] : [];
+  const prefix = `${resultPrefix(record)}/failed`;
+
+  const put = async (name: string, read: () => Promise<string | undefined>): Promise<void> => {
+    try {
+      const content = await read();
+      if (content === undefined || content.length === 0) return;
+      const key = `${prefix}/${name}`;
+      await bucket.put(key, content);
+      keys.push(key);
+    } catch {
+      // Deliberately silent. Preservation is additive; a missing artefact is not a new failure.
+    }
+  };
+
+  // What the harness printed. Already in memory, so this survives even a dead container.
+  for (const [label, text] of Object.entries(record.logs ?? {})) {
+    if (typeof text === "string") await put(`${label}.log`, async () => text);
+  }
+
+  await put("failure.json", async () =>
+    `${JSON.stringify(
+      {
+        runId: record.runId,
+        jobId: record.jobId,
+        shardIndex: record.shardIndex,
+        failedAtStep: record.stepBeforeFailure ?? null,
+        errorClass: record.errorClass ?? null,
+        error: record.error ?? null,
+        timings: record.timings,
+        environment: record.environment ?? null,
+        sourceTarballKey: record.sourceTarballKey,
+        sourceTarballSha256: record.sourceTarballSha256,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  // The observed corpus - the artefact a locate-stage refusal used to destroy.
+  await put("corpus.jsonl", async () => (await sandbox.readFile(OBSERVED_CORPUS_PATH)).content);
+  await put("survey-summary.json", async () => (await sandbox.readFile(`${SURVEY_OUT}/survey-summary.json`)).content);
+
+  // Whatever the mutation pass had written before it stopped.
+  try {
+    const listing = await sandbox.exec(`ls -1 ${RUNS_DIR} 2>/dev/null || true`, { timeout: 30_000 });
+    const dirs = listing.stdout.split("\n").map((d) => d.trim()).filter(Boolean).slice(0, 4);
+    for (const dir of dirs) {
+      for (const file of ["results.jsonl", "manifest.json", "corpus.jsonl"]) {
+        await put(`${dir}-${file}`, async () => (await sandbox.readFile(`${RUNS_DIR}/${dir}/${file}`)).content);
+      }
+    }
+  } catch {
+    // As above.
+  }
+
+  record.resultKeys = keys;
+  record.evidencePreserved = true;
+  record.step = "failed";
+  return { record, nextAlarmDelayMs: null };
+}
+
 export async function stepValidation(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   switch (record.step) {
     case "bootstrapping":
@@ -937,6 +1035,8 @@ export async function stepValidation(record: ValidationRecord, deps: ValidationS
       return mutate(record, deps);
     case "collecting":
       return collect(record, deps);
+    case "preserving":
+      return preserveEvidence(record, deps);
     default:
       return { record, nextAlarmDelayMs: null };
   }
