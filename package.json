@@ -71,7 +71,8 @@
     "funnel:qualification": "tsx scripts/qualification-funnel.ts",
     "select:mechanism-proof": "tsx scripts/select-mechanism-proof.ts",
     "observe:pairs": "tsx scripts/observe-named-pairs.ts",
-    "qualify:universe": "tsx scripts/qualify-universe.ts"
+    "qualify:universe": "tsx scripts/qualify-universe.ts",
+    "corpus:register": "tsx scripts/register-corpus-entry.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",

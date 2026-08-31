@@ -52,6 +52,7 @@ import {
   surveyArgv,
   densityArgv,
   observePairsArgv,
+  registerArgv,
   universeArgv,
   UNIVERSE_OUT,
   DENSITY_OUT,
@@ -85,6 +86,7 @@ export type ValidationStep =
   | "measuringDensity"
   | "observingPairs"
   | "verifyingUniverse"
+  | "registering"
   | "locating"
   | "mutating"
   | "collecting"
@@ -137,7 +139,7 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
-  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string; register?: string };
   /** Set once evidence preservation has run, so a failure inside it cannot loop. */
   evidencePreserved?: boolean;
   /** The step that actually failed, kept because `step` becomes "preserving" then "failed". */
@@ -438,7 +440,13 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
 
     // Universe sanity runs BEFORE the suite qualification: if DiffCI models the wrong set of
     // executable tests there is no point measuring how reliably that suite goes green.
-    record.step = job.universe ? "verifyingUniverse" : job.mode === "qualify" ? "qualifying" : "observing";
+    record.step = job.universe
+      ? "verifyingUniverse"
+      : job.registerBeforeQualify
+        ? "registering"
+        : job.mode === "qualify"
+          ? "qualifying"
+          : "observing";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {
     return fail(record, "prepare-failed", err instanceof Error ? err.message : String(err));
@@ -450,7 +458,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe",
+  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe" | "register",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -535,6 +543,23 @@ async function runHarnessPass(
  * Nothing is mutated. This answers only whether the repository can contribute safety evidence at all -
  * mutating a suite that was never green attributes pre-existing failures to the mutation.
  */
+/**
+ * Register the repository in the corpus registry before qualifying it.
+ *
+ * The frame-continuation repositories are not in the 20-entry registry, so `dogfood:qualify --only`
+ * found nothing and the run failed with "the collected corpus has no entry" - an apparatus gap, not a
+ * red suite. Commands come from the repository own manifest under the frozen rule; nothing is chosen
+ * per repository. Exit 2 means UNREGISTERABLE, which is an outcome to record, not a crash.
+ */
+async function registerStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const t0 = record.processStartedAt ?? deps.now();
+  return runHarnessPass(record, deps, registerArgv(deps.job), "register", (r) => {
+    r.timings.registerMs = deps.now() - t0;
+    r.step = "qualifying";
+    return { record: r, nextAlarmDelayMs: 0 };
+  });
+}
+
 async function qualifyStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   const t0 = record.processStartedAt ?? deps.now();
   return runHarnessPass(record, deps, qualifyArgv(deps.job), "qualify", (r) => {
@@ -1243,6 +1268,8 @@ async function stepValidationInner(record: ValidationRecord, deps: ValidationSte
       return observePairsStep(record, deps);
     case "verifyingUniverse":
       return verifyUniverse(record, deps);
+    case "registering":
+      return registerStep(record, deps);
     case "locating":
       return locate(record, deps);
     case "mutating":

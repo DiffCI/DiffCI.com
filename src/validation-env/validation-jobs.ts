@@ -23,6 +23,8 @@
 export const WORKSPACE = "/workspace";
 /** The pinned clone the corpus points at. Never the tree the harness checks commits out in. */
 export const PINNED_CLONE = `${WORKSPACE}/target-src`;
+/** Where DiffCI own source is unpacked in the container. Mirrors the DO constant. */
+export const DIFFCI_DIR = "/opt/diffci";
 /** TMPDIR for the harness, so `mkdtemp`'s scratch directory lands somewhere discoverable. */
 export const SCRATCH_ROOT = `${WORKSPACE}/tmp`;
 /** The corpus definition the DO writes, pointing `source` at PINNED_CLONE. */
@@ -78,6 +80,8 @@ export interface ValidationJob {
   /** Sealed pair list for observe-pairs jobs. Defaults to the MECHANISM_PROOF_01 five. */
   /** Refuse to run unless the container is the QUALIFIED apparatus of this generation. */
   requiresApparatus?: "gen-c";
+  /** Register the repository in the corpus registry before qualifying it (frame-continuation repos). */
+  registerBeforeQualify?: boolean;
   /** Frame file for a survey job. Defaults to the frozen ranks 1-40. */
   surveyFramePath?: string;
   pairsPath?: string;
@@ -1059,6 +1063,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "d0c1517b61f4805a319ae416f50b1d5bdf3e137f",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1071,6 +1076,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "cf9c7012003b8d71783d6c2d72f357616957b99c",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1083,6 +1089,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "e73585efc03ddf17df0273fa3b8dad0b66c51168",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1095,6 +1102,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "ed3e1f7592a5fea2eb0da2475a3675ceb9371a47",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1107,6 +1115,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "f3a027627472216e17e812f5324059f45d156298",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1119,6 +1128,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "4cff90bbe88a6747d5a0eb52d300cb8bed505277",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1131,6 +1141,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "bc6f9f8f61d708352ea89fd4fc9764ce1e4de409",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1143,6 +1154,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "c5dbf3f09b406586d5ce6ce0a3d634d1a07b4f04",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1155,6 +1167,7 @@ const JOBS: Record<string, ValidationJob> = {
     // The tree E1 actually screened, not whatever HEAD later moves to.
     pinnedHeadSha: "698636508e08f5379a57eaf086b5ff533af8e051",
     requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
     expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
     maxRunMs: 4 * 60 * 60_000,
   },
@@ -1290,6 +1303,15 @@ export function observeArgv(): string[] {
  * `--clone-depth 0` is a full clone. Builds that ask git what changed cannot answer from a shallow one,
  * which is precisely how TanStack/query was disqualified on the developer host.
  */
+/**
+ * Register the repository in the corpus registry from its OWN manifest, under the frozen rule in
+ * docs/e2-registration-rule.md. Reads package.json and lockfiles; executes nothing.
+ */
+export function registerArgv(job: ValidationJob): string[] {
+  if (!job.repository) throw new Error(`job "${job.id}" has mode "${job.mode}" and names no repository`);
+  return ["run", "corpus:register", "--", "--repo", PINNED_CLONE, "--source", job.repository, "--out", `${DIFFCI_DIR}/scripts/dogfood-corpus.json`];
+}
+
 export function qualifyArgv(job: ValidationJob): string[] {
   if (!job.repository) throw new Error(`job "${job.id}" has mode "${job.mode}" and names no repository`);
   return ["run", "dogfood:qualify", "--", "--only", job.repository, "--clone-depth", "0", "--write"];
