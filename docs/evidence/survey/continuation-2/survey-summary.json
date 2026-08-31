@@ -1,0 +1,889 @@
+{
+  "frame": {
+    "source": "npm-high-impact@1.13.0, export npmTopDependents",
+    "sourcePublished": "2026-06-08T16:53:09.521Z",
+    "entries": 100
+  },
+  "runnerCapabilities": [
+    {
+      "runner": "vitest",
+      "failureCountReadable": true,
+      "fileCountReadable": true,
+      "supported": true
+    },
+    {
+      "runner": "jest",
+      "failureCountReadable": true,
+      "fileCountReadable": true,
+      "supported": true
+    },
+    {
+      "runner": "mocha",
+      "failureCountReadable": true,
+      "fileCountReadable": false,
+      "supported": false
+    },
+    {
+      "runner": "node:test",
+      "failureCountReadable": true,
+      "fileCountReadable": false,
+      "supported": false
+    },
+    {
+      "runner": "ava",
+      "failureCountReadable": false,
+      "fileCountReadable": false,
+      "supported": false
+    },
+    {
+      "runner": "tap",
+      "failureCountReadable": true,
+      "fileCountReadable": false,
+      "supported": false
+    },
+    {
+      "runner": "jasmine",
+      "failureCountReadable": false,
+      "fileCountReadable": false,
+      "supported": false
+    },
+    {
+      "runner": "karma",
+      "failureCountReadable": false,
+      "fileCountReadable": false,
+      "supported": false
+    },
+    {
+      "runner": "uvu",
+      "failureCountReadable": false,
+      "fileCountReadable": false,
+      "supported": false
+    },
+    {
+      "runner": "playwright",
+      "failureCountReadable": false,
+      "fileCountReadable": false,
+      "supported": false
+    }
+  ],
+  "chain": {
+    "frameEntries": 100,
+    "excluded": 7,
+    "surveyEligible": 93,
+    "reachedQualification": 18
+  },
+  "counts": {
+    "MONOREPO_SCOPE_UNSUPPORTED": 38,
+    "RUNNER_UNSUPPORTED": 35,
+    "EXCLUDED_ARCHIVED": 4,
+    "REACHED_QUALIFICATION": 18,
+    "NO_ROOT_COMMAND": 1,
+    "SURVEY_ERROR": 1,
+    "EXCLUDED_NO_TESTS": 1,
+    "EXCLUDED_NOT_JS_TS": 2
+  },
+  "adjudications": [
+    {
+      "rank": 141,
+      "packageName": "@storybook/addon-actions",
+      "repository": "storybookjs/storybook",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces, nx.json. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 142,
+      "packageName": "@storybook/addon-essentials",
+      "repository": "storybookjs/storybook",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces, nx.json. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 143,
+      "packageName": "vite",
+      "repository": "vitejs/vite",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 144,
+      "packageName": "babel-runtime",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 145,
+      "packageName": "browserify",
+      "repository": "browserify/browserify",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares tap (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 146,
+      "packageName": "less-loader",
+      "repository": "webpack/less-loader",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "no runner could be identified from dependencies, config files, or test scripts"
+    },
+    {
+      "rank": 147,
+      "packageName": "@commitlint/cli",
+      "repository": "conventional-changelog/commitlint",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml, lerna.json. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 148,
+      "packageName": "eslint-loader",
+      "repository": "webpack-contrib/eslint-loader",
+      "outcome": "EXCLUDED_ARCHIVED",
+      "gate": 0,
+      "reason": "GitHub reports the repository archived"
+    },
+    {
+      "rank": 149,
+      "packageName": "babel-polyfill",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 150,
+      "packageName": "gh-pages",
+      "repository": "tschaub/gh-pages",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable); playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 151,
+      "packageName": "@types/hyper-function-component",
+      "repository": "DefinitelyTyped/DefinitelyTyped",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 152,
+      "packageName": "bluebird",
+      "repository": "petkaantonov/bluebird",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 153,
+      "packageName": "eslint-plugin-jest",
+      "repository": "jest-community/eslint-plugin-jest",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: jest\", 95 test files by best-matching pattern"
+    },
+    {
+      "rank": 154,
+      "packageName": "enzyme",
+      "repository": "airbnb/enzyme",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: lerna.json. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 155,
+      "packageName": "should",
+      "repository": "shouldjs/should.js",
+      "outcome": "EXCLUDED_ARCHIVED",
+      "gate": 0,
+      "reason": "GitHub reports the repository archived"
+    },
+    {
+      "rank": 156,
+      "packageName": "colors",
+      "repository": "Marak/colors.js",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "no runner could be identified from dependencies, config files, or test scripts"
+    },
+    {
+      "rank": 157,
+      "packageName": "styled-components",
+      "repository": "styled-components/styled-components",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 158,
+      "packageName": "@types/express",
+      "repository": "DefinitelyTyped/DefinitelyTyped",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 159,
+      "packageName": "karma-jasmine",
+      "repository": "karma-runner/karma-jasmine",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares jasmine (failure count unreadable, file count unreadable); karma (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 160,
+      "packageName": "rollup-plugin-postcss",
+      "repository": "egoist/rollup-plugin-postcss",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: npm run lint && jest\", 42 test files by best-matching pattern"
+    },
+    {
+      "rank": 161,
+      "packageName": "babel-register",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 162,
+      "packageName": "jquery",
+      "repository": "jquery/jquery",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "no runner could be identified from dependencies, config files, or test scripts"
+    },
+    {
+      "rank": 163,
+      "packageName": "@rollup/plugin-babel",
+      "repository": "rollup/plugins",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 164,
+      "packageName": "jasmine-core",
+      "repository": "jasmine/jasmine",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares jasmine (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 165,
+      "packageName": "rollup-plugin-peer-deps-external",
+      "repository": "pmowrer/rollup-plugin-peer-deps-external",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: jest\", 2 test files by best-matching pattern"
+    },
+    {
+      "rank": 166,
+      "packageName": "body-parser",
+      "repository": "expressjs/body-parser",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable); playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 167,
+      "packageName": "uglify-js",
+      "repository": "mishoo/UglifyJS",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "no runner could be identified from dependencies, config files, or test scripts"
+    },
+    {
+      "rank": 168,
+      "packageName": "babel-plugin-transform-object-rest-spread",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 169,
+      "packageName": "gulp-rename",
+      "repository": "hparra/gulp-rename",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 170,
+      "packageName": "@angular/core",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 171,
+      "packageName": "del",
+      "repository": "sindresorhus/del",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares ava (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 172,
+      "packageName": "cz-conventional-changelog",
+      "repository": "commitizen/cz-conventional-changelog",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 173,
+      "packageName": "mini-css-extract-plugin",
+      "repository": "webpack/mini-css-extract-plugin",
+      "outcome": "EXCLUDED_ARCHIVED",
+      "gate": 0,
+      "reason": "GitHub reports the repository archived"
+    },
+    {
+      "rank": 174,
+      "packageName": "babel-preset-stage-2",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 175,
+      "packageName": "underscore",
+      "repository": "jashkenas/underscore",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares karma (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 176,
+      "packageName": "copy-webpack-plugin",
+      "repository": "webpack/copy-webpack-plugin",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test:only: cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js\", 66 test files by best-matching pattern"
+    },
+    {
+      "rank": 177,
+      "packageName": "@angular/common",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 178,
+      "packageName": "tslint-config-prettier",
+      "repository": "prettier/tslint-config-prettier",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: yarn clean && jest --no-cache\", 57 test files by best-matching pattern"
+    },
+    {
+      "rank": 179,
+      "packageName": "@angular/compiler",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 180,
+      "packageName": "@types/jasmine",
+      "repository": "DefinitelyTyped/DefinitelyTyped",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 181,
+      "packageName": "react-native",
+      "repository": "react/react-native",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 182,
+      "packageName": "sinon-chai",
+      "repository": "chaijs/sinon-chai",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable); playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 183,
+      "packageName": "zone.js",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 184,
+      "packageName": "tsup",
+      "repository": "egoist/tsup",
+      "outcome": "NO_ROOT_COMMAND",
+      "gate": 3,
+      "reason": "no documented script runs a supported runner without a browser, foreign runtime, or service. Scripts: test: pnpm run build && pnpm run test-only"
+    },
+    {
+      "rank": 185,
+      "packageName": "react-router-dom",
+      "repository": "remix-run/react-router",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 186,
+      "packageName": "uglifyjs-webpack-plugin",
+      "repository": "webpack-contrib/uglifyjs-webpack-plugin",
+      "outcome": "EXCLUDED_ARCHIVED",
+      "gate": 0,
+      "reason": "GitHub reports the repository archived"
+    },
+    {
+      "rank": 187,
+      "packageName": "@angular/platform-browser",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 188,
+      "packageName": "webpack-bundle-analyzer",
+      "repository": "webpack/webpack-bundle-analyzer",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: NODE_OPTIONS=--openssl-legacy-provider jest --runInBand\", 129 test files by best-matching pattern"
+    },
+    {
+      "rank": 189,
+      "packageName": "optimize-css-assets-webpack-plugin",
+      "repository": "NMFR/optimize-css-assets-webpack-plugin",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: jest\", 29 test files by best-matching pattern"
+    },
+    {
+      "rank": 190,
+      "packageName": "@angular/compiler-cli",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 191,
+      "packageName": "clean-webpack-plugin",
+      "repository": "johnagan/clean-webpack-plugin",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: jest\", 3 test files by best-matching pattern"
+    },
+    {
+      "rank": 192,
+      "packageName": "jsonwebtoken",
+      "repository": "auth0/node-jsonwebtoken",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 193,
+      "packageName": "reflect-metadata",
+      "repository": "rbuckton/reflect-metadata",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable); playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 194,
+      "packageName": "gulp-uglify",
+      "repository": "terinjokes/gulp-uglify",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 195,
+      "packageName": "terser-webpack-plugin",
+      "repository": "webpack/minimizer-webpack-plugin",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test:base: node ./scripts/jest.js\", 135 test files by best-matching pattern"
+    },
+    {
+      "rank": 196,
+      "packageName": "redux",
+      "repository": "reduxjs/redux",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner vitest, script \"test: vitest --run --typecheck\", 32 test files by best-matching pattern"
+    },
+    {
+      "rank": 197,
+      "packageName": "stylelint",
+      "repository": "stylelint/stylelint",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: run-s test-jest test-node\", 483 test files by best-matching pattern"
+    },
+    {
+      "rank": 198,
+      "packageName": "@angular/platform-browser-dynamic",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 199,
+      "packageName": "@ant-design/web3-common",
+      "repository": "ant-design/ant-design-web3",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces, pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 200,
+      "packageName": "@ant-design/web3-icons",
+      "repository": "ant-design/ant-design-web3",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces, pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 201,
+      "packageName": "js-yaml",
+      "repository": "nodeca/js-yaml",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 202,
+      "packageName": "grunt-contrib-jshint",
+      "repository": "gruntjs/grunt-contrib-jshint",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 203,
+      "packageName": "karma-mocha",
+      "repository": null,
+      "outcome": "SURVEY_ERROR",
+      "gate": 0,
+      "reason": "npm registry lookup failed: ENOENT: no such file or directory, stat '/workspace/survey/clones/r203/.editorconfig'"
+    },
+    {
+      "rank": 204,
+      "packageName": "path",
+      "repository": "jinder/path",
+      "outcome": "EXCLUDED_NO_TESTS",
+      "gate": 0,
+      "reason": "no test script in package.json and no files matching any test pattern"
+    },
+    {
+      "rank": 205,
+      "packageName": "concurrently",
+      "repository": "open-cli-tools/concurrently",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 206,
+      "packageName": "commitizen",
+      "repository": "commitizen/cz-cli",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable); playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 207,
+      "packageName": "babel",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 208,
+      "packageName": "standard-version",
+      "repository": "conventional-changelog/standard-version",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 209,
+      "packageName": "cheerio",
+      "repository": "cheeriojs/cheerio",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner vitest, script \"test:vi: vitest run\", 14 test files by best-matching pattern"
+    },
+    {
+      "rank": 210,
+      "packageName": "karma-coverage",
+      "repository": "karma-runner/karma-coverage",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares karma (failure count unreadable, file count unreadable); mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 211,
+      "packageName": "codecov",
+      "repository": "codecov/codecov-node",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: jest --coverage\", 25 test files by best-matching pattern"
+    },
+    {
+      "rank": 212,
+      "packageName": "eslint-plugin-flowtype",
+      "repository": "gajus/eslint-plugin-flowtype",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 213,
+      "packageName": "@rollup/plugin-json",
+      "repository": "rollup/plugins",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 214,
+      "packageName": "del-cli",
+      "repository": "sindresorhus/del-cli",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares ava (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 215,
+      "packageName": "jshint",
+      "repository": "jshint/jshint",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "no runner could be identified from dependencies, config files, or test scripts"
+    },
+    {
+      "rank": 216,
+      "packageName": "source-map-support",
+      "repository": "evanw/node-source-map-support",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 217,
+      "packageName": "enzyme-adapter-react-16",
+      "repository": "enzymejs/enzyme",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: lerna.json. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 218,
+      "packageName": "ws",
+      "repository": "websockets/ws",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 219,
+      "packageName": "supertest",
+      "repository": "ladjs/supertest",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 220,
+      "packageName": "@babel/plugin-proposal-object-rest-spread",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 221,
+      "packageName": "@angular/forms",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 222,
+      "packageName": "@babel/polyfill",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 223,
+      "packageName": "@babel/register",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 224,
+      "packageName": "tsdx",
+      "repository": "jaredpalmer/tsdx",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner vitest, script \"test: vitest run\", 4 test files by best-matching pattern"
+    },
+    {
+      "rank": 225,
+      "packageName": "react-redux",
+      "repository": "reduxjs/react-redux",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner vitest, script \"test: vitest --run --typecheck\", 23 test files by best-matching pattern"
+    },
+    {
+      "rank": 226,
+      "packageName": "babel-plugin-add-module-exports",
+      "repository": "59naga/babel-plugin-add-module-exports",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable); playwright (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 227,
+      "packageName": "web-vitals",
+      "repository": "GoogleChrome/web-vitals",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "no runner could be identified from dependencies, config files, or test scripts"
+    },
+    {
+      "rank": 228,
+      "packageName": "@vitejs/plugin-vue",
+      "repository": "vitejs/vite-plugin-vue",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 229,
+      "packageName": "karma-webpack",
+      "repository": "webpack-contrib/karma-webpack",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: jest\", 17 test files by best-matching pattern"
+    },
+    {
+      "rank": 230,
+      "packageName": "babel-plugin-transform-class-properties",
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: package.json declares workspaces. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 231,
+      "packageName": "gulp-util",
+      "repository": "gulpjs/gulp-util",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares mocha (failure count readable, file count unreadable)"
+    },
+    {
+      "rank": 232,
+      "packageName": "bootstrap",
+      "repository": "twbs/bootstrap",
+      "outcome": "EXCLUDED_NOT_JS_TS",
+      "gate": 0,
+      "reason": "JS/TS files are 16% of counted files"
+    },
+    {
+      "rank": 233,
+      "packageName": "through2",
+      "repository": "rvagg/through2",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "no runner could be identified from dependencies, config files, or test scripts"
+    },
+    {
+      "rank": 234,
+      "packageName": "chokidar",
+      "repository": "paulmillr/chokidar",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "no runner could be identified from dependencies, config files, or test scripts"
+    },
+    {
+      "rank": 235,
+      "packageName": "execa",
+      "repository": "sindresorhus/execa",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "gate": 2,
+      "reason": "declares ava (failure count unreadable, file count unreadable)"
+    },
+    {
+      "rank": 236,
+      "packageName": "vuex",
+      "repository": "vuejs/vuex",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test:unit: jest --testPathIgnorePatterns test/e2e\", 20 test files by best-matching pattern"
+    },
+    {
+      "rank": 237,
+      "packageName": "@angular/router",
+      "repository": "angular/angular",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 238,
+      "packageName": "@types/fs-extra",
+      "repository": "DefinitelyTyped/DefinitelyTyped",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "gate": 1,
+      "reason": "monorepo: pnpm-workspace.yaml. The harness runs the test module with cwd at the clone root and has no test working directory."
+    },
+    {
+      "rank": 239,
+      "packageName": "gulp-babel",
+      "repository": "babel/gulp-babel",
+      "outcome": "EXCLUDED_NOT_JS_TS",
+      "gate": 0,
+      "reason": "JS/TS files are 18% of counted files"
+    },
+    {
+      "rank": 240,
+      "packageName": "rollup-plugin-uglify",
+      "repository": "TrySound/rollup-plugin-uglify",
+      "outcome": "REACHED_QUALIFICATION",
+      "gate": 5,
+      "reason": "runner jest, script \"test: jest --runInBand\", 10 test files by best-matching pattern"
+    }
+  ],
+  "producedAt": "2026-08-31T14:55:02.565Z",
+  "note": "Gates 1-4 only. REACHED_QUALIFICATION means the structural gates passed and the repository is eligible for the canonical container run that decides gates 5 (baseline green) and 6 (calibration readable). It is NOT an assessment reach rate on its own."
+}

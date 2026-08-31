@@ -1,0 +1,96 @@
+{
+  "note": "Head sha each E1 screening cloned, ranks 141-240. E2 pins these exact trees.",
+  "source": "survey-continuation-02",
+  "repositories": {
+    "jest-community/eslint-plugin-jest": {
+      "rank": 153,
+      "packageName": "eslint-plugin-jest",
+      "headSha": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da"
+    },
+    "egoist/rollup-plugin-postcss": {
+      "rank": 160,
+      "packageName": "rollup-plugin-postcss",
+      "headSha": "71593d9f4698ce564482b86cc2fa7f69626e8b8a"
+    },
+    "pmowrer/rollup-plugin-peer-deps-external": {
+      "rank": 165,
+      "packageName": "rollup-plugin-peer-deps-external",
+      "headSha": "8b92f9723a0ba09a6479c077482cbdc59a2dd050"
+    },
+    "webpack/copy-webpack-plugin": {
+      "rank": 176,
+      "packageName": "copy-webpack-plugin",
+      "headSha": "08b3a640f054c8414b48f450baa39e7da4f77695"
+    },
+    "prettier/tslint-config-prettier": {
+      "rank": 178,
+      "packageName": "tslint-config-prettier",
+      "headSha": "dba2b6c555877cbeb828ae940a49c68fbd778066"
+    },
+    "webpack/webpack-bundle-analyzer": {
+      "rank": 188,
+      "packageName": "webpack-bundle-analyzer",
+      "headSha": "eab49ca192ee61a2d0c703ba38f9b2fec052efbd"
+    },
+    "NMFR/optimize-css-assets-webpack-plugin": {
+      "rank": 189,
+      "packageName": "optimize-css-assets-webpack-plugin",
+      "headSha": "d0bf176a01b144cd8736f01c409dd1214ecfbe8c"
+    },
+    "johnagan/clean-webpack-plugin": {
+      "rank": 191,
+      "packageName": "clean-webpack-plugin",
+      "headSha": "0207fe42de3da90c30ad492fd1dbe042dec2623b"
+    },
+    "webpack/minimizer-webpack-plugin": {
+      "rank": 195,
+      "packageName": "terser-webpack-plugin",
+      "headSha": "6f34b21109cd75e433c47a958cc17aaacbe0d211"
+    },
+    "reduxjs/redux": {
+      "rank": 196,
+      "packageName": "redux",
+      "headSha": "71606661ac515bdd64c199a6bb508401c7cf736f"
+    },
+    "stylelint/stylelint": {
+      "rank": 197,
+      "packageName": "stylelint",
+      "headSha": "cabcfb818938dbd39b0f8e3a883e7c526ecbfe3a"
+    },
+    "cheeriojs/cheerio": {
+      "rank": 209,
+      "packageName": "cheerio",
+      "headSha": "ad87bd8f298d68e9fd1f8c214bf1657d178d2a90"
+    },
+    "codecov/codecov-node": {
+      "rank": 211,
+      "packageName": "codecov",
+      "headSha": "7c698b77e3b04abc24a8bbf2e0606d6f77cdba21"
+    },
+    "jaredpalmer/tsdx": {
+      "rank": 224,
+      "packageName": "tsdx",
+      "headSha": "5b1aa0d67788bfb5ae46e6845e2e4e07c1c73e99"
+    },
+    "reduxjs/react-redux": {
+      "rank": 225,
+      "packageName": "react-redux",
+      "headSha": "16f1a91eb2cc3817bf63753e8c90e528a9f0580c"
+    },
+    "webpack-contrib/karma-webpack": {
+      "rank": 229,
+      "packageName": "karma-webpack",
+      "headSha": "ee740b90896e51aa741949f929437642553c1aa8"
+    },
+    "vuejs/vuex": {
+      "rank": 236,
+      "packageName": "vuex",
+      "headSha": "bd907467b8392d6671bb115738285ff7f63d0cf6"
+    },
+    "TrySound/rollup-plugin-uglify": {
+      "rank": 240,
+      "packageName": "rollup-plugin-uglify",
+      "headSha": "60df3a9e7f9e8354afa614e40c9cb1a1bf0fefbc"
+    }
+  }
+}

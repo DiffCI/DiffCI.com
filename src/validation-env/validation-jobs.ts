@@ -1194,6 +1194,229 @@ const JOBS: Record<string, ValidationJob> = {
    *
    * E1 only: no observe, no mutate, no density.
    */
+  /**
+   * E2 green gate for the SECOND continuation window, ranks 141-240.
+   *
+   * Registered for all 18 E1+E3 passers so rank order is fixed in code, run sequentially in rank order,
+   * stopping at GREEN #5 - which needs ONE more green. Repositories after that point are never
+   * qualified even with a warm apparatus; they stay unseen beyond E1/E3.
+   */
+  "e2-eslint-plugin-jest": {
+    id: "e2-eslint-plugin-jest",
+    description: "E2 green gate, frame rank 153: jest-community/eslint-plugin-jest.",
+    mode: "qualify",
+    repository: "jest-community/eslint-plugin-jest",
+    pinnedHeadSha: "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-rollup-plugin-postcss": {
+    id: "e2-rollup-plugin-postcss",
+    description: "E2 green gate, frame rank 160: egoist/rollup-plugin-postcss.",
+    mode: "qualify",
+    repository: "egoist/rollup-plugin-postcss",
+    pinnedHeadSha: "71593d9f4698ce564482b86cc2fa7f69626e8b8a",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-rollup-plugin-peer-deps-external": {
+    id: "e2-rollup-plugin-peer-deps-external",
+    description: "E2 green gate, frame rank 165: pmowrer/rollup-plugin-peer-deps-external.",
+    mode: "qualify",
+    repository: "pmowrer/rollup-plugin-peer-deps-external",
+    pinnedHeadSha: "8b92f9723a0ba09a6479c077482cbdc59a2dd050",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-copy-webpack-plugin": {
+    id: "e2-copy-webpack-plugin",
+    description: "E2 green gate, frame rank 176: webpack/copy-webpack-plugin.",
+    mode: "qualify",
+    repository: "webpack/copy-webpack-plugin",
+    pinnedHeadSha: "08b3a640f054c8414b48f450baa39e7da4f77695",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-tslint-config-prettier": {
+    id: "e2-tslint-config-prettier",
+    description: "E2 green gate, frame rank 178: prettier/tslint-config-prettier.",
+    mode: "qualify",
+    repository: "prettier/tslint-config-prettier",
+    pinnedHeadSha: "dba2b6c555877cbeb828ae940a49c68fbd778066",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-webpack-bundle-analyzer": {
+    id: "e2-webpack-bundle-analyzer",
+    description: "E2 green gate, frame rank 188: webpack/webpack-bundle-analyzer.",
+    mode: "qualify",
+    repository: "webpack/webpack-bundle-analyzer",
+    pinnedHeadSha: "eab49ca192ee61a2d0c703ba38f9b2fec052efbd",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-optimize-css-assets-webpack-plugin": {
+    id: "e2-optimize-css-assets-webpack-plugin",
+    description: "E2 green gate, frame rank 189: NMFR/optimize-css-assets-webpack-plugin.",
+    mode: "qualify",
+    repository: "NMFR/optimize-css-assets-webpack-plugin",
+    pinnedHeadSha: "d0bf176a01b144cd8736f01c409dd1214ecfbe8c",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-clean-webpack-plugin": {
+    id: "e2-clean-webpack-plugin",
+    description: "E2 green gate, frame rank 191: johnagan/clean-webpack-plugin.",
+    mode: "qualify",
+    repository: "johnagan/clean-webpack-plugin",
+    pinnedHeadSha: "0207fe42de3da90c30ad492fd1dbe042dec2623b",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-minimizer-webpack-plugin": {
+    id: "e2-minimizer-webpack-plugin",
+    description: "E2 green gate, frame rank 195: webpack/minimizer-webpack-plugin.",
+    mode: "qualify",
+    repository: "webpack/minimizer-webpack-plugin",
+    pinnedHeadSha: "6f34b21109cd75e433c47a958cc17aaacbe0d211",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-redux": {
+    id: "e2-redux",
+    description: "E2 green gate, frame rank 196: reduxjs/redux.",
+    mode: "qualify",
+    repository: "reduxjs/redux",
+    pinnedHeadSha: "71606661ac515bdd64c199a6bb508401c7cf736f",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-stylelint": {
+    id: "e2-stylelint",
+    description: "E2 green gate, frame rank 197: stylelint/stylelint.",
+    mode: "qualify",
+    repository: "stylelint/stylelint",
+    pinnedHeadSha: "cabcfb818938dbd39b0f8e3a883e7c526ecbfe3a",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-cheerio": {
+    id: "e2-cheerio",
+    description: "E2 green gate, frame rank 209: cheeriojs/cheerio.",
+    mode: "qualify",
+    repository: "cheeriojs/cheerio",
+    pinnedHeadSha: "ad87bd8f298d68e9fd1f8c214bf1657d178d2a90",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-codecov-node": {
+    id: "e2-codecov-node",
+    description: "E2 green gate, frame rank 211: codecov/codecov-node.",
+    mode: "qualify",
+    repository: "codecov/codecov-node",
+    pinnedHeadSha: "7c698b77e3b04abc24a8bbf2e0606d6f77cdba21",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-tsdx": {
+    id: "e2-tsdx",
+    description: "E2 green gate, frame rank 224: jaredpalmer/tsdx.",
+    mode: "qualify",
+    repository: "jaredpalmer/tsdx",
+    pinnedHeadSha: "5b1aa0d67788bfb5ae46e6845e2e4e07c1c73e99",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-react-redux": {
+    id: "e2-react-redux",
+    description: "E2 green gate, frame rank 225: reduxjs/react-redux.",
+    mode: "qualify",
+    repository: "reduxjs/react-redux",
+    pinnedHeadSha: "16f1a91eb2cc3817bf63753e8c90e528a9f0580c",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-karma-webpack": {
+    id: "e2-karma-webpack",
+    description: "E2 green gate, frame rank 229: webpack-contrib/karma-webpack.",
+    mode: "qualify",
+    repository: "webpack-contrib/karma-webpack",
+    pinnedHeadSha: "ee740b90896e51aa741949f929437642553c1aa8",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-vuex": {
+    id: "e2-vuex",
+    description: "E2 green gate, frame rank 236: vuejs/vuex.",
+    mode: "qualify",
+    repository: "vuejs/vuex",
+    pinnedHeadSha: "bd907467b8392d6671bb115738285ff7f63d0cf6",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-rollup-plugin-uglify": {
+    id: "e2-rollup-plugin-uglify",
+    description: "E2 green gate, frame rank 240: TrySound/rollup-plugin-uglify.",
+    mode: "qualify",
+    repository: "TrySound/rollup-plugin-uglify",
+    pinnedHeadSha: "60df3a9e7f9e8354afa614e40c9cb1a1bf0fefbc",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "survey-frame-continuation-2": {
     id: "survey-frame-continuation-2",
     description: "E1 addressability screening over frame ranks 141-240, under the generation-C apparatus.",
