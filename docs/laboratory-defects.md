@@ -92,3 +92,27 @@ The external validation protocol ([external-validation-protocol.md](external-val
 freezes the predicted sign before economics run, and forbids changes to the predictor in between.
 Defect #11 is the argument for that rule: it was found by reading the corpus schema carefully, *not* by
 noticing a wrong answer — because the wrong answer would have looked like good news.
+
+## Defect 17 — test discovery ignores the runner's own configuration
+
+Found 2026-08-31 closing M2 on the ts-jest mutation result.
+
+DiffCI reported a test universe of **40** for `kulshekhar/ts-jest`. The repository's `jest.config.ts`
+sets `testMatch: ['<rootDir>/src/**/*.spec.ts']`, which matches **20**. The other 20 are `e2e/` and
+`examples/` spec files that this configuration never executes.
+
+Discovery enumerates test-suffixed files in the tree and never intersects that set with the runner's
+configured `testMatch` / `roots` / `testPathIgnorePatterns`.
+
+**Consequence on this repository: reporting only.** Every selection fraction was stated against a
+denominator roughly twice the real one (candidate 5's headline `2/38` is truly `2/20`). Checked
+explicitly: no selected test fell outside `testMatch` on any of the five candidates, so no measurement
+and no recall verdict is invalidated.
+
+**Consequence in general: not confined to reporting.** A change under a directory the runner ignores
+could lead DiffCI to select files that never execute — selection that looks like coverage and detects
+nothing. Nothing in the current design prevents that.
+
+Not fixed at the time of recording: the analyser is frozen against the MECHANISM_PROOF_01 result, and
+changing discovery now would mean two results measured by two analysers. It is the first item for the
+next apparatus change.

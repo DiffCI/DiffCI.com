@@ -105,3 +105,68 @@ sealed before any result was seen.
 **It does not establish** that DiffCI usually saves compute. On this evidence it usually did not: 3 of 4
 commits cost more than the path-rule comparator. Zero false greens across 3 measurable mutations is a
 denominator of 3.
+
+---
+
+# FROZEN — 2026-08-31
+
+M2 is closed (`docs/mechanism-proof-01-m2-closure.md`) and this result is frozen as it stands.
+
+## The result, stated in full
+
+```
+3 measurable selective decisions
+  -> 3 recall confirmed
+  -> 0 observed false greens
+  -> 1 economically positive, 2 economically negative
+1 selective decision recall-UNMEASURABLE
+1 conservative FULL
+```
+
+This is the reportable form. **Not** "4/5 selective", and **not** "+247 CPU-s savings" — both of those
+are true sentences that leave a reader with a false impression.
+
+## Denominator correction from M2
+
+jest executes **20** test files, not the 40/38 DiffCI reported (defect 17: discovery never intersects
+its universe with the runner's `testMatch`). Every selection fraction in the tables above overstates its
+denominator by roughly 2x. Corrected:
+
+| candidate | as reported | true |
+|---|---|---|
+| 1 | 7/40 | **7/20 = 35%** |
+| 2, 3 | 7/38 | **7/20 = 35%** |
+| 4 | 9/38 | **9/20 = 45%** |
+| 5 | 2/38 | **2/20 = 10%** |
+
+**No measured quantity changes.** The CPU figures are executed measurements, not count-derived. And no
+selected test on any candidate fell outside jest's `testMatch`, so the recall verdicts stand.
+
+## The supported claim
+
+> **There exists an externally selected historical workload where DiffCI retained defect detection while
+> materially reducing measured compute relative to the repository-derived comparator.**
+
+Candidate 5: 2 of the 20 executed test files, defect caught by both, +213.20 CPU-s incremental against
+the comparator.
+
+## What is NOT claimed
+
+- **Not** that DiffCI usually beats a cheap path/co-location heuristic. This sample points the other
+  way: 3 of 4 commits cost more than the comparator.
+- **Not** general safety. Zero false greens over a denominator of 3.
+- **Not** that the graph's contribution is established. Candidate 1 was the clean test of that — 7
+  purely graph-derived selections, no changed test file — and it is recall-unmeasurable.
+
+## Recorded alongside
+
+- `docs/product-finding-cost-awareness.md` — test count is not compute; the selector should become
+  cost-aware as well as dependency-aware. Recorded, deliberately not acted on.
+- `docs/laboratory-defects.md` defect 17 — discovery ignores the runner's configuration.
+
+## Next
+
+Not a new repository draw yet, and explicitly not collecting repositories until the percentages look
+good. The open question is whether candidate 5's shape — dependency-aware selection safely avoiding an
+expensive test that a path heuristic cannot exclude — repeats on independently selected repositories.
+**A finding that it does not repeat is a result, not a failed run.**
