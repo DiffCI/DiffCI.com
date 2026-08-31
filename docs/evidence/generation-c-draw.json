@@ -1,0 +1,57 @@
+{
+  "drawVersion": 1,
+  "rule": "docs/generation-c-draw-rule.md",
+  "ruleCommit": "9f424b8e62217fb2ed6c78fb4d716d19c4e620a5",
+  "populationArtefact": "docs/evidence/generation-c-eligible-population.json",
+  "populationFrozenAt": "0f6ea3f",
+  "canonicalOrdering": "ascending frame rank (npm-high-impact@1.13.0 topDependent)",
+  "orderedPopulation": [
+    {
+      "index": 0,
+      "rank": 62,
+      "repository": "eslint-community/eslint-plugin-promise",
+      "headSha": "e73585efc03ddf17df0273fa3b8dad0b66c51168"
+    },
+    {
+      "index": 1,
+      "rank": 75,
+      "repository": "webpack/postcss-loader",
+      "headSha": "ed3e1f7592a5fea2eb0da2475a3675ceb9371a47"
+    },
+    {
+      "index": 2,
+      "rank": 112,
+      "repository": "ezolenko/rollup-plugin-typescript2",
+      "headSha": "4cff90bbe88a6747d5a0eb52d300cb8bed505277"
+    },
+    {
+      "index": 3,
+      "rank": 115,
+      "repository": "webpack-contrib/extract-text-webpack-plugin",
+      "headSha": "bc6f9f8f61d708352ea89fd4fc9764ce1e4de409"
+    },
+    {
+      "index": 4,
+      "rank": 153,
+      "repository": "jest-community/eslint-plugin-jest",
+      "headSha": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da"
+    }
+  ],
+  "randomness": {
+    "source": "sha256 of the draw-rule commit hash",
+    "H": "9f424b8e62217fb2ed6c78fb4d716d19c4e620a5",
+    "seed": "e4a9fb6ab8850c5c1161076e6ec7d4cb0527b90789bbf57375621206e79c092e",
+    "first8Hex": "e4a9fb6a",
+    "uint32": 3836345194,
+    "modulus": 5
+  },
+  "index": 4,
+  "selected": {
+    "rank": 153,
+    "repository": "jest-community/eslint-plugin-jest",
+    "headSha": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da"
+  },
+  "verification": "printf %s \"9f424b8e62217fb2ed6c78fb4d716d19c4e620a5\" | sha256sum  -> e4a9fb6ab8850c5c1161076e6ec7d4cb0527b90789bbf57375621206e79c092e; 0xe4a9fb6a = 3836345194; 3836345194 mod 5 = 4",
+  "drawnAt": "2026-08-31",
+  "note": "Made ONCE. No redraw. Nothing about the selected repository was inspected before or during the draw."
+}

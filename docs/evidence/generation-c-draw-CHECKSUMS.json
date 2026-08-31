@@ -1,0 +1,10 @@
+{
+  "draw": "generation-c",
+  "drawnAt": "2026-08-31",
+  "sha256": {
+    "docs/evidence/generation-c-draw.json": "f1fb996442e39f29e7745e43174ba248f53c289f1626dde88c41972da0c60b00",
+    "docs/evidence/generation-c-eligible-population.json": "d223668488bb29324c5dfe31bbe660048ea0ba385d64fc7615d6ab04c1105106",
+    "docs/generation-c-draw-rule.md": "c4a3777a265f9eb5a2db963a999754cf7258c0e698df67435c5a39ea5b4ee3b8",
+    "docs/generation-c-population-frozen.md": "22cf9c617b5e4e4f2cc85fc2a9507702c1753b4e78e8e3eb50f13dea745e23ad"
+  }
+}
