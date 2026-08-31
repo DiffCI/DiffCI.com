@@ -914,6 +914,31 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 3 * 60 * 60_000,
   },
 
+  /**
+   * COMPUTE_PROOF_V1 repository gate, second candidate (2026-08-30).
+   *
+   * Reached mechanically: typescript-eslint failed twoGreenBaselines when its pnpm postinstall could
+   * not load three Nx plugins, so the sealed rule at `1b84b07` advanced here without intervention.
+   * The >=30% mapping threshold is NOT revisited - Jest's 38.3% was known before the rule was sealed,
+   * and raising it now because the 99.7% candidate was eliminated is exactly the outcome-dependent
+   * change the protocol prevents.
+   *
+   * Jest's documented `jest` script is a direct runner invocation, so the substitution question that
+   * dominated typescript-eslint does not arise here.
+   */
+  "jest-qualification": {
+    id: "jest-qualification",
+    description: "COMPUTE_PROOF_V1 gate: qualify jestjs/jest against its own documented jest script.",
+    mode: "qualify",
+    repository: "jestjs/jest",
+    pinnedHeadSha: "be425a0b0e3bd60a74e4a7e350aa38c63a2d25ef",
+    expectedAgentIntegrity: "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    // A yarn install across a large workspace plus TWO full runs of a 1195-file suite that includes
+    // e2e. Prettier's 1557-file suite took 442 s for both baselines; Jest's e2e tests spawn processes
+    // and are far slower per file, so this is deliberately generous rather than tuned.
+    maxRunMs: 6 * 60 * 60_000,
+  },
+
   "immer-economics": {
     id: "immer-economics",
     description: "Compute measurement for immerjs/immer under agent B - out-of-sample test of a frozen POSITIVE prediction.",

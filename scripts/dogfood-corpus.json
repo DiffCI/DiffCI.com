@@ -381,5 +381,27 @@
     "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
     "mutationQualifiedBy": "qualifier 2.0.0",
     "externalValidation": "COMPUTE_PROOF_V1 candidate ELIMINATED at the twoGreenBaselines gate. tse-qualify-01, 2026-08-30: clone 0.6s, install 32.2s, not qualified at 33s. `corepack pnpm install --frozen-lockfile` failed in postinstall where Nx could not load three of its own default plugins - an ORDINARY INSTALL FAILURE, not the contradictory-execution case. Nothing executed, so the frozen execution classifier was never exercised and the nx orchestrator hazard remains untested. twoGreenBaselines is a required criterion, so the sealed rule at 1b84b07 advances to jestjs/jest without intervention, and the provisional draw a2fccae3 is discarded."
+  },
+  {
+    "source": "jestjs/jest",
+    "stresses": "COMPUTE_PROOF_V1 candidate, reached by the sealed rule at 1b84b07 after typescript-eslint failed the twoGreenBaselines gate. 1195 test files, 38.3% test-to-production mapping density, 730 test-to-production edges - the only large repository in the frozen 40 with meaningful connectivity, and the lower density is itself part of what the experiment tests.",
+    "commits": 25,
+    "observationQualified": "unknown",
+    "mutationQualified": "unknown",
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--immutable"
+    ],
+    "testModule": "packages/jest-cli/bin/jest.js",
+    "testArgs": [],
+    "testCommandRationale": "The repository's own documented `jest` script, verbatim: `node ./packages/jest-cli/bin/jest.js`. It is a DIRECT runner invocation, not an orchestrator, so no substitution question arises - unlike typescript-eslint, where nx run-many had no equivalent direct form and was run as documented rather than replaced. The default `test` script is `yarn lint && yarn jest`, which additionally runs eslint: not a test, not file-selectable, and it would charge both arms for work no selector can narrow. Choosing between two of the repository's own documented scripts is the rule already applied to vue, axios, immer and fastify. No file filters or exclusions invented; the root jest.config.mjs decides the file set.",
+    "comparatorExcludedScopes": [
+      "website",
+      "examples"
+    ],
+    "comparatorScopeRationale": "COMPUTE_PROOF_V1 amendment A1. jest.config.mjs excludes website via modulePathIgnorePatterns and examples via testPathIgnorePatterns, so a change confined to either has zero optimisation opportunity by construction. Implementation source under packages/*/src IS in scope.",
+    "lockfile": "yarn.lock committed; packageManager yarn@4.18.0."
   }
 ]
