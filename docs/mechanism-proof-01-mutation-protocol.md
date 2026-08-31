@@ -136,3 +136,37 @@ The mutation run measures it directly: the full arm reports how many suites jest
 selecting from a universe wider than the runner's, the selection fractions (`7/40`, `2/38`) overstate
 the denominator, and **the reported savings would be overstated with it**. That is checked and reported
 whatever it shows.
+
+## Amendment M3 — the comparator column cannot be filled, recorded before results
+
+Found while estimating the run's remaining time, with `tsjest-mutate-01` in `mutating` and **no result
+visible.**
+
+`dogfood-mutate.classify()` runs, per candidate: install, green baseline, the two economics arms on the
+CLEAN tree, the full mutated run, and then **DiffCI's selection on the mutated tree — and nothing else.**
+There is no comparator arm on the mutated tree. The comparator is measured for COST, never for RECALL.
+
+So the matrix stated above overreached. This run can report:
+
+```
+historical defect  →  caught by full?  →  caught by DiffCI?
+```
+
+and cannot report the comparator column. **The error is in the protocol, not in the harness** — the
+matrix was written before `classify()` was read closely enough, and the fix is to say so rather than to
+quietly report two columns as though three had been planned.
+
+**What survives intact:** the false-green test, which needs only the full arm and the DiffCI arm, and
+which is the disqualifying outcome. That is fully measured.
+
+**What does not:** whether DiffCI's extra six impact tests on candidates 2 and 3 were NECESSARY - the
+question those candidates were fixed in to answer. Distinguishing justified breadth from over-selection
+requires running the comparator's 2 tests against the same mutation, which this apparatus does not do.
+
+Whether it is recoverable post hoc depends on whether the full run's failing test NAMES are persisted.
+`classify()` computes `missed` from them but appears to record only a count. If the names are absent,
+the comparator column is underivable and is reported as ABSENT, not estimated.
+
+**No change is made to the mutation machinery while this run is in flight.** Adding a comparator-recall
+arm is a change to the apparatus and belongs in a separate, disclosed run — not a mid-flight edit that
+would leave the reported results measured by two different harnesses.
