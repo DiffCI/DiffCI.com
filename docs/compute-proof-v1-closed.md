@@ -1,7 +1,32 @@
-# COMPUTE_PROOF_V1 — closed, qualifying pool exhausted
+# COMPUTE_PROOF_V1 — INCONCLUSIVE: NO QUALIFIED TARGETS
 
-**No compute proof was obtained.** Both qualifying repositories failed the `twoGreenBaselines` gate, for
-different reasons, and the pre-registration forbids finding a third by lowering a criterion.
+**Not failed savings. Not successful savings. No qualified target was ever reached.**
+
+The distinction is the entire result and must not erode: V1 produced **no evidence that DiffCI fails to
+save compute**, because no candidate ever reached a DiffCI observation. Ten qualified repositories
+returning ten FULL selections would be a finding about DiffCI. Zero qualified repositories is a finding
+about the funnel.
+
+## The funnel, preserved
+
+```
+40 frame entries
+ ↓
+28 measured
+ ↓
+ 2 satisfy structural compute-proof criteria
+ ↓
+ 0 satisfy canonical qualification
+ ↓
+ 0 changes observed by DiffCI
+ ↓
+ 0 compute comparisons
+ ↓
+ 0 recall measurements
+```
+
+Both qualifying repositories failed the `twoGreenBaselines` gate, for different reasons, and the
+pre-registration forbids finding a third by lowering a criterion.
 
 ## The two candidates
 

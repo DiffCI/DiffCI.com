@@ -1,0 +1,53 @@
+
+  CANONICAL QUALIFICATION FUNNEL - assembled from committed evidence, nothing re-run
+
+  repository                           tests   map  edge   stage          detail
+  microsoft/TypeScript                    14 43%    13   NOT_ATTEMPTED  no canonical qualification run exists
+  eslint/eslint                            7 29%     9   NOT_ATTEMPTED  no canonical qualification run exists
+  react/react                           2406  0%    13   NOT_ATTEMPTED  no canonical qualification run exists
+  mochajs/mocha                          135  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  DefinitelyTyped/DefinitelyTyped        197  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  jestjs/jest                           1195 38%   730   BASELINE       999 test(s) failing at HEAD on every run (999, 999)
+  prettier/prettier                     1667  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  webpack/webpack                        181  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  babel/babel                             20  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  babel/babel-loader                      13  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  import-js/eslint-plugin-import           0   -     -   NOT_ATTEMPTED  no test files discovered - outside the product's scope
+  isaacs/rimraf                           24 54%    19   NOT_ATTEMPTED  no canonical qualification run exists
+  chaijs/chai                             10  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  lodash/lodash                            -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
+  babel/babel-eslint                       -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
+  typicode/husky                           -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
+  rollup/rollup                            3  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  chalk/chalk                              -   -     -   NOT_ATTEMPTED  no canonical qualification run exists
+  typescript-eslint/typescript-eslint    308100%   470   INSTALL        install failed: postinstall - NX Failed to load 3 default Nx plugin(s). Never reached a baseline.
+  Microsoft/tslib                          2 50%     1   NOT_ATTEMPTED  no canonical qualification run exists
+  TypeStrong/ts-node                      29 76%    79   NOT_ATTEMPTED  no canonical qualification run exists
+  prettier/eslint-config-prettier          -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
+  webpack/webpack-cli                     41  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  kulshekhar/ts-jest                      40 85%    77   NOT_ATTEMPTED  no canonical qualification run exists
+  webpack/css-loader                       -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
+  jsx-eslint/eslint-plugin-react           1  0%     0   NOT_ATTEMPTED  no canonical qualification run exists
+  prettier/eslint-plugin-prettier          -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
+  kentcdodds/cross-env                     5100%     9   NOT_ATTEMPTED  no canonical qualification run exists
+  axios/axios                              -   -     -   BASELINE       2 test(s) failing at HEAD on every run (2, 2), in tests/unit/adapters/fetch.test.js
+  vuejs/core                               -   -     -   NOT_ATTEMPTED  no canonical qualification run exists
+  expressjs/express                        -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
+  postcss/autoprefixer                     -   -     -   ANALYZER       no tsconfig.json - DiffCI cannot analyse it
+
+  WHERE REPOSITORIES STOP  (distinct repositories: 32)
+
+      8  analyser ineligible - no tsconfig
+     21  never qualified - NO EVIDENCE YET
+      1  install failed
+      0  build failed
+      2  reached a baseline, not green twice
+      0  GREEN ON TWO CONSECUTIVE RUNS
+
+  Of 32 distinct repositories, 8 are analyser-ineligible and
+  21 have never been through canonical qualification at all.
+  Among the 3 actually attempted: 0 green twice.
+
+  The 21 unattempted rows are the cost of completing this funnel -
+  one container run each, and until they exist the green rate is not a rate.
+
