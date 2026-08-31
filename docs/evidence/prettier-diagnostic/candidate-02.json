@@ -1,0 +1,80 @@
+{
+  "repoPath": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\ffab3b6b-7eea-4772-827d-31dedbf8a62d\\scratchpad\\diag-prettier",
+  "base": "bb52ae36d541534c99085b9bf401f28f7186c67b",
+  "head": "893fd3b1203c2c2dc196aba55759dce6c3a53478",
+  "producedAt": "2026-08-31T05:06:56.249Z",
+  "platform": "win32 node v24.16.0",
+  "note": "NON-CANONICAL developer-host diagnostic. Valid for decision trace and operation multiplicity; not for economics.",
+  "phases": {
+    "eligibility": {
+      "wallMs": 0.5488,
+      "cpuMs": 0
+    },
+    "gitDelta": {
+      "wallMs": 267.4718,
+      "cpuMs": 31
+    },
+    "graphBuild": {
+      "wallMs": 8411.1122,
+      "cpuMs": 9735
+    },
+    "impactAnalysis": {
+      "wallMs": 158.5633,
+      "cpuMs": 172
+    },
+    "pathBaseline": {
+      "wallMs": 4.481,
+      "cpuMs": 31
+    }
+  },
+  "totals": {
+    "wallMs": 8843.143,
+    "cpuMs": 9969,
+    "rssMb": 344.09375
+  },
+  "funnel": {
+    "changedFiles": 5,
+    "graphNodes": 2201,
+    "graphEdges": 1574,
+    "graphConfidenceRaw": "UNSAFE",
+    "graphConfidenceEffective": "COMPLETE",
+    "affectedSourceFiles": 105,
+    "affectedAssets": 0,
+    "affectedEntryPoints": 0,
+    "testUniverse": 1667,
+    "affectedTests": 0,
+    "analysisStatus": "SAFE_TO_PROPOSE",
+    "fallbackRequired": false,
+    "finalDecision": "SELECTIVE",
+    "finalSelectedTests": 0,
+    "comparatorSelected": 1663,
+    "fallbackReasons": [],
+    "riskSignals": []
+  },
+  "operations": {
+    "fs.statSync": {
+      "calls": 19277,
+      "totalMs": 2473,
+      "maxMs": 46,
+      "distinct": 2392
+    },
+    "fs.readFileSync": {
+      "calls": 655,
+      "totalMs": 463,
+      "maxMs": 10,
+      "distinct": 651
+    },
+    "fs.readdirSync": {
+      "calls": 103,
+      "totalMs": 39,
+      "maxMs": 1,
+      "distinct": 103
+    },
+    "fs.realpathSync": {
+      "calls": 16,
+      "totalMs": 3,
+      "maxMs": 1,
+      "distinct": 11
+    }
+  }
+}
