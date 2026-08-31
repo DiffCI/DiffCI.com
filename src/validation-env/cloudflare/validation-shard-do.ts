@@ -29,6 +29,7 @@
  * establishing whether the evidence reproduces, not for improving the thing being measured.
  */
 import type { R2BucketLike, SandboxLike } from "../../analysis-fanout/sandbox-like.js";
+import { apparatusMismatches } from "../apparatus-identity.js";
 import {
   JOB_CORPUS_PATH,
   OBSERVED_CORPUS_PATH,
@@ -400,6 +401,20 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
 
     // Universe sanity runs BEFORE the suite qualification: if DiffCI models the wrong set of
     // executable tests there is no point measuring how reliably that suite goes green.
+    // A sealed experiment must run on the QUALIFIED apparatus, and is refused otherwise. Pinning the
+    // expected digest on the job catches the wrong tarball; this catches the wrong environment too,
+    // and names every mismatch at once rather than one per run.
+    if (job.requiresApparatus === "gen-c") {
+      const problems = apparatusMismatches({
+        agentIntegrity: record.environment?.agentIntegrity,
+        image: record.environment?.image,
+        node: record.environment?.node,
+      });
+      if (problems.length > 0) {
+        return fail(record, "apparatus-mismatch", `this job requires the qualified generation-C apparatus: ${problems.join("; ")}`);
+      }
+    }
+
     record.step = job.universe ? "verifyingUniverse" : job.mode === "qualify" ? "qualifying" : "observing";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {

@@ -76,6 +76,8 @@ export interface ValidationJob {
    */
   universe?: { expectedTestCount: number; forbiddenPrefixes: string[] };
   /** Sealed pair list for observe-pairs jobs. Defaults to the MECHANISM_PROOF_01 five. */
+  /** Refuse to run unless the container is the QUALIFIED apparatus of this generation. */
+  requiresApparatus?: "gen-c";
   pairsPath?: string;
   /** Require every pair sharing a head to produce an IDENTICAL report - observation determinism. */
   assertIdenticalRepeats?: boolean;

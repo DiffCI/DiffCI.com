@@ -1,0 +1,298 @@
+{
+  "frame": {
+    "source": "npm-high-impact@1.13.0, export topDependent",
+    "sourcePublished": "2026-06-08T16:53:09.521Z",
+    "ranks": "1-40",
+    "resolvedAt": "2026-08-30",
+    "note": "External published ordering, resolved before any repository configuration was inspected."
+  },
+  "criteria": [
+    "E1 ADDRESSABLE: reached qualification in the frozen addressability survey. Pre-existing, defined 2026-08-30.",
+    "E2 GREEN: its suite qualifies green in the canonical environment. Required to attribute a mutation to anything.",
+    "E3 UNMEASURED: no DiffCI observation, selection or economics rows exist for it. Required for a BLIND draw - a specimen whose measurement has been seen is not blind."
+  ],
+  "eligible": [],
+  "population": [
+    {
+      "rank": 1,
+      "repository": "microsoft/TypeScript",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 2,
+      "repository": "eslint/eslint",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 3,
+      "repository": "react/react",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 4,
+      "repository": "mochajs/mocha",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 5,
+      "repository": "DefinitelyTyped/DefinitelyTyped",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 6,
+      "repository": "jestjs/jest",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 7,
+      "repository": "prettier/prettier",
+      "outcome": "REACHED_QUALIFICATION",
+      "eligible": false,
+      "excluded": "E3 DiffCI measurements already exist for this repository"
+    },
+    {
+      "rank": 8,
+      "repository": "webpack/webpack",
+      "outcome": "REACHED_QUALIFICATION",
+      "eligible": false,
+      "excluded": "E2 qualification RED in the canonical environment (suite not green)"
+    },
+    {
+      "rank": 9,
+      "repository": "react/react",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 10,
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 11,
+      "repository": "babel/babel-loader",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 12,
+      "repository": "import-js/eslint-plugin-import",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 13,
+      "repository": "isaacs/rimraf",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 14,
+      "repository": "chaijs/chai",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 15,
+      "repository": "DefinitelyTyped/DefinitelyTyped",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 16,
+      "repository": "lodash/lodash",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 17,
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 18,
+      "repository": "babel/babel-eslint",
+      "outcome": "EXCLUDED_ARCHIVED",
+      "eligible": false,
+      "excluded": "E1 not addressable: EXCLUDED_ARCHIVED at 0"
+    },
+    {
+      "rank": 19,
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 20,
+      "repository": "typicode/husky",
+      "outcome": "EXCLUDED_NOT_JS_TS",
+      "eligible": false,
+      "excluded": "E1 not addressable: EXCLUDED_NOT_JS_TS at 0"
+    },
+    {
+      "rank": 21,
+      "repository": "rollup/rollup",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 22,
+      "repository": "chalk/chalk",
+      "outcome": "EXCLUDED_ALREADY_EXAMINED",
+      "eligible": false,
+      "excluded": "E1 not addressable: EXCLUDED_ALREADY_EXAMINED at 0"
+    },
+    {
+      "rank": 23,
+      "repository": "typescript-eslint/typescript-eslint",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 24,
+      "repository": "typescript-eslint/typescript-eslint",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 25,
+      "repository": "Microsoft/tslib",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 26,
+      "repository": "TypeStrong/ts-node",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 27,
+      "repository": "prettier/eslint-config-prettier",
+      "outcome": "REACHED_QUALIFICATION",
+      "eligible": false,
+      "excluded": "E3 DiffCI measurements already exist for this repository"
+    },
+    {
+      "rank": 28,
+      "repository": "webpack/webpack-cli",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 29,
+      "repository": "DefinitelyTyped/DefinitelyTyped",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 30,
+      "repository": "kulshekhar/ts-jest",
+      "outcome": "REACHED_QUALIFICATION",
+      "eligible": false,
+      "excluded": "E3 DiffCI measurements already exist for this repository"
+    },
+    {
+      "rank": 31,
+      "repository": "webpack/css-loader",
+      "outcome": "REACHED_QUALIFICATION",
+      "eligible": false,
+      "excluded": "E3 DiffCI measurements already exist for this repository"
+    },
+    {
+      "rank": 32,
+      "repository": "jsx-eslint/eslint-plugin-react",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 33,
+      "repository": "prettier/eslint-plugin-prettier",
+      "outcome": "EXCLUDED_NOT_JS_TS",
+      "eligible": false,
+      "excluded": "E1 not addressable: EXCLUDED_NOT_JS_TS at 0"
+    },
+    {
+      "rank": 34,
+      "repository": "kentcdodds/cross-env",
+      "outcome": "REACHED_QUALIFICATION",
+      "eligible": false,
+      "excluded": "E3 DiffCI measurements already exist for this repository"
+    },
+    {
+      "rank": 35,
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 36,
+      "repository": "axios/axios",
+      "outcome": "EXCLUDED_ALREADY_EXAMINED",
+      "eligible": false,
+      "excluded": "E1 not addressable: EXCLUDED_ALREADY_EXAMINED at 0"
+    },
+    {
+      "rank": 37,
+      "repository": "vuejs/core",
+      "outcome": "EXCLUDED_ALREADY_EXAMINED",
+      "eligible": false,
+      "excluded": "E1 not addressable: EXCLUDED_ALREADY_EXAMINED at 0"
+    },
+    {
+      "rank": 38,
+      "repository": "expressjs/express",
+      "outcome": "RUNNER_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: RUNNER_UNSUPPORTED at 2"
+    },
+    {
+      "rank": 39,
+      "repository": "babel/babel",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    },
+    {
+      "rank": 40,
+      "repository": "postcss/autoprefixer",
+      "outcome": "MONOREPO_SCOPE_UNSUPPORTED",
+      "eligible": false,
+      "excluded": "E1 not addressable: MONOREPO_SCOPE_UNSUPPORTED at 1"
+    }
+  ],
+  "producedAt": "2026-08-31"
+}
