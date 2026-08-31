@@ -62,7 +62,8 @@
     "diagnose:symbols": "tsx scripts/diagnose-symbol-precision.ts",
     "eligibility": "tsx scripts/economic-eligibility.ts",
     "calibrate": "tsx scripts/calibrate-repository.ts",
-    "survey": "tsx scripts/survey-run.ts"
+    "survey": "tsx scripts/survey-run.ts",
+    "diagnose:candidate": "tsx scripts/diagnose-candidate.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",

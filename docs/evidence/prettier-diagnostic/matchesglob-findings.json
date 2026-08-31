@@ -1,0 +1,71 @@
+{
+  "producedAt": "2026-08-31T04:54:32.180Z",
+  "source": "src/repo/impact.ts:655 matchesGlob",
+  "note": "NON-CANONICAL developer-host diagnostic. Nothing was modified; this reproduces the shipped translation exactly.",
+  "translations": {
+    "**/__tests__/**/*.[jt]s?(x)": "^__tests__/.[^/]*[^/]*.[jt]s.(x)$",
+    "**/?(*.)+(spec|test).[jt]s?(x)": "^.([^/]*.)+(spec|test).[jt]s.(x)$",
+    "**/*.spec.{ts,tsx,js,jsx,mjs,cjs,mts,cts}": "^[^/]*.spec.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$",
+    "**/*.test.{ts,tsx,js,jsx,mjs,cjs,mts,cts}": "^[^/]*.test.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$"
+  },
+  "catastrophicBacktracking": {
+    "regex": "^.([^/]*.)+(spec|test).[jt]s.(x)$",
+    "scaling": [
+      {
+        "pathLength": 10,
+        "ms": 0.6752
+      },
+      {
+        "pathLength": 15,
+        "ms": 3.7947
+      },
+      {
+        "pathLength": 20,
+        "ms": 103.9701
+      },
+      {
+        "pathLength": 22,
+        "ms": 415.2079
+      },
+      {
+        "pathLength": 24,
+        "ms": 1643.301
+      },
+      {
+        "pathLength": 26,
+        "ms": 12554.3132
+      },
+      {
+        "pathLength": 28,
+        "ms": 32053.8374
+      }
+    ]
+  },
+  "anchoringDefect": {
+    "glob": "**/__tests__/**/*.[jt]s?(x)",
+    "regex": "^__tests__\\/.[^/]*[^/]*.[jt]s.(x)$",
+    "matches src/__tests__/foo.test.js": false,
+    "matches __tests__/foo.test.js": false
+  },
+  "liveProfile": {
+    "method": "inspector CPU profile of the running trace, 15s at 200us sampling",
+    "samples": 19049,
+    "selfTime": {
+      "matchesGlob (repo/impact.ts)": "100.0%"
+    },
+    "stack": [
+      "main",
+      "phase",
+      "analyze (repo/impact.ts)",
+      "collectAlwaysRunTests (repo/impact.ts)",
+      "matchesGlob (repo/impact.ts)"
+    ]
+  },
+  "cardinalities": {
+    "graphNodes": 2200,
+    "graphEdges": 1569,
+    "testLocations": 4,
+    "testFilePaths": 1667,
+    "impliedCalls": 8800
+  }
+}
