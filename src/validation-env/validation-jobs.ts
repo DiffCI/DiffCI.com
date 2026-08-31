@@ -78,6 +78,8 @@ export interface ValidationJob {
   /** Sealed pair list for observe-pairs jobs. Defaults to the MECHANISM_PROOF_01 five. */
   /** Refuse to run unless the container is the QUALIFIED apparatus of this generation. */
   requiresApparatus?: "gen-c";
+  /** Frame file for a survey job. Defaults to the frozen ranks 1-40. */
+  surveyFramePath?: string;
   pairsPath?: string;
   /** Require every pair sharing a head to produce an IDENTICAL report - observation determinism. */
   assertIdenticalRepeats?: boolean;
@@ -1023,6 +1025,31 @@ const JOBS: Record<string, ValidationJob> = {
    * five MECHANISM_PROOF_01 candidates - in particular not candidate 5. WHAT it selects is never
    * interpreted and never compared against the sealed experiment; the only question is run 1 == run 2.
    */
+  /**
+   * E1 screening over the FRAME CONTINUATION, ranks 41-140.
+   *
+   * The frozen 40-entry frame was exhausted mechanically (0 eligible). The continuation rule frozen at
+   * `ad4b4f6` - BEFORE any rank >= 41 was resolved - traverses the same third-party ordering from rank
+   * 41 and stops at 5 eligible previously unmeasured repositories.
+   *
+   * This job answers E1 (addressability) ONLY. It runs no `observe`, no `mutate`, and no density
+   * survey: learning during screening that a repository is favourable to DiffCI would destroy the
+   * independence the draw exists to protect, as surely as choosing one on purpose.
+   *
+   * It screens the whole 100-entry window rather than stopping at the 5th eligible, because the survey
+   * never skips and its per-entry cost is metadata plus a shallow clone. The COUNT stop applies to the
+   * expensive gate, qualification, which is run afterwards sequentially in rank order.
+   */
+  "survey-frame-continuation": {
+    id: "survey-frame-continuation",
+    description: "E1 addressability screening over frame ranks 41-140, under the generation-C apparatus.",
+    mode: "survey",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    surveyFramePath: "docs/evidence/survey/frame-ranks-41-140.json",
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
   "apparatus-determinism-gen-c": {
     id: "apparatus-determinism-gen-c",
     description: "Apparatus qualification: repeated observation of one non-candidate pair must be identical.",
@@ -1230,8 +1257,10 @@ export function densityArgv(): string[] {
   return ["run", "survey:density", "--", "--frame", SURVEY_FRAME_PATH, "--out", DENSITY_OUT, "--work", `${DENSITY_OUT}/clones`];
 }
 
-export function surveyArgv(): string[] {
-  return ["run", "survey", "--", "--frame", SURVEY_FRAME_PATH, "--out", SURVEY_OUT, "--work", `${SURVEY_OUT}/clones`];
+export function surveyArgv(job?: ValidationJob): string[] {
+  // The frame is a path INTO THE SOURCE TARBALL, so which repositories are screened is fixed by the
+  // committed frame file and cannot drift at run time.
+  return ["run", "survey", "--", "--frame", job?.surveyFramePath ?? SURVEY_FRAME_PATH, "--out", SURVEY_OUT, "--work", `${SURVEY_OUT}/clones`];
 }
 
 /**

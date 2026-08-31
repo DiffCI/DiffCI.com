@@ -537,7 +537,7 @@ async function densityStep(record: ValidationRecord, deps: ValidationStepDeps): 
 
 async function surveyStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   const t0 = record.processStartedAt ?? deps.now();
-  return runHarnessPass(record, deps, surveyArgv(), "survey", (r) => {
+  return runHarnessPass(record, deps, surveyArgv(deps.job), "survey", (r) => {
     r.timings.surveyMs = deps.now() - t0;
     r.step = "collecting";
     return { record: r, nextAlarmDelayMs: 0 };

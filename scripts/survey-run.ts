@@ -30,6 +30,9 @@ interface Frame {
   source: string;
   sourcePublished: string;
   ranks: string[];
+  /** True rank of ranks[0], minus one. A continuation frame starting at rank 41 sets 40, so the
+   * recorded ranks remain the frame own numbering rather than restarting at 1. */
+  rankOffset?: number;
 }
 
 function main(): void {
@@ -66,7 +69,7 @@ function main(): void {
 
   void (async () => {
     for (let i = 0; i < frame.ranks.length; i++) {
-      const rank = i + 1;
+      const rank = (frame.rankOffset ?? 0) + i + 1;
       const packageName = frame.ranks[i]!;
       let facts: RepositoryFacts;
       try {
