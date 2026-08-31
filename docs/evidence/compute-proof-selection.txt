@@ -1,0 +1,35 @@
+
+  COMPUTE_PROOF_V1 SELECTION
+
+  source: C:\Users\Swati Kale\OneDrive\Desktop\DiffCI.com\docs\evidence\density-02\density-summary.json
+  measured repositories: 20
+
+    repository                              tests   mapping   edges   verdict
+    kentcdodds/cross-env                        5    100.0%       9   tests<100, edges<100
+    typescript-eslint/typescript-eslint       308     99.7%     470   QUALIFIES
+    kulshekhar/ts-jest                         40     85.0%      77   tests<100, edges<100
+    TypeStrong/ts-node                         29     75.9%      79   tests<100, edges<100
+    isaacs/rimraf                              24     54.2%      19   tests<100, edges<100
+    Microsoft/tslib                             2     50.0%       1   tests<100, edges<100
+    microsoft/TypeScript                       14     42.9%      13   tests<100, edges<100
+    jestjs/jest                              1195     38.3%     730   QUALIFIES
+    eslint/eslint                               7     28.6%       9   tests<100, mapping<30%, edges<100
+    react/react                              2406      0.4%      13   mapping<30%, edges<100
+    mochajs/mocha                             135      0.0%       0   mapping<30%, edges<100
+    DefinitelyTyped/DefinitelyTyped           197      0.0%       0   mapping<30%, edges<100
+    prettier/prettier                        1667      0.0%       0   mapping<30%, edges<100
+    webpack/webpack                           181      0.0%       0   mapping<30%, edges<100
+    babel/babel                                20      0.0%       0   tests<100, mapping<30%, edges<100
+    babel/babel-loader                         13      0.0%       0   tests<100, mapping<30%, edges<100
+    chaijs/chai                                10      0.0%       0   tests<100, mapping<30%, edges<100
+    rollup/rollup                               3      0.0%       0   tests<100, mapping<30%, edges<100
+    webpack/webpack-cli                        41      0.0%       0   tests<100, mapping<30%, edges<100
+    jsx-eslint/eslint-plugin-react              1      0.0%       0   tests<100, mapping<30%, edges<100
+
+  qualifying: 2
+    SELECTED  typescript-eslint/typescript-eslint  (mapping 99.7%, 308 tests, 470 edges)
+    next      jestjs/jest  (mapping 38.3%, 1195 tests, 730 edges)
+
+  twoGreenBaselines is NOT evaluated here - it needs a container run. If the selected repository
+  cannot produce two green baselines it fails eligibility and the next in this order is taken.
+
