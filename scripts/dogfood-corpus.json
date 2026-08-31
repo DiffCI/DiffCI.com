@@ -402,6 +402,13 @@
       "examples"
     ],
     "comparatorScopeRationale": "COMPUTE_PROOF_V1 amendment A1. jest.config.mjs excludes website via modulePathIgnorePatterns and examples via testPathIgnorePatterns, so a change confined to either has zero optimisation opportunity by construction. Implementation source under packages/*/src IS in scope.",
-    "lockfile": "yarn.lock committed; packageManager yarn@4.18.0."
+    "lockfile": "yarn.lock committed; packageManager yarn@4.18.0.",
+    "build": [
+      "corepack",
+      "yarn",
+      "build"
+    ],
+    "buildRationale": "COMPUTE_PROOF_V1 correction J1. Jest is SELF-HOSTING: packages/jest-cli/bin/jest.js requires ../build/index.js, which Jest's own build produces, so the suite cannot run against an unbuilt tree. jest-qualify-01 exited after 49 ms and 0.05 CPU-seconds with that module missing - qualification was never exercised. The repository documents `build: yarn build:js && yarn build:ts && yarn bundle:ts` and its CI runs `yarn build` before tests (.github/workflows/nodejs.yml:47). The frozen corpus schema already models a build stage and zod already uses it for the same environment-reconstruction purpose. The qualifier runs build ONCE, between install and the baselines; that order is followed unchanged.",
+    "mutationQualificationReason": "jest-qualify-01 (2026-08-30) is RETAINED as a failed registration attempt, not a qualification result: the entry omitted the build step, so the baseline could not load Jest at all."
   }
 ]
