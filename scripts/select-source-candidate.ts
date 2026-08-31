@@ -88,6 +88,7 @@ function main(): void {
   // matches in history order - only how many of them are taken. One successful mutant establishes
   // existence but is fragile; a single lucky selection is not a mechanism.
   const count = Number(flagOf("count") ?? 1);
+  const trace = args.includes("--trace");
 
   const git = (...a: string[]): string => execFileSync("git", ["-C", repo, ...a], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   const shas = git("rev-list", `--max-count=${limit}`, "HEAD").trim().split("\n");
@@ -121,7 +122,15 @@ function main(): void {
       rejections.push(`A1: every implementation file is outside the comparator's scope (${outOfScope.slice(0, 3).join(", ")})`);
     }
 
-    if (rejections.length > 0) continue;
+    // --trace records the WHOLE traversal, not only the matches. Added 2026-08-31 after the
+    // generation-C candidate universe was already drawn, so it cannot influence any selection: the
+    // rejections were always computed, they were simply never printed, which left "why was this commit
+    // not a candidate?" unanswerable from the artefact.
+    if (rejections.length > 0) {
+      if (trace) console.log(`    - ${sha.slice(0, 9)}  REJECTED  ${rejections.join("; ")}   [${subject.slice(0, 60)}]`);
+      continue;
+    }
+    if (trace) console.log(`    + ${sha.slice(0, 9)}  MATCH     [${subject.slice(0, 60)}]`);
 
     drawn += 1;
     console.log(`  CANDIDATE ${drawn} of ${count} - selected after examining ${examined} commit(s)\n`);

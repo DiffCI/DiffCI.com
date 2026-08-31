@@ -1,0 +1,91 @@
+{
+  "experiment": "GENERATION_C_01",
+  "stopRuleApplies": false,
+  "repository": "jest-community/eslint-plugin-jest",
+  "pinnedTree": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+  "sealedAt": "draw 209c56b, candidate rule frozen before the filter ran",
+  "drawArtefact": "docs/evidence/generation-c-draw.json",
+  "candidateRule": "docs/generation-c-candidate-rule.md",
+  "traversal": "docs/evidence/generation-c-candidate-selection.txt",
+  "note": "The first five matches in history order under the unchanged filter plus A1, exclude-scope empty. Nine commits examined, four rejected with reasons recorded. NOT observed by DiffCI.",
+  "pairs": [
+    {
+      "index": 1,
+      "base": "3629019d8e84e096115c8774a34178ff5b83aaf2",
+      "head": "58e487fecda05ddafcac2fcf67475d90bd515957",
+      "subject": "fix(prefer-to-have-been-called): don't crash on matcher without an argument (#2016)",
+      "implementationFiles": [
+        "src/rules/prefer-to-have-been-called.ts"
+      ],
+      "changedTestFiles": [
+        "src/rules/__tests__/prefer-to-have-been-called.test.ts"
+      ],
+      "allChangedFiles": [
+        "src/rules/__tests__/prefer-to-have-been-called.test.ts",
+        "src/rules/prefer-to-have-been-called.ts"
+      ]
+    },
+    {
+      "index": 2,
+      "base": "197f34167e306fa057d1285b1fe08746cfc5a4a0",
+      "head": "3629019d8e84e096115c8774a34178ff5b83aaf2",
+      "subject": "fix(prefer-to-have-length): don't crash on `expect` chain without a value (#2014)",
+      "implementationFiles": [
+        "src/rules/prefer-to-have-length.ts"
+      ],
+      "changedTestFiles": [
+        "src/rules/__tests__/prefer-to-have-length.test.ts"
+      ],
+      "allChangedFiles": [
+        "src/rules/__tests__/prefer-to-have-length.test.ts",
+        "src/rules/prefer-to-have-length.ts"
+      ]
+    },
+    {
+      "index": 3,
+      "base": "6e6e9a272fbb780148cfdc8b23d8b97801e84b2c",
+      "head": "197f34167e306fa057d1285b1fe08746cfc5a4a0",
+      "subject": "refactor(valid-expect): use optional chaining (#2015)",
+      "implementationFiles": [
+        "src/rules/valid-expect.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/valid-expect.ts"
+      ]
+    },
+    {
+      "index": 4,
+      "base": "fc5657c8801fb79b85f28c91ab0abcf009a3c513",
+      "head": "d848f70d5ae1a143d4ae2ef52bf00c6658f5070d",
+      "subject": "fix(no-export): handle literal property accessors (#2011)",
+      "implementationFiles": [
+        "src/rules/no-export.ts"
+      ],
+      "changedTestFiles": [
+        "src/rules/__tests__/no-export.test.ts"
+      ],
+      "allChangedFiles": [
+        "src/rules/__tests__/no-export.test.ts",
+        "src/rules/no-export.ts"
+      ]
+    },
+    {
+      "index": 5,
+      "base": "6156650467c5982182aa2cb8ba122c0320a2d4dd",
+      "head": "fc5657c8801fb79b85f28c91ab0abcf009a3c513",
+      "subject": "refactor: use `replaceText` in fixers when possible (#2012)",
+      "implementationFiles": [
+        "src/rules/no-unneeded-async-expect-function.ts",
+        "src/rules/prefer-jest-mocked.ts",
+        "src/rules/valid-title.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/no-unneeded-async-expect-function.ts",
+        "src/rules/prefer-jest-mocked.ts",
+        "src/rules/valid-title.ts"
+      ]
+    }
+  ]
+}

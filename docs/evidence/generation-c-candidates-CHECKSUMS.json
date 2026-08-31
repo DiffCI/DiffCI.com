@@ -1,0 +1,9 @@
+{
+  "step": "5.4 candidate universe",
+  "sha256": {
+    "docs/evidence/generation-c-candidate-pairs.json": "365642621005de49c6d68a219af11ee732cece2cd010e2d848ca729140a0278f",
+    "docs/evidence/generation-c-candidate-selection.txt": "5ae9b389ea1d792f8db56c9a87299b92f079b9d0fac7fc34d01acd5900a1b97f",
+    "docs/generation-c-candidate-rule.md": "f700e43f8db1535bf6434afabb90c3deb6ea3d55308ee01f219696102de19dda",
+    "docs/evidence/generation-c-draw.json": "f1fb996442e39f29e7745e43174ba248f53c289f1626dde88c41972da0c60b00"
+  }
+}

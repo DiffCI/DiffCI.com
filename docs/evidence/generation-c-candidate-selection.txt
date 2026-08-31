@@ -1,0 +1,108 @@
+
+> diffci@0.1.0 select:candidate
+> tsx scripts/select-source-candidate.ts --repo C:/Users/SWATIK~1/AppData/Local/Temp/claude/C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com/***/scratchpad/epj --count 5 --trace
+
+
+  SOURCE-CANDIDATE SELECTION - first match in history order wins
+
+  scanning 400 commits from HEAD
+
+    - c7bf004e0  REJECTED  no implementation source file changed; global-risk file(s): yarn.lock; dependency automation   [chore(deps): lock file maintenance (#2017)]
+    - 94076f052  REJECTED  no implementation source file changed; global-risk file(s): package.json   [chore(release): 29.16.6 [skip ci]]
+    + 58e487fec  MATCH     [fix(prefer-to-have-been-called): don't crash on matcher with]
+  CANDIDATE 1 of 5 - selected after examining 3 commit(s)
+
+    head     58e487fecda05ddafcac2fcf67475d90bd515957
+    base     3629019d8e84e096115c8774a34178ff5b83aaf2
+    subject  fix(prefer-to-have-been-called): don't crash on matcher without an argument (#2016)
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/rules/prefer-to-have-been-called.ts
+      test files also changed       1  (not test-only)
+        src/rules/__tests__/prefer-to-have-been-called.test.ts
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           whole repository
+      total files in diff           2
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
+    + 3629019d8  MATCH     [fix(prefer-to-have-length): don't crash on `expect` chain wi]
+  CANDIDATE 2 of 5 - selected after examining 4 commit(s)
+
+    head     3629019d8e84e096115c8774a34178ff5b83aaf2
+    base     197f34167e306fa057d1285b1fe08746cfc5a4a0
+    subject  fix(prefer-to-have-length): don't crash on `expect` chain without a value (#2014)
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/rules/prefer-to-have-length.ts
+      test files also changed       1  (not test-only)
+        src/rules/__tests__/prefer-to-have-length.test.ts
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           whole repository
+      total files in diff           2
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
+    + 197f34167  MATCH     [refactor(valid-expect): use optional chaining (#2015)]
+  CANDIDATE 3 of 5 - selected after examining 5 commit(s)
+
+    head     197f34167e306fa057d1285b1fe08746cfc5a4a0
+    base     6e6e9a272fbb780148cfdc8b23d8b97801e84b2c
+    subject  refactor(valid-expect): use optional chaining (#2015)
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/rules/valid-expect.ts
+      test files also changed       0  (not test-only)
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           whole repository
+      total files in diff           1
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
+    - 6e6e9a272  REJECTED  no implementation source file changed; global-risk file(s): .github/workflows/lint.yml; dependency automation   [chore(deps): update ghcr.io/danger/danger-js docker digest t]
+    - b1c03289f  REJECTED  no implementation source file changed; global-risk file(s): package.json   [chore(release): 29.16.5 [skip ci]]
+    + d848f70d5  MATCH     [fix(no-export): handle literal property accessors (#2011)]
+  CANDIDATE 4 of 5 - selected after examining 8 commit(s)
+
+    head     d848f70d5ae1a143d4ae2ef52bf00c6658f5070d
+    base     fc5657c8801fb79b85f28c91ab0abcf009a3c513
+    subject  fix(no-export): handle literal property accessors (#2011)
+
+    why it qualified:
+      implementation files changed  1  (1-5 required)
+        src/rules/no-export.ts
+      test files also changed       1  (not test-only)
+        src/rules/__tests__/no-export.test.ts
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           whole repository
+      total files in diff           2
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
+    + fc5657c88  MATCH     [refactor: use `replaceText` in fixers when possible (#2012)]
+  CANDIDATE 5 of 5 - selected after examining 9 commit(s)
+
+    head     fc5657c8801fb79b85f28c91ab0abcf009a3c513
+    base     6156650467c5982182aa2cb8ba122c0320a2d4dd
+    subject  refactor: use `replaceText` in fixers when possible (#2012)
+
+    why it qualified:
+      implementation files changed  3  (1-5 required)
+        src/rules/no-unneeded-async-expect-function.ts
+        src/rules/prefer-jest-mocked.ts
+        src/rules/valid-title.ts
+      test files also changed       0  (not test-only)
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      A1 comparator scope           whole repository
+      total files in diff           3
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
