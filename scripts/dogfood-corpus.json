@@ -386,8 +386,8 @@
     "source": "jestjs/jest",
     "stresses": "COMPUTE_PROOF_V1 candidate, reached by the sealed rule at 1b84b07 after typescript-eslint failed the twoGreenBaselines gate. 1195 test files, 38.3% test-to-production mapping density, 730 test-to-production edges - the only large repository in the frozen 40 with meaningful connectivity, and the lower density is itself part of what the experiment tests.",
     "commits": 25,
-    "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "observationQualified": "not attempted",
+    "mutationQualified": "no",
     "install": [
       "corepack",
       "yarn",
@@ -409,6 +409,10 @@
       "build"
     ],
     "buildRationale": "COMPUTE_PROOF_V1 correction J1. Jest is SELF-HOSTING: packages/jest-cli/bin/jest.js requires ../build/index.js, which Jest's own build produces, so the suite cannot run against an unbuilt tree. jest-qualify-01 exited after 49 ms and 0.05 CPU-seconds with that module missing - qualification was never exercised. The repository documents `build: yarn build:js && yarn build:ts && yarn bundle:ts` and its CI runs `yarn build` before tests (.github/workflows/nodejs.yml:47). The frozen corpus schema already models a build stage and zod already uses it for the same environment-reconstruction purpose. The qualifier runs build ONCE, between install and the baselines; that order is followed unchanged.",
-    "mutationQualificationReason": "jest-qualify-01 (2026-08-30) is RETAINED as a failed registration attempt, not a qualification result: the entry omitted the build step, so the baseline could not load Jest at all."
+    "mutationQualificationReason": "999 test(s) failing at HEAD on every run (999, 999)",
+    "mutationQualifiedAt": "2026-08-30T12:22:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "COMPUTE_PROOF_V1 second and final candidate - NOT QUALIFIED. jest-qualify-02 (2026-08-30): clone 0.5s, install 52.9s, build 178.7s, baseline 1 507.6s, baseline 2 351.9s. Reproducibly RED at HEAD: Tests 999 failed, 275 skipped, 5235 passed, 6509 total; Test Suites 29 failed, 520 passed, 549 of 553. Identical on both runs with exit=1, so classifyExecution returned RED rather than CONTRADICTORY_EXECUTION_EVIDENCE. THE 999 WAS VERIFIED against the real bottom-line summary, not taken from the snapshot-diff lines that Jest's own output-asserting tests scatter through the log. J1 worked - install, build and both baselines all executed - so this is a genuine qualification failure, not a registration defect. Full-suite cost measured at ~1680 CPU-s (run 1). Why 999 tests fail was NOT investigated: a red baseline disqualifies under the sealed rule and looking further would be debugging a candidate to keep it selected. COMPUTE_PROOF_V1 closes with its qualifying pool exhausted."
   }
 ]
