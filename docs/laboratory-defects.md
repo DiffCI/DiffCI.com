@@ -128,3 +128,28 @@ runner executes and that is the shape of a false green - a spread, an unresolved
 interpolated template or a call all leave the wide universe in force. A NAMED variant config
 (`vitest.e2e.config.ts`) never speaks for what the bare runner executes. Regression suite:
 `tests/repo/runner-universe.test.ts`.
+
+## Defect 18 — `validation:pack` uploads a stale agent under a fresh label
+
+Found 2026-08-31, immediately after the defect-17 fix, while preparing apparatus qualification.
+
+`pack` selects whatever `.tgz` already sits in `dist-agent/` and never rebuilds it. After changing
+`analyzer.ts`, `test-discovery.ts` and adding `runner-universe.ts`, packing reported the **unchanged
+generation-B digest** `sha512-mlNTeKlr…`.
+
+Had that gone unnoticed, the generation-C qualification would have run the **old** analyser while every
+artefact — `environment.json`, the manifest, the corpus rows — recorded the new one. The defect-17 fix
+would then have been "inherited" by results that never contained it, and the frozen `89fc236` analyser
+identity would have propagated forward invisibly. That is the precise failure the qualification step
+exists to prevent, and the apparatus itself was set up to cause it.
+
+Caught by checking the digest against the previous one rather than by any automated guard.
+
+**Fixed in the same session.** `pack` now REFUSES when the packaged agent is older than any file under
+`src/` that it is built from, naming the offending files and the command to run. It refuses rather than
+silently rebuilding: an operator who believes the wrong analyser is under test needs to be told, not
+quietly corrected. Verified in both directions — a clean tree packs, and touching one source file
+produces the refusal.
+
+Generation C is `sha512-eQGRE3ep…`, and `tests/validation-env/apparatus-qualification-gen-c.test.ts`
+asserts it differs from generation B.

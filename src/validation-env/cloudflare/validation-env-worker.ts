@@ -86,6 +86,9 @@ const COLLECTED_FILES: ReadonlySet<string> = new Set([
   // that can read them.
   "corpus-definition.json",
   "qualify.log",
+  // Apparatus qualification (Step 4, 2026-08-31): the universe-sanity verdict and its log.
+  "universe-sanity.json",
+  "universe.log",
   // Calibration runs.
   "calibration.log",
   // Addressability survey. Same omission as the qualification artefacts above, made again on

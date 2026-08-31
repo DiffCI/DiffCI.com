@@ -17,8 +17,8 @@
  */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 
 const REPO_ROOT = resolve(dirname(import.meta.filename), "..");
 const BUCKET = "diffci-validation-env";
@@ -92,11 +92,55 @@ async function api(args: Record<string, string>, path: string, init?: RequestIni
  * agent in the container) is what makes "same agent digest" literally true for a reproduction, instead
  * of "same agent version, rebuilt elsewhere".
  */
+/**
+ * Source files newer than the packaged agent, newest first.
+ *
+ * Only `src/` is consulted: that is what the agent bundle is built from. Scripts, docs and tests do
+ * not enter the agent, so treating their mtimes as staleness would refuse valid packs.
+ */
+function staleSourcesAgainst(agentTarball: string): string[] {
+  let agentMtime: number;
+  try { agentMtime = statSync(agentTarball).mtimeMs; } catch { return []; }
+  const out: Array<{ path: string; mtime: number }> = [];
+  const walk = (dir: string): void => {
+    let entries: string[] = [];
+    try { entries = readdirSync(dir); } catch { return; }
+    for (const name of entries) {
+      const full = join(dir, name);
+      let st;
+      try { st = statSync(full); } catch { continue; }
+      if (st.isDirectory()) walk(full);
+      else if (/.(ts|tsx|mts|cts|js|mjs|cjs|json)$/.test(name) && st.mtimeMs > agentMtime) {
+        out.push({ path: relative(REPO_ROOT, full), mtime: st.mtimeMs });
+      }
+    }
+  };
+  walk(join(REPO_ROOT, "src"));
+  return out.sort((a, b) => b.mtime - a.mtime).map((e) => e.path);
+}
+
 function cmdPack(): void {
   const distAgent = join(REPO_ROOT, "dist-agent");
   const tarballs = existsSync(distAgent) ? readdirSync(distAgent).filter((f) => f.endsWith(".tgz")) : [];
   if (tarballs.length !== 1) fail(`expected exactly one .tgz in dist-agent, found ${tarballs.length}. Run: npm run build:agent`);
   const agentLocal = join(distAgent, tarballs[0]!);
+
+  // DEFECT 18 (2026-08-31). `pack` uploads whatever tarball is already sitting in dist-agent and never
+  // rebuilds it. After the defect-17 analyser change, packing reported the UNCHANGED generation-B
+  // digest - so a qualification run would have measured the OLD analyser while every artifact claimed
+  // the new one, and the corrected behaviour would have been inherited into results that never had it.
+  //
+  // It REFUSES rather than silently rebuilding: an operator who believes the wrong analyser is under
+  // test needs to be told so, not quietly corrected.
+  const stale = staleSourcesAgainst(agentLocal);
+  if (stale.length > 0) {
+    fail(
+      `the packaged agent is OLDER than ${stale.length} source file(s) it is built from, so packing it ` +
+        `would upload a stale analyser under a fresh label. Newest: ${stale.slice(0, 3).join(", ")}. ` +
+        `Run: npm run build:agent`,
+    );
+  }
+
   const agentSha = sha256File(agentLocal);
   const agentIntegrity = `sha512-${createHash("sha512").update(readFileSync(agentLocal)).digest("base64")}`;
 

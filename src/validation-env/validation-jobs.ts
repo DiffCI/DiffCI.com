@@ -70,6 +70,11 @@ export interface ValidationJob {
    * green attributes failures to the mutation that were already there.
    */
   mode: "reproduce" | "qualify" | "calibrate" | "survey" | "density" | "observe-pairs";
+  /**
+   * Universe-sanity expectations, checked in the canonical environment BEFORE the suite qualification.
+   * Present only on apparatus-qualification jobs. See docs/apparatus-qualification-gen-c.md.
+   */
+  universe?: { expectedTestCount: number; forbiddenPrefixes: string[] };
   /** The frozen bundle this job reproduces, when it is a reproduction rather than new evidence. */
   reproduces?: string;
   /** "owner/name" - cloned from GitHub over https, no credentials. Unused by `calibrate`. */
@@ -968,6 +973,39 @@ const JOBS: Record<string, ValidationJob> = {
    * green baselines on this same tree at 260.22 CPU-s. Nothing about the execution recipe is tuned
    * for this experiment.
    */
+  /**
+   * APPARATUS QUALIFICATION - analyser generation C (`5fb0183`, defect 17 fixed).
+   *
+   * `89fc236` is frozen and stays frozen: it is evidence about generation B. Generation C changed what
+   * DiffCI believes the test universe IS, so it must earn qualification independently rather than
+   * inherit B verdict. See docs/apparatus-qualification-gen-c.md.
+   *
+   * The chain: pinned clone -> canonical environment -> universe sanity -> install/build -> repeated
+   * green baselines. Universe sanity runs FIRST because there is no point measuring how reliably a
+   * suite goes green if DiffCI models the wrong set of executable tests.
+   *
+   * ts-jest is the target because b1a97ac4 is the tree where the 20-vs-40 error was found and can
+   * therefore be checked against ground truth. NO candidate pair is observed and NOTHING is mutated -
+   * in particular not candidate 5, which is now a known success case and has no business inside a
+   * qualification run.
+   */
+  "apparatus-qualify-gen-c": {
+    id: "apparatus-qualify-gen-c",
+    description: "Apparatus qualification for analyser generation C: universe sanity + repeated green baselines.",
+    mode: "qualify",
+    repository: "kulshekhar/ts-jest",
+    pinnedHeadSha: "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+    // Generation C. MUST differ from generation B sha512-mlNTeKlr..., or the run would be measuring
+    // the old analyser under a new label - the exact trap defect 18 set.
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    universe: {
+      // jest.config.ts declares testMatch <rootDir>/src/**/*.spec.ts, which matches exactly 20.
+      expectedTestCount: 20,
+      forbiddenPrefixes: ["e2e", "examples", "presets", "scripts", "website"],
+    },
+    maxRunMs: 8 * 60 * 60_000,
+  },
+
   "tsjest-mechanism-mutation": {
     id: "tsjest-mechanism-mutation",
     description: "MECHANISM_PROOF_01: mutate the five sealed ts-jest candidates under the frozen protocol.",
@@ -1131,6 +1169,24 @@ export const PAIRS_PATH = "docs/evidence/mechanism-proof-pairs.json";
  */
 export function observePairsArgv(): string[] {
   return ["run", "observe:pairs", "--", "--repo", PINNED_CLONE, "--pairs", PAIRS_PATH, "--out", OBSERVED_CORPUS_PATH, "--reports", `${WORKSPACE}/reports`];
+}
+
+export const UNIVERSE_OUT = `${WORKSPACE}/universe-sanity.json`;
+
+/**
+ * Universe-sanity argv. Refuses (exit 1) on any mismatch, so a discrepancy fails the RUN rather than
+ * being recorded as a finding - an apparatus defect must never become an experimental result.
+ */
+export function universeArgv(job: ValidationJob): string[] {
+  const u = job.universe;
+  if (!u) throw new Error(`job "${job.id}" has no universe expectations`);
+  return [
+    "run", "qualify:universe", "--",
+    "--repo", PINNED_CLONE,
+    "--expect-tests", String(u.expectedTestCount),
+    "--forbid-prefixes", u.forbiddenPrefixes.join(","),
+    "--out", UNIVERSE_OUT,
+  ];
 }
 
 export function densityArgv(): string[] {

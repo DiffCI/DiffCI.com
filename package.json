@@ -70,7 +70,8 @@
     "select:compute-proof": "tsx scripts/select-compute-proof.ts",
     "funnel:qualification": "tsx scripts/qualification-funnel.ts",
     "select:mechanism-proof": "tsx scripts/select-mechanism-proof.ts",
-    "observe:pairs": "tsx scripts/observe-named-pairs.ts"
+    "observe:pairs": "tsx scripts/observe-named-pairs.ts",
+    "qualify:universe": "tsx scripts/qualify-universe.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",

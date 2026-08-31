@@ -50,6 +50,8 @@ import {
   surveyArgv,
   densityArgv,
   observePairsArgv,
+  universeArgv,
+  UNIVERSE_OUT,
   DENSITY_OUT,
   SURVEY_OUT,
   type ValidationJob,
@@ -80,6 +82,7 @@ export type ValidationStep =
   | "surveying"
   | "measuringDensity"
   | "observingPairs"
+  | "verifyingUniverse"
   | "locating"
   | "mutating"
   | "collecting"
@@ -128,7 +131,7 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
-  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string };
   /** Set once evidence preservation has run, so a failure inside it cannot loop. */
   evidencePreserved?: boolean;
   /** The step that actually failed, kept because `step` becomes "preserving" then "failed". */
@@ -395,7 +398,9 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
       return { record, nextAlarmDelayMs: 0 };
     }
 
-    record.step = job.mode === "qualify" ? "qualifying" : "observing";
+    // Universe sanity runs BEFORE the suite qualification: if DiffCI models the wrong set of
+    // executable tests there is no point measuring how reliably that suite goes green.
+    record.step = job.universe ? "verifyingUniverse" : job.mode === "qualify" ? "qualifying" : "observing";
     return { record, nextAlarmDelayMs: 0 };
   } catch (err) {
     return fail(record, "prepare-failed", err instanceof Error ? err.message : String(err));
@@ -407,7 +412,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs",
+  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -520,6 +525,15 @@ async function surveyStep(record: ValidationRecord, deps: ValidationStepDeps): P
   return runHarnessPass(record, deps, surveyArgv(), "survey", (r) => {
     r.timings.surveyMs = deps.now() - t0;
     r.step = "collecting";
+    return { record: r, nextAlarmDelayMs: 0 };
+  });
+}
+
+async function verifyUniverse(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const t0 = record.processStartedAt ?? deps.now();
+  return runHarnessPass(record, deps, universeArgv(deps.job), "universe", (r) => {
+    r.timings.universeMs = deps.now() - t0;
+    r.step = deps.job.mode === "qualify" ? "qualifying" : "observing";
     return { record: r, nextAlarmDelayMs: 0 };
   });
 }
@@ -804,6 +818,25 @@ async function collectQualification(record: ValidationRecord, deps: ValidationSt
     const logKey = `${resultPrefix(record)}/qualify.log`;
     await bucket.put(logKey, record.logs.qualify);
     keys.push(logKey);
+  }
+
+  // Universe sanity. Written here and allowlisted in the worker in the SAME commit - defect #4 and
+  // #14 were both this allowlist lagging behind a writer, producing a completed run whose artefacts
+  // reached R2 and were then unreadable through the only route that can read them.
+  if (record.logs?.universe) {
+    const logKey = `${resultPrefix(record)}/universe.log`;
+    await bucket.put(logKey, record.logs.universe);
+    keys.push(logKey);
+  }
+  if (deps.job.universe) {
+    try {
+      const sanity = (await sandbox.readFile(UNIVERSE_OUT)).content;
+      const sanityKey = `${resultPrefix(record)}/universe-sanity.json`;
+      await bucket.put(sanityKey, sanity);
+      keys.push(sanityKey);
+    } catch (err) {
+      return fail(record, "universe-sanity-unreadable", err instanceof Error ? err.message : String(err));
+    }
   }
 
   const envKey = `${resultPrefix(record)}/environment.json`;
@@ -1117,6 +1150,8 @@ export async function stepValidation(record: ValidationRecord, deps: ValidationS
       return densityStep(record, deps);
     case "observingPairs":
       return observePairsStep(record, deps);
+    case "verifyingUniverse":
+      return verifyUniverse(record, deps);
     case "locating":
       return locate(record, deps);
     case "mutating":
