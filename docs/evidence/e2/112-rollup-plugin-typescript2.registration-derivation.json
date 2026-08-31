@@ -1,0 +1,38 @@
+{
+  "derivationVersion": 1,
+  "source": "ezolenko/rollup-plugin-typescript2",
+  "rule": "docs/e2-registration-rule.md",
+  "ruleFrozenAt": "7d8e213",
+  "evidence": {
+    "lockfilesPresent": [
+      "package-lock.json"
+    ],
+    "packageManagerFrom": "package-lock.json",
+    "runnerFrom": "package.json devDependencies/dependencies",
+    "declaredRunnerVersions": {
+      "jest": "^29.7.0"
+    },
+    "hasBuildScript": true,
+    "testScript": "jest"
+  },
+  "detected": {
+    "packageManager": "npm",
+    "runner": "node_modules/jest/bin/jest.js"
+  },
+  "derived": {
+    "install": [
+      "npm",
+      "ci",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "build": [
+      "npm",
+      "run",
+      "build"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": []
+  },
+  "outcome": "REGISTERED"
+}

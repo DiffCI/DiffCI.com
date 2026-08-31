@@ -1,5 +1,5 @@
 {
-  "note": "Head sha each E1 screening actually cloned. E2 pins these exact trees, so the gate qualifies the tree that was screened rather than whatever HEAD later moves to.",
+  "note": "Head sha each E1 screening actually cloned. E2 pins these exact trees, so the gate qualifies the tree that was screened rather than whatever HEAD later moves to. Rank 116 resolved separately: the survey names fact files with `_` for @ and /, so the first lookup used the wrong separator and reported it absent.",
   "source": "survey-continuation-01 facts/*.json",
   "repositories": {
     "lint-staged/lint-staged": {
@@ -40,7 +40,7 @@
     "testing-library/jest-dom": {
       "rank": 116,
       "packageName": "@testing-library/jest-dom",
-      "headSha": "(absent)"
+      "headSha": "3782c78b3dc9824675afe0cb8f1722f8c96f494d"
     },
     "ant-design/ant-design": {
       "rank": 119,

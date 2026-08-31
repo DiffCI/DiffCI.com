@@ -1146,6 +1146,19 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 4 * 60 * 60_000,
   },
 
+  "e2-jest-dom": {
+    id: "e2-jest-dom",
+    description: "E2 green gate, frame rank 116: testing-library/jest-dom.",
+    mode: "qualify",
+    repository: "testing-library/jest-dom",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "3782c78b3dc9824675afe0cb8f1722f8c96f494d",
+    requiresApparatus: "gen-c",
+    registerBeforeQualify: true,
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "e2-ant-design": {
     id: "e2-ant-design",
     description: "E2 green gate, frame rank 119: ant-design/ant-design.",
