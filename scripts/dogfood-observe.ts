@@ -24,6 +24,8 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { fileURLToPath } from "node:url";
+
 import { execBounded } from "./process-exec.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
 
@@ -115,7 +117,7 @@ function git(args: string[], cwd: string): { stdout: string; ok: boolean } {
  * A clean prefix per run, not a shared one: the point is to exercise what a customer's runner does on
  * a cold machine, including the dependency install. Reusing node_modules would quietly skip that.
  */
-function installAgent(): { bin: string; version: string; integrity: string; prefix: string } {
+export function installAgent(): { bin: string; version: string; integrity: string; prefix: string } {
   const distDir = join(repoRoot, "dist-agent");
   const tarballs = existsSync(distDir) ? readdirSync(distDir).filter((f) => f.endsWith(".tgz")) : [];
   if (tarballs.length !== 1) throw new Error(`expected exactly one .tgz in dist-agent, found ${tarballs.length}. Run: npm run build:agent`);
@@ -351,4 +353,6 @@ function main(): void {
   console.log(`\n${observed} observation(s) written to ${outPath}`);
 }
 
-main();
+// Only when invoked directly: exporting installAgent above makes this module importable, and an
+// import must not launch a full corpus run as a side effect.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();

@@ -1,0 +1,49 @@
+{
+  "repository": "kulshekhar/ts-jest",
+  "pinnedTree": "b1a97ac485711377e01e72bac8b115e41a1c17ba",
+  "sealedAt": "07bc3d1",
+  "note": "The five MECHANISM_PROOF_01 candidates, transcribed verbatim from docs/evidence/mechanism-proof-candidates.txt. Drawn in history order at ranks 29, 97, 106, 112 and 113 of the examined commits, under the sealed filter plus A1 with comparator scope src/ (excluded: e2e, examples, presets, scripts, website). None was skipped for changing its own test or for looking unlikely to select.",
+  "pairs": [
+    {
+      "index": 1,
+      "base": "f10746008e512203ad7d8c581e2c58cc7dcd43c8",
+      "head": "06c79d4cebfa785749b2f96ef2dbeffc12798c47",
+      "subject": "fix: address TypeScript 7 review feedback",
+      "implementationFiles": ["src/legacy/compiler/ts-compiler.ts"],
+      "changedTestFiles": [],
+      "why": "The most informative of the five, and not chosen for it: NO test file changes, so any test selected must be reached through the graph rather than because it was edited."
+    },
+    {
+      "index": 2,
+      "base": "efb3c2f84d3583db0787982a18425d99edadfe25",
+      "head": "39418187515f11b6584d35a4e3ddf50231f74936",
+      "subject": "fix: preserve Bundler on the CJS path under TypeScript >= 6",
+      "implementationFiles": ["src/legacy/compiler/ts-compiler.ts"],
+      "changedTestFiles": ["src/legacy/compiler/ts-compiler.spec.ts"]
+    },
+    {
+      "index": 3,
+      "base": "6edad687cb69ea62e567dc68b0f3ed67977937e7",
+      "head": "a82a2b32c4987a5249fd5284283117dd2fa3be47",
+      "subject": "fix: rebuild Program when consecutive compiles need different module kinds",
+      "implementationFiles": ["src/legacy/compiler/ts-compiler.ts"],
+      "changedTestFiles": ["src/legacy/compiler/ts-compiler.spec.ts"]
+    },
+    {
+      "index": 4,
+      "base": "96d025dd912ea2bceb18b67d2d509ada7a756d9d",
+      "head": "8a8fd2fb8446655bba18367db9306a1089490e62",
+      "subject": "fix(transformer): use a consistent comparator in hoist-jest sortStatements",
+      "implementationFiles": ["src/transformers/hoist-jest.ts"],
+      "changedTestFiles": ["src/transformers/__snapshots__/hoist-jest.spec.ts.snap", "src/transformers/hoist-jest.spec.ts"]
+    },
+    {
+      "index": 5,
+      "base": "61a41b5c95c72ef417f8f6b668097a60082e7118",
+      "head": "96d025dd912ea2bceb18b67d2d509ada7a756d9d",
+      "subject": "fix(transformer): transpile `mjs` files from `node_modules` for CJS mode",
+      "implementationFiles": ["src/legacy/ts-jest-transformer.ts"],
+      "changedTestFiles": ["src/legacy/ts-jest-transformer.spec.ts"]
+    }
+  ]
+}

@@ -69,7 +69,8 @@
     "trace:imports": "tsx scripts/trace-import-resolution.ts",
     "select:compute-proof": "tsx scripts/select-compute-proof.ts",
     "funnel:qualification": "tsx scripts/qualification-funnel.ts",
-    "select:mechanism-proof": "tsx scripts/select-mechanism-proof.ts"
+    "select:mechanism-proof": "tsx scripts/select-mechanism-proof.ts",
+    "observe:pairs": "tsx scripts/observe-named-pairs.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",
