@@ -1,0 +1,22 @@
+{
+  "receiptVersion": 1,
+  "runId": "e2-12-jest-dom",
+  "jobId": "e2-jest-dom",
+  "mode": "qualify",
+  "shardIndex": 0,
+  "apparatus": {
+    "sourceTarballKey": "sources/diffci-7b09858e82cb5fb5.tgz",
+    "sourceTarballSha256": "7b09858e82cb5fb53893c4ad1f980c07529d1df4008946e7309b48bc796075ac"
+  },
+  "guards": [],
+  "commands": [],
+  "timings": {},
+  "outcome": {
+    "step": "failed",
+    "failed": true,
+    "layer": "INFRASTRUCTURE",
+    "errorClass": "bootstrap-failed",
+    "error": "Sandbox operation sandbox.exec was interrupted while the platform was updating the sandbox runtime"
+  },
+  "producedAt": "2026-08-31T13:55:54.663Z"
+}

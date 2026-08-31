@@ -1242,7 +1242,23 @@ async function writeExecutionReceipt(record: ValidationRecord, deps: ValidationS
         environment: record.environment,
         sourceTarballKey: record.sourceTarballKey,
         sourceTarballSha256: record.sourceTarballSha256,
-        guards: record.guards,
+        // A DECLARED guard that never ran must appear as NOT_REACHED, not vanish. An empty guards
+        // array is indistinguishable from "this job declared no guard" - which is precisely the
+        // defect-19 blind spot the receipt exists to close. e2-12-jest-dom died in bootstrap before
+        // the guard, and reported [] until this was fixed.
+        guards:
+          deps.job.requiresApparatus && !(record.guards ?? []).some((g) => g.name === `requiresApparatus:${deps.job.requiresApparatus}`)
+            ? [
+                ...(record.guards ?? []),
+                {
+                  declared: true,
+                  executed: false,
+                  name: `requiresApparatus:${deps.job.requiresApparatus}`,
+                  result: "NOT_REACHED" as const,
+                  problems: ["the run failed before this control was reached"],
+                },
+              ]
+            : record.guards,
         commands: record.commands,
         timings: record.timings,
         step: record.step,

@@ -54,3 +54,27 @@ test("a repository RED keeps its REPOSITORY layer", () => {
   );
   assert.equal(receipt.outcome.layer, "REPOSITORY");
 });
+
+test("a DECLARED guard that never ran is recorded NOT_REACHED, not omitted", () => {
+  // e2-12-jest-dom died in bootstrap before the apparatus guard and its receipt reported `guards: []`,
+  // which reads identically to "this job declared no guard". That is the defect-19 blind spot wearing
+  // a different hat: absence of evidence presented as evidence of absence.
+  const receipt = buildExecutionReceipt(
+    {
+      runId: "e2-12-jest-dom",
+      jobId: "e2-jest-dom",
+      mode: "qualify",
+      shardIndex: 0,
+      step: "failed",
+      stepBeforeFailure: "bootstrapping",
+      guards: [
+        { declared: true, executed: false, name: "requiresApparatus:gen-c", result: "NOT_REACHED", problems: ["the run failed before this control was reached"] },
+      ],
+    },
+    "2026-08-31T00:00:00.000Z",
+  );
+  assert.equal(receipt.guards.length, 1);
+  assert.equal(receipt.guards[0]!.executed, false);
+  assert.equal(receipt.guards[0]!.result, "NOT_REACHED");
+  assert.equal(receipt.outcome.layer, "INFRASTRUCTURE");
+});
