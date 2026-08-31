@@ -1309,7 +1309,7 @@ export function observeArgv(): string[] {
  */
 export function registerArgv(job: ValidationJob): string[] {
   if (!job.repository) throw new Error(`job "${job.id}" has mode "${job.mode}" and names no repository`);
-  return ["run", "corpus:register", "--", "--repo", PINNED_CLONE, "--source", job.repository, "--out", `${DIFFCI_DIR}/scripts/dogfood-corpus.json`];
+  return ["run", "corpus:register", "--", "--repo", PINNED_CLONE, "--source", job.repository, "--out", `${DIFFCI_DIR}/scripts/dogfood-corpus.json`, "--derivation", REGISTRATION_DERIVATION_OUT];
 }
 
 export function qualifyArgv(job: ValidationJob): string[] {
@@ -1375,6 +1375,8 @@ export function observePairsArgv(job?: ValidationJob): string[] {
     ...(job?.assertIdenticalRepeats ? ["--assert-identical-repeats"] : []),
   ];
 }
+
+export const REGISTRATION_DERIVATION_OUT = `${WORKSPACE}/registration-derivation.json`;
 
 export const UNIVERSE_OUT = `${WORKSPACE}/universe-sanity.json`;
 

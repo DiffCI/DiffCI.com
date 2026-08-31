@@ -53,6 +53,7 @@ import {
   densityArgv,
   observePairsArgv,
   registerArgv,
+  REGISTRATION_DERIVATION_OUT,
   universeArgv,
   UNIVERSE_OUT,
   DENSITY_OUT,
@@ -890,6 +891,20 @@ async function collectQualification(record: ValidationRecord, deps: ValidationSt
   // Universe sanity. Written here and allowlisted in the worker in the SAME commit - defect #4 and
   // #14 were both this allowlist lagging behind a writer, producing a completed run whose artefacts
   // reached R2 and were then unreadable through the only route that can read them.
+  // The derivation behind the commands, not only the commands. Written whenever the registration pass
+  // ran, including when it refused - an UNREGISTERABLE verdict is exactly the case where a reader most
+  // needs to see what the rule was looking at.
+  if (deps.job.registerBeforeQualify) {
+    try {
+      const derivation = (await sandbox.readFile(REGISTRATION_DERIVATION_OUT)).content;
+      const key = `${resultPrefix(record)}/registration-derivation.json`;
+      await bucket.put(key, derivation);
+      keys.push(key);
+    } catch {
+      // Absent is itself informative; it does not fail an otherwise complete qualification.
+    }
+  }
+
   if (record.logs?.register) {
     const logKey = `${resultPrefix(record)}/register.log`;
     await bucket.put(logKey, record.logs.register);
