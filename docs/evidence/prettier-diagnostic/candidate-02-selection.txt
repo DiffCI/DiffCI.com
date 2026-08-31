@@ -1,0 +1,25 @@
+
+  SOURCE-CANDIDATE SELECTION - first match in history order wins
+
+  scanning 400 commits from HEAD
+
+  SELECTED after examining 18 commit(s)
+
+    head     893fd3b1203c2c2dc196aba55759dce6c3a53478
+    base     bb52ae36d541534c99085b9bf401f28f7186c67b
+    subject  Add `isTypeAnnotation` (#19921)
+
+    why it qualified:
+      implementation files changed  5  (1-5 required)
+        src/language-js/comments/handle-comments.js
+        src/language-js/print/function-parameters.js
+        src/language-js/print/type-annotation.js
+        src/language-js/utilities/is-type-annotation-a-function.js
+        src/language-js/utilities/node-types.js
+      test files also changed       0  (not test-only)
+      global-risk files             0  (none of package.json, lockfiles, tsconfig, configs, .github)
+      dependency automation         no
+      total files in diff           5
+
+  Recorded BEFORE any analyser result for this candidate was produced.
+
