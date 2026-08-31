@@ -356,8 +356,8 @@
     "source": "typescript-eslint/typescript-eslint",
     "stresses": "COMPUTE_PROOF_V1 candidate, selected mechanically at 1b84b07 from density-02: highest mapping density among qualifiers (99.7%, 308 tests, 470 test-to-production edges). Solution-style TypeScript monorepo whose graph was unusable before the C1 fix at 645c0eb (310 nodes of which 2 were non-test) and is 1389 nodes / 3848 edges after it.",
     "commits": 25,
-    "observationQualified": "unknown",
-    "mutationQualified": "unknown",
+    "observationQualified": "not attempted",
+    "mutationQualified": "no",
     "install": [
       "corepack",
       "pnpm",
@@ -375,6 +375,11 @@
       "website-eslint"
     ],
     "testCommandRationale": "The repository's OWN documented test script, verbatim. A direct `vitest run` against the root config was considered and REJECTED as not semantically equivalent: measured from the repository, nx excludes integration-tests while root vitest includes it, nx includes types while root vitest excludes it, and root vitest adds tools/ which is not a packages project - 15 effective projects against 16, differing in both directions. Substituting would redefine the full suite for convenience, and the comparator's cost is the denominator of the entire economic claim. Inventing a --project exclusion list to reconcile them is equally disallowed. nx is an orchestrator, which is the shape that produced the false green in defect #5; classifyExecution() and CONTRADICTORY_EXECUTION_EVIDENCE are frozen and decide this on their own terms, with no nx-specific handling added.",
-    "lockfile": "pnpm-lock.yaml committed; packageManager pnpm@12.0.0-rc.7, a release candidate corepack must fetch. Recorded as a reproducibility note, not corrected."
+    "lockfile": "pnpm-lock.yaml committed; packageManager pnpm@12.0.0-rc.7, a release candidate corepack must fetch. Recorded as a reproducibility note, not corrected.",
+    "mutationQualificationReason": "install failed: postinstall - NX Failed to load 3 default Nx plugin(s). Never reached a baseline.",
+    "mutationQualifiedAt": "2026-08-30T11:38:00.000Z",
+    "mutationQualifiedIn": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+    "mutationQualifiedBy": "qualifier 2.0.0",
+    "externalValidation": "COMPUTE_PROOF_V1 candidate ELIMINATED at the twoGreenBaselines gate. tse-qualify-01, 2026-08-30: clone 0.6s, install 32.2s, not qualified at 33s. `corepack pnpm install --frozen-lockfile` failed in postinstall where Nx could not load three of its own default plugins - an ORDINARY INSTALL FAILURE, not the contradictory-execution case. Nothing executed, so the frozen execution classifier was never exercised and the nx orchestrator hazard remains untested. twoGreenBaselines is a required criterion, so the sealed rule at 1b84b07 advances to jestjs/jest without intervention, and the provisional draw a2fccae3 is discarded."
   }
 ]
