@@ -890,6 +890,12 @@ async function collectQualification(record: ValidationRecord, deps: ValidationSt
   // Universe sanity. Written here and allowlisted in the worker in the SAME commit - defect #4 and
   // #14 were both this allowlist lagging behind a writer, producing a completed run whose artefacts
   // reached R2 and were then unreadable through the only route that can read them.
+  if (record.logs?.register) {
+    const logKey = `${resultPrefix(record)}/register.log`;
+    await bucket.put(logKey, record.logs.register);
+    keys.push(logKey);
+  }
+
   if (record.logs?.universe) {
     const logKey = `${resultPrefix(record)}/universe.log`;
     await bucket.put(logKey, record.logs.universe);

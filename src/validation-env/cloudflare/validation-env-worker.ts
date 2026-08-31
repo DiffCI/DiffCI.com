@@ -87,6 +87,9 @@ const COLLECTED_FILES: ReadonlySet<string> = new Set([
   "corpus-definition.json",
   "qualify.log",
   // Apparatus qualification (Step 4, 2026-08-31): the universe-sanity verdict and its log.
+  // The registration pass decides which commands a qualification runs, so a RED cannot be attributed
+  // to the repository rather than to the rule without it.
+  "register.log",
   "universe-sanity.json",
   // The execution receipt, emitted by EVERY mode. Allowlisted in the same commit as the writer.
   "execution-receipt.json",
