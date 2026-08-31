@@ -30,6 +30,7 @@
  */
 import type { R2BucketLike, SandboxLike } from "../../analysis-fanout/sandbox-like.js";
 import { apparatusMismatches } from "../apparatus-identity.js";
+import { buildExecutionReceipt, type GuardRecord } from "../execution-receipt.js";
 import {
   JOB_CORPUS_PATH,
   OBSERVED_CORPUS_PATH,
@@ -120,6 +121,10 @@ export interface ValidationRecord {
   processId?: string;
   processStartedAt?: number;
   scratchDir?: string;
+  /** Controls that actually ran, with their verdicts. See execution-receipt.ts. */
+  guards?: GuardRecord[];
+  /** Allowlisted harness passes executed, in order. */
+  commands?: Array<{ label: string; argv: string[]; exitStatus: number | null }>;
   clonePath?: string;
   runDirName?: string;
   resultKeys?: string[];
@@ -328,6 +333,18 @@ async function bootstrap(record: ValidationRecord, deps: ValidationStepDeps): Pr
         image: record.environment.image,
         node: record.environment.node,
       });
+      // Recorded BEFORE the early return, so a failing guard is evidence rather than only an error
+      // string. A guard that fails still proves it executed.
+      record.guards = [
+        ...(record.guards ?? []),
+        {
+          declared: true,
+          executed: true,
+          name: "requiresApparatus:gen-c",
+          result: problems.length === 0 ? "PASS" : "FAIL",
+          problems,
+        } satisfies GuardRecord,
+      ];
       if (problems.length > 0) {
         return fail(record, "apparatus-mismatch", `this job requires the qualified generation-C apparatus: ${problems.join("; ")}`);
       }
@@ -498,6 +515,10 @@ async function runHarnessPass(
 
     record.processId = undefined;
     record.processStartedAt = undefined;
+
+    // Recorded for BOTH outcomes. A receipt that only lists successful passes cannot be used to ask
+    // what actually ran, which is the whole point of keeping one.
+    record.commands = [...(record.commands ?? []), { label, argv, exitStatus: exitCode ?? null }];
 
     if (status !== "completed" || (exitCode !== undefined && exitCode !== 0)) {
       return fail(record, `${label}-failed`, `${label} ended ${status} exit ${exitCode}: ${record.logs?.[label]?.slice(-2000) ?? ""}`);
@@ -1153,7 +1174,56 @@ async function preserveEvidence(record: ValidationRecord, deps: ValidationStepDe
   return { record, nextAlarmDelayMs: null };
 }
 
+/**
+ * Writes the execution receipt for a run that has reached a terminal step.
+ *
+ * ONE place, so every mode emits the same record. Four collectors each writing their own provenance is
+ * how survey mode ended up with no `environment.json` at all while calibration, qualification and
+ * observation had one - provenance semantics silently differing by mode is exactly what the receipt
+ * invariant exists to stop.
+ *
+ * Best-effort: a receipt that cannot be written must not turn a completed run into a failed one, but
+ * its absence is visible rather than papered over.
+ */
+async function writeExecutionReceipt(record: ValidationRecord, deps: ValidationStepDeps): Promise<void> {
+  try {
+    const receipt = buildExecutionReceipt(
+      {
+        runId: record.runId,
+        jobId: record.jobId,
+        mode: deps.job.mode,
+        shardIndex: record.shardIndex,
+        environment: record.environment,
+        sourceTarballKey: record.sourceTarballKey,
+        sourceTarballSha256: record.sourceTarballSha256,
+        guards: record.guards,
+        commands: record.commands,
+        timings: record.timings,
+        step: record.step,
+        errorClass: record.errorClass,
+        error: record.error,
+      },
+      new Date(deps.now()).toISOString(),
+    );
+    const key = `${resultPrefix(record)}/execution-receipt.json`;
+    await deps.bucket.put(key, `${JSON.stringify(receipt, null, 2)}
+`);
+    record.resultKeys = [...(record.resultKeys ?? []), key];
+  } catch {
+    // The run stands or falls on its own result; a missing receipt is visible by its absence.
+  }
+}
+
 export async function stepValidation(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const result = await stepValidationInner(record, deps);
+  // Every terminal path, every mode, one record.
+  if (result.record.step === "done" || result.record.step === "failed") {
+    await writeExecutionReceipt(result.record, deps);
+  }
+  return result;
+}
+
+async function stepValidationInner(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   switch (record.step) {
     case "bootstrapping":
       return bootstrap(record, deps);

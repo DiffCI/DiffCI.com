@@ -190,3 +190,23 @@ which lists the package name. A frame listing is not a DiffCI measurement.
 Left uncorrected it would have dropped an eligible repository from the population for a reason with no
 substance, silently shrinking the draw. E3 now matches only artefacts that carry measurement structure
 and explicitly ignores frame and population files. Result: 10 of 10, not 9 of 10.
+
+## Defect 21 — the result allowlist assumed a two-digit rank
+
+Found 2026-08-31 while pinning E2 to the trees E1 screened.
+
+Survey per-entry evidence is served under `facts/<rank>-<name>.json`, matched by
+`/^facts\/[0-9]{2}-.../`. **Exactly two digits.** The frame continuation runs to rank 140, so every fact
+from rank 100 onward was written to R2 and then unreadable through the only route that can read it.
+
+It presented as five repositories with "absent" head shas — evidence that looked missing but existed.
+Had I trusted that reading, five eligible repositories would have been dropped from the population for a
+reason with no substance, in the same way defect 20 nearly dropped one.
+
+This is the third instance of one failure: defect 4 and defect 14 were both the allowlist lagging behind
+a writer. The rank bound is now `[0-9]{1,5}`, taken from the frame rather than from a literal.
+
+**Recovered:** 9 of 10 head shas now read back. `@testing-library/jest-dom` (rank 116) remains
+unresolved — a scoped-name filename question, not an allowlist one — and its E2 job was REMOVED rather
+than registered unpinned. The sequence stops at the fifth GREEN from rank 46, so it is unlikely to be
+reached; if it is, the sha is resolved then.

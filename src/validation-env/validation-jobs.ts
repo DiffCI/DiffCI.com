@@ -1040,6 +1040,125 @@ const JOBS: Record<string, ValidationJob> = {
    * never skips and its per-entry cost is metadata plus a shallow clone. The COUNT stop applies to the
    * expensive gate, qualification, which is run afterwards sequentially in rank order.
    */
+  /**
+   * E2 GREEN gate for the frame continuation, ranks 41-140.
+   *
+   * Registered for all ten E1+E3 passers so the rank order is fixed in code rather than chosen at run
+   * time - but they are RUN sequentially in rank order and the sequence STOPS at the fifth GREEN. A
+   * repository after that point is never qualified, even though the apparatus is warm: it must stay
+   * unseen beyond E1/E3.
+   *
+   * Qualification only. No observe, no mutate, no density, no selection inspection. Nothing here can
+   * learn whether a repository is favourable to DiffCI.
+   */
+  "e2-lint-staged": {
+    id: "e2-lint-staged",
+    description: "E2 green gate, frame rank 46: lint-staged/lint-staged.",
+    mode: "qualify",
+    repository: "lint-staged/lint-staged",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "d0c1517b61f4805a319ae416f50b1d5bdf3e137f",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-html-webpack-plugin": {
+    id: "e2-html-webpack-plugin",
+    description: "E2 green gate, frame rank 58: jantimon/html-webpack-plugin.",
+    mode: "qualify",
+    repository: "jantimon/html-webpack-plugin",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "cf9c7012003b8d71783d6c2d72f357616957b99c",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-eslint-plugin-promise": {
+    id: "e2-eslint-plugin-promise",
+    description: "E2 green gate, frame rank 62: eslint-community/eslint-plugin-promise.",
+    mode: "qualify",
+    repository: "eslint-community/eslint-plugin-promise",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "e73585efc03ddf17df0273fa3b8dad0b66c51168",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-postcss-loader": {
+    id: "e2-postcss-loader",
+    description: "E2 green gate, frame rank 75: webpack/postcss-loader.",
+    mode: "qualify",
+    repository: "webpack/postcss-loader",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "ed3e1f7592a5fea2eb0da2475a3675ceb9371a47",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-eslint-plugin-vue": {
+    id: "e2-eslint-plugin-vue",
+    description: "E2 green gate, frame rank 80: vuejs/eslint-plugin-vue.",
+    mode: "qualify",
+    repository: "vuejs/eslint-plugin-vue",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "f3a027627472216e17e812f5324059f45d156298",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-rollup-plugin-typescript2": {
+    id: "e2-rollup-plugin-typescript2",
+    description: "E2 green gate, frame rank 112: ezolenko/rollup-plugin-typescript2.",
+    mode: "qualify",
+    repository: "ezolenko/rollup-plugin-typescript2",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "4cff90bbe88a6747d5a0eb52d300cb8bed505277",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-extract-text-webpack-plugin": {
+    id: "e2-extract-text-webpack-plugin",
+    description: "E2 green gate, frame rank 115: webpack-contrib/extract-text-webpack-plugin.",
+    mode: "qualify",
+    repository: "webpack-contrib/extract-text-webpack-plugin",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "bc6f9f8f61d708352ea89fd4fc9764ce1e4de409",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-ant-design": {
+    id: "e2-ant-design",
+    description: "E2 green gate, frame rank 119: ant-design/ant-design.",
+    mode: "qualify",
+    repository: "ant-design/ant-design",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "c5dbf3f09b406586d5ce6ce0a3d634d1a07b4f04",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
+  "e2-vue-loader": {
+    id: "e2-vue-loader",
+    description: "E2 green gate, frame rank 120: vuejs/vue-loader.",
+    mode: "qualify",
+    repository: "vuejs/vue-loader",
+    // The tree E1 actually screened, not whatever HEAD later moves to.
+    pinnedHeadSha: "698636508e08f5379a57eaf086b5ff533af8e051",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "survey-frame-continuation": {
     id: "survey-frame-continuation",
     description: "E1 addressability screening over frame ranks 41-140, under the generation-C apparatus.",

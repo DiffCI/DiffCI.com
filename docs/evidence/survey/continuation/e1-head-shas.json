@@ -1,0 +1,56 @@
+{
+  "note": "Head sha each E1 screening actually cloned. E2 pins these exact trees, so the gate qualifies the tree that was screened rather than whatever HEAD later moves to.",
+  "source": "survey-continuation-01 facts/*.json",
+  "repositories": {
+    "lint-staged/lint-staged": {
+      "rank": 46,
+      "packageName": "lint-staged",
+      "headSha": "d0c1517b61f4805a319ae416f50b1d5bdf3e137f"
+    },
+    "jantimon/html-webpack-plugin": {
+      "rank": 58,
+      "packageName": "html-webpack-plugin",
+      "headSha": "cf9c7012003b8d71783d6c2d72f357616957b99c"
+    },
+    "eslint-community/eslint-plugin-promise": {
+      "rank": 62,
+      "packageName": "eslint-plugin-promise",
+      "headSha": "e73585efc03ddf17df0273fa3b8dad0b66c51168"
+    },
+    "webpack/postcss-loader": {
+      "rank": 75,
+      "packageName": "postcss-loader",
+      "headSha": "ed3e1f7592a5fea2eb0da2475a3675ceb9371a47"
+    },
+    "vuejs/eslint-plugin-vue": {
+      "rank": 80,
+      "packageName": "eslint-plugin-vue",
+      "headSha": "f3a027627472216e17e812f5324059f45d156298"
+    },
+    "ezolenko/rollup-plugin-typescript2": {
+      "rank": 112,
+      "packageName": "rollup-plugin-typescript2",
+      "headSha": "4cff90bbe88a6747d5a0eb52d300cb8bed505277"
+    },
+    "webpack-contrib/extract-text-webpack-plugin": {
+      "rank": 115,
+      "packageName": "extract-text-webpack-plugin",
+      "headSha": "bc6f9f8f61d708352ea89fd4fc9764ce1e4de409"
+    },
+    "testing-library/jest-dom": {
+      "rank": 116,
+      "packageName": "@testing-library/jest-dom",
+      "headSha": "(absent)"
+    },
+    "ant-design/ant-design": {
+      "rank": 119,
+      "packageName": "antd",
+      "headSha": "c5dbf3f09b406586d5ce6ce0a3d634d1a07b4f04"
+    },
+    "vuejs/vue-loader": {
+      "rank": 120,
+      "packageName": "vue-loader",
+      "headSha": "698636508e08f5379a57eaf086b5ff533af8e051"
+    }
+  }
+}

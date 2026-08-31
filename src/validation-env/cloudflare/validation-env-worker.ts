@@ -88,6 +88,8 @@ const COLLECTED_FILES: ReadonlySet<string> = new Set([
   "qualify.log",
   // Apparatus qualification (Step 4, 2026-08-31): the universe-sanity verdict and its log.
   "universe-sanity.json",
+  // The execution receipt, emitted by EVERY mode. Allowlisted in the same commit as the writer.
+  "execution-receipt.json",
   "universe.log",
   // Calibration runs.
   "calibration.log",
@@ -210,7 +212,11 @@ export default {
         // `facts/<name>.json` is the survey's per-entry evidence: one file per frame entry, named by
         // rank and package. A prefix rule rather than 40 allowlist entries, constrained so it cannot
         // address anything outside that directory.
-        const isSurveyFact = /^facts\/[0-9]{2}-[A-Za-z0-9_.@-]+\.json$/.test(file);
+        // DEFECT 21. The rank was matched as EXACTLY two digits, so every fact from rank 100 onward was
+        // written to R2 and then unreadable through the only route that can read it — the frame
+        // continuation reaches rank 140. Same failure as defects 4 and 14: the allowlist encoding an
+        // assumption the writer had already outgrown.
+        const isSurveyFact = /^facts\/[0-9]{1,5}-[A-Za-z0-9_.@-]+\.json$/.test(file);
         // Evidence preserved from a FAILED run (defect #16). Added here at the same time as the write
         // path, because #14 was this allowlist lagging behind a writer and #4 was the same thing again.
         const isPreserved = /^failed\/[A-Za-z0-9_.@-]+\.(json|jsonl|log)$/.test(file);
