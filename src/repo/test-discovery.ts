@@ -224,12 +224,28 @@ function escapeRegexLiteral(text: string): string {
  * A bare `?` outside a group is a single-character wildcard (`[^/]`), which it also was not: it
  * previously reached the regex as a quantifier over whatever preceded it.
  */
+/**
+ * Wildcards inside an extglob body, translated by the same rules as the rest of the pattern.
+ *
+ * `?(*.)` in jest's `**\/?(*.)+(spec|test).[jt]s?(x)` means "optionally: anything, then a dot". The
+ * body is a glob in its own right, so escaping it as a literal turns it into "optionally the two
+ * characters `*` and `.`" - which no real path contains, so `src/foo.test.js` matched NOTHING while
+ * the bare `test.js` still matched. Found 2026-08-30 while diagnosing Prettier, where it was one of
+ * two defects in the same area (see the duplicate matcher deleted from impact.ts).
+ *
+ * Bracket expressions such as `[jt]` are left alone deliberately: they are already valid regex
+ * character classes and mean the same thing in both syntaxes.
+ */
+function translateExtglobBody(body: string): string {
+  return body.replace(/\\/g, "\\\\").replace(/\./g, "\\.").replace(/\*/g, "[^/]*").replace(/\?/g, "[^/]");
+}
+
 function globToRegex(pattern: string): RegExp {
   // Extglob bodies contain `*`, `?` and `|` that must not be rewritten by the wildcard rules below,
   // so they are lifted out behind placeholders first and restored last.
   const groups: string[] = [];
   let working = pattern.replace(/([?*+@!])\(([^()]*)\)/g, (_match, operator: string, body: string) => {
-    const alternatives = body.split("|").map(escapeRegexLiteral).join("|");
+    const alternatives = body.split("|").map(translateExtglobBody).join("|");
     const source =
       operator === "!"
         ? "[^/]*"

@@ -630,7 +630,7 @@ export class ImpactAnalyzer {
     const knownTestPaths = new Set<string>();
     for (const testLocation of profile.tests) {
       for (const node of graph.nodes) {
-        if (matchesGlob(testLocation.glob, node.path) || this.isTestFile(node.path)) {
+        if (matchesTestGlob(node.path, testLocation.glob) || this.isTestFile(node.path)) {
           knownTestPaths.add(node.path);
         }
       }
@@ -652,8 +652,24 @@ export class ImpactAnalyzer {
   }
 }
 
-function matchesGlob(glob: string, path: string): boolean {
-  const trimmed = glob.replace(/^\*\*\//, "").replace(/\*\*\/|\*\*/g, ".*").replace(/\*/g, "[^/]*").replace(/\?/g, ".").replace(/\{([^}]+)\}/g, "($1)").replace(/,/g, "|");
-  const regex = new RegExp(`^${trimmed}$`);
-  return regex.test(path);
-}
+/*
+ * The local `matchesGlob` that stood here was DELETED on 2026-08-30.
+ *
+ * It was the copy Phase 01 intended to remove when `test-discovery.ts` became the single definition of
+ * "does this path match this glob", and it carried two defects the shared one does not:
+ *
+ *   PERFORMANCE. It translated `**\/?(*.)+(spec|test).[jt]s?(x)` into
+ *   `^.([^/]*.)+(spec|test).[jt]s.(x)$` - a nested quantifier over an overlapping inner pattern, which
+ *   backtracks catastrophically. Measured on one non-matching path: 0.69 ms at 10 characters, 106 ms at
+ *   20, 1.8 s at 24, 30 s at 28, roughly 4x per additional character. Prettier's paths are 30-60
+ *   characters, so `prettier/prettier` spent 601 seconds per candidate against a full suite that runs in
+ *   214, and a single instrumented candidate was still inside this function after 84 minutes with 100%
+ *   of CPU samples in it.
+ *
+ *   CORRECTNESS. It stripped the leading `**\/` and then anchored with `^`, so
+ *   `**\/__tests__\/**\/*.[jt]s?(x)` became `^__tests__\/...$` and matched NEITHER
+ *   `src/__tests__/foo.test.js` NOR `__tests__/foo.test.js`.
+ *
+ * Both came from hand-translating glob syntax into regex by string substitution. There is now one
+ * implementation, in test-discovery.ts, imported above as `matchesTestGlob`.
+ */

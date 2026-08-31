@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
-import { createTestFileMatcher, DEFAULT_TEST_PATTERNS, discoverTestRunnerConfigs, extractIncludeGlobs, testFamilyOfPath } from "../../src/repo/test-discovery.js";
+import { createTestFileMatcher, DEFAULT_TEST_PATTERNS, discoverTestRunnerConfigs, extractIncludeGlobs, matchesGlob, testFamilyOfPath } from "../../src/repo/test-discovery.js";
 import { analyzeRepository } from "../../src/repo/analyzer.js";
 import { buildDependencyGraph } from "../../src/repo/graph.js";
 
@@ -150,5 +150,85 @@ describe("analyzer + graph use the discovered universe", () => {
       assert.strictEqual(isTest["tests/lib.e2e.ts"], false);
       assert.strictEqual(graph.profile.stats.testFiles, 2);
     } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+/**
+ * The glob matcher's semantic contract, and a bounded-runtime guarantee.
+ *
+ * Both exist because of one function deleted from impact.ts on 2026-08-30, which hand-translated glob
+ * syntax into regex by string substitution and carried two defects at once: it produced
+ * `^.([^/]*.)+(spec|test).[jt]s.(x)$`, a nested quantifier that backtracks catastrophically (30 seconds
+ * for ONE non-matching 28-character path, roughly 4x per additional character), and it stripped the
+ * leading `**\/` before anchoring, so `**\/__tests__\/**\/*` matched no nested path at all.
+ *
+ * The contract below is semantic rather than implementation-specific on purpose: it should hold for any
+ * matcher, including a third-party one, if this is ever replaced again.
+ */
+describe("glob matching: semantic contract", () => {
+  const matches = (path: string, glob: string): boolean => matchesGlob(path, glob);
+
+  it("matches jest's default spec/test pattern at any depth", () => {
+    const glob = "**/?(*.)+(spec|test).[jt]s?(x)";
+    // `?(*.)` is "optionally: anything, then a dot" - a glob in its own right. Escaping its body as a
+    // literal made `src/foo.test.js` match nothing while bare `test.js` still matched.
+    for (const path of ["test.js", "src/foo.test.js", "src/foo.spec.ts", "a/b/c/deep.test.tsx", "x.spec.jsx"]) {
+      assert.equal(matches(path, glob), true, `${path} should match ${glob}`);
+    }
+    for (const path of ["src/index.js", "src/testing/helper.js", "README.md", "src/spectrum.js"]) {
+      assert.equal(matches(path, glob), false, `${path} should NOT match ${glob}`);
+    }
+  });
+
+  it("matches a nested __tests__ directory, which the deleted matcher could not", () => {
+    const glob = "**/__tests__/**/*.[jt]s?(x)";
+    assert.equal(matches("src/__tests__/foo.test.js", glob), true);
+    assert.equal(matches("__tests__/foo.js", glob), true);
+    assert.equal(matches("packages/a/src/__tests__/deep/b.tsx", glob), true);
+    assert.equal(matches("src/foo.js", glob), false);
+  });
+
+  it("expands braces and honours bracket expressions", () => {
+    assert.equal(matches("pkg/a.spec.mts", "**/*.spec.{ts,tsx,js,jsx,mjs,cjs,mts,cts}"), true);
+    assert.equal(matches("pkg/a.js", "**/*.spec.{ts,tsx,js,jsx,mjs,cjs,mts,cts}"), false);
+    assert.equal(matches("src/a.test.cjs", "**/*.{test,spec}.?(c|m)[jt]s?(x)"), true);
+    assert.equal(matches("src/a.js", "**/*.{test,spec}.?(c|m)[jt]s?(x)"), false);
+  });
+});
+
+describe("glob matching: bounded runtime", () => {
+  it("matches a realistic workload in milliseconds, not minutes", () => {
+    // The pattern that produced the pathological regex, against paths the length of Prettier's.
+    const glob = "**/?(*.)+(spec|test).[jt]s?(x)";
+    const paths: string[] = [];
+    for (let i = 0; i < 100; i++) {
+      const depth = 2 + (i % 5);
+      const segments = Array.from({ length: depth }, (_unused, d) => `segment${i}${"x".repeat(4 + ((i + d) % 9))}`);
+      paths.push(`${segments.join("/")}/module${"y".repeat(i % 12)}.js`);
+    }
+    // Lengths span the range where the old implementation went from milliseconds to minutes.
+    const lengths = paths.map((p) => p.length);
+    assert.ok(Math.max(...lengths) >= 60, `workload must reach Prettier-like lengths, got max ${Math.max(...lengths)}`);
+
+    const started = Date.now();
+    let matched = 0;
+    for (let round = 0; round < 100; round++) {
+      for (const path of paths) if (matchesGlob(path, glob)) matched += 1;
+    }
+    const elapsedMs = Date.now() - started;
+
+    assert.equal(matched, 0, "these paths are all non-matching - the worst case for a backtracking matcher");
+    // Generous by design. This distinguishes milliseconds from minutes, not one machine's nanoseconds
+    // from another's. The deleted implementation would not have finished this workload in a day.
+    assert.ok(elapsedMs < 5000, `10,000 matches took ${elapsedMs} ms - expected well under 5000`);
+  });
+
+  it("returns immediately on the single input that took ~30 seconds", () => {
+    // 28 characters before the separator was 30,096 ms with the deleted matcher; 120 is far beyond it.
+    const adversarial = `${"a".repeat(120)}/x.js`;
+    const started = Date.now();
+    assert.equal(matchesGlob(adversarial, "**/?(*.)+(spec|test).[jt]s?(x)"), false);
+    const elapsedMs = Date.now() - started;
+    assert.ok(elapsedMs < 1000, `single adversarial match took ${elapsedMs} ms`);
   });
 });
