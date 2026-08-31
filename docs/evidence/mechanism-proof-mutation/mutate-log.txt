@@ -1,0 +1,37 @@
+
+> diffci@0.1.0 dogfood:mutate
+> tsx scripts/dogfood-mutate.ts --repository kulshekhar/ts-jest --repo /workspace/target-src --corpus /workspace/corpus.jsonl --reports /workspace/reports --runs-dir /workspace/runs --max-attempts 2 --timeout 900000 --install npm|ci|--no-audit|--no-fund --test-module node_modules/jest/bin/jest.js --test-args -c=jest.config.ts
+
+
+Mutation-recall pass over 4 recall-measurable candidate(s)
+  install: npm ci --no-audit --no-fund
+  runner:  node node_modules/jest/bin/jest.js -c=jest.config.ts
+
+  06c79d4ce  selected 7/40 ... RECALL_UNMEASURABLE
+      none of this merge's 2 revertible source files produced a full-suite failure, so its own tests do not cover them
+  394181875  selected 7/38 ... RECALL_CONFIRMED  (reverted src/legacy/compiler/ts-compiler.ts)
+  a82a2b32c  selected 7/38 ... RECALL_CONFIRMED  (reverted src/legacy/compiler/ts-compiler.ts)
+  96d025dd9  selected 2/38 ... RECALL_CONFIRMED  (reverted src/legacy/ts-jest-transformer.ts)
+
+CLASSIFICATION
+  BASELINE_QUALIFIED     0
+  RECALL_CONFIRMED       3
+  FALSE_GREEN            0
+  RECALL_UNMEASURABLE    1
+  ENVIRONMENT_DIRTY      0
+  INVALID_RUN            0
+
+EFFICIENCY - scored independently of recall
+  EFFICIENT            1
+  COMPARABLE           0
+  SELECTION_OVERBROAD  2
+    394181875  ran 7/38 against a comparator's 2 (+5); 3 test(s) actually detected the mutation
+    a82a2b32c  ran 7/38 against a comparator's 2 (+5); 1 test(s) actually detected the mutation
+
+PRIMARY SAFETY METRIC
+  false greens / recall-measurable selective decisions = 0/3 = 0.0%
+
+  run 2026-08-31T07-59-58-453Z-kulshekhar-ts-jest-912f0d
+  /workspace/runs/2026-08-31T07-59-58-453Z-kulshekhar-ts-jest-912f0d/results.jsonl
+
+

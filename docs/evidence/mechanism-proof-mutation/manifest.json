@@ -1,0 +1,37 @@
+{
+  "runId": "2026-08-31T07-59-58-453Z-kulshekhar-ts-jest-912f0d",
+  "startedAt": "2026-08-31T07:59:58.453Z",
+  "mode": "mutate",
+  "repository": "kulshekhar/ts-jest",
+  "repoPath": "/workspace/target-src",
+  "corpusPath": "/workspace/corpus.jsonl",
+  "reportsDir": "/workspace/reports",
+  "commands": {
+    "install": [
+      "npm",
+      "ci",
+      "--no-audit",
+      "--no-fund"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": [
+      "-c=jest.config.ts"
+    ]
+  },
+  "maxAttempts": 2,
+  "timeoutMs": 900000,
+  "candidates": 4,
+  "candidateShas": [
+    "06c79d4cebfa785749b2f96ef2dbeffc12798c47",
+    "39418187515f11b6584d35a4e3ddf50231f74936",
+    "a82a2b32c4987a5249fd5284283117dd2fa3be47",
+    "96d025dd912ea2bceb18b67d2d509ada7a756d9d"
+  ],
+  "repositoriesInScope": [
+    "kulshekhar/ts-jest"
+  ],
+  "node": "v22.23.2",
+  "platform": "linux",
+  "validationImage": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+  "insideValidationImage": true
+}

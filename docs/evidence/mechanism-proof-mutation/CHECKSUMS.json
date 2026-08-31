@@ -1,0 +1,11 @@
+{
+  "run": "tsjest-mutate-01",
+  "job": "tsjest-mechanism-mutation",
+  "sha256": {
+    "corpus.jsonl": "8867c15b99774aa573fad88064078054e1fc31d55c4ed4c864348470e6f2ac0d",
+    "environment.json": "499455c50a64d5246bb2a887bf333e749967ddad2705cda2ee74ee4899a679bc",
+    "manifest.json": "7274a1551130af383593707876a6a457c3e9a8cd25402bf0fd2b41262c81f657",
+    "mutate-log.txt": "e02a606baa2a60ed6be7090ef572609de342b14a394d88a382fe30ca9d978bb5",
+    "results.jsonl": "511661e0ca6f79034d409a49da26e4c0f73bf9b65b74f5df0bfbcddf91292acc"
+  }
+}
