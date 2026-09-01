@@ -13,8 +13,9 @@
  * Nothing is optimised. See docs/ci-reproduction-01-protocol.md, frozen before this executed.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { collectEvidence } from "../src/ci-inference/evidence.js";
 import { inferPipeline } from "../src/ci-inference/infer.js";
@@ -23,13 +24,40 @@ import { execBounded } from "./process-exec.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
 import { parseTestOutput } from "./test-output-parsers.js";
 
-type Outcome = "REPRODUCED" | "PARTIAL_REPRODUCTION" | "REFUSED" | "DIVERGED";
+/**
+ * `INFRASTRUCTURE` is the fifth outcome, added after attempt 3.
+ *
+ * Attempt 3's test step was killed by THIS HARNESS's own 20-minute bound in both arms, and `classify`
+ * labelled the pair `DIVERGED` - scoring my own execution ceiling against the engine's graph. That is
+ * the unknown-as-negative error this project has recorded repeatedly, this time compiled into the
+ * scorer rather than committed by a person.
+ *
+ * A run that never produced a verdict has not produced a NEGATIVE verdict. `INFRASTRUCTURE` is checked
+ * FIRST, before any substantive outcome can be reached.
+ */
+export type Outcome = "REPRODUCED" | "PARTIAL_REPRODUCTION" | "REFUSED" | "DIVERGED" | "INFRASTRUCTURE";
 
-interface StepReceipt {
+export interface StepReceipt {
+  /** Stable identity: `<arm>#<index>` - what a live receipt names before any exit status exists. */
+  stepId: string;
+  arm: "reference" | "inference";
   command: string[];
+  /** The command as one string, so receipts can be matched across arms without re-joining argv. */
+  commandIdentity: string;
   workingDirectory: string;
   environment: Record<string, string>;
+  startedAt: string;
+  endedAt?: string;
   exitStatus: number | null;
+  /**
+   * True when the step was killed by THIS HARNESS's bound rather than by the repository.
+   *
+   * Recorded structurally instead of inferred later from `exitStatus === null`, because null also
+   * means "signalled for some other reason" and the two must not be scored the same.
+   */
+  terminatedByBound?: boolean;
+  /** Which layer the outcome belongs to - never the repository when the bound fired. */
+  outcomeLayer?: "repository" | "harness" | "environment";
   cpuSeconds?: number;
   wallMs: number;
   testFiles?: number;
@@ -38,7 +66,7 @@ interface StepReceipt {
   outputTail: string;
 }
 
-interface ArmReceipt {
+export interface ArmReceipt {
   arm: "reference" | "inference";
   source: string;
   steps: StepReceipt[];
@@ -97,39 +125,112 @@ function tail(out: string): string {
 }
 
 /**
+ * Durable per-operation receipts, appended AS execution happens.
+ *
+ * `appendFileSync` on every line, deliberately: a buffered writer would hold exactly the records that
+ * matter when a run has to be killed, which is the failure mode this exists to remove. One JSONL line
+ * per operation boundary, so the file is readable while it is still being written.
+ */
+interface ProgressEvent {
+  event: "start" | "end" | "arm" | "run";
+  [key: string]: unknown;
+}
+
+class ProgressLog {
+  constructor(private readonly file: string) {}
+
+  emit(event: ProgressEvent): void {
+    try {
+      appendFileSync(this.file, `${JSON.stringify({ at: new Date().toISOString(), ...event })}
+`);
+    } catch {
+      /* observability must never take down the run it observes */
+    }
+  }
+}
+
+/**
  * Runs one arm's steps in order, stopping at the first non-zero exit.
  *
  * Stopping is deliberate: a pipeline whose install failed has not "partly run", and continuing would
  * produce test numbers from a tree that was never correctly prepared.
  */
-function runArm(arm: "reference" | "inference", source: string, steps: Array<{ command: string[]; environment?: Record<string, string> }>, repoPath: string, timeoutMs: number): ArmReceipt {
+function runArm(
+  arm: "reference" | "inference",
+  source: string,
+  steps: Array<{ command: string[]; environment?: Record<string, string> }>,
+  repoPath: string,
+  timeoutMs: number,
+  progress: ProgressLog,
+): ArmReceipt {
   const receipts: StepReceipt[] = [];
   let reachedEnd = true;
-  for (const step of steps) {
+  for (const [index, step] of steps.entries()) {
     const [bin, ...args] = step.command;
     if (!bin) continue;
-    process.stdout.write(`    ${arm.padEnd(9)} ${step.command.join(" ").slice(0, 70).padEnd(72)}`);
+    const stepId = `${arm}#${index}`;
+    const commandIdentity = step.command.join(" ");
+    process.stdout.write(`    ${arm.padEnd(9)} ${commandIdentity.slice(0, 70).padEnd(72)}`);
     // The shell-invocation invariant, and it applies with unusual force here: the INFERENCE arm's argv
-    // comes from workflow `run:` lines, which are repository-derived text — the exact input the guard
+    // comes from workflow `run:` lines, which are repository-derived text - the exact input the guard
     // exists for. `npm` needs a shell to reach its shim, so the arguments are asserted safe first.
     // The engine's own `argvOf` already rejects metacharacters; this makes that guarantee enforced at
     // the spawn site rather than assumed from a caller two files away.
     assertShellSafeArgs(step.command, `ci-reproduction ${arm} arm`);
+
+    // START is written BEFORE the child is spawned. Attempt 3 ran 41 minutes with no way to tell which
+    // of six operations was live, because every receipt was assembled after the child exited - so the
+    // one situation where progress mattered was the one with no record. A receipt that only exists
+    // once the step is over cannot answer "where are we now".
+    const startedAt = new Date().toISOString();
+    progress.emit({ event: "start", stepId, arm, commandIdentity, workingDirectory: repoPath, startedAt, timeoutMs });
+
     const run = execBounded(bin, args, { cwd: repoPath, timeoutMs, shell: true, env: { ...process.env, ...(step.environment ?? {}) } as Record<string, string> });
-    const combined = `${run.stdout}\n${run.stderr}`;
+    const combined = `${run.stdout}
+${run.stderr}`;
     const parsed = parseTestOutput(combined);
+
+    // A null exit at (or beyond) the bound is THIS HARNESS killing the child, not the repository
+    // failing. The 1% margin absorbs measurement slack; attempt 3 recorded 1_200_013ms against a
+    // 1_200_000ms bound.
+    const terminatedByBound = run.status === null && run.ms >= timeoutMs * 0.99;
+    const outcomeLayer: StepReceipt["outcomeLayer"] = terminatedByBound ? "harness" : "repository";
+    const endedAt = new Date().toISOString();
+
     receipts.push({
+      stepId,
+      arm,
       command: step.command,
+      commandIdentity,
       workingDirectory: repoPath,
       environment: step.environment ?? {},
+      startedAt,
+      endedAt,
       exitStatus: run.status,
+      ...(terminatedByBound ? { terminatedByBound } : {}),
+      outcomeLayer,
       cpuSeconds: run.cpuSeconds,
       wallMs: run.ms,
       ...countsOf(combined),
       failures: parsed.failures,
       outputTail: tail(combined),
     });
-    console.log(` exit ${String(run.status).padStart(3)}  ${(run.ms / 1000).toFixed(1)}s`);
+    progress.emit({
+      event: "end",
+      stepId,
+      arm,
+      commandIdentity,
+      startedAt,
+      endedAt,
+      exitStatus: run.status,
+      terminatedByBound,
+      outcomeLayer,
+      cpuSeconds: run.cpuSeconds,
+      wallMs: run.ms,
+      ...countsOf(combined),
+      failures: parsed.failures,
+    });
+    console.log(` exit ${String(run.status).padStart(3)}  ${(run.ms / 1000).toFixed(1)}s${terminatedByBound ? "  KILLED BY BOUND" : ""}`);
     if (run.status !== 0) {
       reachedEnd = false;
       break;
@@ -148,11 +249,31 @@ function runArm(arm: "reference" | "inference", source: string, steps: Array<{ c
 /**
  * Classifies the pair of receipts under the frozen outcomes.
  *
- * Materially equivalent means: both arms ran a suite, and both reported the same failure count. Two arms
- * that never ran a suite are not "equivalent" — they are equally uninformative, which is DIVERGED when
- * the engine claimed the pipeline was executable.
+ * Materially equivalent means: both arms ran a suite, and both reported the same failure count.
+ *
+ * Two arms that never ran a suite are equally uninformative - but WHY they are uninformative decides
+ * the label. If this harness killed them, that is INFRASTRUCTURE and is checked first. Only when the
+ * steps ran to their own conclusion can the absence of a suite be charged to the graph as DIVERGED.
  */
-function classify(reference: ArmReceipt, inference: ArmReceipt, optimisable: boolean): { outcome: Outcome; reason: string } {
+export function classify(reference: ArmReceipt, inference: ArmReceipt, optimisable: boolean): { outcome: Outcome; reason: string } {
+  // DEFECT 23, CHECKED FIRST. Attempt 3 reached "neither arm executed a suite, so no reproduction can
+  // be claimed" and returned DIVERGED - while both arms' test steps had been killed by this harness's
+  // own 20-minute bound. The graph was never shown wrong; the ceiling was never raised. Asking WHY no
+  // suite ran has to happen before any outcome that blames the engine or the repository.
+  const bounded = [...reference.steps, ...inference.steps].filter((s) => s.terminatedByBound);
+  if (bounded.length > 0) {
+    const which = bounded
+      .map((s) => `${s.stepId} ${s.commandIdentity} after ${(s.wallMs / 1000 / 60).toFixed(1)}min`)
+      .join("; ");
+    return {
+      outcome: "INFRASTRUCTURE",
+      reason:
+        `${bounded.length} step(s) were killed by this harness execution bound, not by the repository ` +
+        `or the graph: ${which}. No reproduction verdict exists - this is NOT divergence, refusal, ` +
+        `or a repository failure.`,
+    };
+  }
+
   const suiteOf = (a: ArmReceipt): StepReceipt | undefined => a.steps.find((s) => typeof s.tests === "number" && s.tests > 0);
   const refSuite = suiteOf(reference);
   const infSuite = suiteOf(inference);
@@ -195,7 +316,11 @@ function main(): void {
   const headSha = flag("head") ?? "cf9c7012003b8d71783d6c2d72f357616957b99c";
   const work = resolve(flag("work") ?? "ci-reproduction-work");
   const outDir = resolve(flag("out") ?? "docs/evidence/ci-reproduction-01");
-  const timeoutMs = Number(flag("timeout") ?? 20 * 60_000);
+  // Attempt 3 died on this default: html-webpack-plugin builds webpack repeatedly and its suite was
+  // still running, still producing output, when the 20-minute bound killed it in BOTH arms. The bound
+  // is harness infrastructure - not inference, commands, matrix scope, environment or protocol - so
+  // raising it leaves the reproduction question itself untouched.
+  const timeoutMs = Number(flag("timeout") ?? 90 * 60_000);
   const referencePlanPath = resolve(flag("reference") ?? "docs/evidence/ci-reproduction-01-reference-plan.json");
   mkdirSync(work, { recursive: true });
   mkdirSync(outDir, { recursive: true });
@@ -252,9 +377,12 @@ function main(): void {
   console.log(`  reference plan : ${referencePlan.source}`);
   console.log(`  inferred plan  : ${inferenceSteps.length} executable operation(s), optimisable=${pipeline.optimisable}\n`);
 
-  const reference = runArm("reference", referencePlan.source, referencePlan.steps, referenceRepo, timeoutMs);
+  const progress = new ProgressLog(join(outDir, "progress.jsonl"));
+  progress.emit({ event: "run", repository, headSha, timeoutMs, arms: ["reference", "inference"] });
+
+  const reference = runArm("reference", referencePlan.source, referencePlan.steps, referenceRepo, timeoutMs, progress);
   const inference: ArmReceipt = plan.executable
-    ? runArm("inference", "inferred ExecutionGraph", inferenceSteps, inferenceRepo, timeoutMs)
+    ? runArm("inference", "inferred ExecutionGraph", inferenceSteps, inferenceRepo, timeoutMs, progress)
     : {
         arm: "inference",
         source: "inferred ExecutionGraph",
@@ -300,4 +428,6 @@ function main(): void {
   console.log(`  ${reason}\n`);
 }
 
-main();
+// Only run when invoked as a script. Exporting `classify` for a behavioural test must not execute a
+// two-arm container run as a side effect of importing this module.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
