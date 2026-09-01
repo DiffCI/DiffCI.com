@@ -1,0 +1,22 @@
+{
+  "experiment": "MECHANISM_ISOLATION_02",
+  "stopRuleApplies": false,
+  "repository": "jest-community/eslint-plugin-jest",
+  "pinnedTree": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+  "sealedAt": "drawn from a 4-entry pool sealed at c08de74699fb75e00e45ce746fa4543878f60e0a, index 0",
+  "pairs": [
+    {
+      "index": 1,
+      "base": "e0cdeb59b18434be0309985c5ca41d482cb4970b",
+      "head": "c48c48c9d03ed04eda01a78959ab7f794e1fa448",
+      "subject": "fix(prefer-expect-assertions): use correct word in error message (#1873)",
+      "implementationFiles": [
+        "src/rules/prefer-expect-assertions.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/prefer-expect-assertions.ts"
+      ]
+    }
+  ]
+}

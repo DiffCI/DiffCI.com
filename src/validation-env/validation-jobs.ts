@@ -1442,6 +1442,32 @@ const JOBS: Record<string, ValidationJob> = {
    * Runs the full, comparator, DiffCI and DIRECT-ONLY arms against one mutation. The direct-only arm
    * is the isolating one: only it can distinguish dependency reasoning from running the diff.
    */
+  /**
+   * MECHANISM_ISOLATION_02 - the final bespoke mechanism experiment. Protocol frozen at c08de74.
+   *
+   * Asks the detection half MI-01 could not: does a graph-reached test actually change the DETECTION
+   * outcome? Four arms, of which DIRECT-ONLY is the discriminator.
+   */
+  "mi2-mutate-target": {
+    id: "mi2-mutate-target",
+    description: "MECHANISM_ISOLATION_02: mutate the drawn fix-subject no-test-edit target.",
+    mode: "observe-pairs",
+    repository: "jest-community/eslint-plugin-jest",
+    pinnedHeadSha: "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    pairsPath: "docs/evidence/mechanism-isolation-02-target-pair.json",
+    mutate: {
+      install: ["corepack", "yarn", "install", "--immutable"],
+      build: ["corepack", "yarn", "run", "build"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: [],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    maxRunMs: 6 * 60 * 60_000,
+  },
+
   "mi-mutate-target": {
     id: "mi-mutate-target",
     description: "MECHANISM_ISOLATION_01: mutate the drawn no-test-edit target, with the direct-only arm.",

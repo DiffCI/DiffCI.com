@@ -1,0 +1,31 @@
+{
+  "experiment": "MECHANISM_ISOLATION_02",
+  "protocol": "docs/mechanism-isolation-02-protocol.md",
+  "poolArtefact": "docs/evidence/mechanism-isolation-02-pool.json",
+  "poolSealedAt": "c08de74699fb75e00e45ce746fa4543878f60e0a",
+  "randomness": {
+    "source": "sha256 of the pool-sealing commit hash",
+    "H": "c08de74699fb75e00e45ce746fa4543878f60e0a",
+    "seed": "f6f8d1584397d0e38ec51acf76c0472e3dd632e1ebc827adb5d1a5961a9b3394",
+    "first8Hex": "f6f8d158",
+    "uint32": 4143501656,
+    "modulus": 4
+  },
+  "index": 0,
+  "target": {
+    "poolIndex": 0,
+    "base": "e0cdeb59b18434be0309985c5ca41d482cb4970b",
+    "head": "c48c48c9d03ed04eda01a78959ab7f794e1fa448",
+    "subject": "fix(prefer-expect-assertions): use correct word in error message (#1873)",
+    "implementationFiles": [
+      "src/rules/prefer-expect-assertions.ts"
+    ],
+    "changedTestFiles": [],
+    "allChangedFiles": [
+      "src/rules/prefer-expect-assertions.ts"
+    ]
+  },
+  "verification": "printf %s c08de74699fb75e00e45ce746fa4543878f60e0a | sha256sum -> f6f8d1584397d0e38ec51acf76c0472e3dd632e1ebc827adb5d1a5961a9b3394; 0xf6f8d158 = 4143501656; 4143501656 mod 4 = 0",
+  "chosenWithoutDiffCIOutput": true,
+  "note": "One draw. No redraw. No pool entry analysed before drawing."
+}
