@@ -75,3 +75,65 @@ test("a refused plan is still REFUSED, and is not reclassified as infrastructure
   const result = classify(arm("reference", []), arm("inference", []), false);
   assert.equal(result.outcome, "REFUSED");
 });
+
+/**
+ * Defects 25 and 26, from CI_REPRODUCTION_03 attempt 4.
+ *
+ * The scorer returned **REPRODUCED — both arms ran 161 tests with 113 failures**. Two things were wrong
+ * with that, and the scorer could question neither:
+ *
+ *   26. Essentially every failure was jest's own "Exceeded timeout of 30000 ms for a test". 113 × 30s is
+ *       ~56 minutes against a 51.8-minute run: the suite did not fail, it sat at its per-test ceiling.
+ *       Each step was nonetheless labelled `outcomeLayer: "repository"`, blaming html-webpack-plugin for
+ *       the container's throughput.
+ *   25. REPRODUCED was decided from arm-to-arm agreement ALONE. At the pinned commit a lint failure at
+ *       29s cancelled all 27 test cells within 51s, so real CI produced no completed test result for any
+ *       cell — there was no ground truth to reproduce. Two arms agreeing with each other and with
+ *       nothing external is precisely the near-tautological agreement the attempt-3 protocol warned of.
+ */
+import { type CiGroundTruth, environmentSignalsIn } from "../../scripts/ci-reproduction.js";
+
+const JEST_TIMEOUT = 'thrown: "Exceeded timeout of 30000 ms for a test.';
+
+function suite(a: "reference" | "inference", extra: Partial<StepReceipt> = {}): StepReceipt {
+  return step({ arm: a, stepId: `${a}#2`, exitStatus: 1, wallMs: 3_106_000, tests: 161, testFiles: 4, failures: 113, outcomeLayer: "repository", ...extra });
+}
+
+test("a per-test timeout is an ENVIRONMENT signal, not a repository failure", () => {
+  assert.deepEqual(environmentSignalsIn(JEST_TIMEOUT), ["jest per-test timeout"]);
+  assert.deepEqual(environmentSignalsIn("expect(received).toEqual(expected)"), [], "a real assertion failure is not an environment signal");
+});
+
+test("agreeing arms whose failures are environment signals are ENVIRONMENT_INADEQUATE, not REPRODUCED", () => {
+  const env = { environmentSignals: ["jest per-test timeout"] };
+  const result = classify(arm("reference", [suite("reference", env)]), arm("inference", [suite("inference", env)]), true);
+
+  assert.equal(result.outcome, "ENVIRONMENT_INADEQUATE");
+  assert.notEqual(result.outcome, "REPRODUCED", "113 jest timeouts must never read as a successful reproduction");
+  assert.match(result.reason, /could not execute/i);
+});
+
+test("without CI ground truth, agreeing arms are UNVERIFIABLE — agreement is not reproduction", () => {
+  const result = classify(arm("reference", [suite("reference")]), arm("inference", [suite("inference")]), true);
+
+  assert.equal(result.outcome, "UNVERIFIABLE");
+  assert.match(result.reason, /ground truth/i);
+});
+
+test("a cancelled CI run is not usable ground truth", () => {
+  const cancelled: CiGroundTruth = { cell: "test Node 22.x ubuntu-latest", conclusion: "cancelled", source: "github check-runs" };
+  const result = classify(arm("reference", [suite("reference")]), arm("inference", [suite("inference")]), true, cancelled);
+
+  assert.equal(result.outcome, "UNVERIFIABLE", "cancelled is not a result");
+  assert.match(result.reason, /cancelled/);
+});
+
+test("REPRODUCED is still reachable when ground truth exists and the environment behaved", () => {
+  const truth: CiGroundTruth = { cell: "test Node 22.x ubuntu-latest", conclusion: "success", source: "github check-runs" };
+  const clean = (a: "reference" | "inference"): StepReceipt =>
+    step({ arm: a, stepId: `${a}#2`, exitStatus: 0, wallMs: 120_000, tests: 161, testFiles: 4, failures: 0, outcomeLayer: "repository" });
+
+  const result = classify(arm("reference", [clean("reference")]), arm("inference", [clean("inference")]), true, truth);
+  assert.equal(result.outcome, "REPRODUCED", "the fixes must not make a genuine reproduction unreachable");
+  assert.match(result.reason, /ground truth/i);
+});

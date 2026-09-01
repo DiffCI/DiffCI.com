@@ -1,0 +1,60 @@
+{
+  "receiptVersion": 1,
+  "runId": "ci-repro-04-linux",
+  "jobId": "ci-reproduce-html-webpack-plugin",
+  "mode": "ci-reproduce",
+  "shardIndex": 0,
+  "apparatus": {
+    "image": "docker.io/cloudflare/sandbox:0.12.5",
+    "node": "v22.23.2",
+    "npm": "10.9.8",
+    "git": "git version 2.34.1",
+    "uname": "Linux cloudchamber 6.18.36-cloudflare-firecracker-2026.6.17 #1 SMP PREEMPT_DYNAMIC Mon Sep 27 00:00:00 UTC 2010 x86_64 x86_64 x86_64 GNU/Linux",
+    "osRelease": "PRETTY_NAME=\"Ubuntu 22.04.5 LTS\" NAME=\"Ubuntu\" VERSION_ID=\"22.04\"",
+    "agentIntegrity": "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    "sourceTarballKey": "sources/diffci-be23dee0f5c4cee2.tgz",
+    "sourceTarballSha256": "be23dee0f5c4cee22f8cb1c1d4cf24261aa92d2309d7a45cf3a431e48182caec"
+  },
+  "guards": [
+    {
+      "declared": true,
+      "executed": true,
+      "name": "requiresApparatus:gen-c",
+      "result": "PASS",
+      "problems": []
+    }
+  ],
+  "commands": [
+    {
+      "label": "ci-reproduce",
+      "argv": [
+        "run",
+        "ci:reproduce",
+        "--",
+        "--repository",
+        "jantimon/html-webpack-plugin",
+        "--head",
+        "cf9c7012003b8d71783d6c2d72f357616957b99c",
+        "--work",
+        "/workspace/ci-repro-work",
+        "--out",
+        "/workspace/ci-reproduction",
+        "--reference",
+        "docs/evidence/ci-reproduction-01-reference-plan.json"
+      ],
+      "exitStatus": 0
+    }
+  ],
+  "timings": {
+    "bootstrapMs": 12265,
+    "prepareMs": 0,
+    "ciReproduceMs": 6257362,
+    "collectMs": 993
+  },
+  "outcome": {
+    "step": "done",
+    "failed": false,
+    "layer": "REPOSITORY"
+  },
+  "producedAt": "2026-09-01T11:04:56.552Z"
+}

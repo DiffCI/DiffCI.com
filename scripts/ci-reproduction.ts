@@ -35,7 +35,28 @@ import { parseTestOutput } from "./test-output-parsers.js";
  * A run that never produced a verdict has not produced a NEGATIVE verdict. `INFRASTRUCTURE` is checked
  * FIRST, before any substantive outcome can be reached.
  */
-export type Outcome = "REPRODUCED" | "PARTIAL_REPRODUCTION" | "REFUSED" | "DIVERGED" | "INFRASTRUCTURE";
+export /**
+ * `ENVIRONMENT_INADEQUATE` and `UNVERIFIABLE` were added after attempt 4, which the scorer called
+ * REPRODUCED on two counts it had no way to question:
+ *
+ *   1. Both arms reported 161 tests / 113 failures - and essentially every failure was jest's own
+ *      "Exceeded timeout of 30000 ms for a test". 113 x 30s is ~56 minutes against a 51.8 minute run,
+ *      so the suite did not fail, it sat at its per-test ceiling. The container could not execute the
+ *      suite; that is the ENVIRONMENT, not the repository and not the graph.
+ *   2. REPRODUCED was decided from arm-to-arm agreement ALONE. Real CI at the pinned commit produced
+ *      no completed test result for ANY cell - a lint failure at 29s cancelled all 27 test cells
+ *      within 51s - so there was never a ground truth to reproduce. Two arms agreeing with each other
+ *      and with nothing external is the near-tautological agreement the attempt-3 protocol explicitly
+ *      warned about, reintroduced by the scorer in a different form.
+ */
+type Outcome =
+  | "REPRODUCED"
+  | "PARTIAL_REPRODUCTION"
+  | "REFUSED"
+  | "DIVERGED"
+  | "INFRASTRUCTURE"
+  | "ENVIRONMENT_INADEQUATE"
+  | "UNVERIFIABLE";
 
 export interface StepReceipt {
   /** Stable identity: `<arm>#<index>` - what a live receipt names before any exit status exists. */
@@ -56,8 +77,10 @@ export interface StepReceipt {
    * means "signalled for some other reason" and the two must not be scored the same.
    */
   terminatedByBound?: boolean;
-  /** Which layer the outcome belongs to - never the repository when the bound fired. */
+  /** Which layer the outcome belongs to - never the repository when the bound or the ENVIRONMENT fired. */
   outcomeLayer?: "repository" | "harness" | "environment";
+  /** Environment-caused failure signatures found in the output, e.g. per-test timeouts. */
+  environmentSignals?: string[];
   cpuSeconds?: number;
   wallMs: number;
   testFiles?: number;
@@ -111,6 +134,37 @@ function flag(key: string): string | undefined {
  * undefined, never zero. A zero here would make "ran nothing" indistinguishable from "ran and passed",
  * and that is the exact comparison this experiment turns on.
  */
+/**
+ * Failures that are the ENVIRONMENT giving up, not the code being wrong.
+ *
+ * A per-test timeout says the runner ran out of wall clock, which on a throughput-starved container
+ * says nothing about the repository. Counting these as ordinary failures is how attempt 4 charged 113
+ * jest timeouts to html-webpack-plugin.
+ */
+const ENVIRONMENT_FAILURE_SIGNALS: Array<{ pattern: RegExp; signal: string }> = [
+  { pattern: /Exceeded timeout of \d+\s*ms for a (test|hook)/i, signal: "jest per-test timeout" },
+  { pattern: /Test timed out in \d+\s*ms/i, signal: "vitest per-test timeout" },
+  { pattern: /ENOSPC|no space left on device/i, signal: "disk exhausted" },
+  { pattern: /JavaScript heap out of memory/i, signal: "heap exhausted" },
+];
+
+export function environmentSignalsIn(output: string): string[] {
+  return ENVIRONMENT_FAILURE_SIGNALS.filter((s) => s.pattern.test(output)).map((s) => s.signal);
+}
+
+/**
+ * What real CI actually produced for the cell being reproduced.
+ *
+ * Required before REPRODUCED can be claimed. Without it the comparison has only two arms in it, and
+ * "reproduction" degenerates into "the two things I built agree with each other".
+ */
+export interface CiGroundTruth {
+  cell: string;
+  /** GitHub check-run conclusion. Only success/failure are usable; cancelled/skipped are not results. */
+  conclusion: string;
+  source: string;
+}
+
 function countsOf(output: string): { testFiles?: number; tests?: number } {
   const suites = /Test Suites:.*?(\d+) total/.exec(output);
   const tests = /Tests:.*?(\d+) total/.exec(output);
@@ -194,7 +248,17 @@ ${run.stderr}`;
     // failing. The 1% margin absorbs measurement slack; attempt 3 recorded 1_200_013ms against a
     // 1_200_000ms bound.
     const terminatedByBound = run.status === null && run.ms >= timeoutMs * 0.99;
-    const outcomeLayer: StepReceipt["outcomeLayer"] = terminatedByBound ? "harness" : "repository";
+    // DEFECT 26. The layer was previously binary - bound means harness, everything else means
+    // repository - even though the type has always had an `environment` case. Attempt 4 therefore
+    // recorded 113 jest per-test timeouts as a REPOSITORY outcome, blaming html-webpack-plugin for
+    // this container's throughput. A failing step is only the repository's when the environment was
+    // able to run it.
+    const environmentSignals = run.status === 0 ? [] : environmentSignalsIn(combined);
+    const outcomeLayer: StepReceipt["outcomeLayer"] = terminatedByBound
+      ? "harness"
+      : environmentSignals.length > 0
+        ? "environment"
+        : "repository";
     const endedAt = new Date().toISOString();
 
     receipts.push({
@@ -209,6 +273,7 @@ ${run.stderr}`;
       exitStatus: run.status,
       ...(terminatedByBound ? { terminatedByBound } : {}),
       outcomeLayer,
+      ...(environmentSignals.length > 0 ? { environmentSignals } : {}),
       cpuSeconds: run.cpuSeconds,
       wallMs: run.ms,
       ...countsOf(combined),
@@ -225,6 +290,7 @@ ${run.stderr}`;
       exitStatus: run.status,
       terminatedByBound,
       outcomeLayer,
+      environmentSignals,
       cpuSeconds: run.cpuSeconds,
       wallMs: run.ms,
       ...countsOf(combined),
@@ -255,7 +321,12 @@ ${run.stderr}`;
  * the label. If this harness killed them, that is INFRASTRUCTURE and is checked first. Only when the
  * steps ran to their own conclusion can the absence of a suite be charged to the graph as DIVERGED.
  */
-export function classify(reference: ArmReceipt, inference: ArmReceipt, optimisable: boolean): { outcome: Outcome; reason: string } {
+export function classify(
+  reference: ArmReceipt,
+  inference: ArmReceipt,
+  optimisable: boolean,
+  groundTruth?: CiGroundTruth,
+): { outcome: Outcome; reason: string } {
   // DEFECT 23, CHECKED FIRST. Attempt 3 reached "neither arm executed a suite, so no reproduction can
   // be claimed" and returned DIVERGED - while both arms' test steps had been killed by this harness's
   // own 20-minute bound. The graph was never shown wrong; the ceiling was never raised. Asking WHY no
@@ -302,8 +373,41 @@ export function classify(reference: ArmReceipt, inference: ArmReceipt, optimisab
   if (!refSuite && !infSuite) {
     return { outcome: "DIVERGED", reason: "neither arm executed a suite, so no reproduction can be claimed" };
   }
+  // DEFECT 26. A suite whose failures are the ENVIRONMENT running out of wall clock has not told us
+  // anything about the repository or the graph, however consistently both arms reproduce it.
+  const envSignals = [...new Set([...(refSuite?.environmentSignals ?? []), ...(infSuite?.environmentSignals ?? [])])];
+  if (envSignals.length > 0) {
+    return {
+      outcome: "ENVIRONMENT_INADEQUATE",
+      reason:
+        `the suite failed on environment signals rather than on the code under test (${envSignals.join(", ")}): ` +
+        `reference ${refSuite?.failures}/${refSuite?.tests} failed, inference ${infSuite?.failures}/${infSuite?.tests}. ` +
+        `The arms agree, but they agree on a run this environment could not execute.`,
+    };
+  }
+
   if (refSuite && infSuite && refSuite.failures === infSuite.failures && refSuite.tests === infSuite.tests) {
-    return { outcome: "REPRODUCED", reason: `both arms ran ${refSuite.tests} tests with ${refSuite.failures} failures` };
+    // DEFECT 25. Arm-to-arm agreement is NOT reproduction. Without knowing what CI actually produced
+    // for this cell, "REPRODUCED" only ever meant "the two things I built agree with each other" -
+    // and at the attempt-4 commit real CI produced no completed test result at all, so there was
+    // nothing to agree WITH. Absent ground truth the honest answer is UNVERIFIABLE, not a pass.
+    const usable = groundTruth && (groundTruth.conclusion === "success" || groundTruth.conclusion === "failure");
+    if (!usable) {
+      return {
+        outcome: "UNVERIFIABLE",
+        reason:
+          `both arms ran ${refSuite.tests} tests with ${refSuite.failures} failures, but there is no usable CI ` +
+          `ground truth for this cell (` +
+          (groundTruth ? `${groundTruth.cell} concluded "${groundTruth.conclusion}"` : "none recorded") +
+          `). Arm-to-arm agreement alone cannot establish that CI was reproduced.`,
+      };
+    }
+    return {
+      outcome: "REPRODUCED",
+      reason:
+        `both arms ran ${refSuite.tests} tests with ${refSuite.failures} failures, matching CI ground truth ` +
+        `${groundTruth.cell} = "${groundTruth.conclusion}" (${groundTruth.source})`,
+    };
   }
   return {
     outcome: "PARTIAL_REPRODUCTION",
@@ -368,6 +472,8 @@ function main(): void {
 
   // --- reference arm: transcribed from the repository's workflow, engine not consulted ---
   const referencePlan = JSON.parse(readFileSync(referencePlanPath, "utf8")) as {
+    /** What real CI produced for this cell. Absent means REPRODUCED cannot be claimed - see defect 25. */
+    ciGroundTruth?: CiGroundTruth;
     source: string;
     steps: Array<{ command: string[]; environment?: Record<string, string> }>;
   };
@@ -398,7 +504,7 @@ function main(): void {
       };
   if (!plan.executable) console.log(`    inference  REFUSED - executed nothing: ${plan.refusal}`);
   assertBoundaryHonoured(plan.executable, inference);
-  const { outcome, reason } = classify(reference, inference, plan.executable);
+  const { outcome, reason } = classify(reference, inference, plan.executable, referencePlan.ciGroundTruth);
 
   writeFileSync(
     join(outDir, "reproduction.json"),

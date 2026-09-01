@@ -1,0 +1,6306 @@
+{
+  "schema": "diffci.ci.reproduction/v1",
+  "attempt": 1,
+  "repository": "jantimon/html-webpack-plugin",
+  "headSha": "cf9c7012003b8d71783d6c2d72f357616957b99c",
+  "protocol": "docs/ci-reproduction-01-protocol.md",
+  "optimisable": true,
+  "jobs": [
+    {
+      "id": "main.yml#lint-osubuntu-latest-node-versionlts/*",
+      "provides": [
+        "INSTALL",
+        "LINT",
+        "SECURITY"
+      ],
+      "operations": [
+        {
+          "id": "lint-osubuntu-latest-node-versionlts/*-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "lint-osubuntu-latest-node-versionlts/*-lint-1",
+          "kind": "lint",
+          "command": [
+            "npm",
+            "run",
+            "lint"
+          ],
+          "executable": true
+        },
+        {
+          "id": "lint-osubuntu-latest-node-versionlts/*-security-2",
+          "kind": "security",
+          "command": [
+            "npm",
+            "run",
+            "security",
+            "--",
+            "--only=prod"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node10.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node10.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node10.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node10.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node10.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node10.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node10.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node12.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node12.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node12.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node12.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node12.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node12.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node12.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node14.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node14.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node14.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node14.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node14.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node14.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node14.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node16.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node16.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node16.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node16.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node16.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node16.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node16.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node18.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node18.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node18.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node18.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node18.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node18.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node18.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node20.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node20.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node20.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node20.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node20.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node20.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node20.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node22.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node22.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node22.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node22.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node22.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node22.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node22.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node24.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node24.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node24.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node24.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node24.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node24.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node24.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node25.x-osubuntu-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node25.x-osubuntu-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-osubuntu-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-osubuntu-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-osubuntu-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node25.x-oswindows-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node25.x-oswindows-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-oswindows-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-oswindows-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-oswindows-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#build-node25.x-osmacOS-latest-webpacklatest",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-node25.x-osmacOS-latest-webpacklatest-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "--global",
+            "core.autocrlf",
+            "input"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-osmacOS-latest-webpacklatest-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "ci",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-osmacOS-latest-webpacklatest-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "i",
+            "webpack@",
+            "--legacy-peer-deps"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-node25.x-osmacOS-latest-webpacklatest-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:coverage",
+            "--",
+            "--ci"
+          ],
+          "executable": true
+        }
+      ]
+    }
+  ],
+  "testPlan": {
+    "purpose": "TEST",
+    "jobId": "main.yml#build-node22.x-osubuntu-latest-webpacklatest",
+    "operations": [
+      {
+        "id": "build-node22.x-osubuntu-latest-webpacklatest-unknown-0",
+        "kind": "unknown",
+        "command": [
+          "git",
+          "config",
+          "--global",
+          "core.autocrlf",
+          "input"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "${{ matrix.node-version }}",
+          "source": {
+            "file": ".github/workflows/main.yml",
+            "text": "actions/setup-node@v4",
+            "line": 33
+          }
+        },
+        "environment": {},
+        "dependsOn": [],
+        "evidence": [
+          {
+            "file": ".github/workflows/main.yml",
+            "text": "git config --global core.autocrlf input",
+            "line": 80
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": false,
+        "condition": {
+          "expression": "matrix.os == 'windows-latest'",
+          "result": "FALSE"
+        }
+      },
+      {
+        "id": "build-node22.x-osubuntu-latest-webpacklatest-install-1",
+        "kind": "install",
+        "command": [
+          "npm",
+          "ci",
+          "--legacy-peer-deps"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "${{ matrix.node-version }}",
+          "source": {
+            "file": ".github/workflows/main.yml",
+            "text": "actions/setup-node@v4",
+            "line": 33
+          }
+        },
+        "environment": {},
+        "dependsOn": [],
+        "evidence": [
+          {
+            "file": ".github/workflows/main.yml",
+            "text": "npm ci --legacy-peer-deps",
+            "line": 39
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true
+      },
+      {
+        "id": "build-node22.x-osubuntu-latest-webpacklatest-install-2",
+        "kind": "install",
+        "command": [
+          "npm",
+          "i",
+          "webpack@",
+          "--legacy-peer-deps"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "${{ matrix.node-version }}",
+          "source": {
+            "file": ".github/workflows/main.yml",
+            "text": "actions/setup-node@v4",
+            "line": 33
+          }
+        },
+        "environment": {},
+        "dependsOn": [
+          "build-node22.x-osubuntu-latest-webpacklatest-install-1"
+        ],
+        "evidence": [
+          {
+            "file": ".github/workflows/main.yml",
+            "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+            "line": 95
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true,
+        "condition": {
+          "expression": "matrix.webpack-version != 'latest'",
+          "result": "TRUE"
+        },
+        "expressionResolutions": [
+          {
+            "expression": "matrix.webpack-version",
+            "kind": "UNDEFINED_CONTEXT",
+            "value": "",
+            "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+          }
+        ]
+      },
+      {
+        "id": "build-node22.x-osubuntu-latest-webpacklatest-test-3",
+        "kind": "test",
+        "command": [
+          "npm",
+          "run",
+          "test:coverage",
+          "--",
+          "--ci"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "${{ matrix.node-version }}",
+          "source": {
+            "file": ".github/workflows/main.yml",
+            "text": "actions/setup-node@v4",
+            "line": 33
+          }
+        },
+        "environment": {},
+        "dependsOn": [
+          "build-node22.x-osubuntu-latest-webpacklatest-install-2"
+        ],
+        "evidence": [
+          {
+            "file": ".github/workflows/main.yml",
+            "text": "npm run test:coverage -- --ci",
+            "line": 98
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true
+      }
+    ],
+    "executable": true
+  },
+  "inferredOperations": [
+    {
+      "id": "lint-osubuntu-latest-node-versionlts/*-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {
+        "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "lint-osubuntu-latest-node-versionlts/*-lint-1",
+      "kind": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {
+        "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+      },
+      "dependsOn": [
+        "lint-osubuntu-latest-node-versionlts/*-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run lint",
+          "line": 42
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "lint-osubuntu-latest-node-versionlts/*-security-2",
+      "kind": "security",
+      "command": [
+        "npm",
+        "run",
+        "security",
+        "--",
+        "--only=prod"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {
+        "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+      },
+      "dependsOn": [
+        "lint-osubuntu-latest-node-versionlts/*-lint-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run security -- --only=prod",
+          "line": 45
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node10.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node10.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node10.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node10.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node10.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node10.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node10.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node10.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node10.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node10.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node10.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node10.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node10.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node10.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node10.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node10.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node10.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node10.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node10.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node12.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node12.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node12.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node12.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node12.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node12.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node12.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node12.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node12.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node12.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node12.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node12.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node12.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node12.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node12.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node12.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node12.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node12.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node12.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node14.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node14.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node14.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node14.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node14.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node14.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node14.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node14.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node14.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node14.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node14.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node14.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node14.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node14.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node14.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node14.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node14.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node14.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node14.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node16.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node16.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node16.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node16.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node16.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node16.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node16.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node16.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node16.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node16.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node16.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node16.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node16.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node16.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node16.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node16.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node16.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node16.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node16.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node18.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node18.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node18.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node18.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node18.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node18.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node18.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node18.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node18.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node18.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node18.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node18.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node18.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node18.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node18.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node18.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node18.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node18.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node18.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node20.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node20.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node20.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node20.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node20.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node20.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node20.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node20.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node20.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node20.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node20.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node20.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node20.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node20.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node20.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node20.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node20.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node20.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node20.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node22.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node22.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node22.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node22.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node22.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node22.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node22.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node22.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node22.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node22.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node22.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node22.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node22.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node22.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node22.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node22.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node22.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node22.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node22.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node24.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node24.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node24.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node24.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node24.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node24.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node24.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node24.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node24.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node24.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node24.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node24.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node24.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node24.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node24.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node24.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node24.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node24.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node24.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node25.x-osubuntu-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node25.x-osubuntu-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node25.x-osubuntu-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node25.x-osubuntu-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node25.x-osubuntu-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node25.x-osubuntu-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node25.x-oswindows-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "build-node25.x-oswindows-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node25.x-oswindows-latest-webpacklatest-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node25.x-oswindows-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node25.x-oswindows-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node25.x-oswindows-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node25.x-oswindows-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node25.x-osmacOS-latest-webpacklatest-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "--global",
+        "core.autocrlf",
+        "input"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "git config --global core.autocrlf input",
+          "line": 80
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.os == 'windows-latest'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "build-node25.x-osmacOS-latest-webpacklatest-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-node25.x-osmacOS-latest-webpacklatest-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node25.x-osmacOS-latest-webpacklatest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps",
+          "line": 95
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.webpack-version != 'latest'",
+        "result": "TRUE"
+      },
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "UNDEFINED_CONTEXT",
+          "value": "",
+          "reason": "the matrix does not declare an axis named `webpack-version`; GitHub renders this as the empty string"
+        }
+      ]
+    },
+    {
+      "id": "build-node25.x-osmacOS-latest-webpacklatest-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-node25.x-osmacOS-latest-webpacklatest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run test:coverage -- --ci",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    }
+  ],
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/main.yml, job `build`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "ci",
+          "--legacy-peer-deps"
+        ],
+        "commandIdentity": "npm ci --legacy-peer-deps",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T09:20:42.762Z",
+        "endedAt": "2026-09-01T09:20:57.259Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 21.2,
+        "wallMs": 14497,
+        "outputTail": "r.\nnpm warn deprecated\nnpm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)\nnpm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.\nnpm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported\nnpm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead\nnpm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead\nnpm warn deprecated @humanwhocodes/config-array@0.11.14: Use @eslint/config-array instead\nnpm warn deprecated @humanwhocodes/object-schema@2.0.2: Use @eslint/object-schema instead\nnpm warn deprecated rimraf@2.5.4: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated eslint@8.56.0: This version is no longer supported. Please see https://eslint.org/version-support for other options.\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "i",
+          "webpack@",
+          "--legacy-peer-deps"
+        ],
+        "commandIdentity": "npm i webpack@ --legacy-peer-deps",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T09:20:57.260Z",
+        "endedAt": "2026-09-01T09:21:01.101Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 4.95,
+        "wallMs": 3841,
+        "outputTail": "\nadded 4 packages, removed 12 packages, changed 10 packages, and audited 1026 packages in 4s\n\n182 packages are looking for funding\n  run `npm fund` for details\n\n32 vulnerabilities (10 low, 7 moderate, 12 high, 3 critical)\n\nTo address issues that do not require attention, run:\n  npm audit fix\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details.\n\n"
+      },
+      {
+        "stepId": "reference#2",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "run",
+          "test:coverage",
+          "--",
+          "--ci"
+        ],
+        "commandIdentity": "npm run test:coverage -- --ci",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T09:21:01.102Z",
+        "endedAt": "2026-09-01T10:12:47.454Z",
+        "exitStatus": 1,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 115.73,
+        "wallMs": 3106341,
+        "testFiles": 4,
+        "tests": 161,
+        "failures": 113,
+        "outputTail": "ok.CALL_ASYNC_DELEGATE [as _callAsync] (node_modules/tapable/lib/Hook.js:21:14)\n      at Cache.shutdown (node_modules/webpack/lib/Cache.js:179:23)\n      at node_modules/webpack/lib/Compiler.js:1512:15\n      at Hook.eval [as callAsync] (eval at create (node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:24:1)\n      at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (node_modules/tapable/lib/Hook.js:21:14)\n      at Compiler.close (node_modules/webpack/lib/Compiler.js:1500:23)\n\n  ● HtmlWebpackPlugin › allow you to use custom HTML tag attributes in templates\n\n    thrown: \"Exceeded timeout of 30000 ms for a test.\n    Use jest.setTimeout(newTimeout) to increase the timeout value, if this is a long-running test.\"\n\n      3827 |   });\n      3828 |\n    > 3829 |   it(\"allow you to use custom HTML tag attributes in templates\", (done) => {\n           |   ^\n      3830 |     testHtmlPlugin(\n      3831 |       {\n      3832 |         mode: \"production\",\n\n      at spec/basic.spec.js:3829:3\n      at Object.<anonymous> (spec/basic.spec.js:109:1)\n\nTest Suites: 2 failed, 2 passed, 4 total\nTests:       113 failed, 48 passed, 161 total\nSnapshots:   0 total\nTime:        3105.12 s\nRan all test suites.\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "inferenceArm": {
+    "arm": "inference",
+    "source": "inferred ExecutionGraph",
+    "steps": [
+      {
+        "stepId": "inference#0",
+        "arm": "inference",
+        "command": [
+          "npm",
+          "ci",
+          "--legacy-peer-deps"
+        ],
+        "commandIdentity": "npm ci --legacy-peer-deps",
+        "workingDirectory": "/workspace/ci-repro-work/inference",
+        "environment": {},
+        "startedAt": "2026-09-01T10:12:47.652Z",
+        "endedAt": "2026-09-01T10:12:56.946Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 15.8,
+        "wallMs": 9293,
+        "outputTail": "0.2: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead\nnpm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported\nnpm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.\nnpm warn deprecated\nnpm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)\nnpm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead\nnpm warn deprecated w3c-hr-time@1.0.2: Use your platform's native performance.now() and performance.timeOrigin.\nnpm warn deprecated @humanwhocodes/object-schema@2.0.2: Use @eslint/object-schema instead\nnpm warn deprecated eslint@8.56.0: This version is no longer supported. Please see https://eslint.org/version-support for other options.\n"
+      },
+      {
+        "stepId": "inference#1",
+        "arm": "inference",
+        "command": [
+          "npm",
+          "i",
+          "webpack@",
+          "--legacy-peer-deps"
+        ],
+        "commandIdentity": "npm i webpack@ --legacy-peer-deps",
+        "workingDirectory": "/workspace/ci-repro-work/inference",
+        "environment": {},
+        "startedAt": "2026-09-01T10:12:56.949Z",
+        "endedAt": "2026-09-01T10:13:00.539Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 4.63,
+        "wallMs": 3588,
+        "outputTail": "\nadded 4 packages, removed 12 packages, changed 10 packages, and audited 1026 packages in 3s\n\n182 packages are looking for funding\n  run `npm fund` for details\n\n32 vulnerabilities (10 low, 7 moderate, 12 high, 3 critical)\n\nTo address issues that do not require attention, run:\n  npm audit fix\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details.\n\n"
+      },
+      {
+        "stepId": "inference#2",
+        "arm": "inference",
+        "command": [
+          "npm",
+          "run",
+          "test:coverage",
+          "--",
+          "--ci"
+        ],
+        "commandIdentity": "npm run test:coverage -- --ci",
+        "workingDirectory": "/workspace/ci-repro-work/inference",
+        "environment": {},
+        "startedAt": "2026-09-01T10:13:00.539Z",
+        "endedAt": "2026-09-01T11:04:47.098Z",
+        "exitStatus": 1,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 114.29,
+        "wallMs": 3106552,
+        "testFiles": 4,
+        "tests": 161,
+        "failures": 113,
+        "outputTail": "k.CALL_ASYNC_DELEGATE [as _callAsync] (node_modules/tapable/lib/Hook.js:21:14)\n      at Cache.shutdown (node_modules/webpack/lib/Cache.js:179:23)\n      at node_modules/webpack/lib/Compiler.js:1512:15\n      at Hook.eval [as callAsync] (eval at create (node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:24:1)\n      at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (node_modules/tapable/lib/Hook.js:21:14)\n      at Compiler.close (node_modules/webpack/lib/Compiler.js:1500:23)\n\n  ● HtmlWebpackPlugin › allow you to use custom HTML tag attributes in templates\n\n    thrown: \"Exceeded timeout of 30000 ms for a test.\n    Use jest.setTimeout(newTimeout) to increase the timeout value, if this is a long-running test.\"\n\n      3827 |   });\n      3828 |\n    > 3829 |   it(\"allow you to use custom HTML tag attributes in templates\", (done) => {\n           |   ^\n      3830 |     testHtmlPlugin(\n      3831 |       {\n      3832 |         mode: \"production\",\n\n      at spec/basic.spec.js:3829:3\n      at Object.<anonymous> (spec/basic.spec.js:109:1)\n\nTest Suites: 2 failed, 2 passed, 4 total\nTests:       113 failed, 48 passed, 161 total\nSnapshots:   0 total\nTime:        3105.181 s\nRan all test suites.\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "outcome": "REPRODUCED",
+  "reason": "both arms ran 161 tests with 113 failures",
+  "producedAt": "2026-09-01T11:04:47.356Z"
+}
