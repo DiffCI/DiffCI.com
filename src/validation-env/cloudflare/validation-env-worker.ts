@@ -90,6 +90,9 @@ const COLLECTED_FILES: ReadonlySet<string> = new Set([
   // The registration pass decides which commands a qualification runs, so a RED cannot be attributed
   // to the repository rather than to the rule without it.
   "register.log",
+  // CI_REPRODUCTION: written and allowlisted together.
+  "reproduction.json",
+  "ci-reproduce.log",
   "registration-derivation.json",
   "universe-sanity.json",
   // The execution receipt, emitted by EVERY mode. Allowlisted in the same commit as the writer.

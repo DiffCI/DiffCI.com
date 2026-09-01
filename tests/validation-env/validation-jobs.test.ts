@@ -77,8 +77,11 @@ describe("the validation job allowlist", () => {
       // tarball rather than N commits taken from `git log`. That is a stronger guarantee than a count,
       // not a weaker one: a count would re-derive the candidates at run time and could drift from the
       // draw the pre-registration froze.
+      // `ci-reproduce` observes no commits either: its subject is ONE pinned tree, and the question is
+      // whether two independently constructed plans reproduce the same pipeline outcome on it. It still
+      // pins repository and sha, which is the guarantee this invariant exists to enforce.
       assert.ok(
-        (job.commits ?? 0) > 0 || job.mode === "qualify" || job.mode === "observe-pairs",
+        (job.commits ?? 0) > 0 || job.mode === "qualify" || job.mode === "observe-pairs" || job.mode === "ci-reproduce",
         `${id} must observe at least one commit`,
       );
       assert.ok(job.maxRunMs > 0, `${id} must bound its own runtime`);

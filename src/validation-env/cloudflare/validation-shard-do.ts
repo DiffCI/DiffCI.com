@@ -53,6 +53,8 @@ import {
   densityArgv,
   observePairsArgv,
   registerArgv,
+  ciReproduceArgv,
+  CI_REPRODUCTION_OUT,
   REGISTRATION_DERIVATION_OUT,
   universeArgv,
   UNIVERSE_OUT,
@@ -88,6 +90,7 @@ export type ValidationStep =
   | "observingPairs"
   | "verifyingUniverse"
   | "registering"
+  | "ciReproducing"
   | "locating"
   | "mutating"
   | "collecting"
@@ -140,7 +143,7 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
-  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string; register?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string; register?: string; "ci-reproduce"?: string };
   /** Set once evidence preservation has run, so a failure inside it cannot loop. */
   evidencePreserved?: boolean;
   /** The step that actually failed, kept because `step` becomes "preserving" then "failed". */
@@ -386,6 +389,13 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
 
     // The survey's subject is 40 repositories named by a frozen frame, so there is no single clone to
     // pin. It does its own cloning, one entry at a time, and records the head sha it actually saw.
+    // ci-reproduce clones both arms itself, so it needs no pinned clone - like the survey.
+    if (job.mode === "ci-reproduce") {
+      record.timings.prepareMs = deps.now() - t0;
+      record.step = "ciReproducing";
+      return { record, nextAlarmDelayMs: 0 };
+    }
+
     if (job.mode === "survey") {
       record.timings.prepareMs = deps.now() - t0;
       record.step = "surveying";
@@ -459,7 +469,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe" | "register",
+  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe" | "register" | "ci-reproduce",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -552,6 +562,15 @@ async function runHarnessPass(
  * red suite. Commands come from the repository own manifest under the frozen rule; nothing is chosen
  * per repository. Exit 2 means UNREGISTERABLE, which is an outcome to record, not a crash.
  */
+async function ciReproduceStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
+  const t0 = record.processStartedAt ?? deps.now();
+  return runHarnessPass(record, deps, ciReproduceArgv(deps.job), "ci-reproduce", (r) => {
+    r.timings.ciReproduceMs = deps.now() - t0;
+    r.step = "collecting";
+    return { record: r, nextAlarmDelayMs: 0 };
+  });
+}
+
 async function registerStep(record: ValidationRecord, deps: ValidationStepDeps): Promise<ValidationStepResult> {
   const t0 = record.processStartedAt ?? deps.now();
   return runHarnessPass(record, deps, registerArgv(deps.job), "register", (r) => {
@@ -903,6 +922,22 @@ async function collectQualification(record: ValidationRecord, deps: ValidationSt
     } catch {
       // Absent is itself informative; it does not fail an otherwise complete qualification.
     }
+  }
+
+  if (deps.job.mode === "ci-reproduce") {
+    try {
+      const content = (await sandbox.readFile(`${CI_REPRODUCTION_OUT}/reproduction.json`)).content;
+      const key = `${resultPrefix(record)}/reproduction.json`;
+      await bucket.put(key, content);
+      keys.push(key);
+    } catch (err) {
+      return fail(record, "reproduction-unreadable", err instanceof Error ? err.message : String(err));
+    }
+  }
+  if (record.logs?.["ci-reproduce"]) {
+    const logKey = `${resultPrefix(record)}/ci-reproduce.log`;
+    await bucket.put(logKey, record.logs["ci-reproduce"]);
+    keys.push(logKey);
   }
 
   if (record.logs?.register) {
@@ -1308,6 +1343,8 @@ async function stepValidationInner(record: ValidationRecord, deps: ValidationSte
       return verifyUniverse(record, deps);
     case "registering":
       return registerStep(record, deps);
+    case "ciReproducing":
+      return ciReproduceStep(record, deps);
     case "locating":
       return locate(record, deps);
     case "mutating":

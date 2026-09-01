@@ -71,7 +71,7 @@ export interface ValidationJob {
    * qualify before mutating it means anything, because a mutation pass against a suite that was never
    * green attributes failures to the mutation that were already there.
    */
-  mode: "reproduce" | "qualify" | "calibrate" | "survey" | "density" | "observe-pairs";
+  mode: "reproduce" | "qualify" | "calibrate" | "survey" | "density" | "observe-pairs" | "ci-reproduce";
   /**
    * Universe-sanity expectations, checked in the canonical environment BEFORE the suite qualification.
    * Present only on apparatus-qualification jobs. See docs/apparatus-qualification-gen-c.md.
@@ -1448,6 +1448,23 @@ const JOBS: Record<string, ValidationJob> = {
    * Asks the detection half MI-01 could not: does a graph-reached test actually change the DETECTION
    * outcome? Four arms, of which DIRECT-ONLY is the discriminator.
    */
+  /**
+   * CI_REPRODUCTION_02 - the canonical Linux run, mandatory before any reproduction claim.
+   *
+   * Attempt 1 ran on Windows under node 24 and is preserved as DIVERGED with that limitation
+   * recorded; its reference-arm test failures are NOT attributable to the repository.
+   */
+  "ci-reproduce-html-webpack-plugin": {
+    id: "ci-reproduce-html-webpack-plugin",
+    description: "CI_REPRODUCTION_02: reference vs inference arms in the canonical Linux environment.",
+    mode: "ci-reproduce",
+    repository: "jantimon/html-webpack-plugin",
+    pinnedHeadSha: "cf9c7012003b8d71783d6c2d72f357616957b99c",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "mi2-mutate-target": {
     id: "mi2-mutate-target",
     description: "MECHANISM_ISOLATION_02: mutate the drawn fix-subject no-test-edit target.",
@@ -1736,6 +1753,25 @@ export function observePairsArgv(job?: ValidationJob): string[] {
 }
 
 export const REGISTRATION_DERIVATION_OUT = `${WORKSPACE}/registration-derivation.json`;
+
+export const CI_REPRODUCTION_OUT = `${WORKSPACE}/ci-reproduction`;
+
+/**
+ * CI_REPRODUCTION argv - two independently constructed arms, executed in the canonical Linux
+ * environment. The Windows attempt 1 is preserved and is NOT used for repository correctness,
+ * baseline CPU, savings or reproduction claims.
+ */
+export function ciReproduceArgv(job: ValidationJob): string[] {
+  if (!job.repository) throw new Error(`job "${job.id}" names no repository`);
+  return [
+    "run", "ci:reproduce", "--",
+    "--repository", job.repository,
+    "--head", job.pinnedHeadSha ?? "",
+    "--work", `${WORKSPACE}/ci-repro-work`,
+    "--out", CI_REPRODUCTION_OUT,
+    "--reference", "docs/evidence/ci-reproduction-01-reference-plan.json",
+  ];
+}
 
 export const UNIVERSE_OUT = `${WORKSPACE}/universe-sanity.json`;
 
