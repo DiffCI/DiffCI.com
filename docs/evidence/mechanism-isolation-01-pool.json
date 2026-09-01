@@ -1,0 +1,263 @@
+{
+  "experiment": "MECHANISM_ISOLATION_01",
+  "protocol": "docs/mechanism-isolation-01-protocol.md",
+  "repository": "jest-community/eslint-plugin-jest",
+  "pinnedTree": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+  "shape": "changed implementation source, ZERO changed test files, frozen filter + A1 otherwise unchanged",
+  "enumeratedFrom": "npm run select:candidate -- --count 40 --no-test-edit --trace",
+  "traversal": "docs/evidence/mechanism-isolation-01-pool.txt",
+  "poolSize": 18,
+  "note": "Sealed BEFORE the draw. No entry was analysed by DiffCI; ordering is history order, untouched.",
+  "pool": [
+    {
+      "poolIndex": 0,
+      "base": "6e6e9a272fbb780148cfdc8b23d8b97801e84b2c",
+      "head": "197f34167e306fa057d1285b1fe08746cfc5a4a0",
+      "subject": "refactor(valid-expect): use optional chaining (#2015)",
+      "implementationFiles": [
+        "src/rules/valid-expect.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/valid-expect.ts"
+      ]
+    },
+    {
+      "poolIndex": 1,
+      "base": "6156650467c5982182aa2cb8ba122c0320a2d4dd",
+      "head": "fc5657c8801fb79b85f28c91ab0abcf009a3c513",
+      "subject": "refactor: use `replaceText` in fixers when possible (#2012)",
+      "implementationFiles": [
+        "src/rules/no-unneeded-async-expect-function.ts",
+        "src/rules/prefer-jest-mocked.ts",
+        "src/rules/valid-title.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/no-unneeded-async-expect-function.ts",
+        "src/rules/prefer-jest-mocked.ts",
+        "src/rules/valid-title.ts"
+      ]
+    },
+    {
+      "poolIndex": 2,
+      "base": "4474ac9dba0e38c1233f21822a1e5c89f65bc934",
+      "head": "9518a244558567872ce09d73e7512e57ea9f292e",
+      "subject": "refactor(no-export): remove unneeded length check (#2010)",
+      "implementationFiles": [
+        "src/rules/no-export.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/no-export.ts"
+      ]
+    },
+    {
+      "poolIndex": 3,
+      "base": "a8f5f33e30eb81ce276c44a1563dd02f4f5acbb0",
+      "head": "6d0f0382b6b768b96df42553a4ebbd1615cbde5d",
+      "subject": "refactor: don't return the result of void functions (#1895)",
+      "implementationFiles": [
+        "src/rules/utils/padding.ts",
+        "src/rules/valid-describe-callback.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/utils/padding.ts",
+        "src/rules/valid-describe-callback.ts"
+      ]
+    },
+    {
+      "poolIndex": 4,
+      "base": "fa86f07bb3f234fb851143e6aa45c8aa2aea3ec6",
+      "head": "08dc6b831dc74c65c51bce52c4af0dab0136bcdf",
+      "subject": "refactor: deduplicate TypeScript-based code (#1891)",
+      "implementationFiles": [
+        "src/rules/no-error-equal.ts",
+        "src/rules/utils/index.ts",
+        "src/rules/utils/ts.ts",
+        "src/rules/valid-expect-with-promise.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/no-error-equal.ts",
+        "src/rules/utils/index.ts",
+        "src/rules/utils/ts.ts",
+        "src/rules/valid-expect-with-promise.ts"
+      ]
+    },
+    {
+      "poolIndex": 5,
+      "base": "a12bc3326abe0836aabde6e136a07e259713113f",
+      "head": "2646599f049eed692c33a44433c91f4e521ecc90",
+      "subject": "docs(prefer-called-with): remove references to `toBeCalled` matcher (#1874)",
+      "implementationFiles": [
+        "src/rules/prefer-called-with.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "README.md",
+        "docs/rules/prefer-called-with.md",
+        "src/rules/prefer-called-with.ts"
+      ]
+    },
+    {
+      "poolIndex": 6,
+      "base": "e0cdeb59b18434be0309985c5ca41d482cb4970b",
+      "head": "c48c48c9d03ed04eda01a78959ab7f794e1fa448",
+      "subject": "fix(prefer-expect-assertions): use correct word in error message (#1873)",
+      "implementationFiles": [
+        "src/rules/prefer-expect-assertions.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/prefer-expect-assertions.ts"
+      ]
+    },
+    {
+      "poolIndex": 7,
+      "base": "661c818c691beaf07a5bd38f46d45cd296f217ad",
+      "head": "e0cdeb59b18434be0309985c5ca41d482cb4970b",
+      "subject": "refactor(prefer-expect-assertions): remove unneeded checks (#1872)",
+      "implementationFiles": [
+        "src/rules/prefer-expect-assertions.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/prefer-expect-assertions.ts"
+      ]
+    },
+    {
+      "poolIndex": 8,
+      "base": "d77ac467f51e3ae3f62798bd3c13b7fbacb024fa",
+      "head": "1d53075c2dd22e33933a0e461c5a2da27cfea361",
+      "subject": "feat(unbound-method): remove `docs.recommended` and `docs.requiresTypeChecking` properties",
+      "implementationFiles": [
+        "src/rules/unbound-method.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/unbound-method.ts"
+      ]
+    },
+    {
+      "poolIndex": 9,
+      "base": "1d9b903be7c481030697dd4aa648bdadd3e55707",
+      "head": "8754a2d3c89342843f22e7290ef89750736c17b5",
+      "subject": "refactor: use declaration merging instead of casting for accessing plugin settings (#1768)",
+      "implementationFiles": [
+        "src/rules/utils/parseJestFnCall.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/utils/parseJestFnCall.ts"
+      ]
+    },
+    {
+      "poolIndex": 10,
+      "base": "51d39cc82c03a87e36900183337043bc4fd5786f",
+      "head": "30440ef7509ee565690507c003da9bccf574b4bf",
+      "subject": "feat(unbound-method): mark `docs.recommended` and `docs.requiresTypeChecking` as deprecated (#1762)",
+      "implementationFiles": [
+        "src/rules/unbound-method.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/unbound-method.ts"
+      ]
+    },
+    {
+      "poolIndex": 11,
+      "base": "078df22b1066759c0eeed607f45d14de59a5ca81",
+      "head": "9f2157785ca7992d022f335a348167be1c77f174",
+      "subject": "chore: add `30` to `JestVersion` type (#1760)",
+      "implementationFiles": [
+        "src/rules/utils/detectJestVersion.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/utils/detectJestVersion.ts"
+      ]
+    },
+    {
+      "poolIndex": 12,
+      "base": "1250371a991359d80febeae6dc0a498bfbd90ad1",
+      "head": "2635b7683110a43487caf092f6c5a6f288760ccd",
+      "subject": "refactor(prefer-ending-with-an-expect): move function definition out of rule creation (#1751)",
+      "implementationFiles": [
+        "src/rules/prefer-ending-with-an-expect.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/prefer-ending-with-an-expect.ts"
+      ]
+    },
+    {
+      "poolIndex": 13,
+      "base": "2e599596b55409a881ae6dd1ce5c4b6f63ae3bb3",
+      "head": "14c27ab73fba6ea2b6509d4ede88ecab8a40e2db",
+      "subject": "fix(no-commented-out-tests): make message less ambiguous (#1740)",
+      "implementationFiles": [
+        "src/rules/no-commented-out-tests.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/no-commented-out-tests.ts"
+      ]
+    },
+    {
+      "poolIndex": 14,
+      "base": "db8172b3960db3a555f271cde3cb8670b95e9e42",
+      "head": "0f5b873edcce08988d1ce51e17eb67c21ddf102d",
+      "subject": "fix(no-large-snapshots): use a far better message for when an unexpected snapshot is found (#1736)",
+      "implementationFiles": [
+        "src/rules/no-large-snapshots.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/no-large-snapshots.ts"
+      ]
+    },
+    {
+      "poolIndex": 15,
+      "base": "eecc6e65eb6a983729a38d97e702da0e4d46bdd9",
+      "head": "9cb4eccab0439c7f56608ffa1e6c9441178bf6d5",
+      "subject": "fix(padding-around-test-blocks): update description (#1691)",
+      "implementationFiles": [
+        "src/rules/padding-around-test-blocks.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "README.md",
+        "docs/rules/padding-around-test-blocks.md",
+        "src/rules/padding-around-test-blocks.ts"
+      ]
+    },
+    {
+      "poolIndex": 16,
+      "base": "a789420ba57e0df632c493e85e4c4939f26f5f80",
+      "head": "066024289ec09e2ecf83db001cc93930aa6288a8",
+      "subject": "perf(prefer-importing-jest-globals): stop collecting import specifiers for no reason (#1646)",
+      "implementationFiles": [
+        "src/rules/prefer-importing-jest-globals.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/prefer-importing-jest-globals.ts"
+      ]
+    },
+    {
+      "poolIndex": 17,
+      "base": "e496de526c5b017bf4c5b3fae8f8210819e7d119",
+      "head": "209e8f3c181bcf372ea75ea60a049c4a4c840efd",
+      "subject": "refactor: use shorthanded object property (#1622)",
+      "implementationFiles": [
+        "src/rules/prefer-jest-mocked.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/prefer-jest-mocked.ts"
+      ]
+    }
+  ]
+}

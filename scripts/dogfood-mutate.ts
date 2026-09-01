@@ -218,6 +218,13 @@ interface MutationResult {
    * observation exposed no comparator list: unmeasurable, never scored as a miss.
    */
   comparatorMutated?: ComparatorArm;
+  /**
+   * ONLY the files the commit changed, run against the same mutation. The mechanism-isolation arm.
+   *
+   * `direct-only MISSES` while `DiffCI DETECTS` is the ONLY shape that shows the dependency graph
+   * reached something a trivial changed-file rule could not. Both detecting means the diff sufficed.
+   */
+  directOnlyMutated?: ComparatorArm;
   /** Scored only when the safety question was answerable; undefined otherwise. */
   efficiency?: Efficiency;
   /** The evidence behind `efficiency`, so the verdict can be re-derived rather than trusted. */
@@ -616,6 +623,35 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number, 
         };
       }
 
+      // 6. DIRECT-ONLY MUTANT. The arm that isolates the MECHANISM, added 2026-09-01.
+      //
+      // GENERATION_C_01 ended RECALL_CONFIRMED with 0 graph-reached selections: DiffCI's 2 files were
+      // both files the commit touched, so a trivial changed-file selector would have matched it exactly.
+      // "DiffCI detected it" could not distinguish dependency reasoning from running the diff.
+      //
+      // This arm runs ONLY the files the commit changed, through the same runner. Then:
+      //
+      //   direct-only MISSES and DiffCI DETECTS  -> the graph reached something the diff could not.
+      //                                             The mechanism did work no trivial rule does.
+      //   both DETECT                            -> the diff was sufficient; the graph is unproven here.
+      //   direct-only DETECTS and DiffCI MISSES  -> a false green against the cheapest possible rule.
+      //
+      // Undefined when the changed-file list is unavailable - unmeasurable, never scored either way.
+      let directOnlyMutated: ComparatorArm | undefined;
+      const directFiles = candidate.changedFiles.filter((f) => !isFileGlob(f));
+      if (directFiles.length > 0) {
+        const directArgs = [testModulePath, ...commands.testArgs.filter((a) => !isFileGlob(a)), ...directFiles];
+        const directRun = run(testExec, directArgs, candidate.repoPath, timeoutMs);
+        const directParsed = parseFailures(directRun.stdout + directRun.stderr);
+        directOnlyMutated = {
+          detected: directParsed.failures === undefined ? undefined : directParsed.failures > 0,
+          failures: directParsed.failures,
+          cpuSeconds: directRun.cpuSeconds,
+          wallMs: directRun.ms,
+          selectedCount: directFiles.length,
+        };
+      }
+
       const missed = fullParsed.failedNames.filter((name) => !selectedParsed.failedNames.includes(name));
       const detected = selectedParsed.failures > 0;
 
@@ -634,6 +670,7 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number, 
         efficiency,
         selection: { selected: selectedCount, total: candidate.totalCount, baselineSelected: comparatorSelected, versusBaseline, detecting: selectedParsed.failures },
         comparatorMutated,
+        directOnlyMutated,
         reason: detected
           ? `reverting ${mutation.path} failed the full suite and DiffCI's selection caught it`
           : `reverting ${mutation.path} failed the full suite but NOT DiffCI's ${candidate.selectedTests.length}-test selection`,
