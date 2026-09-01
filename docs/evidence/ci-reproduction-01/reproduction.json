@@ -1,0 +1,230 @@
+{
+  "schema": "diffci.ci.reproduction/v1",
+  "attempt": 1,
+  "repository": "jantimon/html-webpack-plugin",
+  "headSha": "cf9c7012003b8d71783d6c2d72f357616957b99c",
+  "protocol": "docs/ci-reproduction-01-protocol.md",
+  "optimisable": true,
+  "inferredOperations": [
+    {
+      "id": "checkout",
+      "kind": "checkout",
+      "command": [
+        "git",
+        "checkout",
+        "cf9c7012003b8d71783d6c2d72f357616957b99c"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {
+        "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+      },
+      "dependsOn": [],
+      "evidence": [],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": []
+    },
+    {
+      "id": "install",
+      "kind": "install",
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {
+        "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+      },
+      "dependsOn": [
+        "checkout"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm ci --legacy-peer-deps",
+          "line": 39
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": []
+    },
+    {
+      "id": "lint-1",
+      "kind": "lint",
+      "command": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {
+        "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+      },
+      "dependsOn": [
+        "install"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run lint",
+          "line": 42
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": []
+    },
+    {
+      "id": "security-2",
+      "kind": "security",
+      "command": [
+        "npm",
+        "run",
+        "security",
+        "--",
+        "--only=prod"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v4",
+          "line": 33
+        }
+      },
+      "environment": {
+        "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+      },
+      "dependsOn": [
+        "lint-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm run security -- --only=prod",
+          "line": 45
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": []
+    }
+  ],
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/main.yml, job `build`, transcribed by reading the repository",
+    "steps": [
+      {
+        "command": [
+          "npm",
+          "ci",
+          "--legacy-peer-deps"
+        ],
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\ffab3b6b-7eea-4772-827d-31dedbf8a62d\\scratchpad\\ci-repro\\reference",
+        "environment": {},
+        "exitStatus": 0,
+        "wallMs": 26220,
+        "outputTail": "rs strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.\nnpm warn deprecated\nnpm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)\nnpm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead\nnpm warn deprecated rimraf@2.6.3: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated right-pad@1.0.1: Please use String.prototype.padEnd() over this package.\nnpm warn deprecated w3c-hr-time@1.0.2: Use your platform's native performance.now() and performance.timeOrigin.\nnpm warn deprecated @humanwhocodes/config-array@0.11.14: Use @eslint/config-array instead\nnpm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead\nnpm warn deprecated @humanwhocodes/object-schema@2.0.2: Use @eslint/object-schema instead\nnpm warn deprecated rimraf@2.5.4: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated eslint@8.56.0: This version is no longer supported. Please see https://eslint.org/version-support for other options.\n"
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "test:coverage",
+          "--",
+          "--ci"
+        ],
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\ffab3b6b-7eea-4772-827d-31dedbf8a62d\\scratchpad\\ci-repro\\reference",
+        "environment": {},
+        "exitStatus": 1,
+        "wallMs": 152087,
+        "testFiles": 4,
+        "tests": 151,
+        "failures": 13,
+        "outputTail": "ebpack(webpackConfig, (err, stats) => {\n    > 41 |     expect(err).toBeFalsy();\n         |                 ^\n      42 |     const compilationErrors = (stats.compilation.errors || []).join(\"\\n\");\n      43 |     if (expectErrors) {\n      44 |       expect(compilationErrors).not.toBe(\"\");\n\n      at spec/basic.spec.js:41:17\n      at node_modules/webpack/lib/webpack.js:189:7\n      at node_modules/webpack/lib/HookWebpackError.js:95:2\n      at Hook.eval [as callAsync] (eval at create (node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:6:1)\n      at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (node_modules/tapable/lib/Hook.js:21:14)\n      at Cache.shutdown (node_modules/webpack/lib/Cache.js:157:23)\n      at node_modules/webpack/lib/Compiler.js:1407:15\n      at Hook.eval [as callAsync] (eval at create (node_modules/tapable/lib/HookCodeFactory.js:31:10), <anonymous>:6:1)\n      at Hook.CALL_ASYNC_DELEGATE [as _callAsync] (node_modules/tapable/lib/Hook.js:21:14)\n      at Compiler.close (node_modules/webpack/lib/Compiler.js:1400:23)\n\nTest Suites: 4 failed, 4 total\nTests:       13 failed, 1 skipped, 137 passed, 151 total\nSnapshots:   0 total\nTime:        115.642 s\nRan all test suites.\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v24.16.0",
+    "npm": "11.13.0"
+  },
+  "inferenceArm": {
+    "arm": "inference",
+    "source": "INFERENCE_02 ExecutionGraph",
+    "steps": [
+      {
+        "command": [
+          "npm",
+          "ci",
+          "--legacy-peer-deps"
+        ],
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\ffab3b6b-7eea-4772-827d-31dedbf8a62d\\scratchpad\\ci-repro\\inference",
+        "environment": {
+          "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+        },
+        "exitStatus": 0,
+        "wallMs": 20371,
+        "outputTail": "0.2: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported\nnpm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported\nnpm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.\nnpm warn deprecated\nnpm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)\nnpm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead\nnpm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead\nnpm warn deprecated w3c-hr-time@1.0.2: Use your platform's native performance.now() and performance.timeOrigin.\nnpm warn deprecated @humanwhocodes/object-schema@2.0.2: Use @eslint/object-schema instead\nnpm warn deprecated eslint@8.56.0: This version is no longer supported. Please see https://eslint.org/version-support for other options.\n"
+      },
+      {
+        "command": [
+          "npm",
+          "run",
+          "lint"
+        ],
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\ffab3b6b-7eea-4772-827d-31dedbf8a62d\\scratchpad\\ci-repro\\inference",
+        "environment": {
+          "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"
+        },
+        "exitStatus": 1,
+        "wallMs": 10963,
+        "outputTail": "r] examples/sort-manually/a.js\n[lint:prettier] examples/sort-manually/b.js\n[lint:prettier] examples/sort-manually/c.js\n[lint:prettier] examples/sort-manually/d.js\n[lint:prettier] examples/sort-manually/e.js\n[lint:prettier] examples/sort-manually/main.css\n[lint:prettier] examples/sort-manually/template.html\n[lint:prettier] examples/sort-manually/webpack.config.js\n[lint:prettier] examples/template-parameters/example.js\n[lint:prettier] examples/template-parameters/readme.md\n[lint:prettier] examples/template-parameters/webpack.config.js\n[lint:prettier] index.js\n[lint:prettier] lib/cached-child-compiler.js\n[lint:prettier] lib/child-compiler.js\n[lint:prettier] lib/chunksorter.js\n[lint:prettier] lib/errors.js\n[lint:prettier] lib/hooks.js\n[lint:prettier] lib/html-tags.js\n[lint:prettier] lib/loader.js\n[lint:prettier] lint-staged.config.js\n[lint:prettier] migration.md\n[lint:prettier] package-lock.json\n[lint:prettier] package.json\n[lint:prettier] README.md\n[lint:prettier] spec/basic.spec.js\n[lint:prettier] spec/caching.spec.js\n[lint:prettier] spec/example.spec.js\n[lint:prettier] spec/hot.spec.js\n[lint:prettier] tsconfig.json\n[lint:prettier] typings.d.ts\n\nERROR: \"lint:prettier\" exited with 1.\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v24.16.0",
+    "npm": "11.13.0"
+  },
+  "outcome": "DIVERGED",
+  "reason": "the engine claimed executability but its graph never runs the suite: reference executed a suite (151 tests in 4 files) and the inference arm executed none. Install succeeded in both arms.",
+  "producedAt": "2026-09-01T07:29:24.135Z"
+}
