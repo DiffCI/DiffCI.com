@@ -1470,6 +1470,31 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 4 * 60 * 60_000,
   },
 
+  "r3-qualify-jest": {
+    id: "r3-qualify-jest",
+    description: "CI_REPRODUCTION_SAMPLE_01 member 2, R3: does jestjs/jest complete in the canonical container, reference arm only.",
+    mode: "ci-reproduce",
+    repository: "jestjs/jest",
+    pinnedHeadSha: "9ab14feccd6c15fec1334dbcb03a53a079d153d3",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    referencePlan: "docs/evidence/ci-reproduction-05-jest-reference-plan.json",
+    referenceOnly: true,
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
+  "ci-reproduce-jest": {
+    id: "ci-reproduce-jest",
+    description: "CI_REPRODUCTION_SAMPLE_01 member 2: reference vs inference arms on jestjs/jest.",
+    mode: "ci-reproduce",
+    repository: "jestjs/jest",
+    pinnedHeadSha: "9ab14feccd6c15fec1334dbcb03a53a079d153d3",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    referencePlan: "docs/evidence/ci-reproduction-05-jest-reference-plan.json",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "r3-qualify-eslint": {
     id: "r3-qualify-eslint",
     description: "CI_REPRODUCTION_05 R3: does eslint/eslint complete in the canonical container, reference arm only.",
