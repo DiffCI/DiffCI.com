@@ -13,6 +13,7 @@
  * guarantee survives a rewrite of the function.
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { type ArmReceipt, type StepReceipt, classify } from "../../scripts/ci-reproduction.js";
@@ -164,4 +165,19 @@ test("a mocha run is recognised as a suite, so agreeing arms are not called DIVE
   const truth: CiGroundTruth = { cell: "Test (ubuntu-latest, 22.x)", conclusion: "success", source: "github check-runs" };
   const result = classify(arm("reference", [mocha("reference")]), arm("inference", [mocha("inference")]), true, truth);
   assert.equal(result.outcome, "REPRODUCED");
+});
+
+/**
+ * The same parser, against output the container actually produced.
+ *
+ * The mocha branch above was written against a hand-typed `"  38627 passing"` and its test passed on
+ * that invented fixture. The real output is `"\x1b[32m 38627 passing\x1b[0m"`, where a `^\s*` anchor
+ * cannot match — so the regex had been validated against my assumption, not against reality, and would
+ * have reported no count on the very run it was written for.
+ *
+ * This fixture is the byte-for-byte tail captured from `ci-repro-05-eslint`.
+ */
+test("countsOf parses the REAL eslint mocha output, ANSI and all", () => {
+  const real = readFileSync("tests/scripts/fixtures/eslint-mocha-tail.txt", "utf8");
+  assert.equal(countsOf(real).tests, 38638, "38627 passing + 11 pending, read through the ANSI codes");
 });

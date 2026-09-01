@@ -22,7 +22,7 @@ import { inferPipeline } from "../src/ci-inference/infer.js";
 import { planForPurpose } from "../src/ci-inference/jobs.js";
 import { execBounded } from "./process-exec.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
-import { parseTestOutput } from "./test-output-parsers.js";
+import { parseTestOutput, stripAnsi } from "./test-output-parsers.js";
 
 /**
  * `INFRASTRUCTURE` is the fifth outcome, added after attempt 3.
@@ -164,7 +164,13 @@ export interface CiGroundTruth {
  * undefined, never zero. A zero here would make "ran nothing" indistinguishable from "ran and passed",
  * and that is the exact comparison this experiment turns on.
  */
-export function countsOf(output: string): { testFiles?: number; tests?: number } {
+export function countsOf(raw: string): { testFiles?: number; tests?: number } {
+  // ANSI first, and the reason is a mistake worth keeping visible. The mocha branch below was written
+  // against a hand-typed "  38627 passing" and its test passed on that invented fixture — while the
+  // real eslint output is "\x1b[32m 38627 passing\x1b[0m", where a `^\s*` anchor cannot match. The
+  // regex was checked against my assumption rather than against reality. `parseTestOutput` had been
+  // stripping ANSI since it was written, which is why FAILURES parsed and COUNTS did not.
+  const output = stripAnsi(raw);
   const suites = /Test Suites:.*?(\d+) total/.exec(output);
   const tests = /Tests:.*?(\d+) total/.exec(output);
   if (tests?.[1]) {

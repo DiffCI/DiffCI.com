@@ -1,0 +1,6776 @@
+{
+  "schema": "diffci.ci.reproduction/v1",
+  "attempt": 1,
+  "repository": "eslint/eslint",
+  "headSha": "2417cad57d7d1bc4cf3ecf0f0575cfb10ff2011c",
+  "protocol": "docs/ci-reproduction-01-protocol.md",
+  "optimisable": false,
+  "jobs": [
+    {
+      "id": "ci.yml#verify_files",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "verify_files-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "go",
+            "install",
+            "github.com/rhysd/actionlint/cmd/actionlint@v1.7.10"
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-unknown-1",
+          "kind": "unknown",
+          "command": [
+            "actionlint",
+            "-color",
+            "-shellcheck=",
+            "-pyflakes="
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "verify_files-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "verify_files-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "lint"
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-unknown-5",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "checkRuleFiles"
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-unknown-6",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "checkLicenses"
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-unknown-7",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "lintDocsJS"
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-unknown-8",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "checkRuleExamples"
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-unknown-9",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "lint:rule-types"
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-unknown-10",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "lint:unused"
+          ],
+          "executable": true
+        },
+        {
+          "id": "verify_files-unknown-11",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "fmt:check"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-test-1",
+          "kind": "test",
+          "command": [
+            "node",
+            "Makefile",
+            "mocha"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:emfile"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-test-1",
+          "kind": "test",
+          "command": [
+            "node",
+            "Makefile",
+            "mocha"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:emfile"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-test-1",
+          "kind": "test",
+          "command": [
+            "node",
+            "Makefile",
+            "mocha"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:emfile"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-test-1",
+          "kind": "test",
+          "command": [
+            "node",
+            "Makefile",
+            "mocha"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:emfile"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-test-1",
+          "kind": "test",
+          "command": [
+            "node",
+            "Makefile",
+            "mocha"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:emfile"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_node-oswindows-latest-nodelts/*",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_on_node-oswindows-latest-nodelts/*-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_node-oswindows-latest-nodelts/*-test-1",
+          "kind": "test",
+          "command": [
+            "node",
+            "Makefile",
+            "mocha"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-oswindows-latest-nodelts/*-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-oswindows-latest-nodelts/*-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:emfile"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_node-osmacOS-latest-nodelts/*",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_on_node-osmacOS-latest-nodelts/*-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_node-osmacOS-latest-nodelts/*-test-1",
+          "kind": "test",
+          "command": [
+            "node",
+            "Makefile",
+            "mocha"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osmacOS-latest-nodelts/*-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osmacOS-latest-nodelts/*-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:emfile"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-test-1",
+          "kind": "test",
+          "command": [
+            "node",
+            "Makefile",
+            "mocha"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:emfile"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_on_browser",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test_on_browser-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "npm@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_browser-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_on_browser-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "cypress"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_on_browser-unknown-3",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "Makefile",
+            "fuzz"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test_types",
+      "provides": [
+        "INSTALL",
+        "TEST",
+        "TYPECHECK"
+      ],
+      "operations": [
+        {
+          "id": "test_types-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_types-typecheck-1",
+          "kind": "typecheck",
+          "command": [
+            "npx",
+            "tsc",
+            "-p",
+            "tests/lib/types/tsconfig.json"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_types-test-2",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:types",
+            "-w",
+            "packages/eslint-config-eslint"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_types-test-3",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:types",
+            "-w",
+            "packages/js"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_types-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:types:5.3"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_types-test-5",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:types:5.x"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_types-test-6",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:types:7.x"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#pnpm_test",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "pnpm_test-install",
+          "kind": "install",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "pnpm_test-test-0",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:pnpm"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "docs-ci.yml#verify_files",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "verify_files-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "verify_files-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "verify_files-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "lint:scss"
+          ],
+          "executable": false
+        },
+        {
+          "id": "verify_files-build-3",
+          "kind": "build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "executable": false
+        },
+        {
+          "id": "verify_files-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "lint:links"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "ecosystem-tests.yml#test_ecosystem-plugin@eslint/css",
+      "provides": [
+        "INSTALL",
+        "LINT",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_ecosystem-plugin@eslint/css-lint-0",
+          "kind": "lint",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/css-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "corepack@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/css-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "corepack",
+            "enable",
+            "pnpm"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/css-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/css-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:ecosystem",
+            "--",
+            "--plugin",
+            "@eslint/css"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ecosystem-tests.yml#test_ecosystem-plugin@eslint/json",
+      "provides": [
+        "INSTALL",
+        "LINT",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_ecosystem-plugin@eslint/json-lint-0",
+          "kind": "lint",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/json-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "corepack@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/json-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "corepack",
+            "enable",
+            "pnpm"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/json-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/json-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:ecosystem",
+            "--",
+            "--plugin",
+            "@eslint/json"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ecosystem-tests.yml#test_ecosystem-plugin@eslint/markdown",
+      "provides": [
+        "INSTALL",
+        "LINT",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_ecosystem-plugin@eslint/markdown-lint-0",
+          "kind": "lint",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/markdown-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "corepack@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/markdown-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "corepack",
+            "enable",
+            "pnpm"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/markdown-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint/markdown-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:ecosystem",
+            "--",
+            "--plugin",
+            "@eslint/markdown"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ecosystem-tests.yml#test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments",
+      "provides": [
+        "INSTALL",
+        "LINT",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-lint-0",
+          "kind": "lint",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "corepack@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "corepack",
+            "enable",
+            "pnpm"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:ecosystem",
+            "--",
+            "--plugin",
+            "@eslint-community/eslint-plugin-eslint-comments"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ecosystem-tests.yml#test_ecosystem-plugin@typescript-eslint/typescript-eslint",
+      "provides": [
+        "INSTALL",
+        "LINT",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-lint-0",
+          "kind": "lint",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "corepack@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "corepack",
+            "enable",
+            "pnpm"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:ecosystem",
+            "--",
+            "--plugin",
+            "@typescript-eslint/typescript-eslint"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ecosystem-tests.yml#test_ecosystem-plugineslint-plugin-unicorn",
+      "provides": [
+        "INSTALL",
+        "LINT",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_ecosystem-plugineslint-plugin-unicorn-lint-0",
+          "kind": "lint",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugineslint-plugin-unicorn-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "corepack@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugineslint-plugin-unicorn-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "corepack",
+            "enable",
+            "pnpm"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_ecosystem-plugineslint-plugin-unicorn-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugineslint-plugin-unicorn-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:ecosystem",
+            "--",
+            "--plugin",
+            "eslint-plugin-unicorn"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ecosystem-tests.yml#test_ecosystem-plugineslint-plugin-vue",
+      "provides": [
+        "INSTALL",
+        "LINT",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_ecosystem-plugineslint-plugin-vue-lint-0",
+          "kind": "lint",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugineslint-plugin-vue-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "corepack@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugineslint-plugin-vue-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "corepack",
+            "enable",
+            "pnpm"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test_ecosystem-plugineslint-plugin-vue-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-plugineslint-plugin-vue-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:ecosystem",
+            "--",
+            "--plugin",
+            "eslint-plugin-vue"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ecosystem-updates.yml#test_ecosystem",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test_ecosystem-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test_ecosystem-test-1",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:ecosystem:update"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "rebuild-docs-sites.yml#rebuild",
+      "provides": [],
+      "operations": [
+        {
+          "id": "rebuild-unknown-0",
+          "kind": "unknown",
+          "command": [],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "types-integration.yml#neostandard",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "neostandard-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "neostandard-install-1",
+          "kind": "install",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "neostandard-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "check:tsc"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "types-integration.yml#eslint-flat-config-utils",
+      "provides": [
+        "INSTALL",
+        "TYPECHECK"
+      ],
+      "operations": [
+        {
+          "id": "eslint-flat-config-utils-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "-g",
+            "corepack@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint-flat-config-utils-unknown-1",
+          "kind": "unknown",
+          "command": [
+            "corepack",
+            "enable",
+            "pnpm"
+          ],
+          "executable": true
+        },
+        {
+          "id": "eslint-flat-config-utils-install-2",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint-flat-config-utils-unknown-3",
+          "kind": "unknown",
+          "command": [
+            "pnpm",
+            "add",
+            "-w",
+            "-D",
+            "../eslint"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint-flat-config-utils-typecheck-4",
+          "kind": "typecheck",
+          "command": [
+            "pnpm",
+            "run",
+            "typecheck"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "types-integration.yml#eslint-visitor-keys",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "eslint-visitor-keys-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint-visitor-keys-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "../eslint"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint-visitor-keys-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "build:types",
+            "--workspace",
+            "eslint-visitor-keys"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "types-integration.yml#eslint_json",
+      "provides": [
+        "BUILD",
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "eslint_json-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint_json-install-1",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint_json-build-2",
+          "kind": "build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint_json-install-3",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "../eslint",
+            "@eslint/core@latest"
+          ],
+          "executable": false
+        },
+        {
+          "id": "eslint_json-test-4",
+          "kind": "test",
+          "command": [
+            "npm",
+            "run",
+            "test:types"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "types-integration.yml#html_plugin",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "html_plugin-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "html_plugin-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "install",
+            "--no-immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "html_plugin-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "check:ts",
+            "--filter=@html-eslint/eslint-plugin"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "types-integration.yml#are-the-types-wrong",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "are-the-types-wrong-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "are-the-types-wrong-unknown-1",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "lint:types"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "update-readme.yml#build",
+      "provides": [
+        "INSTALL",
+        "LINT"
+      ],
+      "operations": [
+        {
+          "id": "build-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": false
+        },
+        {
+          "id": "build-unknown-1",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "build:readme"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "git",
+            "config",
+            "user.name",
+            "\"GitHub",
+            "Actions",
+            "Bot\""
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-lint-3",
+          "kind": "lint",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "build-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "chmod",
+            "+x",
+            "./tools/commit-readme.sh"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-unknown-5",
+          "kind": "unknown",
+          "command": [
+            "./tools/commit-readme.sh"
+          ],
+          "executable": true
+        }
+      ]
+    }
+  ],
+  "testPlan": {
+    "purpose": "TEST",
+    "jobId": "ci.yml#test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS",
+    "operations": [
+      {
+        "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-install-0",
+        "kind": "install",
+        "command": [
+          "npm",
+          "install"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "lts/*",
+          "source": {
+            "file": ".github/workflows/ci.yml",
+            "text": "actions/setup-node@v7",
+            "line": 20
+          }
+        },
+        "environment": {
+          "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+        },
+        "dependsOn": [],
+        "evidence": [
+          {
+            "file": ".github/workflows/ci.yml",
+            "text": "npm install",
+            "line": 30
+          }
+        ],
+        "confidence": "DERIVED",
+        "unresolved": [],
+        "executable": false,
+        "missingRequirements": [
+          "a pinned dependency basis (lockfile or packageManager field)"
+        ],
+        "blockedBy": [],
+        "willExecute": true
+      },
+      {
+        "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-test-1",
+        "kind": "test",
+        "command": [
+          "node",
+          "Makefile",
+          "mocha"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "lts/*",
+          "source": {
+            "file": ".github/workflows/ci.yml",
+            "text": "actions/setup-node@v7",
+            "line": 20
+          }
+        },
+        "environment": {
+          "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+        },
+        "dependsOn": [
+          "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-install-0"
+        ],
+        "evidence": [
+          {
+            "file": ".github/workflows/ci.yml",
+            "text": "node Makefile mocha",
+            "line": 90
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true
+      },
+      {
+        "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-unknown-2",
+        "kind": "unknown",
+        "command": [
+          "node",
+          "Makefile",
+          "fuzz"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "lts/*",
+          "source": {
+            "file": ".github/workflows/ci.yml",
+            "text": "actions/setup-node@v7",
+            "line": 20
+          }
+        },
+        "environment": {
+          "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+        },
+        "dependsOn": [
+          "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-test-1"
+        ],
+        "evidence": [
+          {
+            "file": ".github/workflows/ci.yml",
+            "text": "node Makefile fuzz",
+            "line": 92
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true
+      },
+      {
+        "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-test-3",
+        "kind": "test",
+        "command": [
+          "npm",
+          "run",
+          "test:emfile"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "lts/*",
+          "source": {
+            "file": ".github/workflows/ci.yml",
+            "text": "actions/setup-node@v7",
+            "line": 20
+          }
+        },
+        "environment": {
+          "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+        },
+        "dependsOn": [
+          "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-unknown-2"
+        ],
+        "evidence": [
+          {
+            "file": ".github/workflows/ci.yml",
+            "text": "npm run test:emfile",
+            "line": 98
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true,
+        "condition": {
+          "expression": "matrix.node != '26.x'",
+          "result": "TRUE"
+        }
+      }
+    ],
+    "executable": false,
+    "refusal": "1 operation(s) in the TEST path are not executable: test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-install-0 (a pinned dependency basis (lockfile or packageManager field))"
+  },
+  "inferredOperations": [
+    {
+      "id": "verify_files-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "go",
+        "install",
+        "github.com/rhysd/actionlint/cmd/actionlint@v1.7.10"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.10",
+          "line": 26
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-1",
+      "kind": "unknown",
+      "command": [
+        "actionlint",
+        "-color",
+        "-shellcheck=",
+        "-pyflakes="
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "actionlint -color -shellcheck= -pyflakes=",
+          "line": 27
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "lint"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile lint",
+          "line": 37
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-5",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "checkRuleFiles"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-4"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile checkRuleFiles",
+          "line": 40
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-6",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "checkLicenses"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-5"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile checkLicenses",
+          "line": 43
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-7",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "lintDocsJS"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-6"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile lintDocsJS",
+          "line": 46
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-8",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "checkRuleExamples"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-7"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile checkRuleExamples",
+          "line": 49
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-9",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "lint:rule-types"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-8"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run lint:rule-types",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-10",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "lint:unused"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-9"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run lint:unused",
+          "line": 55
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-11",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "fmt:check"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-10"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run fmt:check",
+          "line": 58
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-test-1",
+      "kind": "test",
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile mocha",
+          "line": 90
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-test-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:emfile"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node26.x-NODE_OPTIONS-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:emfile",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "matrix.node != '26.x'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-test-1",
+      "kind": "test",
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile mocha",
+          "line": 90
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-test-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:emfile"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:emfile",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.node != '26.x'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-test-1",
+      "kind": "test",
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile mocha",
+          "line": 90
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-test-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:emfile"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:emfile",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.node != '26.x'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-test-1",
+      "kind": "test",
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile mocha",
+          "line": 90
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-test-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:emfile"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node20.x-NODE_OPTIONS-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:emfile",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.node != '26.x'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-test-1",
+      "kind": "test",
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile mocha",
+          "line": 90
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-test-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:emfile"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node20.19.0-NODE_OPTIONS-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:emfile",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.node != '26.x'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test_on_node-oswindows-latest-nodelts/*-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-oswindows-latest-nodelts/*-test-1",
+      "kind": "test",
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-oswindows-latest-nodelts/*-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile mocha",
+          "line": 90
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-oswindows-latest-nodelts/*-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-oswindows-latest-nodelts/*-test-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-oswindows-latest-nodelts/*-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:emfile"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-oswindows-latest-nodelts/*-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:emfile",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.node != '26.x'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test_on_node-osmacOS-latest-nodelts/*-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osmacOS-latest-nodelts/*-test-1",
+      "kind": "test",
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osmacOS-latest-nodelts/*-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile mocha",
+          "line": 90
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osmacOS-latest-nodelts/*-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osmacOS-latest-nodelts/*-test-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osmacOS-latest-nodelts/*-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:emfile"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osmacOS-latest-nodelts/*-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:emfile",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.node != '26.x'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-test-1",
+      "kind": "test",
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile mocha",
+          "line": 90
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-test-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:emfile"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "NODE_OPTIONS": "${{ matrix.NODE_OPTIONS }}"
+      },
+      "dependsOn": [
+        "test_on_node-osubuntu-latest-node24.x-NODE_OPTIONS--experimental-transform-types-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:emfile",
+          "line": 98
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "condition": {
+        "expression": "matrix.node != '26.x'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test_on_browser-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "npm@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "TERM": "xterm-256color"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install -g npm@latest",
+          "line": 115
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_browser-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "TERM": "xterm-256color"
+      },
+      "dependsOn": [
+        "test_on_browser-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_browser-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "cypress"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "TERM": "xterm-256color"
+      },
+      "dependsOn": [
+        "test_on_browser-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile cypress",
+          "line": 119
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_on_browser-unknown-3",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "Makefile",
+        "fuzz"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {
+        "TERM": "xterm-256color"
+      },
+      "dependsOn": [
+        "test_on_browser-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "node Makefile fuzz",
+          "line": 92
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_types-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 30
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_types-typecheck-1",
+      "kind": "typecheck",
+      "command": [
+        "npx",
+        "tsc",
+        "-p",
+        "tests/lib/types/tsconfig.json"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_types-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npx tsc -p tests/lib/types/tsconfig.json",
+          "line": 136
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_types-test-2",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:types",
+        "-w",
+        "packages/eslint-config-eslint"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_types-typecheck-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:types -w packages/eslint-config-eslint",
+          "line": 139
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-21",
+        "script-22"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test_types-test-3",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:types",
+        "-w",
+        "packages/js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_types-test-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:types -w packages/js",
+          "line": 142
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-23",
+        "script-24"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test_types-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:types:5.3"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_types-test-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:types:5.3",
+          "line": 145
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-25"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test_types-test-5",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:types:5.x"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_types-test-4"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:types:5.x",
+          "line": 148
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-26"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test_types-test-6",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:types:7.x"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_types-test-5"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:types:7.x",
+          "line": 151
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-27"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "pnpm_test-install",
+      "kind": "install",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86",
+          "line": 163
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "install is performed by the composite action pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86",
+          "why": "a composite action is not a command this engine can execute directly; its effect is an install but its argv is unknown",
+          "evidence": {
+            "file": ".github/workflows/ci.yml",
+            "text": "pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86",
+            "line": 163
+          }
+        }
+      ],
+      "refusalReason": "a composite action is not a command this engine can execute directly; its effect is an install but its argv is unknown",
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)",
+        "a resolved package manager"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "pnpm_test-test-0",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm run test:pnpm",
+          "line": 172
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-31",
+        "script-32",
+        "script-33"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/docs-ci.yml",
+          "text": "npm install",
+          "line": 28
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/docs-ci.yml",
+          "text": "npm install",
+          "line": 28
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "lint:scss"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/docs-ci.yml",
+          "text": "npm run lint:scss",
+          "line": 35
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-36"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-build-3",
+      "kind": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/docs-ci.yml",
+          "text": "npm run build",
+          "line": 39
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-37"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "verify_files-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "lint:links"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "verify_files-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/docs-ci.yml",
+          "text": "npm run lint:links",
+          "line": 43
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-38"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/css-lint-0",
+      "kind": "lint",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "echo \"pm=$(jq -r --arg plugin \"${{ matrix.plugin }}\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "line": 42
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "echo \"pm=$(jq -r --arg plugin \"@eslint/css\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@eslint/css"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/css-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "corepack@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install -g corepack@latest",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/css-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "corepack",
+        "enable",
+        "pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "corepack enable pnpm",
+          "line": 48
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/css-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/css-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:ecosystem",
+        "--",
+        "--plugin",
+        "@eslint/css"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_ecosystem-plugin@eslint/css-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm run test:ecosystem -- --plugin ${{ matrix.plugin }}",
+          "line": 54
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@eslint/css"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/json-lint-0",
+      "kind": "lint",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "echo \"pm=$(jq -r --arg plugin \"${{ matrix.plugin }}\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "line": 42
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "echo \"pm=$(jq -r --arg plugin \"@eslint/json\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@eslint/json"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/json-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "corepack@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install -g corepack@latest",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/json-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "corepack",
+        "enable",
+        "pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "corepack enable pnpm",
+          "line": 48
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/json-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/json-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:ecosystem",
+        "--",
+        "--plugin",
+        "@eslint/json"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_ecosystem-plugin@eslint/json-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm run test:ecosystem -- --plugin ${{ matrix.plugin }}",
+          "line": 54
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@eslint/json"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/markdown-lint-0",
+      "kind": "lint",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "echo \"pm=$(jq -r --arg plugin \"${{ matrix.plugin }}\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "line": 42
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "echo \"pm=$(jq -r --arg plugin \"@eslint/markdown\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@eslint/markdown"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/markdown-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "corepack@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install -g corepack@latest",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/markdown-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "corepack",
+        "enable",
+        "pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "corepack enable pnpm",
+          "line": 48
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/markdown-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint/markdown-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:ecosystem",
+        "--",
+        "--plugin",
+        "@eslint/markdown"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_ecosystem-plugin@eslint/markdown-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm run test:ecosystem -- --plugin ${{ matrix.plugin }}",
+          "line": 54
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@eslint/markdown"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-lint-0",
+      "kind": "lint",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "echo \"pm=$(jq -r --arg plugin \"${{ matrix.plugin }}\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "line": 42
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "echo \"pm=$(jq -r --arg plugin \"@eslint-community/eslint-plugin-eslint-comments\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@eslint-community/eslint-plugin-eslint-comments"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "corepack@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install -g corepack@latest",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "corepack",
+        "enable",
+        "pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "corepack enable pnpm",
+          "line": 48
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:ecosystem",
+        "--",
+        "--plugin",
+        "@eslint-community/eslint-plugin-eslint-comments"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_ecosystem-plugin@eslint-community/eslint-plugin-eslint-comments-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm run test:ecosystem -- --plugin ${{ matrix.plugin }}",
+          "line": 54
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@eslint-community/eslint-plugin-eslint-comments"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-lint-0",
+      "kind": "lint",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "echo \"pm=$(jq -r --arg plugin \"${{ matrix.plugin }}\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "line": 42
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "echo \"pm=$(jq -r --arg plugin \"@typescript-eslint/typescript-eslint\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@typescript-eslint/typescript-eslint"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "corepack@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install -g corepack@latest",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "corepack",
+        "enable",
+        "pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "corepack enable pnpm",
+          "line": 48
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-plugin@typescript-eslint/typescript-eslint-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:ecosystem",
+        "--",
+        "--plugin",
+        "@typescript-eslint/typescript-eslint"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_ecosystem-plugin@typescript-eslint/typescript-eslint-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm run test:ecosystem -- --plugin ${{ matrix.plugin }}",
+          "line": 54
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "@typescript-eslint/typescript-eslint"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-unicorn-lint-0",
+      "kind": "lint",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "echo \"pm=$(jq -r --arg plugin \"${{ matrix.plugin }}\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "line": 42
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "echo \"pm=$(jq -r --arg plugin \"eslint-plugin-unicorn\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "eslint-plugin-unicorn"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-unicorn-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "corepack@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install -g corepack@latest",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-unicorn-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "corepack",
+        "enable",
+        "pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "corepack enable pnpm",
+          "line": 48
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-unicorn-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-unicorn-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:ecosystem",
+        "--",
+        "--plugin",
+        "eslint-plugin-unicorn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_ecosystem-plugineslint-plugin-unicorn-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm run test:ecosystem -- --plugin ${{ matrix.plugin }}",
+          "line": 54
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "eslint-plugin-unicorn"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-vue-lint-0",
+      "kind": "lint",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "echo \"pm=$(jq -r --arg plugin \"${{ matrix.plugin }}\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "line": 42
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "echo \"pm=$(jq -r --arg plugin \"eslint-plugin-vue\" '.[$plugin].commands.install[0]' tools/test-ecosystem/plugins-data.json)\" >> \"$GITHUB_OUTPUT\"",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "eslint-plugin-vue"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-vue-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "corepack@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install -g corepack@latest",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-vue-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "corepack",
+        "enable",
+        "pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "corepack enable pnpm",
+          "line": 48
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "steps.get_pm.outputs.pm == 'pnpm'",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "steps.get_pm.outputs.pm == 'pnpm'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-vue-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm install",
+          "line": 47
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-plugineslint-plugin-vue-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:ecosystem",
+        "--",
+        "--plugin",
+        "eslint-plugin-vue"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_ecosystem-plugineslint-plugin-vue-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-tests.yml",
+          "text": "npm run test:ecosystem -- --plugin ${{ matrix.plugin }}",
+          "line": 54
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "matrix.plugin",
+          "kind": "DEFINED",
+          "value": "eslint-plugin-vue"
+        }
+      ]
+    },
+    {
+      "id": "test_ecosystem-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-updates.yml",
+          "text": "npm install",
+          "line": 22
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test_ecosystem-test-1",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:ecosystem:update"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test_ecosystem-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ecosystem-updates.yml",
+          "text": "npm run test:ecosystem:update",
+          "line": 23
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "rebuild-unknown-0",
+      "kind": "unknown",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/rebuild-docs-sites.yml",
+          "text": "jq -r '.items | map(.branch) | join(\",\")' docs/src/_data/versions.json | xargs -I{LIST} curl -X POST -d {} \"${{ secrets.NETLIFY_DOCS_BUILD_HOOK }}?trigger_branch={{LIST}}\""
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "jq -r '.items | map(.branch) | join(\",\")' docs/src/_data/versions.json | xargs -I{LIST} curl -X POST -d {} \"${{ secrets.NETLIFY_DOCS_BUILD_HOOK }}?trigger_branch={{LIST}}\"",
+          "why": "the `secrets` context is not modelled by this engine"
+        }
+      ],
+      "refusalReason": "the `secrets` context is not modelled by this engine",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true,
+      "expressionResolutions": [
+        {
+          "expression": "secrets.NETLIFY_DOCS_BUILD_HOOK",
+          "kind": "UNSUPPORTED_EXPRESSION",
+          "value": "",
+          "reason": "the `secrets` context is not modelled by this engine"
+        }
+      ]
+    },
+    {
+      "id": "neostandard-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install",
+          "line": 33
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "neostandard-install-1",
+      "kind": "install",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "neostandard-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm ci && npm install --no-save ../eslint",
+          "line": 38
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "npm ci && npm install --no-save ../eslint",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)",
+        "a resolved package manager"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "neostandard-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "check:tsc"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "neostandard-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm run check:tsc",
+          "line": 42
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-57"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "eslint-flat-config-utils-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "-g",
+        "corepack@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install -g corepack@latest",
+          "line": 65
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "eslint-flat-config-utils-unknown-1",
+      "kind": "unknown",
+      "command": [
+        "corepack",
+        "enable",
+        "pnpm"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint-flat-config-utils-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "corepack enable pnpm",
+          "line": 66
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "eslint-flat-config-utils-install-2",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint-flat-config-utils-unknown-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install",
+          "line": 33
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "eslint-flat-config-utils-unknown-3",
+      "kind": "unknown",
+      "command": [
+        "pnpm",
+        "add",
+        "-w",
+        "-D",
+        "../eslint"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint-flat-config-utils-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "pnpm add -w -D ../eslint",
+          "line": 75
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-61"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "eslint-flat-config-utils-typecheck-4",
+      "kind": "typecheck",
+      "command": [
+        "pnpm",
+        "run",
+        "typecheck"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint-flat-config-utils-unknown-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "pnpm run typecheck",
+          "line": 79
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-62"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "eslint-visitor-keys-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install",
+          "line": 33
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "eslint-visitor-keys-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "../eslint"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint-visitor-keys-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install ../eslint",
+          "line": 113
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "eslint-visitor-keys-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "build:types",
+        "--workspace",
+        "eslint-visitor-keys"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint-visitor-keys-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm run build:types --workspace eslint-visitor-keys",
+          "line": 117
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-67"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "eslint_json-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install",
+          "line": 33
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "eslint_json-install-1",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint_json-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install",
+          "line": 33
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "eslint_json-build-2",
+      "kind": "build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint_json-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm run build",
+          "line": 108
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-71"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "eslint_json-install-3",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "../eslint",
+        "@eslint/core@latest"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint_json-build-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install ../eslint @eslint/core@latest",
+          "line": 147
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "eslint_json-test-4",
+      "kind": "test",
+      "command": [
+        "npm",
+        "run",
+        "test:types"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "eslint_json-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm run test:types",
+          "line": 151
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "all referenced scripts resolved"
+      ],
+      "blockedBy": [
+        "script-72",
+        "script-73"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "html_plugin-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install",
+          "line": 33
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "html_plugin-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "install",
+        "--no-immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "html_plugin-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "yarn install --no-immutable",
+          "line": 184
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [
+        "script-78"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "html_plugin-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "check:ts",
+        "--filter=@html-eslint/eslint-plugin"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "html_plugin-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "yarn check:ts --filter=@html-eslint/eslint-plugin",
+          "line": 188
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [
+        "script-79"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "are-the-types-wrong-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm install",
+          "line": 33
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "npm install",
+          "why": "the job's matrix contains a construct this expander does not model, so no instance can be trusted"
+        }
+      ],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "are-the-types-wrong-unknown-1",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "lint:types"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "are-the-types-wrong-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/types-integration.yml",
+          "text": "npm run lint:types",
+          "line": 219
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "npm run lint:types",
+          "why": "the job's matrix contains a construct this expander does not model, so no instance can be trusted"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/update-readme.yml",
+          "text": "npm install",
+          "line": 23
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-unknown-1",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "build:readme"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/update-readme.yml",
+          "text": "npm run build:readme",
+          "line": 26
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "git",
+        "config",
+        "user.name",
+        "\"GitHub",
+        "Actions",
+        "Bot\""
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-unknown-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/update-readme.yml",
+          "text": "git config user.name \"GitHub Actions Bot\"",
+          "line": 30
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-lint-3",
+      "kind": "lint",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/update-readme.yml",
+          "text": "git config user.email \"<eslint@googlegroups.com>\"",
+          "line": 31
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "git config user.email \"<eslint@googlegroups.com>\"",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "chmod",
+        "+x",
+        "./tools/commit-readme.sh"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/update-readme.yml",
+          "text": "chmod +x ./tools/commit-readme.sh",
+          "line": 35
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "build-unknown-5",
+      "kind": "unknown",
+      "command": [
+        "./tools/commit-readme.sh"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v7",
+          "line": 20
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-unknown-4"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/update-readme.yml",
+          "text": "./tools/commit-readme.sh",
+          "line": 35
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    }
+  ],
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/ci.yml, job `test_on_node`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "install"
+        ],
+        "commandIdentity": "npm install",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T13:15:36.233Z",
+        "endedAt": "2026-09-01T13:16:35.170Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 52.1,
+        "wallMs": 58937,
+        "outputTail": "ed @sinonjs/text-encoding@0.7.3: Deprecated: no longer maintained and no longer used by Sinon packages. See\nnpm warn deprecated   https://github.com/sinonjs/nise/issues/243 for replacement details.\nnpm warn deprecated lodash.pick@4.4.0: This package is deprecated. Use destructuring assignment syntax instead.\nnpm warn deprecated read-installed@4.0.3: This package is no longer supported.\nnpm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated uuid@8.3.2: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated sinon@11.1.2: 16.1.1\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "node",
+          "Makefile",
+          "mocha"
+        ],
+        "commandIdentity": "node Makefile mocha",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {
+          "NODE_OPTIONS": ""
+        },
+        "startedAt": "2026-09-01T13:16:35.171Z",
+        "endedAt": "2026-09-01T13:18:36.173Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 163.88,
+        "wallMs": 121001,
+        "failures": 0,
+        "outputTail": ".\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬...........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬..........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.......\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬......\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.....\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬....\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬...\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬..\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\u001b[90m]\u001b[0m\n\n\u001b[92m \u001b[0m\u001b[32m 38627 passing\u001b[0m\u001b[90m (2m)\u001b[0m\n\u001b[36m \u001b[0m\u001b[36m 11 pending\u001b[0m\n\n\n=============================== Coverage summary ===============================\nStatements   : 99.33% ( 98793/99459 )\nBranches     : 98.33% ( 16735/17019 )\nFunctions    : 99.4% ( 3521/3542 )\nLines        : 99.33% ( 98793/99459 )\n================================================================================\n\n"
+      }
+    ],
+    "reachedEnd": true,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "inferenceArm": {
+    "arm": "inference",
+    "source": "inferred ExecutionGraph",
+    "steps": [],
+    "reachedEnd": false,
+    "node": "v22.23.2",
+    "npm": "10.9.8",
+    "refused": {
+      "reason": "1 operation(s) in the TEST path are not executable: test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-install-0 (a pinned dependency basis (lockfile or packageManager field))",
+      "blockedBy": [],
+      "missingRequirements": [
+        "a pinned dependency basis (lockfile or packageManager field)"
+      ]
+    }
+  },
+  "outcome": "REFUSED",
+  "reason": "the engine did not mark the path executable, so the inference arm executed nothing: 1 operation(s) in the TEST path are not executable: test_on_node-osubuntu-latest-node22.x-NODE_OPTIONS-install-0 (a pinned dependency basis (lockfile or packageManager field))",
+  "producedAt": "2026-09-01T13:18:36.261Z"
+}
