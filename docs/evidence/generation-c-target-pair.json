@@ -1,0 +1,23 @@
+{
+  "experiment": "GENERATION_C_01",
+  "stopRuleApplies": false,
+  "repository": "jest-community/eslint-plugin-jest",
+  "pinnedTree": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+  "sealedAt": "target sealed by docs/generation-c-target-rule.md at ruleCommit e9c83f8; index 0 of 5",
+  "note": "THE SEALED TARGET ONLY. The other four candidates remain in the universe artefact and are deliberately NOT observed - observing all five and choosing afterwards is the cherry-picking the target rule exists to prevent.",
+  "manifestBundleChecksum": "9e17e3145826f78aab2e54db4a846da67771d56260e1c38f59d523eca0638b34",
+  "pairs": [
+    {
+      "index": 1,
+      "base": "3629019d8e84e096115c8774a34178ff5b83aaf2",
+      "head": "58e487fecda05ddafcac2fcf67475d90bd515957",
+      "subject": "fix(prefer-to-have-been-called): don't crash on matcher without an argument (#2016)",
+      "implementationFiles": [
+        "src/rules/prefer-to-have-been-called.ts"
+      ],
+      "changedTestFiles": [
+        "src/rules/__tests__/prefer-to-have-been-called.test.ts"
+      ]
+    }
+  ]
+}

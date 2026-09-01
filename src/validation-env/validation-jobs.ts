@@ -1417,6 +1417,30 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 4 * 60 * 60_000,
   },
 
+  /**
+   * GENERATION_C_01 - observation of the sealed target. Step 6.
+   *
+   * Observes the ONE sealed target pair, derived mechanically from
+   * docs/evidence/generation-c-target.json. The other four candidates are deliberately NOT observed:
+   * observing all five and choosing afterwards is exactly the cherry-picking the sealed target rule
+   * exists to prevent.
+   *
+   * OBSERVATION ONLY. No mutation, no economics arm, no suite execution. Whatever DiffCI decides -
+   * SELECTIVE, FULL or REFUSED - is the result, reported as measured.
+   */
+  "genc-observe-target": {
+    id: "genc-observe-target",
+    description: "GENERATION_C_01: observe the sealed target pair. No mutation.",
+    mode: "observe-pairs",
+    repository: "jest-community/eslint-plugin-jest",
+    pinnedHeadSha: "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    pairsPath: "docs/evidence/generation-c-target-pair.json",
+    // A clone and one analysis. Nothing installs dependencies or executes a test suite.
+    maxRunMs: 2 * 60 * 60_000,
+  },
+
   "survey-frame-continuation-2": {
     id: "survey-frame-continuation-2",
     description: "E1 addressability screening over frame ranks 141-240, under the generation-C apparatus.",
