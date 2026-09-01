@@ -1435,6 +1435,33 @@ const JOBS: Record<string, ValidationJob> = {
    * Re-observes the sealed target to regenerate the per-commit agent report dogfood-mutate needs, then
    * mutates. Commands are the ones derived at E2 registration from the repository own manifest.
    */
+  /**
+   * MECHANISM_ISOLATION_01. Protocol frozen at 614b385 before the pool was drawn.
+   *
+   * One target, drawn from an 18-entry pool of changed-implementation / ZERO-changed-test candidates.
+   * Runs the full, comparator, DiffCI and DIRECT-ONLY arms against one mutation. The direct-only arm
+   * is the isolating one: only it can distinguish dependency reasoning from running the diff.
+   */
+  "mi-mutate-target": {
+    id: "mi-mutate-target",
+    description: "MECHANISM_ISOLATION_01: mutate the drawn no-test-edit target, with the direct-only arm.",
+    mode: "observe-pairs",
+    repository: "jest-community/eslint-plugin-jest",
+    pinnedHeadSha: "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    pairsPath: "docs/evidence/mechanism-isolation-01-target-pair.json",
+    mutate: {
+      install: ["corepack", "yarn", "install", "--immutable"],
+      build: ["corepack", "yarn", "run", "build"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: [],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    maxRunMs: 6 * 60 * 60_000,
+  },
+
   "genc-mutate-target": {
     id: "genc-mutate-target",
     description: "GENERATION_C_01: mutate the sealed target under the frozen protocol.",

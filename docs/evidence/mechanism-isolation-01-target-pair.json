@@ -1,0 +1,22 @@
+{
+  "experiment": "MECHANISM_ISOLATION_01",
+  "stopRuleApplies": false,
+  "repository": "jest-community/eslint-plugin-jest",
+  "pinnedTree": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+  "sealedAt": "drawn from an 18-entry pool sealed at 614b3850574707a213b3ff8743f2ed30523a0738, index 17",
+  "pairs": [
+    {
+      "index": 1,
+      "base": "e496de526c5b017bf4c5b3fae8f8210819e7d119",
+      "head": "209e8f3c181bcf372ea75ea60a049c4a4c840efd",
+      "subject": "refactor: use shorthanded object property (#1622)",
+      "implementationFiles": [
+        "src/rules/prefer-jest-mocked.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/prefer-jest-mocked.ts"
+      ]
+    }
+  ]
+}

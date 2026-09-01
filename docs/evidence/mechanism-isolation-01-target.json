@@ -1,0 +1,31 @@
+{
+  "experiment": "MECHANISM_ISOLATION_01",
+  "protocol": "docs/mechanism-isolation-01-protocol.md",
+  "poolArtefact": "docs/evidence/mechanism-isolation-01-pool.json",
+  "poolSealedAt": "614b3850574707a213b3ff8743f2ed30523a0738",
+  "randomness": {
+    "source": "sha256 of the pool-sealing commit hash",
+    "H": "614b3850574707a213b3ff8743f2ed30523a0738",
+    "seed": "e98bfb8179be1f033f4efd2fdf4db18d7c31f2d70c3aad6ed89e8e3128a590bd",
+    "first8Hex": "e98bfb81",
+    "uint32": 3918265217,
+    "modulus": 18
+  },
+  "index": 17,
+  "target": {
+    "poolIndex": 17,
+    "base": "e496de526c5b017bf4c5b3fae8f8210819e7d119",
+    "head": "209e8f3c181bcf372ea75ea60a049c4a4c840efd",
+    "subject": "refactor: use shorthanded object property (#1622)",
+    "implementationFiles": [
+      "src/rules/prefer-jest-mocked.ts"
+    ],
+    "changedTestFiles": [],
+    "allChangedFiles": [
+      "src/rules/prefer-jest-mocked.ts"
+    ]
+  },
+  "verification": "printf %s 614b3850574707a213b3ff8743f2ed30523a0738 | sha256sum -> e98bfb8179be1f033f4efd2fdf4db18d7c31f2d70c3aad6ed89e8e3128a590bd; 0xe98bfb81 = 3918265217; 3918265217 mod 18 = 17",
+  "chosenWithoutDiffCIOutput": true,
+  "note": "One draw. No redraw for selection size, likely reach, or anything else. No pool entry was analysed before drawing."
+}
