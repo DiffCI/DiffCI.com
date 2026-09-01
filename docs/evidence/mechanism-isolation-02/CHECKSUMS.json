@@ -1,0 +1,11 @@
+{
+  "run": "mi2-mutate-01",
+  "experiment": "MECHANISM_ISOLATION_02",
+  "sha256": {
+    "corpus.jsonl": "c6c35b8c1679f96e8cac29b2742fdc08a940b299c5842e3a9e1332fc3a0d16d3",
+    "environment.json": "2078c62f8da7123e786641b93e17d1b8f75f95ef5ace0f20b1d04d6961e4c16c",
+    "execution-receipt.json": "841ab4f3ace5bba91c9911e592c544cc83e567adbc88915b6b078d9dedd1c9c0",
+    "manifest.json": "640b634d6bce652e29cba797c78747c24ff0f00bb3799f1a040f52907229d0e3",
+    "results.jsonl": "82009a620fa771bd9c7fe2bf04932340945b019db98f0e7788dd1e5b8624eb63"
+  }
+}

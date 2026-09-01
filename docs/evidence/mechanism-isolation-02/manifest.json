@@ -1,0 +1,38 @@
+{
+  "runId": "2026-09-01T05-07-37-163Z-jest-community-eslint-plugin-jest-54999c",
+  "startedAt": "2026-09-01T05:07:37.163Z",
+  "mode": "mutate",
+  "repository": "jest-community/eslint-plugin-jest",
+  "repoPath": "/workspace/target-src",
+  "corpusPath": "/workspace/corpus.jsonl",
+  "reportsDir": "/workspace/reports",
+  "commands": {
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--immutable"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": [],
+    "build": [
+      "corepack",
+      "yarn",
+      "run",
+      "build"
+    ]
+  },
+  "maxAttempts": 2,
+  "timeoutMs": 900000,
+  "candidates": 1,
+  "candidateShas": [
+    "c48c48c9d03ed04eda01a78959ab7f794e1fa448"
+  ],
+  "repositoriesInScope": [
+    "jest-community/eslint-plugin-jest"
+  ],
+  "node": "v22.23.2",
+  "platform": "linux",
+  "validationImage": "docker.io/cloudflare/sandbox:0.12.5 node=v22.23.2",
+  "insideValidationImage": true
+}
