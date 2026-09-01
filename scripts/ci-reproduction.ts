@@ -14,6 +14,7 @@
  */
 import { execFileSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { cpus } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -78,6 +79,8 @@ export interface StepReceipt {
   terminatedByBound?: boolean;
   /** Which layer the outcome belongs to - never the repository when the bound or the ENVIRONMENT fired. */
   outcomeLayer?: "repository" | "harness" | "environment";
+  /** Tokens the reference plan asked the harness to resolve, and what they became. */
+  substitutions?: Record<string, string>;
   /** Environment-caused failure signatures found in the output, e.g. per-test timeouts. */
   environmentSignals?: string[];
   cpuSeconds?: number;
@@ -139,6 +142,23 @@ const ENVIRONMENT_FAILURE_SIGNALS: Array<{ pattern: RegExp; signal: string }> = 
   { pattern: /ENOSPC|no space left on device/i, signal: "disk exhausted" },
   { pattern: /JavaScript heap out of memory/i, signal: "heap exhausted" },
 ];
+
+/**
+ * The ONLY substitution a reference plan may request, as a function so it can be tested.
+ *
+ * A one-entry whitelist rather than general interpolation: a plan able to expand arbitrary tokens would
+ * be a way to smuggle command repair past the no-repair rule.
+ */
+export function resolveTokens(command: string[]): { resolved: string[]; substitutions: Record<string, string> } {
+  const substitutions: Record<string, string> = {};
+  const resolved = command.map((token) => {
+    if (!token.includes("${CPU_CORES}")) return token;
+    const cores = String(cpus().length);
+    substitutions["${CPU_CORES}"] = cores;
+    return token.replaceAll("${CPU_CORES}", cores);
+  });
+  return { resolved, substitutions };
+}
 
 export function environmentSignalsIn(output: string): string[] {
   return ENVIRONMENT_FAILURE_SIGNALS.filter((s) => s.pattern.test(output)).map((s) => s.signal);
@@ -240,17 +260,32 @@ function runArm(
   const receipts: StepReceipt[] = [];
   let reachedEnd = true;
   for (const [index, step] of steps.entries()) {
-    const [bin, ...args] = step.command;
-    if (!bin) continue;
+    if (step.command.length === 0) continue;
     const stepId = `${arm}#${index}`;
-    const commandIdentity = step.command.join(" ");
-    process.stdout.write(`    ${arm.padEnd(9)} ${commandIdentity.slice(0, 70).padEnd(72)}`);
     // The shell-invocation invariant, and it applies with unusual force here: the INFERENCE arm's argv
     // comes from workflow `run:` lines, which are repository-derived text - the exact input the guard
     // exists for. `npm` needs a shell to reach its shim, so the arguments are asserted safe first.
     // The engine's own `argvOf` already rejects metacharacters; this makes that guarantee enforced at
     // the spawn site rather than assumed from a caller two files away.
-    assertShellSafeArgs(step.command, `ci-reproduction ${arm} arm`);
+    // Amendment 1: the ONLY substitution a reference plan may request, and it is visible in the receipt.
+    //
+    // jest's CI runs `--max-workers ${{ steps.cpu-cores.outputs.count }}`, the output of a third-party
+    // action whose sole documented function is to report the runner's core count. Transcribing that
+    // faithfully needs the number; inventing one would be command repair. So the plan writes the token
+    // and the harness resolves it here, recording what it substituted.
+    //
+    // Deliberately a one-entry whitelist rather than general interpolation: a reference plan that could
+    // expand arbitrary tokens would be a way to smuggle repair past the no-repair rule.
+    const { resolved, substitutions } = resolveTokens(step.command);
+    // Substituted BEFORE the safety check, never after: the guard must see exactly what will be spawned.
+    assertShellSafeArgs(resolved, `ci-reproduction ${arm} arm`);
+
+    // Derived from `resolved`, NOT from `step.command`. Deriving them earlier is how a substitution
+    // becomes correct code in an unreachable position - the defect class this laboratory keeps finding.
+    const [bin, ...args] = resolved;
+    if (!bin) continue;
+    const commandIdentity = resolved.join(" ");
+    process.stdout.write(`    ${arm.padEnd(9)} ${commandIdentity.slice(0, 70).padEnd(72)}`);
 
     // START is written BEFORE the child is spawned. Attempt 3 ran 41 minutes with no way to tell which
     // of six operations was live, because every receipt was assembled after the child exited - so the
@@ -284,8 +319,9 @@ ${run.stderr}`;
     receipts.push({
       stepId,
       arm,
-      command: step.command,
+      command: resolved,
       commandIdentity,
+      ...(Object.keys(substitutions).length > 0 ? { substitutions } : {}),
       workingDirectory: repoPath,
       environment: step.environment ?? {},
       startedAt,

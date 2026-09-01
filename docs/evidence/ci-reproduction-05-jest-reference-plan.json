@@ -1,0 +1,41 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "jestjs/jest",
+  "headSha": "9ab14feccd6c15fec1334dbcb03a53a079d153d3",
+  "source": ".github/workflows/nodejs.yml, job `test-runtime-vm-modules`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file. The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "node-version": "22.x",
+    "runs-on": "ubuntu-latest"
+  },
+  "cellSelection": "The job hard-codes runs-on: ubuntu-latest and matrices node-version [18.x, 20.x, 22.x, 24.x, 25.x, 26.x]. 22.x is the single in-environment cell; the other five are OUT_OF_ENVIRONMENT, recorded and not executed.",
+  "groundTruthCellName": "Node 22.x on Ubuntu with --experimental-vm-modules (jest-runtime)",
+  "ciGroundTruth": {
+    "cell": "Node 22.x on Ubuntu with --experimental-vm-modules (jest-runtime)",
+    "conclusion": "success",
+    "source": "github actions job, recorded in docs/evidence/ci-reproduction-05-screening.json"
+  },
+  "substitutions": {
+    "${CPU_CORES}": "Resolved by the harness to the container's own core count, and recorded in the step receipt. CI obtains this value from `SimenB/github-actions-cpu-cores`, a third-party action whose sole documented function is to report the runner's CPU count; the workflow itself does not state a number. Substituting it is a faithful transcription of the semantics, NOT command repair - but it is a licence the inference engine does not have, which is why docs/ci-reproduction-sample-01-amendment-1.md grades a refusal citing `steps.cpu-cores.outputs.count` as CORRECT_REFUSAL rather than counting it against DiffCI."
+  },
+  "structuralNote": "The test command is NOT a `run:` line. It is a string argument passed under `with:` to the third-party action `nick-fields/retry`, which executes it with up to 3 attempts and a 10-minute per-attempt timeout. The reference arm runs the command ONCE, directly: retry-on-error is a flake-tolerance policy, and repeating a failed suite would make the reference arm's result depend on how many times it was allowed to try.",
+  "conditionsApplied": "The `map coverage` and `codecov` steps carry `if: always()` and follow the test step; they are not part of the TEST path and are excluded. No step in the path up to and including the suite is condition-skipped.",
+  "steps": [
+    {
+      "command": ["corepack", "enable"],
+      "evidence": "REQUIRED BY THE ENVIRONMENT, not by the workflow. CI's actions/setup-node provisions yarn; the canonical container ships npm only. `yarn --immutable` is a Yarn Berry invocation and cannot run without it. Recorded here explicitly rather than hidden, and it is NOT a repair of a repository command - it is the container standing in for setup-node."
+    },
+    {
+      "command": ["yarn", "--immutable"],
+      "evidence": ".github/workflows/nodejs.yml - `install` -> `run: yarn --immutable`"
+    },
+    {
+      "command": ["yarn", "build:js"],
+      "evidence": ".github/workflows/nodejs.yml - `build` -> `run: yarn build:js`"
+    },
+    {
+      "command": ["yarn", "jest-runtime-vm-modules-ci", "--max-workers", "${CPU_CORES}"],
+      "evidence": ".github/workflows/nodejs.yml - `run jest-runtime tests with --experimental-vm-modules` -> `uses: nick-fields/retry` with `command: yarn jest-runtime-vm-modules-ci --max-workers ${{ steps.cpu-cores.outputs.count }}`"
+    }
+  ]
+}

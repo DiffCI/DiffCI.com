@@ -181,3 +181,32 @@ test("countsOf parses the REAL eslint mocha output, ANSI and all", () => {
   const real = readFileSync("tests/scripts/fixtures/eslint-mocha-tail.txt", "utf8");
   assert.equal(countsOf(real).tests, 38638, "38627 passing + 11 pending, read through the ANSI codes");
 });
+
+/**
+ * Amendment 1's substitution, and the reason it is a one-entry whitelist.
+ *
+ * jest's CI runs `--max-workers ${{ steps.cpu-cores.outputs.count }}`. Transcribing that faithfully
+ * needs the runner's core count; inventing a number would be command repair. The plan writes a token,
+ * the harness resolves it, and the receipt records what it became — so the privilege the reference arm
+ * enjoys is visible rather than buried in a command string.
+ */
+import { resolveTokens } from "../../scripts/ci-reproduction.js";
+
+test("CPU_CORES resolves to a number and is recorded", () => {
+  const { resolved, substitutions } = resolveTokens(["yarn", "test", "--max-workers", "${CPU_CORES}"]);
+  assert.match(resolved[3]!, /^\d+$/, "the token must become a concrete count");
+  assert.equal(substitutions["${CPU_CORES}"], resolved[3], "what it became must be recorded");
+});
+
+test("no other token is interpolated — the whitelist is the point", () => {
+  const smuggle = ["npm", "install", "${HOME}", "$(whoami)", "${{ secrets.TOKEN }}"];
+  const { resolved, substitutions } = resolveTokens(smuggle);
+  assert.deepEqual(resolved, smuggle, "nothing but CPU_CORES may expand");
+  assert.deepEqual(substitutions, {}, "and nothing else may be recorded as substituted");
+});
+
+test("a command with no token is returned untouched, with no substitutions", () => {
+  const { resolved, substitutions } = resolveTokens(["npm", "ci"]);
+  assert.deepEqual(resolved, ["npm", "ci"]);
+  assert.deepEqual(substitutions, {});
+});
