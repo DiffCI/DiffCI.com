@@ -1,0 +1,168 @@
+{
+  "protocol": "docs/ci-reproduction-05-eligibility.md",
+  "frame": "npm-high-impact@1.13.0 topDependent, ranks 1-240, frozen",
+  "containerNodeMajor": 22,
+  "note": "R3 is NOT evaluated here. The inference engine was not invoked. Rejected candidates are retained as evidence.",
+  "screened": 11,
+  "qualified": [
+    {
+      "rank": 2,
+      "repo": "eslint/eslint",
+      "pinnedHeadSha": "2417cad57d7d1bc4cf3ecf0f0575cfb10ff2011c",
+      "groundTruth": {
+        "cell": "Test (ubuntu-latest, 22.x)",
+        "conclusion": "success",
+        "source": "github actions job 99789022791"
+      }
+    },
+    {
+      "rank": 6,
+      "repo": "jestjs/jest",
+      "pinnedHeadSha": "9ab14feccd6c15fec1334dbcb03a53a079d153d3",
+      "groundTruth": {
+        "cell": "Node 22.x on Ubuntu with --experimental-vm-modules (jest-runtime)",
+        "conclusion": "success",
+        "source": "github actions job 99781772472"
+      }
+    },
+    {
+      "rank": 8,
+      "repo": "webpack/webpack",
+      "pinnedHeadSha": "ebd3be47689e8e5b1335517dfd680d025ade1f4c",
+      "groundTruth": {
+        "cell": "integration (ubuntu-latest, 22.x, a)",
+        "conclusion": "success",
+        "source": "github actions job 99835078321"
+      }
+    },
+    {
+      "rank": 10,
+      "repo": "babel/babel",
+      "pinnedHeadSha": "3fbcec1ccbe9ebfa5a8575bc88afadd061899bd5",
+      "groundTruth": {
+        "cell": "Test on Node.js 22",
+        "conclusion": "success",
+        "source": "github actions job 99680903978"
+      }
+    },
+    {
+      "rank": 11,
+      "repo": "babel/babel-loader",
+      "pinnedHeadSha": "778e7c54daa57e30c1d676e243c77f7c00a766d8",
+      "groundTruth": {
+        "cell": "Test - ubuntu-latest - Node 22, Babel 7, Webpack 5",
+        "conclusion": "success",
+        "source": "github actions job 92034086500"
+      }
+    }
+  ],
+  "rows": [
+    {
+      "rank": 1,
+      "pkg": "typescript",
+      "repo": "microsoft/TypeScript",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "no ubuntu + node 22 test cell concluded success/failure in the last 20 completed runs"
+    },
+    {
+      "rank": 2,
+      "pkg": "eslint",
+      "repo": "eslint/eslint",
+      "verdict": "QUALIFIED",
+      "detail": "in-environment cell concluded success",
+      "pinnedHeadSha": "2417cad57d7d1bc4cf3ecf0f0575cfb10ff2011c",
+      "groundTruth": {
+        "cell": "Test (ubuntu-latest, 22.x)",
+        "conclusion": "success",
+        "source": "github actions job 99789022791"
+      }
+    },
+    {
+      "rank": 3,
+      "pkg": "react",
+      "repo": "react/react",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "no ubuntu + node 22 test cell concluded success/failure in the last 20 completed runs"
+    },
+    {
+      "rank": 4,
+      "pkg": "mocha",
+      "repo": "mochajs/mocha",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "no ubuntu + node 22 test cell concluded success/failure in the last 20 completed runs"
+    },
+    {
+      "rank": 5,
+      "pkg": "@types/node",
+      "repo": "DefinitelyTyped/DefinitelyTyped",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "no ubuntu + node 22 test cell concluded success/failure in the last 20 completed runs"
+    },
+    {
+      "rank": 6,
+      "pkg": "jest",
+      "repo": "jestjs/jest",
+      "verdict": "QUALIFIED",
+      "detail": "in-environment cell concluded success",
+      "pinnedHeadSha": "9ab14feccd6c15fec1334dbcb03a53a079d153d3",
+      "groundTruth": {
+        "cell": "Node 22.x on Ubuntu with --experimental-vm-modules (jest-runtime)",
+        "conclusion": "success",
+        "source": "github actions job 99781772472"
+      }
+    },
+    {
+      "rank": 7,
+      "pkg": "prettier",
+      "repo": "prettier/prettier",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "no ubuntu + node 22 test cell concluded success/failure in the last 20 completed runs"
+    },
+    {
+      "rank": 8,
+      "pkg": "webpack",
+      "repo": "webpack/webpack",
+      "verdict": "QUALIFIED",
+      "detail": "in-environment cell concluded success",
+      "pinnedHeadSha": "ebd3be47689e8e5b1335517dfd680d025ade1f4c",
+      "groundTruth": {
+        "cell": "integration (ubuntu-latest, 22.x, a)",
+        "conclusion": "success",
+        "source": "github actions job 99835078321"
+      }
+    },
+    {
+      "rank": 9,
+      "pkg": "react-dom",
+      "repo": "react/react",
+      "verdict": "DEDUPED",
+      "detail": "same repository as an earlier, higher-ranked package"
+    },
+    {
+      "rank": 10,
+      "pkg": "@babel/core",
+      "repo": "babel/babel",
+      "verdict": "QUALIFIED",
+      "detail": "in-environment cell concluded success",
+      "pinnedHeadSha": "3fbcec1ccbe9ebfa5a8575bc88afadd061899bd5",
+      "groundTruth": {
+        "cell": "Test on Node.js 22",
+        "conclusion": "success",
+        "source": "github actions job 99680903978"
+      }
+    },
+    {
+      "rank": 11,
+      "pkg": "babel-loader",
+      "repo": "babel/babel-loader",
+      "verdict": "QUALIFIED",
+      "detail": "in-environment cell concluded success",
+      "pinnedHeadSha": "778e7c54daa57e30c1d676e243c77f7c00a766d8",
+      "groundTruth": {
+        "cell": "Test - ubuntu-latest - Node 22, Babel 7, Webpack 5",
+        "conclusion": "success",
+        "source": "github actions job 92034086500"
+      }
+    }
+  ]
+}
