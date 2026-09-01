@@ -1458,6 +1458,18 @@ const JOBS: Record<string, ValidationJob> = {
    * Attempt 1 ran on Windows under node 24 and is preserved as DIVERGED with that limitation
    * recorded; its reference-arm test failures are NOT attributable to the repository.
    */
+  "ci-reproduce-eslint": {
+    id: "ci-reproduce-eslint",
+    description: "CI_REPRODUCTION_05: reference vs inference arms on the sealed R3-qualified target.",
+    mode: "ci-reproduce",
+    repository: "eslint/eslint",
+    pinnedHeadSha: "2417cad57d7d1bc4cf3ecf0f0575cfb10ff2011c",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    referencePlan: "docs/evidence/ci-reproduction-05-eslint-reference-plan.json",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "r3-qualify-eslint": {
     id: "r3-qualify-eslint",
     description: "CI_REPRODUCTION_05 R3: does eslint/eslint complete in the canonical container, reference arm only.",
