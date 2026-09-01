@@ -1,0 +1,29 @@
+{
+  "runId": "mi-mutate-01",
+  "jobId": "mi-mutate-target",
+  "reproduces": null,
+  "runDirName": "2026-09-01T04-51-34-955Z-jest-community-eslint-plugin-jest-7f4fe6",
+  "shardIndex": 0,
+  "shardCount": 1,
+  "selectableCandidates": null,
+  "totalSelectableCandidates": null,
+  "observedRows": null,
+  "environment": {
+    "image": "docker.io/cloudflare/sandbox:0.12.5",
+    "node": "v22.23.2",
+    "npm": "10.9.8",
+    "git": "git version 2.34.1",
+    "uname": "Linux cloudchamber 6.18.36-cloudflare-firecracker-2026.6.17 #1 SMP PREEMPT_DYNAMIC Mon Sep 27 00:00:00 UTC 2010 x86_64 x86_64 x86_64 GNU/Linux",
+    "osRelease": "PRETTY_NAME=\"Ubuntu 22.04.5 LTS\" NAME=\"Ubuntu\" VERSION_ID=\"22.04\"",
+    "agentIntegrity": "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw=="
+  },
+  "timings": {
+    "bootstrapMs": 10653,
+    "prepareMs": 4289,
+    "observeMs": 30617,
+    "mutateMs": 91566
+  },
+  "sourceTarballKey": "sources/diffci-386a237dc02493c1.tgz",
+  "sourceTarballSha256": "386a237dc02493c1bd81c38ee7c37fe5e07c801999e2f90d21b1c5d3497d500c",
+  "agentTarballKey": "agents/observer-ee639e1ac7e1a81b.tgz"
+}
