@@ -1,0 +1,49 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "webpack/webpack",
+  "headSha": "ebd3be47689e8e5b1335517dfd680d025ade1f4c",
+  "source": ".github/workflows/test.yml, job `integration`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file. The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "os": "ubuntu-latest",
+    "node-version": "22.x",
+    "part": "a"
+  },
+  "cellSelection": "Base matrix is os x node-version x part = 3 x 4 x 2 = 24 cells, plus 7 `include` rows. The single in-environment cell is (ubuntu-latest, 22.x, a); the rest are OUT_OF_ENVIRONMENT, recorded and not executed.",
+  "ciGroundTruth": {
+    "cell": "integration (ubuntu-latest, 22.x, a)",
+    "conclusion": "success",
+    "source": "github actions job, recorded in docs/evidence/ci-reproduction-05-screening.json"
+  },
+  "conditionsApplied": "Evaluated per the workflow's own `if:` expressions for this cell, so that SKIPPED and NEVER-EXISTED stay distinguishable: the four `yarn upgrade` blocks gated on node 10.x/12.x/14.x, 16.x, 18.x and 20.x are FALSE; `yarn upgrade enhanced-resolve@...#main ...` is gated on `matrix.use_main_branches == '1'` and the BASE matrix does not declare that axis (only `include:` rows do), so it is UNDEFINED_CONTEXT, renders empty, and '' == '1' is FALSE; `yarn --frozen-lockfile` gated on node being none of 10/12/14/16/18/20/22 is FALSE for 22.x. The 22.x branch IS true and contributes two steps, since a multi-line `run:` is several commands. `yarn report:cover:merge` and Codecov follow the suite and are not on the TEST path.",
+  "compoundRunLines": "Two `run:` lines are not single commands. Per docs/ci-reproduction-sample-01-amendment-3.md: `yarn link --frozen-lockfile || true` becomes a structured allowFailure step, preserving the operator's meaning without handing repository text to a shell; and `yarn cover:integration:a ... || yarn cover:integration:a ... -f` runs the FIRST command ONCE, because `-f` is jest's --onlyFailures and re-running only the failures is flake tolerance - reproducing it would let a suite that failed once be recorded as passing.",
+  "environmentNote": "`steps.calculate_architecture.outputs.result` feeds setup-node's `architecture:` input. It is environment configuration produced by a third-party action, not a repository command; the canonical container is x64 and no reference step corresponds to it.",
+  "steps": [
+    {
+      "command": ["corepack", "enable"],
+      "evidence": "ENVIRONMENT, not a workflow command. CI's actions/setup-node provisions yarn; the canonical container ships npm only. Permitted by docs/ci-reproduction-sample-01-amendment-2.md: corepack ships with node 22, only creates shims, and is recorded as an explicit environment step."
+    },
+    {
+      "command": ["yarn", "upgrade", "pkg-pr-new@0.0.66"],
+      "evidence": ".github/workflows/test.yml - multi-line `run:` gated on `if: matrix.node-version == '22.x'`, which is TRUE for this cell; first of its two lines"
+    },
+    {
+      "command": ["yarn", "--frozen-lockfile"],
+      "evidence": ".github/workflows/test.yml - second line of the same `matrix.node-version == '22.x'` block"
+    },
+    {
+      "command": ["yarn", "link", "--frozen-lockfile"],
+      "allowFailure": true,
+      "evidence": ".github/workflows/test.yml - `run: yarn link --frozen-lockfile || true`. The `|| true` is represented as allowFailure per amendment 3; the receipt still records the real exit status."
+    },
+    {
+      "command": ["yarn", "link", "webpack", "--frozen-lockfile"],
+      "evidence": ".github/workflows/test.yml - `run: yarn link webpack --frozen-lockfile`"
+    },
+    {
+      "command": ["yarn", "cover:integration:a", "--ci", "--cacheDirectory", ".jest-cache"],
+      "environment": { "MAIN_BRANCHES": "" },
+      "evidence": ".github/workflows/test.yml - `run: yarn cover:integration:${{ matrix.part }} --ci --cacheDirectory .jest-cache || ... -f` with `env: MAIN_BRANCHES: ${{ matrix.use_main_branches }}`. matrix.part is DEFINED('a'); matrix.use_main_branches is UNDEFINED_CONTEXT for the base matrix and renders empty. First branch only, per amendment 3."
+    }
+  ]
+}

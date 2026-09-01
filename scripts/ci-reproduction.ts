@@ -79,6 +79,8 @@ export interface StepReceipt {
   terminatedByBound?: boolean;
   /** Which layer the outcome belongs to - never the repository when the bound or the ENVIRONMENT fired. */
   outcomeLayer?: "repository" | "harness" | "environment";
+  /** The workflow wrote `cmd || true`: this step is permitted to fail without stopping the arm. */
+  allowFailure?: boolean;
   /** Tokens the reference plan asked the harness to resolve, and what they became. */
   substitutions?: Record<string, string>;
   /** Environment-caused failure signatures found in the output, e.g. per-test timeouts. */
@@ -252,7 +254,7 @@ class ProgressLog {
 function runArm(
   arm: "reference" | "inference",
   source: string,
-  steps: Array<{ command: string[]; environment?: Record<string, string> }>,
+  steps: Array<{ command: string[]; environment?: Record<string, string>; allowFailure?: boolean }>,
   repoPath: string,
   timeoutMs: number,
   progress: ProgressLog,
@@ -322,6 +324,7 @@ ${run.stderr}`;
       command: resolved,
       commandIdentity,
       ...(Object.keys(substitutions).length > 0 ? { substitutions } : {}),
+      ...(step.allowFailure ? { allowFailure: true } : {}),
       workingDirectory: repoPath,
       environment: step.environment ?? {},
       startedAt,
@@ -353,6 +356,11 @@ ${run.stderr}`;
       failures: parsed.failures,
     });
     console.log(` exit ${String(run.status).padStart(3)}  ${(run.ms / 1000).toFixed(1)}s${terminatedByBound ? "  KILLED BY BOUND" : ""}`);
+    // Amendment 3: `cmd || true` in the workflow, represented as data rather than handed to a shell.
+    // The arm continues, and the receipt still records the real exit status - the step is permitted to
+    // fail, not pretended to have succeeded.
+    if (run.status !== 0 && step.allowFailure) continue;
+
     if (run.status !== 0) {
       reachedEnd = false;
       break;
@@ -509,7 +517,7 @@ function main(): void {
     // down would put the engine's work first and make this guard cosmetic.
     const qualifyPlan = JSON.parse(readFileSync(referencePlanPath, "utf8")) as {
       source: string;
-      steps: Array<{ command: string[]; environment?: Record<string, string> }>;
+      steps: Array<{ command: string[]; environment?: Record<string, string>; allowFailure?: boolean }>;
     };
     const qualifyRepo = join(work, "reference");
     clone(qualifyRepo);
@@ -581,7 +589,7 @@ function main(): void {
     /** What real CI produced for this cell. Absent means REPRODUCED cannot be claimed - see defect 25. */
     ciGroundTruth?: CiGroundTruth;
     source: string;
-    steps: Array<{ command: string[]; environment?: Record<string, string> }>;
+    steps: Array<{ command: string[]; environment?: Record<string, string>; allowFailure?: boolean }>;
   };
   const referenceRepo = join(work, "reference");
   clone(referenceRepo);

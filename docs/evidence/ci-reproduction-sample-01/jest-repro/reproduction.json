@@ -1,0 +1,5294 @@
+{
+  "schema": "diffci.ci.reproduction/v1",
+  "attempt": 1,
+  "repository": "jestjs/jest",
+  "headSha": "9ab14feccd6c15fec1334dbcb03a53a079d153d3",
+  "protocol": "docs/ci-reproduction-01-protocol.md",
+  "optimisable": false,
+  "jobs": [
+    {
+      "id": "check-changelog.yml#check-changelog",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "check-changelog-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable",
+            "--mode=skip-build"
+          ],
+          "executable": false
+        },
+        {
+          "id": "check-changelog-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "check-changelog"
+          ],
+          "executable": true
+        },
+        {
+          "id": "check-changelog-install-2",
+          "kind": "install",
+          "command": [],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "issues.yml#questions",
+      "provides": [],
+      "operations": [
+        {
+          "id": "questions-unknown-0",
+          "kind": "unknown",
+          "command": [],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "issues.yml#bug-without-repro",
+      "provides": [
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "bug-without-repro-test-0",
+          "kind": "test",
+          "command": [],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#ts-compatibility",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "ts-compatibility-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "ts-compatibility-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "ts-compatibility-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "test-ts",
+            "--selectProjects",
+            "ts-integration"
+          ],
+          "executable": true
+        },
+        {
+          "id": "ts-compatibility-install-3",
+          "kind": "install",
+          "command": [],
+          "executable": false
+        },
+        {
+          "id": "ts-compatibility-install-4",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "verify-old-ts"
+          ],
+          "executable": true
+        },
+        {
+          "id": "ts-compatibility-install-5",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "lint-ts-files"
+          ],
+          "executable": true
+        },
+        {
+          "id": "ts-compatibility-install-6",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "test-with-type-info"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#static-checks",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "static-checks-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "static-checks-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:ts"
+          ],
+          "executable": true
+        },
+        {
+          "id": "static-checks-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "static-checks-install-3",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "typecheck:examples"
+          ],
+          "executable": true
+        },
+        {
+          "id": "static-checks-install-4",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "typecheck:tests"
+          ],
+          "executable": true
+        },
+        {
+          "id": "static-checks-install-5",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "verify-pnp"
+          ],
+          "executable": true
+        },
+        {
+          "id": "static-checks-install-6",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "lint"
+          ],
+          "executable": true
+        },
+        {
+          "id": "static-checks-install-7",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "lint:prettier:ci"
+          ],
+          "executable": true
+        },
+        {
+          "id": "static-checks-install-8",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "check-copyright-headers"
+          ],
+          "executable": true
+        },
+        {
+          "id": "static-checks-install-9",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "constraints"
+          ],
+          "executable": false
+        },
+        {
+          "id": "static-checks-install-10",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "dedupe",
+            "--check"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-leak",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-leak-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-leak-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-leak-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "test-leak"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-runtime-vm-modules-node-version18.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-runtime-vm-modules-node-version18.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version18.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version18.x-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-runtime-vm-modules-node-version20.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-runtime-vm-modules-node-version20.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version20.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version20.x-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-runtime-vm-modules-node-version22.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-runtime-vm-modules-node-version22.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version22.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version22.x-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-runtime-vm-modules-node-version24.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-runtime-vm-modules-node-version24.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version24.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version24.x-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-runtime-vm-modules-node-version25.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-runtime-vm-modules-node-version25.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version25.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version25.x-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-runtime-vm-modules-node-version26.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-runtime-vm-modules-node-version26.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version26.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-runtime-vm-modules-node-version26.x-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-watchman",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-watchman-unknown-0",
+          "kind": "unknown",
+          "command": [
+            "sudo",
+            "apt-get",
+            "update"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-watchman-unknown-1",
+          "kind": "unknown",
+          "command": [
+            "sudo",
+            "apt-get",
+            "install",
+            "--no-install-recommends",
+            "-y",
+            "watchman"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-watchman-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "watchman",
+            "--version"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-watchman-install-3",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-watchman-install-4",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-coverage-shard1/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-coverage-shard1/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-coverage-shard1/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-coverage-shard1/4-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-coverage-shard2/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-coverage-shard2/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-coverage-shard2/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-coverage-shard2/4-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-coverage-shard3/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-coverage-shard3/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-coverage-shard3/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-coverage-shard3/4-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "nodejs.yml#test-coverage-shard4/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-coverage-shard4/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-coverage-shard4/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-coverage-shard4/4-unknown-2",
+          "kind": "unknown",
+          "command": [
+            "node",
+            "./scripts/mapCoverage.mjs"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "pkg-pr-new.yml#publish",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "publish-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "publish-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "publish-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "dlx",
+            "pkg-pr-new",
+            "publish",
+            "'./packages/*'",
+            "--compact"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "prepare-cache.yml#prepare-yarn-cache",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "prepare-yarn-cache-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test-nightly.yml#test-shard1/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-shard1/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-shard1/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-shard1/4-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test-nightly.yml#test-shard2/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-shard2/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-shard2/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-shard2/4-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test-nightly.yml#test-shard3/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-shard3/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-shard3/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-shard3/4-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test-nightly.yml#test-shard4/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-shard4/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-shard4/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-shard4/4-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test-nightly.yml#test-jasmine-shard1/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-jasmine-shard1/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-jasmine-shard1/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "test-nightly.yml#test-jasmine-shard2/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-jasmine-shard2/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-jasmine-shard2/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "test-nightly.yml#test-jasmine-shard3/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-jasmine-shard3/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-jasmine-shard3/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "test-nightly.yml#test-jasmine-shard4/4",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-jasmine-shard4/4-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-jasmine-shard4/4-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "test.yml#test-node-version18.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version18.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version18.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version18.x-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test.yml#test-node-version20.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version20.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version20.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version20.x-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test.yml#test-node-version22.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version22.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version22.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version22.x-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test.yml#test-node-version24.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version24.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version24.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version24.x-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test.yml#test-node-version25.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version25.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version25.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version25.x-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test.yml#test-node-version26.x",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version26.x-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version26.x-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version26.x-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "workspace",
+            "jest-environment-node",
+            "test"
+          ],
+          "executable": false
+        }
+      ]
+    },
+    {
+      "id": "test.yml#test-jasmine",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-jasmine-install-0",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "--immutable"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-jasmine-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "build:js"
+          ],
+          "executable": true
+        }
+      ]
+    }
+  ],
+  "testPlan": {
+    "purpose": "TEST",
+    "jobId": "issues.yml#bug-without-repro",
+    "operations": [
+      {
+        "id": "bug-without-repro-test-0",
+        "kind": "test",
+        "command": [],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "lts/*",
+          "source": {
+            "file": ".github/workflows/check-changelog.yml",
+            "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+            "line": 25
+          }
+        },
+        "environment": {
+          "GH_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+          "ISSUE": "${{ github.event.issue.html_url }}"
+        },
+        "dependsOn": [],
+        "evidence": [
+          {
+            "file": ".github/workflows/issues.yml",
+            "text": "gh issue close $ISSUE --comment \"As noted in the [Bug Report template](https://github.com/jestjs/jest/blob/main/.github/ISSUE_TEMPLATE/bug.yml), all bug reports requires a minimal reproduction. Please…",
+            "line": 25
+          }
+        ],
+        "confidence": "DERIVED",
+        "unresolved": [
+          {
+            "what": "${{ github.event.label.name == 'Needs Reproduction' }}",
+            "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+          }
+        ],
+        "refusalReason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not",
+        "executable": false,
+        "missingRequirements": [
+          "a resolved command"
+        ],
+        "blockedBy": [],
+        "willExecute": false,
+        "condition": {
+          "expression": "github.event.label.name == 'Needs Reproduction'",
+          "result": "UNRESOLVED",
+          "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      }
+    ],
+    "executable": true
+  },
+  "inferredOperations": [
+    {
+      "id": "check-changelog-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable",
+        "--mode=skip-build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {
+        "YARN_ENABLE_SCRIPTS": "false",
+        "PR_NUMBER": "${{ github.event.pull_request.number }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "yarn --immutable --mode=skip-build",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-3"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "check-changelog-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "check-changelog"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {
+        "YARN_ENABLE_SCRIPTS": "false",
+        "PR_NUMBER": "${{ github.event.pull_request.number }}"
+      },
+      "dependsOn": [
+        "check-changelog-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "yarn check-changelog",
+          "line": 35
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "${{ !contains(github.event.pull_request.labels.*.name, 'require-changelog') }}",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "!contains(github.event.pull_request.labels.*.name, 'require-changelog')",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "check-changelog-install-2",
+      "kind": "install",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {
+        "YARN_ENABLE_SCRIPTS": "false",
+        "PR_NUMBER": "${{ github.event.pull_request.number }}"
+      },
+      "dependsOn": [
+        "check-changelog-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "yarn check-changelog $PR_NUMBER",
+          "line": 40
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "${{ contains(github.event.pull_request.labels.*.name, 'require-changelog') }}",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "refusalReason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved package manager"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "contains(github.event.pull_request.labels.*.name, 'require-changelog')",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "questions-unknown-0",
+      "kind": "unknown",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {
+        "GH_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+        "ISSUE": "${{ github.event.issue.html_url }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/issues.yml",
+          "text": "gh issue close $ISSUE --comment \"Please note this issue tracker is not a help forum. We recommend using [StackOverflow](https://stackoverflow.com/questions/tagged/jestjs) or our [discord channel](http…",
+          "line": 16
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "${{ github.event.label.name == ':speech_balloon: Question' }}",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "refusalReason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "github.event.label.name == ':speech_balloon: Question'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "bug-without-repro-test-0",
+      "kind": "test",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {
+        "GH_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
+        "ISSUE": "${{ github.event.issue.html_url }}"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/issues.yml",
+          "text": "gh issue close $ISSUE --comment \"As noted in the [Bug Report template](https://github.com/jestjs/jest/blob/main/.github/ISSUE_TEMPLATE/bug.yml), all bug reports requires a minimal reproduction. Please…",
+          "line": 25
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "${{ github.event.label.name == 'Needs Reproduction' }}",
+          "why": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+        }
+      ],
+      "refusalReason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved command"
+      ],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "github.event.label.name == 'Needs Reproduction'",
+        "result": "UNRESOLVED",
+        "reason": "an operand is not modelled: only simple `<context>.<property>` lookups are modelled; functions, operators and nested paths are not"
+      }
+    },
+    {
+      "id": "ts-compatibility-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-7"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "ts-compatibility-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "ts-compatibility-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build",
+          "line": 47
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "ts-compatibility-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "test-ts",
+        "--selectProjects",
+        "ts-integration"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "ts-compatibility-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn test-ts --selectProjects ts-integration",
+          "line": 49
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "ts-compatibility-install-3",
+      "kind": "install",
+      "command": [],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "ts-compatibility-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn test-types --target '>=5.4 <6.0'",
+          "line": 51
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [
+        {
+          "what": "yarn test-types --target '>=5.4 <6.0'",
+          "why": "contains shell control characters; running it would need a shell, which this engine does not model"
+        }
+      ],
+      "refusalReason": "contains shell control characters; running it would need a shell, which this engine does not model",
+      "executable": false,
+      "missingRequirements": [
+        "a resolved package manager"
+      ],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "ts-compatibility-install-4",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "verify-old-ts"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "ts-compatibility-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn verify-old-ts",
+          "line": 53
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "ts-compatibility-install-5",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "lint-ts-files"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "ts-compatibility-install-4"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn lint-ts-files",
+          "line": 55
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "ts-compatibility-install-6",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "test-with-type-info"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "ts-compatibility-install-5"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn test-with-type-info",
+          "line": 57
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-20"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:ts"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:ts",
+          "line": 75
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-3",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "typecheck:examples"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn typecheck:examples",
+          "line": 79
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-4",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "typecheck:tests"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn typecheck:tests",
+          "line": 81
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-5",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "verify-pnp"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-4"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn verify-pnp",
+          "line": 83
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-6",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "lint"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-5"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn lint",
+          "line": 55
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-7",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "lint:prettier:ci"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-6"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn lint:prettier:ci",
+          "line": 87
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-8",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "check-copyright-headers"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-7"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn check-copyright-headers",
+          "line": 89
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-9",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "constraints"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-8"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn constraints",
+          "line": 90
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-30"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "static-checks-install-10",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "dedupe",
+        "--check"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "static-checks-install-9"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn dedupe --check",
+          "line": 93
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-31"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-leak-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-34"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-leak-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-leak-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-leak-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "test-leak"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-leak-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn test-leak",
+          "line": 148
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version18.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-43"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version18.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version18.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version18.x-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version18.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version20.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-45"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version20.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version20.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version20.x-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version20.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version22.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-47"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version22.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version22.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version22.x-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version22.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version24.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-49"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version24.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version24.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version24.x-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version24.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version25.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-51"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version25.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version25.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version25.x-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version25.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version26.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-53"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version26.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version26.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-runtime-vm-modules-node-version26.x-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-runtime-vm-modules-node-version26.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-watchman-unknown-0",
+      "kind": "unknown",
+      "command": [
+        "sudo",
+        "apt-get",
+        "update"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "sudo apt-get update",
+          "line": 207
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-watchman-unknown-1",
+      "kind": "unknown",
+      "command": [
+        "sudo",
+        "apt-get",
+        "install",
+        "--no-install-recommends",
+        "-y",
+        "watchman"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-watchman-unknown-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "sudo apt-get install --no-install-recommends -y watchman",
+          "line": 208
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-watchman-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "watchman",
+        "--version"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-watchman-unknown-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "watchman --version",
+          "line": 209
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-watchman-install-3",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-watchman-unknown-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-59"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-watchman-install-4",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-watchman-install-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard1/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-66"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard1/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-coverage-shard1/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard1/4-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-coverage-shard1/4-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-coverage-shard2/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-68"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard2/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-coverage-shard2/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard2/4-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-coverage-shard2/4-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-coverage-shard3/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-70"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard3/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-coverage-shard3/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard3/4-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-coverage-shard3/4-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "test-coverage-shard4/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn --immutable",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-72"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard4/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-coverage-shard4/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "yarn build:js",
+          "line": 77
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-coverage-shard4/4-unknown-2",
+      "kind": "unknown",
+      "command": [
+        "node",
+        "./scripts/mapCoverage.mjs"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-coverage-shard4/4-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/nodejs.yml",
+          "text": "node ./scripts/mapCoverage.mjs",
+          "line": 183
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "always()",
+          "why": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+        }
+      ],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "condition": {
+        "expression": "always()",
+        "result": "UNRESOLVED",
+        "reason": "only equality and inequality against a literal are modelled; the path stays non-executable rather than assuming the step is skipped"
+      }
+    },
+    {
+      "id": "publish-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/pkg-pr-new.yml",
+          "text": "yarn --immutable",
+          "line": 26
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-76"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "publish-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "publish-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/pkg-pr-new.yml",
+          "text": "yarn build",
+          "line": 29
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "publish-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "dlx",
+        "pkg-pr-new",
+        "publish",
+        "'./packages/*'",
+        "--compact"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "publish-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/pkg-pr-new.yml",
+          "text": "yarn dlx pkg-pr-new publish './packages/*' --compact",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-81"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "prepare-yarn-cache-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {
+        "YARN_NODE_LINKER": "pnp",
+        "YARN_ENABLE_SCRIPTS": "false"
+      },
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/prepare-cache.yml",
+          "text": "yarn --immutable",
+          "line": 31
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-84"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard1/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn --immutable",
+          "line": 29
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-89"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard1/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-shard1/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn build:js",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard1/4-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-shard1/4-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 36
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-91"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard2/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn --immutable",
+          "line": 29
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-92"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard2/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-shard2/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn build:js",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard2/4-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-shard2/4-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 36
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-94"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard3/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn --immutable",
+          "line": 29
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-95"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard3/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-shard3/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn build:js",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard3/4-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-shard3/4-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 36
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-97"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard4/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn --immutable",
+          "line": 29
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-98"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard4/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-shard4/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn build:js",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-shard4/4-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-shard4/4-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 36
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-100"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-shard1/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn --immutable",
+          "line": 29
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-105"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-shard1/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-jasmine-shard1/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn build:js",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-shard2/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn --immutable",
+          "line": 29
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-107"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-shard2/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-jasmine-shard2/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn build:js",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-shard3/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn --immutable",
+          "line": 29
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-109"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-shard3/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-jasmine-shard3/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn build:js",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-shard4/4-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn --immutable",
+          "line": 29
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-111"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-shard4/4-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-jasmine-shard4/4-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test-nightly.yml",
+          "text": "yarn build:js",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version18.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn --immutable",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-117"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version18.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn build:js",
+          "line": 34
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version18.x-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 39
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-119"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version20.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn --immutable",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-120"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version20.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version20.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn build:js",
+          "line": 34
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version20.x-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version20.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 39
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-122"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version22.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn --immutable",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-123"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version22.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version22.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn build:js",
+          "line": 34
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version22.x-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version22.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 39
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-125"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version24.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn --immutable",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-126"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version24.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version24.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn build:js",
+          "line": 34
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version24.x-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version24.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 39
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-128"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version25.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn --immutable",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-129"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version25.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version25.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn build:js",
+          "line": 34
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version25.x-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version25.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 39
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-131"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version26.x-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn --immutable",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-132"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version26.x-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version26.x-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn build:js",
+          "line": 34
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    },
+    {
+      "id": "test-node-version26.x-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "workspace",
+        "jest-environment-node",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version26.x-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn workspace jest-environment-node test",
+          "line": 39
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-134"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-install-0",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn --immutable",
+          "line": 32
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-139"
+      ],
+      "willExecute": true
+    },
+    {
+      "id": "test-jasmine-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "build:js"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "lts/*",
+        "source": {
+          "file": ".github/workflows/check-changelog.yml",
+          "text": "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020",
+          "line": 25
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-jasmine-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/test.yml",
+          "text": "yarn build:js",
+          "line": 34
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true
+    }
+  ],
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/nodejs.yml, job `test-runtime-vm-modules`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "corepack",
+          "enable"
+        ],
+        "commandIdentity": "corepack enable",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:02:34.899Z",
+        "endedAt": "2026-09-01T14:02:35.040Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0.1,
+        "wallMs": 139,
+        "outputTail": "\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "--immutable"
+        ],
+        "commandIdentity": "yarn --immutable",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:02:35.040Z",
+        "endedAt": "2026-09-01T14:03:45.668Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 124.6,
+        "wallMs": 70625,
+        "outputTail": "d by jest-config.\n➤ YN0002: │ jest-config@workspace:packages/jest-config doesn't provide @types/node (p4a73ba), requested by ts-node.\n➤ YN0002: │ jest-website@workspace:website doesn't provide @mdx-js/react (p1a83d4), requested by @docusaurus/core.\n➤ YN0086: │ Some peer dependencies are incorrectly met by your project; run yarn explain peer-requirements <hash> for details, where <hash> is the six-letter p-prefixed code.\n➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.\n➤ YN0000: └ Completed\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 2071 packages were added to the project (+ 165.99 MiB).\n➤ YN0000: └ Completed in 26s 236ms\n➤ YN0000: ┌ Link step\n➤ YN0004: │ core-js@npm:3.50.0 lists build scripts, but all build scripts have been disabled.\n➤ YN0007: │ unrs-resolver@npm:1.12.2 must be built because it never has been before or the last one failed\n➤ YN0007: │ @parcel/watcher@npm:2.6.0 must be built because it never has been before or the last one failed\n➤ YN0007: │ esbuild@npm:0.28.2 must be built because it never has been before or the last one failed\n➤ YN0000: └ Completed in 40s 380ms\n➤ YN0000: · Done with warnings in 1m 8s\n\n"
+      },
+      {
+        "stepId": "reference#2",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "build:js"
+        ],
+        "commandIdentity": "yarn build:js",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:03:45.669Z",
+        "endedAt": "2026-09-01T14:04:02.106Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 22.48,
+        "wallMs": 16436,
+        "outputTail": " Bundling packages \n DONE \n\n"
+      },
+      {
+        "stepId": "reference#3",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "jest-runtime-vm-modules-ci",
+          "--max-workers",
+          "4"
+        ],
+        "commandIdentity": "yarn jest-runtime-vm-modules-ci --max-workers 4",
+        "substitutions": {
+          "${CPU_CORES}": "4"
+        },
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:04:02.106Z",
+        "endedAt": "2026-09-01T14:04:40.250Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 125.02,
+        "wallMs": 38142,
+        "testFiles": 40,
+        "tests": 581,
+        "failures": 0,
+        "outputTail": "\n● Validation Warning:\n\n  Option \"projects\" is not supported in an individual project configuration.\n  Move it to the root configuration.\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n\n● Validation Warning:\n\n  Option \"watchPlugins\" is not supported in an individual project configuration.\n  Move it to the root configuration.\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n\n........................................\n\n\nTest Suites: 40 passed, 40 total\nTests:       112 skipped, 469 passed, 581 total\nSnapshots:   1 passed, 1 total\nTime:        32.597 s\nRan all test suites matching packages/jest-runtime.\n"
+      }
+    ],
+    "reachedEnd": true,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "inferenceArm": {
+    "arm": "inference",
+    "source": "inferred ExecutionGraph",
+    "steps": [],
+    "reachedEnd": true,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "outcome": "DIVERGED",
+  "reason": "the engine claimed executability but its graph never runs the suite: reference executed a suite (581 tests in 40 files) and the inference arm executed none",
+  "producedAt": "2026-09-01T14:04:40.546Z"
+}

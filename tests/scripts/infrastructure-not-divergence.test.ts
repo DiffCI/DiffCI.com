@@ -210,3 +210,30 @@ test("a command with no token is returned untouched, with no substitutions", () 
   assert.deepEqual(resolved, ["npm", "ci"]);
   assert.deepEqual(substitutions, {});
 });
+
+/**
+ * Amendment 3: `cmd || true` represented as data, not handed to a shell.
+ *
+ * webpack's cell contains `yarn link --frozen-lockfile || true`. A reference plan is an argv array and
+ * repository-derived strings must never cross an implicit shell boundary, so the operator's meaning is
+ * carried as `allowFailure` instead. The receipt still records the real exit status: the step is
+ * permitted to fail, not pretended to have succeeded.
+ */
+test("allowFailure is structured data, never a shell operator in argv", () => {
+  const plan = JSON.parse(readFileSync("docs/evidence/ci-reproduction-05-webpack-reference-plan.json", "utf8"));
+  const linkStep = plan.steps.find((s: { command: string[] }) => s.command.includes("link") && !s.command.includes("webpack"));
+
+  assert.equal(linkStep.allowFailure, true, "the `|| true` must survive as a flag");
+  for (const step of plan.steps) {
+    for (const token of step.command as string[]) {
+      assert.doesNotMatch(token, /[|&;<>$`]/, `no shell metacharacter may reach argv: ${token}`);
+    }
+  }
+});
+
+test("the retry branch of a `A || A -f` line is not transcribed", () => {
+  const plan = JSON.parse(readFileSync("docs/evidence/ci-reproduction-05-webpack-reference-plan.json", "utf8"));
+  const suites = plan.steps.filter((s: { command: string[] }) => s.command.includes("cover:integration:a"));
+  assert.equal(suites.length, 1, "running the retry too would let a suite that failed once be recorded as passing");
+  assert.ok(!suites[0].command.includes("-f"), "the --onlyFailures retry must not be the command that runs");
+});

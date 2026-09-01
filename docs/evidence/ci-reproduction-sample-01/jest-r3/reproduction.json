@@ -1,0 +1,99 @@
+{
+  "schema": "diffci.ci.r3-qualification/v1",
+  "protocol": "docs/ci-reproduction-05-eligibility.md",
+  "repository": "jestjs/jest",
+  "headSha": "9ab14feccd6c15fec1334dbcb03a53a079d153d3",
+  "engineInvoked": false,
+  "verdict": "R3_QUALIFIED",
+  "reason": "the reference arm completed (exit 0) with no environment signals",
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/nodejs.yml, job `test-runtime-vm-modules`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "corepack",
+          "enable"
+        ],
+        "commandIdentity": "corepack enable",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T13:57:18.309Z",
+        "endedAt": "2026-09-01T13:57:18.400Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0.09,
+        "wallMs": 90,
+        "outputTail": "\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "--immutable"
+        ],
+        "commandIdentity": "yarn --immutable",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T13:57:18.401Z",
+        "endedAt": "2026-09-01T13:58:03.110Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 103.91,
+        "wallMs": 44709,
+        "outputTail": " jest-config.\n➤ YN0002: │ jest-config@workspace:packages/jest-config doesn't provide @types/node (p4a73ba), requested by ts-node.\n➤ YN0002: │ jest-website@workspace:website doesn't provide @mdx-js/react (p1a83d4), requested by @docusaurus/core.\n➤ YN0086: │ Some peer dependencies are incorrectly met by your project; run yarn explain peer-requirements <hash> for details, where <hash> is the six-letter p-prefixed code.\n➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.\n➤ YN0000: └ Completed\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 2071 packages were added to the project (+ 165.99 MiB).\n➤ YN0000: └ Completed in 20s 487ms\n➤ YN0000: ┌ Link step\n➤ YN0004: │ core-js@npm:3.50.0 lists build scripts, but all build scripts have been disabled.\n➤ YN0007: │ unrs-resolver@npm:1.12.2 must be built because it never has been before or the last one failed\n➤ YN0007: │ @parcel/watcher@npm:2.6.0 must be built because it never has been before or the last one failed\n➤ YN0007: │ esbuild@npm:0.28.2 must be built because it never has been before or the last one failed\n➤ YN0000: └ Completed in 21s 185ms\n➤ YN0000: · Done with warnings in 42s 849ms\n\n"
+      },
+      {
+        "stepId": "reference#2",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "build:js"
+        ],
+        "commandIdentity": "yarn build:js",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T13:58:03.111Z",
+        "endedAt": "2026-09-01T13:58:18.382Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 21.62,
+        "wallMs": 15270,
+        "outputTail": " Bundling packages \n DONE \n\n"
+      },
+      {
+        "stepId": "reference#3",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "jest-runtime-vm-modules-ci",
+          "--max-workers",
+          "4"
+        ],
+        "commandIdentity": "yarn jest-runtime-vm-modules-ci --max-workers 4",
+        "substitutions": {
+          "${CPU_CORES}": "4"
+        },
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T13:58:18.383Z",
+        "endedAt": "2026-09-01T13:58:51.471Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 113.1,
+        "wallMs": 33087,
+        "testFiles": 40,
+        "tests": 581,
+        "failures": 0,
+        "outputTail": "\n● Validation Warning:\n\n  Option \"projects\" is not supported in an individual project configuration.\n  Move it to the root configuration.\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n\n● Validation Warning:\n\n  Option \"watchPlugins\" is not supported in an individual project configuration.\n  Move it to the root configuration.\n\n  Configuration Documentation:\n  https://jestjs.io/docs/configuration\n\n........................................\n\n\nTest Suites: 40 passed, 40 total\nTests:       112 skipped, 469 passed, 581 total\nSnapshots:   1 passed, 1 total\nTime:        29.004 s\nRan all test suites matching packages/jest-runtime.\n"
+      }
+    ],
+    "reachedEnd": true,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "producedAt": "2026-09-01T13:58:51.652Z"
+}
