@@ -19,6 +19,7 @@ import { join, resolve } from "node:path";
 import { collectEvidence } from "../src/ci-inference/evidence.js";
 import { inferPipeline } from "../src/ci-inference/infer.js";
 import { execBounded } from "./process-exec.js";
+import { assertShellSafeArgs } from "./shell-safety.js";
 import { parseTestOutput } from "./test-output-parsers.js";
 
 type Outcome = "REPRODUCED" | "PARTIAL_REPRODUCTION" | "REFUSED" | "DIVERGED";
@@ -83,6 +84,12 @@ function runArm(arm: "reference" | "inference", source: string, steps: Array<{ c
     const [bin, ...args] = step.command;
     if (!bin) continue;
     process.stdout.write(`    ${arm.padEnd(9)} ${step.command.join(" ").slice(0, 70).padEnd(72)}`);
+    // The shell-invocation invariant, and it applies with unusual force here: the INFERENCE arm's argv
+    // comes from workflow `run:` lines, which are repository-derived text — the exact input the guard
+    // exists for. `npm` needs a shell to reach its shim, so the arguments are asserted safe first.
+    // The engine's own `argvOf` already rejects metacharacters; this makes that guarantee enforced at
+    // the spawn site rather than assumed from a caller two files away.
+    assertShellSafeArgs(step.command, `ci-reproduction ${arm} arm`);
     const run = execBounded(bin, args, { cwd: repoPath, timeoutMs, shell: true, env: { ...process.env, ...(step.environment ?? {}) } as Record<string, string> });
     const combined = `${run.stdout}\n${run.stderr}`;
     const parsed = parseTestOutput(combined);
