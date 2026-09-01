@@ -1,0 +1,12 @@
+{
+  "run": "genc-mutate-02",
+  "experiment": "GENERATION_C_01",
+  "supersededAttempt": "genc-mutate-01 (INVALID_RUN, defect 22, measured nothing)",
+  "sha256": {
+    "corpus.jsonl": "32bf6992e9e4e50264bbcab01be5bc935484405fa12d10db6a06c2147295d260",
+    "environment.json": "4d457324e76065168d567b6612f91527bb153a4330dac294544de01c97d0cae9",
+    "execution-receipt.json": "08cff690e7334df77df42dd1c2b58edcb721e29a54baa1a7a93b065efb1a12e1",
+    "manifest.json": "10208f5faa89c8c8b26cda506ad477480d21cf2fc1eace43b6d576f91f4c8aa8",
+    "results.jsonl": "11817e01a8084ca1e511565d10107df272303580c17aba5446bf182d49545e3b"
+  }
+}
