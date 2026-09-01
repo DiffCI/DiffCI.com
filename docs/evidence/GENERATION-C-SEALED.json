@@ -1,0 +1,25 @@
+{
+  "experimentId": "GENERATION_C_01",
+  "sealedAt": "2026-08-31",
+  "bundleChecksum": "9e17e3145826f78aab2e54db4a846da67771d56260e1c38f59d523eca0638b34",
+  "bundleChecksumMethod": "sha256 over the newline-joined \"<path> <sha256>\" lines below, in the order listed",
+  "observationsPerformed": 0,
+  "mutationsPerformed": 0,
+  "files": {
+    "docs/evidence/generation-c-manifest.json": "84df02b9177818ed190884eb2fbd6bafeaeb135c117722ea17d04c3ec0db04c5",
+    "docs/evidence/generation-c-target.json": "fa71795806ea04d81412a8b448428e16a960ce9acc9fa14d94624883ef86b6ab",
+    "docs/evidence/generation-c-candidate-pairs.json": "365642621005de49c6d68a219af11ee732cece2cd010e2d848ca729140a0278f",
+    "docs/evidence/generation-c-candidate-selection.txt": "5ae9b389ea1d792f8db56c9a87299b92f079b9d0fac7fc34d01acd5900a1b97f",
+    "docs/evidence/generation-c-draw.json": "f1fb996442e39f29e7745e43174ba248f53c289f1626dde88c41972da0c60b00",
+    "docs/evidence/generation-c-eligible-population.json": "d223668488bb29324c5dfe31bbe660048ea0ba385d64fc7615d6ab04c1105106",
+    "docs/evidence/apparatus-gen-c/APPARATUS_IDENTITY.json": "2ecb6aa0627002482ebf135147f4764dff8183b6d5bee21576d337a118f11bc1",
+    "docs/generation-c-target-rule.md": "1d1a98a9919ef05f2b28be689bdd8c523c1556f912b9cc8c05e3b5b4ac41361c",
+    "docs/generation-c-candidate-rule.md": "f700e43f8db1535bf6434afabb90c3deb6ea3d55308ee01f219696102de19dda",
+    "docs/generation-c-draw-rule.md": "c4a3777a265f9eb5a2db963a999754cf7258c0e698df67435c5a39ea5b4ee3b8",
+    "docs/generation-c-frame-continuation-rule.md": "fd986c8cf3cce0fa565e64412e3e162b197fe6a94488c0bd60fae5a74c519c78",
+    "docs/generation-c-population-frozen.md": "22cf9c617b5e4e4f2cc85fc2a9507702c1753b4e78e8e3eb50f13dea745e23ad",
+    "docs/label-distinctness-principle.md": "6ec4e33240178d9f24e744660a9b6442a0c316d8ffee6a8d7defcf3d29e234f7",
+    "docs/red-qualification-corpus.md": "976234f0ff237f42af2362a198f5323d33a704e7189555df219278fa40be4867",
+    "docs/e2-registration-rule.md": "9471a916a33154bd7b21bcf1b6996f352794f919fb0e7ae9ad95e8fc4b5df0f8"
+  }
+}

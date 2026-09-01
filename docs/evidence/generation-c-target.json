@@ -1,0 +1,32 @@
+{
+  "targetVersion": 1,
+  "rule": "docs/generation-c-target-rule.md",
+  "ruleCommit": "e9c83f8",
+  "candidateUniverse": "docs/evidence/generation-c-candidate-pairs.json",
+  "candidateUniverseSealedAt": "d151f76",
+  "inputChecksum": "365642621005de49c6d68a219af11ee732cece2cd010e2d848ca729140a0278f",
+  "seed": "8f8ae6ef9c8a48dbf9707c2a3cd3141b39e9bf4e2b53cf980155c5cf09eaafc9",
+  "first8Hex": "8f8ae6ef",
+  "uint32": 2408244975,
+  "modulus": 5,
+  "index": 0,
+  "target": {
+    "candidateIndex": 1,
+    "base": "3629019d8e84e096115c8774a34178ff5b83aaf2",
+    "head": "58e487fecda05ddafcac2fcf67475d90bd515957",
+    "subject": "fix(prefer-to-have-been-called): don't crash on matcher without an argument (#2016)",
+    "implementationFiles": [
+      "src/rules/prefer-to-have-been-called.ts"
+    ],
+    "changedTestFiles": [
+      "src/rules/__tests__/prefer-to-have-been-called.test.ts"
+    ],
+    "allChangedFiles": [
+      "src/rules/__tests__/prefer-to-have-been-called.test.ts",
+      "src/rules/prefer-to-have-been-called.ts"
+    ]
+  },
+  "verification": "printf %s 365642621005de49c6d68a219af11ee732cece2cd010e2d848ca729140a0278f | sha256sum -> 8f8ae6ef9c8a48dbf9707c2a3cd3141b39e9bf4e2b53cf980155c5cf09eaafc9; 0x8f8ae6ef = 2408244975; 2408244975 mod 5 = 0",
+  "chosenWithoutDiffCIOutput": true,
+  "note": "One target. No recomputation, no substitution. The other four candidates remain sealed in the universe artefact."
+}

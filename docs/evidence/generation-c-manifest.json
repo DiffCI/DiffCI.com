@@ -1,0 +1,275 @@
+{
+  "manifestVersion": 1,
+  "schema": {
+    "manifest": "diffci.experiment.manifest/v1",
+    "executionReceipt": "diffci.execution.receipt/v1",
+    "registrationDerivation": "diffci.registration.derivation/v1",
+    "note": "Schema identifiers are declared so this sealed experiment stays readable as training or evaluation evidence later, WITHOUT retroactive interpretation of ambiguous fields. No learned-model features are produced today; the experiment is unchanged by their presence."
+  },
+  "experimentId": "GENERATION_C_01",
+  "sealedAt": "2026-08-31",
+  "subject": {
+    "repository": "jest-community/eslint-plugin-jest",
+    "pinnedTree": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+    "frameRank": 153,
+    "selectedBy": "sealed random draw, docs/evidence/generation-c-draw.json"
+  },
+  "provenanceChain": [
+    {
+      "step": "5.1 apparatus identity",
+      "artefact": "docs/evidence/apparatus-gen-c/APPARATUS_IDENTITY.json",
+      "sha256": "2ecb6aa0627002482ebf135147f4764dff8183b6d5bee21576d337a118f11bc1"
+    },
+    {
+      "step": "5.2 eligible population",
+      "artefact": "docs/evidence/generation-c-eligible-population.json",
+      "sha256": "d223668488bb29324c5dfe31bbe660048ea0ba385d64fc7615d6ab04c1105106",
+      "frozenAt": "0f6ea3f"
+    },
+    {
+      "step": "5.3 draw rule",
+      "artefact": "docs/generation-c-draw-rule.md",
+      "sha256": "c4a3777a265f9eb5a2db963a999754cf7258c0e698df67435c5a39ea5b4ee3b8",
+      "frozenAt": "9f424b8"
+    },
+    {
+      "step": "5.3 draw result",
+      "artefact": "docs/evidence/generation-c-draw.json",
+      "sha256": "f1fb996442e39f29e7745e43174ba248f53c289f1626dde88c41972da0c60b00",
+      "sealedAt": "209c56b"
+    },
+    {
+      "step": "5.4 candidate rule",
+      "artefact": "docs/generation-c-candidate-rule.md",
+      "sha256": "f700e43f8db1535bf6434afabb90c3deb6ea3d55308ee01f219696102de19dda"
+    },
+    {
+      "step": "5.4 candidate universe",
+      "artefact": "docs/evidence/generation-c-candidate-pairs.json",
+      "sha256": "365642621005de49c6d68a219af11ee732cece2cd010e2d848ca729140a0278f",
+      "sealedAt": "d151f76"
+    },
+    {
+      "step": "5.4 traversal record",
+      "artefact": "docs/evidence/generation-c-candidate-selection.txt",
+      "sha256": "5ae9b389ea1d792f8db56c9a87299b92f079b9d0fac7fc34d01acd5900a1b97f"
+    },
+    {
+      "step": "5.5 target rule",
+      "artefact": "docs/generation-c-target-rule.md",
+      "sha256": "1d1a98a9919ef05f2b28be689bdd8c523c1556f912b9cc8c05e3b5b4ac41361c",
+      "frozenAt": "e9c83f8"
+    },
+    {
+      "step": "5.5 target result",
+      "artefact": "docs/evidence/generation-c-target.json",
+      "sha256": "fa71795806ea04d81412a8b448428e16a960ce9acc9fa14d94624883ef86b6ab"
+    }
+  ],
+  "draw": {
+    "rule": "docs/generation-c-draw-rule.md",
+    "H": "9f424b8e62217fb2ed6c78fb4d716d19c4e620a5",
+    "seed": "e4a9fb6ab8850c5c1161076e6ec7d4cb0527b90789bbf57375621206e79c092e",
+    "index": 4,
+    "selected": {
+      "rank": 153,
+      "repository": "jest-community/eslint-plugin-jest",
+      "headSha": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da"
+    },
+    "orderedPopulation": [
+      {
+        "index": 0,
+        "rank": 62,
+        "repository": "eslint-community/eslint-plugin-promise",
+        "headSha": "e73585efc03ddf17df0273fa3b8dad0b66c51168"
+      },
+      {
+        "index": 1,
+        "rank": 75,
+        "repository": "webpack/postcss-loader",
+        "headSha": "ed3e1f7592a5fea2eb0da2475a3675ceb9371a47"
+      },
+      {
+        "index": 2,
+        "rank": 112,
+        "repository": "ezolenko/rollup-plugin-typescript2",
+        "headSha": "4cff90bbe88a6747d5a0eb52d300cb8bed505277"
+      },
+      {
+        "index": 3,
+        "rank": 115,
+        "repository": "webpack-contrib/extract-text-webpack-plugin",
+        "headSha": "bc6f9f8f61d708352ea89fd4fc9764ce1e4de409"
+      },
+      {
+        "index": 4,
+        "rank": 153,
+        "repository": "jest-community/eslint-plugin-jest",
+        "headSha": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da"
+      }
+    ]
+  },
+  "candidateUniverse": {
+    "count": 5,
+    "rule": "docs/generation-c-candidate-rule.md",
+    "excludeScope": "",
+    "excludeScopeRationale": "the lint project declares testMatch <rootDir>/**/*.{js,ts}; no region lies outside the executed scope",
+    "pairs": [
+      {
+        "index": 1,
+        "base": "3629019d8e84e096115c8774a34178ff5b83aaf2",
+        "head": "58e487fecda05ddafcac2fcf67475d90bd515957",
+        "subject": "fix(prefer-to-have-been-called): don't crash on matcher without an argument (#2016)",
+        "implementationFiles": [
+          "src/rules/prefer-to-have-been-called.ts"
+        ],
+        "changedTestFiles": [
+          "src/rules/__tests__/prefer-to-have-been-called.test.ts"
+        ]
+      },
+      {
+        "index": 2,
+        "base": "197f34167e306fa057d1285b1fe08746cfc5a4a0",
+        "head": "3629019d8e84e096115c8774a34178ff5b83aaf2",
+        "subject": "fix(prefer-to-have-length): don't crash on `expect` chain without a value (#2014)",
+        "implementationFiles": [
+          "src/rules/prefer-to-have-length.ts"
+        ],
+        "changedTestFiles": [
+          "src/rules/__tests__/prefer-to-have-length.test.ts"
+        ]
+      },
+      {
+        "index": 3,
+        "base": "6e6e9a272fbb780148cfdc8b23d8b97801e84b2c",
+        "head": "197f34167e306fa057d1285b1fe08746cfc5a4a0",
+        "subject": "refactor(valid-expect): use optional chaining (#2015)",
+        "implementationFiles": [
+          "src/rules/valid-expect.ts"
+        ],
+        "changedTestFiles": []
+      },
+      {
+        "index": 4,
+        "base": "fc5657c8801fb79b85f28c91ab0abcf009a3c513",
+        "head": "d848f70d5ae1a143d4ae2ef52bf00c6658f5070d",
+        "subject": "fix(no-export): handle literal property accessors (#2011)",
+        "implementationFiles": [
+          "src/rules/no-export.ts"
+        ],
+        "changedTestFiles": [
+          "src/rules/__tests__/no-export.test.ts"
+        ]
+      },
+      {
+        "index": 5,
+        "base": "6156650467c5982182aa2cb8ba122c0320a2d4dd",
+        "head": "fc5657c8801fb79b85f28c91ab0abcf009a3c513",
+        "subject": "refactor: use `replaceText` in fixers when possible (#2012)",
+        "implementationFiles": [
+          "src/rules/no-unneeded-async-expect-function.ts",
+          "src/rules/prefer-jest-mocked.ts",
+          "src/rules/valid-title.ts"
+        ],
+        "changedTestFiles": []
+      }
+    ]
+  },
+  "target": {
+    "rule": "docs/generation-c-target-rule.md",
+    "ruleCommit": "e9c83f8",
+    "inputChecksum": "365642621005de49c6d68a219af11ee732cece2cd010e2d848ca729140a0278f",
+    "seed": "8f8ae6ef9c8a48dbf9707c2a3cd3141b39e9bf4e2b53cf980155c5cf09eaafc9",
+    "index": 0,
+    "candidate": {
+      "candidateIndex": 1,
+      "base": "3629019d8e84e096115c8774a34178ff5b83aaf2",
+      "head": "58e487fecda05ddafcac2fcf67475d90bd515957",
+      "subject": "fix(prefer-to-have-been-called): don't crash on matcher without an argument (#2016)",
+      "implementationFiles": [
+        "src/rules/prefer-to-have-been-called.ts"
+      ],
+      "changedTestFiles": [
+        "src/rules/__tests__/prefer-to-have-been-called.test.ts"
+      ],
+      "allChangedFiles": [
+        "src/rules/__tests__/prefer-to-have-been-called.test.ts",
+        "src/rules/prefer-to-have-been-called.ts"
+      ]
+    }
+  },
+  "apparatus": {
+    "generation": "C",
+    "analyserCommit": "0beb661",
+    "agentIntegrity": "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    "agentTarballSha256": "ee639e1ac7e1a81bb0ba21800a912b7462831f3ca3f55d084dc7d4dc852e8ba9",
+    "supersededGenerationB": "sha512-mlNTeKlrkt6TqWBGi9e5O/QM90t7vXpmwyBIly5Mm1glHzRotWmV1s9A1PK3zJIwfntHEgh8S/t3lRJOYucN8g==",
+    "environment": {
+      "image": "docker.io/cloudflare/sandbox:0.12.5",
+      "node": "v22.23.2",
+      "npm": "10.9.8",
+      "git": "git version 2.34.1",
+      "osRelease": "Ubuntu 22.04.5 LTS"
+    },
+    "qualifierVersion": "2.0.0",
+    "qualificationRuns": {
+      "suiteAndUniverse": "apparatus-qualify-genc-01",
+      "observationDeterminism": "apparatus-determinism-genc-02"
+    },
+    "guard": "requiresApparatus: gen-c, enforced in bootstrap; every mode passes through it and the receipt records executed true/false"
+  },
+  "execution": {
+    "install": [
+      "corepack",
+      "yarn",
+      "install",
+      "--immutable"
+    ],
+    "build": [
+      "corepack",
+      "yarn",
+      "run",
+      "build"
+    ],
+    "testModule": "node_modules/jest/bin/jest.js",
+    "testArgs": [],
+    "derivedFrom": "docs/evidence/e2/153-eslint-plugin-jest.registration-derivation.json (yarn.lock present; test script `jest`)",
+    "registrationRule": "docs/e2-registration-rule.md",
+    "comparatorExecutionScope": "whole repository - jest projects: a default `test` project and a jest-runner-eslint `lint` project with testMatch <rootDir>/**/*.{js,ts}",
+    "greenBaseline": "240 suites, 4809 tests, 9 skipped; exit 0 on two consecutive runs (run e2-16-eslint-plugin-jest)"
+  },
+  "measurement": {
+    "cpuPrimary": "CPU-seconds via /proc/self/stat cutime+cstime through execBounded; wall time reported separately",
+    "incremental": "C_comparator - (C_diffci_selected + C_joint_analysis); joint analysis charged ENTIRELY to DiffCI",
+    "grossVersusFull": "reported alongside incremental, never instead of it",
+    "installAndBuild": "common unavoidable work, reported SEPARATELY; never counted as selection savings",
+    "negativeSavings": "preserved as measured and reported",
+    "crossRunComparison": "FORBIDDEN. The same suite on one tree varied ~20% across runs (apparatus-qualification-gen-c). Only WITHIN-run arm comparison is sound.",
+    "denominator": "the RUNNER universe, not the tree - defect 17. Selection fractions are stated against what jest executes."
+  },
+  "stopRule": {
+    "falseGreen": "full arm FAIL and DiffCI arm PASS is a FALSE GREEN: disqualifying, reported at the top of the result, never offset by savings elsewhere",
+    "recallUnmeasurable": "stays in the denominator; hiding it inflates apparent recall",
+    "noRedraw": "no candidate re-drawn, substituted or skipped for any result",
+    "noAnalyserChange": "the analyser is frozen at generation C between sealing and result; any change voids the experiment rather than amending it"
+  },
+  "labelSemantics": {
+    "principle": "unknown != negative - docs/label-distinctness-principle.md",
+    "labels": {
+      "RED": "the repository own install, build or suite failed",
+      "INFRASTRUCTURE": "platform, container, harness or registry failure; nothing of the repository ran",
+      "UNREGISTERABLE": "the rule could not determine commands and refused",
+      "NOT_REACHED": "a declared control never executed",
+      "NO_VERDICT": "the run produced no repository outcome",
+      "RECALL_UNMEASURABLE": "the mutation did not change suite behaviour",
+      "REFUSED": "DiffCI declined to propose a selection"
+    },
+    "layering": "execution receipts carry outcome.layer (INFRASTRUCTURE | REPOSITORY | ANALYSER), decided structurally from the step the run died on, never from error text"
+  },
+  "state": {
+    "observationsPerformed": 0,
+    "mutationsPerformed": 0,
+    "targetChosenWithoutDiffCIOutput": true,
+    "statement": "No DiffCI observation, selection, mutation or density analysis has been performed on this repository. The target was chosen from artefact checksums alone."
+  }
+}
