@@ -210,3 +210,28 @@ a writer. The rank bound is now `[0-9]{1,5}`, taken from the frame rather than f
 unresolved — a scoped-name filename question, not an allowlist one — and its E2 job was REMOVED rather
 than registered unpinned. The sequence stops at the fifth GREEN from rank 46, so it is unlikely to be
 reached; if it is, the sha is resolved then.
+
+## Defect 22 — present-but-empty read as absent, so a default command was substituted
+
+Found 2026-09-01 when `genc-mutate-01` returned `INVALID_RUN` having measured nothing.
+
+`dogfood-mutate` parsed its command flags as `flag(x) ? flag(x).split("|") : DEFAULT`. An **empty**
+value is falsy, so a caller that legitimately declares "no extra test arguments" silently received the
+default instead.
+
+`jest-community/eslint-plugin-jest` needs none — its test script is bare `jest`. So `--test-args ""`
+was passed, the empty string was falsy, and the vitest-shaped default `["--test", "tests/**/*.test.ts"]`
+was substituted. Jest answered `Unrecognized option "test"`, the baseline could not be parsed, and the
+run died before any mutation.
+
+**Nothing about the repository or about DiffCI was measured.** Recorded as an apparatus defect, not as a
+result, and the run is not a mutation attempt against the sealed target.
+
+**Same family as `unknown ≠ negative`:** an empty declaration is a declaration. Only an ABSENT flag may
+fall back to a default. Fixed for `--install`, `--test-args` and `--build` by testing argv presence
+rather than value truthiness, with a test pinning that the truthiness form is gone rather than merely
+supplemented.
+
+Worth noting what caught it: the harness refused to infer a failure count from output it could not
+parse, and reported `INVALID_RUN` with the runner's own error text. An earlier version that guessed a
+count would have produced a plausible-looking mutation result from a run where jest never started.

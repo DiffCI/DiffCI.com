@@ -712,14 +712,25 @@ function main(): void {
   // The install command may reach a .cmd shim through a shell (fixed literals, asserted). The test
   // module is invoked through `node` so the selected run can append repository-derived paths without
   // one. That asymmetry is the shell invariant, applied.
+  // PRESENT-BUT-EMPTY IS NOT ABSENT (2026-09-01).
+  //
+  // These read `flag(x) ? ... : DEFAULT`, so a caller passing an EMPTY value silently got the default
+  // instead. `genc-mutate-01` is what that costs: eslint-plugin-jest legitimately needs no extra test
+  // arguments, so `--test-args ""` was passed, the empty string was falsy, and the vitest-shaped
+  // default `["--test", "tests/**/*.test.ts"]` was substituted. Jest rejected `--test`, the baseline
+  // could not be parsed, and the run died INVALID_RUN having measured nothing.
+  //
+  // The repository was fine and DiffCI was never exercised. Same family as `unknown != negative`: an
+  // empty declaration is a declaration, and only an ABSENT flag may fall back to a default.
+  const present = (key: string): boolean => args.includes(`--${key}`);
   const commands: RepoCommands = {
-    install: flag("install") ? flag("install")!.split("|") : DEFAULT_COMMANDS.install,
+    install: present("install") ? flag("install")!.split("|").filter(Boolean) : DEFAULT_COMMANDS.install,
     testModule: flag("test-module") ?? DEFAULT_COMMANDS.testModule,
-    testArgs: flag("test-args") ? flag("test-args")!.split("|") : DEFAULT_COMMANDS.testArgs,
+    testArgs: present("test-args") ? flag("test-args")!.split("|").filter(Boolean) : DEFAULT_COMMANDS.testArgs,
     // This was omitted once, and the run manifest is the only reason anyone noticed: a qualification
     // run passed --build, the flag was never read, and the result was byte-identical to the run it was
     // supposed to differ from. Identical failure counts are what gave it away.
-    build: flag("build") ? flag("build")!.split("|") : undefined,
+    build: present("build") ? flag("build")!.split("|").filter(Boolean) : undefined,
   };
 
   if (!existsSync(corpusPath)) throw new Error(`no corpus at ${corpusPath} - run: npm run dogfood`);

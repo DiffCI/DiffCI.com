@@ -6,6 +6,7 @@
  * container platform that stopped mid-bootstrap three times running. Each, recorded as "this repository
  * failed", would have removed an eligible repository for a reason with no substance.
  */
+import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -77,4 +78,20 @@ test("a DECLARED guard that never ran is recorded NOT_REACHED, not omitted", () 
   assert.equal(receipt.guards[0]!.executed, false);
   assert.equal(receipt.guards[0]!.result, "NOT_REACHED");
   assert.equal(receipt.outcome.layer, "INFRASTRUCTURE");
+});
+
+test("an empty --test-args is a DECLARATION, not an absent flag", () => {
+  // genc-mutate-01: eslint-plugin-jest needs no extra test arguments, so `--test-args ""` was passed.
+  // The parser read the empty string as falsy and substituted the vitest-shaped default
+  // ["--test", "tests/**/*.test.ts"]. Jest rejected `--test`, the baseline was unparseable, and the
+  // run died INVALID_RUN having measured nothing about the repository or about DiffCI.
+  const src = readFileSync("scripts/dogfood-mutate.ts", "utf8");
+  assert.match(src, /const present = \(key: string\)/, "presence must be distinguishable from truthiness");
+  for (const flag of ["install", "test-args", "build"]) {
+    assert.ok(
+      src.includes(`present("${flag}")`),
+      `--${flag} must fall back to a default only when ABSENT, never when empty`,
+    );
+  }
+  assert.ok(!/flag\("test-args"\) \? /.test(src), "the truthiness form must be gone, not merely supplemented");
 });
