@@ -1,0 +1,124 @@
+/**
+ * Job semantics — what each workflow job is FOR, and a planner that resolves a path to an outcome.
+ *
+ * WHY THIS REPLACES `primaryJob`. INFERENCE_02 collapsed a workflow to a single job by scoring jobs on
+ * how many recognised operations they ran. On `html-webpack-plugin` the lint job (lint + security) beat
+ * the build job (test:coverage) two-to-one, so the engine described the lint pipeline and proposed no
+ * test step at all — then claimed the pipeline was executable. `lint-staged` failed the same way.
+ *
+ * The defect was never the scoring weights. It was collapsing a workflow to one job at all: a pipeline
+ * has several purposes, and "which job wins" is the wrong question. The right one is **which path
+ * produces the outcome being asked about**.
+ *
+ * So every job is preserved as a node with the purposes it provides, and a planner resolves a path for
+ * a requested purpose. Nothing is discarded because it lost a comparison — `lint` and `security` remain
+ * in the graph, because optimising the WHOLE pipeline eventually needs them.
+ *
+ * This is deliberately not "prefer jobs containing test". A purpose is derived from the operations a job
+ * actually contains; asking for `TEST` finds jobs that provide `TEST`, and asking for `LINT` finds jobs
+ * that provide `LINT`, with the same code.
+ */
+import type { InferredOperation, OperationKind } from "./schema.js";
+
+/** What a job or operation is FOR. Uppercase to keep it distinct from the operation-kind vocabulary. */
+export type Purpose = "INSTALL" | "BUILD" | "LINT" | "TYPECHECK" | "TEST" | "SECURITY" | "PACKAGE" | "DEPLOY" | "GENERATE" | "VERIFY" | "UNKNOWN";
+
+const PURPOSE_BY_KIND: Partial<Record<OperationKind, Purpose>> = {
+  install: "INSTALL",
+  build: "BUILD",
+  lint: "LINT",
+  typecheck: "TYPECHECK",
+  test: "TEST",
+  security: "SECURITY",
+  package: "PACKAGE",
+  deploy: "DEPLOY",
+  generate: "GENERATE",
+  verify: "VERIFY",
+};
+
+export function purposeOfKind(kind: OperationKind): Purpose {
+  return PURPOSE_BY_KIND[kind] ?? "UNKNOWN";
+}
+
+/**
+ * One workflow job, kept whole.
+ *
+ * `provides` is derived from the operations it contains — never from its name. A job called "test" that
+ * runs only a linter provides `LINT`, and a job called "ci" that runs a suite provides `TEST`.
+ */
+export interface InferredJob {
+  id: string;
+  workflow: string;
+  job: string;
+  provides: Purpose[];
+  operations: InferredOperation[];
+  /** Reference-node ids that block this job as a whole. */
+  blockedBy: string[];
+}
+
+export function jobProvides(operations: InferredOperation[]): Purpose[] {
+  const seen = new Set<Purpose>();
+  for (const op of operations) {
+    const purpose = purposeOfKind(op.kind);
+    if (purpose !== "UNKNOWN") seen.add(purpose);
+  }
+  return [...seen].sort();
+}
+
+export interface PurposePlan {
+  purpose: Purpose;
+  /** The job chosen to produce this outcome, if any provides it. */
+  jobId?: string;
+  /** Operations to execute, in dependency order, including the prerequisites the outcome needs. */
+  operations: InferredOperation[];
+  /** True only when every operation in the path is executable. */
+  executable: boolean;
+  /** Why the path cannot be executed, when it cannot. */
+  refusal?: string;
+}
+
+/**
+ * Resolves the execution path for one requested outcome.
+ *
+ * Deterministic: among jobs that provide the purpose, the one with the fewest blocked operations wins;
+ * workflow-then-job order breaks ties. Preferring the least-blocked job is not a quality judgement about
+ * the repository — it is choosing the path this engine can actually account for.
+ *
+ * `INSTALL` is included as a prerequisite whenever the chosen job has one, because a test outcome
+ * produced from an uninstalled tree is not that outcome.
+ */
+export function planForPurpose(jobs: InferredJob[], purpose: Purpose): PurposePlan {
+  const providers = jobs.filter((j) => j.provides.includes(purpose));
+  if (providers.length === 0) {
+    return {
+      purpose,
+      operations: [],
+      executable: false,
+      refusal: `no workflow job provides ${purpose}; the repository may produce this outcome outside GitHub Actions, or this engine did not recognise the step that does`,
+    };
+  }
+
+  const blockedCount = (j: InferredJob): number => j.operations.filter((o) => !o.executable).length;
+  const chosen = [...providers].sort((a, b) => blockedCount(a) - blockedCount(b))[0]!;
+
+  // The prerequisite chain: install first when the job has one, then everything up to and including the
+  // operations that deliver the requested purpose. Steps AFTER it are not needed for this outcome.
+  const ordered = chosen.operations;
+  const lastIndex = ordered.reduce((acc, op, i) => (purposeOfKind(op.kind) === purpose ? i : acc), -1);
+  const path = lastIndex === -1 ? [] : ordered.slice(0, lastIndex + 1);
+
+  const blocked = path.filter((o) => !o.executable);
+  return {
+    purpose,
+    jobId: chosen.id,
+    operations: path,
+    executable: blocked.length > 0 ? false : path.length > 0,
+    ...(blocked.length > 0
+      ? {
+          refusal: `${blocked.length} operation(s) in the ${purpose} path are not executable: ${blocked
+            .map((o) => `${o.id} (${[...o.missingRequirements, ...o.blockedBy].join(", ")})`)
+            .join("; ")}`,
+        }
+      : {}),
+  };
+}

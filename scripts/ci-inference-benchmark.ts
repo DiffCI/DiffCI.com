@@ -25,6 +25,7 @@ import { join, resolve } from "node:path";
 
 import { collectEvidence } from "../src/ci-inference/evidence.js";
 import { inferPipeline } from "../src/ci-inference/infer.js";
+import { planForPurpose } from "../src/ci-inference/jobs.js";
 import { validateOperation, type BenchmarkVerdict, type InferenceBenchmarkRow, type InferredPipeline } from "../src/ci-inference/schema.js";
 
 /** The six frozen REDs, with the generic derivation and the failure each produced. Transcribed from evidence. */
@@ -112,8 +113,15 @@ function score(
   row: { knownFailure: { stage: string; detail: string } },
   inferred: InferredPipeline,
   generic: { install: string[] },
-): { verdict: BenchmarkVerdict; reason: string } {
-  const install = inferred.operations.find((o) => o.kind === "install");
+): { verdict: BenchmarkVerdict; reason: string; installRecovered?: string } {
+  // INFERENCE_03 scores the PATH TO AN OUTCOME, not whole-pipeline optimisability. With every job kept,
+  // a whole workflow is almost never entirely executable - ant-design has 167 operations - and judging
+  // the test question on that would refuse everything for reasons unrelated to testing.
+  const plan = planForPurpose(inferred.jobs, "TEST");
+  const install = plan.operations.find((o) => o.kind === "install" && o.command.length > 0)
+    ?? inferred.operations.find((o) => o.kind === "install" && o.command.length > 0);
+  // Tracked separately so a recovered install command cannot be lost silently behind a path refusal.
+  const installRecovered = install && install.command.length > 0 ? install.command.join(" ") : undefined;
 
   // A resource-limit failure is a different learning problem from configuration inference, and is kept
   // separate rather than scored as if evidence could have predicted it.
@@ -124,11 +132,12 @@ function score(
     };
   }
 
-  // THE HARD BOUNDARY, checked before anything else.
-  if (!inferred.optimisable) {
+  // THE HARD BOUNDARY, checked before anything else - now on the path to the outcome in question.
+  if (!plan.executable) {
     return {
       verdict: "CORRECT_REFUSAL",
-      reason: `refused to optimise - ${inferred.optimisationRefusal}`,
+      reason: `refused to execute the TEST path - ${plan.refusal ?? "no executable path"}`,
+      installRecovered,
     };
   }
 
@@ -144,6 +153,7 @@ function score(
     if (addsResolutionFlag || differentManager) {
       return {
         verdict: "CORRECT_INFERENCE",
+        installRecovered,
         reason: `executable install \`${inferredCmd}\` (${install.confidence}) - materially different from the generic \`${genericCmd}\` in a way that addresses the recorded failure`,
       };
     }
@@ -187,7 +197,7 @@ function main(): void {
       const problems = validateOperation(op);
       if (problems.length > 0) throw new Error(`schema violation: ${problems.join("; ")}`);
     }
-    const { verdict, reason } = score(entry, inferred, entry.genericDerivation);
+    const { verdict, reason, installRecovered } = score(entry, inferred, entry.genericDerivation);
     rows.push({
       schema: "diffci.ci.inference.benchmark/v1",
       repository: entry.repository,
@@ -197,10 +207,12 @@ function main(): void {
       inferred,
       verdict,
       verdictReason: reason,
-    });
+      ...(installRecovered ? { installRecovered } : {}),
+    } as never);
     console.log(`${verdict}`);
     console.log(`      facts ${String(facts.length).padStart(4)}   operations ${String(inferred.operations.length).padStart(2)}   refs ${String(inferred.references.length).padStart(3)}   optimisable ${inferred.optimisable ? "YES" : "NO"}`);
     console.log(`      ${reason}`);
+    if (installRecovered) console.log(`      install recovered: ${installRecovered}`);
   }
 
   writeFileSync(join(outDir, "benchmark.json"), `${JSON.stringify({ schema: "diffci.ci.inference.benchmark/v1", producedAt: new Date().toISOString(), rows }, null, 2)}\n`);

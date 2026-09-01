@@ -18,6 +18,7 @@ import { join, resolve } from "node:path";
 
 import { collectEvidence } from "../src/ci-inference/evidence.js";
 import { inferPipeline } from "../src/ci-inference/infer.js";
+import { planForPurpose } from "../src/ci-inference/jobs.js";
 import { execBounded } from "./process-exec.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
 import { parseTestOutput } from "./test-output-parsers.js";
@@ -186,8 +187,12 @@ function main(): void {
   clone(inferenceRepo);
   const facts = collectEvidence(inferenceRepo);
   const pipeline = inferPipeline(inferenceRepo, repository, headSha, facts, new Date().toISOString());
-  const inferenceSteps = pipeline.operations
-    .filter((o) => o.kind !== "checkout" && o.executable && o.command.length > 0)
+  // INFERENCE_03: ask the planner for the path to the outcome under reproduction, rather than taking
+  // whatever operations a single collapsed job happened to contain. The reference question here is TEST
+  // reproduction, so the plan is the TEST path - install included, later steps excluded.
+  const plan = planForPurpose(pipeline.jobs, "TEST");
+  const inferenceSteps = plan.operations
+    .filter((o) => o.kind !== "checkout" && o.command.length > 0)
     .map((o) => ({ command: o.command, environment: o.environment }));
 
   // --- reference arm: transcribed from the repository's workflow, engine not consulted ---
@@ -203,7 +208,7 @@ function main(): void {
 
   const reference = runArm("reference", referencePlan.source, referencePlan.steps, referenceRepo, timeoutMs);
   const inference = runArm("inference", "INFERENCE_02 ExecutionGraph", inferenceSteps, inferenceRepo, timeoutMs);
-  const { outcome, reason } = classify(reference, inference, pipeline.optimisable);
+  const { outcome, reason } = classify(reference, inference, plan.executable);
 
   writeFileSync(
     join(outDir, "reproduction.json"),
@@ -215,6 +220,8 @@ function main(): void {
         headSha,
         protocol: "docs/ci-reproduction-01-protocol.md",
         optimisable: pipeline.optimisable,
+        jobs: pipeline.jobs.map((j) => ({ id: j.id, provides: j.provides, operations: j.operations.map((o) => ({ id: o.id, kind: o.kind, command: o.command, executable: o.executable })) })),
+        testPlan: plan,
         inferredOperations: pipeline.operations,
         referenceArm: reference,
         inferenceArm: inference,

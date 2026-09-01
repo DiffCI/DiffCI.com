@@ -23,6 +23,7 @@
  * A command list would have to be torn apart to get there, and every consumer rewritten with it.
  */
 
+import type { InferredJob } from "./jobs.js";
 import type { ReferenceNode } from "./reference-graph.js";
 
 /** Where a fact was observed. A fact without a location cannot be re-checked. */
@@ -143,6 +144,15 @@ export interface InferredPipeline {
   repository: string;
   headSha: string;
   facts: ObservedFact[];
+  /**
+   * EVERY workflow job, kept whole, with the purposes each provides.
+   *
+   * INFERENCE_03. The previous version collapsed a workflow to one job and lost the rest; lint and
+   * security disappeared from html-webpack-plugin because the test job won a scoring function. A
+   * pipeline has several purposes and optimising all of it eventually needs all of them.
+   */
+  jobs: InferredJob[];
+  /** Every operation across every job, flattened. */
   operations: InferredOperation[];
   unresolved: Unresolved[];
   /** The reference graph behind the operations - what each step depends on and whether it resolved. */
