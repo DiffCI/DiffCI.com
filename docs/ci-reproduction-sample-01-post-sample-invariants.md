@@ -75,3 +75,83 @@ safely optimise a sufficiently broad sample.**
 If the remaining three reproduce, they become the substrates for `CI_OPTIMIZATION_01`. If they do not,
 the response is to fix the dominant semantic and addressability failures — **not** to manufacture a
 savings experiment on a convenient repository.
+
+---
+
+# Added during member 3, before babel runs
+
+## Amendment 4 contains an internal contradiction, and it is NOT being resolved by weakening it
+
+Rule 2 says the producing job's steps run **in declaration order, all of them, no selective omission**.
+babel's plan selectively omits `assert-dir-git-clean`. Recording that as a disclosed deviation made it
+*transparent*; it did not make the reference arm *compliant*.
+
+The rule stands. babel's evidence carries an explicit qualifier instead:
+
+```
+REFERENCE_DEVIATION — assert-dir-git-clean not reconstructed
+                      because it cannot cross the current shell-safety boundary.
+```
+
+**babel cannot become pristine `REPRODUCED` evidence under Amendment 4.** The run can still be learned
+from, but it may not be promoted to clean evidence. Relaxing rule 2 the first time it binds would make it
+a rule that applies only when convenient, which is not a rule — and rule 2 exists precisely to prevent
+selective reconstruction.
+
+## Future invariant — artifact producers are part of the plan
+
+```
+Outcome plan includes every causal producer of consumed artifacts
+```
+
+Concretely:
+
+```
+TEST consumes artifact A
+  → identify producing job
+  → reconstruct producer
+  → verify artifact receipt
+  → transfer A
+  → execute consumer
+```
+
+A TEST job **cannot be called executable** merely because its own commands resolve, when the filesystem
+state it requires comes from an unresolved upstream job. This is the CI/CD-wide dependency graph the
+product needs regardless; it is not a babel-specific feature.
+
+## Future invariant — no credit from undeclared pre-existing state
+
+```
+A plan cannot earn reproduction credit from undeclared pre-existing state.
+```
+
+This guards a failure mode the frozen engine could still produce with babel: **accidentally succeeding**
+because compiled output happens to be present locally, in a stale tree, or vendored in the repository.
+Success must not erase a missing causal dependency. A plan that never modelled the producer and passed
+anyway has not demonstrated it understood the pipeline — it has demonstrated it was lucky, and luck is
+not a capability that transfers to a customer's runner.
+
+So there are **three** acceptable observations from the frozen engine on babel, not two:
+
+| observation | meaning |
+|---|---|
+| `CORRECT_REFUSAL` | it recognised the causal path is incomplete |
+| `DIVERGED` | it asserted executability while ignoring the artifact producer |
+| incorrect-plan category | it *succeeded accidentally* against pre-existing state — recorded as a defect, never as success |
+
+## Future capability — artifacts get provenance, like commands
+
+Artifacts should eventually carry the same evidentiary structure commands already do:
+
+```
+producer · digest · transfer mechanism · consumer · execution receipt
+```
+
+An artifact with no recorded producer is an unexplained input, and an unexplained input is exactly what
+the execution-receipt discipline exists to eliminate. This becomes training evidence later as well.
+
+## Still not implemented, still after the sample
+
+None of the above touches the running engine. Members 3, 4 and 5 execute on the frozen engine, and only
+once the five-member distribution is sealed do we decide which defects and capability gaps are
+prerequisites to `CI_OPTIMIZATION_01`.

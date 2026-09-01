@@ -92,5 +92,11 @@
       "evidence": ".github/workflows/ci.yml - job `test`, `Test on node.js ${{ matrix.node-version }}` -> `run: node ./node_modules/.bin/jest --ci`, with its declared env"
     }
   ],
-  "disclosedDeviation": "Job `build` step `Ensure cwd does not contain uncommitted changes` (`node ./scripts/assert-dir-git-clean.ts \"...\"`) is NOT reconstructed. Amendment 4 rule 2 forbids selective omission, so this is a DEVIATION and is disclosed rather than hidden. Cause: the step argument embeds backticks, which cannot cross this harness shell-safety guard as argv; under amendment 3 that makes the line untranscribable. It is a verification step that produces nothing the artifact contains, so its absence does not change the tree the suite runs against - but that is a mitigation, not a licence, and the omission is recorded as a deviation."
+  "disclosedDeviation": "Job `build` step `Ensure cwd does not contain uncommitted changes` (`node ./scripts/assert-dir-git-clean.ts \"...\"`) is NOT reconstructed. Amendment 4 rule 2 forbids selective omission, so this is a DEVIATION and is disclosed rather than hidden. Cause: the step argument embeds backticks, which cannot cross this harness shell-safety guard as argv; under amendment 3 that makes the line untranscribable. It is a verification step that produces nothing the artifact contains, so its absence does not change the tree the suite runs against - but that is a mitigation, not a licence, and the omission is recorded as a deviation.",
+  "referenceFidelity": {
+    "qualifier": "REFERENCE_DEVIATION",
+    "detail": "assert-dir-git-clean not reconstructed because it cannot cross the current shell-safety boundary.",
+    "consequence": "Amendment 4 rule 2 forbids selective omission and is NOT weakened to accommodate this. This reference arm does not satisfy the frozen rule. Any outcome from this member carries the qualifier: babel CANNOT become pristine REPRODUCED evidence under amendment 4. The run may still be learned from.",
+    "whyNotWeakenTheRule": "Rule 2 exists specifically to prevent selective reconstruction. Relaxing it the first time it binds would make it a rule that only applies when convenient, which is not a rule."
+  }
 }
