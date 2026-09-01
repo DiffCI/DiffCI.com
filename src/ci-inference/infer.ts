@@ -18,7 +18,8 @@
  * Confidence and executability are DERIVED from reference-graph completeness, never assigned.
  */
 import { jobProvides, type InferredJob } from "./jobs.js";
-import { expandMatrix, hasUnresolvedExpression, substituteMatrix, type MatrixAssignment } from "./matrix.js";
+import { evaluateCondition, renderCommand, type Resolution } from "./expression.js";
+import { expandMatrix, type MatrixAssignment } from "./matrix.js";
 import { computeCompleteness, confidenceFromCompleteness, type ReferenceNode } from "./reference-graph.js";
 import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences } from "./resolve.js";
 import type { EvidenceRef, InferredOperation, InferredPipeline, ObservedFact, OperationKind, Unresolved } from "./schema.js";
@@ -151,6 +152,7 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
       executable: completeness.executable,
       missingRequirements: completeness.missing,
       blockedBy: completeness.blockedBy.map((n) => n.id),
+      willExecute: true,
     };
   };
 
@@ -199,26 +201,38 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
     const operations: InferredOperation[] = [];
     let previous: string | undefined;
     for (const [i, fact] of runs.entries()) {
-      // Substitution happens BEFORE classification and argv splitting, so an expanded command is
-      // classified and split as the thing that will actually run.
-      const substituted = substituteMatrix(fact.value, assignment);
-      const line = substituted ?? fact.value;
+      // GITHUB EXPRESSION SEMANTICS, applied at the rendering boundary (INFERENCE_05).
+      //
+      // DEFINED_EMPTY and UNDEFINED_CONTEXT both render as "" because that is what GitHub does, so
+      // `npm i webpack@ --legacy-peer-deps` is a FAITHFUL reproduction of what this repository's CI
+      // actually runs — not command repair. The resolutions are kept so a receipt can say which of the
+      // four cases produced the empty, and in particular that html-webpack-plugin references a matrix
+      // axis it never declares.
+      //
+      // UNSUPPORTED_EXPRESSION keeps the line non-renderable: the engine does not know what GitHub
+      // would produce, and executing it would run something it cannot account for.
+      const context = { matrix: assignment };
+      const { rendered, resolutions, renderable } = renderCommand(fact.value, context);
+      const line = rendered;
       const kind = kindOfRunLine(line);
-      const stillUnresolved = substituted === undefined || hasUnresolvedExpression(line);
-      const { argv, unresolved: u0 } = stillUnresolved
-        ? {
-            argv: [] as string[],
-            unresolved: {
-              what: fact.value,
-              why:
-                substituted === undefined
-                  ? "references a matrix axis this instance does not define"
-                  : "contains an expression that is not a matrix reference and was not resolved",
-            },
-          }
+
+      // The step condition. UNRESOLVED is NOT false: "we could not read the condition" and "the step
+      // does not run" are different claims, and only one of them is safe to act on.
+      const conditionText = fact.attributes?.if;
+      const condition = conditionText !== undefined ? evaluateCondition(conditionText, context, fact.evidence) : undefined;
+      const willExecute = condition ? condition.result === "TRUE" : true;
+
+      const unsupported = resolutions.find((r: Resolution) => r.kind === "UNSUPPORTED_EXPRESSION");
+      const { argv, unresolved: u0 } = !renderable
+        ? { argv: [] as string[], unresolved: { what: fact.value, why: unsupported?.reason ?? "an expression in this command is not modelled" } }
         : argvOf(line);
-      const u = matrixUnsupported && !u0 ? { what: fact.value, why: "the job's matrix contains a construct this expander does not model, so no instance can be trusted" } : u0;
-      if (u) unresolved.push(u);
+      const conditionBlocks = condition?.result === "UNRESOLVED";
+      const u = conditionBlocks
+        ? { what: conditionText ?? "", why: condition?.reason ?? "the step condition could not be evaluated" }
+        : matrixUnsupported && !u0
+          ? { what: fact.value, why: "the job's matrix contains a construct this expander does not model, so no instance can be trusted" }
+          : u0;
+
       const op = makeOperation(
         `${jobName}${suffix}-${kind}-${i}`,
         kind,
@@ -229,8 +243,17 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
         environment,
         u ? [u] : [],
       );
-      operations.push(op);
-      if (argv.length > 0) previous = op.id;
+      const decorated: InferredOperation = {
+        ...op,
+        ...(condition ? { condition: { expression: condition.expression, result: condition.result, ...(condition.reason ? { reason: condition.reason } : {}) } } : {}),
+        willExecute,
+        ...(resolutions.length > 0 ? { expressionResolutions: resolutions.map((r: Resolution) => ({ expression: r.expression, kind: r.kind, value: r.value, ...(r.reason ? { reason: r.reason } : {}) })) } : {}),
+        // A step CI skips is not an obstacle to executing the path: it is a step the pipeline does not
+        // run in this instance. It stays in the graph, recorded, and executable-by-omission.
+        ...(condition?.result === "FALSE" ? { executable: true, missingRequirements: [], blockedBy: [] } : {}),
+      };
+      operations.push(decorated);
+      if (argv.length > 0 && willExecute) previous = decorated.id;
     }
 
     // A job with no install run line may still install through a composite action, or rely on the
@@ -244,7 +267,7 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
           evidence: action.evidence,
         };
         unresolved.push(u);
-        operations.unshift(makeOperation(`${jobName}${suffix}-install`, "install", [], true, [action.evidence], [], environment, [u]));
+        operations.unshift({ ...makeOperation(`${jobName}${suffix}-install`, "install", [], true, [action.evidence], [], environment, [u]), willExecute: true });
       }
     }
 

@@ -217,12 +217,28 @@ function main(): void {
   // INFERENCE_03: ask the planner for the path to the outcome under reproduction, rather than taking
   // whatever operations a single collapsed job happened to contain. The reference question here is TEST
   // reproduction, so the plan is the TEST path - install included, later steps excluded.
-  const plan = planForPurpose(pipeline.jobs, "TEST");
+  // MATRIX SCOPE, fixed by docs/ci-reproduction-03-protocol.md before any instance was computed:
+  // in-environment means os is ubuntu-* and node is absent or matches the container major version.
+  // Everything else is OUT_OF_ENVIRONMENT - recorded, never executed, never counted as a failure.
+  const containerMajor = process.version.replace(/^v/, "").split(".")[0]!;
+  const testJobs = pipeline.jobs.filter((j) => j.provides.includes("TEST"));
+  const inEnvironment = testJobs.filter((j) => {
+    const os = j.matrix?.os ?? "ubuntu-latest";
+    const node = j.matrix?.node;
+    return /^ubuntu/.test(os) && (node === undefined || node.replace(/.x$/, "") === containerMajor);
+  });
+  const outOfEnvironment = testJobs.filter((j) => !inEnvironment.includes(j));
+  console.log(`  matrix scope   : ${inEnvironment.length} in-environment of ${testJobs.length} TEST instances (node ${containerMajor}, ubuntu)`);
+  for (const j of outOfEnvironment.slice(0, 3)) console.log(`      OUT_OF_ENVIRONMENT ${JSON.stringify(j.matrix)}`);
+  if (outOfEnvironment.length > 3) console.log(`      ... and ${outOfEnvironment.length - 3} more, recorded and not executed`);
+  const plan = inEnvironment.length > 0 ? planForPurpose(inEnvironment, "TEST") : planForPurpose(pipeline.jobs, "TEST");
   // A refused plan executes NOTHING. Filtering out the blocking operation and running the remainder is
   // exactly the attempt-2 defect: it silently converts "we cannot account for this path" into "we ran a
   // slightly different path", which is the one substitution this experiment cannot tolerate.
   const inferenceSteps = plan.executable
-    ? plan.operations.filter((o) => o.kind !== "checkout" && o.command.length > 0).map((o) => ({ command: o.command, environment: o.environment }))
+    ? plan.operations
+        .filter((o) => o.kind !== "checkout" && o.willExecute !== false && o.command.length > 0)
+        .map((o) => ({ command: o.command, environment: o.environment }))
     : [];
 
   // --- reference arm: transcribed from the repository's workflow, engine not consulted ---

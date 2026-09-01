@@ -1,19 +1,44 @@
 {
-  "schema": "diffci.ci.reference-plan/v1",
+  "schema": "diffci.ci.reference-plan/v2",
   "repository": "jantimon/html-webpack-plugin",
   "headSha": "cf9c7012003b8d71783d6c2d72f357616957b99c",
   "source": ".github/workflows/main.yml, job `build`, transcribed by reading the repository",
-  "constructedIndependently": "This plan was written by reading the workflow file directly. The inference engine was not consulted, and this file is not generated from any ExecutionGraph.",
-  "declaredDeviation": "The build job's second step is `npm i webpack@${{ matrix.webpack }} --legacy-peer-deps`. Expanding a GitHub Actions matrix is not modelled by this reproduction, so that step is OMITTED and the arm tests against the webpack version the lockfile pins. This makes the reference arm a faithful reproduction of one matrix cell's dependency state, not of the matrix. Declared before execution.",
+  "constructedIndependently": "Written by reading the workflow file. The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "node": "22.x",
+    "os": "ubuntu-latest",
+    "webpack": "latest"
+  },
+  "omissionWithdrawn": "CI_REPRODUCTION_01 and _02 omitted the matrix install step and declared that as a deviation. THAT OMISSION IS WITHDRAWN. The step is included below.",
+  "githubSemanticsApplied": "The workflow writes `npm i webpack@${{ matrix.webpack-version }}`, and its matrix declares `webpack` rather than `webpack-version`. GitHub renders an undefined context as the empty string, so the command CI actually runs is `npm i webpack@ --legacy-peer-deps`. Transcribing that is applying GitHub documented behaviour, NOT DiffCI command repair - the same coercion the engine applies independently in src/ci-inference/expression.ts.",
+  "conditionsApplied": "The workflow gates `git config --global core.autocrlf input` on `matrix.os == 'windows-latest'`. This cell is ubuntu-latest, so real CI SKIPS it and this plan omits it - by the workflow own condition, not by a choice of mine.",
   "steps": [
     {
-      "command": ["npm", "ci", "--legacy-peer-deps"],
-      "evidence": ".github/workflows/main.yml — `run: npm ci --legacy-peer-deps`"
+      "command": [
+        "npm",
+        "ci",
+        "--legacy-peer-deps"
+      ],
+      "evidence": ".github/workflows/main.yml - `run: npm ci --legacy-peer-deps`"
     },
     {
-      "command": ["npm", "run", "test:coverage", "--", "--ci"],
-      "evidence": ".github/workflows/main.yml — `run: npm run test:coverage -- --ci`",
-      "note": "package.json resolves this to `npm run test:only -- --coverage` and then to `cross-env NODE_ENV=test jest`, so NODE_ENV=test is supplied by the repository's own script chain rather than by this plan."
+      "command": [
+        "npm",
+        "i",
+        "webpack@",
+        "--legacy-peer-deps"
+      ],
+      "evidence": ".github/workflows/main.yml - `run: npm i webpack@${{ matrix.webpack-version }} --legacy-peer-deps`, rendered under GitHub undefined-context semantics"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:coverage",
+        "--",
+        "--ci"
+      ],
+      "evidence": ".github/workflows/main.yml - `run: npm run test:coverage -- --ci`"
     }
   ]
 }

@@ -121,6 +121,18 @@ export interface InferredOperation {
   /** Present ONLY when the engine declines to propose this operation. */
   refusalReason?: string;
   /**
+   * The step condition and how it evaluated for this matrix instance.
+   *
+   * A step whose condition is FALSE is NOT removed: it is recorded as
+   * declared: true -> condition: FALSE -> executed: false. Deleting it would make a skipped step
+   * indistinguishable from a step the pipeline never had — unknown versus absent, again.
+   */
+  condition?: { expression: string; result: "TRUE" | "FALSE" | "UNRESOLVED"; reason?: string };
+  /** Whether this operation runs in this instance. False when its condition is FALSE. */
+  willExecute: boolean;
+  /** How each expression in the command resolved, so an empty value can be traced to its cause. */
+  expressionResolutions?: Array<{ expression: string; kind: string; value: string; reason?: string }>;
+  /**
    * Whether a decision engine may EXECUTE this operation, derived from reference-graph completeness.
    *
    * INFERENCE_02. An operation can be reportable and not executable: the engine may state what it

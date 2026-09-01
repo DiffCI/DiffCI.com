@@ -111,7 +111,9 @@ export function planForPurpose(jobs: InferredJob[], purpose: Purpose): PurposePl
   const lastIndex = ordered.reduce((acc, op, i) => (purposeOfKind(op.kind) === purpose ? i : acc), -1);
   const path = lastIndex === -1 ? [] : ordered.slice(0, lastIndex + 1);
 
-  const blocked = path.filter((o) => !o.executable);
+  // A step whose condition is FALSE is part of the pipeline and simply does not run in this instance,
+  // so it neither blocks the path nor contributes a command.
+  const blocked = path.filter((o) => !o.executable && o.willExecute !== false);
   return {
     purpose,
     jobId: chosen.id,

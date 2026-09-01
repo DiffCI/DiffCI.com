@@ -172,9 +172,13 @@ export function workflowFacts(repoPath: string): ObservedFact[] {
           });
         }
         if (typeof step.run === "string") {
+          // The step condition travels WITH the run line. A step CI skips is still a declared step, and
+          // dropping the condition here would make "skipped" indistinguishable from "never existed".
+          const withCondition =
+            typeof step.if === "string" || typeof step.if === "boolean" ? { ...stepAttrs, if: String(step.if) } : stepAttrs;
           // Multi-line `run:` blocks are several commands; each line is its own fact.
           for (const line of step.run.split("\n").map((l: string) => l.trim()).filter(Boolean)) {
-            facts.push({ kind: "workflow.step.run", value: line, evidence: ref(file, line, source), attributes: stepAttrs });
+            facts.push({ kind: "workflow.step.run", value: line, evidence: ref(file, line, source), attributes: withCondition });
           }
         }
         for (const [key, value] of Object.entries((step.env ?? {}) as Record<string, unknown>)) {
