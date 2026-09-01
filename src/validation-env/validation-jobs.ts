@@ -126,6 +126,10 @@ export interface ValidationJob {
   observeOnly?: boolean;
   /** Ceiling for the whole harness process. Exceeding it kills the run rather than polling forever. */
   maxRunMs: number;
+  /** Hand-transcribed reference plan for this job. Defaults to the CI_REPRODUCTION_01 plan. */
+  referencePlan?: string;
+  /** R3 qualification: run the reference arm only and never invoke the inference engine. */
+  referenceOnly?: boolean;
 }
 
 const JOBS: Record<string, ValidationJob> = {
@@ -1454,6 +1458,19 @@ const JOBS: Record<string, ValidationJob> = {
    * Attempt 1 ran on Windows under node 24 and is preserved as DIVERGED with that limitation
    * recorded; its reference-arm test failures are NOT attributable to the repository.
    */
+  "r3-qualify-eslint": {
+    id: "r3-qualify-eslint",
+    description: "CI_REPRODUCTION_05 R3: does eslint/eslint complete in the canonical container, reference arm only.",
+    mode: "ci-reproduce",
+    repository: "eslint/eslint",
+    pinnedHeadSha: "2417cad57d7d1bc4cf3ecf0f0575cfb10ff2011c",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    referencePlan: "docs/evidence/ci-reproduction-05-eslint-reference-plan.json",
+    referenceOnly: true,
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
   "ci-reproduce-html-webpack-plugin": {
     id: "ci-reproduce-html-webpack-plugin",
     description: "CI_REPRODUCTION_02: reference vs inference arms in the canonical Linux environment.",
@@ -1769,7 +1786,10 @@ export function ciReproduceArgv(job: ValidationJob): string[] {
     "--head", job.pinnedHeadSha ?? "",
     "--work", `${WORKSPACE}/ci-repro-work`,
     "--out", CI_REPRODUCTION_OUT,
-    "--reference", "docs/evidence/ci-reproduction-01-reference-plan.json",
+    "--reference", job.referencePlan ?? "docs/evidence/ci-reproduction-01-reference-plan.json",
+    // R3 qualification runs the reference arm ALONE. The engine must not see a candidate while its
+    // eligibility is still being decided, or eligibility starts depending on whether DiffCI copes.
+    ...(job.referenceOnly ? ["--reference-only"] : []),
   ];
 }
 

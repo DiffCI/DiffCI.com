@@ -1,0 +1,40 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "eslint/eslint",
+  "headSha": "2417cad57d7d1bc4cf3ecf0f0575cfb10ff2011c",
+  "source": ".github/workflows/ci.yml, job `test_on_node`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file. The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "os": "ubuntu-latest",
+    "node": "22.x",
+    "NODE_OPTIONS": ""
+  },
+  "cellSelection": "The single in-environment cell: matrix.os ubuntu-latest and matrix.node 22.x match the canonical container. The `include` entries (windows-latest, macOS-latest, and the ubuntu 24.x --experimental-transform-types row) are OUT_OF_ENVIRONMENT and are recorded, not executed.",
+  "githubSemanticsApplied": "matrix.NODE_OPTIONS is DECLARED with the empty string, so `${{ matrix.NODE_OPTIONS }}` is DEFINED_EMPTY - NOT UNDEFINED_CONTEXT. Both render as the empty string, so NODE_OPTIONS is set to empty in the environment either way, but only one of them means the workflow references an axis that does not exist. This cell is the DEFINED_EMPTY case and the receipt must say so.",
+  "conditionsApplied": "The job declares no step-level `if:`, so no step is condition-skipped in this cell.",
+  "ciGroundTruth": {
+    "cell": "Test (ubuntu-latest, 22.x)",
+    "conclusion": "success",
+    "source": "github actions job, recorded in docs/evidence/ci-reproduction-05-screening.json"
+  },
+  "steps": [
+    {
+      "command": [
+        "npm",
+        "install"
+      ],
+      "evidence": ".github/workflows/ci.yml - `Install Packages` -> `run: npm install`"
+    },
+    {
+      "command": [
+        "node",
+        "Makefile",
+        "mocha"
+      ],
+      "environment": {
+        "NODE_OPTIONS": ""
+      },
+      "evidence": ".github/workflows/ci.yml - `Test` -> `run: node Makefile mocha`, with `env: NODE_OPTIONS: ${{ matrix.NODE_OPTIONS }}` rendering DEFINED_EMPTY"
+    }
+  ]
+}

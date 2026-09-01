@@ -34,9 +34,8 @@ import { parseTestOutput } from "./test-output-parsers.js";
  *
  * A run that never produced a verdict has not produced a NEGATIVE verdict. `INFRASTRUCTURE` is checked
  * FIRST, before any substantive outcome can be reached.
- */
-export /**
- * `ENVIRONMENT_INADEQUATE` and `UNVERIFIABLE` were added after attempt 4, which the scorer called
+ *
+ * `ENVIRONMENT_INADEQUATE` and `UNVERIFIABLE` followed after attempt 4, which the scorer called
  * REPRODUCED on two counts it had no way to question:
  *
  *   1. Both arms reported 161 tests / 113 failures - and essentially every failure was jest's own
@@ -49,7 +48,7 @@ export /**
  *      and with nothing external is the near-tautological agreement the attempt-3 protocol explicitly
  *      warned about, reintroduced by the scorer in a different form.
  */
-type Outcome =
+export type Outcome =
   | "REPRODUCED"
   | "PARTIAL_REPRODUCTION"
   | "REFUSED"
@@ -128,13 +127,6 @@ function flag(key: string): string | undefined {
 }
 
 /**
- * Suite and test counts from the runner's own summary.
- *
- * Regex over the runner output rather than an inference: if the summary is absent the counts are
- * undefined, never zero. A zero here would make "ran nothing" indistinguishable from "ran and passed",
- * and that is the exact comparison this experiment turns on.
- */
-/**
  * Failures that are the ENVIRONMENT giving up, not the code being wrong.
  *
  * A per-test timeout says the runner ran out of wall clock, which on a throughput-starved container
@@ -165,6 +157,13 @@ export interface CiGroundTruth {
   source: string;
 }
 
+/**
+ * Suite and test counts from the runner's own summary.
+ *
+ * Regex over the runner output rather than an inference: if the summary is absent the counts are
+ * undefined, never zero. A zero here would make "ran nothing" indistinguishable from "ran and passed",
+ * and that is the exact comparison this experiment turns on.
+ */
 function countsOf(output: string): { testFiles?: number; tests?: number } {
   const suites = /Test Suites:.*?(\d+) total/.exec(output);
   const tests = /Tests:.*?(\d+) total/.exec(output);
@@ -426,6 +425,7 @@ function main(): void {
   // raising it leaves the reproduction question itself untouched.
   const timeoutMs = Number(flag("timeout") ?? 90 * 60_000);
   const referencePlanPath = resolve(flag("reference") ?? "docs/evidence/ci-reproduction-01-reference-plan.json");
+  const referenceOnly = process.argv.includes("--reference-only");
   mkdirSync(work, { recursive: true });
   mkdirSync(outDir, { recursive: true });
 
@@ -437,6 +437,55 @@ function main(): void {
     execFileSync("git", ["clone", "--quiet", `https://github.com/${repository}.git`, into], { stdio: "pipe" });
     execFileSync("git", ["-C", into, "checkout", "--quiet", headSha], { stdio: "pipe" });
   };
+
+  // --- R3 QUALIFICATION: the reference arm alone, engine never invoked ---
+  //
+  // docs/ci-reproduction-05-eligibility.md fixes this before any candidate was screened. If
+  // qualification ran BOTH arms, a repository would become eligible partly because the engine happened
+  // to handle it - selecting targets on which DiffCI already succeeds, and turning the eventual
+  // reproduction result into a tautology. So the engine must not see the candidate until it is sealed.
+  //
+  // Returning here, before collectEvidence, is what makes that structural rather than a promise.
+  if (referenceOnly) {
+    // Self-contained on purpose. The reference arm is cloned and run HERE, above `collectEvidence`, so
+    // that qualifying a candidate cannot reach the engine even by accident. Reusing the arm built lower
+    // down would put the engine's work first and make this guard cosmetic.
+    const qualifyPlan = JSON.parse(readFileSync(referencePlanPath, "utf8")) as {
+      source: string;
+      steps: Array<{ command: string[]; environment?: Record<string, string> }>;
+    };
+    const qualifyRepo = join(work, "reference");
+    clone(qualifyRepo);
+    const qualifyProgress = new ProgressLog(join(outDir, "progress.jsonl"));
+    qualifyProgress.emit({ event: "run", repository, headSha, timeoutMs, arms: ["reference"], mode: "R3" });
+    console.log(`  R3 qualification: reference arm only, engine NOT invoked`);
+    const reference = runArm("reference", qualifyPlan.source, qualifyPlan.steps, qualifyRepo, timeoutMs, qualifyProgress);
+
+    const suite = reference.steps[reference.steps.length - 1];
+    const signals = suite?.environmentSignals ?? [];
+    const completed = suite?.exitStatus !== null && suite?.exitStatus !== undefined;
+    const qualified = completed && signals.length === 0;
+    const r3 = {
+      schema: "diffci.ci.r3-qualification/v1",
+      protocol: "docs/ci-reproduction-05-eligibility.md",
+      repository,
+      headSha,
+      engineInvoked: false,
+      verdict: qualified ? "R3_QUALIFIED" : "R3_FAILED",
+      reason: qualified
+        ? `the reference arm completed (exit ${suite?.exitStatus}) with no environment signals`
+        : !completed
+          ? "the reference arm did not complete inside the bound"
+          : `the reference arm hit environment signals: ${signals.join(", ")}`,
+      referenceArm: reference,
+      producedAt: new Date().toISOString(),
+    };
+    writeFileSync(join(outDir, "reproduction.json"), `${JSON.stringify(r3, null, 2)}
+`);
+    console.log(`
+  R3: ${r3.verdict} - ${r3.reason}`);
+    return;
+  }
 
   // --- inference arm: from the frozen graph ONLY ---
   const inferenceRepo = join(work, "inference");
