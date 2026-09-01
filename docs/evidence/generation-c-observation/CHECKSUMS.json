@@ -1,0 +1,10 @@
+{
+  "run": "genc-observe-01",
+  "experiment": "GENERATION_C_01",
+  "sha256": {
+    "corpus.jsonl": "2b9c78ab8a49af18bd896a9800644acf373863dbd50f323bb2f6b15f8f6f3e97",
+    "environment.json": "1ce402413772c443a23f3961b49c31f74568a55673972e721029dc5b1db97541",
+    "execution-receipt.json": "9b78ce7cd44843735876a5e972ab17f78b16d0019e8d26f62b13bb9c30ca785e",
+    "manifest.json": "f6578700f17f2f39cecda3a992f836ad4cd400d583ad6c46cd3b80217402d33d"
+  }
+}
