@@ -1,0 +1,10 @@
+{
+  "experiment": "CI_REPRODUCTION_02",
+  "attempt": 2,
+  "environment": "canonical Linux",
+  "sha256": {
+    "environment.json": "e4bda301d525886d161e101efa196a9a6699e64a67f584407cfa4d0258596fd6",
+    "execution-receipt.json": "71a1f250f44f409b5b97d9de212e0af9ba718e8b5bc77acccb21a53304ca7413",
+    "reproduction.json": "69230fd72d81f45845ed8520686e5ec56e0bb178ecb8adf7716ba47c7dd8a247"
+  }
+}
