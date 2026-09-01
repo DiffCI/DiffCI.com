@@ -1428,6 +1428,33 @@ const JOBS: Record<string, ValidationJob> = {
    * OBSERVATION ONLY. No mutation, no economics arm, no suite execution. Whatever DiffCI decides -
    * SELECTIVE, FULL or REFUSED - is the result, reported as measured.
    */
+  /**
+   * GENERATION_C_01 mutation of the sealed target. Protocol frozen in
+   * docs/generation-c-mutation-protocol.md before any mutation result existed.
+   *
+   * Re-observes the sealed target to regenerate the per-commit agent report dogfood-mutate needs, then
+   * mutates. Commands are the ones derived at E2 registration from the repository own manifest.
+   */
+  "genc-mutate-target": {
+    id: "genc-mutate-target",
+    description: "GENERATION_C_01: mutate the sealed target under the frozen protocol.",
+    mode: "observe-pairs",
+    repository: "jest-community/eslint-plugin-jest",
+    pinnedHeadSha: "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    pairsPath: "docs/evidence/generation-c-target-pair.json",
+    mutate: {
+      install: ["corepack", "yarn", "install", "--immutable"],
+      build: ["corepack", "yarn", "run", "build"],
+      testModule: "node_modules/jest/bin/jest.js",
+      testArgs: [],
+      maxAttempts: 2,
+      timeoutMs: 900_000,
+    },
+    maxRunMs: 6 * 60 * 60_000,
+  },
+
   "genc-observe-target": {
     id: "genc-observe-target",
     description: "GENERATION_C_01: observe the sealed target pair. No mutation.",

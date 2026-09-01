@@ -196,11 +196,28 @@ interface ArmCost {
   outputTail?: string;
 }
 
+/** One arm's outcome against a mutation: did this test set see the defect, and what did it cost. */
+interface ComparatorArm {
+  detected: boolean | undefined;
+  failures: number | undefined;
+  cpuSeconds?: number;
+  wallMs: number;
+  selectedCount: number;
+}
+
 interface MutationResult {
   repository: string;
   headSha: string;
   baseSha: string;
   classification: Classification;
+  /**
+   * The comparator run against the SAME mutation. Added 2026-08-31, closing amendment M3's gap.
+   *
+   * `detected: true` alongside a caught DiffCI arm means the path rule would have caught it too — so
+   * DiffCI demonstrated safety but no unique mechanism advantage on that candidate. Undefined when the
+   * observation exposed no comparator list: unmeasurable, never scored as a miss.
+   */
+  comparatorMutated?: ComparatorArm;
   /** Scored only when the safety question was answerable; undefined otherwise. */
   efficiency?: Efficiency;
   /** The evidence behind `efficiency`, so the verdict can be re-derived rather than trusted. */
@@ -576,6 +593,29 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number, 
         return { ...base, reason: `could not parse the selected mutated run's failure count for ${mutation.path}`, mutatedFile: mutation.path, attemptedFiles };
       }
 
+      // 5. COMPARATOR MUTATED. Added 2026-08-31, BEFORE any GENERATION_C_01 mutation result existed.
+      //
+      // Amendment M3 recorded that this arm did not exist: the comparator was measured for COST on the
+      // clean tree and never for RECALL on the mutated one, so "did DiffCI catch something a path rule
+      // would have missed?" was unanswerable. Without it, a caught mutation reads as a DiffCI win even
+      // when the trivial comparator catches it too.
+      //
+      // Same runner, comparator file list, exactly as the DiffCI arm is run. Left undefined when the
+      // observation exposed no comparator list - unmeasurable, and never scored as a miss.
+      let comparatorMutated: ComparatorArm | undefined;
+      if (candidate.comparatorTests.length > 0) {
+        const comparatorArgs = [testModulePath, ...commands.testArgs.filter((a) => !isFileGlob(a)), ...candidate.comparatorTests];
+        const comparatorRun = run(testExec, comparatorArgs, candidate.repoPath, timeoutMs);
+        const comparatorParsed = parseFailures(comparatorRun.stdout + comparatorRun.stderr);
+        comparatorMutated = {
+          detected: comparatorParsed.failures === undefined ? undefined : comparatorParsed.failures > 0,
+          failures: comparatorParsed.failures,
+          cpuSeconds: comparatorRun.cpuSeconds,
+          wallMs: comparatorRun.ms,
+          selectedCount: candidate.comparatorTests.length,
+        };
+      }
+
       const missed = fullParsed.failedNames.filter((name) => !selectedParsed.failedNames.includes(name));
       const detected = selectedParsed.failures > 0;
 
@@ -593,6 +633,7 @@ function classify(candidate: Candidate, timeoutMs: number, maxAttempts: number, 
         classification: detected ? "RECALL_CONFIRMED" : "FALSE_GREEN",
         efficiency,
         selection: { selected: selectedCount, total: candidate.totalCount, baselineSelected: comparatorSelected, versusBaseline, detecting: selectedParsed.failures },
+        comparatorMutated,
         reason: detected
           ? `reverting ${mutation.path} failed the full suite and DiffCI's selection caught it`
           : `reverting ${mutation.path} failed the full suite but NOT DiffCI's ${candidate.selectedTests.length}-test selection`,

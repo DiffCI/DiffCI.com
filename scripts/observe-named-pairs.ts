@@ -37,6 +37,7 @@ interface Pair {
   subject?: string;
   implementationFiles?: string[];
   changedTestFiles?: string[];
+  allChangedFiles?: string[];
 }
 
 interface PairsFile {
@@ -115,7 +116,22 @@ function main(): void {
 
     // Direct-change vs production-impact. A test DiffCI selects because that very file was edited
     // proves nothing about the dependency graph; a test reached through changed production code does.
+    // SELECTION CAUSE, fixed 2026-08-31 after GENERATION_C_01.
+    //
+    // The old split asked only "is this a changed TEST file?" and called everything else
+    // production-impact. On jest-community/eslint-plugin-jest that misattributed a changed
+    // IMPLEMENTATION file - selected because the commit edited it - as graph-reached, reporting
+    // 1 graph-derived selection where the true count was 0.
+    //
+    // Training on falsely attributed graph impact would teach DiffCI the wrong REASON a selection
+    // succeeded, which is worse than a wrong count: the count is visibly small, the false cause is not.
+    //
+    // A path is DIRECT_CHANGED if the commit touched it AT ALL - test or implementation. Only what the
+    // commit did not touch can have been reached through the graph.
+    const changedAny = new Set([...(pair.changedTestFiles ?? []), ...(pair.implementationFiles ?? []), ...(pair.allChangedFiles ?? [])]);
     const changedTests = new Set(pair.changedTestFiles ?? []);
+    const directChanged = selected.filter((p) => changedAny.has(p));
+    const graphReached = selected.filter((p) => !changedAny.has(p));
     const direct = selected.filter((p) => changedTests.has(p));
     const throughImpact = selected.filter((p) => !changedTests.has(p));
 
@@ -172,6 +188,13 @@ function main(): void {
       classification,
       selectedCount: selected.length,
       totalTestCount: total,
+      // The corrected cause split. Prefer these two over the legacy pair below.
+      selectionCause: { DIRECT_CHANGED: directChanged.length, GRAPH_REACHED: graphReached.length },
+      selectedDirectChangedPaths: directChanged,
+      selectedGraphReachedPaths: graphReached,
+      // Legacy fields, kept so rows emitted before 2026-08-31 stay comparable. selectedThroughProductionImpact
+      // OVERSTATES graph contribution wherever a changed implementation file is itself in the test
+      // universe - see docs/generation-c-observation-result.md. Do not use it for attribution.
       selectedDirectlyChanged: direct.length,
       selectedThroughProductionImpact: throughImpact.length,
       selectedTests: selected,
