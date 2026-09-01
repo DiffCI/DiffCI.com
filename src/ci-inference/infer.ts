@@ -14,6 +14,8 @@
  * REFUSAL IS A RESULT. An engine that cannot tell when it does not understand a pipeline is more
  * dangerous than one that says so, because the confident wrong plan is the one that gets executed.
  */
+import { computeCompleteness, confidenceFromCompleteness, type ReferenceNode } from "./reference-graph.js";
+import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences } from "./resolve.js";
 import type { Confidence, EvidenceRef, InferredOperation, InferredPipeline, ObservedFact, OperationKind, Unresolved } from "./schema.js";
 
 /** Commands that install dependencies, in the form CI actually writes them. */
@@ -99,9 +101,12 @@ function primaryJob(facts: ObservedFact[]): string | undefined {
  *
  * Never executes anything. Reads facts only.
  */
-export function inferPipeline(repository: string, headSha: string, facts: ObservedFact[], now: string): InferredPipeline {
+export function inferPipeline(repoPath: string, repository: string, headSha: string, facts: ObservedFact[], now: string): InferredPipeline {
+  resetReferenceIds();
   const operations: InferredOperation[] = [];
   const unresolved: Unresolved[] = [];
+  const references: ReferenceNode[] = [];
+  const basis = pinnedDependencyBasis(facts);
 
   const workflowRuns = facts.filter((f) => f.kind === "workflow.step.run");
   const job = primaryJob(facts);
@@ -124,40 +129,77 @@ export function inferPipeline(repository: string, headSha: string, facts: Observ
     if (key) environment[key] = rest.join("=");
   }
 
+  /**
+   * Adds an operation, resolving what it depends on and DERIVING confidence and executability.
+   *
+   * Nothing here assigns confidence. INFERENCE_01 did, and that is how a plausible `npm install` was
+   * labelled OBSERVED while the thing that made it irreproducible — no pinned dependency basis — went
+   * unrecorded.
+   */
   const add = (
     id: string,
     kind: OperationKind,
     command: string[],
-    confidence: Confidence,
+    sawVerbatim: boolean,
     evidence: EvidenceRef[],
     dependsOn: string[],
     opUnresolved: Unresolved[] = [],
+    extraRefs: ReferenceNode[] = [],
   ): void => {
+    const own: ReferenceNode[] = [...extraRefs];
+    if (evidence[0] && command.length > 0) {
+      const joined = command.join(" ");
+      own.push(...expressionReferences(joined, evidence[0]));
+      const scriptMatch = SCRIPT_RUN.exec(joined);
+      if (scriptMatch?.[4]) own.push(...resolveScript(repoPath, scriptMatch[4], evidence[0]));
+    }
+    references.push(...own);
+
+    const scriptsResolved = own.filter((n) => n.kind === "SCRIPT_REFERENCE").every((n) => n.resolution === "RESOLVED");
+    const requirementsMet = {
+      "a resolved command": command.length > 0,
+      "a known working directory": true,
+      "all referenced scripts resolved": scriptsResolved,
+      "a pinned dependency basis (lockfile or packageManager field)": basis.pinned,
+      "a resolved package manager": command.length > 0,
+    };
+    const completeness = computeCompleteness(kind, requirementsMet, own);
+    const confidence = confidenceFromCompleteness(sawVerbatim, completeness);
+
     operations.push({
       id,
       kind,
       command,
       workingDirectory: ".",
-      ...(runtimeVersion ? { runtime: { name: "node" as const, version: runtimeVersion, source: runtimeSource! } } : {}),
+      ...(runtimeVersion && runtimeSource ? { runtime: { name: "node" as const, version: runtimeVersion, source: runtimeSource } } : {}),
       environment,
       dependsOn,
       evidence,
       confidence,
       unresolved: opUnresolved,
+      executable: completeness.executable,
+      missingRequirements: completeness.missing,
+      blockedBy: completeness.blockedBy.map((n) => n.id),
     });
   };
 
-  add("checkout", "checkout", ["git", "checkout", headSha], "DERIVED", [], []);
+  const serviceRefs = serviceReferences(facts, job);
+  const actionRefs = facts
+    .filter((f) => f.kind === "workflow.step.uses" && (!job || `${f.attributes?.workflow}#${f.attributes?.job}` === job))
+    .map((f) => resolveAction(repoPath, f.value, f.evidence));
+  references.push(...serviceRefs, ...actionRefs);
+
+  add("checkout", "checkout", ["git", "checkout", headSha], false, [], []);
 
   // --- install: the workflow's own line if there is one, else the lockfile rule ---
   const installFact = jobRuns.find((f) => INSTALL_PATTERN.test(f.value)) ?? workflowRuns.find((f) => INSTALL_PATTERN.test(f.value));
   if (installFact) {
     const { argv, unresolved: u } = argvOf(installFact.value);
     if (argv.length > 0) {
-      add("install", "install", argv, "OBSERVED", [installFact.evidence], ["checkout"]);
+      add("install", "install", argv, true, [installFact.evidence], ["checkout"]);
     } else if (u) {
       unresolved.push(u);
-      add("install", "install", [], "OBSERVED", [installFact.evidence], ["checkout"], [u]);
+      add("install", "install", [], true, [installFact.evidence], ["checkout"], [u]);
       operations[operations.length - 1]!.refusalReason = u.why;
     }
   } else if (facts.some((f) => f.kind === "workflow.step.uses" && INSTALL_ACTION.test(f.value))) {
@@ -170,7 +212,7 @@ export function inferPipeline(repository: string, headSha: string, facts: Observ
       evidence: action.evidence,
     };
     unresolved.push(u);
-    add("install", "install", [], "OBSERVED", [action.evidence], ["checkout"], [u]);
+    add("install", "install", [], true, [action.evidence], ["checkout"], [u]);
     operations[operations.length - 1]!.refusalReason = u.why;
   } else {
     const lock = facts.find((f) => f.kind === "lockfile.present");
@@ -180,7 +222,7 @@ export function inferPipeline(repository: string, headSha: string, facts: Observ
       "package-lock.json": ["npm", "ci", "--no-audit", "--no-fund"],
     };
     if (lock && byLock[lock.value]) {
-      add("install", "install", byLock[lock.value]!, "DERIVED", [lock.evidence], ["checkout"]);
+      add("install", "install", byLock[lock.value]!, false, [lock.evidence], ["checkout"]);
     } else {
       // The Generation C failure mode, now explicit: no workflow line AND no lockfile means the
       // install command is a GUESS. eslint-plugin-vue died exactly here.
@@ -189,7 +231,7 @@ export function inferPipeline(repository: string, headSha: string, facts: Observ
         why: "no workflow install step and no lockfile - any install command would be an assumption",
       };
       unresolved.push(u);
-      add("install", "install", [], "ASSUMED", [], ["checkout"], [u]);
+      add("install", "install", [], false, [], ["checkout"], [u]);
       operations[operations.length - 1]!.refusalReason = u.why;
     }
   }
@@ -212,11 +254,11 @@ export function inferPipeline(repository: string, headSha: string, facts: Observ
     const id = `${kind}-${i}`;
     if (argv.length === 0 && u) {
       unresolved.push(u);
-      add(id, kind, [], "OBSERVED", [fact.evidence], [previous], [u]);
+      add(id, kind, [], true, [fact.evidence], [previous], [u]);
       operations[operations.length - 1]!.refusalReason = u.why;
       continue;
     }
-    add(id, kind, argv, "OBSERVED", [fact.evidence], [previous]);
+    add(id, kind, argv, true, [fact.evidence], [previous]);
     previous = id;
   }
 
@@ -232,6 +274,18 @@ export function inferPipeline(repository: string, headSha: string, facts: Observ
         }
       : undefined;
 
+  // THE HARD BOUNDARY. An incomplete causal execution path means a decision engine must not act on
+  // this pipeline, however plausible the commands look.
+  const nonExecutable = operations.filter((o) => !o.executable && o.kind !== "checkout");
+  const optimisable = !refusal && nonExecutable.length === 0;
+  const optimisationRefusal = optimisable
+    ? undefined
+    : refusal
+      ? refusal.reason
+      : `${nonExecutable.length} operation(s) are not executable: ${nonExecutable
+          .map((o) => `${o.id} (${[...o.missingRequirements, ...o.blockedBy].join(", ")})`)
+          .join("; ")}`;
+
   return {
     schema: "diffci.ci.inference/v1",
     repository,
@@ -239,6 +293,9 @@ export function inferPipeline(repository: string, headSha: string, facts: Observ
     facts,
     operations,
     unresolved,
+    references,
+    optimisable,
+    ...(optimisationRefusal ? { optimisationRefusal } : {}),
     ...(refusal ? { refusal } : {}),
     producedAt: now,
   };

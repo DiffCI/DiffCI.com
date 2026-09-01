@@ -23,6 +23,8 @@
  * A command list would have to be torn apart to get there, and every consumer rewritten with it.
  */
 
+import type { ReferenceNode } from "./reference-graph.js";
+
 /** Where a fact was observed. A fact without a location cannot be re-checked. */
 export interface EvidenceRef {
   /** Repo-relative path. */
@@ -117,6 +119,18 @@ export interface InferredOperation {
   unresolved: Unresolved[];
   /** Present ONLY when the engine declines to propose this operation. */
   refusalReason?: string;
+  /**
+   * Whether a decision engine may EXECUTE this operation, derived from reference-graph completeness.
+   *
+   * INFERENCE_02. An operation can be reportable and not executable: the engine may state what it
+   * believes the command probably is while refusing to treat that belief as a plan. Those are different
+   * claims and INFERENCE_01 could not tell them apart.
+   */
+  executable: boolean;
+  /** Requirements this operation has not met. Non-empty implies executable === false. */
+  missingRequirements: string[];
+  /** Reference-node ids blocking execution. */
+  blockedBy: string[];
 }
 
 /**
@@ -131,6 +145,17 @@ export interface InferredPipeline {
   facts: ObservedFact[];
   operations: InferredOperation[];
   unresolved: Unresolved[];
+  /** The reference graph behind the operations - what each step depends on and whether it resolved. */
+  references: ReferenceNode[];
+  /**
+   * THE HARD BOUNDARY: an incomplete causal execution path means the pipeline must not be optimised.
+   *
+   * True when every operation is executable. False is not a failure - it is the engine declining to let
+   * a decision engine act on an incomplete understanding.
+   */
+  optimisable: boolean;
+  /** Why optimisation is refused, when it is. */
+  optimisationRefusal?: string;
   /**
    * The engine declines to describe this pipeline at all.
    *
