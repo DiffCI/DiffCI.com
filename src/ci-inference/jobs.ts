@@ -50,6 +50,10 @@ export interface InferredJob {
   id: string;
   workflow: string;
   job: string;
+  /** The concrete matrix cell this instance represents, when the job declares a matrix. */
+  matrix?: Record<string, string>;
+  /** Index of this instance in declaration order, so a receipt can name WHICH cell it reproduced. */
+  matrixInstance?: number;
   provides: Purpose[];
   operations: InferredOperation[];
   /** Reference-node ids that block this job as a whole. */

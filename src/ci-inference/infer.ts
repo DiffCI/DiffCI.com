@@ -18,6 +18,7 @@
  * Confidence and executability are DERIVED from reference-graph completeness, never assigned.
  */
 import { jobProvides, type InferredJob } from "./jobs.js";
+import { expandMatrix, hasUnresolvedExpression, substituteMatrix, type MatrixAssignment } from "./matrix.js";
 import { computeCompleteness, confidenceFromCompleteness, type ReferenceNode } from "./reference-graph.js";
 import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences } from "./resolve.js";
 import type { EvidenceRef, InferredOperation, InferredPipeline, ObservedFact, OperationKind, Unresolved } from "./schema.js";
@@ -173,14 +174,53 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
     ];
     references.push(...jobRefs);
 
+    // MATRIX EXPANSION (INFERENCE_04). A job with a matrix is really N jobs; representing it as one
+    // produced commands containing `${{ matrix.x }}` that could never execute, which is what blocked
+    // reproduction. Each instance keeps its exact assignment and the evidence it came from.
+    const matrixFact = jobFacts.find((f) => f.kind === "workflow.matrix");
+    let parsedMatrix: unknown;
+    if (matrixFact) {
+      try {
+        parsedMatrix = JSON.parse(matrixFact.value);
+      } catch {
+        parsedMatrix = matrixFact.value;
+      }
+    }
+    const expansion = matrixFact ? expandMatrix(parsedMatrix, matrixFact.evidence) : { instances: [], unsupported: [] };
+    for (const u of expansion.unsupported) {
+      unresolved.push({ what: u.what, why: u.why, ...(matrixFact ? { evidence: matrixFact.evidence } : {}) });
+    }
+    // No matrix means exactly one instance with no assignment - the same code path, not a special case.
+    const assignments: MatrixAssignment[] = expansion.instances.length > 0 ? expansion.instances : [{}];
+    const matrixUnsupported = expansion.unsupported.length > 0;
+
+    for (const [instanceIndex, assignment] of assignments.entries()) {
+    const suffix = Object.keys(assignment).length > 0 ? `-${Object.entries(assignment).map(([k, v]) => `${k}${v}`).join("-")}` : "";
     const operations: InferredOperation[] = [];
     let previous: string | undefined;
     for (const [i, fact] of runs.entries()) {
-      const kind = kindOfRunLine(fact.value);
-      const { argv, unresolved: u } = argvOf(fact.value);
+      // Substitution happens BEFORE classification and argv splitting, so an expanded command is
+      // classified and split as the thing that will actually run.
+      const substituted = substituteMatrix(fact.value, assignment);
+      const line = substituted ?? fact.value;
+      const kind = kindOfRunLine(line);
+      const stillUnresolved = substituted === undefined || hasUnresolvedExpression(line);
+      const { argv, unresolved: u0 } = stillUnresolved
+        ? {
+            argv: [] as string[],
+            unresolved: {
+              what: fact.value,
+              why:
+                substituted === undefined
+                  ? "references a matrix axis this instance does not define"
+                  : "contains an expression that is not a matrix reference and was not resolved",
+            },
+          }
+        : argvOf(line);
+      const u = matrixUnsupported && !u0 ? { what: fact.value, why: "the job's matrix contains a construct this expander does not model, so no instance can be trusted" } : u0;
       if (u) unresolved.push(u);
       const op = makeOperation(
-        `${jobName}-${kind}-${i}`,
+        `${jobName}${suffix}-${kind}-${i}`,
         kind,
         argv,
         true,
@@ -204,18 +244,20 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
           evidence: action.evidence,
         };
         unresolved.push(u);
-        operations.unshift(makeOperation(`${jobName}-install`, "install", [], true, [action.evidence], [], environment, [u]));
+        operations.unshift(makeOperation(`${jobName}${suffix}-install`, "install", [], true, [action.evidence], [], environment, [u]));
       }
     }
 
     jobs.push({
-      id: key,
+      id: `${key}${suffix}`,
       workflow: workflow ?? "unknown",
-      job: jobName ?? "unknown",
+      job: `${jobName ?? "unknown"}${suffix}`,
+      ...(Object.keys(assignment).length > 0 ? { matrix: assignment, matrixInstance: instanceIndex } : {}),
       provides: jobProvides(operations),
       operations,
       blockedBy: [...new Set(operations.flatMap((o) => o.blockedBy))],
     });
+    }
   }
 
   const operations = jobs.flatMap((j) => j.operations);

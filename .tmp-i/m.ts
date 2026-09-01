@@ -1,0 +1,11 @@
+import { collectEvidence } from "../src/ci-inference/evidence.js";
+import { inferPipeline } from "../src/ci-inference/infer.js";
+import { planForPurpose } from "../src/ci-inference/jobs.js";
+const dir = "C:/Users/SWATIK~1/AppData/Local/Temp/claude/C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com/ffab3b6b-7eea-4772-827d-31dedbf8a62d/scratchpad/ci-bench/jantimon__html-webpack-plugin";
+const p = inferPipeline(dir, "jantimon/html-webpack-plugin", "cf9c7012003b8d71783d6c2d72f357616957b99c", collectEvidence(dir), new Date().toISOString());
+console.log("jobs (" + p.jobs.length + "):");
+for (const j of p.jobs) console.log("  " + j.job.padEnd(28) + " matrix=" + JSON.stringify(j.matrix ?? {}) + " provides " + j.provides.join(","));
+const plan = planForPurpose(p.jobs, "TEST");
+console.log("\nTEST plan job=" + plan.jobId + " executable=" + plan.executable);
+for (const o of plan.operations) console.log("   exec=" + String(o.executable).padEnd(5) + " " + o.command.join(" ").slice(0, 62));
+if (plan.refusal) console.log("refusal: " + plan.refusal);
