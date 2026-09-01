@@ -73,7 +73,8 @@
     "observe:pairs": "tsx scripts/observe-named-pairs.ts",
     "qualify:universe": "tsx scripts/qualify-universe.ts",
     "corpus:register": "tsx scripts/register-corpus-entry.ts",
-    "ci:benchmark": "tsx scripts/ci-inference-benchmark.ts"
+    "ci:benchmark": "tsx scripts/ci-inference-benchmark.ts",
+    "ci:reproduce": "tsx scripts/ci-reproduction.ts"
   },
   "dependencies": {
     "@types/node": "^22.15.12",

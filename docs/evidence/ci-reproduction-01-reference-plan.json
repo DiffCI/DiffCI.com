@@ -1,0 +1,19 @@
+{
+  "schema": "diffci.ci.reference-plan/v1",
+  "repository": "jantimon/html-webpack-plugin",
+  "headSha": "cf9c7012003b8d71783d6c2d72f357616957b99c",
+  "source": ".github/workflows/main.yml, job `build`, transcribed by reading the repository",
+  "constructedIndependently": "This plan was written by reading the workflow file directly. The inference engine was not consulted, and this file is not generated from any ExecutionGraph.",
+  "declaredDeviation": "The build job's second step is `npm i webpack@${{ matrix.webpack }} --legacy-peer-deps`. Expanding a GitHub Actions matrix is not modelled by this reproduction, so that step is OMITTED and the arm tests against the webpack version the lockfile pins. This makes the reference arm a faithful reproduction of one matrix cell's dependency state, not of the matrix. Declared before execution.",
+  "steps": [
+    {
+      "command": ["npm", "ci", "--legacy-peer-deps"],
+      "evidence": ".github/workflows/main.yml — `run: npm ci --legacy-peer-deps`"
+    },
+    {
+      "command": ["npm", "run", "test:coverage", "--", "--ci"],
+      "evidence": ".github/workflows/main.yml — `run: npm run test:coverage -- --ci`",
+      "note": "package.json resolves this to `npm run test:only -- --coverage` and then to `cross-env NODE_ENV=test jest`, so NODE_ENV=test is supplied by the repository's own script chain rather than by this plan."
+    }
+  ]
+}
