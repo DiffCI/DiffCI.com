@@ -143,6 +143,8 @@ export interface ValidationRecord {
   resultRows?: number;
   errorClass?: string;
   error?: string;
+  /** Live progress of the running harness pass, refreshed on every poll. Diagnostic, never load-bearing. */
+  progress?: { label: string; elapsedMs: number; at: number; tail: string };
   logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string; register?: string; "ci-reproduce"?: string };
   /** Set once evidence preservation has run, so a failure inside it cannot loop. */
   evidencePreserved?: boolean;
@@ -503,6 +505,27 @@ async function runHarnessPass(
     }
 
     if (!(status && TERMINAL_PROCESS.has(status))) {
+      // LIVE PROGRESS, captured on every poll rather than only at the end.
+      //
+      // ci-repro-03-linux ran 41 minutes with `step: ciReproducing` as the only observable, because logs
+      // were fetched exclusively on exit and on the timeout path. getProcessLogs works perfectly well
+      // while the process is running - the capability was there, it was just never called on the happy
+      // path. A run is most worth observing WHILE it is running, which is exactly when nothing looked.
+      try {
+        const live = await sandbox.getProcessLogs(record.processId);
+        const combined = `${live.stdout ?? ""}
+${live.stderr ?? ""}`;
+        record.progress = {
+          label,
+          elapsedMs: deps.now() - (record.processStartedAt ?? deps.now()),
+          at: deps.now(),
+          // The harness prints one line per operation boundary; the tail names the live operation.
+          tail: combined.slice(-4_000),
+        };
+      } catch {
+        /* observability must never take down the run it observes */
+      }
+
       const elapsed = deps.now() - (record.processStartedAt ?? deps.now());
       if (elapsed > job.maxRunMs) {
         // Capture BEFORE killing, and before failing. zod-qualify-01 was killed by this guard after
