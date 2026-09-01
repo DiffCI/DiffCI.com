@@ -1,0 +1,59 @@
+{
+  "schema": "diffci.ci.r3-qualification/v1",
+  "protocol": "docs/ci-reproduction-05-eligibility.md",
+  "repository": "eslint/eslint",
+  "headSha": "2417cad57d7d1bc4cf3ecf0f0575cfb10ff2011c",
+  "engineInvoked": false,
+  "verdict": "R3_QUALIFIED",
+  "reason": "the reference arm completed (exit 0) with no environment signals",
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/ci.yml, job `test_on_node`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "install"
+        ],
+        "commandIdentity": "npm install",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T13:06:28.527Z",
+        "endedAt": "2026-09-01T13:07:33.132Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 63.12,
+        "wallMs": 64604,
+        "outputTail": "ed @sinonjs/text-encoding@0.7.3: Deprecated: no longer maintained and no longer used by Sinon packages. See\nnpm warn deprecated   https://github.com/sinonjs/nise/issues/243 for replacement details.\nnpm warn deprecated lodash.pick@4.4.0: This package is deprecated. Use destructuring assignment syntax instead.\nnpm warn deprecated read-installed@4.0.3: This package is no longer supported.\nnpm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated uuid@8.3.2: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\nnpm warn deprecated sinon@11.1.2: 16.1.1\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "node",
+          "Makefile",
+          "mocha"
+        ],
+        "commandIdentity": "node Makefile mocha",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {
+          "NODE_OPTIONS": ""
+        },
+        "startedAt": "2026-09-01T13:07:33.132Z",
+        "endedAt": "2026-09-01T13:09:37.821Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 162.71,
+        "wallMs": 124688,
+        "failures": 0,
+        "outputTail": ".\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬...........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬..........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.......\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬......\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.....\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬....\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬...\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬..\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\u001b[90m]\u001b[0m\n\n\u001b[92m \u001b[0m\u001b[32m 38627 passing\u001b[0m\u001b[90m (2m)\u001b[0m\n\u001b[36m \u001b[0m\u001b[36m 11 pending\u001b[0m\n\n\n=============================== Coverage summary ===============================\nStatements   : 99.33% ( 98793/99459 )\nBranches     : 98.33% ( 16737/17021 )\nFunctions    : 99.4% ( 3521/3542 )\nLines        : 99.33% ( 98793/99459 )\n================================================================================\n\n"
+      }
+    ],
+    "reachedEnd": true,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "producedAt": "2026-09-01T13:09:37.923Z"
+}

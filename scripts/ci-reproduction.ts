@@ -164,13 +164,28 @@ export interface CiGroundTruth {
  * undefined, never zero. A zero here would make "ran nothing" indistinguishable from "ran and passed",
  * and that is the exact comparison this experiment turns on.
  */
-function countsOf(output: string): { testFiles?: number; tests?: number } {
+export function countsOf(output: string): { testFiles?: number; tests?: number } {
   const suites = /Test Suites:.*?(\d+) total/.exec(output);
   const tests = /Tests:.*?(\d+) total/.exec(output);
-  return {
-    ...(suites?.[1] ? { testFiles: Number(suites[1]) } : {}),
-    ...(tests?.[1] ? { tests: Number(tests[1]) } : {}),
-  };
+  if (tests?.[1]) {
+    return { ...(suites?.[1] ? { testFiles: Number(suites[1]) } : {}), tests: Number(tests[1]) };
+  }
+
+  // MOCHA. Caught before the CI_REPRODUCTION_05 run, not after: eslint runs mocha, whose epilogue is
+  // "N passing / N failing / N pending" and matches nothing above. Left alone, BOTH arms would have
+  // reported `tests: undefined`, `suiteOf` would have found no suite in either, and `classify` would
+  // have returned DIVERGED - "neither arm executed a suite" - for a pair of runs that each executed
+  // thousands of them. A jest-shaped parser silently reporting nothing is indistinguishable from a
+  // graph that runs nothing, which is the same unknown-as-negative confusion as defects 23 and 25.
+  const passing = /^\s*(\d+) passing/m.exec(output);
+  const failing = /^\s*(\d+) failing/m.exec(output);
+  const pending = /^\s*(\d+) pending/m.exec(output);
+  if (passing?.[1] || failing?.[1]) {
+    const total = Number(passing?.[1] ?? 0) + Number(failing?.[1] ?? 0) + Number(pending?.[1] ?? 0);
+    return { tests: total };
+  }
+
+  return {};
 }
 
 function tail(out: string): string {

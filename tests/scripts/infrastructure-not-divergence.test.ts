@@ -137,3 +137,31 @@ test("REPRODUCED is still reachable when ground truth exists and the environment
   assert.equal(result.outcome, "REPRODUCED", "the fixes must not make a genuine reproduction unreachable");
   assert.match(result.reason, /ground truth/i);
 });
+
+/**
+ * The runner-shape gap, caught before the CI_REPRODUCTION_05 run rather than after it.
+ *
+ * `countsOf` recognised only jest's "Tests: N total". eslint runs mocha. Both arms would have reported
+ * `tests: undefined`, `suiteOf` would have found no suite in either, and `classify` would have returned
+ * DIVERGED — "neither arm executed a suite" — for two runs that each executed thousands.
+ */
+import { countsOf } from "../../scripts/ci-reproduction.js";
+
+test("jest and mocha epilogues both yield a test count", () => {
+  assert.equal(countsOf("Test Suites: 2 failed, 2 passed, 4 total\nTests: 113 failed, 48 passed, 161 total").tests, 161);
+  assert.equal(countsOf("  4212 passing (2m)\n  3 pending\n  5 failing").tests, 4220);
+  assert.equal(countsOf("  4212 passing (2m)").tests, 4212);
+});
+
+test("unparseable output yields NO count, never zero", () => {
+  assert.equal(countsOf("some unrelated output").tests, undefined, "zero would make 'ran nothing' look like 'ran and passed'");
+});
+
+test("a mocha run is recognised as a suite, so agreeing arms are not called DIVERGED", () => {
+  const mocha = (a: "reference" | "inference"): StepReceipt =>
+    step({ arm: a, stepId: `${a}#1`, command: ["node", "Makefile", "mocha"], commandIdentity: "node Makefile mocha", exitStatus: 0, wallMs: 124_700, failures: 0, outcomeLayer: "repository", ...countsOf("  4212 passing (2m)") });
+
+  const truth: CiGroundTruth = { cell: "Test (ubuntu-latest, 22.x)", conclusion: "success", source: "github check-runs" };
+  const result = classify(arm("reference", [mocha("reference")]), arm("inference", [mocha("inference")]), true, truth);
+  assert.equal(result.outcome, "REPRODUCED");
+});
