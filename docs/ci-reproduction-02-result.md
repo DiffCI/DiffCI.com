@@ -1,5 +1,11 @@
 # CI_REPRODUCTION_02 — attempt 2, canonical Linux
 
+> **RECORDED OUTCOME: `REFUSED`, with APPARATUS PROTOCOL VIOLATION — inference operations executed
+> despite refusal.** The inference arm outcome and CPU numbers from this attempt are NOT reproduction
+> evidence and must not be cited as such. The reference-arm Linux result (GREEN, 161 tests / 4 files /
+> 0 failures) and the execution-confirmed `npm ci --legacy-peer-deps` recovery remain independently
+> useful.
+
 Run `ci-repro-02-linux-b`, container `sandbox:0.12.5`, node `v22.23.2`, npm `10.9.8`.
 
 ## Recorded outcome: `REFUSED` — and the recorded reason is FALSE

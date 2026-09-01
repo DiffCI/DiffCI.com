@@ -45,6 +45,30 @@ interface ArmReceipt {
   reachedEnd: boolean;
   node: string;
   npm: string;
+  /** Set when the arm executed NOTHING because the plan was refused. */
+  refused?: { reason: string; blockedBy: string[]; missingRequirements: string[] };
+}
+
+/**
+ * THE EXECUTION BOUNDARY, enforced rather than described.
+ *
+ *   No DiffCI decision without an executable plan, and no execution of a refused plan.
+ *
+ * Attempt 2 violated this: plan.executable was false, and the harness filtered out the blocking
+ * operation and ran the rest anyway - then reported "no inference arm was run" while its own receipt
+ * showed three executed steps. The engine held the line; the harness walked through it and produced a
+ * false receipt, which is worse than a failed run because it reads as evidence.
+ *
+ * Fails CLOSED: a refused plan that somehow carries execution receipts throws rather than being
+ * reported, because at that point nothing downstream can be trusted to describe what happened.
+ */
+function assertBoundaryHonoured(executable: boolean, arm: ArmReceipt): void {
+  if (!executable && arm.steps.length > 0) {
+    throw new Error(
+      `APPARATUS PROTOCOL VIOLATION: the ${arm.arm} plan was refused, yet ${arm.steps.length} repository ` +
+        `operation(s) were executed. A refused plan must execute ZERO operations.`,
+    );
+  }
 }
 
 function flag(key: string): string | undefined {
@@ -135,7 +159,10 @@ function classify(reference: ArmReceipt, inference: ArmReceipt, optimisable: boo
   const installOf = (a: ArmReceipt): StepReceipt | undefined => a.steps.find((s) => s.command.includes("ci") || s.command.includes("install"));
 
   if (!optimisable) {
-    return { outcome: "REFUSED", reason: "the engine did not mark this pipeline executable, so no inference arm was run" };
+    return {
+      outcome: "REFUSED",
+      reason: `the engine did not mark the path executable, so the inference arm executed nothing: ${inference.refused?.reason ?? "no reason recorded"}`,
+    };
   }
 
   const refInstall = installOf(reference);
@@ -191,9 +218,12 @@ function main(): void {
   // whatever operations a single collapsed job happened to contain. The reference question here is TEST
   // reproduction, so the plan is the TEST path - install included, later steps excluded.
   const plan = planForPurpose(pipeline.jobs, "TEST");
-  const inferenceSteps = plan.operations
-    .filter((o) => o.kind !== "checkout" && o.command.length > 0)
-    .map((o) => ({ command: o.command, environment: o.environment }));
+  // A refused plan executes NOTHING. Filtering out the blocking operation and running the remainder is
+  // exactly the attempt-2 defect: it silently converts "we cannot account for this path" into "we ran a
+  // slightly different path", which is the one substitution this experiment cannot tolerate.
+  const inferenceSteps = plan.executable
+    ? plan.operations.filter((o) => o.kind !== "checkout" && o.command.length > 0).map((o) => ({ command: o.command, environment: o.environment }))
+    : [];
 
   // --- reference arm: transcribed from the repository's workflow, engine not consulted ---
   const referencePlan = JSON.parse(readFileSync(referencePlanPath, "utf8")) as {
@@ -207,7 +237,23 @@ function main(): void {
   console.log(`  inferred plan  : ${inferenceSteps.length} executable operation(s), optimisable=${pipeline.optimisable}\n`);
 
   const reference = runArm("reference", referencePlan.source, referencePlan.steps, referenceRepo, timeoutMs);
-  const inference = runArm("inference", "INFERENCE_02 ExecutionGraph", inferenceSteps, inferenceRepo, timeoutMs);
+  const inference: ArmReceipt = plan.executable
+    ? runArm("inference", "inferred ExecutionGraph", inferenceSteps, inferenceRepo, timeoutMs)
+    : {
+        arm: "inference",
+        source: "inferred ExecutionGraph",
+        steps: [],
+        reachedEnd: false,
+        node: reference.node,
+        npm: reference.npm,
+        refused: {
+          reason: plan.refusal ?? "the plan was not executable",
+          blockedBy: [...new Set(plan.operations.flatMap((o) => o.blockedBy))],
+          missingRequirements: [...new Set(plan.operations.flatMap((o) => o.missingRequirements))],
+        },
+      };
+  if (!plan.executable) console.log(`    inference  REFUSED - executed nothing: ${plan.refusal}`);
+  assertBoundaryHonoured(plan.executable, inference);
   const { outcome, reason } = classify(reference, inference, plan.executable);
 
   writeFileSync(
