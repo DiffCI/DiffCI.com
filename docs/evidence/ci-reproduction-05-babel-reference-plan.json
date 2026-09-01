@@ -1,0 +1,96 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "babel/babel",
+  "headSha": "3fbcec1ccbe9ebfa5a8575bc88afadd061899bd5",
+  "source": ".github/workflows/ci.yml, jobs `build` and `test`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file. The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "node-version": "22"
+  },
+  "cellSelection": "Job `test` hard-codes runs-on: ubuntu-latest and matrices node-version [25, 24, 22]. 22 is the single in-environment cell; 25 and 24 are OUT_OF_ENVIRONMENT, recorded and not executed. The sibling jobs `test-coverage` (node latest) and `test-windows-mac` are also out of environment.",
+  "ciGroundTruth": {
+    "cell": "Test on Node.js 22",
+    "conclusion": "success",
+    "source": "github actions job, recorded in docs/evidence/ci-reproduction-05-screening.json"
+  },
+  "crossJobReconstruction": "Per docs/ci-reproduction-sample-01-amendment-4.md. Job `test` declares `needs: build` and consumes `babel-artifact` via actions/download-artifact@v8; job `build` produces it via actions/upload-artifact@v7 with path packages/*/lib/**/* and siblings. The suite therefore runs against COMPILED OUTPUT PRODUCED BY A DIFFERENT JOB, and running the test job's steps alone would leave the tree with no lib/ directories. All of build's `run:` steps are reconstructed in declaration order, with no selective omission. `build` itself declares `needs: prepare-yarn-cache`, which ships no artifact - that is ordering, not a file dependency, and is NOT reconstructed. The artifact transfer itself is not reproduced: upload/download between jobs on one commit is a file transfer, and running both jobs in a single tree leaves the same files in place.",
+  "provisioningNote": "In CI each job installs for itself - `build` through setup-node's restored yarn cache, `test` through its explicit `yarn install`. A single tree cannot have two independent installs, and building without dependencies is not what CI does either, so `yarn install` runs ONCE at the top. It is a reconstruction step, not a transcribed line in its original position.",
+  "conditionsApplied": "Neither job declares a step-level `if:`, so no step is condition-skipped in this cell.",
+  "steps": [
+    {
+      "command": [
+        "corepack",
+        "enable"
+      ],
+      "evidence": "ENVIRONMENT, not a workflow command. Permitted by docs/ci-reproduction-sample-01-amendment-2.md: corepack ships with node 22, only creates shims, and is recorded as an explicit environment step."
+    },
+    {
+      "command": [
+        "yarn",
+        "install"
+      ],
+      "evidence": "RECONSTRUCTION, per amendment 4 rule 3. .github/workflows/ci.yml - job `test`, `Install` -> `run: yarn install`, hoisted to run once before the reconstructed build steps."
+    },
+    {
+      "command": [
+        "make",
+        "-j",
+        "build-standalone-ci"
+      ],
+      "environment": {
+        "BABEL_ENV": "test-legacy",
+        "BABEL_9_BREAKING": "false",
+        "STRIP_BABEL_VERSION_FLAG": "true"
+      },
+      "evidence": ".github/workflows/ci.yml - job `build`, `Build babel artifacts` -> `run: make -j build-standalone-ci`, with its declared env"
+    },
+    {
+      "command": [
+        "node",
+        "./scripts/pack-script.ts"
+      ],
+      "evidence": ".github/workflows/ci.yml - job `build`, `Build Makefile.js`"
+    },
+    {
+      "command": [
+        "make",
+        "generate-readme"
+      ],
+      "evidence": ".github/workflows/ci.yml - job `build`, `Generate readmes`"
+    },
+    {
+      "command": [
+        "node",
+        "scripts/generators/npm-ignore.ts"
+      ],
+      "evidence": ".github/workflows/ci.yml - job `build`, `Generate .npmignore`"
+    },
+    {
+      "command": [
+        "node",
+        "scripts/cleanup-fixtures.ts"
+      ],
+      "evidence": ".github/workflows/ci.yml - job `build`, `Cleanup fixtures`"
+    },
+    {
+      "command": [
+        "node",
+        "./packages/babel-node/scripts/list-node-flags.js"
+      ],
+      "evidence": ".github/workflows/ci.yml - job `test`, `Ensure that @babel/node's list of node flags is up to date`"
+    },
+    {
+      "command": [
+        "node",
+        "./node_modules/.bin/jest",
+        "--ci"
+      ],
+      "environment": {
+        "BABEL_ENV": "test",
+        "TEST_FUZZ": "true"
+      },
+      "evidence": ".github/workflows/ci.yml - job `test`, `Test on node.js ${{ matrix.node-version }}` -> `run: node ./node_modules/.bin/jest --ci`, with its declared env"
+    }
+  ],
+  "disclosedDeviation": "Job `build` step `Ensure cwd does not contain uncommitted changes` (`node ./scripts/assert-dir-git-clean.ts \"...\"`) is NOT reconstructed. Amendment 4 rule 2 forbids selective omission, so this is a DEVIATION and is disclosed rather than hidden. Cause: the step argument embeds backticks, which cannot cross this harness shell-safety guard as argv; under amendment 3 that makes the line untranscribable. It is a verification step that produces nothing the artifact contains, so its absence does not change the tree the suite runs against - but that is a mitigation, not a licence, and the omission is recorded as a deviation."
+}
