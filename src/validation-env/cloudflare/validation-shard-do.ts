@@ -776,6 +776,7 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
     // mutation run, so it takes the FULL collect path. Only the observation-only pair job collects just
     // the corpus.
     if (deps.job.observeOnly || (deps.job.mode === "observe-pairs" && !deps.job.mutate)) return collectObservation(record, deps, t0);
+    if (deps.job.mode === "ci-reproduce") return collectCiReproduction(record, deps, t0);
     if (deps.job.mode === "calibrate") return collectCalibration(record, deps, t0);
     if (deps.job.mode === "survey") return collectSurvey(record, deps, t0);
     if (deps.job.mode === "density") return collectDensity(record, deps, t0);
@@ -924,22 +925,6 @@ async function collectQualification(record: ValidationRecord, deps: ValidationSt
     }
   }
 
-  if (deps.job.mode === "ci-reproduce") {
-    try {
-      const content = (await sandbox.readFile(`${CI_REPRODUCTION_OUT}/reproduction.json`)).content;
-      const key = `${resultPrefix(record)}/reproduction.json`;
-      await bucket.put(key, content);
-      keys.push(key);
-    } catch (err) {
-      return fail(record, "reproduction-unreadable", err instanceof Error ? err.message : String(err));
-    }
-  }
-  if (record.logs?.["ci-reproduce"]) {
-    const logKey = `${resultPrefix(record)}/ci-reproduce.log`;
-    await bucket.put(logKey, record.logs["ci-reproduce"]);
-    keys.push(logKey);
-  }
-
   if (record.logs?.register) {
     const logKey = `${resultPrefix(record)}/register.log`;
     await bucket.put(logKey, record.logs.register);
@@ -1083,6 +1068,59 @@ async function collectSurvey(record: ValidationRecord, deps: ValidationStepDeps,
       // One unreadable facts file must not lose the whole survey; the summary already records the entry.
     }
   }
+
+  record.resultKeys = keys;
+  record.timings.collectMs = deps.now() - t0;
+  record.step = "done";
+  return { record, nextAlarmDelayMs: null };
+}
+
+/**
+ * Collect a CI_REPRODUCTION run.
+ *
+ * There is no run directory and no results.jsonl: nothing was mutated and no corpus was observed. The
+ * two arms' receipts ARE the result, and the reproduction verdict is computed by the harness rather than
+ * by this collector — so a missing artefact is a failure, not something to substitute a default for.
+ */
+async function collectCiReproduction(record: ValidationRecord, deps: ValidationStepDeps, t0: number): Promise<ValidationStepResult> {
+  const { sandbox, bucket } = deps;
+  const keys: string[] = [];
+
+  let reproduction: string;
+  try {
+    reproduction = (await sandbox.readFile(`${CI_REPRODUCTION_OUT}/reproduction.json`)).content;
+  } catch (err) {
+    return fail(record, "reproduction-unreadable", err instanceof Error ? err.message : String(err));
+  }
+  const key = `${resultPrefix(record)}/reproduction.json`;
+  await bucket.put(key, reproduction);
+  keys.push(key);
+
+  const log = record.logs?.["ci-reproduce"] ?? "(no output captured)";
+  const logKey = `${resultPrefix(record)}/ci-reproduce.log`;
+  await bucket.put(logKey, log);
+  keys.push(logKey);
+
+  const envKey = `${resultPrefix(record)}/environment.json`;
+  await bucket.put(
+    envKey,
+    `${JSON.stringify(
+      {
+        runId: record.runId,
+        jobId: record.jobId,
+        mode: "ci-reproduce",
+        repository: deps.job.repository,
+        pinnedHeadSha: deps.job.pinnedHeadSha,
+        environment: record.environment ?? null,
+        timings: record.timings,
+        sourceTarballKey: record.sourceTarballKey,
+        sourceTarballSha256: record.sourceTarballSha256,
+      },
+      null,
+      2,
+    )}\n`,
+  );
+  keys.push(envKey);
 
   record.resultKeys = keys;
   record.timings.collectMs = deps.now() - t0;
