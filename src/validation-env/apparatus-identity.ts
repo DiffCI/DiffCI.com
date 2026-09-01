@@ -13,6 +13,16 @@ export const GENERATION_C = {
   generation: "C",
   analyserCommit: "0beb661",
   qualificationEvidenceCommit: "5fcff30",
+  /**
+   * The tarball this generation was QUALIFIED from. Documentation, not an enforced check - a run
+   * carries its own --source-sha256 from `pack`, verified at bootstrap against what it downloaded.
+   *
+   * It has legitimately moved since qualification (be23dee0... for CI_REPRODUCTION_03 attempt 4),
+   * because the source tarball carries scripts/ and the harness was instrumented. The AGENT integrity
+   * below did NOT move: repacking after the defect-23/24 fixes produced a byte-identical analyser
+   * bundle. That is the evidence that attempt 4 changed instrumentation and not inference - stronger
+   * than my assurance, since it is a digest rather than a claim.
+   */
   sourceTarballSha256: "3ed8fc1e0800336dced4aca6902bbcf70646ab29b0f94ce35f2a6d22a29e67c8",
   agentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
   image: "docker.io/cloudflare/sandbox:0.12.5",
