@@ -1,0 +1,68 @@
+{
+  "experiment": "MECHANISM_ISOLATION_02",
+  "protocol": "docs/mechanism-isolation-02-protocol.md",
+  "repository": "jest-community/eslint-plugin-jest",
+  "pinnedTree": "c7bf004e00271f88bc8dd2b6a0e378dfc33f02da",
+  "shape": "changed implementation source, ZERO changed test files, subject matches /^fix(([^)]*))?!?:/",
+  "criterionInputs": "the commit subject line only - no graph, no DiffCI selection, no observation, no mutation outcome, no predicted saving, no judgement about testability",
+  "enumeratedFrom": "npm run select:candidate -- --count 40 --no-test-edit --fix-subject --trace",
+  "traversal": "docs/evidence/mechanism-isolation-02-pool.txt",
+  "poolSize": 4,
+  "note": "Sealed BEFORE the draw. Verified: every entry changes zero test files and declares itself a fix. None analysed by DiffCI.",
+  "pool": [
+    {
+      "poolIndex": 0,
+      "base": "e0cdeb59b18434be0309985c5ca41d482cb4970b",
+      "head": "c48c48c9d03ed04eda01a78959ab7f794e1fa448",
+      "subject": "fix(prefer-expect-assertions): use correct word in error message (#1873)",
+      "implementationFiles": [
+        "src/rules/prefer-expect-assertions.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/prefer-expect-assertions.ts"
+      ]
+    },
+    {
+      "poolIndex": 1,
+      "base": "2e599596b55409a881ae6dd1ce5c4b6f63ae3bb3",
+      "head": "14c27ab73fba6ea2b6509d4ede88ecab8a40e2db",
+      "subject": "fix(no-commented-out-tests): make message less ambiguous (#1740)",
+      "implementationFiles": [
+        "src/rules/no-commented-out-tests.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/no-commented-out-tests.ts"
+      ]
+    },
+    {
+      "poolIndex": 2,
+      "base": "db8172b3960db3a555f271cde3cb8670b95e9e42",
+      "head": "0f5b873edcce08988d1ce51e17eb67c21ddf102d",
+      "subject": "fix(no-large-snapshots): use a far better message for when an unexpected snapshot is found (#1736)",
+      "implementationFiles": [
+        "src/rules/no-large-snapshots.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "src/rules/no-large-snapshots.ts"
+      ]
+    },
+    {
+      "poolIndex": 3,
+      "base": "eecc6e65eb6a983729a38d97e702da0e4d46bdd9",
+      "head": "9cb4eccab0439c7f56608ffa1e6c9441178bf6d5",
+      "subject": "fix(padding-around-test-blocks): update description (#1691)",
+      "implementationFiles": [
+        "src/rules/padding-around-test-blocks.ts"
+      ],
+      "changedTestFiles": [],
+      "allChangedFiles": [
+        "README.md",
+        "docs/rules/padding-around-test-blocks.md",
+        "src/rules/padding-around-test-blocks.ts"
+      ]
+    }
+  ]
+}

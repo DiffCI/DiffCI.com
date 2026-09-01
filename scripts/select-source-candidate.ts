@@ -92,6 +92,12 @@ function main(): void {
   // MECHANISM_ISOLATION_01: the eligible shape is "changed implementation, ZERO changed tests". The
   // only addition to the frozen filter, declared in the protocol before the pool was enumerated.
   const requireNoTestEdit = args.includes("--no-test-edit");
+  // MECHANISM_ISOLATION_02: a MECHANICAL claim of behaviour change - the commit declares itself a fix
+  // under conventional commits. Frozen prospectively. It reads the subject line only: no graph, no
+  // DiffCI selection, no mutation outcome, no predicted saving, and no judgement about whether a
+  // particular fix "looks testable".
+  const requireFixSubject = args.includes("--fix-subject");
+  const FIX_SUBJECT = /^fix(\([^)]*\))?!?:/;
 
   const git = (...a: string[]): string => execFileSync("git", ["-C", repo, ...a], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   const shas = git("rev-list", `--max-count=${limit}`, "HEAD").trim().split("\n");
@@ -122,6 +128,7 @@ function main(): void {
     if (DEPENDENCY_AUTOMATION.test(subject)) rejections.push("dependency automation");
     if (tests.length === files.length) rejections.push("test-only change");
     if (requireNoTestEdit && tests.length > 0) rejections.push(`changes ${tests.length} test file(s) - outside the isolation shape`);
+    if (requireFixSubject && !FIX_SUBJECT.test(subject)) rejections.push("subject is not a conventional-commit fix");
     if (implementation.length > 0 && outOfScope.length === implementation.length) {
       rejections.push(`A1: every implementation file is outside the comparator's scope (${outOfScope.slice(0, 3).join(", ")})`);
     }

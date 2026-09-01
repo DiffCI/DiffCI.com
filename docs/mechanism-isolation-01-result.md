@@ -92,3 +92,14 @@ A cheaper alternative worth weighing: the pool's `fix:` commits are likelier to 
 than its `refactor:` commits. But **filtering the pool toward fixes after seeing this result would be
 selecting for a measurable outcome**, which is the same error in a new coat. If the shape is narrowed, it
 must be narrowed as a precommitted rule in a fresh experiment, not as a repair to this one.
+
+---
+
+## CLOSED — `RECALL_UNMEASURABLE` / `GRAPH_REACHED` demonstrated
+
+MI-01 is closed at exactly that, and is not reopened or redrawn.
+
+**A precision on the economics.** The +43.81 CPU-s incremental here is **supporting replication
+evidence** for the cost behaviour seen in GENERATION_C_01. It is **not a second safety-plus-savings
+proof**, because recall was unmeasurable on this candidate: there was no detection outcome to pair the
+saving with. One measured safety-plus-savings result stands (GENERATION_C_01), not two.
