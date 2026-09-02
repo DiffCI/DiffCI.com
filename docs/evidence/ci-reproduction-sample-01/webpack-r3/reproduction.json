@@ -1,0 +1,140 @@
+{
+  "schema": "diffci.ci.r3-qualification/v1",
+  "protocol": "docs/ci-reproduction-05-eligibility.md",
+  "repository": "webpack/webpack",
+  "headSha": "ebd3be47689e8e5b1335517dfd680d025ade1f4c",
+  "engineInvoked": false,
+  "verdict": "R3_QUALIFIED",
+  "reason": "the reference arm completed (exit 0) with no environment signals",
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/test.yml, job `integration`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "corepack",
+          "enable"
+        ],
+        "commandIdentity": "corepack enable",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:41:25.185Z",
+        "endedAt": "2026-09-01T14:41:25.273Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0.08,
+        "wallMs": 86,
+        "outputTail": "\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "upgrade",
+          "pkg-pr-new@0.0.66"
+        ],
+        "commandIdentity": "yarn upgrade pkg-pr-new@0.0.66",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:41:25.274Z",
+        "endedAt": "2026-09-01T14:42:07.246Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 68.7,
+        "wallMs": 41972,
+        "outputTail": "ack@>=5.32.0\".\nwarning \" > coffee-loader@5.0.0\" has unmet peer dependency \"webpack@^5.0.0\".\nwarning \" > file-loader@6.2.0\" has unmet peer dependency \"webpack@^4.0.0 || ^5.0.0\".\nwarning \" > fork-ts-checker-webpack-plugin@9.1.0\" has unmet peer dependency \"webpack@^5.11.0\".\nwarning \" > html-loader@5.1.0\" has unmet peer dependency \"webpack@^5.0.0\".\nwarning \" > mini-css-extract-plugin@2.10.2\" has unmet peer dependency \"webpack@^5.0.0\".\nwarning \" > raw-loader@4.0.2\" has unmet peer dependency \"webpack@^4.0.0 || ^5.0.0\".\nwarning \" > style-loader@4.0.0\" has unmet peer dependency \"webpack@^5.27.0\".\nwarning \" > ts-loader@9.6.2\" has unmet peer dependency \"webpack@^4.0.0 || ^5.0.0\".\nwarning \" > url-loader@4.1.1\" has unmet peer dependency \"webpack@^4.0.0 || ^5.0.0\".\nwarning \" > webpack-cli@7.2.2\" has unmet peer dependency \"webpack@^5.101.0\".\nwarning Workspaces can only be enabled in private projects.\nwarning Workspaces can only be enabled in private projects.\nwarning Workspaces can only be enabled in private projects.\nwarning Workspaces can only be enabled in private projects.\nwarning Workspaces can only be enabled in private projects.\nwarning Workspaces can only be enabled in private projects.\n"
+      },
+      {
+        "stepId": "reference#2",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "--frozen-lockfile"
+        ],
+        "commandIdentity": "yarn --frozen-lockfile",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:42:07.246Z",
+        "endedAt": "2026-09-01T14:42:07.968Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 1.14,
+        "wallMs": 721,
+        "outputTail": "yarn install v1.22.22\n[1/4] Resolving packages...\nsuccess Already up-to-date.\n$ husky\nDone in 0.52s.\n\n"
+      },
+      {
+        "stepId": "reference#3",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "link",
+          "--frozen-lockfile"
+        ],
+        "commandIdentity": "yarn link --frozen-lockfile",
+        "allowFailure": true,
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:42:07.969Z",
+        "endedAt": "2026-09-01T14:42:08.273Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0.31,
+        "wallMs": 304,
+        "outputTail": "yarn link v1.22.22\nsuccess Registered \"webpack\".\ninfo You can now run `yarn link \"webpack\"` in the projects where you want to use this package and it will be used instead.\nDone in 0.05s.\n\n"
+      },
+      {
+        "stepId": "reference#4",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "link",
+          "webpack",
+          "--frozen-lockfile"
+        ],
+        "commandIdentity": "yarn link webpack --frozen-lockfile",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-01T14:42:08.274Z",
+        "endedAt": "2026-09-01T14:42:08.567Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0.31,
+        "wallMs": 292,
+        "outputTail": "yarn link v1.22.22\nsuccess Using linked package for \"webpack\".\nDone in 0.06s.\n\n"
+      },
+      {
+        "stepId": "reference#5",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "cover:integration:a",
+          "--ci",
+          "--cacheDirectory",
+          ".jest-cache"
+        ],
+        "commandIdentity": "yarn cover:integration:a --ci --cacheDirectory .jest-cache",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {
+          "MAIN_BRANCHES": ""
+        },
+        "startedAt": "2026-09-01T14:42:08.567Z",
+        "endedAt": "2026-09-01T14:56:49.627Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 2317.89,
+        "wallMs": 881058,
+        "testFiles": 46,
+        "tests": 57666,
+        "failures": 0,
+        "outputTail": "eated)\nPASS test/TestCasesDevtoolEval.test.js (46.435 s, 578 MB heap size)\n(node:1172) Warning: Setting the NODE_TLS_REJECT_UNAUTHORIZED environment variable to '0' makes TLS connections and HTTPS requests insecure by disabling certificate verification.\n(node:1200) ExperimentalWarning: VM Modules is an experimental feature and might change at any time\n(Use `node --trace-warnings ...` to show where the warning was created)\nPASS test/HotTestCasesNode.test.js (50.742 s, 295 MB heap size)\nPASS test/HotTestCasesWeb.test.js (62.52 s, 347 MB heap size)\n  ● Console\n\n    console.log\n      [HMR] Reload all css\n\n      at update (test/js/hot-cases-web/css/mini-css-extract/main.js:296:15)\n\nPASS test/TestCasesNormal.basictest.js (102.258 s, 424 MB heap size)\nPASS test/ConfigCacheTestCases.basictest.js (583.739 s, 870 MB heap size)\nPASS test/ConfigTestCases.basictest.js (338 s, 843 MB heap size)\n\nTest Suites: 46 passed, 46 total\nTests:       238 skipped, 57428 passed, 57666 total\nSnapshots:   2386 passed, 2386 total\nTime:        878.403 s\nRan all test suites.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?\n"
+      }
+    ],
+    "reachedEnd": true,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "producedAt": "2026-09-01T14:56:49.765Z"
+}
