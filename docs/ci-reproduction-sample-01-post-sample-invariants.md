@@ -155,3 +155,73 @@ the execution-receipt discipline exists to eliminate. This becomes training evid
 None of the above touches the running engine. Members 3, 4 and 5 execute on the frozen engine, and only
 once the five-member distribution is sealed do we decide which defects and capability gaps are
 prerequisites to `CI_OPTIMIZATION_01`.
+
+---
+
+# Added after member 3 — the repair is architectural, not a feature list
+
+webpack changed the diagnosis. The dominant blocker is **not** "support a few more GitHub Actions
+constructs". It is the semantic layer that converts workflow syntax into causal operations.
+
+## Defect 28 — regex over command text must lose its authority
+
+Two independent external repositories produced the same failure:
+
+```
+incidental string contains a test-framework name  →  operation classified TEST
+```
+
+A URL in an issue comment (`github.com/jestjs/jest/…`) and a patch filename
+(`test/patches/jest-worker+30.4.1.patch`). Both manufactured false TEST semantics.
+
+**Regex-over-command-text should stop being an authority for operation purpose.** It may remain *weak
+evidence*; it must not license a TEST decision on its own.
+
+## Defect 31 — the inverse collapse
+
+```
+command cannot safely become argv  →  operation disappears  →  TEST semantics disappear
+```
+
+Another unknown-as-negative. The right representation is:
+
+```
+declared step  →  semantic purpose possibly TEST  →  execution representation UNRESOLVED
+```
+
+**not** `couldn't parse the command → no operation exists`. The step was declared; the repository says
+what it is for. Failing to build argv is a statement about *our executor*, not about the pipeline.
+
+## Defect 30 — receipt integrity
+
+Requirements must be **structured predicates carrying evidence**, not human-readable labels living
+apart from their implementation:
+
+```
+PACKAGE_MANAGER_RESOLVED → expected yarn → observed packageManager + lockfile → SATISFIED
+```
+
+A shape like that makes `"a resolved package manager": command.length > 0` hard to write in the first
+place, because the predicate, its expectation and its observation would have to be stated together.
+
+## Repair order — architecture, not features
+
+```
+workflow evidence → semantic operations → causal dependencies → executability → purpose planning → receipts
+```
+
+Explicitly **not** "implement every missing GitHub Actions feature". Cluster the failures, repair the
+layers in that order, then re-run **the same five repositories** as an evaluation set.
+
+## The threshold before CI_OPTIMIZATION_01 — stronger than before
+
+> At least one external repository must reach genuine `REPRODUCED`, with **correct job purpose**,
+> **complete causal path**, **truthful receipts**, **no human command repair**, and **no accidental
+> success from omitted or unresolved state**. Ideally more than one.
+
+## The concrete engineering target
+
+webpack states the gap in one line: **the external reference pipeline ran 57,666 tests, while DiffCI
+could not recognise its integration job as providing TEST at all.**
+
+That is not a vague research problem. It is a measurable target.
