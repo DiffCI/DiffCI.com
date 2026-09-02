@@ -622,6 +622,118 @@ async function execShadowPoll(sandbox: any, owner: string, name: string, languag
   return JSON.parse(String(file.content));
 }
 
+// ============================================================================================
+// EXTERNAL_ENGINE_BRIDGE_01 (2026-09-02). Same container image as prepareContainer, extended with the
+// build-toolchain provisioning SEMANTIC_REPAIR_02 established for validation-env
+// (validation-shard-do.ts:292-310) - Shadow's own prepareContainer never needed it, because the
+// dependency-graph engine never executes the repository's own build/test commands, only statically
+// reads its source. ci:reproduce does, so a container that has never provisioned `make`/`python3`/`cc`
+// would fail every repository whose CI needs them for a reason that is this container's, not theirs -
+// exactly the babel `make: not found` finding this ports the fix for.
+
+/** prepareContainer() plus the toolchain ci:reproduce needs. Kept as a separate function, not a change
+ *  to prepareContainer itself, so Shadow's own poll path's container preparation is untouched - the two
+ *  pipelines share the base image and the source-extraction step, nothing more. */
+async function prepareContainerForCiReproductionBridge(sandbox: any, sourceTarball: File): Promise<void> {
+  await prepareContainer(sandbox, sourceTarball);
+
+  let build = await sandbox.exec("make --version && python3 --version && cc --version", { timeout: 20_000 });
+  if (!build.success) {
+    await sandbox.exec(
+      "(command -v apt-get >/dev/null && apt-get update && apt-get install -y --no-install-recommends make python3 build-essential) || " +
+        "(command -v apk >/dev/null && apk add --no-cache make python3 build-base) || true",
+      { timeout: 600_000 },
+    );
+    build = await sandbox.exec("make --version && python3 --version && cc --version", { timeout: 20_000 });
+    if (!build.success) {
+      // Recorded, not thrown - a repository that turns out not to need the toolchain (most of the R3/
+      // reference-plan corpus so far are plain npm/yarn/pnpm projects) should still get a genuine
+      // attempt. One that DOES need it will fail its own build step later, with a real, specific reason
+      // - "make: not found" - rather than this bootstrap step manufacturing a generic one in advance.
+      console.log("prepareContainerForCiReproductionBridge: build toolchain unavailable after self-heal attempt - proceeding anyway, a repository that needs it will fail its own build step with a specific reason");
+    }
+  }
+
+  // Every reference plan collected so far (docs/evidence/ci-reproduction-05-*) starts with `corepack
+  // enable` - matches validation-shard-do.ts's own provisioning exactly, for the same reason (pnpm/yarn
+  // present via corepack but not enabled by default in this base image).
+  await sandbox.exec(
+    "(corepack enable >/dev/null 2>&1 || (npm install -g corepack --silent && corepack enable)) >/dev/null 2>&1 || true",
+    { timeout: 180_000 },
+  );
+}
+
+/** owner/name/language-style validation, reused exactly - see validateShellSafeIdentifiers's own comment
+ *  on why this must run before anything is interpolated into a shell command. `owner`/`name` are the
+ *  ONLY values this call site puts into a shell string; `headSha` is derived INSIDE the container by
+ *  cloudflare-ci-reproduction-bridge.ts itself (never trusted from outside it) and reaches ci:reproduce
+ *  only as an argv element via execFileSync there, never through a shell at all. */
+interface CiReproductionBridgeResult {
+  ok: boolean;
+  repository?: string;
+  headSha?: string;
+  /** The full parsed reproduction.json (or R3 verdict document) - present only when ok. */
+  reproduction?: Record<string, unknown>;
+  error?: string;
+}
+
+async function execCiReproductionBridgeScript(sandbox: any, owner: string, name: string, cloneToken: string | undefined): Promise<CiReproductionBridgeResult> {
+  validateShellSafeIdentifiers(owner, name, "typescript"); // language argument unused by this script; the existing validator just needs a value
+  const outPath = "/workspace/ci-reproduction-bridge-result.json";
+  const exec = await sandbox.exec(
+    `cd /opt/diffci && npx tsx scripts/cloudflare-ci-reproduction-bridge.ts --owner ${owner} --name ${name} --workspace /workspace --out ${outPath}`,
+    // GITHUB_CLONE_TOKEN via exec's env option, never the command string - identical rule to
+    // execShadowPoll. 30 minutes: generous for a single repository's clone + one ci:reproduce attempt,
+    // short of the container's own idle sleep.
+    { timeout: 30 * 60_000, env: { GITHUB_CLONE_TOKEN: cloneToken } },
+  );
+  if (!exec.success) throw new Error(`ci-reproduction-bridge script failed (exit ${exec.exitCode}): ${errorTail(exec)}`);
+  const file = await sandbox.readFile(outPath);
+  return JSON.parse(String(file.content));
+}
+
+/** The bridge's own orchestration, mirroring executeShadowPoll's shape: prepare, authenticate, run,
+ *  persist. A separate Sandbox session from Shadow's own poll (a distinct id suffix) - the two engines
+ *  never share a container instance, so neither can affect the other's environment. */
+async function executeCiReproductionBridge(env: ValidationEnv, owner: string, name: string, source: File): Promise<{ ok: boolean; repository: string; r2Keys?: string[]; outcome?: string; error?: string }> {
+  const repository = `${owner}/${name}`;
+  const id = await buildSandboxSessionId(owner, name, 1);
+  const sandbox = getSandbox(env.ResearchSandbox as any, `${id}-ci-bridge`, { enableDefaultSession: false, keepAlive: false, sleepAfter: "5m", transport: "rpc" });
+  const startedAt = new Date().toISOString();
+  try {
+    await prepareContainerForCiReproductionBridge(sandbox, source);
+    const cloneToken = await githubTokenForRepo(env, repository);
+    const result = await execCiReproductionBridgeScript(sandbox, owner, name, cloneToken);
+    await sandbox.destroy();
+
+    if (!result.ok || !result.headSha) {
+      return { ok: false, repository, error: result.error ?? "ci-reproduction-bridge-failed" };
+    }
+
+    // R2 only, no D1 - mirroring validation-env's own ci:reproduce persistence (validation-shard-
+    // do.ts's collectCiReproduction), not Shadow's prediction-model-specific tables, which have no
+    // column shape a reproduction.json result fits without distortion.
+    const evidenceStore = new R2EvidenceStore(env.RESEARCH_BUCKET);
+    const prefix = `shadow/ci-reproduction/${repository}/${result.headSha}`;
+    const environment = { image: "docker.io/cloudflare/sandbox:0.12.5", startedAt, completedAt: new Date().toISOString(), repository, headSha: result.headSha };
+    const reproduction = result.reproduction ?? { outcome: "REFUSED", reason: result.error ?? "no reproduction.json produced" };
+    await evidenceStore.put(`${prefix}/reproduction.json`, reproduction);
+    await evidenceStore.put(`${prefix}/environment.json`, environment);
+    const outcome = String(reproduction.outcome ?? reproduction.verdict ?? "?");
+    console.log(`executeCiReproductionBridge ${repository}@${result.headSha}: outcome=${outcome}`);
+    return { ok: true, repository, r2Keys: [`${prefix}/reproduction.json`, `${prefix}/environment.json`], outcome };
+  } catch (error: unknown) {
+    try {
+      await sandbox.destroy();
+    } catch {
+      // best-effort cleanup - the sandbox may already be gone, which is exactly the failure mode.
+    }
+    const message = error instanceof Error ? error.message : String(error);
+    console.log(`executeCiReproductionBridge ${repository} failed: ${message}`);
+    return { ok: false, repository, error: message };
+  }
+}
+
 async function shadowEnroll(request: Request, env: ValidationEnv): Promise<Response> {
   let body: { repository?: string; observationSource?: ObservationSource; language?: string };
   try {
@@ -1119,6 +1231,25 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
           executeShadowReconcile(env, repository, DEFAULT_SHADOW_CRON_CONFIG.reconcileLimitPerRepo)
             .then((r) => console.log(`shadow-webhook: workflow_run-triggered reconcile for ${repository}: reconciled=${r.reconciled} stillPending=${r.stillPending} errors=${r.errors.length}`))
             .catch((error: unknown) => console.log(`shadow-webhook: reconcile for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
+        );
+      },
+      // EXTERNAL_ENGINE_BRIDGE_01. Same verified-source gate schedulePoll above already uses - both
+      // pipelines extract the identical diffci source tarball into their own (separate) container, so
+      // both refuse identically when that source is stale/missing/unverifiable, never running the
+      // CI-reproduction engine against an unverified build of itself.
+      scheduleCiReproductionBridge: (repository) => {
+        ctx.waitUntil(
+          (async () => {
+            const [owner, name] = repository.split("/");
+            validateShellSafeIdentifiers(owner ?? "", name ?? "", "typescript");
+            const verified = await loadVerifiedShadowSource(env);
+            if (verified.status !== "CURRENT") {
+              console.log(`shadow-webhook: ci-reproduction-bridge for ${repository} refused - source-integrity-${verified.status}: ${verified.detail}`);
+              return;
+            }
+            const result = await executeCiReproductionBridge(env, owner!, name!, verified.file);
+            console.log(`shadow-webhook: push-triggered ci-reproduction-bridge for ${repository}: ok=${result.ok} outcome=${result.outcome ?? "?"}${result.error ? ` error=${result.error}` : ""}`);
+          })().catch((error: unknown) => console.log(`shadow-webhook: ci-reproduction-bridge for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
         );
       },
       log: (message) => console.log(message),

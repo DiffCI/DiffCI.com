@@ -37,6 +37,14 @@ export interface ShadowWebhookDeps {
    * never thrown back into webhook handling: GitHub only needs the 2xx acknowledgment. */
   schedulePoll(repository: string): void;
   scheduleReconcile(repository: string): void;
+  /**
+   * EXTERNAL_ENGINE_BRIDGE_01. Fire-and-forget, same rule as schedulePoll - triggers the independent
+   * ci:reproduce engine (src/ci-inference/) inside the same enrolled-repository Sandbox path, alongside
+   * the dependency-graph prediction schedulePoll already starts. Optional so every existing caller and
+   * fixture (in particular tests/research/cloudflare/shadow-webhook.test.ts's makeDeps()) is unaffected -
+   * an environment that hasn't wired this dep simply doesn't get the extra trigger, never an error.
+   */
+  scheduleCiReproductionBridge?(repository: string): void;
   log(message: string): void;
 }
 
@@ -114,6 +122,10 @@ export async function handleShadowWebhook(
       const installationId = String(payload?.installation?.id ?? "");
       if (installationId) await deps.setInstallationId(repository, installationId);
       deps.schedulePoll(repository);
+      // Independent of the poll above: same push, same enrolled repository, a SEPARATE analysis engine.
+      // Never blocks or replaces schedulePoll, and its absence from the response body when unwired keeps
+      // this byte-for-byte compatible with every caller that doesn't yet supply it.
+      deps.scheduleCiReproductionBridge?.(repository);
       return ok("poll-scheduled", { repository });
     }
 

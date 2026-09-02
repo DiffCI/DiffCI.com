@@ -115,6 +115,33 @@ describe("handleShadowWebhook", () => {
     assert.deepEqual(calls.installationIds, [{ repository: "acme/web", installationId: "42" }]);
   });
 
+  it("a default-branch push works identically whether or not scheduleCiReproductionBridge is wired", async () => {
+    const { deps, calls } = makeDeps();
+    assert.equal(deps.scheduleCiReproductionBridge, undefined, "makeDeps()'s baseline fixture must not supply it - every existing caller stays unaffected");
+    const outcome = await deliver("push", { ref: "refs/heads/main", repository: { full_name: "acme/web", default_branch: "main" } }, deps);
+    assert.equal(outcome.body.action, "poll-scheduled");
+    assert.deepEqual(calls.polls, ["acme/web"], "schedulePoll must still fire with no ci-reproduction-bridge dep present");
+  });
+
+  it("EXTERNAL_ENGINE_BRIDGE_01: a default-branch push ALSO triggers scheduleCiReproductionBridge when wired, alongside schedulePoll, never instead of it", async () => {
+    const { deps, calls } = makeDeps();
+    const bridgeCalls: string[] = [];
+    deps.scheduleCiReproductionBridge = (repository) => bridgeCalls.push(repository);
+    const outcome = await deliver("push", { ref: "refs/heads/main", repository: { full_name: "acme/web", default_branch: "main" } }, deps);
+    assert.equal(outcome.body.action, "poll-scheduled");
+    assert.deepEqual(calls.polls, ["acme/web"], "the independent dependency-graph pipeline must be unaffected by the new trigger existing alongside it");
+    assert.deepEqual(bridgeCalls, ["acme/web"]);
+  });
+
+  it("a non-default-branch push triggers neither pipeline", async () => {
+    const { deps, calls } = makeDeps();
+    const bridgeCalls: string[] = [];
+    deps.scheduleCiReproductionBridge = (repository) => bridgeCalls.push(repository);
+    await deliver("push", { ref: "refs/heads/feature-x", repository: { full_name: "acme/web", default_branch: "main" } }, deps);
+    assert.deepEqual(calls.polls, []);
+    assert.deepEqual(bridgeCalls, []);
+  });
+
   it("ignores a push to a non-default branch", async () => {
     const { deps, calls } = makeDeps();
     const outcome = await deliver(
