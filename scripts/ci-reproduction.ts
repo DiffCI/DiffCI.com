@@ -227,6 +227,26 @@ export function countsOf(raw: string): { testFiles?: number; tests?: number } {
     return { tests: total };
   }
 
+  // TAP_PARSING_01. TAP (`node --test`, and any other TAP-protocol producer emitting the standard summary
+  // footer) - structural, not runner-specific: `# tests N` is TAP's own summary convention, matched
+  // nowhere else in this function. `testFiles` is deliberately NOT populated from `# suites N` - TAP
+  // "suites" include nested `describe()`-shaped groupings, not a flat file count the way `Test Suites:`
+  // and `Test Files` above are, and reporting one would silently misrepresent what was measured for
+  // whichever caller uses `testFiles` as a cost-per-file denominator.
+  //
+  // `# tests N` ALONE is not proof this is a genuine, completed summary - TAP permits an arbitrary
+  // `# comment` line anywhere, so a single matching line could in principle be a diagnostic aside rather
+  // than the reporter's own footer. Requiring `# pass` and `# fail` alongside it is the same discipline
+  // the mocha branch above already uses (`passing` AND `failing`, not either alone) - three independent
+  // structural anchors from the one footer block a real completed run always prints together, not
+  // satisfiable by a stray line or a run truncated before the footer finishes.
+  const tapTests = /^# tests (\d+)\s*$/m.exec(output);
+  const tapPass = /^# pass (\d+)\s*$/m.exec(output);
+  const tapFail = /^# fail (\d+)\s*$/m.exec(output);
+  if (tapTests?.[1] && tapPass?.[1] && tapFail?.[1]) {
+    return { tests: Number(tapTests[1]) };
+  }
+
   return {};
 }
 
