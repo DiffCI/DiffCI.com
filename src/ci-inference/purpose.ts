@@ -62,6 +62,48 @@ function basename(token: string): string {
   return cleaned.slice(cleaned.lastIndexOf("/") + 1);
 }
 
+/**
+ * One `KEY=value` prefix, consumed as a single unit even when the value is quoted and contains
+ * whitespace — `NODE_OPTIONS="--a --b"` must not fragment into `NODE_OPTIONS="--a` and `--b"` the way a
+ * plain whitespace split would.
+ */
+const LEADING_ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=(?:"[^"]*"|'[^']*'|\S*)/;
+
+export interface NormalizedCommand {
+  /** `KEY=value` prefixes stripped from the front, in order — execution environment, not identity. */
+  assignments: string[];
+  /** Tokens of what remains: the executable and its arguments. Empty for an assignment-only line. */
+  tokens: string[];
+}
+
+/**
+ * SEMANTIC_REPAIR_02, step 2. Leading shell environment assignments modify the execution environment;
+ * they do not determine the executable identity. `NODE_OPTIONS="--experimental-vm-modules" yarn jest`
+ * must expose the identical executable/package-manager semantics as `yarn jest` — jest's own
+ * `jest-runtime-vm-modules` script is written exactly this way, and before this function existed neither
+ * `executableChain` nor `packageManagerCommand` ever saw past the assignment to find `yarn` at all,
+ * because `firstCommandTokens` is a plain whitespace split and the assignment became (a broken fragment
+ * of) the line's first token.
+ *
+ * Operates on the RAW LINE, not on already-split tokens, specifically so a quoted value survives intact
+ * — tokenising first and asking "is this token an assignment" second can never recover a value that
+ * contained whitespace, because the damage (an extra, spurious token) is already done.
+ *
+ * LEADING ONLY: stops at the first token that is not itself an assignment, so `yarn jest FOO=bar` —
+ * where `FOO=bar` is an ARGUMENT to jest, not an environment prefix — is untouched; this function never
+ * scans past the first non-assignment token looking for one. An assignment-only line (nothing follows
+ * the last assignment) yields empty `tokens`, never treating the last `KEY` as a program to run.
+ */
+export function normalizeExecutable(line: string): NormalizedCommand {
+  const assignments: string[] = [];
+  let rest = line.trimStart();
+  for (let m = LEADING_ASSIGNMENT.exec(rest); m; m = LEADING_ASSIGNMENT.exec(rest)) {
+    assignments.push(m[0]);
+    rest = rest.slice(m[0].length).trimStart();
+  }
+  return { assignments, tokens: firstCommandTokens(rest) };
+}
+
 /** Runners invoked directly. Matched against the EXECUTABLE, never against arguments. */
 const EXECUTABLE_PURPOSE: Array<[RegExp, OperationPurpose]> = [
   [/^(jest|vitest|mocha|ava|jasmine|tap|karma|cypress|playwright)(\.(js|cjs|mjs))?$/i, "test"],
@@ -174,9 +216,13 @@ export interface PackageManagerCommand {
  * `yarn --frozen-lockfile`, `yarn install` and `yarn link webpack` were each resolved as invocations of
  * scripts named `--frozen-lockfile`, `install` and `link` — correctly absent from every package.json,
  * and cited as a blocking prerequisite for an operation that was never a script call at all.
+ *
+ * Takes already-normalised tokens (`normalizeExecutable(line).tokens`), never a raw line. This function
+ * is the package-manager SEMANTIC classifier; teaching it to also strip shell prefixes would start
+ * turning it into a shell parser. Normalisation is a separate, earlier step both this and
+ * `executableChain` consume — never re-derived independently by either.
  */
-export function packageManagerCommand(line: string): PackageManagerCommand | undefined {
-  const tokens = firstCommandTokens(line);
+export function packageManagerCommand(tokens: string[]): PackageManagerCommand | undefined {
   if (tokens.length === 0) return undefined;
   const [head, ...rest] = tokens as [string, ...string[]];
   if (!PACKAGE_MANAGER.test(basename(head))) return undefined;
@@ -215,7 +261,10 @@ export function packageManagerCommand(line: string): PackageManagerCommand | und
  * `depth` bounds script-to-script recursion; a cycle yields `unknown` rather than hanging.
  */
 export function purposeOfLine(line: string, lookupScript: (name: string) => string | undefined, depth = 0): PurposeVerdict {
-  const tokens = firstCommandTokens(line);
+  // Normalised ONCE: leading `KEY=value` assignments stripped, so both the wrapper/interpreter walk and
+  // the package-manager classifier see the same executable-identifying tokens, agreeing by construction
+  // rather than by coincidence.
+  const { tokens } = normalizeExecutable(line);
   if (tokens.length === 0) return { purpose: "unknown", basis: "NONE", evidence: "empty command" };
 
   // Walk past coverage wrappers and interpreters: `nyc … jest`, `node ./node_modules/.bin/jest --ci`.
@@ -224,7 +273,7 @@ export function purposeOfLine(line: string, lookupScript: (name: string) => stri
     if (direct) return { purpose: direct, basis: "EXECUTABLE_POSITION", evidence: `executable \`${basename(candidate)}\`` };
   }
 
-  const pm = packageManagerCommand(line);
+  const pm = packageManagerCommand(tokens);
   if (pm?.kind === "install") {
     return { purpose: "install", basis: "EXECUTABLE_POSITION", evidence: `\`${[basename(pm.head), pm.sub].filter(Boolean).join(" ")}\`` };
   }

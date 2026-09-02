@@ -25,7 +25,7 @@ import { evaluateCondition, renderCommand, type Resolution } from "./expression.
 import { expandMatrix, type MatrixAssignment } from "./matrix.js";
 import { computeCompleteness, confidenceFromCompleteness, type ReferenceNode } from "./reference-graph.js";
 import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences } from "./resolve.js";
-import { packageManagerCommand, purposeOfLine } from "./purpose.js";
+import { normalizeExecutable, packageManagerCommand, purposeOfLine } from "./purpose.js";
 import type { DeclaredPrerequisite } from "./causal.js";
 import type { EvidenceRef, InferredOperation, InferredPipeline, ObservedFact, OperationKind, Unresolved } from "./schema.js";
 
@@ -141,8 +141,9 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
       // SEMANTIC_REPAIR_02: the SAME classification purpose.ts uses to decide `purpose: install` vs a
       // script invocation, consumed rather than re-derived. Only `kind === "script"` may ever reach
       // `resolveScript` — an `install` or `builtin` verb is never a script reference, regardless of
-      // whether package.json happens to declare a same-named script.
-      const pm = packageManagerCommand(joined);
+      // whether package.json happens to declare a same-named script. Normalised first, same as
+      // `purposeOfLine`, so a leading `KEY=value` prefix doesn't hide the package manager from either.
+      const pm = packageManagerCommand(normalizeExecutable(joined).tokens);
       if (pm?.kind === "script" && pm.scriptName) own.push(...resolveScript(repoPath, pm.scriptName, evidence[0]));
     }
     references.push(...own);

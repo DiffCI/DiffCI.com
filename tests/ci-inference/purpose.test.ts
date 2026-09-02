@@ -9,7 +9,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { establishesPurpose, firstCommandTokens, packageManagerCommand, purposeOfLine } from "../../src/ci-inference/purpose.js";
+import { establishesPurpose, firstCommandTokens, normalizeExecutable, packageManagerCommand, purposeOfLine } from "../../src/ci-inference/purpose.js";
+
+/** `packageManagerCommand` takes normalised tokens, never a raw line — this is the one call site every
+ *  test below shares, so a line's assignments and its package-manager semantics are always asked about
+ *  through the same pipeline the source code itself uses. */
+const pmc = (line: string) => packageManagerCommand(normalizeExecutable(line).tokens);
 
 const NO_SCRIPTS = () => undefined;
 
@@ -116,20 +121,80 @@ test("packageManagerCommand never classifies a yarn flag or built-in as a script
     ["yarn link webpack --frozen-lockfile", "builtin"], // webpack's basic-unknown-2 — script-84
   ];
   for (const [line, kind] of cases) {
-    const pm = packageManagerCommand(line);
+    const pm = pmc(line);
     assert.equal(pm?.kind, kind, line);
     assert.equal(pm?.scriptName, undefined, `${line} must never produce a script name`);
   }
 });
 
 test("packageManagerCommand still recognises a genuine script invocation, with or without `run`", () => {
-  assert.deepEqual(packageManagerCommand("yarn build")?.kind, "script");
-  assert.equal(packageManagerCommand("yarn build")?.scriptName, "build");
-  assert.equal(packageManagerCommand("yarn run build")?.scriptName, "build");
-  assert.equal(packageManagerCommand("npm run test:coverage")?.scriptName, "test:coverage");
+  assert.deepEqual(pmc("yarn build")?.kind, "script");
+  assert.equal(pmc("yarn build")?.scriptName, "build");
+  assert.equal(pmc("yarn run build")?.scriptName, "build");
+  assert.equal(pmc("npm run test:coverage")?.scriptName, "test:coverage");
   // webpack's real test step, unaffected by the built-in list: not a recognised builtin, so still a
   // script candidate — resolveScript is what correctly reports whether the repository declares it.
-  assert.equal(packageManagerCommand("yarn cover:integration:a --ci")?.scriptName, "cover:integration:a");
+  assert.equal(pmc("yarn cover:integration:a --ci")?.scriptName, "cover:integration:a");
+});
+
+/**
+ * SEMANTIC_REPAIR_02, step 2. Boundaries pre-registered before implementation: multiple assignments
+ * work, a quoted assignment value never fragments into argv, an assignment AFTER the executable is an
+ * argument and stays put, an assignment-only line invents no executable, and every yarn built-in case
+ * already covered stays a built-in once assignments are stripped in front of it.
+ */
+test("normalizeExecutable strips leading KEY=value assignments, and only those", () => {
+  assert.deepEqual(normalizeExecutable("yarn jest packages/jest-runtime"), {
+    assignments: [],
+    tokens: ["yarn", "jest", "packages/jest-runtime"],
+  });
+
+  // Jest's real line: a quoted value containing whitespace must be consumed as ONE assignment, not
+  // fragmented into extra tokens that could be mistaken for flags or arguments.
+  const quoted = normalizeExecutable('NODE_OPTIONS="--experimental-vm-modules --no-warnings" yarn jest packages/jest-runtime');
+  assert.deepEqual(quoted.assignments, ['NODE_OPTIONS="--experimental-vm-modules --no-warnings"']);
+  assert.deepEqual(quoted.tokens, ["yarn", "jest", "packages/jest-runtime"]);
+
+  // Multiple assignments in a row.
+  const multi = normalizeExecutable("FOO=bar BAZ=qux yarn jest");
+  assert.deepEqual(multi.assignments, ["FOO=bar", "BAZ=qux"]);
+  assert.deepEqual(multi.tokens, ["yarn", "jest"]);
+
+  // An assignment AFTER the executable is an ARGUMENT, not an environment prefix — never stripped.
+  const trailing = normalizeExecutable("yarn jest FOO=bar");
+  assert.deepEqual(trailing.assignments, []);
+  assert.deepEqual(trailing.tokens, ["yarn", "jest", "FOO=bar"]);
+
+  // Assignment-only: no executable to invent from the last KEY.
+  assert.deepEqual(normalizeExecutable("FOO=bar"), { assignments: ["FOO=bar"], tokens: [] });
+
+  // Every previously-confirmed built-in case, unaffected: no leading assignment, nothing to strip.
+  assert.deepEqual(normalizeExecutable("yarn link webpack --frozen-lockfile").tokens, ["yarn", "link", "webpack", "--frozen-lockfile"]);
+});
+
+test("an assignment-prefixed package-manager script is classified exactly like its bare form", () => {
+  const bare = pmc("yarn jest packages/jest-runtime");
+  const prefixed = pmc('NODE_OPTIONS="--experimental-vm-modules --no-warnings" yarn jest packages/jest-runtime');
+  assert.deepEqual(prefixed, bare, "an environment prefix must not change the package-manager verdict");
+  assert.equal(prefixed?.kind, "script");
+  assert.equal(prefixed?.scriptName, "jest");
+});
+
+test("jest's real three-level script chain resolves to TEST through an assignment prefix", () => {
+  // The exact chain nodejs.yml#test-runtime-vm-modules runs: jest-runtime-vm-modules-ci ->
+  // jest-runtime-vm-modules -> `NODE_OPTIONS="..." yarn jest packages/jest-runtime` -> jest's own "jest"
+  // script, which is a real executable position. Before normalizeExecutable existed, the middle link
+  // broke the chain: `yarn` was never identified as the package manager, so `jest` was never reached as
+  // a script name, and this job never received TEST purpose at all — REGRESSION_01's PARTIAL_REPRODUCTION
+  // (test-leak wins instead) is what that invisibility caused downstream, in the planner.
+  const scripts: Record<string, string> = {
+    "jest-runtime-vm-modules-ci": "yarn jest-runtime-vm-modules --color --config jest.config.ci.mjs --coverage",
+    "jest-runtime-vm-modules": 'NODE_OPTIONS="--experimental-vm-modules --no-warnings" yarn jest packages/jest-runtime',
+    jest: "node ./packages/jest-cli/bin/jest.js",
+  };
+  const verdict = purposeOfLine("yarn jest-runtime-vm-modules-ci --max-workers 4", (n) => scripts[n]);
+  assert.equal(verdict.purpose, "test");
+  assert.equal(verdict.basis, "SCRIPT_BODY");
 });
 
 test("a package-manager built-in never establishes purpose by name, same as before the fix", () => {
@@ -173,6 +238,10 @@ test("operations carry executionRepresentation and purposeBasis", () => {
 test("SEMANTIC_REPAIR_02: infer.ts has no second, disagreeing script-invocation regex", () => {
   const source = read("src/ci-inference/infer.ts", "utf8");
   assert.doesNotMatch(source, /const SCRIPT_RUN/, "the deleted second parser must not return");
-  assert.match(source, /packageManagerCommand\(joined\)/, "resolveScript must be gated by the SAME classifier purpose.ts uses");
+  assert.match(
+    source,
+    /packageManagerCommand\(normalizeExecutable\(joined\)\.tokens\)/,
+    "resolveScript must be gated by the SAME classifier purpose.ts uses, on the SAME normalised tokens",
+  );
   assert.doesNotMatch(source, /resolveScript\(repoPath, scriptMatch/, "resolveScript must never be called from a regex match infer.ts derived on its own");
 });
