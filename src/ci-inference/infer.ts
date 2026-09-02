@@ -17,11 +17,15 @@
  *
  * Confidence and executability are DERIVED from reference-graph completeness, never assigned.
  */
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { jobProvides, type InferredJob } from "./jobs.js";
 import { evaluateCondition, renderCommand, type Resolution } from "./expression.js";
 import { expandMatrix, type MatrixAssignment } from "./matrix.js";
 import { computeCompleteness, confidenceFromCompleteness, type ReferenceNode } from "./reference-graph.js";
 import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences } from "./resolve.js";
+import { purposeOfLine } from "./purpose.js";
 import type { EvidenceRef, InferredOperation, InferredPipeline, ObservedFact, OperationKind, Unresolved } from "./schema.js";
 
 /** Commands that install dependencies, in the form CI actually writes them. */
@@ -39,33 +43,16 @@ const INSTALL_ACTION = /^(bahmutov\/npm-install|pnpm\/action-setup|borales\/acti
 /** A run line that is a package-script invocation, e.g. `npm run build` / `yarn test`. */
 const SCRIPT_RUN = /^(npm run |yarn (run )?|pnpm (run )?|bun run )([A-Za-z0-9:_-]+)/;
 
-const KIND_BY_SCRIPT: Array<[RegExp, OperationKind]> = [
-  // `test:coverage` is html-webpack-plugin's real CI test command.
-  [/^test(:|$)/i, "test"],
-  [/^(unit|jest|vitest)$/i, "test"],
-  [/^(build|compile|bundle|prepack|prepare)$/i, "build"],
-  [/^(lint|eslint|lint:js)$/i, "lint"],
-  [/^(typecheck|tsc|types|check-types)$/i, "typecheck"],
-  [/^(generate|codegen|prebuild)$/i, "generate"],
-  [/^(audit|security)$/i, "security"],
-];
-
-function kindOfScript(script: string): OperationKind {
-  for (const [pattern, kind] of KIND_BY_SCRIPT) if (pattern.test(script)) return kind;
-  return "unknown";
-}
-
-/** Classifies a raw run line into an operation kind, from the command rather than the step's name. */
-function kindOfRunLine(line: string): OperationKind {
-  if (INSTALL_PATTERN.test(line)) return "install";
-  const script = SCRIPT_RUN.exec(line);
-  if (script?.[4]) return kindOfScript(script[4]);
-  if (/\b(jest|vitest|mocha|ava)\b/.test(line)) return "test";
-  if (/\btsc\b/.test(line)) return "typecheck";
-  if (/\beslint\b/.test(line)) return "lint";
-  if (/\baudit\b/.test(line)) return "security";
-  return "unknown";
-}
+// DELETED in SEMANTIC_REPAIR_01 layer 2: `KIND_BY_SCRIPT`, `kindOfScript` and `kindOfRunLine`.
+//
+// `kindOfRunLine` matched /(jest|vitest|mocha|ava)/ against the WHOLE command line, which made an
+// issue-closing command a TEST operation because its comment linked to github.com/jestjs/jest, and made
+// `git apply test/patches/jest-worker+30.4.1.patch` a TEST operation because of a patch filename. Two
+// external repositories, two unrelated innocent strings, the same defect.
+//
+// Purpose now comes from `purpose.ts`, derived from the executable position or from a script body the
+// repository declares. These are REMOVED rather than left unused: dead code that still encodes the old
+// authority is one careless call away from reinstating it, and a test asserts the pattern is absent.
 
 /** Split a CI run line into argv without a shell. Refuses anything with shell control characters. */
 function argvOf(line: string): { argv: string[]; unresolved?: Unresolved } {
@@ -97,6 +84,19 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
 
   const keyOf = (f: ObservedFact): string | undefined =>
     f.attributes?.workflow && f.attributes?.job ? `${f.attributes.workflow}#${f.attributes.job}` : undefined;
+
+  // The repository's own package scripts, read once. Injected into purposeOfLine so that module never
+  // touches the filesystem and stays exhaustively testable.
+  let declaredScripts: Record<string, string> = {};
+  try {
+    const pkgPath = join(repoPath, 'package.json');
+    if (existsSync(pkgPath)) {
+      declaredScripts = (JSON.parse(readFileSync(pkgPath, 'utf8')) as { scripts?: Record<string, string> }).scripts ?? {};
+    }
+  } catch {
+    /* an unreadable package.json simply declares no scripts */
+  }
+  const lookupScript = (name: string): string | undefined => declaredScripts[name];
 
   const jobKeys: string[] = [];
   for (const f of facts) {
@@ -214,13 +214,19 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
       const context = { matrix: assignment };
       const { rendered, resolutions, renderable } = renderCommand(fact.value, context);
       const line = rendered;
-      const kind = kindOfRunLine(line);
+      // LAYER 2, and the rule that matters most here: inference CONSUMES the structural purpose
+      // verdict and never rediscovers purpose from raw command text. Removing substring authority in
+      // purpose.ts while some consumer re-derived it here would have recreated defect 28 downstream.
+      const verdict = purposeOfLine(line, lookupScript);
+      const kind = verdict.purpose as OperationKind;
 
       // The step condition. UNRESOLVED is NOT false: "we could not read the condition" and "the step
       // does not run" are different claims, and only one of them is safe to act on.
       const conditionText = fact.attributes?.if;
       const condition = conditionText !== undefined ? evaluateCondition(conditionText, context, fact.evidence) : undefined;
-      const willExecute = condition ? condition.result === "TRUE" : true;
+      // DEFECT 29. UNRESOLVED is NOT false. `undefined` means "we could not read the condition", which
+      // is a different claim from "the step does not run" and must not be acted on as if it were.
+      const willExecute = condition === undefined ? true : condition.result === "TRUE" ? true : condition.result === "FALSE" ? false : undefined;
 
       const unsupported = resolutions.find((r: Resolution) => r.kind === "UNSUPPORTED_EXPRESSION");
       const { argv, unresolved: u0 } = !renderable
@@ -243,8 +249,15 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
         environment,
         u ? [u] : [],
       );
+      // The two axes, kept separate. A compound line webpack's CI genuinely runs is
+      // `purpose TEST + execution UNRESOLVED`: the repository says what the step is for, and only our
+      // executor cannot represent it. Collapsing that into `no operation` cost webpack its TEST purpose
+      // across all 31 job instances while its real suite ran 57,666 tests.
+      const executionRepresentation = argv.length > 0 ? 'RESOLVED' as const : 'UNRESOLVED' as const;
       const decorated: InferredOperation = {
         ...op,
+        executionRepresentation,
+        purposeBasis: verdict.basis,
         ...(condition ? { condition: { expression: condition.expression, result: condition.result, ...(condition.reason ? { reason: condition.reason } : {}) } } : {}),
         willExecute,
         ...(resolutions.length > 0 ? { expressionResolutions: resolutions.map((r: Resolution) => ({ expression: r.expression, kind: r.kind, value: r.value, ...(r.reason ? { reason: r.reason } : {}) })) } : {}),

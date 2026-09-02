@@ -100,3 +100,32 @@ test("babel's real test command is recognised through the interpreter", () => {
   assert.equal(verdict.purpose, "test");
   assert.equal(verdict.basis, "EXECUTABLE_POSITION");
 });
+
+/**
+ * LAYER 2 guards: inference must CONSUME the structural verdict, never rediscover purpose from text.
+ *
+ * Removing substring authority from one module while a consumer re-derives it downstream would recreate
+ * defect 28 exactly where it is hardest to see. These assert the old authority is gone from the source,
+ * not merely bypassed.
+ */
+import { readFileSync as read } from "node:fs";
+
+test("infer.ts contains no substring-based purpose rule", () => {
+  const source = read("src/ci-inference/infer.ts", "utf8");
+  assert.doesNotMatch(source, /\/\b\(jest\|vitest\|mocha\|ava\)\b\/\.test/, "the deleted rule must not return");
+  assert.doesNotMatch(source, /function kindOfRunLine/, "dead code encoding the old authority is one call from reinstating it");
+  assert.doesNotMatch(source, /function kindOfScript/);
+  assert.match(source, /purposeOfLine\(line, lookupScript\)/, "purpose must be consumed from the structural module");
+});
+
+test("willExecute is three-valued: UNRESOLVED yields undefined, never false", () => {
+  const source = read("src/ci-inference/infer.ts", "utf8");
+  assert.doesNotMatch(source, /const willExecute = condition \? condition\.result === "TRUE" : true/, "defect 29 must not return");
+  assert.match(source, /condition\.result === "FALSE" \? false : undefined/, "UNRESOLVED must fall through to undefined");
+});
+
+test("operations carry executionRepresentation and purposeBasis", () => {
+  const source = read("src/ci-inference/infer.ts", "utf8");
+  assert.match(source, /executionRepresentation,/);
+  assert.match(source, /purposeBasis: verdict\.basis,/, "PurposeBasis must reach the receipt for the eventual learning layer");
+});

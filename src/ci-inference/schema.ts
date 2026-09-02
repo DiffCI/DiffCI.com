@@ -128,8 +128,42 @@ export interface InferredOperation {
    * indistinguishable from a step the pipeline never had — unknown versus absent, again.
    */
   condition?: { expression: string; result: "TRUE" | "FALSE" | "UNRESOLVED"; reason?: string };
-  /** Whether this operation runs in this instance. False when its condition is FALSE. */
-  willExecute: boolean;
+  /**
+   * Whether this operation runs in this instance. THREE-VALUED, deliberately.
+   *
+   * `true` when the condition is TRUE or absent, `false` only when it is FALSE, and **`undefined` when
+   * it is UNRESOLVED** — we could not read the condition, which is not the same as knowing the step is
+   * skipped.
+   *
+   * DEFECT 29. This was `condition.result === "TRUE"`, collapsing UNRESOLVED into false. `expression.ts`
+   * had documented that UNRESOLVED is not FALSE, and the consumer one file away narrowed three values to
+   * two — an invariant stated in one file and violated in the next. On jest that turned an unreadable
+   * `github.event.*` condition into "this step does not run", which let a path of entirely non-running
+   * steps be reported executable.
+   */
+  willExecute?: boolean;
+  /**
+   * SEMANTIC PURPOSE, independent of whether the command can be executed.
+   *
+   * The four states must stay distinguishable:
+   *
+   *   purpose TEST    + execution RESOLVED     the normal case
+   *   purpose TEST    + execution UNRESOLVED   webpack: a compound line we cannot safely run, that the
+   *                                            repository nonetheless says is its test step
+   *   purpose NONE    + execution RESOLVED     a runnable command we cannot attribute an outcome to
+   *   purpose UNKNOWN + execution UNRESOLVED   nothing established either way
+   *
+   * Executor limitations must not erase pipeline semantics.
+   */
+  executionRepresentation?: "RESOLVED" | "UNRESOLVED";
+  /**
+   * HOW the purpose was established — EXECUTABLE_POSITION, SCRIPT_BODY, SCRIPT_NAME or NONE.
+   *
+   * Kept on every operation and carried into receipts: "we recognised the runner being invoked" and
+   * "we matched a conventional script name" are different strengths of claim, and a learning system
+   * later needs the evidence rather than only the label.
+   */
+  purposeBasis?: string;
   /** How each expression in the command resolved, so an empty value can be traced to its cause. */
   expressionResolutions?: Array<{ expression: string; kind: string; value: string; reason?: string }>;
   /**
