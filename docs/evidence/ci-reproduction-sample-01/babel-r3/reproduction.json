@@ -1,0 +1,78 @@
+{
+  "schema": "diffci.ci.r3-qualification/v1",
+  "protocol": "docs/ci-reproduction-05-eligibility.md",
+  "repository": "babel/babel",
+  "headSha": "3fbcec1ccbe9ebfa5a8575bc88afadd061899bd5",
+  "engineInvoked": false,
+  "verdict": "R3_QUALIFIED",
+  "reason": "the reference arm completed (exit 127) with no environment signals",
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/ci.yml, jobs `build` and `test`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "corepack",
+          "enable"
+        ],
+        "commandIdentity": "corepack enable",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T07:46:21.788Z",
+        "endedAt": "2026-09-02T07:46:21.920Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0.12,
+        "wallMs": 130,
+        "outputTail": "\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "install"
+        ],
+        "commandIdentity": "yarn install",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T07:46:21.920Z",
+        "endedAt": "2026-09-02T07:46:52.271Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 64.19,
+        "wallMs": 30350,
+        "outputTail": "rrectly met by your project; run yarn explain peer-requirements <hash> for details, where <hash> is the six-letter p-prefixed code.\n➤ YN0086: │ Some peer dependencies are incorrectly met by dependencies; run yarn explain peer-requirements for details.\n➤ YN0000: └ Completed\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 1475 packages were added to the project (+ 79.12 MiB).\n➤ YN0000: └ Completed in 13s 249ms\n➤ YN0000: ┌ Link step\n➤ YN0004: │ core-js-pure@npm:3.49.0 lists build scripts, but all build scripts have been disabled.\n➤ YN0004: │ core-js@npm:3.49.0 lists build scripts, but all build scripts have been disabled.\n➤ YN0004: │ es5-ext@npm:0.10.64 lists build scripts, but all build scripts have been disabled.\n➤ YN0004: │ esbuild@npm:0.28.1 lists build scripts, but all build scripts have been disabled.\n➤ YN0004: │ uglifyjs-webpack-plugin@npm:0.4.6 [2c0fc] lists build scripts, but all build scripts have been disabled.\n➤ YN0004: │ unrs-resolver@npm:1.11.1 lists build scripts, but all build scripts have been disabled.\n➤ YN0007: │ babel@workspace:. must be built because it never has been before or the last one failed\n➤ YN0000: └ Completed in 14s 627ms\n➤ YN0000: · Done with warnings in 28s 723ms\n\n"
+      },
+      {
+        "stepId": "reference#2",
+        "arm": "reference",
+        "command": [
+          "make",
+          "-j",
+          "build-standalone-ci"
+        ],
+        "commandIdentity": "make -j build-standalone-ci",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {
+          "BABEL_ENV": "test-legacy",
+          "BABEL_9_BREAKING": "false",
+          "STRIP_BABEL_VERSION_FLAG": "true"
+        },
+        "startedAt": "2026-09-02T07:46:52.272Z",
+        "endedAt": "2026-09-02T07:46:52.276Z",
+        "exitStatus": 127,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0,
+        "wallMs": 4,
+        "outputTail": "\n/bin/sh: 1: make: not found\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "producedAt": "2026-09-02T07:46:52.389Z"
+}

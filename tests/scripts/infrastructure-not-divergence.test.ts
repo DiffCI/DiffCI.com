@@ -237,3 +237,30 @@ test("the retry branch of a `A || A -f` line is not transcribed", () => {
   assert.equal(suites.length, 1, "running the retry too would let a suite that failed once be recorded as passing");
   assert.ok(!suites[0].command.includes("-f"), "the --onlyFailures retry must not be the command that runs");
 });
+
+/**
+ * Defects 32 and 33, from sample member 4.
+ *
+ * babel's R3 reported **R3_QUALIFIED** for an arm that exited 127 on `make: not found` at step 3 of 9,
+ * and its own reason string read "the reference arm completed (exit 127) with no environment signals".
+ * `completed` meant only "exit status is not null", so a command-not-found counted as completion — and
+ * the arm never reached the suite at all. Qualification asked whether the process ENDED, not whether it
+ * WORKED.
+ *
+ * Separately, that step was recorded `outcomeLayer: "repository"`, charging babel for a toolchain
+ * GitHub's ubuntu runner ships and this container does not.
+ */
+test("a missing toolchain is an ENVIRONMENT signal, not a repository failure", () => {
+  assert.deepEqual(environmentSignalsIn("/bin/sh: 1: make: not found"), ["toolchain missing"], "sh phrasing - the ACTUAL babel output");
+  assert.deepEqual(environmentSignalsIn("  it returns 404 when not found"), [], "a test NAME containing the words must not match");
+  assert.deepEqual(environmentSignalsIn("bash: make: command not found"), ["toolchain missing"]);
+  assert.deepEqual(environmentSignalsIn("node: No such file or directory"), ["toolchain missing"]);
+  assert.deepEqual(environmentSignalsIn("AssertionError: expected 1 to equal 2"), [], "a real test failure is not a toolchain signal");
+});
+
+test("R3 must not qualify an arm that failed before reaching a suite", () => {
+  const SOURCE = readFileSync("scripts/ci-reproduction.ts", "utf8");
+  assert.match(SOURCE, /const allSucceeded = reference\.steps\.every/, "every step must have succeeded");
+  assert.match(SOURCE, /const ranSuite = reference\.steps\.some\(\(s\) => typeof s\.tests === "number" && s\.tests > 0\)/, "a suite must actually have run");
+  assert.match(SOURCE, /qualified = allSucceeded && reference\.reachedEnd && ranSuite && signals\.length === 0/, "all four conditions, not just a non-null exit");
+});

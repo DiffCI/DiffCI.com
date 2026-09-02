@@ -143,6 +143,16 @@ const ENVIRONMENT_FAILURE_SIGNALS: Array<{ pattern: RegExp; signal: string }> = 
   { pattern: /Test timed out in \d+\s*ms/i, signal: "vitest per-test timeout" },
   { pattern: /ENOSPC|no space left on device/i, signal: "disk exhausted" },
   { pattern: /JavaScript heap out of memory/i, signal: "heap exhausted" },
+  // DEFECT 33. babel's build needs `make`, which GitHub's ubuntu runner ships and this container does
+  // not. The arm exited 127 and the step was recorded outcomeLayer "repository" - charging a missing
+  // toolchain to babel. "command not found" is the environment failing to provide, never the
+  // repository failing to work.
+  //
+  // Anchored on `<name>: [command ]not found` at END OF LINE, because sh and bash phrase it
+  // differently - `/bin/sh: 1: make: not found` versus `bash: make: command not found` - and a bare
+  // /not found/ would match any test whose NAME contains those words.
+  { pattern: /:\s*(?:command\s+)?not found\s*$/im, signal: "toolchain missing" },
+  { pattern: /No such file or directory/i, signal: "toolchain missing" },
 ];
 
 /**
@@ -526,10 +536,19 @@ function main(): void {
     console.log(`  R3 qualification: reference arm only, engine NOT invoked`);
     const reference = runArm("reference", qualifyPlan.source, qualifyPlan.steps, qualifyRepo, timeoutMs, qualifyProgress);
 
-    const suite = reference.steps[reference.steps.length - 1];
-    const signals = suite?.environmentSignals ?? [];
-    const completed = suite?.exitStatus !== null && suite?.exitStatus !== undefined;
-    const qualified = completed && signals.length === 0;
+    // DEFECT 32. This predicate passed babel with `make: not found` and printed "the reference arm
+    // completed (exit 127) with no environment signals". `completed` meant only "exit status is not
+    // null", so a command-not-found on step 3 of 9 counted as completion - and the arm never reached
+    // the suite at all. Qualification asked whether the process ENDED, not whether it WORKED.
+    //
+    // R3 now requires all three: every step exited 0, the arm reached its end, and a suite reported a
+    // test count. "It stopped without crashing" is not qualification.
+    const last = reference.steps[reference.steps.length - 1];
+    const signals = [...new Set(reference.steps.flatMap((s) => s.environmentSignals ?? []))];
+    const allSucceeded = reference.steps.every((s) => s.exitStatus === 0 || s.allowFailure);
+    const ranSuite = reference.steps.some((s) => typeof s.tests === "number" && s.tests > 0);
+    const failedStep = reference.steps.find((s) => s.exitStatus !== 0 && !s.allowFailure);
+    const qualified = allSucceeded && reference.reachedEnd && ranSuite && signals.length === 0;
     const r3 = {
       schema: "diffci.ci.r3-qualification/v1",
       protocol: "docs/ci-reproduction-05-eligibility.md",
@@ -538,10 +557,14 @@ function main(): void {
       engineInvoked: false,
       verdict: qualified ? "R3_QUALIFIED" : "R3_FAILED",
       reason: qualified
-        ? `the reference arm completed (exit ${suite?.exitStatus}) with no environment signals`
-        : !completed
-          ? "the reference arm did not complete inside the bound"
-          : `the reference arm hit environment signals: ${signals.join(", ")}`,
+        ? `the reference arm ran to completion and executed a suite, with no environment signals`
+        : signals.length > 0
+          ? `the reference arm hit environment signals: ${signals.join(", ")}`
+          : failedStep
+            ? `the reference arm failed at ${failedStep.stepId} (${failedStep.commandIdentity}) with exit ${failedStep.exitStatus}`
+            : !ranSuite
+              ? "the reference arm executed no suite, so there is nothing to reproduce"
+              : "the reference arm did not reach its end inside the bound",
       referenceArm: reference,
       producedAt: new Date().toISOString(),
     };
