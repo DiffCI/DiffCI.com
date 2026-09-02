@@ -1470,6 +1470,31 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 4 * 60 * 60_000,
   },
 
+  "r3-qualify-babel": {
+    id: "r3-qualify-babel",
+    description: "CI_REPRODUCTION_SAMPLE_01 member 4, R3: babel/babel reference arm only, cross-job artifact reconstruction.",
+    mode: "ci-reproduce",
+    repository: "babel/babel",
+    pinnedHeadSha: "3fbcec1ccbe9ebfa5a8575bc88afadd061899bd5",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    referencePlan: "docs/evidence/ci-reproduction-05-babel-reference-plan.json",
+    referenceOnly: true,
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
+  "ci-reproduce-babel": {
+    id: "ci-reproduce-babel",
+    description: "CI_REPRODUCTION_SAMPLE_01 member 4: reference vs inference arms on babel/babel. Carries REFERENCE_DEVIATION.",
+    mode: "ci-reproduce",
+    repository: "babel/babel",
+    pinnedHeadSha: "3fbcec1ccbe9ebfa5a8575bc88afadd061899bd5",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    referencePlan: "docs/evidence/ci-reproduction-05-babel-reference-plan.json",
+    maxRunMs: 4 * 60 * 60_000,
+  },
+
   "r3-qualify-webpack": {
     id: "r3-qualify-webpack",
     description: "CI_REPRODUCTION_SAMPLE_01 member 3, R3: webpack/webpack reference arm only.",
