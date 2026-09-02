@@ -596,8 +596,44 @@ function main(): void {
   const timeoutMs = Number(flag("timeout") ?? 90 * 60_000);
   const referencePlanPath = resolve(flag("reference") ?? "docs/evidence/ci-reproduction-01-reference-plan.json");
   const referenceOnly = process.argv.includes("--reference-only");
-  mkdirSync(work, { recursive: true });
   mkdirSync(outDir, { recursive: true });
+
+  // EXTERNAL_ENGINE_BRIDGE_01. A reference plan is hand-transcribed by reading the repository's own
+  // workflow, deliberately never auto-generated - see docs/ci-reproduction-01-protocol.md and
+  // semantic-repair-01-plan.md on why the reference arm must stay independently constructed from the
+  // inference arm. Before this check, a repository with no plan yet crashed here uncaught (readFileSync
+  // -> ENOENT, no reproduction.json ever written, a raw stack trace as the only evidence) - the same
+  // "unknown treated as negative infrastructure noise" failure mode DEFECT 23/26 already fixed elsewhere
+  // in this file. Every caller, not only a future automated one, benefits from an honest, persisted
+  // refusal instead of a crash: this is what makes "no reference plan for this repository yet" a
+  // legitimate, inspectable product outcome rather than an unhandled exception.
+  if (!existsSync(referencePlanPath)) {
+    const reason = `no reference plan exists at ${referencePlanPath} - a reference plan must be hand-transcribed from this repository's own workflow before it can be reproduced (docs/ci-reproduction-01-protocol.md); this is not automated, so its absence is not a defect to fix, only a fact to report honestly`;
+    if (referenceOnly) {
+      writeFileSync(
+        join(outDir, "reproduction.json"),
+        `${JSON.stringify(
+          { schema: "diffci.ci.r3-qualification/v1", protocol: "docs/ci-reproduction-05-eligibility.md", repository, headSha, engineInvoked: false, verdict: "R3_FAILED", reason, producedAt: new Date().toISOString() },
+          null,
+          2,
+        )}\n`,
+      );
+      console.log(`\n  R3: R3_FAILED - ${reason}`);
+    } else {
+      writeFileSync(
+        join(outDir, "reproduction.json"),
+        `${JSON.stringify(
+          { schema: "diffci.ci.reproduction/v1", attempt: 1, repository, headSha, protocol: "docs/ci-reproduction-01-protocol.md", outcome: "REFUSED", reason, producedAt: new Date().toISOString() },
+          null,
+          2,
+        )}\n`,
+      );
+      console.log(`\n  CI_REPRODUCTION_01  ${repository} @ ${headSha.slice(0, 9)}`);
+      console.log(`\n  OUTCOME  REFUSED\n  ${reason}\n`);
+    }
+    return;
+  }
+  mkdirSync(work, { recursive: true });
 
   console.log(`\n  CI_REPRODUCTION_01  ${repository} @ ${headSha.slice(0, 9)}`);
   console.log(`  Two independently constructed arms. Nothing is optimised.\n`);
