@@ -140,6 +140,66 @@ test("REPRODUCED is still reachable when ground truth exists and the environment
 });
 
 /**
+ * GROUND_TRUTH_CONSISTENCY_01. Arm agreement is necessary for REPRODUCED, not sufficient - babel-loader's
+ * real case: both arms ran 66 tests with 2 failures, identically, while CI ground truth for the cell
+ * recorded "success". Two things agreeing with each other while both disagreeing with reality is
+ * repeatability of the wrong result, not reproduction.
+ */
+test("babel-loader's real contradiction: success ground truth, 2/2 failures in both arms — GROUND_TRUTH_CONTRADICTED, not REPRODUCED", () => {
+  const truth: CiGroundTruth = { cell: "Test - ubuntu-latest - Node 22, Babel 7, Webpack 5", conclusion: "success", source: "github actions job 92034086500" };
+  const contradicted = (a: "reference" | "inference"): StepReceipt =>
+    step({ arm: a, stepId: `${a}#2`, exitStatus: 1, wallMs: 4_490_000, tests: 66, testFiles: undefined, failures: 2, outcomeLayer: "repository" });
+
+  const result = classify(arm("reference", [contradicted("reference")]), arm("inference", [contradicted("inference")]), true, truth);
+
+  assert.equal(result.outcome, "GROUND_TRUTH_CONTRADICTED");
+  assert.notEqual(result.outcome, "REPRODUCED", "repeatability of the wrong result must never read as reproduction");
+  assert.match(result.reason, /success/);
+  assert.match(result.reason, /66 tests, 2 failures/);
+});
+
+test("a success ground truth with a clean run in both arms is still REPRODUCED — the fix must not overcorrect", () => {
+  const truth: CiGroundTruth = { cell: "test Node 22.x ubuntu-latest", conclusion: "success", source: "github check-runs" };
+  const clean = (a: "reference" | "inference"): StepReceipt => step({ arm: a, stepId: `${a}#2`, exitStatus: 0, wallMs: 120_000, tests: 40, failures: 0, outcomeLayer: "repository" });
+
+  const result = classify(arm("reference", [clean("reference")]), arm("inference", [clean("inference")]), true, truth);
+  assert.equal(result.outcome, "REPRODUCED");
+});
+
+test("a failure ground truth with matching failures in both arms is REPRODUCED — the previously untested direction", () => {
+  const truth: CiGroundTruth = { cell: "test Node 22.x ubuntu-latest", conclusion: "failure", source: "github check-runs" };
+  const failing = (a: "reference" | "inference"): StepReceipt => step({ arm: a, stepId: `${a}#2`, exitStatus: 1, wallMs: 120_000, tests: 40, failures: 3, outcomeLayer: "repository" });
+
+  const result = classify(arm("reference", [failing("reference")]), arm("inference", [failing("inference")]), true, truth);
+  assert.equal(result.outcome, "REPRODUCED", "a failure ground truth matched by real failures in both arms is genuine reproduction");
+});
+
+test("a failure ground truth contradicted by a clean run in both arms is GROUND_TRUTH_CONTRADICTED — the asymmetric case", () => {
+  // Deliberately NOT assumed symmetric with the success direction: a clean run against a recorded
+  // failure is equally consistent with benign non-determinism AND with the reproduced path silently
+  // never exercising whatever failed historically. The reason string, not just the outcome, must reflect
+  // that this is a DIFFERENT caveat from the success-contradicted-by-failures case.
+  const truth: CiGroundTruth = { cell: "test Node 22.x ubuntu-latest", conclusion: "failure", source: "github check-runs" };
+  const clean = (a: "reference" | "inference"): StepReceipt => step({ arm: a, stepId: `${a}#2`, exitStatus: 0, wallMs: 120_000, tests: 40, failures: 0, outcomeLayer: "repository" });
+
+  const result = classify(arm("reference", [clean("reference")]), arm("inference", [clean("inference")]), true, truth);
+  assert.equal(result.outcome, "GROUND_TRUTH_CONTRADICTED");
+  assert.match(result.reason, /does not by itself prove/i, "the failure-direction reason must carry its own, different caveat, not reuse the success-direction wording");
+});
+
+test("agreeing arms with no usable failure count are UNVERIFIABLE, never a manufactured GROUND_TRUTH_CONTRADICTED or REPRODUCED", () => {
+  // countsOf() and parseTestOutput() are independent parsers over the same output; `tests` being defined
+  // is not a guarantee `failures` is. The classifier must not treat an absent count as zero.
+  const truth: CiGroundTruth = { cell: "test Node 22.x ubuntu-latest", conclusion: "success", source: "github check-runs" };
+  const noFailureCount = (a: "reference" | "inference"): StepReceipt =>
+    step({ arm: a, stepId: `${a}#2`, exitStatus: 0, wallMs: 120_000, tests: 40, failures: undefined, outcomeLayer: "repository" });
+
+  const result = classify(arm("reference", [noFailureCount("reference")]), arm("inference", [noFailureCount("inference")]), true, truth);
+  assert.equal(result.outcome, "UNVERIFIABLE");
+  assert.doesNotMatch(result.reason, /GROUND_TRUTH_CONTRADICTED/);
+});
+
+/**
  * The runner-shape gap, caught before the CI_REPRODUCTION_05 run rather than after it.
  *
  * `countsOf` recognised only jest's "Tests: N total". eslint runs mocha. Both arms would have reported

@@ -56,7 +56,17 @@ export type Outcome =
   | "DIVERGED"
   | "INFRASTRUCTURE"
   | "ENVIRONMENT_INADEQUATE"
-  | "UNVERIFIABLE";
+  | "UNVERIFIABLE"
+  /**
+   * GROUND_TRUTH_CONSISTENCY_01. Arm-to-arm agreement is necessary for REPRODUCED, not sufficient - both
+   * arms can agree with EACH OTHER while contradicting what CI ground truth actually recorded, and that
+   * is not reproduction, it is repeatability of the wrong result. babel-loader: both arms ran 66 tests
+   * with 2 failures, identically; recorded ground truth for the cell was "success". This state says only
+   * WHAT the evidence establishes - that a contradiction exists - never WHY (a floating dependency, a
+   * genuine flake, or something else). Diagnosis is a separate, later concern, the same discipline
+   * UNVERIFIABLE already applies to a missing ground truth.
+   */
+  | "GROUND_TRUTH_CONTRADICTED";
 
 export interface StepReceipt {
   /** Stable identity: `<arm>#<index>` - what a live receipt names before any exit status exists. */
@@ -525,6 +535,40 @@ export function classify(
           `ground truth for this cell (` +
           (groundTruth ? `${groundTruth.cell} concluded "${groundTruth.conclusion}"` : "none recorded") +
           `). Arm-to-arm agreement alone cannot establish that CI was reproduced.`,
+      };
+    }
+    // GROUND_TRUTH_CONSISTENCY_01. Arm agreement is necessary, not sufficient - both arms agreeing with
+    // EACH OTHER while contradicting what CI ground truth recorded is repeatability of the wrong result,
+    // not reproduction. `failures` can be `undefined` here even though `tests` is defined: `countsOf()`
+    // and `parseTestOutput()` are independent parsers over the same output, and one supplying a test
+    // count is not a guarantee the other supplied a failure count. Treated as UNKNOWN, never as zero -
+    // the classifier must not manufacture certainty the parse never established.
+    if (typeof refSuite.failures !== "number") {
+      return {
+        outcome: "UNVERIFIABLE",
+        reason:
+          `both arms agree on ${refSuite.tests} tests, but neither reports a usable failure count, so ` +
+          `consistency with CI ground truth ${groundTruth.cell} = "${groundTruth.conclusion}" cannot be checked`,
+      };
+    }
+    const cleanRun = refSuite.failures === 0;
+    // "success" implies zero failures; "failure" implies at least one - `usable` above already narrowed
+    // `conclusion` to exactly these two values. Not symmetric in what a mismatch MEANS (see the frozen
+    // plan), but the check itself is the same shape both directions: does the recorded conclusion match
+    // what both arms actually ran.
+    const consistent = groundTruth.conclusion === "success" ? cleanRun : !cleanRun;
+    if (!consistent) {
+      return {
+        outcome: "GROUND_TRUTH_CONTRADICTED",
+        reason:
+          groundTruth.conclusion === "success"
+            ? `both arms agree (${refSuite.tests} tests, ${refSuite.failures} failures) but CI ground truth ` +
+              `${groundTruth.cell} recorded "success", which implies zero failures. The commit is pinned, so the ` +
+              `source cannot explain this - check whether the environment (dependency resolution, toolchain) ` +
+              `differs from what CI originally ran.`
+            : `both arms agree (${refSuite.tests} tests, 0 failures) but CI ground truth ${groundTruth.cell} ` +
+              `recorded "failure". A clean run here does not by itself prove the reproduced path exercises ` +
+              `whatever failed historically - verify independently rather than treating arm agreement as confirmation.`,
       };
     }
     return {
