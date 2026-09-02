@@ -112,6 +112,21 @@ const EXECUTABLE_PURPOSE: Array<[RegExp, OperationPurpose]> = [
   [/^(webpack|rollup|vite|esbuild|tsup|parcel)$/i, "build"],
 ];
 
+/**
+ * Node's OWN built-in test runner, stable since Node 20 - the one recognised runner that is a FLAG on a
+ * generic interpreter rather than a program with its own name. Every other `EXECUTABLE_PURPOSE` entry is
+ * matched against the executable position, which `executableChain` deliberately never inspects past
+ * (flags are skipped, not read); `node --test` needs a check of its own for exactly that reason.
+ *
+ * Any `--test*` flag (`--test`, `--test-only`, `--test-name-pattern=...`, …) puts `node` in test-runner
+ * mode per Node's own documented behaviour, so this does not require the bare `--test` flag specifically.
+ */
+const NODE_TEST_RUNNER = /^--test\b/;
+
+function isNodeTestRunner(tokens: string[]): boolean {
+  return /^node(\.exe)?$/i.test(basename(tokens[0] ?? "")) && tokens.slice(1).some((t) => NODE_TEST_RUNNER.test(t));
+}
+
 /** Package managers whose next tokens name a script rather than a program. */
 const PACKAGE_MANAGER = /^(npm|yarn|pnpm|bun|corepack)$/i;
 
@@ -266,6 +281,13 @@ export function purposeOfLine(line: string, lookupScript: (name: string) => stri
   // rather than by coincidence.
   const { tokens } = normalizeExecutable(line);
   if (tokens.length === 0) return { purpose: "unknown", basis: "NONE", evidence: "empty command" };
+
+  // Node's native test runner: a flag, not a name, so it must be checked before the name-only walk below
+  // ever discards it. `babel-loader`'s real test step is exactly this shape: `node --test test/**/*.js`.
+  if (isNodeTestRunner(tokens)) {
+    const flag = tokens.find((t) => NODE_TEST_RUNNER.test(t));
+    return { purpose: "test", basis: "EXECUTABLE_POSITION", evidence: `\`node ${flag}\`` };
+  }
 
   // Walk past coverage wrappers and interpreters: `nyc … jest`, `node ./node_modules/.bin/jest --ci`.
   for (const candidate of executableChain(tokens)) {

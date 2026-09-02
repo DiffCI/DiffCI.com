@@ -180,6 +180,44 @@ test("an assignment-prefixed package-manager script is classified exactly like i
   assert.equal(prefixed?.scriptName, "jest");
 });
 
+/**
+ * babel-loader's naming-policy question, resolved: the fix is recognising Node's OWN test runner as an
+ * EXECUTABLE_POSITION signal (the strongest basis), not widening SCRIPT_NAME_PURPOSE's `/^test(:|$)/i`
+ * to admit hyphenated names. That pattern is deliberately left untouched - `test-data`, `test-helper`,
+ * `test-build` are all real, plausible npm script names where "test" is an ADJECTIVE modifying a NOUN
+ * ("data for tests", "a helper for tests"), not the verb "run tests", and nothing about the SPELLING
+ * distinguishes them from `test-only` or `test-unit`. Recognising the runner it actually invokes does not
+ * have that ambiguity: `node --test` means one thing regardless of what any script happens to be called.
+ */
+test("node --test is recognised as EXECUTABLE_POSITION test purpose", () => {
+  for (const line of ["node --test test/**/*.test.js", "node --test", "node --test-only test/foo.test.js", "node --test-name-pattern=foo test/"]) {
+    const verdict = purposeOfLine(line, NO_SCRIPTS);
+    assert.equal(verdict.purpose, "test", line);
+    assert.equal(verdict.basis, "EXECUTABLE_POSITION", line);
+  }
+});
+
+test("an ordinary node invocation without --test is unaffected", () => {
+  const verdict = purposeOfLine("node ./scripts/generate.js", NO_SCRIPTS);
+  assert.notEqual(verdict.purpose, "test");
+});
+
+test("babel-loader's real test script resolves to TEST through its declared body, not its name", () => {
+  const scripts: Record<string, string> = { "test-only": "node --test test/**/*.test.js" };
+  const verdict = purposeOfLine("yarn test-only", (n) => scripts[n]);
+  assert.equal(verdict.purpose, "test");
+  assert.equal(verdict.basis, "SCRIPT_BODY", "the body resolved it - the name was never consulted");
+});
+
+test("SCRIPT_NAME_PURPOSE is deliberately NOT widened to hyphenated names — the naming-policy decision", () => {
+  // A declared script whose body this engine cannot follow (an opaque wrapper) and whose NAME is
+  // hyphenated must stay unknown. If this ever starts passing, SCRIPT_NAME_PURPOSE was widened without
+  // the ambiguity (test-data / test-helper / test-build) being resolved first.
+  const scripts: Record<string, string> = { "test-data": "some-custom-seed-tool --fixtures" };
+  const verdict = purposeOfLine("yarn test-data", (n) => scripts[n]);
+  assert.notEqual(verdict.purpose, "test", "a hyphenated name alone must not license TEST purpose");
+});
+
 test("jest's real three-level script chain resolves to TEST through an assignment prefix", () => {
   // The exact chain nodejs.yml#test-runtime-vm-modules runs: jest-runtime-vm-modules-ci ->
   // jest-runtime-vm-modules -> `NODE_OPTIONS="..." yarn jest packages/jest-runtime` -> jest's own "jest"
