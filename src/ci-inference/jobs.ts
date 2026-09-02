@@ -111,20 +111,54 @@ export function planForPurpose(jobs: InferredJob[], purpose: Purpose): PurposePl
   const lastIndex = ordered.reduce((acc, op, i) => (purposeOfKind(op.kind) === purpose ? i : acc), -1);
   const path = lastIndex === -1 ? [] : ordered.slice(0, lastIndex + 1);
 
-  // A step whose condition is FALSE is part of the pipeline and simply does not run in this instance,
-  // so it neither blocks the path nor contributes a command.
-  const blocked = path.filter((o) => !o.executable && o.willExecute !== false);
+  // DEFECT 27, implemented as the invariant rather than as a patch for the empty-plan symptom:
+  //
+  //   Executable(P, OUTCOME)  ⇒  ∃ o ∈ P : Purpose(o) = OUTCOME ∧ Executable(o) ∧ CausallyProvides(o, OUTCOME)
+  //
+  // That is necessary and NOT sufficient, so all five conditions are required:
+  //
+  //   1. at least one executable operation CAUSALLY PROVIDES the requested outcome
+  //   2. every required causal predecessor is resolved, executable, or structurally known not to run
+  //   3. UNRESOLVED anywhere on the required causal path blocks executability
+  //   4. a FALSE condition removes that operation from the ACTIVE path while retaining its receipt
+  //   5. an empty active path can never satisfy the outcome
+  //
+  // The old rule asked only whether `blocked` was empty, and a path whose every step will not run has
+  // nothing to block — so jest's plan, one operation with `command: []` and `willExecute: false`, was
+  // reported EXECUTABLE and then executed nothing.
+
+  // (4) A FALSE condition leaves the operation in `path` — and so in the receipt — but out of the
+  // active path. "Skipped" and "never existed" must stay distinguishable.
+  const active = path.filter((o) => o.willExecute !== false);
+
+  // (3) UNRESOLVED is not FALSE. `willExecute === undefined` means the condition could not be read, so
+  // the operation stays on the required path and blocks it.
+  const blocked = active.filter((o) => !o.executable);
+
+  // (1) The outcome must be provided by an operation that can actually run — not merely be present.
+  const provider = active.find((o) => purposeOfKind(o.kind) === purpose && o.executable && o.executionRepresentation !== "UNRESOLVED");
+
+  // (5) An empty active path can never satisfy the outcome.
+  const refusals: string[] = [];
+  if (active.length === 0) {
+    refusals.push(`every operation in the ${purpose} path is skipped in this instance, so nothing would run`);
+  }
+  if (blocked.length > 0) {
+    refusals.push(
+      `${blocked.length} operation(s) in the ${purpose} path are not executable: ${blocked
+        .map((o) => `${o.id} (${[...o.missingRequirements, ...o.blockedBy].join(", ") || "cause not recorded"})`)
+        .join("; ")}`,
+    );
+  }
+  if (!provider) {
+    refusals.push(`no executable operation in this path causally provides ${purpose}; a path containing something CLASSIFIED as ${purpose} is not the same as one that produces it`);
+  }
+
   return {
     purpose,
     jobId: chosen.id,
     operations: path,
-    executable: blocked.length > 0 ? false : path.length > 0,
-    ...(blocked.length > 0
-      ? {
-          refusal: `${blocked.length} operation(s) in the ${purpose} path are not executable: ${blocked
-            .map((o) => `${o.id} (${[...o.missingRequirements, ...o.blockedBy].join(", ")})`)
-            .join("; ")}`,
-        }
-      : {}),
+    executable: refusals.length === 0,
+    ...(refusals.length > 0 ? { refusal: refusals.join(". ") } : {}),
   };
 }
