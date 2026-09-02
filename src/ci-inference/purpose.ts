@@ -75,6 +75,21 @@ const PACKAGE_MANAGER = /^(npm|yarn|pnpm|bun|corepack)$/i;
 
 const INSTALL_SUBCOMMAND = /^(ci|install|i|add|up|upgrade)$/i;
 
+/**
+ * Every OTHER built-in verb yarn and pnpm recognise, none of them a script.
+ *
+ * `yarn <token>` and `pnpm <token>` fall back to `run <token>` only when `<token>` is not one of the
+ * package manager's own commands — real yarn and pnpm always give the built-in priority over a
+ * same-named script, so `yarn link` runs yarn's linker even in a repository that happens to declare a
+ * script called `link`. `INSTALL_SUBCOMMAND` above is the subset of this surface that also means
+ * `purpose: install`; this is everything else that still means "not a script", which SEMANTIC_REPAIR_02
+ * needed once `infer.ts` started asking the same "is this a script?" question this file already answers.
+ * `npm` and `bun` are unaffected: this codebase's grammar requires their literal `run` keyword, so they
+ * are never ambiguous with a built-in the way the optional-`run` shorthand is.
+ */
+const PACKAGE_MANAGER_BUILTIN =
+  /^(access|audit|autoclean|bin|cache|check|config|create|dedupe|deploy|dlx|doctor|env|exec|generate-lock-entry|global|help|import|info|init|licenses|link|list|ls|login|logout|node|outdated|owner|pack|patch|patch-commit|plugin|policies|prune|publish|rebuild|remove|root|self-update|server|set|setup|store|tag|team|unlink|unplug|version|why|whoami|workspace|workspaces)$/i;
+
 /** Script NAMES the ecosystem uses conventionally. Acceptable only for a script the repo declares. */
 const SCRIPT_NAME_PURPOSE: Array<[RegExp, OperationPurpose]> = [
   [/^test(:|$)/i, "test"],
@@ -133,6 +148,64 @@ function purposeOfExecutable(token: string): OperationPurpose | undefined {
   return undefined;
 }
 
+/** What kind of package-manager command a line is, before anyone asks what it's FOR. */
+export interface PackageManagerCommand {
+  head: string;
+  /** The first non-flag token after the package manager, when there is one — kept for receipts. */
+  sub?: string;
+  /**
+   * `install`      — a dependency operation (`yarn`, `yarn ci`, `yarn add x`, bare flags only).
+   * `builtin`      — a recognised non-script command (`yarn link`, `pnpm why`, …).
+   * `script`       — `<pm> run <name>`, or `<pm> <name>` where `<name>` is neither of the above.
+   * `unknown`      — a package manager with nothing after it this rule can classify (e.g. `yarn run`
+   *                  alone, with no script name following).
+   */
+  kind: "install" | "builtin" | "script" | "unknown";
+  /** Present only when `kind === "script"`. Existence in package.json is a SEPARATE question — this is
+   *  the syntactic claim "this line's FORM invokes a script named X", nothing more. */
+  scriptName?: string;
+}
+
+/**
+ * SEMANTIC_REPAIR_02. The single parse of "is this a package-manager script invocation, and if so what
+ * is its name" — every caller that needs that answer, `purposeOfLine` and `infer.ts` alike, must consume
+ * THIS, never re-derive it. Before this repair `infer.ts` asked the identical question with its own
+ * regex (`SCRIPT_RUN`), which had no `INSTALL_SUBCOMMAND` exclusion and no built-in awareness, so
+ * `yarn --frozen-lockfile`, `yarn install` and `yarn link webpack` were each resolved as invocations of
+ * scripts named `--frozen-lockfile`, `install` and `link` — correctly absent from every package.json,
+ * and cited as a blocking prerequisite for an operation that was never a script call at all.
+ */
+export function packageManagerCommand(line: string): PackageManagerCommand | undefined {
+  const tokens = firstCommandTokens(line);
+  if (tokens.length === 0) return undefined;
+  const [head, ...rest] = tokens as [string, ...string[]];
+  if (!PACKAGE_MANAGER.test(basename(head))) return undefined;
+
+  // A package manager with NO non-flag argument is a bare install: `yarn` and `yarn --immutable` both
+  // install, which is how jest and babel-loader begin. Requiring a subcommand missed them.
+  const nonFlags = rest.filter((t) => !t.startsWith("-"));
+  const sub = nonFlags[0];
+  if (sub === undefined || INSTALL_SUBCOMMAND.test(sub)) {
+    return { head, sub, kind: "install" };
+  }
+
+  // `run`/`run-script` explicitly requests a declared script and is never ambiguous with a built-in —
+  // yarn and npm both accept it as a literal prefix regardless of what name follows.
+  if (/^run(-script)?$/i.test(sub)) {
+    const scriptName = nonFlags[1];
+    return scriptName ? { head, sub, kind: "script", scriptName } : { head, sub, kind: "unknown" };
+  }
+
+  // Without `run`, yarn/pnpm shorthand `<pm> <token>` invokes a declared script named `<token>` UNLESS
+  // `<token>` is itself one of the package manager's own built-ins, which always take priority over a
+  // same-named script.
+  if (PACKAGE_MANAGER_BUILTIN.test(sub)) {
+    return { head, sub, kind: "builtin" };
+  }
+
+  return { head, sub, kind: "script", scriptName: sub };
+}
+
 /**
  * Resolves what a line is for.
  *
@@ -145,41 +218,32 @@ export function purposeOfLine(line: string, lookupScript: (name: string) => stri
   const tokens = firstCommandTokens(line);
   if (tokens.length === 0) return { purpose: "unknown", basis: "NONE", evidence: "empty command" };
 
-  const [head, ...rest] = tokens as [string, ...string[]];
-
   // Walk past coverage wrappers and interpreters: `nyc … jest`, `node ./node_modules/.bin/jest --ci`.
   for (const candidate of executableChain(tokens)) {
     const direct = purposeOfExecutable(candidate);
     if (direct) return { purpose: direct, basis: "EXECUTABLE_POSITION", evidence: `executable \`${basename(candidate)}\`` };
   }
 
-  if (PACKAGE_MANAGER.test(basename(head))) {
-    // `yarn`, `npm ci`, `yarn add -D webpack@5`, `yarn up @babel/*@^7` — dependency operations.
-    //
-    // A package manager with NO non-flag argument is a bare install: `yarn` and `yarn --immutable` both
-    // install, which is how jest and babel-loader begin. Requiring a subcommand missed them.
-    const sub = rest.find((t) => !t.startsWith("-"));
-    if (sub === undefined || INSTALL_SUBCOMMAND.test(sub)) {
-      return { purpose: "install", basis: "EXECUTABLE_POSITION", evidence: `\`${[basename(head), sub].filter(Boolean).join(" ")}\`` };
-    }
+  const pm = packageManagerCommand(line);
+  if (pm?.kind === "install") {
+    return { purpose: "install", basis: "EXECUTABLE_POSITION", evidence: `\`${[basename(pm.head), pm.sub].filter(Boolean).join(" ")}\`` };
+  }
 
-    // `npm run x` / `yarn x` — the script name, then the script's own body.
-    const scriptName = rest.filter((t) => !t.startsWith("-")).find((t) => t !== "run");
-    if (scriptName) {
-      const body = lookupScript(scriptName);
-      if (body !== undefined && depth < 5) {
-        const nested = purposeOfLine(body, lookupScript, depth + 1);
-        if (nested.purpose !== "unknown") {
-          return { purpose: nested.purpose, basis: "SCRIPT_BODY", evidence: `script \`${scriptName}\` → ${nested.evidence}` };
-        }
+  if (pm?.kind === "script" && pm.scriptName) {
+    const scriptName = pm.scriptName;
+    const body = lookupScript(scriptName);
+    if (body !== undefined && depth < 5) {
+      const nested = purposeOfLine(body, lookupScript, depth + 1);
+      if (nested.purpose !== "unknown") {
+        return { purpose: nested.purpose, basis: "SCRIPT_BODY", evidence: `script \`${scriptName}\` → ${nested.evidence}` };
       }
-      // The repository declares this script, so its NAME is the repository's own statement of intent.
-      // Only ever consulted for a script that exists - a name alone proves nothing about a script that
-      // does not.
-      if (body !== undefined) {
-        for (const [pattern, purpose] of SCRIPT_NAME_PURPOSE) {
-          if (pattern.test(scriptName)) return { purpose, basis: "SCRIPT_NAME", evidence: `declared script named \`${scriptName}\`` };
-        }
+    }
+    // The repository declares this script, so its NAME is the repository's own statement of intent.
+    // Only ever consulted for a script that exists - a name alone proves nothing about a script that
+    // does not.
+    if (body !== undefined) {
+      for (const [pattern, purpose] of SCRIPT_NAME_PURPOSE) {
+        if (pattern.test(scriptName)) return { purpose, basis: "SCRIPT_NAME", evidence: `declared script named \`${scriptName}\`` };
       }
     }
   }

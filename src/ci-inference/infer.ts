@@ -25,7 +25,7 @@ import { evaluateCondition, renderCommand, type Resolution } from "./expression.
 import { expandMatrix, type MatrixAssignment } from "./matrix.js";
 import { computeCompleteness, confidenceFromCompleteness, type ReferenceNode } from "./reference-graph.js";
 import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences } from "./resolve.js";
-import { purposeOfLine } from "./purpose.js";
+import { packageManagerCommand, purposeOfLine } from "./purpose.js";
 import type { DeclaredPrerequisite } from "./causal.js";
 import type { EvidenceRef, InferredOperation, InferredPipeline, ObservedFact, OperationKind, Unresolved } from "./schema.js";
 
@@ -52,8 +52,15 @@ const MODELLED_ACTION =
 
 const INSTALL_ACTION = /^(bahmutov\/npm-install|pnpm\/action-setup|borales\/actions-yarn)/;
 
-/** A run line that is a package-script invocation, e.g. `npm run build` / `yarn test`. */
-const SCRIPT_RUN = /^(npm run |yarn (run )?|pnpm (run )?|bun run )([A-Za-z0-9:_-]+)/;
+// DELETED in SEMANTIC_REPAIR_02: `SCRIPT_RUN`, a second, disagreeing regex that independently decided
+// whether a line was a script invocation. `yarn --frozen-lockfile`, `yarn install` and `yarn link
+// webpack` all matched it (`([A-Za-z0-9:_-]+)` does not exclude yarn's own flags or built-in
+// subcommands), so `resolveScript` was asked whether package.json declares scripts named
+// `--frozen-lockfile`, `install` and `link` — correctly "no", and that correct-but-irrelevant answer
+// blocked three otherwise-executable operations across jest, webpack and babel (REGRESSION_01's
+// adjudication, docs/evidence/regression-01/adjudication.md). `purpose.ts` already asked the identical
+// question correctly (`PACKAGE_MANAGER` + `INSTALL_SUBCOMMAND`) to decide `purpose: install` a layer
+// above; `packageManagerCommand` is that same logic, now the only place either question is asked.
 
 // DELETED in SEMANTIC_REPAIR_01 layer 2: `KIND_BY_SCRIPT`, `kindOfScript` and `kindOfRunLine`.
 //
@@ -131,8 +138,12 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
     if (evidence[0] && command.length > 0) {
       const joined = command.join(" ");
       own.push(...expressionReferences(joined, evidence[0]));
-      const scriptMatch = SCRIPT_RUN.exec(joined);
-      if (scriptMatch?.[4]) own.push(...resolveScript(repoPath, scriptMatch[4], evidence[0]));
+      // SEMANTIC_REPAIR_02: the SAME classification purpose.ts uses to decide `purpose: install` vs a
+      // script invocation, consumed rather than re-derived. Only `kind === "script"` may ever reach
+      // `resolveScript` — an `install` or `builtin` verb is never a script reference, regardless of
+      // whether package.json happens to declare a same-named script.
+      const pm = packageManagerCommand(joined);
+      if (pm?.kind === "script" && pm.scriptName) own.push(...resolveScript(repoPath, pm.scriptName, evidence[0]));
     }
     references.push(...own);
 

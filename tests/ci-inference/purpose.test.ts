@@ -9,7 +9,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { establishesPurpose, firstCommandTokens, purposeOfLine } from "../../src/ci-inference/purpose.js";
+import { establishesPurpose, firstCommandTokens, packageManagerCommand, purposeOfLine } from "../../src/ci-inference/purpose.js";
 
 const NO_SCRIPTS = () => undefined;
 
@@ -102,6 +102,46 @@ test("babel's real test command is recognised through the interpreter", () => {
 });
 
 /**
+ * SEMANTIC_REPAIR_02. Every line REGRESSION_01's adjudication traced a phantom `script-N` block to
+ * (docs/evidence/regression-01/adjudication.md), reproduced here as the single classifier both
+ * `purposeOfLine` and `infer.ts` must now agree on. None of these is a script invocation — they are
+ * yarn's own bare-install form, an install subcommand, and a built-in command — and none may reach
+ * `resolveScript`.
+ */
+test("packageManagerCommand never classifies a yarn flag or built-in as a script", () => {
+  const cases: Array<[string, "install" | "builtin"]> = [
+    ["yarn --frozen-lockfile", "install"], // webpack's basic-install-0 — script-83
+    ["yarn --immutable", "install"], // jest's test-leak-install-0 — script-34
+    ["yarn install", "install"], // babel's test-node-version25-install-0 — script-32
+    ["yarn link webpack --frozen-lockfile", "builtin"], // webpack's basic-unknown-2 — script-84
+  ];
+  for (const [line, kind] of cases) {
+    const pm = packageManagerCommand(line);
+    assert.equal(pm?.kind, kind, line);
+    assert.equal(pm?.scriptName, undefined, `${line} must never produce a script name`);
+  }
+});
+
+test("packageManagerCommand still recognises a genuine script invocation, with or without `run`", () => {
+  assert.deepEqual(packageManagerCommand("yarn build")?.kind, "script");
+  assert.equal(packageManagerCommand("yarn build")?.scriptName, "build");
+  assert.equal(packageManagerCommand("yarn run build")?.scriptName, "build");
+  assert.equal(packageManagerCommand("npm run test:coverage")?.scriptName, "test:coverage");
+  // webpack's real test step, unaffected by the built-in list: not a recognised builtin, so still a
+  // script candidate — resolveScript is what correctly reports whether the repository declares it.
+  assert.equal(packageManagerCommand("yarn cover:integration:a --ci")?.scriptName, "cover:integration:a");
+});
+
+test("a package-manager built-in never establishes purpose by name, same as before the fix", () => {
+  // Unchanged behaviour: `purposeOfLine` already left `yarn link webpack` at NONE, because it never
+  // committed to a purpose for an undeclared candidate name. The fix is entirely in what `infer.ts` does
+  // with the SAME classification, not in what purpose this line has.
+  const verdict = purposeOfLine("yarn link webpack --frozen-lockfile", NO_SCRIPTS);
+  assert.equal(verdict.purpose, "unknown");
+  assert.equal(verdict.basis, "NONE");
+});
+
+/**
  * LAYER 2 guards: inference must CONSUME the structural verdict, never rediscover purpose from text.
  *
  * Removing substring authority from one module while a consumer re-derives it downstream would recreate
@@ -128,4 +168,11 @@ test("operations carry executionRepresentation and purposeBasis", () => {
   const source = read("src/ci-inference/infer.ts", "utf8");
   assert.match(source, /executionRepresentation,/);
   assert.match(source, /purposeBasis: verdict\.basis,/, "PurposeBasis must reach the receipt for the eventual learning layer");
+});
+
+test("SEMANTIC_REPAIR_02: infer.ts has no second, disagreeing script-invocation regex", () => {
+  const source = read("src/ci-inference/infer.ts", "utf8");
+  assert.doesNotMatch(source, /const SCRIPT_RUN/, "the deleted second parser must not return");
+  assert.match(source, /packageManagerCommand\(joined\)/, "resolveScript must be gated by the SAME classifier purpose.ts uses");
+  assert.doesNotMatch(source, /resolveScript\(repoPath, scriptMatch/, "resolveScript must never be called from a regex match infer.ts derived on its own");
 });
