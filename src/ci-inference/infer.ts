@@ -64,7 +64,7 @@ const INSTALL_ACTION = /^(bahmutov\/npm-install|pnpm\/action-setup|borales\/acti
 
 // DELETED in SEMANTIC_REPAIR_01 layer 2: `KIND_BY_SCRIPT`, `kindOfScript` and `kindOfRunLine`.
 //
-// `kindOfRunLine` matched /(jest|vitest|mocha|ava)/ against the WHOLE command line, which made an
+// `kindOfRunLine` matched /\b(jest|vitest|mocha|ava)\b/ against the WHOLE command line, which made an
 // issue-closing command a TEST operation because its comment linked to github.com/jestjs/jest, and made
 // `git apply test/patches/jest-worker+30.4.1.patch` a TEST operation because of a patch filename. Two
 // external repositories, two unrelated innocent strings, the same defect.
@@ -212,7 +212,7 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
       if (f.kind !== 'workflow.step.uses') continue;
       if (MODELLED_ACTION.test(f.value)) continue;
       const keys = f.attributes?.withKeys;
-      const carriesCommand = keys !== undefined && /(command|run|script|args)/.test(keys);
+      const carriesCommand = keys !== undefined && /\b(command|run|script|args)\b/.test(keys);
       const named = f.attributes?.withName;
       out.push({
         kind: carriesCommand ? 'ACTION_EXECUTION' : 'ARTIFACT',
