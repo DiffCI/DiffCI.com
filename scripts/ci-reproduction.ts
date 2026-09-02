@@ -22,7 +22,7 @@ import { collectEvidence } from "../src/ci-inference/evidence.js";
 import { inferPipeline } from "../src/ci-inference/infer.js";
 import { planForPurpose } from "../src/ci-inference/jobs.js";
 import { execBounded } from "./process-exec.js";
-import { assertShellSafeArgs } from "./shell-safety.js";
+import { assertShellSafeArgs, findShellUnsafeArgument } from "./shell-safety.js";
 import { parseTestOutput, stripAnsi } from "./test-output-parsers.js";
 
 /**
@@ -81,6 +81,8 @@ export interface StepReceipt {
   outcomeLayer?: "repository" | "harness" | "environment";
   /** The workflow wrote `cmd || true`: this step is permitted to fail without stopping the arm. */
   allowFailure?: boolean;
+  /** True when argv carried a metacharacter and was therefore spawned with NO shell - amendment 5. */
+  spawnedWithoutShell?: boolean;
   /** Tokens the reference plan asked the harness to resolve, and what they became. */
   substitutions?: Record<string, string>;
   /** Environment-caused failure signatures found in the output, e.g. per-test timeouts. */
@@ -289,8 +291,25 @@ function runArm(
     // Deliberately a one-entry whitelist rather than general interpolation: a reference plan that could
     // expand arbitrary tokens would be a way to smuggle repair past the no-repair rule.
     const { resolved, substitutions } = resolveTokens(step.command);
-    // Substituted BEFORE the safety check, never after: the guard must see exactly what will be spawned.
-    assertShellSafeArgs(resolved, `ci-reproduction ${arm} arm`);
+
+    // AMENDMENT 5. The invariant is unchanged and absolute: repository-derived strings must never cross
+    // an implicit shell boundary. Until now the harness satisfied it by REJECTING metacharacters while
+    // still spawning through a shell. There is a stricter way.
+    //
+    // babel-loader's cell runs `yarn up @babel/*@^7`. That is one well-formed command; the glob is not
+    // shell syntax at all - bash finds no match, passes the string through untouched, and YARN expands
+    // it. Rejecting it would have failed the repository for something the harness chose to do.
+    //
+    // So: metacharacter-free argv keeps the `shell: true` path members 1-4 ran. Argv containing a
+    // metacharacter is spawned with NO SHELL, which honours the invariant more strictly than rejection
+    // did, because no shell ever sees the string. SHELL_METACHARACTERS is untouched - loosening it
+    // would have been the wrong fix.
+    const unsafeArgument = findShellUnsafeArgument(resolved);
+    const useShell = unsafeArgument === undefined;
+    if (useShell) {
+      // Substituted BEFORE the check, never after: the guard must see exactly what will be spawned.
+      assertShellSafeArgs(resolved, `ci-reproduction ${arm} arm`);
+    }
 
     // Derived from `resolved`, NOT from `step.command`. Deriving them earlier is how a substitution
     // becomes correct code in an unreachable position - the defect class this laboratory keeps finding.
@@ -306,7 +325,7 @@ function runArm(
     const startedAt = new Date().toISOString();
     progress.emit({ event: "start", stepId, arm, commandIdentity, workingDirectory: repoPath, startedAt, timeoutMs });
 
-    const run = execBounded(bin, args, { cwd: repoPath, timeoutMs, shell: true, env: { ...process.env, ...(step.environment ?? {}) } as Record<string, string> });
+    const run = execBounded(bin, args, { cwd: repoPath, timeoutMs, shell: useShell, env: { ...process.env, ...(step.environment ?? {}) } as Record<string, string> });
     const combined = `${run.stdout}
 ${run.stderr}`;
     const parsed = parseTestOutput(combined);
@@ -335,6 +354,7 @@ ${run.stderr}`;
       commandIdentity,
       ...(Object.keys(substitutions).length > 0 ? { substitutions } : {}),
       ...(step.allowFailure ? { allowFailure: true } : {}),
+      ...(useShell ? {} : { spawnedWithoutShell: true }),
       workingDirectory: repoPath,
       environment: step.environment ?? {},
       startedAt,

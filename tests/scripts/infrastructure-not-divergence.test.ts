@@ -264,3 +264,38 @@ test("R3 must not qualify an arm that failed before reaching a suite", () => {
   assert.match(SOURCE, /const ranSuite = reference\.steps\.some\(\(s\) => typeof s\.tests === "number" && s\.tests > 0\)/, "a suite must actually have run");
   assert.match(SOURCE, /qualified = allSucceeded && reference\.reachedEnd && ranSuite && signals\.length === 0/, "all four conditions, not just a non-null exit");
 });
+
+/**
+ * Amendment 5: metacharacter-bearing argv is spawned with NO shell, never rejected and never shelled.
+ *
+ * babel-loader runs `yarn up @babel/*@^7`. That is one well-formed command — the glob is not shell
+ * syntax; bash finds no match, passes the string through, and yarn expands it. Rejecting it would fail
+ * the repository for something the harness chose to do; shelling it would breach the invariant. Spawning
+ * without a shell honours the invariant *more* strictly, because no shell ever sees the string.
+ */
+import { findShellUnsafeArgument } from "../../scripts/shell-safety.js";
+
+test("the metacharacter set is NOT loosened — that would be the wrong fix", () => {
+  assert.equal(findShellUnsafeArgument(["yarn", "up", "@babel/*@^7"]), "@babel/*@^7", "still flagged as unsafe for a shell");
+  assert.equal(findShellUnsafeArgument(["yarn", "install"]), undefined);
+  // `-c` itself is metacharacter-free; the payload is what gets flagged, which is the point.
+  assert.equal(findShellUnsafeArgument(["sh", "-c", "rm -rf / ; echo pwned"]), "rm -rf / ; echo pwned", "injection payloads stay flagged");
+});
+
+test("the harness chooses no-shell exactly when argv is unsafe for a shell", () => {
+  const SOURCE = readFileSync("scripts/ci-reproduction.ts", "utf8");
+  assert.match(SOURCE, /const unsafeArgument = findShellUnsafeArgument\(resolved\)/);
+  assert.match(SOURCE, /const useShell = unsafeArgument === undefined/, "shell only when nothing is unsafe");
+  assert.match(SOURCE, /shell: useShell/, "the decision must reach the spawn");
+  assert.match(SOURCE, /spawnedWithoutShell: true/, "and be recorded in the receipt");
+});
+
+test("members 1-4 are unaffected: their commands are all metacharacter-free", () => {
+  for (const plan of ["eslint", "jest", "webpack", "babel"]) {
+    const doc = JSON.parse(readFileSync(`docs/evidence/ci-reproduction-05-${plan}-reference-plan.json`, "utf8"));
+    for (const step of doc.steps as Array<{ command: string[] }>) {
+      const resolved = step.command.map((t) => t.replace("${CPU_CORES}", "4"));
+      assert.equal(findShellUnsafeArgument(resolved), undefined, `${plan}: ${resolved.join(" ")} must keep the shell path`);
+    }
+  }
+});

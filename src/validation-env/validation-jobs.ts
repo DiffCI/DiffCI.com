@@ -1470,6 +1470,31 @@ const JOBS: Record<string, ValidationJob> = {
     maxRunMs: 4 * 60 * 60_000,
   },
 
+  "r3-qualify-babel-loader": {
+    id: "r3-qualify-babel-loader",
+    description: "CI_REPRODUCTION_SAMPLE_01 member 5, R3: babel/babel-loader reference arm only.",
+    mode: "ci-reproduce",
+    repository: "babel/babel-loader",
+    pinnedHeadSha: "778e7c54daa57e30c1d676e243c77f7c00a766d8",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    referencePlan: "docs/evidence/ci-reproduction-05-babel-loader-reference-plan.json",
+    referenceOnly: true,
+    maxRunMs: 2 * 60 * 60_000,
+  },
+
+  "ci-reproduce-babel-loader": {
+    id: "ci-reproduce-babel-loader",
+    description: "CI_REPRODUCTION_SAMPLE_01 member 5: reference vs inference arms on babel/babel-loader.",
+    mode: "ci-reproduce",
+    repository: "babel/babel-loader",
+    pinnedHeadSha: "778e7c54daa57e30c1d676e243c77f7c00a766d8",
+    requiresApparatus: "gen-c",
+    expectedAgentIntegrity: "sha512-eQGRE3epHI3vAszgEL8qD0GzrAkcRbDyiiIhWyBa2f5soZMkceIXdXcvdqovj/YOd6G2Faa3htaf9NW0HEFHfw==",
+    referencePlan: "docs/evidence/ci-reproduction-05-babel-loader-reference-plan.json",
+    maxRunMs: 3 * 60 * 60_000,
+  },
+
   "r3-qualify-babel": {
     id: "r3-qualify-babel",
     description: "CI_REPRODUCTION_SAMPLE_01 member 4, R3: babel/babel reference arm only, cross-job artifact reconstruction.",

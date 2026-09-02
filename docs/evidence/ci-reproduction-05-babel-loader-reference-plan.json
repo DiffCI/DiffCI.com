@@ -1,0 +1,49 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "babel/babel-loader",
+  "headSha": "778e7c54daa57e30c1d676e243c77f7c00a766d8",
+  "source": ".github/workflows/ci.yml, job `test`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file. The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "os": "ubuntu-latest",
+    "node-version": "22",
+    "babel-version": "7",
+    "webpack-version": "5"
+  },
+  "cellSelection": "Base matrix is os x node-version x babel-version x webpack-version = 2 x 2 x 2 x 1 = 8 cells, plus 4 `include` rows. The in-environment cell is (ubuntu-latest, 22, 7, 5), matching the CI ground-truth job name. Every windows-latest cell and every non-22 node version is OUT_OF_ENVIRONMENT, recorded and not executed.",
+  "ciGroundTruth": {
+    "cell": "Test - ubuntu-latest - Node 22, Babel 7, Webpack 5",
+    "conclusion": "success",
+    "source": "github actions job, recorded in docs/evidence/ci-reproduction-05-screening.json"
+  },
+  "conditionsApplied": "The `Downgrade to Babel 7` step is gated on `matrix.babel-version == '7'`, which is TRUE for this cell, so it IS included. No other step declares an `if:`.",
+  "expressionsApplied": "`matrix.webpack-version` is DEFINED('5') and `matrix.babel-version` is DEFINED('7'), so `yarn add -D webpack@${{ matrix.webpack-version }}` renders `webpack@5`. Unlike html-webpack-plugin's UNDEFINED_CONTEXT case, both axes here are genuinely declared.",
+  "shellBoundaryNote": "`yarn up @babel/*@^7` carries `*` and `^`, both in SHELL_METACHARACTERS. Per docs/ci-reproduction-sample-01-amendment-5.md it is spawned with NO SHELL rather than rejected or shelled: the glob is not shell syntax here - bash would find no match, pass the string through untouched, and yarn expands it itself. The receipt records spawnedWithoutShell on that step.",
+  "steps": [
+    {
+      "command": ["corepack", "enable"],
+      "evidence": "ENVIRONMENT, not a workflow command. Permitted by docs/ci-reproduction-sample-01-amendment-2.md: corepack ships with node 22, only creates shims, and is recorded as an explicit environment step."
+    },
+    {
+      "command": ["yarn"],
+      "evidence": ".github/workflows/ci.yml - `Install dependencies` -> `run: yarn`"
+    },
+    {
+      "command": ["yarn", "add", "-D", "webpack@5"],
+      "evidence": ".github/workflows/ci.yml - `Install webpack ${{ matrix.webpack-version }}` -> `run: yarn add -D webpack@${{ matrix.webpack-version }}`, with matrix.webpack-version DEFINED('5')"
+    },
+    {
+      "command": ["yarn", "up", "@babel/*@^7"],
+      "evidence": ".github/workflows/ci.yml - `Downgrade to Babel 7` -> `run: yarn up @babel/*@^7`, gated on `if: matrix.babel-version == '7'` which is TRUE for this cell"
+    },
+    {
+      "command": ["yarn", "run", "build"],
+      "evidence": ".github/workflows/ci.yml - `Build babel-loader` -> `run: yarn run build`"
+    },
+    {
+      "command": ["yarn", "test-only"],
+      "evidence": ".github/workflows/ci.yml - `Run tests for webpack version ${{ matrix.webpack-version }}` -> `run: yarn test-only`"
+    }
+  ],
+  "notes": "Single job, no cross-job artifact dependency, no third-party action wrapping the test command, no compound run: line, and no reference deviation. This is the cleanest pipeline in the sample and the only remaining candidate for a pristine REPRODUCED."
+}
