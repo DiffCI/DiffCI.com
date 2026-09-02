@@ -162,7 +162,18 @@ export function workflowFacts(repoPath: string): ObservedFact[] {
       const steps = Array.isArray(job.steps) ? job.steps : [];
       for (const [i, step] of steps.entries()) {
         if (!step || typeof step !== "object") continue;
-        const stepAttrs = { ...attrs, step: String(i), ...(step.name ? { name: String(step.name) } : {}) };
+        // The step condition travels WITH every fact this step produces, `uses:` included - a step CI
+        // skips is still a declared step, and dropping the condition would make "skipped" indistinguishable
+        // from "never existed". Previously computed only inside the `run:` branch below (`withCondition`),
+        // which left every `workflow.step.uses`/`workflow.step.with` fact silently unconditional even when
+        // the step itself declared an `if:` - correct for `nick-fields/retry`'s specific step (it has
+        // none), but a gap ACTION_INPUT_MODELING_01's new operations must not inherit for the next action.
+        const stepAttrs = {
+          ...attrs,
+          step: String(i),
+          ...(step.name ? { name: String(step.name) } : {}),
+          ...(typeof step.if === "string" || typeof step.if === "boolean" ? { if: String(step.if) } : {}),
+        };
         if (typeof step.uses === "string") {
           // The `with:` INPUTS are recorded, not interpreted.
           //
@@ -187,22 +198,27 @@ export function workflowFacts(repoPath: string): ObservedFact[] {
             },
           });
           for (const key of inputKeys) {
+            const raw = String(inputs[key]).slice(0, 400);
+            // Prefer the line the VALUE itself appears on over the owning `uses:` line, so a command
+            // extracted from here (ACTION_INPUT_MODELING_01) cites where it was actually written. Falls
+            // back to the `uses:` line when the value's own text can't be found verbatim (a multi-line
+            // YAML block scalar, for instance, won't match this single-line search).
+            const valueEvidence = lineOf(source, raw) !== undefined ? ref(file, raw, source) : ref(file, step.uses, source);
             facts.push({
               kind: "workflow.step.with",
-              value: `${key}=${String(inputs[key]).slice(0, 400)}`,
-              evidence: ref(file, step.uses, source),
-              attributes: { ...stepAttrs, input: key, action: step.uses },
+              value: `${key}=${raw}`,
+              evidence: valueEvidence,
+              // `attributes.value` is the raw input value alone, additive: existing consumers reading
+              // `.value` as `"key=value"` are unaffected; ACTION_INPUT_MODELING_01 reads this instead of
+              // re-parsing the combined string.
+              attributes: { ...stepAttrs, input: key, action: step.uses, value: raw },
             });
           }
         }
         if (typeof step.run === "string") {
-          // The step condition travels WITH the run line. A step CI skips is still a declared step, and
-          // dropping the condition here would make "skipped" indistinguishable from "never existed".
-          const withCondition =
-            typeof step.if === "string" || typeof step.if === "boolean" ? { ...stepAttrs, if: String(step.if) } : stepAttrs;
           // Multi-line `run:` blocks are several commands; each line is its own fact.
           for (const line of step.run.split("\n").map((l: string) => l.trim()).filter(Boolean)) {
-            facts.push({ kind: "workflow.step.run", value: line, evidence: ref(file, line, source), attributes: withCondition });
+            facts.push({ kind: "workflow.step.run", value: line, evidence: ref(file, line, source), attributes: stepAttrs });
           }
         }
         for (const [key, value] of Object.entries((step.env ?? {}) as Record<string, unknown>)) {

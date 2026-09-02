@@ -52,6 +52,29 @@ const MODELLED_ACTION =
 
 const INSTALL_ACTION = /^(bahmutov\/npm-install|pnpm\/action-setup|borales\/actions-yarn)/;
 
+/**
+ * ACTION_INPUT_MODELING_01. Actions this engine recognises as carrying a command in one specific, NAMED
+ * input — a claim about ONE action's documented contract, never a claim about `with:` keys in general.
+ * jest's `nodejs.yml#test-runtime-vm-modules` job runs its real test command as `with.command` of
+ * `nick-fields/retry`, a retry wrapper; that command was previously invisible to `purposeOfLine` entirely,
+ * because only `workflow.step.run` facts ever became operations.
+ *
+ * FAIL CLOSED BY CONSTRUCTION: an action absent from this map, or a `with:` key on a listed action that
+ * doesn't match the one named here, produces no operation — falls through to `declaredPrerequisites`
+ * exactly as before this phase. This is deliberately NOT `carriesCommand`-style key-name matching
+ * (`command|run|script|args` on ANY action) — that would license this engine to execute whatever string
+ * happens to sit under a suggestively-named key on an action it has never verified the semantics of.
+ */
+const MODELLED_COMMAND_INPUT: Record<string, string> = {
+  "nick-fields/retry": "command",
+};
+
+/** The action-name prefix `MODELLED_COMMAND_INPUT` is keyed by, e.g. `nick-fields/retry` from
+ *  `nick-fields/retry@ad984534...`. */
+function actionName(uses: string): string {
+  return uses.split("@")[0]!;
+}
+
 // DELETED in SEMANTIC_REPAIR_02: `SCRIPT_RUN`, a second, disagreeing regex that independently decided
 // whether a line was a script invocation. `yarn --frozen-lockfile`, `yarn install` and `yarn link
 // webpack` all matched it (`([A-Za-z0-9:_-]+)` does not exclude yarn's own flags or built-in
@@ -229,8 +252,37 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
   for (const key of jobKeys) {
     const [workflow, jobName] = key.split("#");
     const jobFacts = facts.filter((f) => keyOf(f) === key);
-    const runs = jobFacts.filter((f) => f.kind === "workflow.step.run");
-    if (runs.length === 0) continue;
+    const runFacts = jobFacts.filter((f) => f.kind === "workflow.step.run");
+    if (runFacts.length === 0) continue;
+
+    // ACTION_INPUT_MODELING_01. A step whose command lives in a MODELLED action's input is, causally, no
+    // different from a `run:` step at the same position - it is one more thing this job does, in order.
+    // Synthesised as an ordinary `workflow.step.uses`-kind fact carrying the extracted command as `.value`
+    // so the SAME rendering/purpose/argv pipeline below runs unmodified; a new SOURCE of command text,
+    // never a new way of interpreting one. Absent from `MODELLED_COMMAND_INPUT`, or missing the one named
+    // input, and a `uses:` step contributes nothing here - `declaredPrerequisites` (below) still reports
+    // it, exactly as before this phase.
+    const modelledUsesSources: ObservedFact[] = [];
+    for (const usesFact of jobFacts.filter((f) => f.kind === "workflow.step.uses")) {
+      const inputKey = MODELLED_COMMAND_INPUT[actionName(usesFact.value)];
+      if (!inputKey) continue;
+      const withFact = jobFacts.find(
+        (f) => f.kind === "workflow.step.with" && f.attributes?.step === usesFact.attributes?.step && f.attributes?.input === inputKey,
+      );
+      if (!withFact) continue;
+      const raw = withFact.attributes?.value;
+      if (raw === undefined) continue;
+      modelledUsesSources.push({
+        kind: "workflow.step.uses",
+        value: raw,
+        evidence: { ...withFact.evidence, text: `${usesFact.value} with.${inputKey}: ${withFact.evidence.text}` },
+        attributes: usesFact.attributes,
+      });
+    }
+    // Merged and re-sorted by declared step position, not appended after every `run:` step - a modelled
+    // action's command depends on whatever installed before it and precedes whatever runs after it, the
+    // same as any `run:` line, because GitHub Actions steps are one ordered sequence regardless of kind.
+    const runs = [...runFacts, ...modelledUsesSources].sort((a, b) => Number(a.attributes?.step ?? 0) - Number(b.attributes?.step ?? 0));
 
     const environment: Record<string, string> = {};
     for (const f of jobFacts.filter((f) => f.kind === "workflow.env")) {
