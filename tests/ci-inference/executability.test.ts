@@ -89,3 +89,38 @@ test("a genuinely complete path is still executable — the fix must not refuse 
   assert.equal(plan.executable, true);
   assert.equal(plan.refusal, undefined);
 });
+
+/**
+ * LAYER 5: the planner consumes causal evidence carried on the job, and never manufactures it.
+ *
+ * jest's real test command is an input to `nick-fields/retry`; babel's suite consumes an artifact from
+ * another job. Both are recorded as declared prerequisites during inference, from what the workflow
+ * says — not inferred in the planner from an action's name.
+ */
+test("an unresolved declared prerequisite blocks a plan whose own steps are all fine", () => {
+  const jobs = job([op({ id: "install-0", kind: "install" }), op({ id: "test-1", kind: "test" })]);
+  jobs[0]!.prerequisites = [
+    { kind: "ACTION_EXECUTION", identifier: "nick-fields/retry@ad98453", reason: "the command this step runs is an input to an action this engine does not read" },
+  ];
+
+  const plan = planForPurpose(jobs, "TEST");
+  assert.equal(plan.executable, false, "every own step is executable, yet a cause is unestablished");
+  assert.match(plan.refusal!, /TEST EXISTS but/, "the outcome must stay PRESENT while the plan refuses");
+  assert.match(plan.refusal!, /nick-fields\/retry/);
+});
+
+test("the plan carries the causal path so a receipt can show why, not just assert a verdict", () => {
+  const jobs = job([op({ id: "install-0", kind: "install" }), op({ id: "test-1", kind: "test" })]);
+  jobs[0]!.prerequisites = [{ kind: "ARTIFACT", identifier: "babel-artifact", reason: "produced by a job this engine does not follow" }];
+
+  const plan = planForPurpose(jobs, "TEST");
+  assert.equal(plan.causal?.outcomePresent, true);
+  assert.equal(plan.causal?.complete, false);
+  assert.equal(plan.causal?.unresolved[0]?.relation, "CONSUMES_ARTIFACT");
+});
+
+test("no declared prerequisites leaves a sound plan executable", () => {
+  const plan = planForPurpose(job([op({ id: "install-0", kind: "install" }), op({ id: "test-1", kind: "test" })]), "TEST");
+  assert.equal(plan.executable, true);
+  assert.equal(plan.causal?.complete, true);
+});

@@ -18,6 +18,7 @@
  * actually contains; asking for `TEST` finds jobs that provide `TEST`, and asking for `LINT` finds jobs
  * that provide `LINT`, with the same code.
  */
+import { causalPathFor, type CausalPath, type DeclaredPrerequisite } from "./causal.js";
 import type { InferredOperation, OperationKind } from "./schema.js";
 
 /** What a job or operation is FOR. Uppercase to keep it distinct from the operation-kind vocabulary. */
@@ -56,6 +57,13 @@ export interface InferredJob {
   matrixInstance?: number;
   provides: Purpose[];
   operations: InferredOperation[];
+  /**
+   * Causal prerequisites the job declares that this engine cannot follow.
+   *
+   * Carried on the job rather than derived in the planner, so the planner CONSUMES causal evidence and
+   * never manufactures it from action names or classifications.
+   */
+  prerequisites?: DeclaredPrerequisite[];
   /** Reference-node ids that block this job as a whole. */
   blockedBy: string[];
 }
@@ -79,6 +87,8 @@ export interface PurposePlan {
   executable: boolean;
   /** Why the path cannot be executed, when it cannot. */
   refusal?: string;
+  /** The causal path consulted, so a receipt can show WHY rather than assert a verdict. */
+  causal?: CausalPath;
 }
 
 /**
@@ -138,6 +148,17 @@ export function planForPurpose(jobs: InferredJob[], purpose: Purpose): PurposePl
   // (1) The outcome must be provided by an operation that can actually run — not merely be present.
   const provider = active.find((o) => purposeOfKind(o.kind) === purpose && o.executable && o.executionRepresentation !== "UNRESOLVED");
 
+  // LAYER 5. The planner CONSUMES the causal path; it does not re-derive one.
+  //
+  // The prerequisites come from the job, where they were recorded from what the workflow DECLARES. The
+  // planner must never manufacture missing causal evidence from command text, action names or purpose
+  // classifications — that is the architectural leak these layers exist to close, and it would reappear
+  // here first, because this is where a plan is finally allowed to say yes.
+  const kindOfPurpose = Object.entries(PURPOSE_BY_KIND).find(([, p]) => p === purpose)?.[0];
+  const causal: CausalPath | undefined = kindOfPurpose
+    ? causalPathFor(path, kindOfPurpose, chosen.prerequisites ?? [], purpose)
+    : undefined;
+
   // (5) An empty active path can never satisfy the outcome.
   const refusals: string[] = [];
   if (active.length === 0) {
@@ -154,11 +175,20 @@ export function planForPurpose(jobs: InferredJob[], purpose: Purpose): PurposePl
     refusals.push(`no executable operation in this path causally provides ${purpose}; a path containing something CLASSIFIED as ${purpose} is not the same as one that produces it`);
   }
 
+  // (2) Every required causal predecessor must be established. An unresolved edge - an artifact from a
+  // job we do not follow, a command inside an action we do not read - blocks the plan while leaving the
+  // outcome PRESENT. "TEST exists and we cannot establish its causes" is the honest refusal; planning
+  // something else instead is what produced jest's DIVERGED and webpack's INCORRECT_REFUSAL.
+  if (causal && causal.outcomePresent && !causal.complete) {
+    refusals.push(causal.reason);
+  }
+
   return {
     purpose,
     jobId: chosen.id,
     operations: path,
     executable: refusals.length === 0,
+    ...(causal ? { causal } : {}),
     ...(refusals.length > 0 ? { refusal: refusals.join(". ") } : {}),
   };
 }

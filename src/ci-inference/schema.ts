@@ -47,6 +47,8 @@ export interface ObservedFact {
     | "workflow.job"
     | "workflow.step.run"
     | "workflow.step.uses"
+    /** A `with:` input of a `uses:` step. Recorded, never interpreted here - see evidence.ts. */
+    | "workflow.step.with"
     | "workflow.matrix"
     | "workflow.env"
     | "workflow.services"

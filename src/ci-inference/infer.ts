@@ -26,6 +26,7 @@ import { expandMatrix, type MatrixAssignment } from "./matrix.js";
 import { computeCompleteness, confidenceFromCompleteness, type ReferenceNode } from "./reference-graph.js";
 import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences } from "./resolve.js";
 import { purposeOfLine } from "./purpose.js";
+import type { DeclaredPrerequisite } from "./causal.js";
 import type { EvidenceRef, InferredOperation, InferredPipeline, ObservedFact, OperationKind, Unresolved } from "./schema.js";
 
 /** Commands that install dependencies, in the form CI actually writes them. */
@@ -38,6 +39,17 @@ const INSTALL_PATTERN = /^(npm (ci|install|i)\b|yarn( install)?\b|pnpm (install|
  * made `testing-library/jest-dom` — which installs via `bahmutov/npm-install` — look unanalysable for a
  * reason that was about this engine's vocabulary, not the repository.
  */
+/**
+ * Actions this engine MODELS, and therefore does not treat as an unresolved causal contributor.
+ *
+ * Stated as what we understand rather than as what to ignore. Anything absent from this list becomes an
+ * unresolved edge, so a third-party action cannot silently contribute nothing to a causal path.
+ * `checkout`, `setup-*` and `cache` supply the environment the container already stands in for;
+ * `upload-artifact` produces rather than consumes and so blocks nothing in a consumer's path.
+ */
+const MODELLED_ACTION =
+  /^(actions\/(checkout|setup-node|setup-python|setup-go|setup-java|cache|upload-artifact)|bahmutov\/npm-install|pnpm\/action-setup|borales\/actions-yarn)/;
+
 const INSTALL_ACTION = /^(bahmutov\/npm-install|pnpm\/action-setup|borales\/actions-yarn)/;
 
 /** A run line that is a package-script invocation, e.g. `npm run build` / `yarn test`. */
@@ -154,6 +166,37 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
       blockedBy: completeness.blockedBy.map((n) => n.id),
       willExecute: true,
     };
+  };
+
+  /**
+   * Causal prerequisites a job DECLARES and this engine cannot follow.
+   *
+   * Conservative by construction: any `uses:` step that is not in the modelled set becomes an
+   * UNRESOLVED causal contributor. That is deliberately NOT name-matching for particular actions -
+   * the engine states what it models and everything else is unresolved, so a new third-party action
+   * cannot silently contribute nothing.
+   *
+   * This is where the sample's two capability gaps become visible instead of absent: jest's test
+   * command is an input to `nick-fields/retry`, and babel's suite consumes an artifact declared by
+   * `actions/download-artifact`. Neither is implemented here; both are now REPRESENTED.
+   */
+  const declaredPrerequisites = (facts: ObservedFact[]): DeclaredPrerequisite[] => {
+    const out: DeclaredPrerequisite[] = [];
+    for (const f of facts) {
+      if (f.kind !== 'workflow.step.uses') continue;
+      if (MODELLED_ACTION.test(f.value)) continue;
+      const keys = f.attributes?.withKeys;
+      const carriesCommand = keys !== undefined && /(command|run|script|args)/.test(keys);
+      const named = f.attributes?.withName;
+      out.push({
+        kind: carriesCommand ? 'ACTION_EXECUTION' : 'ARTIFACT',
+        identifier: named ? `${f.value} (${named})` : f.value,
+        reason: carriesCommand
+          ? `the command this step runs is an input (${keys}) to an action this engine does not read`
+          : `this step uses ${f.value}, which this engine does not model, so what it contributes is unknown`,
+      });
+    }
+    return out;
   };
 
   const jobs: InferredJob[] = [];
@@ -290,6 +333,7 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
       job: `${jobName ?? "unknown"}${suffix}`,
       ...(Object.keys(assignment).length > 0 ? { matrix: assignment, matrixInstance: instanceIndex } : {}),
       provides: jobProvides(operations),
+      prerequisites: declaredPrerequisites(jobFacts),
       operations,
       blockedBy: [...new Set(operations.flatMap((o) => o.blockedBy))],
     });

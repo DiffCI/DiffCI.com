@@ -106,6 +106,14 @@ export function causalPathFor(
   operations: InferredOperation[],
   outcome: string,
   prerequisites: DeclaredPrerequisite[] = [],
+  /**
+   * How to NAME the outcome in messages.
+   *
+   * Matching happens on `OperationKind` (`test`) while callers speak in `Purpose` (`TEST`). This
+   * codebase keeps those vocabularies deliberately distinct, and a refusal that mixed them would blur
+   * the very distinction the uppercase/lowercase split exists to hold.
+   */
+  label: string = outcome,
 ): CausalPath {
   const nodes: CausalNode[] = [];
   const edges: CausalEdge[] = [];
@@ -119,7 +127,7 @@ export function causalPathFor(
       edges,
       unresolved: [],
       complete: false,
-      reason: `no operation in this job provides ${outcome}`,
+      reason: `no operation in this job provides ${label}`,
     };
   }
 
@@ -195,8 +203,8 @@ export function causalPathFor(
     unresolved,
     complete,
     reason: complete
-      ? `${outcome} is provided by ${target.id} and every required cause is established`
-      : `${outcome} EXISTS but ${unresolved.length} causal prerequisite(s) could not be established: ${unresolved
+      ? `${label} is provided by ${target.id} and every required cause is established`
+      : `${label} EXISTS but ${unresolved.length} causal prerequisite(s) could not be established: ${unresolved
           .map((e) => `${e.from} (${e.reason})`)
           .join("; ")}`,
   };

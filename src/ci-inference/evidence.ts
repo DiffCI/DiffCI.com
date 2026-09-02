@@ -164,12 +164,36 @@ export function workflowFacts(repoPath: string): ObservedFact[] {
         if (!step || typeof step !== "object") continue;
         const stepAttrs = { ...attrs, step: String(i), ...(step.name ? { name: String(step.name) } : {}) };
         if (typeof step.uses === "string") {
+          // The `with:` INPUTS are recorded, not interpreted.
+          //
+          // Two of the sample's five members hid their real causal structure in here: jest's test
+          // command is `with.command` of `nick-fields/retry`, and babel's suite consumes `with.name`
+          // of `actions/download-artifact`. Both were invisible because this collector kept only
+          // `node-version`, so the engine could not even represent that something was missing.
+          //
+          // This is EVIDENCE ACQUISITION. Nothing here decides what an input means; recording the
+          // keys is what later lets a causal edge be marked unresolved instead of being absent.
+          const inputs = step.with && typeof step.with === "object" ? (step.with as Record<string, unknown>) : {};
+          const inputKeys = Object.keys(inputs).slice(0, 20);
           facts.push({
             kind: "workflow.step.uses",
             value: step.uses,
             evidence: ref(file, step.uses, source),
-            attributes: { ...stepAttrs, ...(step.with?.["node-version"] ? { nodeVersion: String(step.with["node-version"]) } : {}) },
+            attributes: {
+              ...stepAttrs,
+              ...(inputs["node-version"] ? { nodeVersion: String(inputs["node-version"]) } : {}),
+              ...(inputKeys.length > 0 ? { withKeys: inputKeys.join(",") } : {}),
+              ...(inputs.name ? { withName: String(inputs.name).slice(0, 200) } : {}),
+            },
           });
+          for (const key of inputKeys) {
+            facts.push({
+              kind: "workflow.step.with",
+              value: `${key}=${String(inputs[key]).slice(0, 400)}`,
+              evidence: ref(file, step.uses, source),
+              attributes: { ...stepAttrs, input: key, action: step.uses },
+            });
+          }
         }
         if (typeof step.run === "string") {
           // The step condition travels WITH the run line. A step CI skips is still a declared step, and
