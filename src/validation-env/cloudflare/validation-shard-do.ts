@@ -121,6 +121,8 @@ export interface ValidationRecord {
     git?: string;
     uname?: string;
     osRelease?: string;
+    /** Build tools present, or an explicit statement that they are not. Member 4 died on a missing make. */
+    buildToolchain?: string;
     /** The agent's own sha512, measured in-container and matched against the job's expectation. */
     agentIntegrity?: string;
   };
@@ -275,6 +277,37 @@ async function bootstrap(record: ValidationRecord, deps: ValidationStepDeps): Pr
       tools = await sandbox.exec("git --version && node --version && npm --version", { timeout: 20_000 });
       if (!tools.success) return fail(record, "toolchain-missing", tail(tools));
     }
+
+    // BUILD TOOLCHAIN — environment equivalence with the runner being reproduced.
+    //
+    // CI_REPRODUCTION_SAMPLE_01 member 4 died at `make: not found` on step 3 of 9. babel's build is
+    // Makefile-driven, GitHub's `ubuntu-latest` ships `make`, and this container did not — so the run
+    // never reached the question the sample existed to ask, and was correctly recorded
+    // ENVIRONMENT_INADEQUATE rather than as anything about babel or about DiffCI.
+    //
+    // The container is not a substitute for a GitHub runner unless it carries the toolchain a large
+    // fraction of real repositories assume. Provisioned here, ONCE, and verified — so a missing tool is
+    // a bootstrap failure with an obvious cause rather than a mid-harness surprise attributed to a
+    // repository. Recorded in the environment so evidence says which toolchain produced it.
+    let build = await sandbox.exec("make --version && python3 --version && cc --version", { timeout: 20_000 });
+    if (!build.success) {
+      await sandbox.exec(
+        "(command -v apt-get >/dev/null && apt-get update && apt-get install -y --no-install-recommends make python3 build-essential) || " +
+          "(command -v apk >/dev/null && apk add --no-cache make python3 build-base) || true",
+        { timeout: 600_000 },
+      );
+      build = await sandbox.exec("make --version && python3 --version && cc --version", { timeout: 20_000 });
+    }
+    record.environment = {
+      ...(record.environment ?? {}),
+      buildToolchain: build.success
+        ? tail(build, 300)
+            .split(/\r?\n/)
+            .filter(Boolean)
+            .slice(0, 3)
+            .join(" | ")
+        : "UNAVAILABLE - repositories requiring make/python/cc cannot be reproduced here",
+    } as ValidationRecord["environment"];
 
     // The sandbox image ships Node WITHOUT corepack's shims enabled, so `pnpm` and `yarn` are absent
     // from PATH even though corepack itself is present. That is exactly how colinhacks/zod was
