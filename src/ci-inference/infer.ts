@@ -137,14 +137,27 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
     references.push(...own);
 
     const scriptsResolved = own.filter((n) => n.kind === "SCRIPT_REFERENCE").every((n) => n.resolution === "RESOLVED");
+    // DEFECT 30. Each requirement now carries what was OBSERVED, not merely a boolean. The deleted
+    // `"a resolved package manager"` was implemented as `command.length > 0` — it duplicated the
+    // command check while claiming to have established something about package managers, and webpack's
+    // refusal cited it against a repository that pins `yarn@1.22.22` with a committed lockfile.
+    const scriptRefs = own.filter((n) => n.kind === "SCRIPT_REFERENCE");
     const completeness = computeCompleteness(
       kind,
       {
-        "a resolved command": command.length > 0,
-        "a known working directory": true,
-        "all referenced scripts resolved": scriptsResolved,
-        "a pinned dependency basis (lockfile or packageManager field)": basis.pinned,
-        "a resolved package manager": command.length > 0,
+        COMMAND_RESOLVED: {
+          satisfied: command.length > 0,
+          observed: command.length > 0 ? `argv of ${command.length} token(s)` : "no argv could be built for this line",
+        },
+        WORKING_DIRECTORY_KNOWN: { satisfied: true, observed: "repository root" },
+        SCRIPTS_RESOLVED: {
+          satisfied: scriptsResolved,
+          observed:
+            scriptRefs.length === 0
+              ? "no script references"
+              : `${scriptRefs.filter((n) => n.resolution === "RESOLVED").length}/${scriptRefs.length} script reference(s) resolved`,
+        },
+        DEPENDENCY_BASIS_PINNED: { satisfied: basis.pinned, observed: basis.detail },
       },
       own,
     );
@@ -162,6 +175,7 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
       unresolved: opUnresolved,
       ...(command.length === 0 && opUnresolved[0] ? { refusalReason: opUnresolved[0].why } : {}),
       executable: completeness.executable,
+      requirementChecks: completeness.checks,
       missingRequirements: completeness.missing,
       blockedBy: completeness.blockedBy.map((n) => n.id),
       willExecute: true,

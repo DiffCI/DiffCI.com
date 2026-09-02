@@ -69,20 +69,69 @@ export interface ReferenceNode {
  * Not a checklist for its own sake: every entry is a thing whose absence has produced, or could
  * produce, a run that looks like the repository's CI and is not.
  */
-export const COMPLETENESS_REQUIREMENTS: Record<string, string[]> = {
+export const REQUIREMENT_PREDICATES = {
+  COMMAND_RESOLVED: {
+    label: "a resolved command",
+    predicate: "the operation has a non-empty argv",
+  },
+  WORKING_DIRECTORY_KNOWN: {
+    label: "a known working directory",
+    predicate: "the operation runs at a directory this engine can name",
+  },
+  SCRIPTS_RESOLVED: {
+    label: "all referenced scripts resolved",
+    predicate: "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+  },
+  DEPENDENCY_BASIS_PINNED: {
+    label: "a pinned dependency basis (lockfile or packageManager field)",
+    predicate: "the repository commits a lockfile or declares a packageManager field",
+  },
+} as const;
+
+export type RequirementId = keyof typeof REQUIREMENT_PREDICATES;
+
+/**
+ * One requirement, its predicate, and what was actually seen.
+ *
+ * DEFECT 30. The requirement named "a resolved package manager" was implemented as
+ * `command.length > 0`. The label said package manager; the code tested whether the command was empty.
+ * webpack's refusal cited it against a repository that pins `yarn@1.22.22` WITH a committed lockfile,
+ * so the receipt asserted evidence the engine had never established — and a maintainer acting on it
+ * would have hunted a problem that did not exist. That is an evidence-integrity defect, not wording.
+ *
+ * The shape is the fix: `predicate` states what the code tests and `observed` states what it saw, so a
+ * label divorced from its implementation has nowhere to hide. The bogus requirement is DELETED rather
+ * than renamed — it duplicated COMMAND_RESOLVED while claiming to check something else.
+ *
+ * Receipts explain WHY a verdict was reached. They are never a source the verdict is derived from.
+ */
+export interface RequirementCheck {
+  id: RequirementId;
+  label: string;
+  predicate: string;
+  /** What the engine saw, in its own words — the half a boolean cannot carry. */
+  observed: string;
+  satisfied: boolean;
+}
+
+export const COMPLETENESS_REQUIREMENTS: Record<string, RequirementId[]> = {
   install: [
     // Without one, "install" is not reproducible: the same command resolves differently over time,
-    // which is exactly how eslint-plugin-vue's generic `npm install` crashed.
-    "a pinned dependency basis (lockfile or packageManager field)",
-    "a resolved package manager",
-    "a known working directory",
+    // which is exactly how eslint-plugin-vue's generic `npm install` crashed — and what member 5 of
+    // CI_REPRODUCTION_SAMPLE_01 demonstrated empirically, its CI passing on 2026-08-04 and its suite
+    // failing today because `webpack@5` resolved to a version published 28 days later.
+    "DEPENDENCY_BASIS_PINNED",
+    "COMMAND_RESOLVED",
+    "WORKING_DIRECTORY_KNOWN",
   ],
-  test: ["a resolved command", "a known working directory", "all referenced scripts resolved"],
-  build: ["a resolved command", "a known working directory", "all referenced scripts resolved"],
-  default: ["a resolved command", "a known working directory"],
+  test: ["COMMAND_RESOLVED", "WORKING_DIRECTORY_KNOWN", "SCRIPTS_RESOLVED"],
+  build: ["COMMAND_RESOLVED", "WORKING_DIRECTORY_KNOWN", "SCRIPTS_RESOLVED"],
+  default: ["COMMAND_RESOLVED", "WORKING_DIRECTORY_KNOWN"],
 };
 
 export interface Completeness {
+  /** Every requirement with its predicate and what was observed — the receipt's evidence. */
+  checks: RequirementCheck[];
   /** Requirements met, by name. */
   satisfied: string[];
   /** Requirements NOT met, by name. Non-empty means not executable. */
@@ -99,12 +148,32 @@ export interface Completeness {
  * `executable` is the only thing a decision engine may act on. `missing` and `blockedBy` are what a
  * human — or a future model — reads to understand WHY, which a boolean cannot carry.
  */
-export function computeCompleteness(kind: string, requirementsMet: Record<string, boolean>, references: ReferenceNode[]): Completeness {
+export function computeCompleteness(
+  kind: string,
+  observations: Partial<Record<RequirementId, { satisfied: boolean; observed: string }>>,
+  references: ReferenceNode[],
+): Completeness {
   const required = COMPLETENESS_REQUIREMENTS[kind] ?? COMPLETENESS_REQUIREMENTS.default!;
-  const satisfied = required.filter((r) => requirementsMet[r] === true);
-  const missing = required.filter((r) => requirementsMet[r] !== true);
+  const checks: RequirementCheck[] = required.map((id) => {
+    const spec = REQUIREMENT_PREDICATES[id];
+    const seen = observations[id];
+    return {
+      id,
+      label: spec.label,
+      predicate: spec.predicate,
+      observed: seen?.observed ?? "not observed",
+      satisfied: seen?.satisfied === true,
+    };
+  });
   const blockedBy = references.filter((n) => n.resolution !== "RESOLVED");
-  return { satisfied, missing, blockedBy, executable: missing.length === 0 && blockedBy.length === 0 };
+  const missing = checks.filter((c) => !c.satisfied);
+  return {
+    checks,
+    satisfied: checks.filter((c) => c.satisfied).map((c) => c.label),
+    missing: missing.map((c) => c.label),
+    blockedBy,
+    executable: missing.length === 0 && blockedBy.length === 0,
+  };
 }
 
 /**

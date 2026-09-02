@@ -166,6 +166,13 @@ export interface InferredOperation {
    * later needs the evidence rather than only the label.
    */
   purposeBasis?: string;
+  /**
+   * Every requirement with its predicate and what was observed.
+   *
+   * Receipts EXPLAIN why the planner reached a verdict; they are never a source the verdict is derived
+   * from. Carrying the observation alongside the predicate is what stopped defect 30 being writable.
+   */
+  requirementChecks?: Array<{ id: string; label: string; predicate: string; observed: string; satisfied: boolean }>;
   /** How each expression in the command resolved, so an empty value can be traced to its cause. */
   expressionResolutions?: Array<{ expression: string; kind: string; value: string; reason?: string }>;
   /**
