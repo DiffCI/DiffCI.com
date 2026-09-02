@@ -85,12 +85,18 @@ harness-recorded "historical reproduction unavailable" outcome is fully establis
 lives in the `5539155` commit message and `scripts/determinism-gate.ts`, not yet written into
 `reproduction.json` or this evidence directory as a first-class field.
 
+## Adjudication — done in a follow-up pass
+
+`CORRECT_REFUSAL` / `INCORRECT_REFUSAL` classification for webpack's, babel's, and babel-loader's new
+refusal reasons is complete: [adjudication.md](adjudication.md). Headline: one precisely located regex
+defect (`src/ci-inference/infer.ts:56`, confirmed by re-running this session's own inference engine
+against fresh pinned-head clones of all three repos) drives the dominant share of jest's, webpack's, and
+babel's refusals; babel-loader's refusal traces to a separate, independent gap in test-script-name
+recognition. No engine code was changed — adjudication only.
+
 ## Not done in this pass
 
-- `CORRECT_REFUSAL` vs `INCORRECT_REFUSAL` classification against the mechanical table, for webpack,
-  babel, and babel-loader's new refusal reasons (only eslint's was checked, per the tripwire requirement).
 - Recording the babel-loader determinism-gate verdict as data alongside its `reproduction.json`, rather
   than only in prose and the `5539155` commit message.
-
-Both are natural next steps, not resolved here so the ambiguity is not silently absorbed into a verdict
-this session did not verify.
+- Any engine fix. Per direction, changing inference before classifying these refusals would have destroyed
+  some of the value of the frozen run; adjudication came first.
