@@ -85,6 +85,8 @@ export interface StepReceipt {
   spawnedWithoutShell?: boolean;
   /** Tokens the reference plan asked the harness to resolve, and what they became. */
   substitutions?: Record<string, string>;
+  /** Names of failing tests, which the parser already computes. Evidence, never used to derive counts. */
+  failedNames?: string[];
   /** Environment-caused failure signatures found in the output, e.g. per-test timeouts. */
   environmentSignals?: string[];
   cpuSeconds?: number;
@@ -228,8 +230,16 @@ export function countsOf(raw: string): { testFiles?: number; tests?: number } {
   return {};
 }
 
+/**
+ * 1200 characters was too small to diagnose with.
+ *
+ * babel-loader's R3 failed 2 of 66 tests where CI's ground truth for the same cell was `success`, and
+ * the tail held only the tail of a passing suite — not one failure line. Classifying that without
+ * seeing the failures would have meant guessing which layer they belonged to, which is the error this
+ * whole apparatus exists to avoid. Raised so a failing step can actually be read.
+ */
 function tail(out: string): string {
-  return out.slice(-1200);
+  return out.slice(-20_000);
 }
 
 /**
@@ -367,6 +377,7 @@ ${run.stderr}`;
       wallMs: run.ms,
       ...countsOf(combined),
       failures: parsed.failures,
+      ...(parsed.failedNames.length > 0 ? { failedNames: parsed.failedNames.slice(0, 20) } : {}),
       outputTail: tail(combined),
     });
     progress.emit({

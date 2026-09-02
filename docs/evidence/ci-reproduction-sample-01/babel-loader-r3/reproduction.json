@@ -1,0 +1,132 @@
+{
+  "schema": "diffci.ci.r3-qualification/v1",
+  "protocol": "docs/ci-reproduction-05-eligibility.md",
+  "repository": "babel/babel-loader",
+  "headSha": "778e7c54daa57e30c1d676e243c77f7c00a766d8",
+  "engineInvoked": false,
+  "verdict": "R3_FAILED",
+  "reason": "the reference arm failed at reference#5 (yarn test-only) with exit 1",
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/ci.yml, job `test`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "corepack",
+          "enable"
+        ],
+        "commandIdentity": "corepack enable",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T08:01:44.403Z",
+        "endedAt": "2026-09-02T08:01:44.476Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0.07,
+        "wallMs": 73,
+        "outputTail": "\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "yarn"
+        ],
+        "commandIdentity": "yarn",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T08:01:44.477Z",
+        "endedAt": "2026-09-02T08:01:56.817Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 26.02,
+        "wallMs": 12340,
+        "outputTail": "➤ YN0000: · Yarn 4.17.0\n➤ YN0000: ┌ Resolution step\n➤ YN0000: └ Completed\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 410 packages were added to the project (+ 45.58 MiB).\n➤ YN0000: └ Completed in 7s 616ms\n➤ YN0000: ┌ Link step\n➤ YN0000: └ Completed in 2s 496ms\n➤ YN0000: · Done in 10s 348ms\n\n"
+      },
+      {
+        "stepId": "reference#2",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "add",
+          "-D",
+          "webpack@5"
+        ],
+        "commandIdentity": "yarn add -D webpack@5",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T08:01:56.818Z",
+        "endedAt": "2026-09-02T08:02:00.431Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 4.8,
+        "wallMs": 3612,
+        "outputTail": "➤ YN0000: · Yarn 4.17.0\n➤ YN0000: ┌ Resolution step\n➤ YN0085: │ + webpack@npm:5.110.3, @jridgewell/trace-mapping@npm:0.3.31, acorn@npm:8.18.0, enhanced-resolve@npm:5.24.5, minimizer-webpack-plugin@npm:5.8.0, and 2 more.\n➤ YN0085: │ - acorn-import-phases@npm:1.0.4, enhanced-resolve@npm:5.24.1, eslint-scope@npm:5.1.1, estraverse@npm:4.3.0, loader-runner@npm:4.3.2, and 4 more.\n➤ YN0000: └ Completed in 0s 481ms\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 7 packages were added to the project (+ 3.41 MiB).\n➤ YN0000: └ Completed in 1s 260ms\n➤ YN0000: ┌ Link step\n➤ YN0000: └ Completed in 1s 114ms\n➤ YN0000: · Done in 2s 940ms\n\n"
+      },
+      {
+        "stepId": "reference#3",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "up",
+          "@babel/*@^7"
+        ],
+        "commandIdentity": "yarn up @babel/*@^7",
+        "spawnedWithoutShell": true,
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T08:02:00.431Z",
+        "endedAt": "2026-09-02T08:02:05.604Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 7.38,
+        "wallMs": 5173,
+        "outputTail": "➤ YN0000: · Yarn 4.17.0\n➤ YN0000: ┌ Resolution step\n➤ YN0085: │ + @babel/cli@npm:7.29.7, @babel/core@npm:7.29.7, @babel/eslint-parser@npm:7.29.7, @babel/preset-env@npm:7.29.7, @babel/code-frame@npm:7.29.7, and 126 more.\n➤ YN0085: │ - @babel/cli@npm:8.0.1, @babel/code-frame@npm:8.0.0, @babel/compat-data@npm:8.0.0, @babel/core@npm:8.0.1, @babel/eslint-parser@npm:8.0.1, and 91 more.\n➤ YN0000: └ Completed in 2s 392ms\n➤ YN0000: ┌ Post-resolution validation\n➤ YN0060: │ eslint is listed by your project with version 10.6.0 (pc97038), which doesn't satisfy what @babel/eslint-parser and other dependencies request (but they have non-overlapping ranges!).\n➤ YN0086: │ Some peer dependencies are incorrectly met by your project; run yarn explain peer-requirements <hash> for details, where <hash> is the six-letter p-prefixed code.\n➤ YN0000: └ Completed\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 129 packages were added to the project (+ 3.38 MiB).\n➤ YN0000: └ Completed in 0s 839ms\n➤ YN0000: ┌ Link step\n➤ YN0000: └ Completed in 1s 137ms\n➤ YN0000: · Done with warnings in 4s 464ms\n\n"
+      },
+      {
+        "stepId": "reference#4",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "run",
+          "build"
+        ],
+        "commandIdentity": "yarn run build",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T08:02:05.604Z",
+        "endedAt": "2026-09-02T08:02:07.113Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 1.86,
+        "wallMs": 1508,
+        "outputTail": "Successfully compiled 6 files with Babel (475ms).\n\n"
+      },
+      {
+        "stepId": "reference#5",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "test-only"
+        ],
+        "commandIdentity": "yarn test-only",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T08:02:07.114Z",
+        "endedAt": "2026-09-02T08:02:11.622Z",
+        "exitStatus": 1,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 10.53,
+        "wallMs": 4507,
+        "failures": 2,
+        "outputTail": " - webpack\n  ---\n  duration_ms: 1077.581768\n  type: 'suite'\n  ...\n# Subtest: rspack\n    # Subtest: should output sourcemap\n    ok 1 - should output sourcemap\n      ---\n      duration_ms: 71.044075\n      type: 'test'\n      ...\n    # Subtest: should output sourcemap properly when set 'inline'\n    ok 2 - should output sourcemap properly when set 'inline'\n      ---\n      duration_ms: 31.878582\n      type: 'test'\n      ...\n    # Subtest: should output devtoolModuleFilename option\n    ok 3 - should output devtoolModuleFilename option\n      ---\n      duration_ms: 25.759131\n      type: 'test'\n      ...\n    # Subtest: should disable sourcemap output with 'sourceMaps:false'\n    ok 4 - should disable sourcemap output with 'sourceMaps:false'\n      ---\n      duration_ms: 28.064795\n      type: 'test'\n      ...\n    # Subtest: should disable sourcemap output with 'sourceMap:false'\n    ok 5 - should disable sourcemap output with 'sourceMap:false'\n      ---\n      duration_ms: 26.852444\n      type: 'test'\n      ...\n    1..5\nok 16 - rspack\n  ---\n  duration_ms: 184.596508\n  type: 'suite'\n  ...\n1..16\n# tests 66\n# suites 10\n# pass 61\n# fail 2\n# cancelled 0\n# skipped 3\n# todo 0\n# duration_ms 3523.162541\n\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "producedAt": "2026-09-02T08:02:11.756Z"
+}
