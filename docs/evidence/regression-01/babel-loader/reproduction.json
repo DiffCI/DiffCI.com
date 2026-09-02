@@ -1,0 +1,4744 @@
+{
+  "schema": "diffci.ci.reproduction/v1",
+  "attempt": 1,
+  "repository": "babel/babel-loader",
+  "headSha": "778e7c54daa57e30c1d676e243c77f7c00a766d8",
+  "protocol": "docs/ci-reproduction-01-protocol.md",
+  "optimisable": false,
+  "jobs": [
+    {
+      "id": "ci.yml#test-osubuntu-latest-node-version22-babel-version7-webpack-version5",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-osubuntu-latest-node-version22-babel-version8-webpack-version5",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-osubuntu-latest-node-version24-babel-version7-webpack-version5",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-osubuntu-latest-node-version24-babel-version8-webpack-version5",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-oswindows-latest-node-version22-babel-version7-webpack-version5",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-oswindows-latest-node-version22-babel-version8-webpack-version5",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-oswindows-latest-node-version24-babel-version7-webpack-version5",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-oswindows-latest-node-version24-babel-version8-webpack-version5",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-node-version20-webpack-version5-babel-version7-osubuntu-latest",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-node-version18-webpack-version5-babel-version7-osubuntu-latest",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-node-version18-webpack-version5-babel-version7-oswindows-latest",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest",
+      "provides": [
+        "BUILD",
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-1",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "add",
+            "-D",
+            "webpack@5.61.0"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-2",
+          "kind": "install",
+          "command": [
+            "yarn",
+            "up",
+            "@babel/*@^7"
+          ],
+          "executable": false
+        },
+        {
+          "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-build-3",
+          "kind": "build",
+          "command": [
+            "yarn",
+            "run",
+            "build"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-unknown-4",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "test-only"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "ci.yml#lint-coverage-osubuntu-latest-node-versionlatest",
+      "provides": [
+        "INSTALL",
+        "LINT"
+      ],
+      "operations": [
+        {
+          "id": "lint-coverage-osubuntu-latest-node-versionlatest-install-0",
+          "kind": "install",
+          "command": [
+            "yarn"
+          ],
+          "executable": true
+        },
+        {
+          "id": "lint-coverage-osubuntu-latest-node-versionlatest-unknown-1",
+          "kind": "unknown",
+          "command": [
+            "yarn",
+            "tsc"
+          ],
+          "executable": false
+        },
+        {
+          "id": "lint-coverage-osubuntu-latest-node-versionlatest-lint-2",
+          "kind": "lint",
+          "command": [
+            "yarn",
+            "test"
+          ],
+          "executable": true
+        }
+      ]
+    }
+  ],
+  "testPlan": {
+    "purpose": "TEST",
+    "operations": [],
+    "executable": false,
+    "refusal": "no workflow job provides TEST; the repository may produce this outcome outside GitHub Actions, or this engine did not recognise the step that does"
+  },
+  "inferredOperations": [
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-3"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-4"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version22-babel-version7-webpack-version5-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-7"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version22-babel-version8-webpack-version5-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-11"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-12"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version24-babel-version7-webpack-version5-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-15"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-osubuntu-latest-node-version24-babel-version8-webpack-version5-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-19"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-20"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version22-babel-version7-webpack-version5-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version7-webpack-version5-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version22-babel-version7-webpack-version5-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-23"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version22-babel-version8-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-oswindows-latest-node-version22-babel-version8-webpack-version5-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version22-babel-version8-webpack-version5-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-27"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-28"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version24-babel-version7-webpack-version5-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version7-webpack-version5-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version24-babel-version7-webpack-version5-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-31"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": false,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "FALSE"
+      }
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version24-babel-version8-webpack-version5-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-oswindows-latest-node-version24-babel-version8-webpack-version5-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-oswindows-latest-node-version24-babel-version8-webpack-version5-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-35"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-36"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version20-webpack-version5-babel-version7-osubuntu-latest-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-39"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-40"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18-webpack-version5-babel-version7-osubuntu-latest-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-43"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5"
+        }
+      ]
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-44"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18-webpack-version5-babel-version7-oswindows-latest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-node-version18-webpack-version5-babel-version7-oswindows-latest-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18-webpack-version5-babel-version7-oswindows-latest-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-1",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "add",
+        "-D",
+        "webpack@5.61.0"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn add -D webpack@${{ matrix.webpack-version }}",
+          "line": 45
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 4 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-47"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "expressionResolutions": [
+        {
+          "expression": "matrix.webpack-version",
+          "kind": "DEFINED",
+          "value": "5.61.0"
+        }
+      ]
+    },
+    {
+      "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-2",
+      "kind": "install",
+      "command": [
+        "yarn",
+        "up",
+        "@babel/*@^7"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn up @babel/*@^7",
+          "line": 48
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-48"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION",
+      "condition": {
+        "expression": "matrix.babel-version == '7'",
+        "result": "TRUE"
+      }
+    },
+    {
+      "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-build-3",
+      "kind": "build",
+      "command": [
+        "yarn",
+        "run",
+        "build"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-install-2"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn run build",
+          "line": 50
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-unknown-4",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "test-only"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version18.20.0-webpack-version5.61.0-babel-version7-osubuntu-latest-build-3"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test-only",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "lint-coverage-osubuntu-latest-node-versionlatest-install-0",
+      "kind": "install",
+      "command": [
+        "yarn"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn",
+          "line": 41
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile yarn.lock",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 1 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "lint-coverage-osubuntu-latest-node-versionlatest-unknown-1",
+      "kind": "unknown",
+      "command": [
+        "yarn",
+        "tsc"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "lint-coverage-osubuntu-latest-node-versionlatest-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn tsc",
+          "line": 71
+        }
+      ],
+      "confidence": "DERIVED",
+      "unresolved": [],
+      "executable": false,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [
+        "script-54"
+      ],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    },
+    {
+      "id": "lint-coverage-osubuntu-latest-node-versionlatest-lint-2",
+      "kind": "lint",
+      "command": [
+        "yarn",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v3",
+          "line": 38
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "lint-coverage-osubuntu-latest-node-versionlatest-unknown-1"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "yarn test",
+          "line": 52
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_BODY"
+    }
+  ],
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/ci.yml, job `test`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "corepack",
+          "enable"
+        ],
+        "commandIdentity": "corepack enable",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T10:44:22.788Z",
+        "endedAt": "2026-09-02T10:44:22.857Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 0.08,
+        "wallMs": 69,
+        "outputTail": "\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "yarn"
+        ],
+        "commandIdentity": "yarn",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T10:44:22.858Z",
+        "endedAt": "2026-09-02T10:44:36.953Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 28.22,
+        "wallMs": 14094,
+        "outputTail": "➤ YN0000: · Yarn 4.17.0\n➤ YN0000: ┌ Resolution step\n➤ YN0000: └ Completed\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 410 packages were added to the project (+ 45.58 MiB).\n➤ YN0000: └ Completed in 10s 345ms\n➤ YN0000: ┌ Link step\n➤ YN0000: └ Completed in 2s 603ms\n➤ YN0000: · Done in 13s 154ms\n\n"
+      },
+      {
+        "stepId": "reference#2",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "add",
+          "-D",
+          "webpack@5"
+        ],
+        "commandIdentity": "yarn add -D webpack@5",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T10:44:36.954Z",
+        "endedAt": "2026-09-02T10:44:39.929Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 4.17,
+        "wallMs": 2975,
+        "outputTail": "➤ YN0000: · Yarn 4.17.0\n➤ YN0000: ┌ Resolution step\n➤ YN0085: │ + webpack@npm:5.110.3, @jridgewell/trace-mapping@npm:0.3.31, acorn@npm:8.18.0, enhanced-resolve@npm:5.24.5, minimizer-webpack-plugin@npm:5.8.0, and 2 more.\n➤ YN0085: │ - acorn-import-phases@npm:1.0.4, enhanced-resolve@npm:5.24.1, eslint-scope@npm:5.1.1, estraverse@npm:4.3.0, loader-runner@npm:4.3.2, and 4 more.\n➤ YN0000: └ Completed in 0s 543ms\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 7 packages were added to the project (+ 3.41 MiB).\n➤ YN0000: └ Completed in 0s 880ms\n➤ YN0000: ┌ Link step\n➤ YN0000: └ Completed in 0s 935ms\n➤ YN0000: · Done in 2s 425ms\n\n"
+      },
+      {
+        "stepId": "reference#3",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "up",
+          "@babel/*@^7"
+        ],
+        "commandIdentity": "yarn up @babel/*@^7",
+        "spawnedWithoutShell": true,
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T10:44:39.930Z",
+        "endedAt": "2026-09-02T10:44:44.938Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 8.16,
+        "wallMs": 5008,
+        "outputTail": "➤ YN0000: · Yarn 4.17.0\n➤ YN0000: ┌ Resolution step\n➤ YN0085: │ + @babel/cli@npm:7.29.7, @babel/core@npm:7.29.7, @babel/eslint-parser@npm:7.29.7, @babel/preset-env@npm:7.29.7, @babel/code-frame@npm:7.29.7, and 126 more.\n➤ YN0085: │ - @babel/cli@npm:8.0.1, @babel/code-frame@npm:8.0.0, @babel/compat-data@npm:8.0.0, @babel/core@npm:8.0.1, @babel/eslint-parser@npm:8.0.1, and 91 more.\n➤ YN0000: └ Completed in 1s 171ms\n➤ YN0000: ┌ Post-resolution validation\n➤ YN0060: │ eslint is listed by your project with version 10.6.0 (pc97038), which doesn't satisfy what @babel/eslint-parser and other dependencies request (but they have non-overlapping ranges!).\n➤ YN0086: │ Some peer dependencies are incorrectly met by your project; run yarn explain peer-requirements <hash> for details, where <hash> is the six-letter p-prefixed code.\n➤ YN0000: └ Completed\n➤ YN0000: ┌ Fetch step\n➤ YN0013: │ 129 packages were added to the project (+ 3.38 MiB).\n➤ YN0000: └ Completed in 1s 22ms\n➤ YN0000: ┌ Link step\n➤ YN0000: └ Completed in 2s 65ms\n➤ YN0000: · Done with warnings in 4s 340ms\n\n"
+      },
+      {
+        "stepId": "reference#4",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "run",
+          "build"
+        ],
+        "commandIdentity": "yarn run build",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T10:44:44.939Z",
+        "endedAt": "2026-09-02T10:44:46.292Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 1.66,
+        "wallMs": 1353,
+        "outputTail": "Successfully compiled 6 files with Babel (366ms).\n\n"
+      },
+      {
+        "stepId": "reference#5",
+        "arm": "reference",
+        "command": [
+          "yarn",
+          "test-only"
+        ],
+        "commandIdentity": "yarn test-only",
+        "workingDirectory": "/workspace/ci-repro-work/reference",
+        "environment": {},
+        "startedAt": "2026-09-02T10:44:46.292Z",
+        "endedAt": "2026-09-02T10:44:50.709Z",
+        "exitStatus": 1,
+        "outcomeLayer": "repository",
+        "cpuSeconds": 10.95,
+        "wallMs": 4415,
+        "failures": 2,
+        "failedNames": [
+          "webpack",
+          "webpack"
+        ],
+        "outputTail": "TAP version 13\n# Subtest: webpack\n    # Subtest: should output files to cache directory\n    ok 1 - should output files to cache directory\n      ---\n      duration_ms: 1137.567434\n      type: 'test'\n      ...\n    # Subtest: should output json.gz files to standard cache dir by default\n    ok 2 - should output json.gz files to standard cache dir by default\n      ---\n      duration_ms: 83.300254\n      type: 'test'\n      ...\n    # Subtest: should output non-compressed files to standard cache dir when cacheCompression is set to false\n    ok 3 - should output non-compressed files to standard cache dir when cacheCompression is set to false\n      ---\n      duration_ms: 55.110028\n      type: 'test'\n      ...\n    # Subtest: should output files to standard cache dir if set to true in query\n    ok 4 - should output files to standard cache dir if set to true in query\n      ---\n      duration_ms: 46.929595\n      type: 'test'\n      ...\n    # Subtest: should read from cache directory if cached file exists\n    ok 5 - should read from cache directory if cached file exists\n      ---\n      duration_ms: 78.783328\n      type: 'test'\n      ...\n    # Subtest: should have one file per module\n    ok 6 - should have one file per module\n      ---\n      duration_ms: 78.141036\n      type: 'test'\n      ...\n    # Subtest: should generate a new file if the identifier changes\n    ok 7 - should generate a new file if the identifier changes\n      ---\n      duration_ms: 109.087016\n      type: 'test'\n      ...\n    # Subtest: should allow to specify the .babelrc file\n    ok 8 - should allow to specify the .babelrc file\n      ---\n      duration_ms: 83.475415\n      type: 'test'\n      ...\n    # Subtest: should cache result when there are external dependencies\n    ok 9 - should cache result when there are external dependencies\n      ---\n      duration_ms: 87.24291\n      type: 'test'\n      ...\n    # Subtest: should output debug logs when stats.loggingDebug includes babel-loader\n    not ok 10 - should output debug logs when stats.loggingDebug includes babel-loader\n      ---\n      duration_ms: 80.70738\n      type: 'test'\n      location: '/workspace/ci-repro-work/reference/test/cache.test.js:415:3'\n      failureType: 'testCodeFailure'\n      error: |-\n        The input did not match the regular expression /normalizing loader options\\n\\s+resolving Babel configs\\n\\s+cache is enabled\\n\\s+reading cache file.+\\n\\s+discarded cache as it can not be read\\n\\s+creating cache folder.+\\n\\s+applying Babel transform\\n\\s+writing result to cache file.+\\n\\s+added '.+babel.config.json' to webpack dependencies/. Input:\n        \n        'asset main.js 5.52 KiB [emitted] (name: main)\\n' +\n          'runtime modules 614 bytes 3 modules\\n' +\n          'cacheable modules 295 bytes\\n' +\n          '  ./test/fixtures/basic.js 153 bytes [built] [code generated]\\n' +\n          '  ./test/fixtures/import.js 99 bytes [built] [code generated]\\n' +\n          '  ./test/fixtures/constant.js 43 bytes [built] [code generated]\\n' +\n          'webpack 5.110.3 compiled successfully in 57 ms'\n        \n      code: 'ERR_ASSERTION'\n      name: 'AssertionError'\n      expected:\n      actual: |-\n        asset main.js 5.52 KiB [emitted] (name: main)\n        runtime modules 614 bytes 3 modules\n        cacheable modules 295 bytes\n          ./test/fixtures/basic.js 153 bytes [built] [code generated]\n          ./test/fixtures/import.js 99 bytes [built] [code generated]\n          ./test/fixtures/constant.js 43 bytes [built] [code generated]\n        webpack 5.110.3 compiled successfully in 57 ms\n      operator: 'match'\n      stack: |-\n        TestContext.<anonymous> (file:///workspace/ci-repro-work/reference/test/cache.test.js:440:12)\n        async Test.run (node:internal/test_runner/test:1054:7)\n        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)\n      ...\n    1..10\nnot ok 1 - webpack\n  ---\n  duration_ms: 1843.276622\n  type: 'suite'\n  location: '/workspace/ci-repro-work/reference/test/cache.test.js:448:8'\n  failureType: 'subtestsFailed'\n  error: '1 subtest failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# Subtest: rspack\n    # Subtest: should output files to cache directory\n    ok 1 - should output files to cache directory\n      ---\n      duration_ms: 56.886851\n      type: 'test'\n      ...\n    # Subtest: should output json.gz files to standard cache dir by default\n    ok 2 - should output json.gz files to standard cache dir by default\n      ---\n      duration_ms: 39.026243\n      type: 'test'\n      ...\n    # Subtest: should output non-compressed files to standard cache dir when cacheCompression is set to false\n    ok 3 - should output non-compressed files to standard cache dir when cacheCompression is set to false\n      ---\n      duration_ms: 44.818143\n      type: 'test'\n      ...\n    # Subtest: should output files to standard cache dir if set to true in query\n    ok 4 - should output files to standard cache dir if set to true in query\n      ---\n      duration_ms: 43.21179\n      type: 'test'\n      ...\n    # Subtest: should read from cache directory if cached file exists\n    ok 5 - should read from cache directory if cached file exists\n      ---\n      duration_ms: 91.216167\n      type: 'test'\n      ...\n    # Subtest: should have one file per module\n    ok 6 - should have one file per module\n      ---\n      duration_ms: 39.928834\n      type: 'test'\n      ...\n    # Subtest: should generate a new file if the identifier changes\n    ok 7 - should generate a new file if the identifier changes\n      ---\n      duration_ms: 84.017795\n      type: 'test'\n      ...\n    # Subtest: should allow to specify the .babelrc file\n    ok 8 - should allow to specify the .babelrc file\n      ---\n      duration_ms: 37.686531\n      type: 'test'\n      ...\n    # Subtest: should cache result when there are external dependencies\n    ok 9 - should cache result when there are external dependencies # SKIP\n      ---\n      duration_ms: 0.14798\n      type: 'test'\n      ...\n    # Subtest: should output debug logs when stats.loggingDebug includes babel-loader\n    ok 10 - should output debug logs when stats.loggingDebug includes babel-loader\n      ---\n      duration_ms: 102.300885\n      type: 'test'\n      ...\n    1..10\nok 2 - rspack\n  ---\n  duration_ms: 540.539002\n  type: 'suite'\n  ...\n# Browserslist: browsers data (caniuse-lite) is 8 months old. Please run:\n#   npx update-browserslist-db@latest\n#   Why you should do it regularly: https://github.com/browserslist/update-db\\#readme\n# Subtest: webpack\n    # Subtest: should transpile the code snippet\n    ok 1 - should transpile the code snippet\n      ---\n      duration_ms: 1007.688504\n      type: 'test'\n      ...\n    # Subtest: should not throw error on syntax error\n    ok 2 - should not throw error on syntax error\n      ---\n      duration_ms: 30.69197\n      type: 'test'\n      ...\n    # Subtest: should not throw without config\n    ok 3 - should not throw without config\n      ---\n      duration_ms: 57.099042\n      type: 'test'\n      ...\n    # Subtest: should return compilation errors with the message included in the stack trace\n    ok 4 - should return compilation errors with the message included in the stack trace\n      ---\n      duration_ms: 31.495161\n      type: 'test'\n      ...\n    # Subtest: should load ESM config files\n    ok 5 - should load ESM config files\n      ---\n      duration_ms: 52.715425\n      type: 'test'\n      ...\n    # Subtest: should track external dependencies\n    ok 6 - should track external dependencies\n      ---\n      duration_ms: 44.219311\n      type: 'test'\n      ...\n    # Subtest: should output debug logs when stats.loggingDebug includes babel-loader\n    not ok 7 - should output debug logs when stats.loggingDebug includes babel-loader\n      ---\n      duration_ms: 97.057177\n      type: 'test'\n      location: '/workspace/ci-repro-work/reference/test/loader.test.js:228:5'\n      failureType: 'testCodeFailure'\n      error: |-\n        The input did not match the regular expression /normalizing loader options\\n\\s+resolving Babel configs\\n\\s+cache is disabled, applying Babel transform/. Input:\n        \n        'asset main.js 6.41 KiB [emitted] (name: main)\\n' +\n          'runtime modules 614 bytes 3 modules\\n' +\n          'cacheable modules 1.15 KiB\\n' +\n          '  ./test/fixtures/basic.js 1.01 KiB [built] [code generated]\\n' +\n          '  ./test/fixtures/import.js 99 bytes [built] [code generated]\\n' +\n          '  ./test/fixtures/constant.js 41 bytes [built] [code generated]\\n' +\n          'webpack 5.110.3 compiled successfully in 73 ms'\n        \n      code: 'ERR_ASSERTION'\n      name: 'AssertionError'\n      expected:\n      actual: |-\n        asset main.js 6.41 KiB [emitted] (name: main)\n        runtime modules 614 bytes 3 modules\n        cacheable modules 1.15 KiB\n          ./test/fixtures/basic.js 1.01 KiB [built] [code generated]\n          ./test/fixtures/import.js 99 bytes [built] [code generated]\n          ./test/fixtures/constant.js 41 bytes [built] [code generated]\n        webpack 5.110.3 compiled successfully in 73 ms\n      operator: 'match'\n      stack: |-\n        TestContext.<anonymous> (file:///workspace/ci-repro-work/reference/test/loader.test.js:239:14)\n        async Test.run (node:internal/test_runner/test:1054:7)\n        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)\n      ...\n    1..7\nnot ok 3 - webpack\n  ---\n  duration_ms: 1324.004605\n  type: 'suite'\n  location: '/workspace/ci-repro-work/reference/test/loader.test.js:54:8'\n  failureType: 'subtestsFailed'\n  error: '1 subtest failed'\n  code: 'ERR_TEST_FAILURE'\n  ...\n# Subtest: rspack\n    # Subtest: should transpile the code snippet\n    ok 1 - should transpile the code snippet\n      ---\n      duration_ms: 106.161812\n      type: 'test'\n      ...\n    # Subtest: should not throw error on syntax error\n    ok 2 - should not throw error on syntax error\n      ---\n      duration_ms: 27.504305\n      type: 'test'\n      ...\n    # Subtest: should not throw without config\n    ok 3 - should not throw without config\n      ---\n      duration_ms: 25.796211\n      type: 'test'\n      ...\n    # Subtest: should return compilation errors with the message included in the stack trace\n    ok 4 - should return compilation errors with the message included in the stack trace\n      ---\n      duration_ms: 35.102347\n      type: 'test'\n      ...\n    # Subtest: should load ESM config files\n    ok 5 - should load ESM config files\n      ---\n      duration_ms: 24.142569\n      type: 'test'\n      ...\n    # Subtest: should track external dependencies\n    ok 6 - should track external dependencies\n      ---\n      duration_ms: 15.535925\n      type: 'test'\n      ...\n    # Subtest: should output debug logs when stats.loggingDebug includes babel-loader\n    ok 7 - should output debug logs when stats.loggingDebug includes babel-loader\n      ---\n      duration_ms: 101.903675\n      type: 'test'\n      ...\n    1..7\nok 4 - rspack\n  ---\n  duration_ms: 337.346894\n  type: 'suite'\n  ...\n# Subtest: webpack\n    # Subtest: should obtain metadata from the transform result\n    ok 1 - should obtain metadata from the transform result\n      ---\n      duration_ms: 855.145888\n      type: 'test'\n      ...\n    # Subtest: should obtain metadata from the transform result with cache\n    ok 2 - should obtain metadata from the transform result with cache\n      ---\n      duration_ms: 80.757121\n      type: 'test'\n      ...\n    1..2\nok 5 - webpack\n  ---\n  duration_ms: 937.430511\n  type: 'suite'\n  ...\n# Subtest: rspack\n    # Subtest: should obtain metadata from the transform result\n    ok 1 - should obtain metadata from the transform result\n      ---\n      duration_ms: 54.278808\n      type: 'test'\n      ...\n    # Subtest: should obtain metadata from the transform result with cache\n    ok 2 - should obtain metadata from the transform result with cache\n      ---\n      duration_ms: 28.538926\n      type: 'test'\n      ...\n    1..2\nok 6 - rspack\n  ---\n  duration_ms: 83.245004\n  type: 'suite'\n  ...\n# Subtest: webpack\n    # Subtest: should interpret options given to the loader\n    ok 1 - should interpret options given to the loader\n      ---\n      duration_ms: 1091.862211\n      type: 'test'\n      ...\n    # Subtest: should throw when options.metadataSubscribers is not an array\n    ok 2 - should throw when options.metadataSubscribers is not an array\n      ---\n      duration_ms: 61.434169\n      type: 'test'\n      ...\n    # Subtest: should throw when options.customize is not a string\n    ok 3 - should throw when options.customize is not a string\n      ---\n      duration_ms: 29.468047\n      type: 'test'\n      ...\n    # Subtest: should throw when options.customize is not an absolute path\n    ok 4 - should throw when options.customize is not an absolute path\n      ---\n      duration_ms: 35.801478\n      type: 'test'\n      ...\n    # Subtest: should warn when options.babelrc is a string\n    ok 5 - should warn when options.babelrc is a string\n      ---\n      duration_ms: 29.995709\n      type: 'test'\n      ...\n    # Subtest: should warn when options.forceEnv is set\n    ok 6 - should warn when options.forceEnv is set\n      ---\n      duration_ms: 60.298697\n      type: 'test'\n      ...\n    1..6\nok 7 - webpack\n  ---\n  duration_ms: 1311.936845\n  type: 'suite'\n  ...\n# Subtest: rspack\n    # Subtest: should interpret options given to the loader\n    ok 1 - should interpret options given to the loader\n      ---\n      duration_ms: 89.186884\n      type: 'test'\n      ...\n    # Subtest: should throw when options.metadataSubscribers is not an array\n    ok 2 - should throw when options.metadataSubscribers is not an array # SKIP\n      ---\n      duration_ms: 0.934982\n      type: 'test'\n      ...\n    # Subtest: should throw when options.customize is not a string\n    ok 3 - should throw when options.customize is not a string # SKIP\n      ---\n      duration_ms: 0.27347\n      type: 'test'\n      ...\n    # Subtest: should throw when options.customize is not an absolute path\n    ok 4 - should throw when options.customize is not an absolute path\n      ---\n      duration_ms: 21.704445\n      type: 'test'\n      ...\n    # Subtest: should warn when options.babelrc is a string\n    ok 5 - should warn when options.babelrc is a string\n      ---\n      duration_ms: 15.197335\n      type: 'test'\n      ...\n    # Subtest: should warn when options.forceEnv is set\n    ok 6 - should warn when options.forceEnv is set\n      ---\n      duration_ms: 13.824492\n      type: 'test'\n      ...\n    1..6\nok 8 - rspack\n  ---\n  duration_ms: 142.286079\n  type: 'suite'\n  ...\n# Subtest: serialize should work on simple object\nok 9 - serialize should work on simple object\n  ---\n  duration_ms: 2.649644\n  type: 'test'\n  ...\n# Subtest: serialize should sort object keys\nok 10 - serialize should sort object keys\n  ---\n  duration_ms: 0.26902\n  type: 'test'\n  ...\n# Subtest: serialize should respect toJSON method\nok 11 - serialize should respect toJSON method\n  ---\n  duration_ms: 0.180001\n  type: 'test'\n  ...\n# Subtest: serialize should support numbers and NaN\nok 12 - serialize should support numbers and NaN\n  ---\n  duration_ms: 0.18539\n  type: 'test'\n  ...\n# Subtest: serialize should support nullish values\nok 13 - serialize should support nullish values\n  ---\n  duration_ms: 0.177651\n  type: 'test'\n  ...\n# Subtest: serialize should support set\nok 14 - serialize should support set\n  ---\n  duration_ms: 0.18216\n  type: 'test'\n  ...\n# Subtest: webpack\n    # Subtest: should output sourcemap\n    ok 1 - should output sourcemap\n      ---\n      duration_ms: 1066.380719\n      type: 'test'\n      ...\n    # Subtest: should output sourcemap properly when set 'inline'\n    ok 2 - should output sourcemap properly when set 'inline'\n      ---\n      duration_ms: 77.496135\n      type: 'test'\n      ...\n    # Subtest: should output devtoolModuleFilename option\n    ok 3 - should output devtoolModuleFilename option\n      ---\n      duration_ms: 54.133578\n      type: 'test'\n      ...\n    # Subtest: should disable sourcemap output with 'sourceMaps:false'\n    ok 4 - should disable sourcemap output with 'sourceMaps:false'\n      ---\n      duration_ms: 59.883496\n      type: 'test'\n      ...\n    # Subtest: should disable sourcemap output with 'sourceMap:false'\n    ok 5 - should disable sourcemap output with 'sourceMap:false'\n      ---\n      duration_ms: 45.582854\n      type: 'test'\n      ...\n    1..5\nok 15 - webpack\n  ---\n  duration_ms: 1305.519734\n  type: 'suite'\n  ...\n# Subtest: rspack\n    # Subtest: should output sourcemap\n    ok 1 - should output sourcemap\n      ---\n      duration_ms: 68.044489\n      type: 'test'\n      ...\n    # Subtest: should output sourcemap properly when set 'inline'\n    ok 2 - should output sourcemap properly when set 'inline'\n      ---\n      duration_ms: 31.901311\n      type: 'test'\n      ...\n    # Subtest: should output devtoolModuleFilename option\n    ok 3 - should output devtoolModuleFilename option\n      ---\n      duration_ms: 26.966184\n      type: 'test'\n      ...\n    # Subtest: should disable sourcemap output with 'sourceMaps:false'\n    ok 4 - should disable sourcemap output with 'sourceMaps:false'\n      ---\n      duration_ms: 23.743288\n      type: 'test'\n      ...\n    # Subtest: should disable sourcemap output with 'sourceMap:false'\n    ok 5 - should disable sourcemap output with 'sourceMap:false'\n      ---\n      duration_ms: 30.584339\n      type: 'test'\n      ...\n    1..5\nok 16 - rspack\n  ---\n  duration_ms: 182.271664\n  type: 'suite'\n  ...\n1..16\n# tests 66\n# suites 10\n# pass 61\n# fail 2\n# cancelled 0\n# skipped 3\n# todo 0\n# duration_ms 3698.103212\n\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v22.23.2",
+    "npm": "10.9.8"
+  },
+  "inferenceArm": {
+    "arm": "inference",
+    "source": "inferred ExecutionGraph",
+    "steps": [],
+    "reachedEnd": false,
+    "node": "v22.23.2",
+    "npm": "10.9.8",
+    "refused": {
+      "reason": "no workflow job provides TEST; the repository may produce this outcome outside GitHub Actions, or this engine did not recognise the step that does",
+      "blockedBy": [],
+      "missingRequirements": []
+    }
+  },
+  "outcome": "REFUSED",
+  "reason": "the engine did not mark the path executable, so the inference arm executed nothing: no workflow job provides TEST; the repository may produce this outcome outside GitHub Actions, or this engine did not recognise the step that does",
+  "producedAt": "2026-09-02T10:44:50.847Z"
+}
