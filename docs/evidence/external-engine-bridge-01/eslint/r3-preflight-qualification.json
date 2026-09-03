@@ -1,0 +1,58 @@
+{
+  "schema": "diffci.ci.r3-qualification/v1",
+  "protocol": "docs/ci-reproduction-05-eligibility.md",
+  "repository": "eslint/eslint",
+  "headSha": "2417cad57d7d1bc4cf3ecf0f0575cfb10ff2011c",
+  "engineInvoked": false,
+  "verdict": "R3_QUALIFIED",
+  "reason": "the reference arm ran to completion and executed a suite, with no environment signals",
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/ci.yml, job `test_on_node`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "install"
+        ],
+        "commandIdentity": "npm install",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\eslint-preflight-work\\reference",
+        "environment": {},
+        "startedAt": "2026-09-03T01:41:19.090Z",
+        "endedAt": "2026-09-03T01:41:51.298Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "wallMs": 32206,
+        "outputTail": "\nup to date, audited 1175 packages in 32s\n\n274 packages are looking for funding\n  run `npm fund` for details\n\n28 vulnerabilities (6 low, 6 moderate, 14 high, 2 critical)\n\nTo address issues that do not require attention, run:\n  npm audit fix\n\nTo address all issues possible (including breaking changes), run:\n  npm audit fix --force\n\nSome issues need review, and may require choosing\na different dependency.\n\nRun `npm audit` for details.\n\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "node",
+          "Makefile",
+          "mocha"
+        ],
+        "commandIdentity": "node Makefile mocha",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\eslint-preflight-work\\reference",
+        "environment": {
+          "NODE_OPTIONS": ""
+        },
+        "startedAt": "2026-09-03T01:41:51.299Z",
+        "endedAt": "2026-09-03T01:44:39.354Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "wallMs": 168054,
+        "tests": 38647,
+        "failures": 0,
+        "outputTail": "Running unit tests\n\n\r\u001b[J\u001b[90m  [\u001b[0m....................................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m...................................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬..................................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬.................................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬................................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬...............................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬..............................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬.............................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬............................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬...........................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬..........................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬.........................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬........................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬.......................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬......................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬.....................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬....................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬...................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬..................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬................\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬...............\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬..............\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.............\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬............\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬...........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬..........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬........\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.......\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬......\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.....\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬....\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬...\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬..\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬.\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\u001b[90m]\u001b[0m\r\u001b[J\u001b[90m  [\u001b[0m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\u001b[90m]\u001b[0m\n\n\u001b[92m \u001b[0m\u001b[32m 38636 passing\u001b[0m\u001b[90m (3m)\u001b[0m\n\u001b[36m \u001b[0m\u001b[36m 11 pending\u001b[0m\n\n\n=============================== Coverage summary ===============================\nStatements   : 99.33% ( 98793/99459 )\nBranches     : 98.32% ( 16740/17025 )\nFunctions    : 99.46% ( 3521/3540 )\nLines        : 99.33% ( 98793/99459 )\n================================================================================\n\n"
+      }
+    ],
+    "reachedEnd": true,
+    "node": "v24.16.0",
+    "npm": "11.13.0"
+  },
+  "producedAt": "2026-09-03T01:44:39.725Z"
+}
