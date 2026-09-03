@@ -1,7 +1,10 @@
 # The Open Evidence Study 2026 (workstream W, item 4)
 
 **Status:** built and rendered, NOT deployed. Deploying it publishes it; that is a founder decision
-(see "Before publishing" below).
+(see "Before publishing" below). Founder review of 2026-09-03: keep the PDF as the primary public
+evidence; derive the editorial article ([`05-editorial-path-rule.md`](05-editorial-path-rule.md)) from
+it; drop the Sources section, because paths into a private repository are noise to an external reader;
+keep "What this study does not establish" exactly as it is.
 
 ## Why this exists
 
@@ -21,13 +24,14 @@ a "what this study does not establish" section that the test suite refuses to le
 
 | Piece | Path | Notes |
 |---|---|---|
-| Findings module (the only copy of every number) | [`../../src/open-study/diffci-open-evidence-2026.ts`](../../src/open-study/diffci-open-evidence-2026.ts) | 100+ figures, each with category, value, unit, scope, evidence level and a source path that must exist; plus the section prose, tables, one chart, the not-established list and the sources table |
+| Findings module (the only copy of every number) | [`../../src/open-study/diffci-open-evidence-2026.ts`](../../src/open-study/diffci-open-evidence-2026.ts) | 100+ figures, each with category, value, unit, scope, evidence level and an internal source path that must exist; plus the section prose, tables, one chart and the not-established list |
 | Renderer | [`../../scripts/render-open-study.ts`](../../scripts/render-open-study.ts) | `npm run study:render` writes the page, CSV, PDF (pdf-lib, no headless browser) and LICENSE.txt into `site/` |
 | Study page | `site/research/diffci-open-evidence-2026.html` | Same stylesheet and chrome as the three case studies; inline SVG diverging-bar chart using the site's two validated data-viz slots |
-| Data release | `site/research/2026/diffci-open-evidence-2026.csv` | One row per figure: `category,metric,value,unit,scope,evidence_level,source,note,study_id` |
-| Report | `site/research/2026/diffci-open-evidence-2026.pdf` | Rendered from the same module; creation date pinned to `asOf` |
+| Data release | `site/research/2026/diffci-open-evidence-2026.csv` | One row per figure: `category,metric,value,unit,scope,evidence_level,source_report,note,study_id`. `source_report` is the report's label, not its path |
+| Report | `site/research/2026/diffci-open-evidence-2026.pdf` | Rendered from the same module; creation date pinned to `asOf`. **The primary public evidence artefact** |
 | Licence | `site/research/2026/LICENSE.txt` | Same shape as DentalPresence's, with the extra paragraph that named repositories keep their own licences |
-| Guards | [`../../tests/open-study/open-study.test.ts`](../../tests/open-study/open-study.test.ts) | Every source path exists; every cited report is in the sources table; rendered files on disk are byte-identical to a fresh render; chart equals table; disclaimer, licence and the unflattering numbers are present |
+| Guards | [`../../tests/open-study/open-study.test.ts`](../../tests/open-study/open-study.test.ts) | Every internal source path exists; every cited report has a label; rendered files on disk are byte-identical to a fresh render; chart equals table; disclaimer, licence and the unflattering numbers are present; no internal path or `.md` reference leaks into any published artefact |
+| Editorial article | [`05-editorial-path-rule.md`](05-editorial-path-rule.md) | 1,800–2,500-word contributed-article draft derived from the study. Not on the site |
 | Homepage | `site/index.html` | A fourth card in the evidence section and a footer link |
 
 Evidence levels in the study: `MEASURED` (a clock or counter produced it), `PREDICTED` (a frozen
@@ -39,37 +43,42 @@ MEASURED / ESTIMATED / UNKNOWN axis; there is no ESTIMATED figure in the study b
 
 The four in [`README.md`](README.md), plus:
 
-5. **A figure without a source path that exists on disk fails the test suite.** Not a ledger row this
-   time: the module *is* the ledger for the study, and `03-evidence-ledger.md` points at it.
+5. **A figure without an internal source path that exists on disk fails the test suite.** Not a ledger
+   row this time: the module *is* the ledger for the study, and `03-evidence-ledger.md` points at it.
 6. **The rendered files are a build output, not a source.** Never hand-edit `site/research/*`; edit
    the module and re-render. The drift test enforces this.
 7. **The named repositories are described, not endorsed by.** The disclaimer is on the page, in the
    PDF cover, and in the licence.
+8. **Nothing published points into the private repository.** The CSV names the report that produced
+   each row; the path stays internal. A test enforces this too.
+
+## The evidence-chain gap, and the planned fix
+
+The study says every figure traces to a report, and an external reader cannot open those reports.
+The CSV and the licence are good; the chain behind them is not yet auditable from outside. The fix is
+not to open-source DiffCI. It is to publish an **evidence bundle** under the same licence: the frozen
+methodologies, the aggregate inputs and results, the experiment manifests and checksums, the scripts
+where they expose nothing proprietary, and enough reproduction instructions to audit the major claims.
+Open-source the evidence, not necessarily the product. The page and the PDF now say this is the planned
+next release. It is not built and not scheduled; it should be scoped as its own item.
 
 ## Before publishing (founder-only decisions)
 
 Nothing below has been done. The site deploy command is `npm run site:deploy`; running it publishes
 the study at `https://diffci.com/research/diffci-open-evidence-2026`.
 
-1. **Deploy or not.** The study is public content the moment the site is deployed. Read the page
-   first, including the "not established" list, and decide whether every sentence is one you would
+1. **Deploy or not.** The study is public content the moment the site is deployed. Read the PDF
+   first, including the "not established" section, and decide whether every sentence is one you would
    defend to a maintainer of the named repositories.
-2. **"Open source" needs the sources reachable.** DentalPresence's study cited a public crawl. This
-   one cites 23 reports by path in a repository that is private. The page currently says so, in a
-   sentence that reads honestly but weakly. Options: make the repository public; publish `docs/` (or
-   just the cited reports) somewhere public; or leave it and accept that "ask for the report by name"
-   is the access route. Flip `SOURCE_REPORTS_PUBLIC` in the renderer and re-render when that changes.
-3. **Byline.** The study is attributed to "DiffCI", like DentalPresence's was to "DentalPresence". The
+2. **Byline.** The study is attributed to "DiffCI", like DentalPresence's was to "DentalPresence". The
    DentistryIQ piece carried a personal byline. Decide whether the study page should name an author,
    and whether the footer's "no company identity yet" line is acceptable next to a citable study.
-4. **The press angle.** The DentistryIQ article worked because it turned the study into a self-check
-   a reader could act on in fifteen minutes. The equivalent here is the finding that install cost, not
-   selection quality, decides the number: a reader can look at their own CI's install-to-test ratio
-   and know which of 44% and 90% is closer to their ceiling before installing anything. That is a
-   contributed-article pitch for developer press, not a press release. No outreach is authorised by
-   this document; outreach of any kind is still gated on the founder go recorded in
-   [`../yc/README.md`](../yc/README.md).
-5. **Contact.** A citable study invites replies. There is still no contact route on the site.
+3. **The article.** The draft in `05-editorial-path-rule.md` is written for a developer publication as
+   a contributed piece. It needs a byline, a target publication, and the founder go on outreach
+   recorded in [`../yc/README.md`](../yc/README.md) before it is sent anywhere.
+4. **Contact.** A citable study invites replies. There is still no contact route on the site.
+5. **The evidence bundle.** Decide whether it is worth doing before or after the first external reader
+   asks for it.
 
 ## What must not be implied
 

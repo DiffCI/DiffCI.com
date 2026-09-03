@@ -30,9 +30,19 @@ export const repoRoot = path.resolve(scriptDir, "..");
 
 export const SITE_ORIGIN = "https://diffci.com";
 
-/** Flip to true once the repository (or at least docs/) is public; the page wording follows it. */
-export const SOURCE_REPORTS_PUBLIC = false;
-export const SOURCE_REPOSITORY_URL = "https://github.com/adityankale190895/DiffCI.com";
+// Source paths stay in the findings module (the test suite requires each to exist) but are NOT
+// published: the repository is private, so a path a reader cannot open is noise, not evidence.
+// The public artefacts carry the report's label instead. Founder decision, 2026-09-03; the
+// planned fix is an evidence bundle (frozen methodologies, aggregate inputs/results, manifests,
+// checksums) published alongside the study - see docs/website/04-open-study.md.
+export function sourceLabel(study: StudyFindings, sourcePath: string): string {
+  const report = study.sourceReports.find((s) => s.path === sourcePath);
+  if (!report) throw new Error(`figure cites a report not in sourceReports: ${sourcePath}`);
+  return report.what;
+}
+
+export const EVIDENCE_LEVEL_KEY =
+  "MEASURED, a clock or a counter produced the number in a real execution; PREDICTED, a frozen rule's prediction, committed before the measurement it predicted; PROCESS_FACT, something that happened rather than a measurement; ABSTAINED, DiffCI declined to produce a number and the abstention is the finding.";
 
 /** Download files are named by the page slug, not the versioned study id, so links stay stable across versions. */
 const slug = (study: StudyFindings) => path.posix.basename(study.pagePath);
@@ -74,11 +84,11 @@ const csvField = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"`
 // CSV
 
 export function renderCsv(study: StudyFindings): string {
-  const header = ["category", "metric", "value", "unit", "scope", "evidence_level", "source", "note", "study_id"];
+  const header = ["category", "metric", "value", "unit", "scope", "evidence_level", "source_report", "note", "study_id"];
   const lines = [header.join(",")];
   for (const fig of study.figures) {
     lines.push(
-      [fig.category, fig.metric, fig.value, fig.unit, fig.scope, fig.level, fig.source, fig.note ?? "", study.studyId]
+      [fig.category, fig.metric, fig.value, fig.unit, fig.scope, fig.level, sourceLabel(study, fig.source), fig.note ?? "", study.studyId]
         .map(csvField)
         .join(","),
     );
@@ -200,10 +210,7 @@ function sectionHtml(s: StudySection): string {
 
 export function renderHtml(study: StudyFindings): string {
   const urls = publicUrls(study);
-  const description = `${study.subtitle}. Every number, its evidence level and its source, under CC BY 4.0.`;
-  const sourceIntro = SOURCE_REPORTS_PUBLIC
-    ? `Every figure above cites the report that produced it, by path in the <a href="${SOURCE_REPOSITORY_URL}">DiffCI repository</a>.`
-    : `Every figure above cites the report that produced it, by path in the DiffCI repository. The repository is private at the time of publication; the paths are given so a reader can ask for a specific report by name, and so that they resolve directly if and when the repository is opened.`;
+  const description = `${study.subtitle}. Every number with its evidence level, under CC BY 4.0.`;
 
   const figuresHtml = study.headlineFindings
     .map((h) => `    <div><b>${escapeHtml(h.value)}</b><span>${escapeHtml(h.label)}</span></div>`)
@@ -212,10 +219,6 @@ export function renderHtml(study: StudyFindings): string {
   const sectionsHtml = study.sections.map(sectionHtml).join("\n\n");
 
   const notEstablished = study.notEstablished.map((n) => `    <li>${escapeHtml(n)}</li>`).join("\n");
-
-  const sources = study.sourceReports
-    .map((s) => `      <tr><td><code>${escapeHtml(s.path)}</code></td><td>${escapeHtml(s.what)}</td></tr>`)
-    .join("\n");
 
   const toc = study.sections.map((s) => `    <li><a href="#${s.id}">${escapeHtml(s.title)}</a></li>`).join("\n");
 
@@ -295,7 +298,7 @@ ${figuresHtml}
 
   <p class="fine">
     Evidence window ${escapeHtml(study.windowStart)} to ${escapeHtml(study.windowEnd)}. Every figure on this page is in the
-    <a href="${urls.csv}">CSV</a> with its evidence level and the path of the report that produced it.
+    <a href="${urls.csv}">CSV</a> with its evidence level and the report that produced it.
     Download the <a href="${urls.pdf}">PDF</a>, or read the <a href="${urls.license}">licence</a>.
   </p>
 
@@ -303,7 +306,6 @@ ${figuresHtml}
 ${toc}
     <li><a href="#not-established">What this study does not establish</a></li>
     <li><a href="#cite">Download and cite</a></li>
-    <li><a href="#sources">Sources</a></li>
   </ul>
 
 ${sectionsHtml}
@@ -321,27 +323,21 @@ ${notEstablished}
     The licence covers the study materials only, not the DiffCI software or the named repositories' code.
   </p>
   <ul>
-    <li><a href="${urls.csv}">All ${study.figures.length} figures as CSV</a> - category, metric, value, unit, scope, evidence level, source path, note.</li>
+    <li><a href="${urls.csv}">All ${study.figures.length} figures as CSV</a> - category, metric, value, unit, scope, evidence level, source report, note.</li>
     <li><a href="${urls.pdf}">Full report as PDF</a> - the same content as this page, rendered from the same data.</li>
     <li><a href="${urls.license}">LICENSE.txt</a></li>
   </ul>
-  <p>Suggested citation:</p>
-  <pre class="cite">${escapeHtml(citation(study))}</pre>
-
-  <h2 id="sources">Sources</h2>
-  <p>${sourceIntro}</p>
   <p>
     Evidence levels used in the CSV: <strong>MEASURED</strong>, a clock or a counter produced the number in a real execution;
     <strong>PREDICTED</strong>, a frozen rule's prediction, committed before the measurement it predicted;
     <strong>PROCESS_FACT</strong>, something that happened rather than a measurement;
     <strong>ABSTAINED</strong>, DiffCI declined to produce a number and the abstention is the finding.
+    Each row names the internal report that produced it; those reports are not yet public, and an evidence
+    bundle of the frozen methodologies, aggregate inputs and results, manifests and checksums is the planned
+    next release under this licence.
   </p>
-  <div class="table-scroll">
-    <table>
-      <tr><th>Report</th><th>What it contains</th></tr>
-${sources}
-    </table>
-  </div>
+  <p>Suggested citation:</p>
+  <pre class="cite">${escapeHtml(citation(study))}</pre>
 
 </article>
 </main>
@@ -622,18 +618,9 @@ export async function renderPdf(study: StudyFindings): Promise<Uint8Array> {
   doc.text(`CSV of all ${study.figures.length} figures: ${SITE_ORIGIN}${urls.csv}`, { size: 9, color: INK2, after: 2 });
   doc.text(`Study page: ${urls.page}`, { size: 9, color: INK2, after: 2 });
   doc.text(`Licence: ${study.license.url}`, { size: 9, color: INK2, after: 10 });
+  doc.text(`Evidence levels used in the CSV: ${EVIDENCE_LEVEL_KEY} Each row names the internal report that produced it; those reports are not yet public, and an evidence bundle of the frozen methodologies, aggregate inputs and results, manifests and checksums is the planned next release under this licence.`, { size: 9, color: INK2, leading: 12.5, after: 8 });
   doc.text("Suggested citation:", { size: 9.5, font: bold, after: 3 });
   doc.text(citation(study), { size: 9, color: INK2, leading: 12.5, after: 10 });
-
-  doc.heading("Sources");
-  doc.text(
-    SOURCE_REPORTS_PUBLIC
-      ? `Every figure cites the report that produced it, by path in the DiffCI repository at ${SOURCE_REPOSITORY_URL}.`
-      : "Every figure cites the report that produced it, by path in the DiffCI repository. The repository is private at the time of publication; the paths are given so a reader can ask for a specific report by name, and so that they resolve directly if and when the repository is opened.",
-    { size: 9.5, leading: 13.5, after: 6 },
-  );
-  doc.text("Evidence levels used in the CSV: MEASURED, a clock or a counter produced the number in a real execution; PREDICTED, a frozen rule's prediction, committed before the measurement it predicted; PROCESS_FACT, something that happened rather than a measurement; ABSTAINED, DiffCI declined to produce a number and the abstention is the finding.", { size: 9, color: INK2, leading: 12.5, after: 8 });
-  doc.table({ id: "sources", caption: "Report paths are relative to the repository root.", columns: ["Report", "What it contains"], numericColumns: [], rows: study.sourceReports.map((s) => [s.path, s.what]) });
 
   return pdf.save();
 }

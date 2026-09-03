@@ -103,8 +103,10 @@ The study's figures live in one typed module,
 [`src/open-study/diffci-open-evidence-2026.ts`](../../src/open-study/diffci-open-evidence-2026.ts),
 where every figure carries its value, unit, scope, evidence level and a source path that
 `tests/open-study/open-study.test.ts` requires to exist. That module is the ledger for the study; the
-CSV the site serves is that array verbatim. The rows below are the headline figures, so a reader of
-this file sees them beside the case-study rows without opening the module.
+CSV the site serves is that array with each internal path replaced by its report's label (the
+repository is private, so published artefacts name reports rather than paths). The rows below are the
+headline figures, so a reader of this file sees them beside the case-study rows without opening the
+module.
 
 | Claim | Value | Level | Source |
 |---|---|---|---|

@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DiffCI Open Evidence Study 2026</title>
-<meta name="description" content="What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number, its evidence level and its source, under CC BY 4.0.">
+<meta name="description" content="What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number with its evidence level, under CC BY 4.0.">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="DiffCI">
 <meta property="og:title" content="DiffCI Open Evidence Study 2026">
-<meta property="og:description" content="What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number, its evidence level and its source, under CC BY 4.0.">
+<meta property="og:description" content="What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number with its evidence level, under CC BY 4.0.">
 <meta property="og:url" content="https://diffci.com/research/diffci-open-evidence-2026">
 <meta name="twitter:card" content="summary">
 <link rel="canonical" href="https://diffci.com/research/diffci-open-evidence-2026">
@@ -20,7 +20,7 @@
   "@context": "https://schema.org",
   "@type": "Dataset",
   "name": "DiffCI Open Evidence Study 2026",
-  "description": "What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number, its evidence level and its source, under CC BY 4.0.",
+  "description": "What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number with its evidence level, under CC BY 4.0.",
   "url": "https://diffci.com/research/diffci-open-evidence-2026",
   "identifier": "diffci-oes-2026-v1",
   "version": "v1",
@@ -89,7 +89,7 @@
 
   <p class="fine">
     Evidence window 2026-08-19 to 2026-09-03. Every figure on this page is in the
-    <a href="/research/2026/diffci-open-evidence-2026.csv">CSV</a> with its evidence level and the path of the report that produced it.
+    <a href="/research/2026/diffci-open-evidence-2026.csv">CSV</a> with its evidence level and the report that produced it.
     Download the <a href="/research/2026/diffci-open-evidence-2026.pdf">PDF</a>, or read the <a href="/research/2026/LICENSE.txt">licence</a>.
   </p>
 
@@ -103,7 +103,6 @@
     <li><a href="#methodology">Methodology and research integrity</a></li>
     <li><a href="#not-established">What this study does not establish</a></li>
     <li><a href="#cite">Download and cite</a></li>
-    <li><a href="#sources">Sources</a></li>
   </ul>
 
   <h2 id="where-the-advantage-lives">The advantage is real, narrow, and concentrated in small repositories</h2>
@@ -355,49 +354,21 @@
     The licence covers the study materials only, not the DiffCI software or the named repositories' code.
   </p>
   <ul>
-    <li><a href="/research/2026/diffci-open-evidence-2026.csv">All 102 figures as CSV</a> - category, metric, value, unit, scope, evidence level, source path, note.</li>
+    <li><a href="/research/2026/diffci-open-evidence-2026.csv">All 102 figures as CSV</a> - category, metric, value, unit, scope, evidence level, source report, note.</li>
     <li><a href="/research/2026/diffci-open-evidence-2026.pdf">Full report as PDF</a> - the same content as this page, rendered from the same data.</li>
     <li><a href="/research/2026/LICENSE.txt">LICENSE.txt</a></li>
   </ul>
-  <p>Suggested citation:</p>
-  <pre class="cite">DiffCI. (2026). DiffCI Open Evidence Study 2026 (diffci-oes-2026-v1): What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. https://diffci.com/research/diffci-open-evidence-2026</pre>
-
-  <h2 id="sources">Sources</h2>
-  <p>Every figure above cites the report that produced it, by path in the DiffCI repository. The repository is private at the time of publication; the paths are given so a reader can ask for a specific report by name, and so that they resolve directly if and when the repository is opened.</p>
   <p>
     Evidence levels used in the CSV: <strong>MEASURED</strong>, a clock or a counter produced the number in a real execution;
     <strong>PREDICTED</strong>, a frozen rule's prediction, committed before the measurement it predicted;
     <strong>PROCESS_FACT</strong>, something that happened rather than a measurement;
     <strong>ABSTAINED</strong>, DiffCI declined to produce a number and the abstention is the finding.
+    Each row names the internal report that produced it; those reports are not yet public, and an evidence
+    bundle of the frozen methodologies, aggregate inputs and results, manifests and checksums is the planned
+    next release under this licence.
   </p>
-  <div class="table-scroll">
-    <table>
-      <tr><th>Report</th><th>What it contains</th></tr>
-      <tr><td><code>docs/research/2026-08-21-stage0-full-experiment-final-report.md</code></td><td>Stage 0 final report: 20 repositories, 2,000 deltas, opportunity buckets, safety recall, overhead</td></tr>
-      <tr><td><code>docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md</code></td><td>cal.com complete-job savings and stage timings for PR #29940</td></tr>
-      <tr><td><code>docs/research/2026-08-24-calcom-execution-observability/13-five-merge-batch-results.md</code></td><td>cal.com five predeclared merges, executed and timed</td></tr>
-      <tr><td><code>docs/research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md</code></td><td>deepseek-harness per-merge execution and economics</td></tr>
-      <tr><td><code>docs/research/2026-08-25-deepseek-execution-validation/09-aggregate-and-comparison.md</code></td><td>Aggregate and cross-repository comparison, mutation recall, selection honouring</td></tr>
-      <tr><td><code>docs/compute-economics-results.md</code></td><td>Compute economics against the path-rule comparator: hono</td></tr>
-      <tr><td><code>docs/safety-validation-milestone.md</code></td><td>Safety-validation phase close: 25 canonical cases, hono and zod</td></tr>
-      <tr><td><code>docs/hono-cross-environment-reproduction.md</code></td><td>hono cross-environment reproduction, 13 of 13</td></tr>
-      <tr><td><code>docs/external-validation-conclusion.md</code></td><td>External validation #1 frozen conclusion: five targets, immer</td></tr>
-      <tr><td><code>docs/immer-prediction-frozen.md</code></td><td>immer economic prediction, frozen before measurement</td></tr>
-      <tr><td><code>docs/generation-c-observation-result.md</code></td><td>GENERATION_C_01 sealed-target observation</td></tr>
-      <tr><td><code>docs/mechanism-isolation-02-result.md</code></td><td>MECHANISM_ISOLATION_02 and the close of the mechanism line</td></tr>
-      <tr><td><code>docs/position-and-next-phase.md</code></td><td>The claim as of 2026-09-01 and the direct-only baseline standard</td></tr>
-      <tr><td><code>docs/mapping-density-survey.md</code></td><td>Test-to-production mapping density across the frozen 40</td></tr>
-      <tr><td><code>docs/qualification-funnel.md</code></td><td>Canonical qualification funnel</td></tr>
-      <tr><td><code>docs/survey-small-repo-diagnostic.md</code></td><td>tsconfig.json refusals on the three small repositories</td></tr>
-      <tr><td><code>docs/ci-reproduction-05-result.md</code></td><td>CI_REPRODUCTION_05: eslint REFUSED, correctly</td></tr>
-      <tr><td><code>docs/engine-coverage-01-plan.md</code></td><td>ENGINE_COVERAGE_01 baseline: the first pilot's four outcomes</td></tr>
-      <tr><td><code>docs/evidence/engine-coverage-01-item-1/results.md</code></td><td>Time-boxed dependency basis: eslint REPRODUCED at its pinned commit</td></tr>
-      <tr><td><code>docs/symbol-precision-result.md</code></td><td>vue symbol-precision diagnostic</td></tr>
-      <tr><td><code>docs/research/2026-08-22-preflight-p1-replay-results.md</code></td><td>Pre-flight P1 leakage-safe replay on DiffCI's own CI</td></tr>
-      <tr><td><code>docs/website/03-evidence-ledger.md</code></td><td>Website evidence ledger: every published number and its level</td></tr>
-      <tr><td><code>docs/yc/metrics.md</code></td><td>YC sprint metrics: zero external installs, verified by query</td></tr>
-    </table>
-  </div>
+  <p>Suggested citation:</p>
+  <pre class="cite">DiffCI. (2026). DiffCI Open Evidence Study 2026 (diffci-oes-2026-v1): What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. https://diffci.com/research/diffci-open-evidence-2026</pre>
 
 </article>
 </main>

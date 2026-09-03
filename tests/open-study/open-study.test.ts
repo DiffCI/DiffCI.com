@@ -46,8 +46,17 @@ test("rendered files on disk match the findings module (run `npm run study:rende
 
 test("CSV has one row per figure and a stable header", () => {
   const lines = renderCsv(study).trimEnd().split("\n");
-  assert.equal(lines[0], "category,metric,value,unit,scope,evidence_level,source,note,study_id");
+  assert.equal(lines[0], "category,metric,value,unit,scope,evidence_level,source_report,note,study_id");
   assert.equal(lines.length - 1, study.figures.length);
+});
+
+test("published artefacts do not cite internal repository paths", () => {
+  // The repository is private; a path a reader cannot open is noise, not evidence. Source paths
+  // stay in the module for the existence check above and are replaced by report labels on output.
+  for (const [name, text] of [["html", renderHtml(study)], ["csv", renderCsv(study)], ["license", renderLicense(study)]] as const) {
+    assert.doesNotMatch(text, /\bdocs\/(research|evidence|website|yc)\//, `${name} cites an internal path`);
+    assert.doesNotMatch(text, /\.md\b/, `${name} cites a markdown file`);
+  }
 });
 
 test("chart data agrees with the per-repository table", () => {
