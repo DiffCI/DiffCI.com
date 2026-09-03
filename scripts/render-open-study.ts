@@ -691,8 +691,8 @@ class Doc {
     const top = this.y;
     for (const d of c.data) {
       const w = Math.max(1.5, (d.value / max) * plotW);
-      this.page.drawText(pdfSafe(d.label), { x: MARGIN, y: this.y - 9, size: 7.8, font: this.regular, color: INK2 });
-      this.page.drawRectangle({ x: MARGIN, y: this.y - 22, width: w, height: 8, color: SERIES_POS });
+      this.page.drawText(pdfSafe(d.label), { x: MARGIN + 4, y: this.y - 9, size: 7.8, font: this.regular, color: INK2 });
+      this.page.drawRectangle({ x: MARGIN + 1, y: this.y - 22, width: w, height: 8, color: SERIES_POS });
       const v = this.fmtValue(c, d.value, false);
       this.page.drawText(v, { x: MARGIN + w + 4, y: this.y - 21, size: 7.5, font: this.regular, color: INK2 });
       if (d.note) {
