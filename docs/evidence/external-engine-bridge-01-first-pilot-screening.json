@@ -7,7 +7,7 @@
   "additionalR4Exclusions": [
     "axios/date-fns/fastify/immer are excluded here too, even though they were never used by a CI_REPRODUCTION attempt specifically - they already appear elsewhere in DiffCI's validation history (the external-validation/economics thread), and reusing them here would blur the same independence this frame exists to protect."
   ],
-  "screened": 5,
+  "screened": 8,
   "rows": [
     {
       "rank": 12,
@@ -56,7 +56,42 @@
         "conclusion": "success",
         "source": "github actions run 28680564540, job within it"
       },
-      "caveat": "lodash's test scripts (test:main, test:fp) invoke QUnit directly via plain `node test/test` - a different test runner from every repository in this corpus so far. Deliberately NOT pre-judged here: whether QUnit's console output is one the harness's evidence parser recognizes is exactly what R3 tests empirically, and skipping this candidate in advance because its output format is unfamiliar would be choosing based on an outcome guess, which is precisely what this selection process must not do. The reference plan below is frozen before running R3 either way."
+      "caveat": "lodash's test scripts (test:main, test:fp) invoke QUnit directly via plain `node test/test` - a different test runner from every repository in this corpus so far. Deliberately NOT pre-judged here: whether QUnit's console output is one the harness's evidence parser recognizes is exactly what R3 tests empirically, and skipping this candidate in advance because its output format is unfamiliar would be choosing based on an outcome guess, which is precisely what this selection process must not do. The reference plan below is frozen before running R3 either way. Real result: docs/evidence/external-engine-bridge-01-first-pilot/results.md - REFUSED, for a reason genuinely emergent from the engine's own analysis."
+    },
+    {
+      "rank": 17,
+      "pkg": "@babel/preset-env",
+      "repo": "babel/babel",
+      "verdict": "DEDUPED",
+      "detail": "same repository as rank 10 (@babel/core), already qualified and used in the original CI_REPRODUCTION_05 corpus."
+    },
+    {
+      "rank": 18,
+      "pkg": "babel-eslint",
+      "repo": "babel/babel-eslint",
+      "verdict": "R1_NO_ACTIVE_CI",
+      "detail": "repository is archived (deprecated in favour of @babel/eslint-parser); no active GitHub Actions workflows."
+    },
+    {
+      "rank": 19,
+      "pkg": "babel-core",
+      "repo": "babel/babel",
+      "verdict": "DEDUPED",
+      "detail": "npm's own repository.url resolves to babel/babel (packages/babel-core subpath) - same repository as rank 10/17."
+    },
+    {
+      "rank": 20,
+      "pkg": "husky",
+      "repo": "typicode/husky",
+      "verdict": "QUALIFIED",
+      "detail": "single job, statically-declared matrix including node-version 22 on ubuntu-latest, plain actions/checkout + actions/setup-node, three plainly-stated commands for this cell (npm --version; npm ci --ignore-scripts; ./test.sh), no reusable-action indirection, no step-level env or if: conditions - directly transcribable with zero repair. Not pre-judged on output-parseability: test.sh is a sequence of 12 bespoke shell integration-test scripts with no conventional test-count format at all, arguably an even less standard shape than lodash's QUnit - deliberately not a reason to skip, for the same reason lodash wasn't skipped.",
+      "pinnedHeadSha": "3f0023dc10d7003d70f2e31aa56300eab80e76d6",
+      "groundTruth": {
+        "cell": "test (22, ubuntu-latest)",
+        "conclusion": "success",
+        "source": "github actions run 23321072009, job within it"
+      },
+      "caveat": "This workflow's most recent completed run before the pinned commit is over 5 months old relative to when this screening was performed (2026-09-03) - the largest plan-age gap of any candidate screened here so far."
     }
   ]
 }

@@ -1,0 +1,42 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "typicode/husky",
+  "headSha": "3f0023dc10d7003d70f2e31aa56300eab80e76d6",
+  "source": ".github/workflows/node.js.yml, job `test`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file, selected via docs/evidence/external-engine-bridge-01-first-pilot-screening.json's continuation of the frozen CI_REPRODUCTION_05 selection frame, after lodash (rank 16). The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "os": "ubuntu-latest",
+    "node-version": "22"
+  },
+  "cellSelection": "The single in-environment cell: matrix.os ubuntu-latest and matrix.node-version 22 match the canonical container (node major 22) exactly, one of 3 node-version entries (20, 22, 24) x 3 os entries. Every other cell is OUT_OF_ENVIRONMENT and is recorded, not executed.",
+  "githubSemanticsApplied": "No step's `run:` body or `env:` block references matrix context, so there is no DEFINED_EMPTY/UNDEFINED_CONTEXT distinction to apply for this cell.",
+  "conditionsApplied": "The job declares no step-level `if:`, so no step is condition-skipped in this cell.",
+  "ciGroundTruth": {
+    "cell": "test (22, ubuntu-latest)",
+    "conclusion": "success",
+    "source": "github actions run 23321072009, job within it, recorded in docs/evidence/external-engine-bridge-01-first-pilot-screening.json"
+  },
+  "steps": [
+    {
+      "command": [
+        "npm",
+        "--version"
+      ],
+      "evidence": ".github/workflows/node.js.yml - unnamed step -> `run: npm --version`"
+    },
+    {
+      "command": [
+        "npm",
+        "ci",
+        "--ignore-scripts"
+      ],
+      "evidence": ".github/workflows/node.js.yml - unnamed step -> `run: npm ci --ignore-scripts`"
+    },
+    {
+      "command": [
+        "./test.sh"
+      ],
+      "evidence": ".github/workflows/node.js.yml - unnamed step -> `run: ./test.sh`. The script itself (visible in the repository at this commit) runs `npm pack` then a fixed sequence of 12 shell integration-test scripts (test/1_default.sh through test/12_deprecated.sh) with `set -e` - no conventional pass/fail count is printed by this script itself; whatever count (if any) the reference arm derives comes from the harness's own generic execution/exit-code handling, not from anything this plan invents. No command repair applied - transcribed exactly as the workflow states it."
+    }
+  ]
+}
