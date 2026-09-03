@@ -214,3 +214,27 @@ whether day-7 report delivery stays pull-only (URL) or gets an email step once a
 **Can wait:** GitHub Marketplace listing (already deferred by decision); a diffci.com hostname for the
 report route (currently a workers.dev URL on the welcome page); og:image; cosmetic empty cell in the
 3-stat hero grid on phones.
+
+**Follow-up, 2026-09-03 (later the same day) - the "where does my code go" gap, closed:**
+- The audit above checked what the site claimed; it did not ask the question a private-repo maintainer
+  asks first: *does DiffCI get my code?* The honest answer for the Shadow App is yes - `contents: read`
+  is used for a shallow clone inside an ephemeral container - and no page said so. "Read-only" only
+  answered what DiffCI cannot change. Added a "Where your code goes" section to `/welcome` and to the
+  homepage pilot block, one row per permission, using only what `/data-handling` already committed to:
+  clone destroyed with the container, what is kept (SHAs, paths, selections, outcomes, evidence) and
+  what is never kept (file contents, credentials), 90-day cap, uninstall erasure, nobody else sees it.
+  (`3847216`, `47dc5d8`.)
+- Writing that table exposed that the App requested `pull_requests: read` and nothing used it: the
+  webhook acknowledged `pull_request` events and returned; no code called the PR API. Dropped it from
+  the manifest, all three site pages, the registration checklist, CURRENT_STATE, the website drafts,
+  and - via the founder's own browser session - the live App on GitHub. Persisted state verified:
+  metadata/contents/actions/checks read, events `push` + `workflow_run`. Installation 155368612 shows
+  "Read access to actions, checks, code, and metadata" with no pending review; GitHub applies a pure
+  reduction without prompting installers, so this was free while the founder is the only installer and
+  would have cost a re-approval round per external installer later. (`92e394d`, `42cd17c`, `83386e0`,
+  `a73805b`.) The Shadow App now holds **four** read-only scopes everywhere it is described.
+- The Action-based observer path (analysis on the maintainer's own runner, source never leaves it) is
+  the stronger answer for private repos but is deliberately **not** advertised on the site: its
+  authenticated-registry install is not live for strangers, and advertising a route that does not work
+  would be worse than the clone disclosure.
+- Founder-only list above is unchanged: contact route, Always Use HTTPS, `www` 522, footer identity.
