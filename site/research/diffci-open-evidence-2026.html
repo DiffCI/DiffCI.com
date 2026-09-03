@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DiffCI Open Evidence Study 2026</title>
+<meta name="description" content="What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number, its evidence level and its source, under CC BY 4.0.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="DiffCI">
+<meta property="og:title" content="DiffCI Open Evidence Study 2026">
+<meta property="og:description" content="What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number, its evidence level and its source, under CC BY 4.0.">
+<meta property="og:url" content="https://diffci.com/research/diffci-open-evidence-2026">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://diffci.com/research/diffci-open-evidence-2026">
+<link rel="license" href="https://creativecommons.org/licenses/by/4.0/">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "DiffCI Open Evidence Study 2026",
+  "description": "What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. Every number, its evidence level and its source, under CC BY 4.0.",
+  "url": "https://diffci.com/research/diffci-open-evidence-2026",
+  "identifier": "diffci-oes-2026-v1",
+  "version": "v1",
+  "dateModified": "2026-09-03",
+  "temporalCoverage": "2026-08-19/2026-09-03",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "creator": {
+    "@type": "Organization",
+    "name": "DiffCI",
+    "url": "https://diffci.com"
+  },
+  "distribution": [
+    {
+      "@type": "DataDownload",
+      "encodingFormat": "text/csv",
+      "contentUrl": "https://diffci.com/research/2026/diffci-open-evidence-2026.csv"
+    },
+    {
+      "@type": "DataDownload",
+      "encodingFormat": "application/pdf",
+      "contentUrl": "https://diffci.com/research/2026/diffci-open-evidence-2026.pdf"
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="/">DiffCI</a>
+    <nav>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#limits">Limits</a>
+      <a href="/#pilot">Pilot</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<article class="wrap">
+
+  <a class="backlink" href="/#evidence">← All evidence</a>
+
+  <p class="eyebrow">Open study · Creative Commons Attribution 4.0 International · diffci-oes-2026-v1</p>
+  <h1>DiffCI Open Evidence Study 2026</h1>
+  <p class="lede">What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing.</p>
+
+  <div class="disclaimer">
+    <strong>None of the repositories named here is a DiffCI customer.</strong> Each is a public open-source project with public CI, analysed from its public source and replayed in DiffCI's own sandbox. None has installed DiffCI, been contacted about it, or endorsed anything here. No change was ever proposed to, or made in, any of their real CI pipelines.
+  </div>
+
+  <h2 class="no-rule">The short version</h2>
+  <p>Between 19 August and 3 September 2026, DiffCI ran a sequence of pre-registered experiments to answer one question: on real repositories, how much CI work can a dependency-graph test selector safely skip, and is that worth more than a trivial path rule? This study publishes every number those experiments produced, including the ones that argue against the product.</p>
+
+  <div class="figures">
+    <div><b>2,000</b><span>real commit deltas across 20 repositories, historically replayed</span></div>
+    <div><b>29.8%</b><span>of deltas offered any chance to be selective at all</span></div>
+    <div><b>94.3%</b><span>of those chances DiffCI selected fewer tests than a path rule; the path rule won 0</span></div>
+    <div><b>4.2%</b><span>aggregate test reduction against the path rule across the whole corpus</span></div>
+    <div><b>96.4% vs 70.7%</b><span>job-level recall of 280 real historical CI failures, DiffCI vs path rule</span></div>
+    <div><b>44% and 90%</b><span>job-level reduction on the two repositories where selections were actually executed and timed</span></div>
+    <div><b>0 of 32</b><span>false greens across every measurable mutation, in five corpora</span></div>
+    <div><b>0</b><span>production CI runs ever skipped, cancelled or blocked</span></div>
+  </div>
+
+  <p class="fine">
+    Evidence window 2026-08-19 to 2026-09-03. Every figure on this page is in the
+    <a href="/research/2026/diffci-open-evidence-2026.csv">CSV</a> with its evidence level and the path of the report that produced it.
+    Download the <a href="/research/2026/diffci-open-evidence-2026.pdf">PDF</a>, or read the <a href="/research/2026/LICENSE.txt">licence</a>.
+  </p>
+
+  <ul class="toc">
+    <li><a href="#where-the-advantage-lives">The advantage is real, narrow, and concentrated in small repositories</a></li>
+    <li><a href="#safety-at-scale">Safety held at scale, and it was not perfect</a></li>
+    <li><a href="#executed-not-computed">When the selection is executed, install cost decides the number</a></li>
+    <li><a href="#against-a-path-rule">Against a cheap path rule, DiffCI sometimes loses</a></li>
+    <li><a href="#graph-causality">The dependency graph has reached tests the diff could not name, but it has not been shown to be necessary</a></li>
+    <li><a href="#how-far-it-reaches">Most repositories cannot yet be reached at all</a></li>
+    <li><a href="#methodology">Methodology and research integrity</a></li>
+    <li><a href="#not-established">What this study does not establish</a></li>
+    <li><a href="#cite">Download and cite</a></li>
+    <li><a href="#sources">Sources</a></li>
+  </ul>
+
+  <h2 id="where-the-advantage-lives">The advantage is real, narrow, and concentrated in small repositories</h2>
+  <p>The largest experiment replayed 2,000 real commit deltas, 100 each from 20 repositories chosen for structural diversity before any were run, through a real Cloudflare orchestrator. Each delta was classified, independently of DiffCI's own output, by whether a selective decision was even possible: <strong>60.3%</strong> touched a lockfile, workflow or root configuration and fell back to full CI by rule; <strong>9.9%</strong> were already optimally handled by a plain path rule; <strong>29.8%</strong> offered a genuine discriminative opportunity.</p>
+  <p>Within those 565 opportunities, DiffCI selected fewer tests than the path rule on <strong>94.3%</strong>, tied on the rest, and lost on none. The median reduction against the path rule inside that bucket was <strong>95.0%</strong>.</p>
+  <p>Across the whole corpus, weighted by test count, that collapses to a <strong>4.2%</strong> aggregate reduction against the path rule. The unconditional median task reduction was <strong>0.0%</strong>. Seven of the twenty repositories hit 100% mandatory fallback or unsafe graph confidence and contributed nothing but drag. A repository-clustered bootstrap puts the 95% interval on the aggregate at <strong>-4.8% to +47.9%</strong>, which crosses zero: this sample cannot rule out a null population effect.</p>
+  <p>The clearest correlate was repository size. The ten repositories below the median source-file count showed a <strong>44.9%</strong> aggregate reduction; the nine above it showed <strong>-0.95%</strong>, indistinguishable from zero. Size and fallback rate are confounded in a sample this small, and the report says so.</p>
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i class="swatch swatch-tests"></i> Fewer tests than the path rule</span>
+        <span><i class="swatch swatch-setup"></i> More tests than the path rule</span>
+      </div>
+      <svg class="diverging" viewBox="0 0 662 430" role="img" aria-labelledby="stage0-per-repository-title" xmlns="http://www.w3.org/2000/svg">
+<title id="stage0-per-repository-title">Aggregate test reduction against the path rule, per repository</title>
+<style>
+.diverging .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
+.diverging .val { font: 500 11px var(--mono); fill: var(--ink-2); }
+.diverging .axis { stroke: var(--rule-2); stroke-width: 1; }
+.diverging .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
+.diverging .bar:hover rect, .diverging .bar:focus rect { opacity: 0.8; }
+</style>
+<line class="axis" x1="236.4" y1="8" x2="236.4" y2="410"></line>
+<text class="axis-lbl" x="236.4" y="420" text-anchor="middle">0 = same as the path rule</text>
+<g class="bar" tabindex="0"><title>TanStack/query: +84.2%</title>
+<text x="170" y="23" text-anchor="end" class="lbl">TanStack/query</text>
+<rect x="237.4" y="12" width="361.6" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="605.0" y="23" text-anchor="start" class="val">+84.2%</text>
+</g>
+<g class="bar" tabindex="0"><title>honojs/hono: +61.5%</title>
+<text x="170" y="45" text-anchor="end" class="lbl">honojs/hono</text>
+<rect x="237.4" y="34" width="264.1" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="507.5" y="45" text-anchor="start" class="val">+61.5%</text>
+</g>
+<g class="bar" tabindex="0"><title>axios/axios: +56.1%</title>
+<text x="170" y="67" text-anchor="end" class="lbl">axios/axios</text>
+<rect x="237.4" y="56" width="240.9" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="484.3" y="67" text-anchor="start" class="val">+56.1%</text>
+</g>
+<g class="bar" tabindex="0"><title>redis/ioredis: +49.2%</title>
+<text x="170" y="89" text-anchor="end" class="lbl">redis/ioredis</text>
+<rect x="237.4" y="78" width="211.3" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="454.7" y="89" text-anchor="start" class="val">+49.2%</text>
+</g>
+<g class="bar" tabindex="0"><title>colinhacks/zod: +41.8%</title>
+<text x="170" y="111" text-anchor="end" class="lbl">colinhacks/zod</text>
+<rect x="237.4" y="100" width="179.5" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="422.9" y="111" text-anchor="start" class="val">+41.8%</text>
+</g>
+<g class="bar" tabindex="0"><title>pmndrs/valtio: +36.6%</title>
+<text x="170" y="133" text-anchor="end" class="lbl">pmndrs/valtio</text>
+<rect x="237.4" y="122" width="157.2" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="400.6" y="133" text-anchor="start" class="val">+36.6%</text>
+</g>
+<g class="bar" tabindex="0"><title>pmndrs/zustand: +25.5%</title>
+<text x="170" y="155" text-anchor="end" class="lbl">pmndrs/zustand</text>
+<rect x="237.4" y="144" width="109.5" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="352.9" y="155" text-anchor="start" class="val">+25.5%</text>
+</g>
+<g class="bar" tabindex="0"><title>unjs/unstorage: +25.3%</title>
+<text x="170" y="177" text-anchor="end" class="lbl">unjs/unstorage</text>
+<rect x="237.4" y="166" width="108.7" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="352.1" y="177" text-anchor="start" class="val">+25.3%</text>
+</g>
+<g class="bar" tabindex="0"><title>unjs/h3: +25.0%</title>
+<text x="170" y="199" text-anchor="end" class="lbl">unjs/h3</text>
+<rect x="237.4" y="188" width="107.4" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="350.8" y="199" text-anchor="start" class="val">+25.0%</text>
+</g>
+<g class="bar" tabindex="0"><title>pmndrs/jotai: +24.1%</title>
+<text x="170" y="221" text-anchor="end" class="lbl">pmndrs/jotai</text>
+<rect x="237.4" y="210" width="103.5" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="346.9" y="221" text-anchor="start" class="val">+24.1%</text>
+</g>
+<g class="bar" tabindex="0"><title>unjs/defu: +7.5%</title>
+<text x="170" y="243" text-anchor="end" class="lbl">unjs/defu</text>
+<rect x="237.4" y="232" width="32.2" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="275.6" y="243" text-anchor="start" class="val">+7.5%</text>
+</g>
+<g class="bar" tabindex="0"><title>unjs/ofetch: +6.6%</title>
+<text x="170" y="265" text-anchor="end" class="lbl">unjs/ofetch</text>
+<rect x="237.4" y="254" width="28.3" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="271.7" y="265" text-anchor="start" class="val">+6.6%</text>
+</g>
+<g class="bar" tabindex="0"><title>nestjs/nest: -2.0% (100% fallback)</title>
+<text x="170" y="287" text-anchor="end" class="lbl">nestjs/nest</text>
+<rect x="226.8" y="276" width="8.6" height="14" rx="3" fill="var(--series-setup)"></rect>
+<text x="220.8" y="287" text-anchor="end" class="val">-2.0%</text>
+</g>
+<g class="bar" tabindex="0"><title>unocss/unocss: -4.2% (100% fallback)</title>
+<text x="170" y="309" text-anchor="end" class="lbl">unocss/unocss</text>
+<rect x="217.4" y="298" width="18.0" height="14" rx="3" fill="var(--series-setup)"></rect>
+<text x="211.4" y="309" text-anchor="end" class="val">-4.2%</text>
+</g>
+<g class="bar" tabindex="0"><title>date-fns/date-fns: -8.7% (100% fallback)</title>
+<text x="170" y="331" text-anchor="end" class="lbl">date-fns/date-fns</text>
+<rect x="198.0" y="320" width="37.4" height="14" rx="3" fill="var(--series-setup)"></rect>
+<text x="192.0" y="331" text-anchor="end" class="val">-8.7%</text>
+</g>
+<g class="bar" tabindex="0"><title>mikro-orm/mikro-orm: -8.7% (100% fallback)</title>
+<text x="170" y="353" text-anchor="end" class="lbl">mikro-orm/mikro-orm</text>
+<rect x="198.0" y="342" width="37.4" height="14" rx="3" fill="var(--series-setup)"></rect>
+<text x="192.0" y="353" text-anchor="end" class="val">-8.7%</text>
+</g>
+<g class="bar" tabindex="0"><title>typeorm/typeorm: -9.9% (100% fallback)</title>
+<text x="170" y="375" text-anchor="end" class="lbl">typeorm/typeorm</text>
+<rect x="192.9" y="364" width="42.5" height="14" rx="3" fill="var(--series-setup)"></rect>
+<text x="186.9" y="375" text-anchor="end" class="val">-9.9%</text>
+</g>
+<g class="bar" tabindex="0"><title>trpc/trpc: -13.6% (100% fallback)</title>
+<text x="170" y="397" text-anchor="end" class="lbl">trpc/trpc</text>
+<rect x="177.0" y="386" width="58.4" height="14" rx="3" fill="var(--series-setup)"></rect>
+<text x="171.0" y="397" text-anchor="end" class="val">-13.6%</text>
+</g>
+</svg>
+    </div>
+    <figcaption>Stage 0, 100 deltas per repository, test-count weighted. Negative values are repositories where 100%-fallback deltas selected the full suite while the path rule had already narrowed. execa and ky are omitted: execa's path rule selected nothing, and ky's AVA test counts are unreliable.</figcaption>
+  </figure>
+  <div class="table-scroll">
+    <table id="stage0-repositories">
+      <tr><th>Repository</th><th class="num">Fallback rate</th><th class="num">Discriminative opportunities</th><th class="num">Aggregate reduction vs path rule</th></tr>
+      <tr><td>TanStack/query</td><td class="num">12%</td><td class="num">64</td><td class="num">84.2%</td></tr>
+      <tr><td>axios/axios</td><td class="num">33%</td><td class="num">44</td><td class="num">56.1%</td></tr>
+      <tr><td>colinhacks/zod</td><td class="num">6%</td><td class="num">83</td><td class="num">41.8%</td></tr>
+      <tr><td>date-fns/date-fns</td><td class="num">100%</td><td class="num">0</td><td class="num">-8.7%</td></tr>
+      <tr><td>honojs/hono</td><td class="num">19%</td><td class="num">81</td><td class="num">61.5%</td></tr>
+      <tr><td>mikro-orm/mikro-orm</td><td class="num">100%</td><td class="num">0</td><td class="num">-8.7%</td></tr>
+      <tr><td>nestjs/nest</td><td class="num">100%</td><td class="num">0</td><td class="num">-2.0%</td></tr>
+      <tr><td>pmndrs/jotai</td><td class="num">41%</td><td class="num">48</td><td class="num">24.1%</td></tr>
+      <tr><td>pmndrs/valtio</td><td class="num">45%</td><td class="num">41</td><td class="num">36.6%</td></tr>
+      <tr><td>pmndrs/zustand</td><td class="num">32%</td><td class="num">18</td><td class="num">25.5%</td></tr>
+      <tr><td>redis/ioredis</td><td class="num">47%</td><td class="num">46</td><td class="num">49.2%</td></tr>
+      <tr><td>sindresorhus/execa</td><td class="num">100%</td><td class="num">0</td><td class="num">n/a</td></tr>
+      <tr><td>sindresorhus/ky</td><td class="num">12%</td><td class="num">0</td><td class="num">n/a</td></tr>
+      <tr><td>trpc/trpc</td><td class="num">100%</td><td class="num">0</td><td class="num">-13.6%</td></tr>
+      <tr><td>typeorm/typeorm</td><td class="num">100%</td><td class="num">0</td><td class="num">-9.9%</td></tr>
+      <tr><td>unjs/defu</td><td class="num">79%</td><td class="num">14</td><td class="num">7.5%</td></tr>
+      <tr><td>unjs/h3</td><td class="num">13%</td><td class="num">67</td><td class="num">25.0%</td></tr>
+      <tr><td>unjs/ofetch</td><td class="num">64%</td><td class="num">27</td><td class="num">6.6%</td></tr>
+      <tr><td>unjs/unstorage</td><td class="num">55%</td><td class="num">32</td><td class="num">25.3%</td></tr>
+      <tr><td>unocss/unocss</td><td class="num">100%</td><td class="num">0</td><td class="num">-4.2%</td></tr>
+    </table>
+  </div>
+  <p class="fine">Stage 0 per-repository results. Fallback rate is the share of the 100 deltas that fell back to full CI by rule or by unsafe graph confidence.</p>
+
+
+  <h2 id="safety-at-scale">Safety held at scale, and it was not perfect</h2>
+  <p>Using authenticated GitHub Actions history, the same 2,000 deltas yielded <strong>280</strong> real job-level CI failures across 154 deltas. DiffCI's plan would have missed <strong>10</strong> of them; the path rule would have missed <strong>82</strong>. That is a job-level failure recall of <strong>96.4%</strong> against <strong>70.7%</strong>. Ten misses is a real finding. Earlier partial snapshots had suggested zero, and the final report refused to round to it.</p>
+  <p>Where a regression could be manufactured and measured, the record is cleaner. Across five corpora, every mutation whose detection was measurable was detected: <strong>32 of 32</strong>, with zero false greens. That sum spans different harness generations and is not a reliability estimate. Twenty-five of the cases come from the canonical Linux container on hono and zod, whose frozen bundle prints its own caveat that 25 cases cannot support a rate.</p>
+  <p>The one place DiffCI's prediction was honestly weak is its own repository. A pre-flight predictor replayed leakage-safe against 24 historical failures in DiffCI's own CI scored a prevention recall of <strong>0.696</strong>, and missed all nine unit-test failures in the set. The first run had scored 0.958, was investigated because it was too good, and turned out to be counting a registry declaration as a prediction.</p>
+  <div class="table-scroll">
+    <table id="mutation-recall">
+      <tr><th>Corpus</th><th>Environment</th><th class="num">Measurable cases detected</th><th class="num">False greens</th></tr>
+      <tr><td>cal.com</td><td>DiffCI sandbox</td><td class="num">3 of 3</td><td class="num">0</td></tr>
+      <tr><td>deepseek-ai/deepseek-harness</td><td>DiffCI sandbox</td><td class="num">3 of 3</td><td class="num">0</td></tr>
+      <tr><td>honojs/hono</td><td>canonical Linux container</td><td class="num">20 of 20</td><td class="num">0</td></tr>
+      <tr><td>colinhacks/zod</td><td>canonical Linux container</td><td class="num">5 of 5</td><td class="num">0</td></tr>
+      <tr><td>jest-community/eslint-plugin-jest</td><td>canonical Linux container, sealed target</td><td class="num">1 of 1</td><td class="num">0</td></tr>
+    </table>
+  </div>
+  <p class="fine">Measurable mutation cases by corpus. A case is measurable only if reverting the change fails the full suite; unmeasurable cases are counted and named in the source reports, never folded into the denominator.</p>
+
+
+  <h2 id="executed-not-computed">When the selection is executed, install cost decides the number</h2>
+  <p>A computed selection is a claim. On two repositories the claim was tested: the full test suite and DiffCI's selected subset were both actually run and timed at the same commit, ten merges in total, and a runtime invariant checked whether the test runner honoured the selection instead of quietly broadening it. It did on <strong>12 of 13</strong> executions; the thirteenth was withheld rather than counted.</p>
+  <p>On cal.com, five merges chosen by a rule written down before their costs were known produced a test-stage reduction of <strong>86.0% to 91.6%</strong>. Measured against the whole job, one merge came to <strong>44.2%</strong>, because cal.com spends 319.7 seconds on install and 17.1 on <code>prisma generate</code> before a single test runs, and those are paid identically on both paths. On deepseek-harness, whose install takes 23 to 39 seconds, the same selection quality produced <strong>79.5% to 89.5%</strong> at job level.</p>
+  <p>That forty-point gap between the two repositories has nothing to do with how good the selection was. It is entirely the ratio of install to test. Anyone quoting a single industry percentage has not measured the repository in question.</p>
+  <div class="table-scroll">
+    <table id="executed-replays">
+      <tr><th>Repository</th><th class="num">Merges executed</th><th class="num">Test-stage reduction, net</th><th class="num">Job-level reduction, net</th><th class="num">Selection honoured</th><th class="num">Measurable regressions caught</th></tr>
+      <tr><td>cal.com</td><td class="num">6</td><td class="num">86.0% to 91.6%</td><td class="num">44.2%</td><td class="num">8 of 8</td><td class="num">3 of 3</td></tr>
+      <tr><td>deepseek-ai/deepseek-harness</td><td class="num">4 of 5</td><td class="num">83.5% to 94.3%</td><td class="num">79.5% to 89.5%</td><td class="num">3 exact, 1 framework-expanded, 1 withheld</td><td class="num">3 of 3</td></tr>
+    </table>
+  </div>
+  <p class="fine">Both paths executed and timed in DiffCI's sandbox. Net figures subtract DiffCI's own analysis cost. deepseek-harness carries 16 to 18 pre-existing failures on every run; a naive check would have read that as a caught regression every time, and the harness was fixed before it could.</p>
+
+
+  <h2 id="against-a-path-rule">Against a cheap path rule, DiffCI sometimes loses</h2>
+  <p>Beating the full suite is a soft target. The business question is whether DiffCI's analysis pays for itself against a path rule that costs nothing to compute. Every CPU-second of DiffCI's own analysis is charged to DiffCI; the comparator is charged nothing, even though it reads the same graph.</p>
+  <p>On honojs/hono, measured in the canonical container across 22 candidates, DiffCI's gross saving against the full suite was <strong>+1,408.92 CPU-s</strong> and its incremental result against the path rule was <strong>-80.90 CPU-s</strong>: 4 candidates positive, 18 negative. Wherever the path rule was tight, DiffCI lost; every one of the four wins was a case where the path rule blew up to 123 tests and DiffCI held at 83. DiffCI paid a fixed toll of roughly 3.3 CPU-s per candidate to insure against that, and on hono the insurance cost more than it saved. Test counts had predicted this, with 12 of 20 selections classed as over-broad, and the CPU meter agreed. A meter that reported DiffCI winning everywhere would have indicted itself.</p>
+  <p>On colinhacks/zod the sign flipped: across five confirmed cases DiffCI selected <strong>629</strong> tests where the path rule selected 761 and the full suite held 967, with four of five selections classed efficient. On jest-community/eslint-plugin-jest, three candidates drawn blind under pre-committed rules cost DiffCI 4 to 6 CPU-s where the comparator cost 52 to 77 and the full suite 59 to 85, an incremental result of <strong>+71.48, +43.81 and +53.56 CPU-s</strong>.</p>
+  <p>The one out-of-sample test of the economic predictor was immerjs/immer, selected by a third party before any DiffCI data existed. The rule, frozen beforehand, predicted a positive sign; the measurement was <strong>+46.97 CPU-s</strong>, positive. That is n = 1, and it validates the ordering of the experiment rather than a prediction accuracy rate. The magnitude was not validated: on a matched subset the model had predicted +85.19, and the gap exposed that the linear per-file cost model under-prices 1- and 2-file selections by roughly four times, an error whose direction inflates predicted savings.</p>
+  <div class="table-scroll">
+    <table id="compute-economics">
+      <tr><th>Repository</th><th class="num">Candidates</th><th class="num">Full suite</th><th class="num">Path rule</th><th class="num">DiffCI incl. analysis</th><th class="num">Incremental vs path rule</th></tr>
+      <tr><td>honojs/hono</td><td class="num">22</td><td class="num">1,928.94</td><td class="num">439.12</td><td class="num">520.02</td><td class="num">-80.90</td></tr>
+      <tr><td>immerjs/immer</td><td class="num">7 measured</td><td class="num">79.02</td><td class="num">79.51</td><td class="num">32.54</td><td class="num">+46.97</td></tr>
+      <tr><td>eslint-plugin-jest, GENERATION_C_01</td><td class="num">1</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">+71.48</td></tr>
+      <tr><td>eslint-plugin-jest, MI-01</td><td class="num">1</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num">+43.81</td></tr>
+      <tr><td>eslint-plugin-jest, MI-02</td><td class="num">1</td><td class="num">64.30</td><td class="num">59.88</td><td class="num">6.32</td><td class="num">+53.56</td></tr>
+    </table>
+  </div>
+  <p class="fine">All values in CPU-seconds. Incremental CPU is comparator cost minus DiffCI's selected-run cost minus DiffCI's analysis cost. Positive means DiffCI's intelligence paid for itself against a free path rule; negative means it did not. All in the canonical Linux container (cloudflare/sandbox:0.12.5, Node 22). Blank cells are per-arm figures the source summary does not restate; across the three eslint-plugin-jest candidates the full suite cost 59 to 85, the path rule 52 to 77 and DiffCI 4 to 6.</p>
+
+
+  <h2 id="graph-causality">The dependency graph has reached tests the diff could not name, but it has not been shown to be necessary</h2>
+  <p>On the one blind-drawn candidate where detection, graph contribution and economics were all measurable at once, DiffCI selected 2 files of 174 against the path rule's 164, caught the regression, and saved 71.48 CPU-s. Both selected files were files the commit had changed. <strong>Nothing was reached through the graph.</strong> A rule that runs only the files a commit touched would have produced the identical selection, detection and cost.</p>
+  <p>On two other candidates, drawn independently under a different rule, DiffCI did reach a test file the commit had not touched, through the import graph, selecting 2 of 159 against the path rule's 149. On both, detection was unmeasurable because reverting the change did not fail the full suite. So the evidence ladder closes with one measured safety-plus-savings result, two independent demonstrations of graph reach, and no case where both were measured together.</p>
+  <p>The consequence is written into the project's standard: beating the full suite no longer counts, and beating the path rule is necessary but not sufficient. Any claim that the graph earns its compute must beat a direct-only rule, the cheap heuristic that has tied twice.</p>
+
+  <h2 id="how-far-it-reaches">Most repositories cannot yet be reached at all</h2>
+  <p>The narrowest finding in the study is how few repositories DiffCI can currently reason about. Of npm's 40 most-depended-upon packages, <strong>8</strong> have no <code>tsconfig.json</code> and are refused before any graph is built. Of the 28 that could be measured, <strong>20</strong> have a mapping density under 20%: fewer than one test file in five can reach any production file through the static import graph. At least two of the four mechanisms behind that band are DiffCI's own limitations, unresolved workspace self-references and monorepo scope, and the report declines to blame the repositories for them.</p>
+  <p>Canonical qualification, which requires a repository's suite to go green twice in the reference container before any selection evidence counts, has been attempted on only 7 of 32 repositories in the frozen frame: 3 went green twice. Seventeen have never been attempted. The funnel's honest headline is how little is known, not a green rate.</p>
+  <p>The external-validation sequence made this concrete. Five repositories were selected by a third party before any DiffCI inspection: <strong>1 of 5</strong> passed the pre-registered assessability gates. Fastify and Axios had red baselines; date-fns could not have its monorepo scope preserved; Chalk uses AVA, which is unsupported. Only immer was assessable.</p>
+  <p>The product's CI-reproduction engine, which must reconstruct a repository's real pipeline before it may plan against it, refused on first exposure to eslint/eslint because the repository commits no lockfile and runs a bare <code>npm install</code>. The refusal was correct on the facts: the reference arm ran 38,627 tests green, and the engine still declined to claim it could account for an unpinned install. The first mechanically selected pilot of four further repositories reproduced <strong>none</strong>: rimraf was rejected at screening, lodash, husky and chalk were refused for three distinct coverage gaps. A weaker, distinctly labelled time-boxed dependency basis built afterwards took eslint at its pinned commit to REPRODUCED, 38,647 tests in both arms, while still failing loudly on the live head that had drifted past the cutoff.</p>
+  <div class="table-scroll">
+    <table id="reach-funnel">
+      <tr><th>Gate</th><th>Outcome</th><th>Source</th></tr>
+      <tr><td>No tsconfig.json in the tree</td><td>8 of 40 refused before analysis</td><td>mapping-density survey</td></tr>
+      <tr><td>Static import graph connects tests to production</td><td>20 of 28 measured under 20% mapping density</td><td>mapping-density survey</td></tr>
+      <tr><td>Suite green twice in the canonical container</td><td>3 of 7 attempted; 17 of 32 never attempted</td><td>qualification funnel</td></tr>
+      <tr><td>Pre-registered external assessability gates</td><td>1 of 5 passed</td><td>external validation #1</td></tr>
+      <tr><td>CI pipeline reproduced from real configuration</td><td>0 of 4 in the first pilot; eslint REFUSED then REPRODUCED under a time-boxed basis</td><td>engine coverage baseline</td></tr>
+    </table>
+  </div>
+  <p class="fine">Where repositories stop. Each row is a different gate; they are not a single funnel and the denominators differ.</p>
+
+
+  <h2 id="methodology">Methodology and research integrity</h2>
+  <p>Every experiment in this study was pre-registered: the methodology, corpus, thresholds or prediction was committed to the repository, and in the larger cases SHA-256 hashed, before the run that would be graded against it. Stage 0's methodology was frozen at one commit across 13 files; the 24-hour shadow-ramp gate was declared before the repositories it governed were enrolled; the immer economic prediction was committed before any economics arm ran; the GENERATION_C target was sealed before any DiffCI output existed.</p>
+  <p>Measurements that matter were made in one canonical environment, a Cloudflare sandbox container (cloudflare/sandbox:0.12.5, Ubuntu 22.04.5, Node 22.23.2), with the agent's exact tarball bytes verified in-container before anything was measured, and results frozen as checksummed bundles before interpretation. Developer-host evidence is labelled as such and was not used for CPU, wall time or economics.</p>
+  <p>Where DiffCI could not measure, it abstained: results are reported as UNMEASURABLE, REFUSED or withheld, never estimated into the denominator. Where the process went wrong, the correction is recorded next to the original rather than edited over it.</p>
+  <ul>
+    <li>One Stage 0 delta with an impossible count was excluded from aggregates rather than patched mid-benchmark on an unconfirmed root cause.</li>
+    <li>The pre-flight replay's first result of 0.958 was rejected as too good, the counting defect was found, and 0.696 was reported.</li>
+    <li>The qualification-funnel script initially reported 12 analyser-ineligible repositories; a classification defect was fixed and 8 reported.</li>
+    <li>GENERATION_C_01's corpus row reports one graph-derived selection; the row was left unedited and re-read on the page as 0 graph-derived, 2 directly changed.</li>
+    <li>A mocha output parser was found to have been validated against a hand-typed fixture instead of real ANSI-wrapped output; the regression test now uses the captured bytes.</li>
+    <li>A cost figure that had been transcribed as $0.0044 in one place and $0.0045 in another was re-measured rather than reconciled by choosing one.</li>
+  </ul>
+
+  <h2 id="not-established">What this study does not establish</h2>
+  <p>This section is part of the study, not a footnote to it.</p>
+  <ul class="limits">
+    <li>That the dependency graph is causally necessary for detection. On the one case where both were measured, a changed-files rule would have tied.</li>
+    <li>Any savings in anyone's production CI. Nothing has ever been skipped in a real pipeline; every reduction here is a controlled replay in DiffCI's sandbox with both paths executed.</li>
+    <li>A general prediction accuracy rate for the economic predictor. One out-of-sample sign match is n = 1.</li>
+    <li>How often the predictor can be reached. 1 of 5 externally selected repositories was assessable; that is a signal, not a population estimate.</li>
+    <li>A false-green rate. 32 measurable cases with 0 misses is a count, not a reliability estimate.</li>
+    <li>That DiffCI is cheaper than a path rule in general. It lost on hono, won on zod, immer and eslint-plugin-jest, and has not been measured on enough repositories to say.</li>
+    <li>Anything about repositories outside TypeScript and JavaScript, or without a tsconfig.json. They are refused, not measured.</li>
+    <li>Any customer, user, pilot or revenue. As of 3 September 2026 there were zero external installs, confirmed by direct database query.</li>
+  </ul>
+
+  <h2 id="cite">Download and cite</h2>
+  <p>
+    The study is published under the <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International (CC BY 4.0)</a>.
+    Reproduce, adapt or republish any of it, including commercially, with credit to DiffCI and a link to this page.
+    The licence covers the study materials only, not the DiffCI software or the named repositories' code.
+  </p>
+  <ul>
+    <li><a href="/research/2026/diffci-open-evidence-2026.csv">All 102 figures as CSV</a> - category, metric, value, unit, scope, evidence level, source path, note.</li>
+    <li><a href="/research/2026/diffci-open-evidence-2026.pdf">Full report as PDF</a> - the same content as this page, rendered from the same data.</li>
+    <li><a href="/research/2026/LICENSE.txt">LICENSE.txt</a></li>
+  </ul>
+  <p>Suggested citation:</p>
+  <pre class="cite">DiffCI. (2026). DiffCI Open Evidence Study 2026 (diffci-oes-2026-v1): What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. https://diffci.com/research/diffci-open-evidence-2026</pre>
+
+  <h2 id="sources">Sources</h2>
+  <p>Every figure above cites the report that produced it, by path in the DiffCI repository. The repository is private at the time of publication; the paths are given so a reader can ask for a specific report by name, and so that they resolve directly if and when the repository is opened.</p>
+  <p>
+    Evidence levels used in the CSV: <strong>MEASURED</strong>, a clock or a counter produced the number in a real execution;
+    <strong>PREDICTED</strong>, a frozen rule's prediction, committed before the measurement it predicted;
+    <strong>PROCESS_FACT</strong>, something that happened rather than a measurement;
+    <strong>ABSTAINED</strong>, DiffCI declined to produce a number and the abstention is the finding.
+  </p>
+  <div class="table-scroll">
+    <table>
+      <tr><th>Report</th><th>What it contains</th></tr>
+      <tr><td><code>docs/research/2026-08-21-stage0-full-experiment-final-report.md</code></td><td>Stage 0 final report: 20 repositories, 2,000 deltas, opportunity buckets, safety recall, overhead</td></tr>
+      <tr><td><code>docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md</code></td><td>cal.com complete-job savings and stage timings for PR #29940</td></tr>
+      <tr><td><code>docs/research/2026-08-24-calcom-execution-observability/13-five-merge-batch-results.md</code></td><td>cal.com five predeclared merges, executed and timed</td></tr>
+      <tr><td><code>docs/research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md</code></td><td>deepseek-harness per-merge execution and economics</td></tr>
+      <tr><td><code>docs/research/2026-08-25-deepseek-execution-validation/09-aggregate-and-comparison.md</code></td><td>Aggregate and cross-repository comparison, mutation recall, selection honouring</td></tr>
+      <tr><td><code>docs/compute-economics-results.md</code></td><td>Compute economics against the path-rule comparator: hono</td></tr>
+      <tr><td><code>docs/safety-validation-milestone.md</code></td><td>Safety-validation phase close: 25 canonical cases, hono and zod</td></tr>
+      <tr><td><code>docs/hono-cross-environment-reproduction.md</code></td><td>hono cross-environment reproduction, 13 of 13</td></tr>
+      <tr><td><code>docs/external-validation-conclusion.md</code></td><td>External validation #1 frozen conclusion: five targets, immer</td></tr>
+      <tr><td><code>docs/immer-prediction-frozen.md</code></td><td>immer economic prediction, frozen before measurement</td></tr>
+      <tr><td><code>docs/generation-c-observation-result.md</code></td><td>GENERATION_C_01 sealed-target observation</td></tr>
+      <tr><td><code>docs/mechanism-isolation-02-result.md</code></td><td>MECHANISM_ISOLATION_02 and the close of the mechanism line</td></tr>
+      <tr><td><code>docs/position-and-next-phase.md</code></td><td>The claim as of 2026-09-01 and the direct-only baseline standard</td></tr>
+      <tr><td><code>docs/mapping-density-survey.md</code></td><td>Test-to-production mapping density across the frozen 40</td></tr>
+      <tr><td><code>docs/qualification-funnel.md</code></td><td>Canonical qualification funnel</td></tr>
+      <tr><td><code>docs/survey-small-repo-diagnostic.md</code></td><td>tsconfig.json refusals on the three small repositories</td></tr>
+      <tr><td><code>docs/ci-reproduction-05-result.md</code></td><td>CI_REPRODUCTION_05: eslint REFUSED, correctly</td></tr>
+      <tr><td><code>docs/engine-coverage-01-plan.md</code></td><td>ENGINE_COVERAGE_01 baseline: the first pilot's four outcomes</td></tr>
+      <tr><td><code>docs/evidence/engine-coverage-01-item-1/results.md</code></td><td>Time-boxed dependency basis: eslint REPRODUCED at its pinned commit</td></tr>
+      <tr><td><code>docs/symbol-precision-result.md</code></td><td>vue symbol-precision diagnostic</td></tr>
+      <tr><td><code>docs/research/2026-08-22-preflight-p1-replay-results.md</code></td><td>Pre-flight P1 leakage-safe replay on DiffCI's own CI</td></tr>
+      <tr><td><code>docs/website/03-evidence-ledger.md</code></td><td>Website evidence ledger: every published number and its level</td></tr>
+      <tr><td><code>docs/yc/metrics.md</code></td><td>YC sprint metrics: zero external installs, verified by query</td></tr>
+    </table>
+  </div>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p>
+    <nav>
+      <a href="/case-studies/calcom">cal.com</a>
+      <a href="/case-studies/deepseek-harness">deepseek-harness</a>
+      <a href="/case-studies/diffci-own-ci">our own CI</a>
+      <a href="/research/diffci-open-evidence-2026">Open study</a>
+      <a href="/data-handling">Data handling</a>
+    </nav>
+    <p class="fine">
+      DiffCI currently ships under its founder's personal GitHub account,
+      <a href="https://github.com/adityankale190895">@adityankale190895</a>. A company identity and a
+      contact address for this site are not yet published; they will appear here when they are.
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

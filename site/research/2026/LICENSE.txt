@@ -1,0 +1,14 @@
+DiffCI Open Evidence Study 2026
+Licence: Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+The findings, prose, tables, charts and data files in this study are published under Creative Commons Attribution 4.0 International (CC BY 4.0). You may reproduce, adapt, and republish them, including commercially, provided you credit DiffCI and link to the study page. This licence covers the study materials only; the DiffCI software, service, GitHub Apps and trademarks are not covered by it.
+
+This licence covers only the study findings, prose, tables and charts at https://diffci.com/research/diffci-open-evidence-2026, and the PDF, CSV and LICENSE files in this directory. It does not cover the DiffCI product, source code, analysis engine, trademarks, or any other page or asset on the site.
+
+The repositories named in the study are public open-source projects analysed from their public source. Their code remains under their own licences. None of them is affiliated with, a customer of, or an endorser of DiffCI.
+
+Full attribution:
+DiffCI. (2026). DiffCI Open Evidence Study 2026 (diffci-oes-2026-v1): What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing. https://diffci.com/research/diffci-open-evidence-2026
+
+CC BY 4.0 deed:
+https://creativecommons.org/licenses/by/4.0/

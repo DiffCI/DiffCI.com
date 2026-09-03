@@ -97,6 +97,31 @@ were cal.com-only figures presented without that scope; these rows replace them 
 | The estimator refuses to produce savings for non-test stages | `src/usage/economics-estimator.ts`; [`shadow-pilot-runbook.md`](../shadow-pilot-runbook.md) |
 | Nothing has ever been skipped, cancelled, or blocked in any real CI | `README.md`; `CURRENT_STATE.md` TL;DR |
 
+## Open Evidence Study 2026 (`/research/diffci-open-evidence-2026`)
+
+The study's figures live in one typed module,
+[`src/open-study/diffci-open-evidence-2026.ts`](../../src/open-study/diffci-open-evidence-2026.ts),
+where every figure carries its value, unit, scope, evidence level and a source path that
+`tests/open-study/open-study.test.ts` requires to exist. That module is the ledger for the study; the
+CSV the site serves is that array verbatim. The rows below are the headline figures, so a reader of
+this file sees them beside the case-study rows without opening the module.
+
+| Claim | Value | Level | Source |
+|---|---|---|---|
+| Stage 0 corpus | 20 repositories, 2,000 deltas (1,899 in test-level aggregates) | MEASURED | [`2026-08-21-stage0-full-experiment-final-report.md`](../research/2026-08-21-stage0-full-experiment-final-report.md) |
+| Deltas with a discriminative opportunity | 29.8% (565); 60.3% mandatory fallback; 9.9% baseline already optimal | MEASURED | same |
+| Within opportunities: DiffCI wins / ties / path-rule wins | 94.3% / 5.7% / 0; median reduction vs path rule 95.0% | MEASURED | same |
+| Aggregate reduction vs path rule, whole corpus | **4.2%** (bootstrap 95% CI -4.8% to +47.9%); small repos 44.9%, large -0.95% | MEASURED | same |
+| Repositories at 100% fallback / unsafe | 7 of 20 | MEASURED | same |
+| Job-level historical failure recall, DiffCI vs path rule | 96.4% vs 70.7% (10 vs 82 misses of 280) | MEASURED | same |
+| Measurable mutation cases detected, all corpora | 32 of 32, 0 false greens (cal.com 3, deepseek 3, hono 20, zod 5, eslint-plugin-jest 1) | MEASURED, a count not a rate | rows above; [`safety-validation-milestone.md`](../safety-validation-milestone.md); [`generation-c-observation-result.md`](../generation-c-observation-result.md) |
+| hono incremental CPU vs path rule | **-80.90 CPU-s** (4 positive, 18 negative candidates); gross vs full +1,408.92 | MEASURED | [`compute-economics-results.md`](../compute-economics-results.md) |
+| immer out-of-sample sign prediction | predicted POSITIVE, measured +46.97 CPU-s; n = 1; magnitude not validated | PREDICTED then MEASURED | [`immer-prediction-frozen.md`](../immer-prediction-frozen.md); [`external-validation-conclusion.md`](../external-validation-conclusion.md) |
+| eslint-plugin-jest incremental CPU | +71.48 (detection confirmed, 0 graph-reached), +43.81, +53.56 (recall unmeasurable, 1 graph-reached each) | MEASURED | [`mechanism-isolation-02-result.md`](../mechanism-isolation-02-result.md); [`position-and-next-phase.md`](../position-and-next-phase.md) |
+| Mapping density under 20% | 20 of 28 measured; 8 of 40 refused for no tsconfig | MEASURED | [`mapping-density-survey.md`](../mapping-density-survey.md) |
+| External targets passing assessability gates | 1 of 5 | MEASURED | [`external-validation-conclusion.md`](../external-validation-conclusion.md) |
+| First engine-coverage pilot | 0 REPRODUCED of 4; eslint REFUSED, then REPRODUCED at its pinned commit under the time-boxed basis | ABSTAINED / MEASURED | [`engine-coverage-01-plan.md`](../engine-coverage-01-plan.md); [`evidence/engine-coverage-01-item-1/results.md`](../evidence/engine-coverage-01-item-1/results.md) |
+
 ## Claims deliberately NOT made
 
 | Tempting claim | Why it is not on the site |

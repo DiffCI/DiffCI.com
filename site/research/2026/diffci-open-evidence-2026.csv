@@ -1,0 +1,103 @@
+category,metric,value,unit,scope,evidence_level,source,note,study_id
+stage0,repositories,20,repositories,Stage 0 corpus,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,commit_deltas,2000,deltas,Stage 0 corpus,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,"COUNT(DISTINCT logical_delta_key) = COUNT(*) = 2000, verified by direct D1 query",diffci-oes-2026-v1
+stage0,deltas_in_test_level_aggregates,1899,deltas,Stage 0 corpus,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,excludes sindresorhus/ky (unreliable AVA test counts) and one impossible-count anomaly,diffci-oes-2026-v1
+stage0,deltas_excluded_as_anomalous,1,deltas,pmndrs/valtio,PROCESS_FACT,docs/research/2026-08-21-stage0-full-experiment-final-report.md,0.05% of deltas; testsSelectedByDiffci > testsTotal; excluded rather than patched mid-benchmark,diffci-oes-2026-v1
+stage0,mandatory_fallback_share,60.3,percent,"1,899 deltas (1,146)",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,baseline_already_optimal_share,9.9,percent,"1,899 deltas (188)",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,discriminative_opportunity_share,29.8,percent,"1,899 deltas (565)",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,diffci_win_rate_within_opportunities,94.3,percent,"565 opportunity deltas (533 wins, 32 ties)",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,path_rule_wins_within_opportunities,0,deltas,565 opportunity deltas,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,median_reduction_vs_path_within_opportunities,95.0,percent,565 opportunity deltas,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,mean_reduction_vs_path_within_opportunities,66.0,percent,565 opportunity deltas,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,aggregate_reduction_vs_full,13.2,percent,"1,899 deltas, test-count weighted",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,path_rule_aggregate_reduction_vs_full,9.4,percent,"1,899 deltas, test-count weighted",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,aggregate_reduction_vs_path,4.2,percent,"1,899 deltas, test-count weighted",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,4.16% unrounded; the medium batch had read 24.6%,diffci-oes-2026-v1
+stage0,median_task_reduction_vs_full_unconditional,0.0,percent,all deltas,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,aggregate_reduction_vs_path_small_repositories,44.9,percent,10 repositories below median source-file count,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,aggregate_reduction_vs_path_large_repositories,-0.95,percent,9 repositories above median source-file count,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,statistically indistinguishable from zero,diffci-oes-2026-v1
+stage0,aggregate_reduction_bootstrap_95ci,-4.8 to +47.9,percent,repository-clustered bootstrap,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,crosses zero: this sample cannot rule out a null population effect,diffci-oes-2026-v1
+stage0,repositories_at_100pct_fallback_or_unsafe,7,repositories,of 20,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,"date-fns, mikro-orm, nestjs, execa, trpc, typeorm, unocss",diffci-oes-2026-v1
+stage0,historical_ci_failures_observed,280,failures,"154 distinct failing deltas, job level",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,diffci_unsafe_misses,10,failures,of 280,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,path_rule_unsafe_misses,82,failures,of 280,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,diffci_job_level_failure_recall,96.4,percent,280 historical failures,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,path_rule_job_level_failure_recall,70.7,percent,280 historical failures,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,analysis_overhead_median,1426,ms,"1,900 timed records",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,analysis_overhead_p90,3676,ms,"1,900 timed records",MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+stage0,analysis_overhead_max,52426,ms,typeorm/typeorm cold graph,MEASURED,docs/research/2026-08-21-stage0-full-experiment-final-report.md,"investigated, not removed",diffci-oes-2026-v1
+stage0,methodology_frozen_before_execution,5c9e936,commit,"13 files, SHA-256 hashed",PROCESS_FACT,docs/research/2026-08-21-stage0-full-experiment-final-report.md,,diffci-oes-2026-v1
+executed-replays,merges_with_full_and_selected_paths_executed_and_timed,10,merges,cal.com 6 + deepseek-harness 4,MEASURED,docs/website/03-evidence-ledger.md,deepseek-harness #2844 withheld because the runner did not honour the selection,diffci-oes-2026-v1
+executed-replays,runtime_selection_honoured,12 of 13,executions,both repositories,MEASURED,docs/research/2026-08-25-deepseek-execution-validation/09-aggregate-and-comparison.md,"11 HONORED_EXACTLY, 1 HONORED_WITH_FRAMEWORK_EXPANSION, 1 IGNORED_OR_BROADENED (withheld)",diffci-oes-2026-v1
+executed-replays,test_stage_net_reduction,86.0 to 91.6,percent,"cal.com, 5 predeclared merges",MEASURED,docs/research/2026-08-24-calcom-execution-observability/13-five-merge-batch-results.md,,diffci-oes-2026-v1
+executed-replays,complete_job_net_reduction,44.2,percent,cal.com PR #29940,MEASURED,docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md,,diffci-oes-2026-v1
+executed-replays,install_stage_wall,319.7,seconds,"cal.com PR #29940, paid on both paths",MEASURED,docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md,,diffci-oes-2026-v1
+executed-replays,pretest_stage_wall,17.1,seconds,"cal.com PR #29940, prisma generate",MEASURED,docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md,,diffci-oes-2026-v1
+executed-replays,test_stage_wall_full,320.9,seconds,cal.com PR #29940,MEASURED,docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md,,diffci-oes-2026-v1
+executed-replays,test_stage_wall_selected,20.0,seconds,cal.com PR #29940,MEASURED,docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md,,diffci-oes-2026-v1
+executed-replays,test_files_selected_of_total,1 to 5 of 249-250,files,"cal.com, 5 predeclared merges",MEASURED,docs/research/2026-08-24-calcom-execution-observability/13-five-merge-batch-results.md,,diffci-oes-2026-v1
+executed-replays,runtime_selection_honoured_exactly,8 of 8,executions,cal.com,MEASURED,docs/research/2026-08-24-calcom-execution-observability/13-five-merge-batch-results.md,,diffci-oes-2026-v1
+executed-replays,mutation_recall_measurable_cases,3 of 3,cases,"cal.com, unique measurable mutations",MEASURED,docs/research/2026-08-25-deepseek-execution-validation/09-aggregate-and-comparison.md,,diffci-oes-2026-v1
+executed-replays,infrastructure_failures,0 of 8,executions,cal.com,MEASURED,docs/research/2026-08-24-calcom-execution-observability/13-five-merge-batch-results.md,,diffci-oes-2026-v1
+executed-replays,test_stage_net_reduction,83.5 to 94.3,percent,"deepseek-harness, 4 eligible merges",MEASURED,docs/research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md,,diffci-oes-2026-v1
+executed-replays,complete_job_net_reduction,79.5 to 89.5,percent,"deepseek-harness, 4 eligible merges",MEASURED,docs/research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md,,diffci-oes-2026-v1
+executed-replays,complete_job_net_reduction,89.5,percent,"deepseek-harness PR #2760 (760.2s full, 58.7s selected)",MEASURED,docs/research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md,,diffci-oes-2026-v1
+executed-replays,install_stage_wall,23 to 39,seconds,deepseek-harness,MEASURED,docs/research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md,,diffci-oes-2026-v1
+executed-replays,test_stage_wall_full,480.9 to 722.7,seconds,deepseek-harness,MEASURED,docs/research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md,,diffci-oes-2026-v1
+executed-replays,mutation_recall_measurable_cases,3 of 3,cases,deepseek-harness; 2 further cases correctly unmeasurable,MEASURED,docs/research/2026-08-25-deepseek-execution-validation/09-aggregate-and-comparison.md,,diffci-oes-2026-v1
+executed-replays,pre_existing_baseline_failures_per_run,16 to 18,tests,"deepseek-harness, every run",MEASURED,docs/research/2026-08-25-deepseek-execution-validation/09-aggregate-and-comparison.md,,diffci-oes-2026-v1
+executed-replays,merges_withheld_not_counted,1 of 5,merges,deepseek-harness PR #2844,ABSTAINED,docs/research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md,,diffci-oes-2026-v1
+compute-economics,full_suite_cpu,1928.94,CPU-s,"honojs/hono, 22 candidates, canonical container",MEASURED,docs/compute-economics-results.md,,diffci-oes-2026-v1
+compute-economics,path_rule_comparator_cpu,439.12,CPU-s,honojs/hono,MEASURED,docs/compute-economics-results.md,,diffci-oes-2026-v1
+compute-economics,diffci_selected_cpu,447.71,CPU-s,honojs/hono,MEASURED,docs/compute-economics-results.md,,diffci-oes-2026-v1
+compute-economics,diffci_analysis_cpu,72.31,CPU-s,"honojs/hono, charged entirely to DiffCI",MEASURED,docs/compute-economics-results.md,,diffci-oes-2026-v1
+compute-economics,gross_cpu_saving_vs_full,+1408.92,CPU-s,honojs/hono,MEASURED,docs/compute-economics-results.md,,diffci-oes-2026-v1
+compute-economics,incremental_cpu_vs_path_rule,-80.90,CPU-s,honojs/hono,MEASURED,docs/compute-economics-results.md,negative: DiffCI lost to the comparator on this repository,diffci-oes-2026-v1
+compute-economics,per_candidate_incremental_sign,"4 positive, 18 negative",candidates,honojs/hono,MEASURED,docs/compute-economics-results.md,,diffci-oes-2026-v1
+compute-economics,selection_overbroad,12 of 20,candidates,honojs/hono measurable mutations,MEASURED,docs/compute-economics-results.md,,diffci-oes-2026-v1
+compute-economics,fixed_analysis_toll_per_candidate,~3.3,CPU-s,honojs/hono,MEASURED,docs/compute-economics-results.md,,diffci-oes-2026-v1
+compute-economics,mutation_recall_measurable_cases,20 of 20,cases,"honojs/hono, canonical container",MEASURED,docs/safety-validation-milestone.md,,diffci-oes-2026-v1
+compute-economics,host_classifications_reproduced_in_canonical_environment,13 of 13,candidates,honojs/hono,MEASURED,docs/hono-cross-environment-reproduction.md,,diffci-oes-2026-v1
+compute-economics,mutation_recall_measurable_cases,5 of 5,cases,colinhacks/zod,MEASURED,docs/safety-validation-milestone.md,,diffci-oes-2026-v1
+compute-economics,tests_selected_diffci_vs_comparator_vs_full,629 / 761 / 967,tests,"colinhacks/zod, 5 confirmed cases",MEASURED,docs/safety-validation-milestone.md,,diffci-oes-2026-v1
+compute-economics,selection_efficient,4 of 5,candidates,colinhacks/zod,MEASURED,docs/safety-validation-milestone.md,,diffci-oes-2026-v1
+compute-economics,false_greens,0,cases,"25 canonical recall-measurable cases, hono + zod",MEASURED,docs/safety-validation-milestone.md,,diffci-oes-2026-v1
+compute-economics,predicted_incremental_cpu,+129.67,CPU-s,"immerjs/immer, frozen before economics ran",PREDICTED,docs/immer-prediction-frozen.md,,diffci-oes-2026-v1
+compute-economics,measured_incremental_cpu,+46.97,CPU-s,immerjs/immer,MEASURED,docs/external-validation-conclusion.md,sign matched the frozen prediction; magnitude not validated,diffci-oes-2026-v1
+compute-economics,post_hoc_matched_subset_predicted_vs_measured,+85.19 vs +46.97,CPU-s,"immerjs/immer, 7 measured candidates",MEASURED,docs/external-validation-conclusion.md,,diffci-oes-2026-v1
+compute-economics,cpu_per_test_file_modelled_vs_observed_at_1_to_2_files,0.6539 vs ~2.7,CPU-s/file,immerjs/immer,MEASURED,docs/external-validation-conclusion.md,the linear model under-prices small selections; the error inflates predicted savings,diffci-oes-2026-v1
+compute-economics,full_vs_comparator_vs_diffci_total_cpu,79.02 / 79.51 / 32.54,CPU-s,immerjs/immer,MEASURED,docs/external-validation-conclusion.md,the comparator degenerates to FULL here; DiffCI is not beating a comparator that works,diffci-oes-2026-v1
+compute-economics,incremental_cpu_vs_path_rule,+71.48,CPU-s,"eslint-plugin-jest, GENERATION_C_01 sealed target",MEASURED,docs/position-and-next-phase.md,,diffci-oes-2026-v1
+compute-economics,files_selected_diffci_vs_comparator_of_universe,2 / 164 of 174,files,"eslint-plugin-jest, GENERATION_C_01",MEASURED,docs/generation-c-observation-result.md,,diffci-oes-2026-v1
+compute-economics,files_reached_through_dependency_graph,0,files,"eslint-plugin-jest, GENERATION_C_01",MEASURED,docs/generation-c-observation-result.md,both selected files were directly changed; a changed-files rule would have tied,diffci-oes-2026-v1
+compute-economics,analysis_cpu,2.80,CPU-s,"eslint-plugin-jest, GENERATION_C_01",MEASURED,docs/generation-c-observation-result.md,,diffci-oes-2026-v1
+compute-economics,incremental_cpu_vs_path_rule,+43.81,CPU-s,"eslint-plugin-jest, MI-01 (recall unmeasurable)",MEASURED,docs/mechanism-isolation-02-result.md,,diffci-oes-2026-v1
+compute-economics,incremental_cpu_vs_path_rule,+53.56,CPU-s,"eslint-plugin-jest, MI-02 (recall unmeasurable)",MEASURED,docs/mechanism-isolation-02-result.md,,diffci-oes-2026-v1
+compute-economics,files_selected_diffci_vs_comparator_of_universe,2 / 149 of 159,files,"eslint-plugin-jest, MI-02",MEASURED,docs/mechanism-isolation-02-result.md,,diffci-oes-2026-v1
+compute-economics,independent_graph_reach_observations,2,observations,"eslint-plugin-jest, MI-01 and MI-02, blind draws",MEASURED,docs/mechanism-isolation-02-result.md,,diffci-oes-2026-v1
+compute-economics,diffci_vs_comparator_vs_full_cpu_range,4-6 / 52-77 / 59-85,CPU-s,"eslint-plugin-jest, three candidates",MEASURED,docs/position-and-next-phase.md,,diffci-oes-2026-v1
+safety,mutation_recall_measurable_cases_all_corpora,32 of 32,cases,"cal.com 3, deepseek-harness 3, hono 20, zod 5, eslint-plugin-jest 1",MEASURED,docs/website/03-evidence-ledger.md,a sum across corpora with different harness generations; not a reliability estimate,diffci-oes-2026-v1
+safety,preflight_prevention_recall,0.696,ratio,"DiffCI.com own CI, 24 historical failures (16 TP, 7 FN, 1 not evaluable)",MEASURED,docs/research/2026-08-22-preflight-p1-replay-results.md,,diffci-oes-2026-v1
+safety,preflight_recall_first_run_rejected,0.958,ratio,DiffCI.com own CI,PROCESS_FACT,docs/research/2026-08-22-preflight-p1-replay-results.md,too good; a registry declaration was being counted as prediction; corrected before reporting,diffci-oes-2026-v1
+safety,unit_test_failures_missed,9 of 9,failures,DiffCI.com own CI,MEASURED,docs/website/03-evidence-ledger.md,,diffci-oes-2026-v1
+reach,frame_size,40,repositories,"npm most-depended-upon, ranks 1-40",PROCESS_FACT,docs/mapping-density-survey.md,,diffci-oes-2026-v1
+reach,analyser_ineligible_no_tsconfig,8,repositories,of 40,MEASURED,docs/mapping-density-survey.md,,diffci-oes-2026-v1
+reach,repositories_measured,28,repositories,"of 40 (3 excluded as already examined, 1 no tests discovered)",MEASURED,docs/mapping-density-survey.md,,diffci-oes-2026-v1
+reach,repositories_with_mapping_density_under_20pct,20,repositories,of 28 measured,MEASURED,docs/mapping-density-survey.md,at least two of the four mechanisms behind this band are DiffCI's own limitations,diffci-oes-2026-v1
+reach,mapping_density_bands_80-100/60-80/40-60/20-40/0-20,2 / 1 / 3 / 2 / 20,repositories,28 measured,MEASURED,docs/mapping-density-survey.md,,diffci-oes-2026-v1
+reach,distinct_repositories_in_qualification_funnel,32,repositories,frozen frame,PROCESS_FACT,docs/qualification-funnel.md,,diffci-oes-2026-v1
+reach,never_put_through_canonical_qualification,17,repositories,of 32,PROCESS_FACT,docs/qualification-funnel.md,,diffci-oes-2026-v1
+reach,green_on_two_consecutive_runs,3 of 7,repositories attempted,frozen frame,MEASURED,docs/qualification-funnel.md,,diffci-oes-2026-v1
+reach,decisions_refused_no_tsconfig,50 of 75,decisions,"css-loader and eslint-config-prettier, 25 each",ABSTAINED,docs/survey-small-repo-diagnostic.md,,diffci-oes-2026-v1
+reach,external_targets_selected_before_inspection,5,repositories,"fastify, axios, date-fns, chalk, immer",PROCESS_FACT,docs/external-validation-conclusion.md,,diffci-oes-2026-v1
+reach,external_targets_passing_assessability_gates,1 of 5,repositories,immer,MEASURED,docs/external-validation-conclusion.md,fastify and axios: red baselines; date-fns: monorepo scope; chalk: AVA unsupported,diffci-oes-2026-v1
+reach,out_of_sample_sign_predictions_confirmed,1 of 1,predictions,immer,MEASURED,docs/external-validation-conclusion.md,"n = 1; validates the experiment's ordering, not a prediction accuracy rate",diffci-oes-2026-v1
+reach,ci_reproduction_outcome,REFUSED,verdict,"eslint/eslint, live head, no lockfile",ABSTAINED,docs/ci-reproduction-05-result.md,"reference arm ran 38,627 tests green; the engine declined to plan against an unpinned install",diffci-oes-2026-v1
+reach,first_pilot_outcomes,0 REPRODUCED of 4,repositories,"rimraf rejected at screening; lodash, husky, chalk REFUSED",ABSTAINED,docs/engine-coverage-01-plan.md,,diffci-oes-2026-v1
+reach,ci_reproduction_outcome_after_time_boxed_dependency_basis,REPRODUCED,verdict,"eslint/eslint at its pinned commit, real Node 22 container",MEASURED,docs/evidence/engine-coverage-01-item-1/results.md,"38,647 tests in both arms, 0 failures",diffci-oes-2026-v1
+reach,file_opportunity_upper_bound_from_symbol_precision,19 of 183,files,"vuejs/core, one changed file",MEASURED,docs/symbol-precision-result.md,"99 demonstrated, 65 unresolved; unresolved is not counted as opportunity",diffci-oes-2026-v1
+product,production_ci_runs_skipped_cancelled_or_blocked,0,runs,"any repository, ever",PROCESS_FACT,docs/website/03-evidence-ledger.md,,diffci-oes-2026-v1
+product,genuine_external_installs,0,installs,"as of 2026-09-03, direct D1 query",MEASURED,docs/yc/metrics.md,,diffci-oes-2026-v1
+product,own_test_suite_size,1960,tests,"DiffCI.com, 389 suites, 0 failures",MEASURED,docs/website/03-evidence-ledger.md,,diffci-oes-2026-v1
+product,own_ci_cost_per_job,0.0048 to 0.0127,USD,"10 most recent real jobs on main, Cloudflare containers",MEASURED,docs/website/03-evidence-ledger.md,,diffci-oes-2026-v1
+product,own_ci_wall_time,135 to 354,seconds,same 10 jobs,MEASURED,docs/website/03-evidence-ledger.md,,diffci-oes-2026-v1

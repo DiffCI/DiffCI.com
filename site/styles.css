@@ -930,3 +930,33 @@ html { scrollbar-color: var(--rule-2) var(--paper); scrollbar-width: thin; }
   .bar-value { grid-area: value; }
   .bar-track { grid-area: track; }
 }
+
+/* ---------------- open study ---------------- */
+
+.toc {
+  list-style: none;
+  padding: 0.9rem 1.1rem;
+  margin: 1.25rem 0 0;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.9rem;
+  columns: 2;
+  column-gap: 1.5rem;
+}
+
+.toc li { break-inside: avoid; margin: 0.2rem 0; }
+.toc a { text-decoration: none; color: var(--accent-ink); }
+.toc a:hover { text-decoration: underline; }
+
+pre.cite {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.82rem;
+}
+
+figure .diverging { width: 100%; height: auto; display: block; }
+
+@media (max-width: 40rem) {
+  .toc { columns: 1; }
+}

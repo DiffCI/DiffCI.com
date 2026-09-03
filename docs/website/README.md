@@ -14,6 +14,8 @@ with before it reaches `site/`; the evidence ledger below is the authority for e
 | [`case-studies/01-calcom.md`](case-studies/01-calcom.md) | cal.com — the activation-quality repository |
 | [`case-studies/02-deepseek-harness.md`](case-studies/02-deepseek-harness.md) | deepseek-ai/deepseek-harness — correct refusal under dirty conditions |
 | [`case-studies/03-diffci-own-ci.md`](case-studies/03-diffci-own-ci.md) | DiffCI's own CI on Cloudflare containers |
+| [`04-open-study.md`](04-open-study.md) | The CC BY 4.0 Open Evidence Study 2026: what was built, the rules, and the founder-only decisions before it is deployed |
+| [`../../src/open-study/diffci-open-evidence-2026.ts`](../../src/open-study/diffci-open-evidence-2026.ts) | The study's findings module: the only copy of every figure in the study page, CSV, PDF and licence (`npm run study:render`) |
 
 ## Rules these drafts follow
 
