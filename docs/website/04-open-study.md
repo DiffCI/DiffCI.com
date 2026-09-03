@@ -34,7 +34,7 @@ a "what this study does not establish" section that the test suite refuses to le
 | Editorial article, text draft | [`05-editorial-path-rule.md`](05-editorial-path-rule.md) | 1,800–2,500-word contributed-article draft derived from the study. Not on the site |
 | Editorial article, published PDF | `site/research/2026/diffci-path-rule-article.pdf` | Founder's typeset version (five figures) with three figure-label corrections applied to the chart images, 2026-09-03. **Permanent URL** `https://diffci.com/research/2026/diffci-path-rule-article.pdf`, registered in [`permalinks.md`](permalinks.md); linked from the study's "Download and cite" and the study PDF. Founder decision: one plain URL, replaced in place on revision (the `-v1`/`-v2` scheme was retired before first deploy) |
 | Permalink registry | [`permalinks.md`](permalinks.md) + `tests/open-study/permalinks.test.ts` | Every URL external citations may depend on; versioned files are hash-pinned so a silent overwrite fails CI |
-| Homepage | `site/index.html` | A fourth card in the evidence section (linking the study and, since 2026-09-03, the article PDF) and a footer link |
+| Homepage | `site/index.html` | A fourth card in the evidence section (linking the study and, since 2026-09-03, the article PDF) and footer links to both the study and the article; the study page's rendered footer carries the same two links |
 
 Evidence levels in the study: `MEASURED` (a clock or counter produced it), `PREDICTED` (a frozen
 rule's prediction, committed before the measurement), `PROCESS_FACT` (something happened), `ABSTAINED`
