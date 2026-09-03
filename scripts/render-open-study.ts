@@ -351,7 +351,6 @@ ${study.companionDocuments.map((d) => `    <li><a href="${d.href}">${escapeHtml(
       <a href="/case-studies/deepseek-harness">deepseek-harness</a>
       <a href="/case-studies/diffci-own-ci">our own CI</a>
       <a href="/${study.pagePath}">Open study</a>
-      <a href="/research/2026/diffci-path-rule-article.pdf">Article (PDF)</a>
       <a href="/data-handling">Data handling</a>
     </nav>
     <p class="fine">
