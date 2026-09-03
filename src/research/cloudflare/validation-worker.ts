@@ -1041,6 +1041,41 @@ async function shadowReconcile(request: Request, env: ValidationEnv): Promise<Re
   return json({ ok: true, repository, ...result });
 }
 
+/**
+ * YC readiness Week 1 (2026-09-04), item 7: identifies which enrolled repositories have crossed the
+ * 7-day mark and are ready for their first report to be delivered. Deliberately NOT an email sender -
+ * scripts/generate-shadow-report.ts's own header already established the intended design: "the
+ * founder-operated delivery step is explicitly manual for the first ten repositories." No email
+ * infrastructure exists in this codebase (no provider, no verified sending domain - which would itself
+ * need the DNS action this whole phase is gated on), and standing this up is a real, separate build, not
+ * a same-session addition. This route is the mechanism a manual delivery step needs: a real, queryable
+ * "who's due" list, rather than the founder tracking enrollment dates by hand. The report itself is
+ * already self-serve from day 0 via GET /v1/shadow/report - a maintainer who bookmarked their URL at
+ * install time never needs to wait for a push at all.
+ */
+async function shadowDay7Status(env: ValidationEnv): Promise<Response> {
+  const { results } = await env.RESEARCH_DB.prepare(
+    `SELECT repository, state, observation_source, enrolled_at FROM shadow_repositories WHERE state IN ('SHADOW_ACTIVE', 'SHADOW_LIMITED') ORDER BY enrolled_at ASC`,
+  )
+    .bind()
+    .all<{ repository: string; state: string; observation_source: string; enrolled_at: string }>();
+  const now = Date.now();
+  const rows = results.map((r) => {
+    const enrolledAtMs = new Date(r.enrolled_at).getTime();
+    const daysSinceEnrollment = Number.isFinite(enrolledAtMs) ? (now - enrolledAtMs) / 86_400_000 : undefined;
+    return {
+      repository: r.repository,
+      state: r.state,
+      observationSource: r.observation_source,
+      enrolledAt: r.enrolled_at,
+      daysSinceEnrollment: daysSinceEnrollment !== undefined ? Math.round(daysSinceEnrollment * 10) / 10 : undefined,
+      readyForDay7Report: daysSinceEnrollment !== undefined && daysSinceEnrollment >= 7,
+      reportUrl: `/v1/shadow/report?repository=${encodeURIComponent(r.repository)}&days=7`,
+    };
+  });
+  return json({ ok: true, count: rows.length, dueNow: rows.filter((r) => r.readyForDay7Report).length, repositories: rows });
+}
+
 async function shadowStatus(request: Request, env: ValidationEnv): Promise<Response> {
   const url = new URL(request.url);
   const repository = url.searchParams.get("repository") ?? "";
@@ -2069,6 +2104,12 @@ export default {
         return json({ ok: false, error: "unauthorized" }, 401);
       }
       return shadowStatus(request, env);
+    }
+    if (request.method === "GET" && url.pathname === "/v1/shadow/day7-status") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return shadowDay7Status(env);
     }
     if (request.method === "POST" && url.pathname === "/v1/shadow/webhook") {
       // No bearer auth - authenticated by GitHub's HMAC signature inside the handler.
