@@ -67,8 +67,8 @@ still-untaken founder decision from pointing DNS).
   (`adityankale190895/DiffCI.com`, real MEASURED/ESTIMATED-labeled output) and a real unenrolled repo
   (`nobody/nowhere`, honest "no completed CI workload was observed" - no fabricated numbers).
 - `site/welcome.html` - post-install landing page, deployed to `diffci-site`, live at
-  `https://diffci-site.damp-waterfall-0cd8.workers.dev/welcome`. Explains the 5 read-only
-  permissions, the 7-day timeline, links a report-lookup form directly to the route above, and links
+  `https://diffci-site.damp-waterfall-0cd8.workers.dev/welcome`. Explains the 4 read-only
+  permissions (pull_requests dropped 2026-09-03, unused) and where the code goes, the 7-day timeline, links a report-lookup form directly to the route above, and links
   `/data-handling`.
 - Two stale metrics re-measured with real, reproducible provenance (`scripts/remeasure-own-ci-cost.ts`,
   real `gh api` job timings, real Cloudflare Containers `standard-2` pricing): CI cost per job now

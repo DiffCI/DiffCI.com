@@ -90,7 +90,7 @@ were cal.com-only figures presented without that scope; these rows replace them 
 | Claim | Source |
 |---|---|
 | Shadow mode is read-only end to end — never writes, comments, labels, or checks out for writing | [`CURRENT_STATE.md`](../CURRENT_STATE.md) §9 |
-| Shadow App permissions are read-only: metadata, contents, actions, checks, pull requests | `CURRENT_STATE.md` §5; [`github-app-registration.md`](../github-app-registration.md) |
+| Shadow App permissions are read-only: metadata, contents, actions, checks (pull requests dropped 2026-09-03, it was never used) | `CURRENT_STATE.md` §5; [`github-app-registration.md`](../github-app-registration.md) |
 | Mandatory fallback to full CI on lockfile / workflow / root-config changes | `src/planner/`, exercised in both case studies' fallback observations |
 | Dependency graph is TypeScript-compiler-backed, reachability-based, confidence-scored | [`README.md`](../../README.md); `src/repo/` |
 | A failed git analysis returns an explicit error, never a silently-empty affected set | `CURRENT_STATE.md` §1 |
