@@ -1,6 +1,6 @@
 # YC readiness plan — W27 application
 
-**Written:** 2026-09-03 · **Status:** proposed, not started, uncommitted
+**Written:** 2026-09-03 · **Status:** proposed, not started (first committed in `6c7a994`, swept in by a concurrent freeze commit)
 · **Target:** Y Combinator Winter 2027 batch, application deadline **2026-11-02 20:00 PT**
 (2026-11-03 09:30 IST), decisions by 2026-12-11. Late applications are read but not on a schedule.
 · **Runway to deadline:** 60 days, planned as 8 working weeks with a 2-day submission buffer.
