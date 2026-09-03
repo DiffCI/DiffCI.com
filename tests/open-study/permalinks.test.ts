@@ -19,9 +19,6 @@ export const PERMALINKS: readonly Permalink[] = [
   { url: "/research/2026/diffci-open-evidence-2026.csv", file: "site/research/2026/diffci-open-evidence-2026.csv" },
   { url: "/research/2026/diffci-open-evidence-2026.pdf", file: "site/research/2026/diffci-open-evidence-2026.pdf" },
   { url: "/research/2026/LICENSE.txt", file: "site/research/2026/LICENSE.txt" },
-  // Founder decision 2026-09-03: the article is published at one plain URL and replaced in place
-  // when revised (no -vN suffix, no hash pin). The URL itself is still a permalink: never moved.
-  { url: "/research/2026/diffci-path-rule-article.pdf", file: "site/research/2026/diffci-path-rule-article.pdf" },
 ];
 
 test("every registered permalink resolves to a file under site/", () => {

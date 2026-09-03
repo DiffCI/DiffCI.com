@@ -491,7 +491,7 @@ export const diffciOpenEvidenceStudy2026: StudyFindings = {
     { path: LEDGER, what: "Website evidence ledger: every published number and its level" },
     { path: METRICS, what: "YC sprint metrics: zero external installs, verified by query" },
   ],
-  // Founder decision 2026-09-03: the article PDF at /research/2026/diffci-path-rule-article.pdf is
-  // hosted for direct citation but not linked from the study, the nav or the homepage.
+  // Founder decision 2026-09-03: the study page is the only citable artefact; the contributed
+  // article is not hosted on the site (its draft lives in docs/website/05-editorial-path-rule.md).
   companionDocuments: [],
 };

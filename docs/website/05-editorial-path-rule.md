@@ -5,11 +5,10 @@
 are all still open; nothing below has been sent anywhere. Every number is in the study's CSV with its
 evidence level. Target length 1,800–2,500 words; the body below is about 2,250.
 
-**Published form:** the founder's typeset PDF of this text (five figures) is at the permanent URL
-`https://diffci.com/research/2026/diffci-path-rule-article.pdf` (file
-`site/research/2026/diffci-path-rule-article.pdf`, registered in [`permalinks.md`](permalinks.md)).
-That URL is the one to cite externally. This markdown is the working text; if it is revised, the PDF
-is replaced in place at the same URL.
+**Published form:** none on the site. Founder decision 2026-09-03: the citable artefact is the study
+page, `https://diffci.com/research/diffci-open-evidence-2026`; the article is for a contributed
+publication, not for self-hosting. A corrected typeset PDF (five figures) exists offline for that
+purpose. This markdown is the working text.
 
 ---
 

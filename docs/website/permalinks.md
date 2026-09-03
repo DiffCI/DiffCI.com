@@ -26,17 +26,11 @@ if a path below goes missing or a pinned file's SHA-256 changes.
 | `https://diffci.com/research/2026/diffci-open-evidence-2026.csv` | `site/research/2026/diffci-open-evidence-2026.csv` | re-rendered, never moved | none |
 | `https://diffci.com/research/2026/diffci-open-evidence-2026.pdf` | `site/research/2026/diffci-open-evidence-2026.pdf` | re-rendered, never moved | none |
 | `https://diffci.com/research/2026/LICENSE.txt` | `site/research/2026/LICENSE.txt` | re-rendered, never moved | none |
-| `https://diffci.com/research/2026/diffci-path-rule-article.pdf` | `site/research/2026/diffci-path-rule-article.pdf` | replaced in place, never moved | none |
-
-The article PDF (6 pages, five figures, footer "DiffCI - contributed article draft - September
-2026") is the founder's typeset version of `05-editorial-path-rule.md`, supplied 2026-09-03, with
-three figure-label corrections applied to the embedded chart images (figure 1's "4.2%" no longer
-overlaps the bootstrap-interval note, figure 3's "-13.6%" for trpc/trpc is no longer clipped by the
-axis, figure 4's "96.4% recall" no longer crosses the frame line). It cites the study page URL above.
-
-Founder decision 2026-09-03: **one plain URL, replaced in place.** An earlier `-v1`/`-v2` scheme was
-retired before the site's first deploy of the study, so nothing external ever cited a versioned URL.
-A revision overwrites this file at the same path; the URL never changes.
+Retired 2026-09-03, same evening it was first deployed and before anything external cited it: the
+contributed-article PDF (`/research/2026/diffci-path-rule-article.pdf`, briefly `-v1`/`-v2`). Founder
+decision: the study page is the only citable artefact; the article is not hosted here. Its draft text
+stays in `05-editorial-path-rule.md` for outreach. If it is ever hosted again, treat it as a new
+permalink under "Adding a permalink"; do not reuse the retired path.
 
 ## Adding a permalink
 
