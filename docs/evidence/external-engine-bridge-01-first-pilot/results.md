@@ -120,15 +120,67 @@ than either arm's shortfall being papered over into a false `REPRODUCED` or a cr
 4. **Refusal outcomes survive unchanged** — `REFUSED`, for a specific, well-formed, engine-derived
    reason. Not coerced toward success, not a crash.
 
-## What this establishes
+## Candidate 2: typicode/husky (rank 20) — REFUSED, a container-provisioning gap this time
+
+Continuing the same protocol after lodash: rank 17/19 dedupe to babel/babel, rank 18
+(babel/babel-eslint) rejected (archived, no active CI), rank 20 (typicode/husky) qualified — single job,
+static matrix including node 22, three plainly-stated commands (`npm --version`, `npm ci
+--ignore-scripts`, `./test.sh`). Plan frozen (`5b62e97`) before running anything, deliberately without
+pre-judging `./test.sh`'s output shape (12 bespoke shell integration scripts, no conventional pass/fail
+count at all) — the same non-pre-judgment applied to lodash's QUnit.
+
+**Result:**
+```
+outcome: REFUSED
+reason: the engine did not mark the path executable, so the inference arm executed nothing:
+        no workflow job provides TEST; the repository may produce this outcome outside GitHub
+        Actions, or this engine did not recognise the step that does
+```
+
+Two independent things went wrong, and it matters that they're different:
+
+1. **Reference arm**: `./test.sh` exited 127. The raw output shows this was *not* a mistranscription or
+   an unexecutable step — 11 of the script's 12 sub-tests ran for real (npm pack, several real git-repo
+   fixture operations), failing only when `test/11_time.sh` invokes a `time` utility this canonical
+   container's image does not provide (`test/11_time.sh: 10: time: not found`), which `set -e` then
+   propagates as the whole script's exit code. A real, novel finding: the canonical Sandbox image is
+   missing at least one common POSIX utility that GitHub's own `ubuntu-latest` runners ship with. Not a
+   plan error — the step is transcribed exactly as the workflow states it.
+2. **Inference arm**: refused independently, for an unrelated reason — `purpose.ts` does not classify a
+   bare `./test.sh` invocation as providing TEST at all (unlike `npm test`/`npm run <script>`-shaped
+   commands, which it does recognize).
+
+Same four proofs verified the same way as lodash's; raw evidence at
+`docs/evidence/external-engine-bridge-01-first-pilot/husky/`.
+
+## What this establishes, across both candidates
 
 This is the "first newly-prepared external-repository pilot" step eslint's rehearsal could not stand in
 for: a repository chosen by a mechanical, external, bias-free process; a reference plan independently
 authored and frozen before any engine output existed for it; carried through the real deployed
-infrastructure to an honest, persisted, immutable result. The result is `REFUSED`, for a reason genuinely
-emergent from the engine's own analysis — not engineered, not expected, not adjusted after the fact.
+infrastructure to an honest, persisted, immutable result — done twice now, both times landing on
+`REFUSED` for a reason genuinely emergent from the engine's own analysis, never engineered or adjusted
+after the fact.
 
-Two real, narrow parser-coverage gaps surfaced along the way (node-tap's CLI reporter at rimraf; QUnit's
-plain-script output at lodash) — both real findings, both explicitly out of scope to fix as part of this
-pilot (extending the evidence parser is new engine work, not a bridge/rehearsal concern), recorded here
-for whoever picks that up next.
+**Three real, distinct gaps have surfaced across three candidates so far — not yet one systematic root
+cause, but a describable pattern:**
+
+| candidate | reference-arm gap | inference-arm gap |
+|---|---|---|
+| rimraf | `node-tap`'s CLI reporter format unrecognized (suite ran clean) | (not reached — R3-level) |
+| lodash | none (ran clean once tested in the real Linux container) | an unresolved TEST-path operation the engine couldn't tie to a command |
+| husky | canonical container missing the `time` utility (11/12 sub-tests ran) | a bare `./test.sh` invocation not recognized as providing TEST at all |
+
+The higher-level theme: **the engine's TEST-purpose detection and output-format coverage are calibrated
+to conventional package.json script/test-runner idioms** (`npm test`, mocha, jest, native `node --test`)
+**and each candidate whose real CI diverges from that idiom — an unfamiliar reporter, a bare script
+entrypoint — has produced a different kind of gap rather than the same one twice.** That is still useful,
+real signal, distinct from "the engine is broken" — but it is three data points, not a survey, and none
+of it is a defect to fix as part of this pilot (extending parser/purpose coverage, or the container image,
+is new engine/infrastructure work). Recorded here for whoever picks it up next.
+
+Still zero `REPRODUCED` and zero candidates that got past outcome-level refusal to compare against ground
+truth. Continuing the same mechanical rank order (next: rank 21, rollup) can keep accumulating evidence
+either toward a `REPRODUCED` case or toward a tighter characterization of this pattern — logged as an open
+decision rather than continued unprompted, given each additional candidate now costs real Cloudflare
+infrastructure time and the pattern above is already substantive enough to report.

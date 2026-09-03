@@ -91,7 +91,7 @@
         "conclusion": "success",
         "source": "github actions run 23321072009, job within it"
       },
-      "caveat": "This workflow's most recent completed run before the pinned commit is over 5 months old relative to when this screening was performed (2026-09-03) - the largest plan-age gap of any candidate screened here so far."
+      "caveat": "This workflow's most recent completed run before the pinned commit is over 5 months old relative to when this screening was performed (2026-09-03) - the largest plan-age gap of any candidate screened here so far. Real result: docs/evidence/external-engine-bridge-01-first-pilot/results.md - REFUSED. The reference arm's ./test.sh step itself failed (exit 127), but NOT because the step was mistranscribed or unexecutable as written: the raw output shows 11 of 12 sub-tests running, failing only when test/11_time.sh invokes a `time` utility this canonical container's image does not provide (`test/11_time.sh: 10: time: not found`) - a real container-provisioning gap, distinct from every prior finding. The inference arm refused for an unrelated, independent reason: purpose.ts does not recognise a bare `./test.sh` invocation as providing TEST at all."
     }
   ]
 }
