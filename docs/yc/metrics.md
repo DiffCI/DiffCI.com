@@ -49,7 +49,16 @@ health endpoints) - none are carried forward from the plan's own baseline row wi
 Everything below is what actually shipped and was actually verified live this session - not a status
 claim carried forward. Commits: `a4ee705` (re-measurement), `1445ae4` (comparator, Week 2 - already
 landed before Week 1 began), `4648495` (hosted report route), `7dee8a6` (welcome page + site fixes +
-manifest), `fa7e216` (day-7 founder diagnostic).
+manifest), `fa7e216` (day-7 founder diagnostic), `130bd6c` (diffci.com custom domain route).
+
+**2026-09-04 update - diffci.com is live.** Founder-authorized and completed: the zone's pre-existing
+externally-managed DNS record at the apex (blocking the custom-domain attach, error 100117) was cleared
+by the founder; `npm run site:deploy` then attached the custom domain cleanly. Verified directly:
+`https://diffci.com/` returns 200 with the real homepage title, `/welcome`, `/case-studies/diffci-own-ci`,
+and `/data-handling` all resolve 200, unknown paths correctly 404, and the `workers.dev` fallback URL
+still works. **R1's "diffci.com is live" is now substantively true** - the one open piece is the App's
+public Marketplace listing, still `public: false` and correctly gated per the plan's own SS6 (a separate,
+still-untaken founder decision from pointing DNS).
 
 **Shipped and verified live:**
 
@@ -82,32 +91,31 @@ taken. The manifest file documents the intended value; the live App does not yet
 
 **Remaining founder-only actions** (none silently started, all explicitly gated by the plan or by
 prior instruction):
-1. Configure `setup_url` on the live "DiffCI Shadow" App's GitHub settings page (UI-only).
-2. Publish the App listing publicly (currently `public: false`; explicitly gated per this task's own
+1. ~~Point `diffci.com` DNS at the deployed `diffci-site` Worker~~ - **done 2026-09-04**, founder cleared
+   the pre-existing blocking DNS record, custom domain attached, verified live (see above).
+2. Configure `setup_url` on the live "DiffCI Shadow" App's GitHub settings page (UI-only, not yet done).
+3. Publish the App listing publicly (currently `public: false`; explicitly gated per this task's own
    instruction: "STOP before publicly publishing the App listing unless explicit founder authorization
    exists").
-3. Point `diffci.com` DNS at the deployed `diffci-site` Worker (explicitly gated per this task's own
-   instruction: "STOP before any founder-only DNS action").
 4. Legal entity / jurisdiction / contact address - pre-existing `[TODO before launch]` on every site
-   page footer, untouched this session.
-5. Complete the uninstall-triggered data-deletion pipeline. **This is a real, currently-true blocker**,
-   not a formality: `site/data-handling.html` carries its own pre-existing banner - "Unfinished - do
-   not launch this page yet... the automated deletion path... is not implemented yet. Until it is, this
-   page must not be published." I verified this is still accurate: `shadow-webhook.ts`'s
-   `installation`/`action:"deleted"` handler only logs today: it deletes nothing from D1 or R2. I
-   deliberately did not build this in this session - it's a real, separate piece of work (a new
-   `R2Binding.delete()` capability doesn't exist yet, plus deletion logic across 3 D1 tables), it
-   wasn't one of the 8 requested items, and item 8's stranger journey doesn't exercise uninstall. It's
-   the most credible reason NOT to flip the App to public before it's resolved: the welcome page
-   already links `/data-handling`, and that page currently admits its own promises aren't backed yet.
+   page footer, untouched this session, **now live and publicly visible** as of the DNS change.
+5. Complete the uninstall-triggered data-deletion pipeline. **This is now a live, real problem, not a
+   future one**: `site/data-handling.html` is publicly reachable at `https://diffci.com/data-handling`
+   today (verified 200), and it still carries its own pre-existing banner - "Unfinished - do not launch
+   this page yet... the automated deletion path... is not implemented yet. Until it is, this page must
+   not be published." That page is now published, with its own banner contradicting that fact, at the
+   real domain. I verified the underlying gap is still accurate: `shadow-webhook.ts`'s
+   `installation`/`action:"deleted"` handler only logs today - it deletes nothing from D1 or R2. I did
+   not build this in this session (a new `R2Binding.delete()` capability doesn't exist yet, plus
+   deletion logic across 3 D1 tables) and did not remove the banner or the page - flagging it here and
+   in chat instead of silently either building around it or hiding it.
 
-**Blocker assessment for outreach beginning 2026-09-11:** the *technical* front door is real and
-working - a stranger who is handed the (not-yet-public) install link today, installs, and is handed
-their own report URL would get the exact experience promised, honestly labeled. The plan's own
-instruction gates going *public* on founder authorization, which is unchanged by this session's work
-and is not a technical blocker. The one item worth resolving before flipping the App to public and
-starting outreach is #5 above: the data-handling page's self-admitted gap becomes a real, live promise
-the moment `public: false` flips, not before.
+**Blocker assessment for outreach beginning 2026-09-11:** the technical front door is now fully live,
+including the domain. The one thing that changed status with the DNS flip: item 5 above went from
+"a gap that will matter once the site is public" to "a self-contradicting page a real visitor could
+land on right now." It's still not a blocker to the App install flow itself (data-handling.html is
+prose, not code in the install path), but it's the most credible reason to fix or gate that one page
+before outreach starts, rather than before DNS - DNS is done now.
 
 ## Dashboard, 2026-09-03 (superseded by Week 1 close-out above for infrastructure status; genuine
 install counts below still current - re-verify before Week 2 reporting)
