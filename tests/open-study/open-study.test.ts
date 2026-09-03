@@ -35,9 +35,11 @@ test("every source report cited by a figure is listed in the sources table", () 
 
 test("rendered files on disk match the findings module (run `npm run study:render` if this fails)", () => {
   const out = outputPaths(study);
-  assert.equal(readFileSync(out.html, "utf8"), renderHtml(study), "site HTML is stale");
-  assert.equal(readFileSync(out.csv, "utf8"), renderCsv(study), "CSV is stale");
-  assert.equal(readFileSync(out.license, "utf8"), renderLicense(study), "LICENSE.txt is stale");
+  // Line endings are normalised so a Windows checkout with core.autocrlf does not fail the guard.
+  const lf = (s: string) => s.replace(/\r\n/g, "\n");
+  assert.equal(lf(readFileSync(out.html, "utf8")), renderHtml(study), "site HTML is stale");
+  assert.equal(lf(readFileSync(out.csv, "utf8")), renderCsv(study), "CSV is stale");
+  assert.equal(lf(readFileSync(out.license, "utf8")), renderLicense(study), "LICENSE.txt is stale");
   assert.ok(existsSync(out.pdf), "PDF missing");
   assert.equal(readFileSync(out.pdf).subarray(0, 5).toString("latin1"), "%PDF-", "PDF header");
 });
