@@ -36,6 +36,8 @@ import { computeSourceIntegrity, isValidSha, type SourceArchiveMeta } from "./sh
 // separately per module to keep each module dependency-free - hence the casts at the call site.
 import { makeD1ShadowReadBoundary, type D1Binding as ShadowBoundaryD1 } from "../../product/shadow-read-boundary.js";
 import { makeD1ShadowEconomicsStore, type D1Binding as ShadowEconomicsD1 } from "../../usage/shadow-economics-store.js";
+import { buildLiveShadowReport, type D1Binding as ShadowReportD1 } from "./shadow-report-query.js";
+import { renderShadowReport } from "../../usage/shadow-report-render.js";
 import { runShadowEconomicsCaptureSweep } from "../../usage/shadow-economics-job.js";
 import { runShadowEconomicsRecompute } from "../../usage/shadow-economics-recompute.js";
 
@@ -765,6 +767,34 @@ async function ciReproductionBridgeManualTrigger(request: Request, env: Validati
   }
   const result = await executeCiReproductionBridge(env, owner!, name!, verified.file);
   return json({ ...result, sourceSha: verified.archiveSha });
+}
+
+/**
+ * YC readiness Week 1 (2026-09-04) — the hosted per-repository shadow report, the piece
+ * scripts/generate-shadow-report.ts's own header already anticipated ("A route can come later if this is
+ * ever automated"). Deliberately PUBLIC — no bearer token, unlike every other `/v1/shadow/*` route — a
+ * maintainer who just installed a read-only App has no credential to present, and the report contains
+ * nothing more sensitive than aggregate CI timing for one named repository (never source, never secrets,
+ * never write access). A stated, deliberate decision, not an oversight: anyone who knows (or guesses) an
+ * "owner/name" slug can view that repository's report, the same shape as a public CI-status badge.
+ * Repository slug validation is the only defense this route needs against abuse — it just answers "what
+ * did DiffCI observe for this repository", the same question the enrolled repository's own maintainer
+ * would ask.
+ */
+const REPORT_REPOSITORY_PATTERN = /^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/;
+
+async function shadowReport(request: Request, env: ValidationEnv): Promise<Response> {
+  const url = new URL(request.url);
+  const repository = url.searchParams.get("repository") ?? "";
+  if (!REPORT_REPOSITORY_PATTERN.test(repository)) {
+    return new Response("repository must be 'owner/name'\n", { status: 400, headers: { "content-type": "text/plain; charset=utf-8" } });
+  }
+  const daysParam = Number.parseInt(url.searchParams.get("days") ?? "7", 10);
+  const days = Number.isFinite(daysParam) && daysParam > 0 && daysParam <= 90 ? daysParam : 7;
+
+  const report = await buildLiveShadowReport(env.RESEARCH_DB as unknown as ShadowReportD1, repository, days);
+  const text = renderShadowReport(report);
+  return new Response(`${text}\n`, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" } });
 }
 
 async function shadowEnroll(request: Request, env: ValidationEnv): Promise<Response> {
@@ -2043,6 +2073,10 @@ export default {
     if (request.method === "POST" && url.pathname === "/v1/shadow/webhook") {
       // No bearer auth - authenticated by GitHub's HMAC signature inside the handler.
       return shadowWebhook(request, env, ctx);
+    }
+    if (request.method === "GET" && url.pathname === "/v1/shadow/report") {
+      // Deliberately PUBLIC - see shadowReport()'s own doc comment for why.
+      return shadowReport(request, env);
     }
     if (request.method === "POST" && url.pathname === "/v1/shadow/source") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
