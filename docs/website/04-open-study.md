@@ -31,7 +31,9 @@ a "what this study does not establish" section that the test suite refuses to le
 | Report | `site/research/2026/diffci-open-evidence-2026.pdf` | Rendered from the same module; creation date pinned to `asOf`. **The primary public evidence artefact** |
 | Licence | `site/research/2026/LICENSE.txt` | Same shape as DentalPresence's, with the extra paragraph that named repositories keep their own licences |
 | Guards | [`../../tests/open-study/open-study.test.ts`](../../tests/open-study/open-study.test.ts) | Every internal source path exists; every cited report has a label; rendered files on disk are byte-identical to a fresh render; chart equals table; disclaimer, licence and the unflattering numbers are present; no internal path or `.md` reference leaks into any published artefact |
-| Editorial article | [`05-editorial-path-rule.md`](05-editorial-path-rule.md) | 1,800–2,500-word contributed-article draft derived from the study. Not on the site |
+| Editorial article, text draft | [`05-editorial-path-rule.md`](05-editorial-path-rule.md) | 1,800–2,500-word contributed-article draft derived from the study. Not on the site |
+| Editorial article, published PDF (v1) | `site/research/2026/diffci-path-rule-article-v1.pdf` | Founder-supplied typeset version with three figures, copied in unmodified 2026-09-03. **Permanent URL** `https://diffci.com/research/2026/diffci-path-rule-article-v1.pdf`, hash-pinned in [`permalinks.md`](permalinks.md); linked from the study's "Download and cite" and the PDF. A revision is a new `-v2` file, never an edit |
+| Permalink registry | [`permalinks.md`](permalinks.md) + `tests/open-study/permalinks.test.ts` | Every URL external citations may depend on; versioned files are hash-pinned so a silent overwrite fails CI |
 | Homepage | `site/index.html` | A fourth card in the evidence section and a footer link |
 
 Evidence levels in the study: `MEASURED` (a clock or counter produced it), `PREDICTED` (a frozen

@@ -80,6 +80,12 @@ export type StudyFindings = {
   readonly notEstablished: readonly string[];
   readonly figures: readonly Figure[];
   readonly sourceReports: readonly { readonly path: string; readonly what: string }[];
+  /**
+   * Documents published beside the study at permanent, versioned URLs. A permalink is a promise:
+   * the file at that path is never edited or moved (tests/open-study/permalinks.test.ts pins its
+   * hash). A corrected version gets a new `-v2` file and a new entry; the old one stays.
+   */
+  readonly companionDocuments: readonly { readonly label: string; readonly href: string; readonly what: string }[];
 };
 
 const STAGE0 = "docs/research/2026-08-21-stage0-full-experiment-final-report.md";
@@ -484,5 +490,12 @@ export const diffciOpenEvidenceStudy2026: StudyFindings = {
     { path: PREFLIGHT, what: "Pre-flight P1 leakage-safe replay on DiffCI's own CI" },
     { path: LEDGER, what: "Website evidence ledger: every published number and its level" },
     { path: METRICS, what: "YC sprint metrics: zero external installs, verified by query" },
+  ],
+  companionDocuments: [
+    {
+      label: "Editorial article (PDF, v1)",
+      href: "/research/2026/diffci-path-rule-article-v1.pdf",
+      what: "\"We Tried to Prove Intelligent Test Selection Beats a Path Rule. The Answer Was Complicated.\" A 2,200-word article derived from this study, with three figures. Permanent URL; this file will not change.",
+    },
   ],
 };

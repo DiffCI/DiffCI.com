@@ -326,6 +326,7 @@ ${notEstablished}
     <li><a href="${urls.csv}">All ${study.figures.length} figures as CSV</a> - category, metric, value, unit, scope, evidence level, source report, note.</li>
     <li><a href="${urls.pdf}">Full report as PDF</a> - the same content as this page, rendered from the same data.</li>
     <li><a href="${urls.license}">LICENSE.txt</a></li>
+${study.companionDocuments.map((d) => `    <li><a href="${d.href}">${escapeHtml(d.label)}</a> - ${escapeHtml(d.what)}</li>`).join("\n")}
   </ul>
   <p>
     Evidence levels used in the CSV: <strong>MEASURED</strong>, a clock or a counter produced the number in a real execution;
@@ -617,7 +618,11 @@ export async function renderPdf(study: StudyFindings): Promise<Uint8Array> {
   doc.text(`Published under the ${study.license.name}. Reproduce, adapt or republish any of it, including commercially, with credit to ${study.publisher} and a link to the study page. The licence covers the study materials only, not the DiffCI software or the named repositories' code.`, { size: 9.5, leading: 13.5, after: 6 });
   doc.text(`CSV of all ${study.figures.length} figures: ${SITE_ORIGIN}${urls.csv}`, { size: 9, color: INK2, after: 2 });
   doc.text(`Study page: ${urls.page}`, { size: 9, color: INK2, after: 2 });
-  doc.text(`Licence: ${study.license.url}`, { size: 9, color: INK2, after: 10 });
+  doc.text(`Licence: ${study.license.url}`, { size: 9, color: INK2, after: 4 });
+  for (const d of study.companionDocuments) {
+    doc.text(`${d.label}: ${SITE_ORIGIN}${d.href}`, { size: 9, color: INK2, after: 2 });
+  }
+  doc.y -= 6;
   doc.text(`Evidence levels used in the CSV: ${EVIDENCE_LEVEL_KEY} Each row names the internal report that produced it; those reports are not yet public, and an evidence bundle of the frozen methodologies, aggregate inputs and results, manifests and checksums is the planned next release under this licence.`, { size: 9, color: INK2, leading: 12.5, after: 8 });
   doc.text("Suggested citation:", { size: 9.5, font: bold, after: 3 });
   doc.text(citation(study), { size: 9, color: INK2, leading: 12.5, after: 10 });

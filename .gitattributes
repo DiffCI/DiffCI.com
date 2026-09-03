@@ -3,3 +3,6 @@
 # checkout. Force LF regardless of the checking-out OS's core.autocrlf setting.
 *.sh text eol=lf
 Dockerfile* text eol=lf
+
+# Published PDFs are binary artefacts: never diff-as-text, never touch line endings.
+*.pdf binary

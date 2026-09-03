@@ -5,6 +5,12 @@
 are all still open; nothing below has been sent anywhere. Every number is in the study's CSV with its
 evidence level. Target length 1,800–2,500 words; the body below is about 2,250.
 
+**Published form:** the founder's typeset PDF of this text (three figures) is at the permanent URL
+`https://diffci.com/research/2026/diffci-path-rule-article-v1.pdf` (file
+`site/research/2026/diffci-path-rule-article-v1.pdf`, hash-pinned in [`permalinks.md`](permalinks.md)).
+That URL is the one to cite externally once the site is deployed. This markdown is the working text;
+if it is revised, the PDF is republished as `-v2` at a new URL and v1 stays.
+
 ---
 
 Every test-selection tool ships with the same chart. On the left, the full suite: hundreds of test
