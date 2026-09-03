@@ -1,0 +1,83 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "prettier/eslint-config-prettier",
+  "headSha": "bd6e6171434c7b34dec3dd0f325aab792c126ec6",
+  "source": ".github/workflows/test.yml, job `test`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file, selected via docs/evidence/external-engine-bridge-01-first-pilot-screening.json's continuation of the frozen CI_REPRODUCTION_05 selection frame, resumed at rank 23 (this is the first genuine qualifier - ranks 23/24 rejected as not transcribable, dynamic Nx-affected matrix; ranks 25/26 rejected at R2, no usable ground truth). The inference engine was not consulted and this file is not generated from any ExecutionGraph. ENGINE_COVERAGE_01 item 1 note: this candidate was selected without regard to whether it would exercise DEPENDENCY_BASIS_TIME_BOXED - the repository has a committed yarn.lock, so it will not.",
+  "matrixCell": {
+    "os": "ubuntu-latest",
+    "node": "22"
+  },
+  "cellSelection": "The single in-environment cell: matrix.os ubuntu-latest and matrix.node 22 match the canonical container (node major 22) exactly, one of 5 declared node values (16, 18, 20, 22, 24) x 3 os entries (macOS-latest, ubuntu-latest, windows-2022). Every other cell is OUT_OF_ENVIRONMENT and is recorded, not executed.",
+  "githubSemanticsApplied": "The job name and the Downgrade step's `if:` both reference matrix.node/matrix.os; neither a step `run:` body nor an `env:` block references matrix context in a way that would render DEFINED_EMPTY or UNDEFINED_CONTEXT, so no such distinction applies to this cell.",
+  "conditionsApplied": "One step declares `if: matrix.node == 16 || matrix.node == 18` (\"Downgrade for Node ${{ matrix.node }}\") - false for this cell (node is 22), so that step is condition-skipped and does not appear in the steps below.",
+  "ciGroundTruth": {
+    "cell": "Test on ubuntu-latest with Node.js 22",
+    "conclusion": "success",
+    "source": "github actions run 32434678465, job within it, recorded in docs/evidence/external-engine-bridge-01-first-pilot-screening.json",
+    "jobStartedAt": "2026-08-21T00:59:12Z"
+  },
+  "steps": [
+    {
+      "command": [
+        "yarn",
+        "--immutable"
+      ],
+      "evidence": ".github/workflows/test.yml - `Install Dependencies` -> `run: yarn --immutable`"
+    },
+    {
+      "command": [
+        "yarn",
+        "test:jest"
+      ],
+      "environment": {
+        "ESLINT_CONFIG_PRETTIER_NO_DEPRECATED": "true"
+      },
+      "evidence": ".github/workflows/test.yml - `Jest - flat` -> `run: yarn test:jest`, with `env: ESLINT_CONFIG_PRETTIER_NO_DEPRECATED: \"true\"`"
+    },
+    {
+      "command": [
+        "yarn",
+        "test:jest"
+      ],
+      "environment": {
+        "ESLINT_USE_FLAT_CONFIG": "false"
+      },
+      "evidence": ".github/workflows/test.yml - `Jest - eslintrc` -> `run: yarn test:jest`, with `env: ESLINT_USE_FLAT_CONFIG: \"false\"`"
+    },
+    {
+      "command": [
+        "yarn",
+        "test:cli-sanity"
+      ],
+      "evidence": ".github/workflows/test.yml - `CLI sanity - flat` -> `run: yarn test:cli-sanity`"
+    },
+    {
+      "command": [
+        "yarn",
+        "test:cli-sanity"
+      ],
+      "environment": {
+        "ESLINT_USE_FLAT_CONFIG": "false"
+      },
+      "evidence": ".github/workflows/test.yml - `CLI sanity - eslintrc` -> `run: yarn test:cli-sanity`, with `env: ESLINT_USE_FLAT_CONFIG: \"false\"`"
+    },
+    {
+      "command": [
+        "yarn",
+        "test:cli-sanity-warning"
+      ],
+      "evidence": ".github/workflows/test.yml - `CLI sanity warning - flat` -> `run: yarn test:cli-sanity-warning`"
+    },
+    {
+      "command": [
+        "yarn",
+        "test:cli-sanity-warning"
+      ],
+      "environment": {
+        "ESLINT_USE_FLAT_CONFIG": "false"
+      },
+      "evidence": ".github/workflows/test.yml - `CLI sanity warning - eslintrc` -> `run: yarn test:cli-sanity-warning`, with `env: ESLINT_USE_FLAT_CONFIG: \"false\"`"
+    }
+  ]
+}

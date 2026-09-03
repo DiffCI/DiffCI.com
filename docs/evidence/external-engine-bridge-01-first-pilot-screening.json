@@ -7,7 +7,7 @@
   "additionalR4Exclusions": [
     "axios/date-fns/fastify/immer are excluded here too, even though they were never used by a CI_REPRODUCTION attempt specifically - they already appear elsewhere in DiffCI's validation history (the external-validation/economics thread), and reusing them here would blur the same independence this frame exists to protect."
   ],
-  "screened": 10,
+  "screened": 15,
   "rows": [
     {
       "rank": 12,
@@ -113,6 +113,48 @@
         "source": "github actions run 30206948620, job within it"
       },
       "caveat": "No lockfile at the repository root and no packageManager field - the same missing-pinned-dependency-basis condition that has driven every eslint REFUSED in this whole project. May cause this candidate to REFUSE before the reference/inference arms' execution or output-parsing behavior is exercised at all, the same way eslint's does."
+    },
+    {
+      "rank": 23,
+      "pkg": "@typescript-eslint/eslint-plugin",
+      "repo": "typescript-eslint/typescript-eslint",
+      "verdict": "REJECTED_NOT_TRANSCRIBABLE",
+      "detail": "an Nx monorepo whose test matrix is computed at runtime by `nx show projects --affected` (diffed against git history via a github-script step), not statically declared - the same class of disqualification as rank 12/21. Also has a genuine cross-job dependency (`needs: [install]`/`needs: [build]`) a linear reference plan could not represent even setting the dynamic matrix aside."
+    },
+    {
+      "rank": 24,
+      "pkg": "@typescript-eslint/parser",
+      "repo": "typescript-eslint/typescript-eslint",
+      "verdict": "DEDUPED",
+      "detail": "same repository as rank 23."
+    },
+    {
+      "rank": 25,
+      "pkg": "tslib",
+      "repo": "Microsoft/tslib",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "CI triggers only on `pull_request`, never `push` - checked the 10 most recent commits on `main` directly via the check-runs API and none carry any recorded check-run at all, so no in-environment cell has ever concluded success/failure against a commit that is actually on the default branch."
+    },
+    {
+      "rank": 26,
+      "pkg": "ts-node",
+      "repo": "TypeStrong/ts-node",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "the real `test` job's matrix tops out at node 21-nightly (flavors covering 16/18/20/21-nightly) - no cell targets major 22. Also structurally depends on a build artifact downloaded from a separate `lint-build` job, which would have blocked transcription regardless."
+    },
+    {
+      "rank": 27,
+      "pkg": "eslint-config-prettier",
+      "repo": "prettier/eslint-config-prettier",
+      "verdict": "QUALIFIED",
+      "detail": "single job, static matrix (os x [16,18,20,22,24]) including node 22 on ubuntu-latest, six plainly-stated steps for this cell (one conditional step, `matrix.node == 16 || matrix.node == 18`, correctly false and skipped at node 22), no reusable-action indirection - directly transcribable with zero repair.",
+      "pinnedHeadSha": "bd6e6171434c7b34dec3dd0f325aab792c126ec6",
+      "groundTruth": {
+        "cell": "Test on ubuntu-latest with Node.js 22",
+        "conclusion": "success",
+        "source": "github actions run 32434678465, job within it, jobStartedAt 2026-08-21T00:59:12Z"
+      },
+      "caveat": "ENGINE_COVERAGE_01 item 1 relevance, recorded for transparency and NOT a selection factor (checked only after R1/R2/R4 already qualified this candidate): the repository has a committed yarn.lock, so DEPENDENCY_BASIS_PINNED is already satisfied and DEPENDENCY_BASIS_TIME_BOXED will never be exercised here. This is a legitimate fresh external-engine holdout regardless - it just provides no generalization evidence specific to item 1."
     }
   ]
 }
