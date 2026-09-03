@@ -20,6 +20,8 @@ function prediction(overrides: Partial<ShadowPredictionSummary> = {}): ShadowPre
     opportunityCategory: "DISCRIMINATIVE_OPPORTUNITY",
     testsSelectedDiffci: 9,
     testsTotalFull: 46,
+    testsSelectedPath: 46,
+    diffciAnalysisOverheadMs: 250,
     createdAt: "2026-08-22T00:00:00Z",
     ...overrides,
   };

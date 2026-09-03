@@ -20,6 +20,8 @@ function prediction(overrides: Partial<ShadowPredictionSummary> = {}): ShadowPre
     opportunityCategory: "DISCRIMINATIVE_OPPORTUNITY",
     testsSelectedDiffci: 9,
     testsTotalFull: 46,
+    testsSelectedPath: 46,
+    diffciAnalysisOverheadMs: 250,
     createdAt: "2026-08-22T00:00:00Z",
     ...overrides,
   };
@@ -315,6 +317,8 @@ describe("runShadowEconomicsCaptureSweep", () => {
         avoidableTier: "UNKNOWN",
         estimationMethod: undefined,
         testsSelectedDiffci: undefined,
+        testsSelectedPath: undefined,
+        diffciAnalysisOverheadMs: undefined,
         planMode: undefined,
         estimatorVersion: undefined,
         estimatedAt: undefined,
@@ -378,7 +382,7 @@ describe("runShadowEconomicsCaptureSweep", () => {
       logicalDeltaKey: "done-1", stage: "test", repository: "acme/web", headSha: p1.headSha,
       workflowRunIds: [], jobIds: [], fullWorkloadMs: 1000, testsTotalFull: 5,
       selectedWorkloadMs: undefined, selectedWorkloadConfidence: undefined, avoidableMs: undefined,
-      avoidableTier: "UNKNOWN", estimationMethod: undefined, testsSelectedDiffci: undefined, planMode: undefined, estimatorVersion: undefined, estimatedAt: undefined, schemaVersion: 1, observedAt: "2026-08-24T00:00:00Z",
+      avoidableTier: "UNKNOWN", estimationMethod: undefined, testsSelectedDiffci: undefined, testsSelectedPath: undefined, diffciAnalysisOverheadMs: undefined, planMode: undefined, estimatorVersion: undefined, estimatedAt: undefined, schemaVersion: 1, observedAt: "2026-08-24T00:00:00Z",
     });
     const tokenCalls: string[] = [];
     await runShadowEconomicsCaptureSweep(

@@ -28,6 +28,15 @@ export interface ShadowEconomicsCandidate {
   testsTotalFull: number;
   /** Raw input to the estimate and stored as such - a FULL plan must never report avoidable work. */
   planMode: "FULL" | "SELECTIVE" | undefined;
+  /** YC readiness Week 2, incremental-economics comparator: the path-rule baseline's own selected-test
+   * count for this same commit (src/planner/path-baseline.ts, computed by the poll container alongside
+   * DiffCI's own selection - never derived here). Lets a report compare DiffCI against "what a path rule
+   * would have run" instead of merely against FULL. */
+  testsSelectedPath: number;
+  /** DiffCI's own real, measured analysis wall-time for this prediction - the cost side of the
+   * comparator, so a comparison cannot credit DiffCI's selection without also charging what producing it
+   * cost. */
+  diffciAnalysisOverheadMs: number;
 }
 
 export interface ShadowEconomicsObservation {
@@ -47,6 +56,11 @@ export interface ShadowEconomicsObservation {
   /** Raw inputs, persisted so a recompute is self-contained and auditable. Never rewritten. */
   testsSelectedDiffci: number | undefined;
   planMode: "FULL" | "SELECTIVE" | undefined;
+  /** YC readiness Week 2 comparator inputs - same test-stage-only scoping as testsSelectedDiffci/
+   * testsTotalFull above, for the same reason (no build/lint/typecheck/e2e selection concept exists for
+   * either DiffCI or the path-rule baseline). */
+  testsSelectedPath: number | undefined;
+  diffciAnalysisOverheadMs: number | undefined;
   /** Which estimator produced the derived fields, and when - drives the recompute/backfill sweep. */
   estimatorVersion: number | undefined;
   estimatedAt: string | undefined;
@@ -101,6 +115,10 @@ export function deriveShadowEconomicsObservations(
         // non-test row never implies DiffCI reasoned about its test counts.
         testsTotalFull: bucket.stage === "test" ? candidate.testsTotalFull : undefined,
         testsSelectedDiffci: bucket.stage === "test" ? candidate.testsSelectedDiffci : undefined,
+        testsSelectedPath: bucket.stage === "test" ? candidate.testsSelectedPath : undefined,
+        // A per-commit, not per-stage, cost - attached only to the 'test' row (where the rest of the
+        // comparator's data already lives) so summing across a commit's stage rows never double-counts it.
+        diffciAnalysisOverheadMs: bucket.stage === "test" ? candidate.diffciAnalysisOverheadMs : undefined,
         planMode: candidate.planMode,
         selectedWorkloadMs: estimate.selectedWorkloadMs,
         selectedWorkloadConfidence: estimate.selectedWorkloadConfidence,

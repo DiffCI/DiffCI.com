@@ -16,7 +16,8 @@
  *    ratios the estimate overstates, because per-invocation overhead is not modeled.
  */
 import type { CiStage } from "../shadow/stage-classification.js";
-import type { ShadowRepositoryReport, StageRollup } from "./shadow-report-rollup.js";
+import type { CommitDetail, ShadowRepositoryReport, StageRollup } from "./shadow-report-rollup.js";
+import { estimateStageEconomics } from "./economics-estimator.js";
 
 function hours(ms: number): string {
   return (ms / 3_600_000).toFixed(2);
@@ -50,6 +51,54 @@ function renderStageLine(stage: StageRollup): string {
   return `${observed}  -  measured consumption, estimated avoidable compute: ${seconds(stage.estimatedAvoidableMs)}s${partial}`;
 }
 
+/**
+ * YC readiness Week 2 - the incremental-economics comparator. Answers, per commit: what did full CI
+ * cost, what would the path-rule baseline (src/planner/path-baseline.ts) have cost, what did DiffCI
+ * select, what did DiffCI's own analysis cost, and what is the incremental difference after paying for
+ * that analysis. Structurally mirrors scripts/dogfood-economics.ts's measured
+ * `incrementalCpu = comparatorCpu - (diffciSelectedCpu + jointAnalysisCpu)`, but every selected-workload
+ * term here is an ESTIMATE (shadow mode executes neither counterfactual) rather than a measured
+ * CPU-second - the vocabulary must say so every time, because "DiffCI selected fewer tests than the path
+ * rule" is not by itself a savings claim once DiffCI's own analysis cost is paid for.
+ */
+interface ComparatorEstimate {
+  /** ESTIMATED - what the path-rule baseline would have cost, had it run. */
+  pathSelectedMs: number | undefined;
+  /** ESTIMATED - what DiffCI's own selection would have cost, had it run. */
+  diffciSelectedMs: number | undefined;
+  /** MEASURED - DiffCI's real analysis wall-time for this commit. */
+  analysisMs: number | undefined;
+  /** ESTIMATED - pathSelectedMs - (diffciSelectedMs + analysisMs). Positive means DiffCI wins even after
+   * paying for its own analysis; negative means the path rule would have been cheaper overall. Undefined
+   * whenever any input is unavailable - never defaulted to zero, which would misreport "no difference"
+   * when the truth is "not comparable yet". */
+  incrementalMs: number | undefined;
+}
+
+function comparatorFor(c: CommitDetail): ComparatorEstimate {
+  if (typeof c.testsTotalFull !== "number" || c.testsTotalFull <= 0) {
+    return { pathSelectedMs: undefined, diffciSelectedMs: undefined, analysisMs: c.diffciAnalysisOverheadMs, incrementalMs: undefined };
+  }
+  // planMode is deliberately NOT passed to either call: it names DiffCI's own plan, and applying it to
+  // the path-rule's independent selection would misapply the estimator's FULL-implies-ratio-1 shortcut
+  // to a strategy that never declared FULL. Both sides get the same treatment - the raw selected/total
+  // ratio - so the comparison is symmetric.
+  const path =
+    typeof c.testsSelectedPath === "number"
+      ? estimateStageEconomics({ stage: "test", fullWorkloadMs: c.fullWorkloadMs, testsSelectedDiffci: c.testsSelectedPath, testsTotalFull: c.testsTotalFull, planMode: undefined })
+      : undefined;
+  const diffci =
+    typeof c.testsSelectedDiffci === "number"
+      ? estimateStageEconomics({ stage: "test", fullWorkloadMs: c.fullWorkloadMs, testsSelectedDiffci: c.testsSelectedDiffci, testsTotalFull: c.testsTotalFull, planMode: undefined })
+      : undefined;
+  const pathSelectedMs = path?.selectedWorkloadMs;
+  const diffciSelectedMs = diffci?.selectedWorkloadMs;
+  const analysisMs = c.diffciAnalysisOverheadMs;
+  const incrementalMs =
+    typeof pathSelectedMs === "number" && typeof diffciSelectedMs === "number" && typeof analysisMs === "number" ? pathSelectedMs - (diffciSelectedMs + analysisMs) : undefined;
+  return { pathSelectedMs, diffciSelectedMs, analysisMs, incrementalMs };
+}
+
 function renderCommitEvidence(stage: StageRollup): string[] {
   const lines: string[] = ["", "  Evidence, per observed commit (test stage):"];
   for (const c of stage.commits) {
@@ -69,8 +118,56 @@ function renderCommitEvidence(stage: StageRollup): string[] {
     }
     lines.push(`              confidence:                      ${c.avoidableTier}`);
     lines.push(`              selected execution:              not yet measured`);
+
+    // The incremental-economics comparator: DiffCI vs the path-rule baseline, not merely vs FULL.
+    const cmp = comparatorFor(c);
+    if (typeof c.testsSelectedPath === "number" && typeof c.testsTotalFull === "number") {
+      lines.push(`              path-rule would select (comparator): ${c.testsSelectedPath} / ${c.testsTotalFull} tests`);
+    }
+    lines.push(`              path-rule estimated cost:        ${typeof cmp.pathSelectedMs === "number" ? `${seconds(cmp.pathSelectedMs)}s [ESTIMATED]` : "not estimable"}`);
+    lines.push(`              DiffCI selected estimated cost: ${typeof cmp.diffciSelectedMs === "number" ? `${seconds(cmp.diffciSelectedMs)}s [ESTIMATED]` : "not estimable"}`);
+    lines.push(`              DiffCI analysis cost:            ${typeof cmp.analysisMs === "number" ? `${seconds(cmp.analysisMs)}s [MEASURED]` : "not recorded"}`);
+    if (typeof cmp.incrementalMs === "number") {
+      const sign = cmp.incrementalMs > 0 ? "DiffCI ahead" : cmp.incrementalMs < 0 ? "path rule ahead" : "no difference";
+      lines.push(`              incremental estimated difference: ${cmp.incrementalMs >= 0 ? "+" : ""}${seconds(cmp.incrementalMs)}s (${sign}) [ESTIMATED]`);
+      lines.push(`                = path-rule cost - (DiffCI selected cost + DiffCI analysis cost)`);
+    } else {
+      lines.push(`              incremental estimated difference: not comparable yet`);
+    }
   }
   return lines;
+}
+
+/**
+ * Repository-level incremental-economics total, summed as raw components rather than averaged ratios
+ * (a tiny cheap commit must not outvote a large expensive one - same discipline as
+ * scripts/dogfood-economics.ts's own TOTALS section). Only sums commits where every term is available;
+ * a commit missing any input is excluded from the total rather than silently treated as zero.
+ */
+function renderComparatorTotal(testStage: StageRollup | undefined): string[] {
+  if (!testStage) return [];
+  const comparable = testStage.commits.map((c) => comparatorFor(c)).filter((cmp) => typeof cmp.incrementalMs === "number");
+  if (comparable.length === 0) {
+    return ["", "Incremental economics vs the path-rule baseline", "  Not yet comparable - no observed commit carries every input this comparator needs."];
+  }
+  const sum = (pick: (c: ComparatorEstimate) => number | undefined): number => comparable.reduce((acc, c) => acc + (pick(c) ?? 0), 0);
+  const path = sum((c) => c.pathSelectedMs);
+  const diffci = sum((c) => c.diffciSelectedMs);
+  const analysis = sum((c) => c.analysisMs);
+  const incremental = path - (diffci + analysis);
+  const L = [
+    "",
+    `Incremental economics vs the path-rule baseline, over ${comparable.length} comparable commit(s)  [ESTIMATED]`,
+    `  path-rule estimated cost         ${seconds(path)}s`,
+    `  DiffCI selected estimated cost   ${seconds(diffci)}s`,
+    `  DiffCI analysis cost (measured)  ${seconds(analysis)}s`,
+    `  incremental estimated difference ${incremental >= 0 ? "+" : ""}${seconds(incremental)}s (${incremental > 0 ? "DiffCI ahead" : incremental < 0 ? "path rule ahead" : "no difference"})`,
+    "  Neither side's selected subset was executed - both figures are projections from the same",
+    "  linear-cost model as the rest of this report, and the sign can flip once DiffCI's own analysis cost",
+    "  is paid for even when DiffCI selected fewer tests than the path rule would have. Treat this as the",
+    "  answer to \"would a simple path rule have been cheaper here\", not as compute already avoided.",
+  ];
+  return L;
 }
 
 export function renderShadowReport(report: ShadowRepositoryReport): string {
@@ -132,6 +229,7 @@ export function renderShadowReport(report: ShadowRepositoryReport): string {
 
   const testStage = report.stages.find((s) => s.stage === "test");
   if (testStage) L.push(...renderCommitEvidence(testStage));
+  L.push(...renderComparatorTotal(testStage));
 
   L.push("");
   if (ev.state === "COLLECTING") {

@@ -21,6 +21,8 @@ function row(overrides: Partial<ShadowEconomicsObservation> = {}): ShadowEconomi
     fullWorkloadMs: 35_000,
     testsTotalFull: 70,
     testsSelectedDiffci: 1,
+    testsSelectedPath: 70,
+    diffciAnalysisOverheadMs: 200,
     planMode: "SELECTIVE",
     selectedWorkloadMs: undefined,
     selectedWorkloadConfidence: undefined,

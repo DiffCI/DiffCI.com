@@ -17,6 +17,8 @@ const CANDIDATE = {
   headSha: "head",
   testsSelectedDiffci: 5,
   testsTotalFull: 70,
+  testsSelectedPath: 70,
+  diffciAnalysisOverheadMs: 200,
   planMode: "SELECTIVE" as const,
 };
 

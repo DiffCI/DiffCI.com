@@ -165,6 +165,8 @@ export async function runShadowEconomicsCaptureSweep(deps: ShadowEconomicsJobDep
           testsSelectedDiffci: prediction.testsSelectedDiffci,
           testsTotalFull: prediction.testsTotalFull,
           planMode: prediction.planMode,
+          testsSelectedPath: prediction.testsSelectedPath,
+          diffciAnalysisOverheadMs: prediction.diffciAnalysisOverheadMs,
         },
         evidence.fullRunsObserved,
         evidence.jobs,

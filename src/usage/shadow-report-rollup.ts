@@ -38,6 +38,9 @@ export interface CommitDetail {
   fullWorkloadMs: number;
   estimatedAvoidableMs: number | undefined;
   avoidableTier: EvidenceTier;
+  /** YC readiness Week 2, incremental-economics comparator. */
+  testsSelectedPath: number | undefined;
+  diffciAnalysisOverheadMs: number | undefined;
 }
 
 export interface StageRollup {
@@ -125,6 +128,8 @@ export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
         fullWorkloadMs: r.fullWorkloadMs,
         estimatedAvoidableMs: r.avoidableMs,
         avoidableTier: r.avoidableTier,
+        testsSelectedPath: r.testsSelectedPath,
+        diffciAnalysisOverheadMs: r.diffciAnalysisOverheadMs,
       })),
     });
   }

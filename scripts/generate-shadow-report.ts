@@ -54,6 +54,8 @@ interface RawRow {
   full_workload_ms: number;
   tests_total_full: number | null;
   tests_selected_diffci: number | null;
+  tests_selected_path: number | null;
+  diffci_analysis_overhead_ms: number | null;
   plan_mode: string | null;
   selected_workload_ms: number | null;
   selected_workload_confidence: string | null;
@@ -85,6 +87,8 @@ function toObservation(row: RawRow): ShadowEconomicsObservation {
     fullWorkloadMs: row.full_workload_ms,
     testsTotalFull: row.tests_total_full ?? undefined,
     testsSelectedDiffci: row.tests_selected_diffci ?? undefined,
+    testsSelectedPath: row.tests_selected_path ?? undefined,
+    diffciAnalysisOverheadMs: row.diffci_analysis_overhead_ms ?? undefined,
     planMode: (row.plan_mode as "FULL" | "SELECTIVE" | null) ?? undefined,
     selectedWorkloadMs: row.selected_workload_ms ?? undefined,
     selectedWorkloadConfidence: (row.selected_workload_confidence as SavingsConfidence | null) ?? undefined,

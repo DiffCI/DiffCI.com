@@ -46,6 +46,8 @@ function rowToObservation(row: Record<string, unknown>): ShadowEconomicsObservat
     avoidableTier: row.avoidable_tier as EvidenceTier,
     estimationMethod: (row.estimation_method as string | null) ?? undefined,
     testsSelectedDiffci: (row.tests_selected_diffci as number | null) ?? undefined,
+    testsSelectedPath: (row.tests_selected_path as number | null) ?? undefined,
+    diffciAnalysisOverheadMs: (row.diffci_analysis_overhead_ms as number | null) ?? undefined,
     planMode: (row.plan_mode as "FULL" | "SELECTIVE" | null) ?? undefined,
     estimatorVersion: (row.estimator_version as number | null) ?? undefined,
     estimatedAt: (row.estimated_at as string | null) ?? undefined,
@@ -104,8 +106,9 @@ export function makeD1ShadowEconomicsStore(db: D1Binding): ShadowEconomicsStore 
              (logical_delta_key, stage, repository, head_sha, workflow_run_ids, job_ids, full_workload_ms,
               tests_total_full, selected_workload_ms, selected_workload_confidence, avoidable_ms,
               avoidable_tier, estimation_method, schema_version, observed_at,
-              tests_selected_diffci, plan_mode, estimator_version, estimated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              tests_selected_diffci, plan_mode, estimator_version, estimated_at,
+              tests_selected_path, diffci_analysis_overhead_ms)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           observation.logicalDeltaKey,
@@ -127,6 +130,8 @@ export function makeD1ShadowEconomicsStore(db: D1Binding): ShadowEconomicsStore 
           observation.planMode ?? null,
           observation.estimatorVersion ?? null,
           observation.estimatedAt ?? null,
+          observation.testsSelectedPath ?? null,
+          observation.diffciAnalysisOverheadMs ?? null,
         )
         .run();
       return (result.meta?.changes ?? 0) > 0;

@@ -34,6 +34,16 @@ export interface ShadowPredictionSummary {
   opportunityCategory: "MANDATORY_FALLBACK" | "BASELINE_ALREADY_OPTIMAL" | "DISCRIMINATIVE_OPPORTUNITY";
   testsSelectedDiffci: number;
   testsTotalFull: number;
+  /** YC readiness Week 2: the same path-rule comparator (src/planner/path-baseline.ts) the poll container
+   * already runs for every prediction (scripts/cloudflare-shadow-poll.ts) and has always stored
+   * (tests_selected_path, NOT NULL since the column's introduction) - simply not read by the product
+   * layer until now. Widened onto the existing column, no schema change here. */
+  testsSelectedPath: number;
+  /** DiffCI's own real, measured analysis wall-time for this prediction - also always stored
+   * (diffci_analysis_overhead_ms), also not previously read by the product layer. The cost side of the
+   * incremental-economics comparator: what DiffCI's own selection cost, so a comparison against the path
+   * rule cannot credit DiffCI's selection without also charging it for producing that selection. */
+  diffciAnalysisOverheadMs: number;
   createdAt: string;
 }
 
@@ -74,7 +84,7 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
     async listPredictions(ownerName, startIso, endIso) {
       const { results } = await db
         .prepare(
-          `SELECT logical_delta_key, repository, head_sha, plan_mode, opportunity_category, tests_selected_diffci, tests_total_full, created_at
+          `SELECT logical_delta_key, repository, head_sha, plan_mode, opportunity_category, tests_selected_diffci, tests_total_full, tests_selected_path, diffci_analysis_overhead_ms, created_at
            FROM shadow_predictions
            WHERE repository = ? AND created_at >= ? AND created_at < ?
            ORDER BY created_at DESC`,
@@ -89,6 +99,8 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
         opportunityCategory: row.opportunity_category as ShadowPredictionSummary["opportunityCategory"],
         testsSelectedDiffci: row.tests_selected_diffci as number,
         testsTotalFull: row.tests_total_full as number,
+        testsSelectedPath: row.tests_selected_path as number,
+        diffciAnalysisOverheadMs: row.diffci_analysis_overhead_ms as number,
         createdAt: row.created_at as string,
       }));
     },

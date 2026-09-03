@@ -113,14 +113,14 @@ export async function getDashboardForOrganization(deps: RouteDeps, userId: strin
   const entitlements = getEntitlementsForOrganization(org);
   const allowance = computeAllowanceStatus(entitlements, usageSummary.ciRunsAnalyzed);
 
-  const allPredictions: Array<{ repository: string; headSha: string; planMode: "FULL" | "SELECTIVE"; testsSelectedDiffci: number; testsTotalFull: number; createdAt: string }> = [];
+  const allPredictions: Array<{ repository: string; headSha: string; planMode: "FULL" | "SELECTIVE"; testsSelectedDiffci: number; testsTotalFull: number; testsSelectedPath: number; diffciAnalysisOverheadMs: number; createdAt: string }> = [];
   for (const repo of repositories) {
     const preds = await deps.shadowBoundary.listPredictions(repo.ownerName, startOfUtcMonth(now).toISOString(), endOfUtcMonth(now).toISOString());
     allPredictions.push(...preds);
   }
   const selectiveCount = allPredictions.filter((p) => p.planMode === "SELECTIVE").length;
   const fullCount = allPredictions.filter((p) => p.planMode === "FULL").length;
-  const perPredictionSavings = allPredictions.map((p) => computeSavingsForPrediction({ logicalDeltaKey: "", repository: p.repository, headSha: p.headSha, planMode: p.planMode, opportunityCategory: "DISCRIMINATIVE_OPPORTUNITY", testsSelectedDiffci: p.testsSelectedDiffci, testsTotalFull: p.testsTotalFull, createdAt: p.createdAt }, deps.savingsOptions));
+  const perPredictionSavings = allPredictions.map((p) => computeSavingsForPrediction({ logicalDeltaKey: "", repository: p.repository, headSha: p.headSha, planMode: p.planMode, opportunityCategory: "DISCRIMINATIVE_OPPORTUNITY", testsSelectedDiffci: p.testsSelectedDiffci, testsTotalFull: p.testsTotalFull, testsSelectedPath: p.testsSelectedPath, diffciAnalysisOverheadMs: p.diffciAnalysisOverheadMs, createdAt: p.createdAt }, deps.savingsOptions));
   const savings = aggregateSavings(perPredictionSavings);
 
   const safetySnapshot = await deps.shadowBoundary.getSafetySnapshot(repositories[0]?.ownerName);

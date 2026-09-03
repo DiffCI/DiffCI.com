@@ -20,6 +20,8 @@ function obs(overrides: Partial<ShadowEconomicsObservation> = {}): ShadowEconomi
     fullWorkloadMs: 35_000,
     testsTotalFull: 70,
     testsSelectedDiffci: 1,
+    testsSelectedPath: 35,
+    diffciAnalysisOverheadMs: 300,
     planMode: "SELECTIVE",
     selectedWorkloadMs: 500,
     selectedWorkloadConfidence: "count_based_estimate",
@@ -255,5 +257,69 @@ describe("renderShadowReport - vocabulary rules", () => {
     assert.ok(text.includes("No completed CI workload was observed"));
     assert.ok(text.includes("not about this repository's activity"), "must not imply the repo was idle");
     assert.ok(!text.includes("0.0s  total estimated"), "no fabricated zero totals");
+  });
+});
+
+describe("renderShadowReport - incremental-economics comparator (YC readiness Week 2)", () => {
+  it("answers all six framing questions: full cost, path-rule cost, DiffCI selection, DiffCI's own cost, incremental difference, and safety evidence", () => {
+    // fullWorkloadMs 35_000, testsTotalFull 70: DiffCI selects 1 (2.5% -> ~500ms est.), path rule
+    // selects 35 (50% -> 17_500ms est.), DiffCI's own analysis measured at 300ms.
+    const report = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, eligiblePredictions: 3, safety: SAFETY, observations: [obs()] });
+    const text = renderShadowReport(report);
+    assert.ok(text.includes("full workload (measured):        35.0s"), "what did full CI cost");
+    assert.ok(text.includes("path-rule estimated cost:        17.5s [ESTIMATED]"), "what would the path rule have cost");
+    assert.ok(text.includes("1 / 70 tests"), "what did DiffCI select");
+    assert.ok(text.includes("DiffCI analysis cost:            0.3s [MEASURED]"), "what did DiffCI's own analysis cost");
+    assert.ok(text.includes("incremental estimated difference:"), "the incremental difference after paying for DiffCI");
+    assert.ok(text.includes("selection safety could not be"), "safety evidence (or its explicit absence) is present in the same report");
+  });
+
+  it("never claims a savings word for the comparator - selecting fewer tests is not by itself the claim", () => {
+    const report = rollUpShadowReport({ repository: "unjs/h3", ...WINDOW, eligiblePredictions: 3, safety: SAFETY, observations: [obs()] });
+    const text = renderShadowReport(report).toLowerCase();
+    assert.ok(!text.includes("saved"));
+    assert.ok(!text.includes("savings"));
+  });
+
+  it("the sign can flip: a large enough DiffCI analysis cost puts the path rule ahead, even though DiffCI selected far fewer tests", () => {
+    // DiffCI selects only 1/70 (cheap: ~500ms est.) but its own analysis is deliberately made expensive
+    // enough to exceed what the path rule (35/70, ~17_500ms est.) would have cost.
+    const report = rollUpShadowReport({
+      repository: "unjs/h3",
+      ...WINDOW,
+      eligiblePredictions: 3,
+      safety: SAFETY,
+      observations: [obs({ diffciAnalysisOverheadMs: 20_000 })],
+    });
+    const text = renderShadowReport(report);
+    assert.ok(text.includes("path rule ahead"), "the incremental figure must be able to favour the path rule, not always DiffCI");
+    assert.ok(/incremental estimated difference: -/.test(text), "a negative sign must actually appear when DiffCI is behind");
+  });
+
+  it("reports 'not comparable' rather than fabricating a figure when the path-rule input is unavailable", () => {
+    const report = rollUpShadowReport({
+      repository: "unjs/h3",
+      ...WINDOW,
+      eligiblePredictions: 3,
+      safety: SAFETY,
+      observations: [obs({ testsSelectedPath: undefined })],
+    });
+    const text = renderShadowReport(report);
+    assert.ok(text.includes("not estimable") || text.includes("not comparable yet"));
+  });
+
+  it("the repository-level total sums raw components across commits rather than averaging ratios", () => {
+    const report = rollUpShadowReport({
+      repository: "unjs/h3",
+      ...WINDOW,
+      eligiblePredictions: 3,
+      safety: SAFETY,
+      observations: [
+        obs({ logicalDeltaKey: "a", headSha: "a".repeat(40) }),
+        obs({ logicalDeltaKey: "b", headSha: "b".repeat(40), fullWorkloadMs: 70_000, testsSelectedDiffci: 2, testsSelectedPath: 70, diffciAnalysisOverheadMs: 600 }),
+      ],
+    });
+    const text = renderShadowReport(report);
+    assert.match(text, /Incremental economics vs the path-rule baseline, over 2 comparable commit\(s\)/);
   });
 });
