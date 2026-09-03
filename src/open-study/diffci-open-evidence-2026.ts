@@ -491,11 +491,7 @@ export const diffciOpenEvidenceStudy2026: StudyFindings = {
     { path: LEDGER, what: "Website evidence ledger: every published number and its level" },
     { path: METRICS, what: "YC sprint metrics: zero external installs, verified by query" },
   ],
-  companionDocuments: [
-    {
-      label: "Editorial article (PDF)",
-      href: "/research/2026/diffci-path-rule-article.pdf",
-      what: "\"We Tried to Prove Intelligent Test Selection Beats a Path Rule. The Answer Was Complicated.\" A 2,200-word article derived from this study, with five figures. Permanent URL.",
-    },
-  ],
+  // Founder decision 2026-09-03: the article PDF at /research/2026/diffci-path-rule-article.pdf is
+  // hosted for direct citation but not linked from the study, the nav or the homepage.
+  companionDocuments: [],
 };
