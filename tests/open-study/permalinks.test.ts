@@ -2,8 +2,8 @@
 //
 // An external citation is a promise that a URL keeps resolving to what was cited. This test turns
 // that promise into a CI failure: every registered path must exist under site/, and a versioned
-// (immutable) file's bytes must still hash to the value recorded when it was published. A
-// correction is a new -vN file and a new entry, never an edit to an existing one.
+// (immutable) file's bytes, if any entry carries a sha256, must still hash to the value recorded
+// when it was published. Unpinned entries may be replaced in place but are never moved.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
@@ -19,16 +19,9 @@ export const PERMALINKS: readonly Permalink[] = [
   { url: "/research/2026/diffci-open-evidence-2026.csv", file: "site/research/2026/diffci-open-evidence-2026.csv" },
   { url: "/research/2026/diffci-open-evidence-2026.pdf", file: "site/research/2026/diffci-open-evidence-2026.pdf" },
   { url: "/research/2026/LICENSE.txt", file: "site/research/2026/LICENSE.txt" },
-  {
-    url: "/research/2026/diffci-path-rule-article-v1.pdf",
-    file: "site/research/2026/diffci-path-rule-article-v1.pdf",
-    sha256: "8f763996fa0b5cca8d8e70464cec4c2bb5ae62d6dfb928d32adf582cc82303fa",
-  },
-  {
-    url: "/research/2026/diffci-path-rule-article-v2.pdf",
-    file: "site/research/2026/diffci-path-rule-article-v2.pdf",
-    sha256: "1734897edfab05ca5598f7f9813da4c5c3ec54ebce23784aff4aac6f4022f56a",
-  },
+  // Founder decision 2026-09-03: the article is published at one plain URL and replaced in place
+  // when revised (no -vN suffix, no hash pin). The URL itself is still a permalink: never moved.
+  { url: "/research/2026/diffci-path-rule-article.pdf", file: "site/research/2026/diffci-path-rule-article.pdf" },
 ];
 
 test("every registered permalink resolves to a file under site/", () => {
@@ -50,7 +43,6 @@ test("every companion document the study links to is a registered permalink", ()
   const registered = new Set(PERMALINKS.map((p) => p.url));
   for (const d of study.companionDocuments) {
     assert.ok(registered.has(d.href), `${d.href} is linked from the study but not in the permalink registry`);
-    assert.match(d.href, /-v\d+\.pdf$/, `${d.href} must be versioned`);
   }
 });
 

@@ -15,7 +15,8 @@ if a path below goes missing or a pinned file's SHA-256 changes.
    (`diffci-oes-2026-v1`) inside them changes if the findings do.
 3. **Never redirect a permalink.** Cloudflare `_redirects` would work, but a redirect is a URL that
    someone will eventually clean up. The file stays where it was cited.
-4. **`site/_headers` caches `-v1` PDFs as immutable for a year.** Correct only because of rule 1.
+4. **No file is currently versioned.** If one is ever added, give it a one-year immutable
+   `Cache-Control` rule in `site/_headers`; that is correct only because of rule 1.
 
 ## Registry
 
@@ -25,19 +26,17 @@ if a path below goes missing or a pinned file's SHA-256 changes.
 | `https://diffci.com/research/2026/diffci-open-evidence-2026.csv` | `site/research/2026/diffci-open-evidence-2026.csv` | re-rendered, never moved | none |
 | `https://diffci.com/research/2026/diffci-open-evidence-2026.pdf` | `site/research/2026/diffci-open-evidence-2026.pdf` | re-rendered, never moved | none |
 | `https://diffci.com/research/2026/LICENSE.txt` | `site/research/2026/LICENSE.txt` | re-rendered, never moved | none |
-| `https://diffci.com/research/2026/diffci-path-rule-article-v1.pdf` | `site/research/2026/diffci-path-rule-article-v1.pdf` | **immutable** | `8f763996fa0b5cca8d8e70464cec4c2bb5ae62d6dfb928d32adf582cc82303fa` |
-| `https://diffci.com/research/2026/diffci-path-rule-article-v2.pdf` | `site/research/2026/diffci-path-rule-article-v2.pdf` | **immutable** | `1734897edfab05ca5598f7f9813da4c5c3ec54ebce23784aff4aac6f4022f56a` |
+| `https://diffci.com/research/2026/diffci-path-rule-article.pdf` | `site/research/2026/diffci-path-rule-article.pdf` | replaced in place, never moved | none |
 
-The article PDF (v1, 6 pages, three figures, footer "DiffCI - contributed article draft - September
-2026") was supplied by the founder on 2026-09-03 and copied in unmodified. It cites the study page
-URL above.
+The article PDF (6 pages, five figures, footer "DiffCI - contributed article draft - September
+2026") is the founder's typeset version of `05-editorial-path-rule.md`, supplied 2026-09-03, with
+three figure-label corrections applied to the embedded chart images (figure 1's "4.2%" no longer
+overlaps the bootstrap-interval note, figure 3's "-13.6%" for trpc/trpc is no longer clipped by the
+axis, figure 4's "96.4% recall" no longer crosses the frame line). It cites the study page URL above.
 
-v2 (2026-09-03, 6 pages, five figures, same footer) is the founder's expanded typeset version with
-three figure-label corrections applied to the embedded chart images: figure 1's "4.2%" no longer
-overlaps the bootstrap-interval note, figure 3's "-13.6%" (trpc/trpc) is no longer clipped by the
-axis, and figure 4's "96.4% recall" no longer crosses the frame line. Text and numbers are unchanged
-from the founder's file. The study page's "Download and cite" links v2; v1 stays at its URL. A
-further revision is `-v3`, add a row, leave v1 and v2.
+Founder decision 2026-09-03: **one plain URL, replaced in place.** An earlier `-v1`/`-v2` scheme was
+retired before the site's first deploy of the study, so nothing external ever cited a versioned URL.
+A revision overwrites this file at the same path; the URL never changes.
 
 ## Adding a permalink
 
