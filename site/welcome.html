@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>You're set up — DiffCI</title>
 <meta name="description" content="What happens now that you've installed the read-only DiffCI Shadow App.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DiffCI">
+<meta property="og:title" content="You're set up — DiffCI">
+<meta property="og:description" content="What happens now that you've installed the read-only DiffCI Shadow App.">
+<meta property="og:url" content="https://diffci.com/welcome">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://diffci.com/welcome">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
 </head>
@@ -45,7 +52,9 @@
 
   <h2>Find your report</h2>
   <p>
-    Every enrolled repository has a live report at a URL built from its "owner/name" — bookmark yours now:
+    Every enrolled repository has a live report at a URL built from its "owner/name" — bookmark yours now.
+    DiffCI does not collect an email address and will not send you anything: there is no message on day
+    7, only this URL.
   </p>
   <form class="report-lookup" onsubmit="event.preventDefault(); var v=document.getElementById('repo-input').value.trim(); if(v) window.location.href='https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/report?repository=' + encodeURIComponent(v) + '&days=7';">
     <input id="repo-input" type="text" placeholder="owner/repository" required pattern="[A-Za-z0-9._-]+/[A-Za-z0-9._-]+">
@@ -85,7 +94,11 @@
       <a href="/case-studies/diffci-own-ci">our own CI</a>
       <a href="/data-handling">Data handling</a>
     </nav>
-    <p class="fine">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+    <p class="fine">
+      DiffCI currently ships under its founder's personal GitHub account,
+      <a href="https://github.com/adityankale190895">@adityankale190895</a>. A company identity and a
+      contact address for this site are not yet published; they will appear here when they are.
+    </p>
   </div>
 </footer>
 

@@ -1,8 +1,8 @@
 # Website + case studies (workstream W)
 
-Draft source material for diffci.com. **Nothing here is published.** No site is built, no DNS is
-pointed, no copy has been reviewed. This directory exists so the words can be argued with before they
-are outward-facing.
+Source material for diffci.com. **The site is live** (built as static HTML in `site/`, deployed by
+`npm run site:deploy`, DNS pointed 2026-09-04). These files remain the place where wording is argued
+with before it reaches `site/`; the evidence ledger below is the authority for every number there.
 
 ## What's here
 

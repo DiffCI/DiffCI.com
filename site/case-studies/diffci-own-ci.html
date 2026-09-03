@@ -4,7 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Our own CI — DiffCI case study</title>
-<meta name="description" content="DiffCI's own suite runs on ephemeral Cloudflare containers at $0.0045-$0.0116 a job — and the bug our own green CI was hiding.">
+<meta name="description" content="DiffCI's own suite runs on ephemeral Cloudflare containers at $0.0048-$0.0127 a job — and the bug our own green CI was hiding.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DiffCI">
+<meta property="og:title" content="Our own CI — DiffCI case study">
+<meta property="og:description" content="DiffCI's own suite runs on ephemeral Cloudflare containers at $0.0048-$0.0127 a job — and the bug our own green CI was hiding.">
+<meta property="og:url" content="https://diffci.com/case-studies/diffci-own-ci">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://diffci.com/case-studies/diffci-own-ci">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
 </head>
@@ -36,23 +43,23 @@
   </div>
 
   <div class="figures">
-    <div><b>$0.0045–$0.0116</b><span>per CI job</span></div>
-    <div><b>1,940</b><span>tests across 384 suites, green</span></div>
+    <div><b>$0.0048–$0.0127</b><span>per CI job</span></div>
+    <div><b>1,960</b><span>tests across 389 suites, green</span></div>
     <div><b>0</b><span>GitHub Actions minutes billed</span></div>
     <div><b>0.696</b><span>our own preflight recall</span></div>
   </div>
 
   <h2 class="no-rule">What runs where</h2>
   <p>
-    DiffCI's test suite is <strong>1,940 tests across 384 suites, currently green</strong>, about 33
+    DiffCI's test suite is <strong>1,960 tests across 389 suites, currently green</strong>, under 40
     seconds locally. It does not run on GitHub-hosted runners.
   </p>
   <p>
     Instead, a <code>workflow_job</code> webhook reaches a Cloudflare Worker, which starts a fresh
     ephemeral container running the GitHub Actions runner agent. The runner registers, executes the job,
-    deregisters and terminates. <strong>$0.0045–$0.0116 per job</strong> (median $0.0052), about
-    <strong>2–5 minutes of wall time</strong> per run once warm, and <strong>zero GitHub Actions minutes
-    billed</strong>. Re-measured 2026-09-04 (<code>scripts/remeasure-own-ci-cost.ts</code>, real job
+    deregisters and terminates. <strong>$0.0048–$0.0127 per job</strong> (median $0.0053), about
+    <strong>2–6 minutes of wall time</strong> per run once warm, and <strong>zero GitHub Actions minutes
+    billed</strong>. Re-measured 2026-09-03 (<code>scripts/remeasure-own-ci-cost.ts</code>, real job
     timings against real Cloudflare Containers <code>standard-2</code> pricing) — both figures are
     materially higher than an earlier measurement because the suite has grown roughly 4x since, not
     because the runner got slower.
@@ -150,7 +157,11 @@
       <a href="/case-studies/diffci-own-ci">our own CI</a>
       <a href="/data-handling">Data handling</a>
     </nav>
-    <p class="fine">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+    <p class="fine">
+      DiffCI currently ships under its founder's personal GitHub account,
+      <a href="https://github.com/adityankale190895">@adityankale190895</a>. A company identity and a
+      contact address for this site are not yet published; they will appear here when they are.
+    </p>
   </div>
 </footer>
 

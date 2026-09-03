@@ -107,7 +107,7 @@ registers, runs the job, deregisters, and self-terminates.
 **Status: green, steady-state verified.** Last 10 consecutive `CI` runs on `main` all `success`.
 **Re-measured 2026-09-04** (`scripts/remeasure-own-ci-cost.ts`, real job timings from the GitHub Actions
 API, priced against the real `standard-2` Cloudflare Containers shape this runner actually uses):
-job wall time 126s–325s (median 146s, mean 176s); job cost $0.0045–$0.0116 (median $0.0052, mean $0.0063).
+job wall time 135s–354s (median 147s, mean 185s); job cost $0.0048–$0.0127 (median $0.0053, mean $0.0066) — re-measured 2026-09-03 in the launch audit (previous 2026-09-04 run: 126s–325s, $0.0045–$0.0116).
 Materially higher than the original 2026-08-21 figures (~1m3s, ~$0.004) because the test suite has grown
 roughly 4x since (286 → 384 suites) - not a regression in the runner itself. Zero GitHub Actions compute
 billed. Getting here required fixing six

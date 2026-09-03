@@ -10,13 +10,13 @@
 
 ## What runs where
 
-DiffCI's test suite is **1,342 tests across 286 suites, currently green**, about 36 seconds locally. It
+DiffCI's test suite is **1,960 tests across 389 suites, currently green**, under 40 seconds locally (re-measured 2026-09-03). It
 does not run on GitHub-hosted runners.
 
 Instead, a `workflow_job` webhook reaches a Cloudflare Worker, which starts a fresh ephemeral container
 running the GitHub Actions runner agent. The runner registers, executes the job, deregisters and
-terminates. Roughly **$0.004 per job**, about **a minute of wall time** per run once warm, and **zero
-GitHub Actions minutes billed**.
+terminates. **$0.0048–$0.0127 per job** (median $0.0053), about **2–6 minutes of wall time** per run once warm,
+and **zero GitHub Actions minutes billed** (re-measured 2026-09-03, `scripts/remeasure-own-ci-cost.ts`).
 
 The blunt reason this exists: this account's GitHub Actions billing was blocked by a payment hold that
 had nothing to do with the code. The choice was to wait, or to build the runner fleet. Building it turned

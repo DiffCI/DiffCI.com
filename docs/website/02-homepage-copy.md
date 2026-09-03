@@ -115,9 +115,9 @@ exists? Illustrative numbers must be visibly labeled as such.]*
 >
 > ### DiffCI's own CI
 >
-> DiffCI's test suite — **1,940 tests across 384 suites, currently green** — does not run on
-> GitHub-hosted runners. It runs on ephemeral Cloudflare containers at **$0.0045–$0.0116 per job**
-> (median $0.0052), **2–5 minutes per run**, with zero GitHub Actions minutes billed. We built our own
+> DiffCI's test suite — **1,960 tests across 389 suites, currently green** — does not run on
+> GitHub-hosted runners. It runs on ephemeral Cloudflare containers at **$0.0048–$0.0127 per job**
+> (median $0.0053), **2–6 minutes per run**, with zero GitHub Actions minutes billed. We built our own
 > runner fleet because we needed the timing data to be ours.
 >
 > [Read how](case-studies/03-diffci-own-ci.md)
@@ -135,9 +135,10 @@ exists? Illustrative numbers must be visibly labeled as such.]*
 > - **Our failure prediction is not good yet.** Replayed against 24 of our own historical CI failures,
 >   the preflight checks would have caught **16 of 23** evaluable ones — 0.696. Every one it caught was a
 >   typecheck or configuration failure. **Every unit-test failure in that dataset was a miss.**
-> - **The external pilot is early.** The shadow cohort is small, and one enrolled repository turned out
->   to be unanalysable and was excluded rather than quietly retried. We are not going to describe that as
->   traction.
+> - **There is no external pilot yet.** At the time of writing, no repository outside our own two has
+>   installed the App. An earlier internal shadow cohort of public repositories was small, and one
+>   repository in it turned out to be unanalysable and was excluded rather than quietly retried. None of
+>   that is traction, and we are not going to describe it as such.
 > - **Small selections make our estimator optimistic.** A run selecting zero of forty tests still pays
 >   the suite's startup cost, and the estimator does not model that. It is being calibrated per
 >   repository from real measurement, not patched with a guessed constant.

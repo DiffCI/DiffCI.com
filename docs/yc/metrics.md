@@ -162,3 +162,55 @@ install counts below still current - re-verify before Week 2 reporting)
 | REPRODUCED / REFUSED / DIVERGED (pilot repos) | 0 / 0 / 0 | no pilot exists; unrelated to the closed `ENGINE_COVERAGE_01` engine-research corpus |
 | Positive incremental-economics repos | 0 of 0 external | comparator live; the research-corpus repos it can compute against are not pilots |
 | Activation candidates | 0 | R3's "yes list" does not exist yet |
+
+## Launch-readiness audit, 2026-09-03 (R1 final check before founder go)
+
+Audited diffci.com as a first-time technical maintainer, every quantitative claim against
+`docs/website/03-evidence-ledger.md`, plus live HTTP behaviour, metadata, mobile layout, console/network
+errors, and the install → welcome → report chain. **Verdict: NOT READY, for founder-only reasons; every
+build-owned blocker was fixed and redeployed in the same session.**
+
+**Fixed and deployed (build-owned):**
+- Removed the stale "Not ready to launch" box that was live on the homepage and contradicted the
+  data-handling page (it claimed the deletion path was unimplemented).
+- Replaced the literal `[TODO before launch: legal entity, jurisdiction, contact address.]` footer on all
+  seven pages, and the data-handling Contact section, with honest text: ships under the founder's
+  personal GitHub account; company identity and contact address not yet published. No mailbox invented.
+- Hero: added the primary "Install the read-only App" CTA (it existed only at the bottom of the page, and
+  the masthead nav is hidden on phones, so mobile visitors had no visible CTA above ~7,000px).
+- Hero stats "6 merges" and "8 of 8 honored" were cal.com-only figures shown without scope and had no
+  ledger row; replaced with the cross-repository truth (10 merges, 12 of 13 honored, 13th withheld) and
+  added ledger rows for them, the chart timings, and the "44% and 90%" sentence.
+- "one test file selected ... in both" was wrong for cal.com PR #29940 (2 of 406, Report 10); corrected.
+- "The external pilot is early" implied an external pilot exists; replaced with "There is no external
+  pilot yet" (zero external installs, re-confirmed).
+- Homepage promised an ineligible repository's report "will say so"; the report does not yet explain
+  why it is empty. Reworded to say exactly that.
+- Own-CI figures re-measured today (`scripts/remeasure-own-ci-cost.ts`, `npm test`): $0.0048–$0.0127/job
+  (median $0.0053), 135–354s wall, 1,960 tests / 389 suites. Propagated to site, ledger, CURRENT_STATE,
+  drafts. Also resolved a $0.0044-vs-$0.0045 transcription mismatch between the ledger and every copy.
+- Added a neutral "Isn't this just Nx affected / Turborepo / a path rule?" section using only the
+  already-approved positioning (different question; explicitly no cost-superiority claim, R5 open).
+- Welcome page now states plainly that DiffCI has no email address for the installer and will send
+  nothing on day 7; the report URL is the only delivery channel.
+- Open Graph / Twitter / canonical metadata on every page; `favicon.ico` (was 404); `_headers` with
+  nosniff / referrer-policy / frame-deny. App manifest `setup_url` updated to match the live App.
+
+**Founder-only before public launch (priority order):**
+1. Contact route. The repo is private and the GitHub profile has no name, blog, or email, so a stranger
+   currently has no way to reach anyone — for deletion requests, security reports, or questions. Needs a
+   mailbox on diffci.com (or a deliberate decision to publish an existing address), then one line each in
+   the footer and `site/data-handling.html`.
+2. Enforce HTTPS: `http://diffci.com/` serves the page in cleartext without redirecting. Cloudflare zone
+   setting "Always Use HTTPS" (dashboard); optionally HSTS after that.
+3. `www.diffci.com` returns Cloudflare 522 (a proxied record pointing nowhere). Either add a www custom
+   domain route / redirect or delete the record.
+4. Founder/company identity line in the footer (name, entity if any, jurisdiction) — copy is ready to
+   receive it; nothing was invented in the meantime.
+
+**Before outreach (in addition):** a reply-to address for the outreach messages themselves; decide
+whether day-7 report delivery stays pull-only (URL) or gets an email step once a mailbox exists.
+
+**Can wait:** GitHub Marketplace listing (already deferred by decision); a diffci.com hostname for the
+report route (currently a workers.dev URL on the welcome page); og:image; cosmetic empty cell in the
+3-stat hero grid on phones.

@@ -60,15 +60,30 @@ report figures are **Potential**.
 
 | Claim | Value | Level | Source |
 |---|---|---|---|
-| Test suite size and status | 1,940 tests / 384 suites, 0 failures | MEASURED, local run 2026-09-04 | `npm run test` on the working tree of this date — grown substantially since the 2026-08-26 figure (1,342/286); re-check before publishing, this rots fast |
-| CI cost per job | **$0.0044 – $0.0116** (median duration $0.0052, mean $0.0063) | provider_estimate, **re-measured 2026-09-04** | `scripts/remeasure-own-ci-cost.ts`, 10 most recent real `check` job(s) on `main`, priced with `createCloudflareContainersStandard2CostModel()` (`src/usage/cost-model.ts`) — the real `standard-2` shape (1 vCPU / 6 GiB / 12 GB disk) `ops/github-runner/wrangler.github-runner.jsonc` actually runs, not the smaller `lite` shape. Real Cloudflare-published rate x measured job duration; not an invoice line — see the script's own output for the basis. |
-| CI wall time | **126s – 325s** (median 146s, mean 176s) once warm | MEASURED, **re-measured 2026-09-04** | Same script/run as above — real job `started_at`/`completed_at` from the GitHub Actions API, not an estimate. Materially higher than the 2026-08-21 figure (~1m3s): the test suite has grown roughly 4x in the same window (286 → 381 suites). |
+| Test suite size and status | 1,960 tests / 389 suites, 0 failures, 38.4s locally | MEASURED, local run 2026-09-03 (launch audit) | `npm run test` on the working tree of this date (previously 1,940/384 on 2026-09-04's pre-audit run, 1,342/286 on 2026-08-26); re-check before every publish, this rots fast |
+| CI cost per job | **$0.0048 – $0.0127** (median duration $0.0053, mean $0.0066) | provider_estimate, **re-measured 2026-09-03 (launch audit; supersedes the 2026-09-04 pre-audit run's $0.0045–$0.0116, whose ledger row had read $0.0044 while every other copy read $0.0045 — a transcription mismatch, now moot)** | `scripts/remeasure-own-ci-cost.ts`, 10 most recent real `check` job(s) on `main`, priced with `createCloudflareContainersStandard2CostModel()` (`src/usage/cost-model.ts`) — the real `standard-2` shape (1 vCPU / 6 GiB / 12 GB disk) `ops/github-runner/wrangler.github-runner.jsonc` actually runs, not the smaller `lite` shape. Real Cloudflare-published rate x measured job duration; not an invoice line — see the script's own output for the basis. |
+| CI wall time | **135s – 354s** (median 147s, mean 185s) once warm; stated on the site as "2–6 minutes" | MEASURED, **re-measured 2026-09-03 (launch audit; previous run 126s–325s)** | Same script/run as above — real job `started_at`/`completed_at` from the GitHub Actions API, not an estimate. Materially higher than the 2026-08-21 figure (~1m3s): the test suite has grown roughly 4x in the same window (286 → 381 suites). |
 | GitHub Actions minutes billed | zero | MEASURED as of 2026-08-21 | `CURRENT_STATE.md` §5 |
 | Six runner bugs, including the `HOSTNAME=cloudchamber` collision | as listed | Process fact | `CURRENT_STATE.md` §5 |
 | Unquoted-glob test-discovery bug; 579 → 734 tests | as stated | MEASURED, 2026-08-22 | [`2026-08-22-preflight-p1-test-discovery-bug.md`](../research/2026-08-22-preflight-p1-test-discovery-bug.md) |
 | Preflight prevention recall | 0.696 (16 TP / 7 FN / 1 not evaluable) | MEASURED | [`2026-08-22-preflight-p1-replay-results.md`](../research/2026-08-22-preflight-p1-replay-results.md) |
 | All 9 unit-test failures in that dataset were misses | as stated | MEASURED | same report |
 | First replay scored 0.958 and was wrong | as stated | Process fact | same report, methodology section |
+
+## Cross-repository figures used on the homepage
+
+Added in the 2026-09-03 launch audit. The hero previously showed "6 merges" and "8 of 8 honored", which
+were cal.com-only figures presented without that scope; these rows replace them with the honest totals.
+
+| Claim | Value | Level | Source |
+|---|---|---|---|
+| Merges with full and selected paths both executed and timed | **10** across two repositories: cal.com 6 (5 predeclared + PR #29940), deepseek-harness 4 of 5 (#2844 withheld, selected path not honored) | MEASURED | cal.com Reports 11, 13; deepseek Report 07 |
+| Runtime selection honored, both repositories | **12 of 13** executions (11 `HONORED_EXACTLY` = 8 cal.com + 3 deepseek; 1 `HONORED_WITH_FRAMEWORK_EXPANSION`); the 13th `IGNORED_OR_BROADENED` and withheld | MEASURED | [`09-aggregate-and-comparison.md`](../research/2026-08-25-deepseek-execution-validation/09-aggregate-and-comparison.md) comparison table |
+| "44% and 90% job-level reduction on two different real repositories" | 44.2% net (cal.com PR #29940) and 89.5% net (deepseek-harness PR #2760), each rounded to the nearest whole percent | MEASURED | Report 11 §2; Report 07 job-level table |
+| Chart, cal.com PR #29940 | install 319.7s + pretest 17.1s = 336.8s (unchanged); test 320.9s → 20.0s; totals 657.7s → 356.9s | MEASURED | Report 11 §2 |
+| Chart, deepseek-harness PR #2760 | full 760.2s, selected 58.7s; test 721.5s → 20.1s; install 38.6s derived as total minus test, inside Report 07's stated 23–39s install range | MEASURED (install derived) | Report 07 job-level table |
+| "one or two test files selected out of hundreds, in both" | #29940: 2 of 406 files; #2760: 1 file (0.1%) | MEASURED | Report 10; Report 07 |
+| "0 production CI runs ever altered" | 0 | Product-behavior claim, see below | `README.md`; `CURRENT_STATE.md` |
 
 ## Product-behavior claims (no number, still need a source)
 
@@ -92,6 +107,12 @@ report figures are **Potential**.
 | Any single headline savings percentage | The two validated repositories differ by ~40 points at job level, entirely due to install cost |
 | "N repositories in the pilot" as traction | The cohort is thin and one enrollment was excluded as unanalysable; see [`2026-08-26-shadow-ramp-load-gate.md`](../research/2026-08-26-shadow-ramp-load-gate.md) |
 | A dollar figure for anyone's savings | No repository has been billed, and no selected run has been executed for any external repository |
+
+## Launch-audit re-verification, 2026-09-03
+
+Items 1–4 below were executed: cost and wall time re-measured (rows above), suite re-run (row above),
+every case-study page checked line by line against this ledger, and the external-pilot language
+replaced with "there is no external pilot yet" (zero external installs at the time of the audit).
 
 ## Before publishing — required re-verification
 

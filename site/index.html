@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>DiffCI — find out what your CI is wasting</title>
 <meta name="description" content="DiffCI observes your repository's real CI runs and reports how much compute was avoidable, in hindsight, without ever changing your CI.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DiffCI">
+<meta property="og:title" content="DiffCI — find out what your CI is wasting">
+<meta property="og:description" content="DiffCI observes your repository's real CI runs and reports how much compute was avoidable, in hindsight, without ever changing your CI.">
+<meta property="og:url" content="https://diffci.com/">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://diffci.com/">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
 </head>
@@ -38,14 +45,19 @@
       mode that exists.
     </p>
 
+    <div class="hero-actions">
+      <a class="button" href="https://github.com/apps/diffci-shadow">Install the read-only App</a>
+      <a class="button-secondary" href="#evidence">Read the evidence</a>
+    </div>
+
     <div class="stats">
       <div class="stat">
-        <b>6</b>
-        <span>real merges executed and timed, both paths</span>
+        <b>10</b>
+        <span>real merges across two repositories, full and selected paths both executed and timed</span>
       </div>
       <div class="stat">
-        <b>8 of 8</b>
-        <span>selections the test runner honored exactly</span>
+        <b>12 of 13</b>
+        <span>executions where the runner honored the selection; the 13th is withheld, not counted</span>
       </div>
       <div class="stat">
         <b>0</b>
@@ -144,8 +156,8 @@
   <div class="wrap wrap-wide">
     <h2>Why there is no single number</h2>
     <p>
-      Two real repositories. Comparable selection quality — one test file selected out of hundreds, in
-      both. Wildly different savings, for a reason that has nothing to do with how good the selection
+      Two real repositories. Comparable selection quality — one or two test files selected out of
+      hundreds, in both. Wildly different savings, for a reason that has nothing to do with how good the selection
       was.
     </p>
 
@@ -249,12 +261,12 @@
         <p class="kicker">Case study</p>
         <h3>Our own CI</h3>
         <div class="figures">
-          <div><b>$0.0045–$0.0116</b><span>per CI job (median $0.0052)</span></div>
-          <div><b>1,940</b><span>tests, currently green</span></div>
+          <div><b>$0.0048–$0.0127</b><span>per CI job (median $0.0053)</span></div>
+          <div><b>1,960</b><span>tests, currently green</span></div>
           <div><b>0</b><span>GitHub Actions minutes billed</span></div>
         </div>
         <p>
-          Our suite runs on ephemeral Cloudflare containers, 2–5 minutes a run. We built our own
+          Our suite runs on ephemeral Cloudflare containers, 2–6 minutes a run. We built our own
           runner fleet because we needed the timing data to be ours — and found a bug that had been
           hiding fifteen test files from our own green CI.
         </p>
@@ -262,6 +274,23 @@
       </article>
 
     </div>
+  </div>
+</section>
+
+<section class="numbered" id="compare">
+  <div class="wrap">
+    <h2>Isn't this just Nx affected, Turborepo, or a path rule?</h2>
+    <p>
+      Those tools answer a different question. They tell you what to run. DiffCI's output is the part
+      they don't ship: evidence, after the fact, that a selection would have been safe on your real CI,
+      and what it would have been worth — reconciled against what your CI actually did.
+    </p>
+    <p>
+      We are not claiming DiffCI is cheaper than any of them. Whether DiffCI's own analysis cost nets
+      out ahead of a simple path rule depends on the repository, and we have not measured it on enough
+      external repositories to say. Where it can be computed, the pilot report includes that comparison
+      for your repository and reports the sign either way.
+    </p>
   </div>
 </section>
 
@@ -287,9 +316,10 @@
         dataset was a miss.
       </li>
       <li>
-        <strong>The external pilot is early.</strong> The shadow cohort is small, and one enrolled
-        repository turned out to be unanalysable and was excluded rather than quietly retried. We are
-        not going to describe that as traction.
+        <strong>There is no external pilot yet.</strong> At the time of writing, no repository outside
+        our own two has installed the App. An earlier internal shadow cohort of public repositories was
+        small, and one repository in it turned out to be unanalysable and was excluded rather than
+        quietly retried. None of that is traction, and we are not going to describe it as such.
       </li>
       <li>
         <strong>Small selections make our estimator optimistic.</strong> A run selecting zero of forty
@@ -317,17 +347,12 @@
       <a class="button" href="https://github.com/apps/diffci-shadow">Install the read-only App</a>
       <p class="cta-note">
         DiffCI can only analyze a repository with a <code>tsconfig.json</code> at its root, active GitHub
-        Actions, and recent commits. If yours doesn't qualify it will say so, rather than produce a
-        report built on nothing.
+        Actions, and recent commits. If yours doesn't qualify, its report stays empty rather than
+        being built on nothing — but it does not yet tell you why, so an unexplained empty report after a
+        few pushes most likely means one of those three conditions is missing.
       </p>
     </div>
 
-    <div class="todo">
-      <b>Not ready to launch</b>
-      Three things must be settled before this domain points here: the legal entity and contact address
-      in the footer, the App install slug above (verify it resolves), and the deletion path promised on
-      the data-handling page, which is not implemented yet.
-    </div>
   </div>
 </section>
 
@@ -342,7 +367,11 @@
       <a href="/case-studies/diffci-own-ci">our own CI</a>
       <a href="/data-handling">Data handling</a>
     </nav>
-    <p class="fine">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+    <p class="fine">
+      DiffCI currently ships under its founder's personal GitHub account,
+      <a href="https://github.com/adityankale190895">@adityankale190895</a>. A company identity and a
+      contact address for this site are not yet published; they will appear here when they are.
+    </p>
   </div>
 </footer>
 

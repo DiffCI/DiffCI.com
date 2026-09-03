@@ -22,10 +22,10 @@
   // Founder-authorized 2026-09-04: point the live domain at this Worker. custom_domain:true has
   // wrangler provision the DNS record itself (the zone was already active on Cloudflare beforehand,
   // independent of this repo). The remaining site TODOs (legal entity, contact, the deletion path
-  // promised in data-handling.html) are still open - authorized to go live with them still open.
-  // BLOCKED as of 2026-09-04: diffci.com already has an externally-managed DNS record (A/CNAME) at
-  // the apex, and this account's API token lacks DNS-record read/write scope to inspect or clear it.
-  // Custom-domain provisioning fails until that record is removed - see chat for what's needed.
+  // promised in data-handling.html) are still open - authorized to go live with them still open.  // Resolved 2026-09-04: the founder cleared a pre-existing externally-managed apex record that had
+  // blocked custom-domain provisioning (error 100117); the route now attaches cleanly on deploy.
+  // Still founder-owned (Cloudflare dashboard, not this file): "Always Use HTTPS" for the zone (plain
+  // http:// currently serves the page without redirecting) and a www record (www.diffci.com returns 522).
   "routes": [
     { "pattern": "diffci.com", "custom_domain": true }
   ]
