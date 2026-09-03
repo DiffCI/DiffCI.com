@@ -1,0 +1,34 @@
+{
+  "protocol": "docs/ci-reproduction-05-eligibility.md",
+  "purpose": "EXTERNAL_ENGINE_BRIDGE_01's first newly-prepared external-repository pilot - continuing the SAME frozen, external, mechanical selection frame CI_REPRODUCTION_05 used (docs/evidence/ci-reproduction-05-screening.json screened ranks 1-11 and qualified eslint/jest/webpack/babel/babel-loader at ranks 2/6/8/10/11). Continuing from the next unscreened rank keeps this selection just as unpickable by me as the original five - not chosen because it seemed likely to produce any particular outcome.",
+  "frame": "npm-high-impact@1.13.0 topDependent, ranks 1-240, frozen (same frame, same version, re-downloaded and diffed against the recorded ranks 1-11 to confirm it is byte-identical before use)",
+  "containerNodeMajor": 22,
+  "note": "R3 is NOT evaluated in this file for the qualifying candidate - see docs/evidence/ci-reproduction-05-rimraf-reference-plan.json and the bridge rehearsal evidence for that. The inference engine was not consulted for any row below.",
+  "additionalR4Exclusions": [
+    "axios/date-fns/fastify/immer are excluded here too, even though they were never used by a CI_REPRODUCTION attempt specifically - they already appear elsewhere in DiffCI's validation history (the external-validation/economics thread), and reusing them here would blur the same independence this frame exists to protect."
+  ],
+  "screened": 2,
+  "rows": [
+    {
+      "rank": 12,
+      "pkg": "eslint-plugin-import",
+      "repo": "import-js/eslint-plugin-import",
+      "verdict": "REJECTED_NOT_TRANSCRIBABLE",
+      "detail": "R1/R2 both pass mechanically (large real matrix, ubuntu-latest+node-22 cells present and green in recent completed runs), but the job's actual Node-version matrix is computed at runtime by a third-party reusable action (ljharb/actions/node/matrix@main) and its install step is another reusable action (ljharb/actions/node/install@main) - neither's real behavior is stated in this repository's own workflow YAML. Hand-transcribing 'the exact command this cell runs' would require reverse-engineering an external actions repository, which is exactly the kind of human command repair the reference-plan discipline forbids. Not evaluated against R3 - rejected before that step, on legibility of the workflow itself, not on any expectation about outcome."
+    },
+    {
+      "rank": 13,
+      "pkg": "rimraf",
+      "repo": "isaacs/rimraf",
+      "verdict": "QUALIFIED",
+      "detail": "single job, statically-declared matrix (no reusable/dynamic matrix generation), two plainly-stated commands (npm install; npm test -- -c -t0), no reusable install action, no step-level env or if: conditions referencing matrix context - directly transcribable from .github/workflows/ci.yml with zero repair.",
+      "pinnedHeadSha": "051e6c72a703854a029344be188d14dbe1b326c7",
+      "groundTruth": {
+        "cell": "build (22.x, ubuntu-latest, bash)",
+        "conclusion": "success",
+        "source": "github actions run 25937631695, job within it"
+      },
+      "caveat": "This workflow's most recent completed run before the pinned commit is over 4 months old relative to when this screening was performed (2026-09-03) - the repository's CI runs on push-to-main and a path-filtered pull_request trigger, and simply hasn't had a qualifying event since. Recorded because the bridge rehearsal (unlike this screening) runs against the repository's live current HEAD, not this pinned ground-truth commit - the same kind of plan-age caveat noted for eslint's rehearsal, here potentially larger."
+    }
+  ]
+}

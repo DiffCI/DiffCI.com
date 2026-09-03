@@ -1,0 +1,39 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "isaacs/rimraf",
+  "headSha": "051e6c72a703854a029344be188d14dbe1b326c7",
+  "source": ".github/workflows/ci.yml, job `build`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file, selected via docs/evidence/external-engine-bridge-01-first-pilot-screening.json's continuation of the frozen CI_REPRODUCTION_05 selection frame. The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "os": "ubuntu-latest",
+    "node-version": "22.x",
+    "platform": { "os": "ubuntu-latest", "shell": "bash" }
+  },
+  "cellSelection": "The single in-environment cell: matrix.platform.os ubuntu-latest and matrix.node-version 22.x match the canonical container (node major 22). matrix.platform.shell bash is the same shell the container already uses by default on Linux, so it changes nothing observable. The other platform entries (macos-latest, windows-latest x2) and node-versions (24.x, 26.x) are OUT_OF_ENVIRONMENT and are recorded, not executed.",
+  "githubSemanticsApplied": "No step or job in this workflow references ${{ matrix.* }} inside an env: block or a run: command body - unlike eslint's NODE_OPTIONS case, there is no DEFINED_EMPTY/UNDEFINED_CONTEXT distinction to apply here. `defaults.run.shell` selects the shell the run: steps execute under, not an environment variable; ubuntu-latest's default shell is already bash, so this cell's behavior is identical with or without the explicit default.",
+  "conditionsApplied": "The job declares no step-level `if:`, so no step is condition-skipped in this cell.",
+  "ciGroundTruth": {
+    "cell": "build (22.x, ubuntu-latest, bash)",
+    "conclusion": "success",
+    "source": "github actions run 25937631695, job within it, recorded in docs/evidence/external-engine-bridge-01-first-pilot-screening.json"
+  },
+  "steps": [
+    {
+      "command": [
+        "npm",
+        "install"
+      ],
+      "evidence": ".github/workflows/ci.yml - `Install dependencies` -> `run: npm install`"
+    },
+    {
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "-c",
+        "-t0"
+      ],
+      "evidence": ".github/workflows/ci.yml - `Run Tests` -> `run: npm test -- -c -t0`. package.json's own `scripts.test` is `tap`, with `scripts.pretest: npm run prepare` - both invoked transparently by npm's own lifecycle when `npm test` runs, exactly as the workflow states it, no command repair applied."
+    }
+  ]
+}
