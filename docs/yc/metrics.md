@@ -123,11 +123,31 @@ prior instruction):
    remaining manual piece was never a different promise: an ad-hoc "delete my data now, without
    uninstalling" request still goes through a person, not a self-service form.
 
+**Own-repo installs confirmed live, 2026-09-04.** Before outreach, founder asked to confirm the App is
+actually receiving events on our own two repos, not just installed. Checked directly:
+- `adityankale190895/DiffCI.com` and `adityankale190895/DentalPresence.in` are both, right now, the
+  App's only two repository-access selections (`github.com/settings/installations/155368612`,
+  "Only select repositories", installed 2 weeks ago) - confirmed live in the GitHub UI, not assumed
+  from D1.
+- **DiffCI.com**: drilled into GitHub's own webhook delivery log (`/v1/shadow/app-info?delivery=<id>`,
+  the App's real deliveries, not our own logs) for 4 of the last 15 deliveries - all
+  `requestRepository: "adityankale190895/DiffCI.com"`, all within the last hour, correctly triggering
+  `poll-scheduled`/`reconcile-scheduled`. 297 predictions, 65 reconciled ground-truth rows; the latest
+  prediction's engine commit (`56fc205`) matches this session's own deploy exactly.
+- **DentalPresence.in**: 20 predictions, 18 reconciled ground-truth rows; its live shadow report shows
+  18 of 20 eligible commits observed in the last 14 days, through today. This can only come from real
+  webhook deliveries - it's enrolled `observation_source = 'github-app-webhook'`, which the separate
+  polling-cron path explicitly excludes (`listPollableRepositories()` only pulls `cloudflare-poll`
+  repos), so there is no other mechanism that could have produced these rows. It didn't appear in the
+  same 15-item recent-deliveries sample as DiffCI.com only because that sample is capped app-wide and
+  all of today's push/CI activity happened to land on DiffCI.com.
+
 **Blocker assessment for outreach beginning 2026-09-11:** none. The technical front door - domain,
 install flow (including `setup_url`), welcome page, hosted report, and real erasure - is fully live and
 matches what `site/data-handling.html` promises; a stranger can already install via the direct link
-today. What's left (items 3-4 above) is a deliberate founder decision (Marketplace listing deferred
-until legal identity is settled), not a build gap.
+today; and the App's install on both of our own repositories is confirmed actually receiving and
+processing real events, not merely present. What's left (items 3-4 above) is a deliberate founder
+decision (Marketplace listing deferred until legal identity is settled), not a build gap.
 
 ## Dashboard, 2026-09-03 (superseded by Week 1 close-out above for infrastructure status; genuine
 install counts below still current - re-verify before Week 2 reporting)
