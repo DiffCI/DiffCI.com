@@ -40,6 +40,7 @@ import { buildLiveShadowReport, type D1Binding as ShadowReportD1 } from "./shado
 import { renderShadowReport } from "../../usage/shadow-report-render.js";
 import { runShadowEconomicsCaptureSweep } from "../../usage/shadow-economics-job.js";
 import { runShadowEconomicsRecompute } from "../../usage/shadow-economics-recompute.js";
+import { eraseInstallation as eraseShadowInstallation, sweepExpiredEvidence } from "./shadow-erasure.js";
 
 // standard-2 Sandbox instance type (wrangler.research-sandbox.jsonc): 1 vCPU, 6 GiB memory, 12 GB disk.
 // Real Container CPU billing is active-use-only, but wall-clock is used as a conservative (over-, not
@@ -1350,6 +1351,20 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
           })().catch((error: unknown) => console.log(`shadow-webhook: ci-reproduction-bridge for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
         );
       },
+      // site/data-handling.html: "Uninstalling deletes it." Real erasure (shadow-erasure.ts) against
+      // this Worker's own D1 store and R2 bucket - not a log line. See shadow-webhook.ts's own doc
+      // comment for why suspend does NOT go through this path.
+      eraseInstallation: (installationId) => {
+        ctx.waitUntil(
+          eraseShadowInstallation(store, new R2EvidenceStore(env.RESEARCH_BUCKET), installationId, new Date().toISOString())
+            .then((r) =>
+              console.log(
+                `shadow-webhook: erasure for installation ${installationId}: repositories=${r.repositories.length} predictions=${r.predictionsDeleted} groundTruth=${r.groundTruthDeleted} economics=${r.economicsDeleted} r2Objects=${r.evidenceObjectsDeleted}`,
+              ),
+            )
+            .catch((error: unknown) => console.log(`shadow-webhook: erasure for installation ${installationId} failed: ${error instanceof Error ? error.message : String(error)}`)),
+        );
+      },
       log: (message) => console.log(message),
     },
   );
@@ -2214,6 +2229,19 @@ export default {
       }
     } catch (error: unknown) {
       console.log(`shadow-economics: sweep failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    // site/data-handling.html: "90 days maximum, regardless." Own try/catch, same posture as the
+    // economics sweep above - a failure here must never take down the poll/reconcile heartbeat. Cheap
+    // in steady state: a tick that finds nothing older than 90 days does one read and zero deletes.
+    try {
+      const store = makeD1ShadowStore(env.RESEARCH_DB);
+      const sweepResult = await sweepExpiredEvidence(store, new R2EvidenceStore(env.RESEARCH_BUCKET), new Date().toISOString(), 90);
+      if (sweepResult.predictionsDeleted > 0 || sweepResult.evidenceObjectsDeleted > 0) {
+        console.log(`shadow-retention: ${JSON.stringify({ event: "shadow_retention.sweep_completed", ...sweepResult })}`);
+      }
+    } catch (error: unknown) {
+      console.log(`shadow-retention: sweep failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   },
 };

@@ -12,9 +12,13 @@
  *   distinguishing a real delivery from an attacker-forged POST to a public URL.
  * - installation / installation_repositories: enroll the added repositories (source
  *   'github-app-webhook') and remember the installation id - the key that later lets the Worker mint
- *   per-installation read tokens (private-repo ground truth without a PAT). Uninstalls are logged
- *   loudly but change no state: per the Stage 2 spec, state transitions beyond
- *   VALIDATING->SHADOW_ACTIVE are human decisions.
+ *   per-installation read tokens (private-repo ground truth without a PAT).
+ * - installation.deleted: erases every repository's analysis records and evidence archives
+ *   (shadow-erasure.ts), then marks each REMOVED - the one state transition beyond
+ *   VALIDATING->SHADOW_ACTIVE that is NOT a human decision under the Stage 2 spec, because
+ *   site/data-handling.html makes it a standing promise ("Uninstalling deletes it") the tenant's own
+ *   action must fulfil immediately, not on the next person to look. installation.suspend is different
+ *   and deliberately NOT erased: a suspension is reversible by the same tenant, unlike an uninstall.
  * - push to the DEFAULT branch: schedule an immediate shadow poll - the whole point of the webhook
  *   source is predicting closer to the push than a 10-minute cron tick can, which is what makes the
  *   prospectiveness evidence (prediction strictly before CI completion) strong. Non-default refs are
@@ -45,6 +49,13 @@ export interface ShadowWebhookDeps {
    * an environment that hasn't wired this dep simply doesn't get the extra trigger, never an error.
    */
   scheduleCiReproductionBridge?(repository: string): void;
+  /**
+   * `installation.deleted` only - fire-and-forget, same posture as schedulePoll/scheduleReconcile.
+   * Optional so every existing caller/fixture that hasn't wired erasure keeps working unchanged, but
+   * see the else-branch below: an environment without this configured logs that fact loudly rather
+   * than silently pretending the data-handling.html promise was kept.
+   */
+  eraseInstallation?(installationId: string): void;
   log(message: string): void;
 }
 
@@ -83,9 +94,18 @@ export async function handleShadowWebhook(
     case "installation": {
       const installationId = String(payload?.installation?.id ?? "");
       const action = String(payload?.action ?? "");
-      if (action === "deleted" || action === "suspend") {
-        deps.log(`shadow-webhook: App installation ${installationId} ${action} - repositories keep their state (human decision per spec), but token minting for them will fail until reinstalled`);
-        return ok(`installation-${action}-acknowledged`);
+      if (action === "deleted") {
+        if (deps.eraseInstallation) {
+          deps.eraseInstallation(installationId);
+          deps.log(`shadow-webhook: App installation ${installationId} deleted - erasure scheduled for every attributed repository (site/data-handling.html: "Uninstalling deletes it")`);
+        } else {
+          deps.log(`shadow-webhook: App installation ${installationId} deleted - erasure NOT performed, this environment has no eraseInstallation dependency configured`);
+        }
+        return ok("installation-deleted-erasure-scheduled");
+      }
+      if (action === "suspend") {
+        deps.log(`shadow-webhook: App installation ${installationId} suspend - repositories keep their state (human decision per spec); a suspension is reversible by the same tenant and is deliberately not erased, unlike a deletion`);
+        return ok("installation-suspend-acknowledged");
       }
       const repos: string[] = (payload?.repositories ?? []).map((r: any) => String(r?.full_name ?? "")).filter((r: string) => REPOSITORY_PATTERN.test(r));
       for (const repository of repos) {

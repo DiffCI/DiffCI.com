@@ -15,11 +15,12 @@ interface FakeCalls {
   installationIds: Array<{ repository: string; installationId: string }>;
   polls: string[];
   reconciles: string[];
+  erasures: string[];
   logs: string[];
 }
 
 function makeDeps(): { deps: ShadowWebhookDeps; calls: FakeCalls } {
-  const calls: FakeCalls = { enrolled: [], installationIds: [], polls: [], reconciles: [], logs: [] };
+  const calls: FakeCalls = { enrolled: [], installationIds: [], polls: [], reconciles: [], erasures: [], logs: [] };
   const deps: ShadowWebhookDeps = {
     // The REAL HMAC implementation, bound to the test secret - signature handling is the security
     // boundary of this route, so the tests must exercise it, not a stub.
@@ -83,12 +84,32 @@ describe("handleShadowWebhook", () => {
     ]);
   });
 
-  it("acknowledges an uninstall without changing repository state", async () => {
+  it("logs an uninstall loudly as unerased when no eraseInstallation dependency is configured", async () => {
     const { deps, calls } = makeDeps();
+    assert.equal(deps.eraseInstallation, undefined, "makeDeps()'s baseline fixture must not supply it - every existing caller stays unaffected");
     const outcome = await deliver("installation", { action: "deleted", installation: { id: 12345 } }, deps);
     assert.equal(outcome.status, 200);
     assert.deepEqual(calls.enrolled, []);
-    assert.equal(calls.logs.filter((l) => l.includes("deleted")).length, 1);
+    assert.equal(calls.logs.filter((l) => l.includes("deleted") && l.includes("NOT performed")).length, 1, "an unconfigured environment must say so loudly, never silently claim the data-handling.html promise was kept");
+  });
+
+  it("triggers eraseInstallation with the installation id when configured, on delete only", async () => {
+    const { deps, calls } = makeDeps();
+    deps.eraseInstallation = (installationId) => calls.erasures.push(installationId);
+    const outcome = await deliver("installation", { action: "deleted", installation: { id: 12345 } }, deps);
+    assert.equal(outcome.status, 200);
+    assert.equal(outcome.body.action, "installation-deleted-erasure-scheduled");
+    assert.deepEqual(calls.erasures, ["12345"]);
+  });
+
+  it("does NOT erase on suspend - a suspension is reversible by the same tenant, unlike an uninstall", async () => {
+    const { deps, calls } = makeDeps();
+    deps.eraseInstallation = (installationId) => calls.erasures.push(installationId);
+    const outcome = await deliver("installation", { action: "suspend", installation: { id: 12345 } }, deps);
+    assert.equal(outcome.status, 200);
+    assert.equal(outcome.body.action, "installation-suspend-acknowledged");
+    assert.deepEqual(calls.erasures, [], "suspend must never trigger erasure");
+    assert.deepEqual(calls.enrolled, []);
   });
 
   it("enrolls repositories added to an existing installation", async () => {

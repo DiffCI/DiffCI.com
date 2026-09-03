@@ -217,6 +217,35 @@ export interface ShadowStore {
    * omitted means "across every enrolled repository". `nowIso`/`stuckThresholdMs` are caller-supplied
    * (not `new Date()` internally) so this stays testable against a real SQLite fixture with fixed clocks. */
   getReconcileDiagnostics(options: { repository?: string; nowIso: string; stuckThresholdMs: number; stuckLimit: number }): Promise<ReconcileDiagnostics>;
+
+  // --- Erasure (site/data-handling.html's two deletion commitments, see shadow-erasure.ts) ---
+
+  /** Repositories currently attributed to one installation - the set an `installation.deleted`
+   * webhook must erase. */
+  listRepositoriesByInstallation(installationId: string): Promise<string[]>;
+  /** r2_evidence_key values (predictions + their ground truth) for one repository - must be read
+   * BEFORE eraseAnalysisRecordsForRepository deletes the rows that name them; the R2 key exists
+   * nowhere else. */
+  collectEvidenceKeys(repository: string): Promise<string[]>;
+  /** Deletes every prediction, ground-truth, and economics-observation row for one repository.
+   * Deliberately does NOT touch the shadow_repositories row itself - the uninstall webhook path calls
+   * markRepositoryRemoved separately; the (future, on-demand) 90-day sweep leaves an installed
+   * repository's own row alone entirely, only its aged-out evidence. */
+  eraseAnalysisRecordsForRepository(repository: string): Promise<{ predictionsDeleted: number; groundTruthDeleted: number; economicsDeleted: number }>;
+  /** Uninstall-only: marks a repository REMOVED and clears its installation id, so a stale id can
+   * never be used to mint a token again even if this repository is never re-enrolled. */
+  markRepositoryRemoved(repository: string, removedAt: string): Promise<void>;
+  /** r2_evidence_key values (predictions + their ground truth) for every prediction older than
+   * cutoffIso, across every repository - the 90-day cap's unit of work, read before
+   * eraseExpiredAnalysisRecords deletes the rows that name them. */
+  listExpiredEvidenceKeys(cutoffIso: string): Promise<string[]>;
+  /** Deletes every prediction, ground-truth, and economics-observation row whose PREDICTION predates
+   * cutoffIso, across every repository. Cutoff is always the prediction's own prediction_created_at -
+   * "the analysis that produced it", per site/data-handling.html - never created_at (insert-time
+   * bookkeeping, not analysis time) and never the ground-truth or economics row's own timestamp, which
+   * would let a slow-to-reconcile prediction escape the cap or a fast-to-reconcile one be purged early
+   * relative to its sibling rows. */
+  eraseExpiredAnalysisRecords(cutoffIso: string): Promise<{ predictionsDeleted: number; groundTruthDeleted: number; economicsDeleted: number }>;
 }
 
 export function makeD1ShadowStore(db: D1Binding): ShadowStore {
@@ -623,6 +652,91 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
           .filter((p) => p.ageMs >= stuckThresholdMs)
           .sort((a, b) => b.ageMs - a.ageMs)
           .slice(0, stuckLimit),
+      };
+    },
+
+    async listRepositoriesByInstallation(installationId) {
+      const { results } = await db
+        .prepare(`SELECT repository FROM shadow_repositories WHERE installation_id = ?`)
+        .bind(installationId)
+        .all<{ repository: string }>();
+      return results.map((r) => r.repository);
+    },
+
+    async collectEvidenceKeys(repository) {
+      const predictionKeys = await db
+        .prepare(`SELECT r2_evidence_key FROM shadow_predictions WHERE repository = ?`)
+        .bind(repository)
+        .all<{ r2_evidence_key: string }>();
+      const groundTruthKeys = await db
+        .prepare(`SELECT r2_evidence_key FROM shadow_ground_truth WHERE repository = ?`)
+        .bind(repository)
+        .all<{ r2_evidence_key: string }>();
+      return [...predictionKeys.results.map((r) => r.r2_evidence_key), ...groundTruthKeys.results.map((r) => r.r2_evidence_key)].filter(Boolean);
+    },
+
+    async eraseAnalysisRecordsForRepository(repository) {
+      // Children before parent: shadow_ground_truth/shadow_economics_observations reference
+      // shadow_predictions.logical_delta_key - matches the same ordering discipline the uninstall
+      // webhook doc comment (src/install/webhook.ts) already established for the product pipeline.
+      const economics = await db
+        .prepare(`DELETE FROM shadow_economics_observations WHERE logical_delta_key IN (SELECT logical_delta_key FROM shadow_predictions WHERE repository = ?)`)
+        .bind(repository)
+        .run();
+      const groundTruth = await db.prepare(`DELETE FROM shadow_ground_truth WHERE repository = ?`).bind(repository).run();
+      const predictions = await db.prepare(`DELETE FROM shadow_predictions WHERE repository = ?`).bind(repository).run();
+      return {
+        predictionsDeleted: predictions.meta?.changes ?? 0,
+        groundTruthDeleted: groundTruth.meta?.changes ?? 0,
+        economicsDeleted: economics.meta?.changes ?? 0,
+      };
+    },
+
+    async markRepositoryRemoved(repository, removedAt) {
+      await db
+        .prepare(`UPDATE shadow_repositories SET state = 'REMOVED', removed_at = ?, installation_id = NULL WHERE repository = ?`)
+        .bind(removedAt, repository)
+        .run();
+    },
+
+    async listExpiredEvidenceKeys(cutoffIso) {
+      // prediction_created_at, NOT created_at: created_at is insert-time bookkeeping (when the D1 row
+      // happened to be written), prediction_created_at is "when the analysis that produced it ran" -
+      // the immutable timestamp the schema's own comment calls out (shadow-migration-2026-08-21-stage2-
+      // shadow.sql), and the one site/data-handling.html's "90 days ... from the analysis that produced
+      // it" actually means.
+      const predictionKeys = await db
+        .prepare(`SELECT r2_evidence_key FROM shadow_predictions WHERE prediction_created_at < ?`)
+        .bind(cutoffIso)
+        .all<{ r2_evidence_key: string }>();
+      const groundTruthKeys = await db
+        .prepare(
+          `SELECT g.r2_evidence_key FROM shadow_ground_truth g
+           JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
+           WHERE p.prediction_created_at < ?`,
+        )
+        .bind(cutoffIso)
+        .all<{ r2_evidence_key: string }>();
+      return [...predictionKeys.results.map((r) => r.r2_evidence_key), ...groundTruthKeys.results.map((r) => r.r2_evidence_key)].filter(Boolean);
+    },
+
+    async eraseExpiredAnalysisRecords(cutoffIso) {
+      // Same prediction_created_at cutoff as listExpiredEvidenceKeys above - both must agree on which
+      // rows are "expired", or a key could be read (and its R2 object deleted) from one query while the
+      // D1 row a different cutoff column leaves behind still points at it.
+      const economics = await db
+        .prepare(`DELETE FROM shadow_economics_observations WHERE logical_delta_key IN (SELECT logical_delta_key FROM shadow_predictions WHERE prediction_created_at < ?)`)
+        .bind(cutoffIso)
+        .run();
+      const groundTruth = await db
+        .prepare(`DELETE FROM shadow_ground_truth WHERE logical_delta_key IN (SELECT logical_delta_key FROM shadow_predictions WHERE prediction_created_at < ?)`)
+        .bind(cutoffIso)
+        .run();
+      const predictions = await db.prepare(`DELETE FROM shadow_predictions WHERE prediction_created_at < ?`).bind(cutoffIso).run();
+      return {
+        predictionsDeleted: predictions.meta?.changes ?? 0,
+        groundTruthDeleted: groundTruth.meta?.changes ?? 0,
+        economicsDeleted: economics.meta?.changes ?? 0,
       };
     },
   };

@@ -25,6 +25,7 @@ function freshDb(): DatabaseSync {
     "schema-migration-2026-08-21-shadow-webhook.sql",
     "schema-migration-2026-08-21-shadow-source-integrity.sql",
     "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql",
+    "schema-migration-2026-08-25-shadow-economics.sql",
   ]) {
     db.exec(readFileSync(join(SCHEMA_DIR, file), "utf8"));
   }
@@ -397,5 +398,124 @@ describe("shadow-store: discriminative-scoped safety metrics (§8 fix - never le
     );
     const summary = await store.getRepositorySummary("acme/web");
     assert.equal(summary?.discriminativeRelevantFailuresObserved, 0);
+  });
+});
+
+/** Inserts directly into shadow_economics_observations - no ShadowStore write method exists for it
+ * (that table is written by shadow-economics-store.ts in production), so these tests build the row
+ * shape by hand, matching schema-migration-2026-08-25-shadow-economics.sql exactly. */
+function insertEconomicsRow(db: DatabaseSync, overrides: { logicalDeltaKey: string; repository: string; observedAt?: string }): void {
+  db.prepare(
+    `INSERT INTO shadow_economics_observations (
+       logical_delta_key, stage, repository, head_sha, workflow_run_ids, job_ids, full_workload_ms,
+       tests_total_full, selected_workload_ms, selected_workload_confidence, avoidable_ms,
+       avoidable_tier, estimation_method, schema_version, observed_at
+     ) VALUES (?, 'test', ?, 'head', '[]', '[]', 1000, 10, NULL, NULL, NULL, 'UNKNOWN', NULL, 1, ?)`,
+  ).run(overrides.logicalDeltaKey, overrides.repository, overrides.observedAt ?? "2026-08-21T12:00:00.000Z");
+}
+
+describe("shadow-store: erasure (site/data-handling.html's two deletion commitments)", () => {
+  it("listRepositoriesByInstallation returns only repositories attributed to that installation id", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "github-app-webhook");
+    await store.ensureRepository("acme/api", "github-app-webhook");
+    await store.ensureRepository("other/repo", "github-app-webhook");
+    await store.setInstallationId("acme/web", "111");
+    await store.setInstallationId("acme/api", "111");
+    await store.setInstallationId("other/repo", "222");
+
+    const repos = await store.listRepositoriesByInstallation("111");
+    assert.deepEqual(repos.sort(), ["acme/api", "acme/web"]);
+  });
+
+  it("collectEvidenceKeys gathers r2_evidence_key from both predictions and ground truth for one repository", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "k1" }), "r2/prediction/k1");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge1", logicalDeltaKey: "k1" }), "r2/ground-truth/ge1");
+
+    const keys = await store.collectEvidenceKeys("acme/web");
+    assert.deepEqual(keys.sort(), ["r2/ground-truth/ge1", "r2/prediction/k1"]);
+  });
+
+  it("eraseAnalysisRecordsForRepository deletes predictions, ground truth, and economics rows for ONE repository only, leaving another repository's rows and the shadow_repositories row itself untouched", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.ensureRepository("other/repo", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "k1", repository: "acme/web" }), "r2/k1");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge1", logicalDeltaKey: "k1", repository: "acme/web" }), "r2/ge1");
+    insertEconomicsRow(db, { logicalDeltaKey: "k1", repository: "acme/web" });
+    await store.recordPrediction(prediction({ logicalDeltaKey: "k2", repository: "other/repo" }), "r2/k2");
+    insertEconomicsRow(db, { logicalDeltaKey: "k2", repository: "other/repo" });
+
+    const counts = await store.eraseAnalysisRecordsForRepository("acme/web");
+    assert.equal(counts.predictionsDeleted, 1);
+    assert.equal(counts.groundTruthDeleted, 1);
+    assert.equal(counts.economicsDeleted, 1);
+
+    const countOf = (table: string, repository: string): number => (db.prepare(`SELECT COUNT(*) as n FROM ${table} WHERE repository = ?`).get(repository) as { n: number }).n;
+    assert.equal(countOf("shadow_predictions", "acme/web"), 0);
+    assert.equal(countOf("shadow_ground_truth", "acme/web"), 0);
+    assert.equal(countOf("shadow_economics_observations", "acme/web"), 0);
+    // The other repository's analysis records must survive untouched.
+    assert.equal(countOf("shadow_predictions", "other/repo"), 1);
+    assert.equal(countOf("shadow_economics_observations", "other/repo"), 1);
+    // The repository's own enrollment row is untouched here - markRepositoryRemoved is a separate call.
+    const repoRow = db.prepare(`SELECT state FROM shadow_repositories WHERE repository = 'acme/web'`).get() as { state: string };
+    assert.equal(repoRow.state, "VALIDATING");
+  });
+
+  it("markRepositoryRemoved sets state=REMOVED, records removed_at, and clears installation_id", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "github-app-webhook");
+    await store.setInstallationId("acme/web", "12345");
+
+    await store.markRepositoryRemoved("acme/web", "2026-09-04T00:00:00.000Z");
+
+    const row = db.prepare(`SELECT state, removed_at, installation_id FROM shadow_repositories WHERE repository = 'acme/web'`).get() as {
+      state: string;
+      removed_at: string | null;
+      installation_id: string | null;
+    };
+    assert.equal(row.state, "REMOVED");
+    assert.equal(row.removed_at, "2026-09-04T00:00:00.000Z");
+    assert.equal(row.installation_id, null, "a stale installation id must never survive removal");
+  });
+
+  it("listExpiredEvidenceKeys / eraseExpiredAnalysisRecords use the PREDICTION's created_at as the cutoff, never the ground-truth or economics row's own timestamp", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+
+    // Old prediction (91 days before "now"), but its ground truth was only just recorded - the ground
+    // truth's own freshness must NOT save the pair from the 90-day cap; the prediction's age governs.
+    await store.recordPrediction(prediction({ logicalDeltaKey: "old", predictionCreatedAt: "2026-06-05T00:00:00.000Z" }), "r2/old-prediction");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge-old", logicalDeltaKey: "old", groundTruthFetchedAt: "2026-09-03T00:00:00.000Z" }), "r2/old-ground-truth");
+    insertEconomicsRow(db, { logicalDeltaKey: "old", repository: "acme/web", observedAt: "2026-09-03T00:00:00.000Z" });
+
+    // Recent prediction (5 days before "now") - must survive.
+    await store.recordPrediction(prediction({ logicalDeltaKey: "fresh", predictionCreatedAt: "2026-08-30T00:00:00.000Z" }), "r2/fresh-prediction");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge-fresh", logicalDeltaKey: "fresh" }), "r2/fresh-ground-truth");
+    insertEconomicsRow(db, { logicalDeltaKey: "fresh", repository: "acme/web" });
+
+    const nowIso = "2026-09-04T00:00:00.000Z";
+    const cutoffIso = new Date(Date.parse(nowIso) - 90 * 86_400_000).toISOString();
+
+    const expiredKeys = await store.listExpiredEvidenceKeys(cutoffIso);
+    assert.deepEqual(expiredKeys.sort(), ["r2/old-ground-truth", "r2/old-prediction"]);
+
+    const counts = await store.eraseExpiredAnalysisRecords(cutoffIso);
+    assert.equal(counts.predictionsDeleted, 1);
+    assert.equal(counts.groundTruthDeleted, 1);
+    assert.equal(counts.economicsDeleted, 1);
+
+    const remaining = db.prepare(`SELECT logical_delta_key FROM shadow_predictions`).all() as Array<{ logical_delta_key: string }>;
+    assert.deepEqual(remaining.map((r) => r.logical_delta_key), ["fresh"]);
+    const remainingEconomics = db.prepare(`SELECT logical_delta_key FROM shadow_economics_observations`).all() as Array<{ logical_delta_key: string }>;
+    assert.deepEqual(remainingEconomics.map((r) => r.logical_delta_key), ["fresh"]);
   });
 });

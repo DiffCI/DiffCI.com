@@ -29,12 +29,13 @@
   <p class="eyebrow">Commitments, not marketing</p>
   <h1>Data handling</h1>
 
-  <div class="todo">
-    <b>Unfinished — do not launch this page yet</b>
-    The retention commitments below describe the intended behavior. The automated deletion path
-    (uninstall-triggered erasure and the 90-day cap) is <strong>not implemented yet</strong>. Until it is,
-    this page must not be published, because it would be promising something the system cannot currently
-    perform. Deletion on request is honored manually in the meantime.
+  <div class="disclaimer">
+    Both automated deletion paths below - uninstall-triggered erasure and the 90-day cap - are
+    implemented and running (<code>src/research/cloudflare/shadow-erasure.ts</code>, verified against a
+    real SQLite-backed test suite, deployed 2026-09-04). An ad-hoc deletion request outside those two
+    triggers - "delete my repository's data now, without uninstalling" - is still handled by hand rather
+    than through a self-service form; that was never a different promise, just a slower path to the same
+    result.
   </div>
 
   <h2 class="no-rule">What DiffCI can see</h2>
