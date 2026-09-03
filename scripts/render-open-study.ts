@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 import { PDFDocument, PDFFont, PDFPage, StandardFonts, rgb } from "pdf-lib";
 import {
   diffciOpenEvidenceStudy2026,
+  type BarDatum,
   type StudyChart,
   type StudyFindings,
   type StudySection,
@@ -121,13 +122,34 @@ ${study.license.url}
 // ---------------------------------------------------------------------------------------------
 // HTML page - hand-matched to site/case-studies/*.html so it uses the same stylesheet and chrome
 
+const chartStyle = `<style>
+.study-chart .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
+.study-chart .val { font: 500 11px var(--mono); fill: var(--ink-2); }
+.study-chart .note { font: 10.5px var(--sans); fill: var(--ink-3); }
+.study-chart .axis { stroke: var(--rule-2); stroke-width: 1; }
+.study-chart .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
+.study-chart .seg-lbl { font: 600 12px var(--mono); }
+.study-chart .bar:hover rect, .study-chart .bar:focus rect { opacity: 0.8; }
+</style>`;
+
+const fmtValue = (chart: StudyChart, v: number, signed: boolean) =>
+  `${signed && v > 0 ? "+" : ""}${v.toFixed(chart.decimals ?? 1)}${chart.unit}`;
+
+const toneFill = (tone: BarDatum["tone"]) =>
+  tone === "neutral" ? "var(--series-neutral)" : tone === "setup" ? "var(--series-setup)" : "var(--series-tests)";
+
+const svgOpen = (chart: StudyChart, kind: string, width: number, height: number) =>
+  `<svg class="study-chart ${kind}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="${chart.id}-title" xmlns="http://www.w3.org/2000/svg">
+<title id="${chart.id}-title">${escapeHtml(chart.title)}</title>
+${chartStyle}`;
+
 function divergingBarsSvg(chart: StudyChart): string {
   // Horizontal diverging bars with a zero line. Polarity is carried by the site's two validated
   // data-viz slots (--series-tests for a reduction, --series-setup for worse-than-baseline) plus a
   // legend and the table that follows, so identity is never colour-alone.
   const rowH = 22;
-  const labelW = 170;
-  const valueW = 56;
+  const labelW = Math.min(260, Math.max(170, Math.max(...chart.data.map((d) => d.label.length)) * 7 + 16));
+  const valueW = Math.max(56, Math.max(...chart.data.map((d) => fmtValue(chart, d.value, true).length)) * 6.8 + 10);
   const plotW = 420;
   const pad = 8;
   const width = labelW + plotW + valueW + pad * 2;
@@ -144,32 +166,127 @@ function divergingBarsSvg(chart: StudyChart): string {
       const w = Math.max(2, Math.abs(d.value) * scale);
       const x = d.value >= 0 ? zeroX + 1 : zeroX - 1 - w;
       const fill = d.value >= 0 ? "var(--series-tests)" : "var(--series-setup)";
-      const valueText = `${d.value > 0 ? "+" : ""}${d.value.toFixed(1)}${chart.unit}`;
-      const valueX = d.value >= 0 ? x + w + 6 : x - 6;
-      const anchor = d.value >= 0 ? "start" : "end";
+      const valueText = fmtValue(chart, d.value, true);
+      // A negative bar's value sits just right of the zero line, never in the label column.
+      const valueX = d.value >= 0 ? x + w + 6 : zeroX + 6;
       const title = `${d.label}: ${valueText}${d.note ? ` (${d.note})` : ""}`;
       return `<g class="bar" tabindex="0"><title>${escapeHtml(title)}</title>
 <text x="${pad + labelW - 8}" y="${y + rowH / 2 + 4}" text-anchor="end" class="lbl">${escapeHtml(d.label)}</text>
 <rect x="${x.toFixed(1)}" y="${y + 4}" width="${w.toFixed(1)}" height="${rowH - 8}" rx="3" fill="${fill}"></rect>
-<text x="${valueX.toFixed(1)}" y="${y + rowH / 2 + 4}" text-anchor="${anchor}" class="val">${escapeHtml(valueText)}</text>
+<text x="${valueX.toFixed(1)}" y="${y + rowH / 2 + 4}" text-anchor="start" class="val">${escapeHtml(valueText)}</text>
 </g>`;
     })
     .join("\n");
 
   const axisY = pad + chart.data.length * rowH + 12;
-  return `<svg class="diverging" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="${chart.id}-title" xmlns="http://www.w3.org/2000/svg">
-<title id="${chart.id}-title">${escapeHtml(chart.title)}</title>
-<style>
-.diverging .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
-.diverging .val { font: 500 11px var(--mono); fill: var(--ink-2); }
-.diverging .axis { stroke: var(--rule-2); stroke-width: 1; }
-.diverging .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
-.diverging .bar:hover rect, .diverging .bar:focus rect { opacity: 0.8; }
-</style>
+  return `${svgOpen(chart, "diverging", width, height)}
 <line class="axis" x1="${zeroX.toFixed(1)}" y1="${pad}" x2="${zeroX.toFixed(1)}" y2="${axisY - 6}"></line>
 <text class="axis-lbl" x="${zeroX.toFixed(1)}" y="${axisY + 4}" text-anchor="middle">0 = same as the path rule</text>
 ${rows}
 </svg>`;
+}
+
+function barsSvg(chart: StudyChart): string {
+  // Plain horizontal bars on a 0..max scale, one colour, label above each bar and the value (plus
+  // its note) at the bar's end. Used where the things compared are the same kind of number.
+  const rowH = 44;
+  const pad = 8;
+  const width = 660;
+  const plotW = 470;
+  const max = chart.max ?? Math.max(...chart.data.map((d) => d.value));
+  const height = chart.data.length * rowH + pad * 2 + 18;
+  const rows = chart.data
+    .map((d, i) => {
+      const y = pad + i * rowH;
+      const w = Math.max(2, (d.value / max) * plotW);
+      const valueText = fmtValue(chart, d.value, false);
+      const valueX = pad + w + 6;
+      const noteX = valueX + valueText.length * 6.8 + 6;
+      const noteFits = !d.note || noteX + d.note.length * 5.6 < width - pad;
+      const note = d.note
+        ? noteFits
+          ? `<text x="${noteX.toFixed(1)}" y="${y + 29}" class="note">${escapeHtml(d.note)}</text>`
+          : `<text x="${width - pad}" y="${y + 12}" text-anchor="end" class="note">${escapeHtml(d.note)}</text>`
+        : "";
+      const title = `${d.label}: ${valueText}${d.note ? ` (${d.note})` : ""}`;
+      return `<g class="bar" tabindex="0"><title>${escapeHtml(title)}</title>
+<text x="${pad + 6}" y="${y + 12}" class="lbl">${escapeHtml(d.label)}</text>
+<rect x="${pad + 1}" y="${y + 18}" width="${w.toFixed(1)}" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="${valueX.toFixed(1)}" y="${y + 29}" class="val">${escapeHtml(valueText)}</text>
+${note}
+</g>`;
+    })
+    .join("\n");
+  const axisY = pad + chart.data.length * rowH + 2;
+  return `${svgOpen(chart, "bars", width, height)}
+<line class="axis" x1="${pad}" y1="${pad}" x2="${pad}" y2="${axisY}"></line>
+<line class="axis" x1="${pad + plotW}" y1="${axisY - 6}" x2="${pad + plotW}" y2="${axisY}"></line>
+<text class="axis-lbl" x="${pad}" y="${axisY + 12}">0${escapeHtml(chart.unit)}</text>
+<text class="axis-lbl" x="${pad + plotW}" y="${axisY + 12}" text-anchor="middle">${escapeHtml(`${max}${chart.unit}`)}</text>
+${rows}
+</svg>`;
+}
+
+function stackedSvg(chart: StudyChart): string {
+  // One bar, 100% wide, split into the chart's segments. The legend rendered above it names each
+  // segment and its count, so colour is never the only carrier of identity.
+  const pad = 8;
+  const width = 660;
+  const plotW = width - pad * 2;
+  const barH = 36;
+  const height = pad + barH + 30;
+  const total = chart.data.reduce((sum, d) => sum + d.value, 0) || 1;
+  let x = pad;
+  const segments = chart.data
+    .map((d) => {
+      const w = (d.value / total) * plotW;
+      const label = fmtValue(chart, d.value, false);
+      const textFill = d.tone === "neutral" ? "var(--ink)" : "#fff";
+      const text =
+        w > 44
+          ? `<text x="${(x + w / 2).toFixed(1)}" y="${pad + barH / 2 + 4}" text-anchor="middle" class="seg-lbl" fill="${textFill}">${escapeHtml(label)}</text>`
+          : "";
+      const title = `${d.label}: ${label}${d.note ? ` (${d.note})` : ""}`;
+      const out = `<g class="bar" tabindex="0"><title>${escapeHtml(title)}</title>
+<rect x="${x.toFixed(1)}" y="${pad}" width="${w.toFixed(1)}" height="${barH}" fill="${toneFill(d.tone)}"></rect>
+${text}
+</g>`;
+      x += w;
+      return out;
+    })
+    .join("\n");
+  const ticks = [0, 20, 40, 60, 80, 100]
+    .map((p) => {
+      const tx = pad + (p / 100) * plotW;
+      const anchor = p === 0 ? "start" : p === 100 ? "end" : "middle";
+      return `<line class="axis" x1="${tx.toFixed(1)}" y1="${pad + barH}" x2="${tx.toFixed(1)}" y2="${pad + barH + 5}"></line>
+<text class="axis-lbl" x="${tx.toFixed(1)}" y="${pad + barH + 18}" text-anchor="${anchor}">${p}${escapeHtml(chart.unit)}</text>`;
+    })
+    .join("\n");
+  return `${svgOpen(chart, "stacked", width, height)}
+${segments}
+${ticks}
+</svg>`;
+}
+
+function chartLegendHtml(c: StudyChart): string {
+  if (c.kind === "diverging-bars") {
+    return `<div class="legend">
+        <span><i class="swatch swatch-tests"></i> ${escapeHtml(c.legend?.positive ?? "Fewer tests than the path rule")}</span>
+        <span><i class="swatch swatch-setup"></i> ${escapeHtml(c.legend?.negative ?? "More tests than the path rule")}</span>
+      </div>`;
+  }
+  if (c.kind === "stacked-single") {
+    const spans = c.data.map(
+      (d) => `<span><i class="swatch swatch-${d.tone ?? "tests"}"></i> ${escapeHtml(d.label)}${d.note ? ` (${escapeHtml(d.note)})` : ""}</span>`,
+    );
+    return `<div class="legend">\n        ${spans.join("\n        ")}\n      </div>`;
+  }
+  return "";
+}
+
+function chartSvg(c: StudyChart): string {
+  return c.kind === "diverging-bars" ? divergingBarsSvg(c) : c.kind === "bars" ? barsSvg(c) : stackedSvg(c);
 }
 
 function tableHtml(t: StudyTable): string {
@@ -194,11 +311,8 @@ function sectionHtml(s: StudySection): string {
   for (const c of s.charts ?? []) {
     parts.push(`  <figure>
     <div class="chart">
-      <div class="legend">
-        <span><i class="swatch swatch-tests"></i> Fewer tests than the path rule</span>
-        <span><i class="swatch swatch-setup"></i> More tests than the path rule</span>
-      </div>
-      ${divergingBarsSvg(c)}
+      ${chartLegendHtml(c)}
+      ${chartSvg(c)}
     </div>
     <figcaption>${escapeHtml(c.caption)}</figcaption>
   </figure>`);
@@ -378,6 +492,7 @@ const WASH = rgb(0xe8 / 255, 0xf2 / 255, 0xee / 255);
 const WARN_WASH = rgb(0xfd / 255, 0xf4 / 255, 0xe0 / 255);
 const SERIES_POS = rgb(0x1b / 255, 0xaf / 255, 0x7a / 255);
 const SERIES_NEG = rgb(0xeb / 255, 0x68 / 255, 0x34 / 255);
+const SERIES_NEUTRAL = rgb(0xb7 / 255, 0xb1 / 255, 0xa4 / 255);
 
 const PAGE: [number, number] = [612, 792]; // US Letter
 const MARGIN = 56;
@@ -516,9 +631,23 @@ class Doc {
   }
 
   chart(c: StudyChart) {
+    if (c.kind === "bars") return this.chartBars(c);
+    if (c.kind === "stacked-single") return this.chartStacked(c);
+    return this.chartDiverging(c);
+  }
+
+  private fmtValue(c: StudyChart, v: number, signed: boolean) {
+    return `${signed && v > 0 ? "+" : ""}${v.toFixed(c.decimals ?? 1)}${c.unit}`;
+  }
+
+  private toneColor(tone: BarDatum["tone"]) {
+    return tone === "neutral" ? SERIES_NEUTRAL : tone === "setup" ? SERIES_NEG : SERIES_POS;
+  }
+
+  private chartDiverging(c: StudyChart) {
     const rowH = 15;
-    const labelW = 150;
-    const valueW = 48;
+    const labelW = Math.min(200, Math.max(150, ...c.data.map((d) => this.regular.widthOfTextAtSize(pdfSafe(d.label), 7.8) + 8)));
+    const valueW = Math.max(48, ...c.data.map((d) => this.regular.widthOfTextAtSize(this.fmtValue(c, d.value, true), 7.5) + 8));
     const plotW = CONTENT_W - labelW - valueW;
     const negExtent = Math.max(0, -Math.min(...c.data.map((d) => d.value)));
     const posExtent = Math.max(0, Math.max(...c.data.map((d) => d.value)));
@@ -528,10 +657,13 @@ class Doc {
     this.ensure(total + 30);
     this.text(c.title, { size: 9.5, font: this.bold, after: 4 });
     // legend
+    const positive = pdfSafe(c.legend?.positive ?? "fewer tests than the path rule");
+    const negative = pdfSafe(c.legend?.negative ?? "more tests than the path rule");
     this.page.drawRectangle({ x: MARGIN, y: this.y - 8, width: 8, height: 8, color: SERIES_POS });
-    this.page.drawText("fewer tests than the path rule", { x: MARGIN + 12, y: this.y - 7.5, size: 7.5, font: this.regular, color: INK2 });
-    this.page.drawRectangle({ x: MARGIN + 150, y: this.y - 8, width: 8, height: 8, color: SERIES_NEG });
-    this.page.drawText("more tests than the path rule", { x: MARGIN + 162, y: this.y - 7.5, size: 7.5, font: this.regular, color: INK2 });
+    this.page.drawText(positive, { x: MARGIN + 12, y: this.y - 7.5, size: 7.5, font: this.regular, color: INK2 });
+    const negX = MARGIN + 12 + this.regular.widthOfTextAtSize(positive, 7.5) + 14;
+    this.page.drawRectangle({ x: negX, y: this.y - 8, width: 8, height: 8, color: SERIES_NEG });
+    this.page.drawText(negative, { x: negX + 12, y: this.y - 7.5, size: 7.5, font: this.regular, color: INK2 });
     this.y -= 18;
     const top = this.y;
     for (const d of c.data) {
@@ -539,15 +671,90 @@ class Doc {
       const x = d.value >= 0 ? zeroX + 1 : zeroX - 1 - w;
       this.page.drawText(pdfSafe(d.label), { x: MARGIN, y: this.y - 10, size: 7.8, font: this.regular, color: INK2 });
       this.page.drawRectangle({ x, y: this.y - 12, width: w, height: 9, color: d.value >= 0 ? SERIES_POS : SERIES_NEG });
-      const v = `${d.value > 0 ? "+" : ""}${d.value.toFixed(1)}${c.unit}`;
-      const vw = this.regular.widthOfTextAtSize(v, 7.5);
-      const vx = d.value >= 0 ? x + w + 4 : x - 4 - vw;
+      const v = this.fmtValue(c, d.value, true);
+      const vx = d.value >= 0 ? x + w + 4 : zeroX + 4; // negative values label right of the zero line
       this.page.drawText(v, { x: vx, y: this.y - 10, size: 7.5, font: this.regular, color: INK2 });
       this.y -= rowH;
     }
     this.page.drawLine({ start: { x: zeroX, y: top }, end: { x: zeroX, y: this.y + 2 }, thickness: 0.6, color: INK3 });
     this.page.drawText("0 = same as the path rule", { x: zeroX - 45, y: this.y - 8, size: 7, font: this.regular, color: INK3 });
     this.y -= 18;
+    this.text(c.caption, { size: 7.6, color: INK3, leading: 10.5, after: 10 });
+  }
+
+  private chartBars(c: StudyChart) {
+    const rowH = 30;
+    const plotW = CONTENT_W - 70;
+    const max = c.max ?? Math.max(...c.data.map((d) => d.value));
+    this.ensure(c.data.length * rowH + 60);
+    this.text(c.title, { size: 9.5, font: this.bold, after: 6 });
+    const top = this.y;
+    for (const d of c.data) {
+      const w = Math.max(1.5, (d.value / max) * plotW);
+      this.page.drawText(pdfSafe(d.label), { x: MARGIN, y: this.y - 9, size: 7.8, font: this.regular, color: INK2 });
+      this.page.drawRectangle({ x: MARGIN, y: this.y - 22, width: w, height: 8, color: SERIES_POS });
+      const v = this.fmtValue(c, d.value, false);
+      this.page.drawText(v, { x: MARGIN + w + 4, y: this.y - 21, size: 7.5, font: this.regular, color: INK2 });
+      if (d.note) {
+        const vw = this.regular.widthOfTextAtSize(v, 7.5);
+        const note = pdfSafe(d.note);
+        const nw = this.regular.widthOfTextAtSize(note, 7);
+        const nx = MARGIN + w + 4 + vw + 6;
+        if (nx + nw <= MARGIN + CONTENT_W) this.page.drawText(note, { x: nx, y: this.y - 21, size: 7, font: this.regular, color: INK3 });
+        else this.page.drawText(note, { x: MARGIN + CONTENT_W - nw, y: this.y - 9, size: 7, font: this.regular, color: INK3 });
+      }
+      this.y -= rowH;
+    }
+    this.page.drawLine({ start: { x: MARGIN, y: top }, end: { x: MARGIN, y: this.y + 4 }, thickness: 0.6, color: INK3 });
+    this.page.drawText(`0${c.unit}`, { x: MARGIN, y: this.y - 6, size: 7, font: this.regular, color: INK3 });
+    const maxLabel = `${max}${c.unit}`;
+    this.page.drawText(maxLabel, {
+      x: MARGIN + plotW - this.regular.widthOfTextAtSize(maxLabel, 7) / 2,
+      y: this.y - 6,
+      size: 7,
+      font: this.regular,
+      color: INK3,
+    });
+    this.y -= 18;
+    this.text(c.caption, { size: 7.6, color: INK3, leading: 10.5, after: 10 });
+  }
+
+  private chartStacked(c: StudyChart) {
+    const barH = 16;
+    this.ensure(70 + c.data.length * 11);
+    this.text(c.title, { size: 9.5, font: this.bold, after: 6 });
+    const total = c.data.reduce((sum, d) => sum + d.value, 0) || 1;
+    let x = MARGIN;
+    for (const d of c.data) {
+      const w = (d.value / total) * CONTENT_W;
+      this.page.drawRectangle({ x, y: this.y - barH, width: w, height: barH, color: this.toneColor(d.tone) });
+      const label = this.fmtValue(c, d.value, false);
+      const lw = this.bold.widthOfTextAtSize(label, 8);
+      if (w > lw + 8) {
+        this.page.drawText(label, {
+          x: x + w / 2 - lw / 2,
+          y: this.y - barH + 4.5,
+          size: 8,
+          font: this.bold,
+          color: d.tone === "neutral" ? INK : rgb(1, 1, 1),
+        });
+      }
+      x += w;
+    }
+    this.y -= barH + 3;
+    for (const p of [0, 20, 40, 60, 80, 100]) {
+      const label = `${p}${c.unit}`;
+      const lw = this.regular.widthOfTextAtSize(label, 7);
+      const tx = MARGIN + (p / 100) * CONTENT_W;
+      this.page.drawText(label, { x: p === 0 ? tx : p === 100 ? tx - lw : tx - lw / 2, y: this.y - 7, size: 7, font: this.regular, color: INK3 });
+    }
+    this.y -= 16;
+    for (const d of c.data) {
+      this.page.drawRectangle({ x: MARGIN, y: this.y - 8, width: 8, height: 8, color: this.toneColor(d.tone) });
+      this.page.drawText(pdfSafe(`${d.label}${d.note ? ` (${d.note})` : ""}`), { x: MARGIN + 12, y: this.y - 7.5, size: 7.5, font: this.regular, color: INK2 });
+      this.y -= 11;
+    }
+    this.y -= 8;
     this.text(c.caption, { size: 7.6, color: INK3, leading: 10.5, after: 10 });
   }
 }

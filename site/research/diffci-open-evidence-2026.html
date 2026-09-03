@@ -113,17 +113,99 @@
   <figure>
     <div class="chart">
       <div class="legend">
+        <span><i class="swatch swatch-neutral"></i> Mandatory fallback (lockfile, workflow, root config) (1,146 deltas)</span>
+        <span><i class="swatch swatch-setup"></i> Path rule already optimal (188 deltas)</span>
+        <span><i class="swatch swatch-tests"></i> Genuine discriminative opportunity (565 deltas)</span>
+      </div>
+      <svg class="study-chart stacked" viewBox="0 0 660 74" role="img" aria-labelledby="stage0-classification-title" xmlns="http://www.w3.org/2000/svg">
+<title id="stage0-classification-title">Three-way classification of the 1,899 analysed commit deltas</title>
+<style>
+.study-chart .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
+.study-chart .val { font: 500 11px var(--mono); fill: var(--ink-2); }
+.study-chart .note { font: 10.5px var(--sans); fill: var(--ink-3); }
+.study-chart .axis { stroke: var(--rule-2); stroke-width: 1; }
+.study-chart .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
+.study-chart .seg-lbl { font: 600 12px var(--mono); }
+.study-chart .bar:hover rect, .study-chart .bar:focus rect { opacity: 0.8; }
+</style>
+<g class="bar" tabindex="0"><title>Mandatory fallback (lockfile, workflow, root config): 60.3% (1,146 deltas)</title>
+<rect x="8.0" y="8" width="388.3" height="36" fill="var(--series-neutral)"></rect>
+<text x="202.2" y="30" text-anchor="middle" class="seg-lbl" fill="var(--ink)">60.3%</text>
+</g>
+<g class="bar" tabindex="0"><title>Path rule already optimal: 9.9% (188 deltas)</title>
+<rect x="396.3" y="8" width="63.8" height="36" fill="var(--series-setup)"></rect>
+<text x="428.2" y="30" text-anchor="middle" class="seg-lbl" fill="#fff">9.9%</text>
+</g>
+<g class="bar" tabindex="0"><title>Genuine discriminative opportunity: 29.8% (565 deltas)</title>
+<rect x="460.1" y="8" width="191.9" height="36" fill="var(--series-tests)"></rect>
+<text x="556.0" y="30" text-anchor="middle" class="seg-lbl" fill="#fff">29.8%</text>
+</g>
+<line class="axis" x1="8.0" y1="44" x2="8.0" y2="49"></line>
+<text class="axis-lbl" x="8.0" y="62" text-anchor="start">0%</text>
+<line class="axis" x1="136.8" y1="44" x2="136.8" y2="49"></line>
+<text class="axis-lbl" x="136.8" y="62" text-anchor="middle">20%</text>
+<line class="axis" x1="265.6" y1="44" x2="265.6" y2="49"></line>
+<text class="axis-lbl" x="265.6" y="62" text-anchor="middle">40%</text>
+<line class="axis" x1="394.4" y1="44" x2="394.4" y2="49"></line>
+<text class="axis-lbl" x="394.4" y="62" text-anchor="middle">60%</text>
+<line class="axis" x1="523.2" y1="44" x2="523.2" y2="49"></line>
+<text class="axis-lbl" x="523.2" y="62" text-anchor="middle">80%</text>
+<line class="axis" x1="652.0" y1="44" x2="652.0" y2="49"></line>
+<text class="axis-lbl" x="652.0" y="62" text-anchor="end">100%</text>
+</svg>
+    </div>
+    <figcaption>Stage 0. A delta is a mandatory fallback when it touches a lockfile, a workflow file or root configuration, so no selector may skip anything. It is path-rule-optimal when the cheap comparator already selects the minimum. Only the remaining 29.8% offered any chance to be selective.</figcaption>
+  </figure>
+  <figure>
+    <div class="chart">
+      
+      <svg class="study-chart bars" viewBox="0 0 660 122" role="img" aria-labelledby="stage0-conditional-vs-corpus-title" xmlns="http://www.w3.org/2000/svg">
+<title id="stage0-conditional-vs-corpus-title">Conditional win rate versus whole-corpus effect</title>
+<style>
+.study-chart .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
+.study-chart .val { font: 500 11px var(--mono); fill: var(--ink-2); }
+.study-chart .note { font: 10.5px var(--sans); fill: var(--ink-3); }
+.study-chart .axis { stroke: var(--rule-2); stroke-width: 1; }
+.study-chart .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
+.study-chart .seg-lbl { font: 600 12px var(--mono); }
+.study-chart .bar:hover rect, .study-chart .bar:focus rect { opacity: 0.8; }
+</style>
+<line class="axis" x1="8" y1="8" x2="8" y2="98"></line>
+<line class="axis" x1="478" y1="92" x2="478" y2="98"></line>
+<text class="axis-lbl" x="8" y="110">0%</text>
+<text class="axis-lbl" x="478" y="110" text-anchor="middle">100%</text>
+<g class="bar" tabindex="0"><title>Win rate within the 565 discriminative opportunities: 94.3% (5.7% tied, 0% lost)</title>
+<text x="14" y="20" class="lbl">Win rate within the 565 discriminative opportunities</text>
+<rect x="9" y="26" width="443.2" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="457.2" y="37" class="val">94.3%</text>
+<text x="497.2" y="37" class="note">5.7% tied, 0% lost</text>
+</g>
+<g class="bar" tabindex="0"><title>Aggregate reduction across the whole corpus: 4.2% (95% bootstrap interval -4.8% to +47.9%)</title>
+<text x="14" y="64" class="lbl">Aggregate reduction across the whole corpus</text>
+<rect x="9" y="70" width="19.7" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="33.7" y="81" class="val">4.2%</text>
+<text x="66.9" y="81" class="note">95% bootstrap interval -4.8% to +47.9%</text>
+</g>
+</svg>
+    </div>
+    <figcaption>Stage 0. The first bar is a win rate: how often DiffCI selected fewer tests than the path rule where that was possible at all. The second is the test-count-weighted aggregate reduction across every analysed delta, most of which offered no opportunity. Both are true; the second is the one that matters for a bill.</figcaption>
+  </figure>
+  <figure>
+    <div class="chart">
+      <div class="legend">
         <span><i class="swatch swatch-tests"></i> Fewer tests than the path rule</span>
         <span><i class="swatch swatch-setup"></i> More tests than the path rule</span>
       </div>
-      <svg class="diverging" viewBox="0 0 662 430" role="img" aria-labelledby="stage0-per-repository-title" xmlns="http://www.w3.org/2000/svg">
+      <svg class="study-chart diverging" viewBox="0 0 662 430" role="img" aria-labelledby="stage0-per-repository-title" xmlns="http://www.w3.org/2000/svg">
 <title id="stage0-per-repository-title">Aggregate test reduction against the path rule, per repository</title>
 <style>
-.diverging .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
-.diverging .val { font: 500 11px var(--mono); fill: var(--ink-2); }
-.diverging .axis { stroke: var(--rule-2); stroke-width: 1; }
-.diverging .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
-.diverging .bar:hover rect, .diverging .bar:focus rect { opacity: 0.8; }
+.study-chart .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
+.study-chart .val { font: 500 11px var(--mono); fill: var(--ink-2); }
+.study-chart .note { font: 10.5px var(--sans); fill: var(--ink-3); }
+.study-chart .axis { stroke: var(--rule-2); stroke-width: 1; }
+.study-chart .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
+.study-chart .seg-lbl { font: 600 12px var(--mono); }
+.study-chart .bar:hover rect, .study-chart .bar:focus rect { opacity: 0.8; }
 </style>
 <line class="axis" x1="236.4" y1="8" x2="236.4" y2="410"></line>
 <text class="axis-lbl" x="236.4" y="420" text-anchor="middle">0 = same as the path rule</text>
@@ -190,32 +272,32 @@
 <g class="bar" tabindex="0"><title>nestjs/nest: -2.0% (100% fallback)</title>
 <text x="170" y="287" text-anchor="end" class="lbl">nestjs/nest</text>
 <rect x="226.8" y="276" width="8.6" height="14" rx="3" fill="var(--series-setup)"></rect>
-<text x="220.8" y="287" text-anchor="end" class="val">-2.0%</text>
+<text x="242.4" y="287" text-anchor="start" class="val">-2.0%</text>
 </g>
 <g class="bar" tabindex="0"><title>unocss/unocss: -4.2% (100% fallback)</title>
 <text x="170" y="309" text-anchor="end" class="lbl">unocss/unocss</text>
 <rect x="217.4" y="298" width="18.0" height="14" rx="3" fill="var(--series-setup)"></rect>
-<text x="211.4" y="309" text-anchor="end" class="val">-4.2%</text>
+<text x="242.4" y="309" text-anchor="start" class="val">-4.2%</text>
 </g>
 <g class="bar" tabindex="0"><title>date-fns/date-fns: -8.7% (100% fallback)</title>
 <text x="170" y="331" text-anchor="end" class="lbl">date-fns/date-fns</text>
 <rect x="198.0" y="320" width="37.4" height="14" rx="3" fill="var(--series-setup)"></rect>
-<text x="192.0" y="331" text-anchor="end" class="val">-8.7%</text>
+<text x="242.4" y="331" text-anchor="start" class="val">-8.7%</text>
 </g>
 <g class="bar" tabindex="0"><title>mikro-orm/mikro-orm: -8.7% (100% fallback)</title>
 <text x="170" y="353" text-anchor="end" class="lbl">mikro-orm/mikro-orm</text>
 <rect x="198.0" y="342" width="37.4" height="14" rx="3" fill="var(--series-setup)"></rect>
-<text x="192.0" y="353" text-anchor="end" class="val">-8.7%</text>
+<text x="242.4" y="353" text-anchor="start" class="val">-8.7%</text>
 </g>
 <g class="bar" tabindex="0"><title>typeorm/typeorm: -9.9% (100% fallback)</title>
 <text x="170" y="375" text-anchor="end" class="lbl">typeorm/typeorm</text>
 <rect x="192.9" y="364" width="42.5" height="14" rx="3" fill="var(--series-setup)"></rect>
-<text x="186.9" y="375" text-anchor="end" class="val">-9.9%</text>
+<text x="242.4" y="375" text-anchor="start" class="val">-9.9%</text>
 </g>
 <g class="bar" tabindex="0"><title>trpc/trpc: -13.6% (100% fallback)</title>
 <text x="170" y="397" text-anchor="end" class="lbl">trpc/trpc</text>
 <rect x="177.0" y="386" width="58.4" height="14" rx="3" fill="var(--series-setup)"></rect>
-<text x="171.0" y="397" text-anchor="end" class="val">-13.6%</text>
+<text x="242.4" y="397" text-anchor="start" class="val">-13.6%</text>
 </g>
 </svg>
     </div>
@@ -253,6 +335,40 @@
   <p>Using authenticated GitHub Actions history, the same 2,000 deltas yielded <strong>280</strong> real job-level CI failures across 154 deltas. DiffCI's plan would have missed <strong>10</strong> of them; the path rule would have missed <strong>82</strong>. That is a job-level failure recall of <strong>96.4%</strong> against <strong>70.7%</strong>. Ten misses is a real finding. Earlier partial snapshots had suggested zero, and the final report refused to round to it.</p>
   <p>Where a regression could be manufactured and measured, the record is cleaner. Across five corpora, every mutation whose detection was measurable was detected: <strong>32 of 32</strong>, with zero false greens. That sum spans different harness generations and is not a reliability estimate. Twenty-five of the cases come from the canonical Linux container on hono and zod, whose frozen bundle prints its own caveat that 25 cases cannot support a rate.</p>
   <p>The one place DiffCI's prediction was honestly weak is its own repository. A pre-flight predictor replayed leakage-safe against 24 historical failures in DiffCI's own CI scored a prevention recall of <strong>0.696</strong>, and missed all nine unit-test failures in the set. The first run had scored 0.958, was investigated because it was too good, and turned out to be counting a registry declaration as a prediction.</p>
+  <figure>
+    <div class="chart">
+      
+      <svg class="study-chart bars" viewBox="0 0 660 122" role="img" aria-labelledby="stage0-recall-title" xmlns="http://www.w3.org/2000/svg">
+<title id="stage0-recall-title">Job-level recall of 280 real historical CI failures</title>
+<style>
+.study-chart .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
+.study-chart .val { font: 500 11px var(--mono); fill: var(--ink-2); }
+.study-chart .note { font: 10.5px var(--sans); fill: var(--ink-3); }
+.study-chart .axis { stroke: var(--rule-2); stroke-width: 1; }
+.study-chart .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
+.study-chart .seg-lbl { font: 600 12px var(--mono); }
+.study-chart .bar:hover rect, .study-chart .bar:focus rect { opacity: 0.8; }
+</style>
+<line class="axis" x1="8" y1="8" x2="8" y2="98"></line>
+<line class="axis" x1="478" y1="92" x2="478" y2="98"></line>
+<text class="axis-lbl" x="8" y="110">0%</text>
+<text class="axis-lbl" x="478" y="110" text-anchor="middle">100%</text>
+<g class="bar" tabindex="0"><title>DiffCI: 96.4% (10 of 280 missed)</title>
+<text x="14" y="20" class="lbl">DiffCI</text>
+<rect x="9" y="26" width="453.1" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="467.1" y="37" class="val">96.4%</text>
+<text x="507.1" y="37" class="note">10 of 280 missed</text>
+</g>
+<g class="bar" tabindex="0"><title>Path rule: 70.7% (82 of 280 missed)</title>
+<text x="14" y="64" class="lbl">Path rule</text>
+<rect x="9" y="70" width="332.3" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="346.3" y="81" class="val">70.7%</text>
+<text x="386.3" y="81" class="note">82 of 280 missed</text>
+</g>
+</svg>
+    </div>
+    <figcaption>Stage 0, authenticated GitHub Actions history for the same 2,000 deltas. Recall is the share of real failed jobs whose failing tests the plan would still have run. DiffCI's 10 misses are real and are listed in the source report; this is not a safety guarantee.</figcaption>
+  </figure>
   <div class="table-scroll">
     <table id="mutation-recall">
       <tr><th>Corpus</th><th>Environment</th><th class="num">Measurable cases detected</th><th class="num">False greens</th></tr>
@@ -285,6 +401,54 @@
   <p>On honojs/hono, measured in the canonical container across 22 candidates, DiffCI's gross saving against the full suite was <strong>+1,408.92 CPU-s</strong> and its incremental result against the path rule was <strong>-80.90 CPU-s</strong>: 4 candidates positive, 18 negative. Wherever the path rule was tight, DiffCI lost; every one of the four wins was a case where the path rule blew up to 123 tests and DiffCI held at 83. DiffCI paid a fixed toll of roughly 3.3 CPU-s per candidate to insure against that, and on hono the insurance cost more than it saved. Test counts had predicted this, with 12 of 20 selections classed as over-broad, and the CPU meter agreed. A meter that reported DiffCI winning everywhere would have indicted itself.</p>
   <p>On colinhacks/zod the sign flipped: across five confirmed cases DiffCI selected <strong>629</strong> tests where the path rule selected 761 and the full suite held 967, with four of five selections classed efficient. On jest-community/eslint-plugin-jest, three candidates drawn blind under pre-committed rules cost DiffCI 4 to 6 CPU-s where the comparator cost 52 to 77 and the full suite 59 to 85, an incremental result of <strong>+71.48, +43.81 and +53.56 CPU-s</strong>.</p>
   <p>The one out-of-sample test of the economic predictor was immerjs/immer, selected by a third party before any DiffCI data existed. The rule, frozen beforehand, predicted a positive sign; the measurement was <strong>+46.97 CPU-s</strong>, positive. That is n = 1, and it validates the ordering of the experiment rather than a prediction accuracy rate. The magnitude was not validated: on a matched subset the model had predicted +85.19, and the gap exposed that the linear per-file cost model under-prices 1- and 2-file selections by roughly four times, an error whose direction inflates predicted savings.</p>
+  <figure>
+    <div class="chart">
+      <div class="legend">
+        <span><i class="swatch swatch-tests"></i> DiffCI's analysis paid for itself against the path rule</span>
+        <span><i class="swatch swatch-setup"></i> DiffCI cost more than the path rule</span>
+      </div>
+      <svg class="study-chart diverging" viewBox="0 0 711.6 144" role="img" aria-labelledby="compute-economics-chart-title" xmlns="http://www.w3.org/2000/svg">
+<title id="compute-economics-chart-title">Incremental CPU-seconds against the free path-rule comparator</title>
+<style>
+.study-chart .lbl { font: 500 11.5px var(--mono); fill: var(--ink-2); }
+.study-chart .val { font: 500 11px var(--mono); fill: var(--ink-2); }
+.study-chart .note { font: 10.5px var(--sans); fill: var(--ink-3); }
+.study-chart .axis { stroke: var(--rule-2); stroke-width: 1; }
+.study-chart .axis-lbl { font: 11px var(--sans); fill: var(--ink-3); }
+.study-chart .seg-lbl { font: 600 12px var(--mono); }
+.study-chart .bar:hover rect, .study-chart .bar:focus rect { opacity: 0.8; }
+</style>
+<line class="axis" x1="415.0" y1="8" x2="415.0" y2="124"></line>
+<text class="axis-lbl" x="415.0" y="134" text-anchor="middle">0 = same as the path rule</text>
+<g class="bar" tabindex="0"><title>eslint-plugin-jest GEN-C: +71.48 CPU-s (GENERATION_C_01 sealed target)</title>
+<text x="184" y="23" text-anchor="end" class="lbl">eslint-plugin-jest GEN-C</text>
+<rect x="416.0" y="12" width="197.0" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="619.0" y="23" text-anchor="start" class="val">+71.48 CPU-s</text>
+</g>
+<g class="bar" tabindex="0"><title>eslint-plugin-jest MI-02: +53.56 CPU-s (recall unmeasurable)</title>
+<text x="184" y="45" text-anchor="end" class="lbl">eslint-plugin-jest MI-02</text>
+<rect x="416.0" y="34" width="147.6" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="569.6" y="45" text-anchor="start" class="val">+53.56 CPU-s</text>
+</g>
+<g class="bar" tabindex="0"><title>immerjs/immer: +46.97 CPU-s (7 measured candidates)</title>
+<text x="184" y="67" text-anchor="end" class="lbl">immerjs/immer</text>
+<rect x="416.0" y="56" width="129.5" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="551.4" y="67" text-anchor="start" class="val">+46.97 CPU-s</text>
+</g>
+<g class="bar" tabindex="0"><title>eslint-plugin-jest MI-01: +43.81 CPU-s (recall unmeasurable)</title>
+<text x="184" y="89" text-anchor="end" class="lbl">eslint-plugin-jest MI-01</text>
+<rect x="416.0" y="78" width="120.8" height="14" rx="3" fill="var(--series-tests)"></rect>
+<text x="542.7" y="89" text-anchor="start" class="val">+43.81 CPU-s</text>
+</g>
+<g class="bar" tabindex="0"><title>honojs/hono: -80.90 CPU-s (22 candidates, 4 positive and 18 negative)</title>
+<text x="184" y="111" text-anchor="end" class="lbl">honojs/hono</text>
+<rect x="191.0" y="100" width="223.0" height="14" rx="3" fill="var(--series-setup)"></rect>
+<text x="421.0" y="111" text-anchor="start" class="val">-80.90 CPU-s</text>
+</g>
+</svg>
+    </div>
+    <figcaption>Comparator cost minus DiffCI's selected-run cost minus DiffCI's own analysis cost, per candidate set. honojs/hono is 22 candidates in the canonical container; immerjs/immer is 7 measured candidates; the three eslint-plugin-jest rows are single sealed-target candidates. Same numbers as the table below.</figcaption>
+  </figure>
   <div class="table-scroll">
     <table id="compute-economics">
       <tr><th>Repository</th><th class="num">Candidates</th><th class="num">Full suite</th><th class="num">Path rule</th><th class="num">DiffCI incl. analysis</th><th class="num">Incremental vs path rule</th></tr>

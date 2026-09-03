@@ -21,6 +21,7 @@
   /* data-viz slots — validated (dataviz skill, categorical slots 3 + 2) */
   --series-tests: #1baf7a;
   --series-setup: #eb6834;
+  --series-neutral: #b7b1a4; /* "no decision possible" segments; identity also carried by the legend */
 
   /* notice */
   --warn-wash: #fdf4e0;
@@ -58,6 +59,7 @@
     --accent-wash: #16302a;
     --series-tests: #199e70;
     --series-setup: #d95926;
+    --series-neutral: #5a5e66;
     --warn-wash: #2a2313;
     --warn-rule: #574823;
     --warn-ink: #d9c58c;
@@ -514,6 +516,7 @@ figcaption { font-size: 0.85rem; color: var(--ink-3); margin-top: 0.9rem; line-h
 
 .swatch-setup { background: var(--series-setup); }
 .swatch-tests { background: var(--series-tests); }
+.swatch-neutral { background: var(--series-neutral); }
 
 .bar-group + .bar-group { margin-top: 1.5rem; }
 
@@ -955,7 +958,7 @@ pre.cite {
   font-size: 0.82rem;
 }
 
-figure .diverging { width: 100%; height: auto; display: block; }
+figure .diverging, figure .study-chart { width: 100%; height: auto; display: block; }
 
 @media (max-width: 40rem) {
   .toc { columns: 1; }

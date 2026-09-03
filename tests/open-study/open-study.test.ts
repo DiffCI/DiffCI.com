@@ -61,13 +61,47 @@ test("published artefacts do not cite internal repository paths", () => {
 
 test("chart data agrees with the per-repository table", () => {
   const section = study.sections.find((s) => s.id === "where-the-advantage-lives");
-  assert.ok(section?.charts?.[0] && section.tables?.[0]);
+  const chart = section?.charts?.find((c) => c.id === "stage0-per-repository");
+  assert.ok(chart && section?.tables?.[0]);
   const table = section.tables[0];
-  for (const d of section.charts[0].data) {
+  for (const d of chart.data) {
     const row = table.rows.find((r) => r[0] === d.label);
     assert.ok(row, `chart label ${d.label} is not in the table`);
     assert.equal(Number.parseFloat(row[3]!.replace("%", "")), d.value, `${d.label}: chart ${d.value} vs table ${row[3]}`);
   }
+});
+
+test("every chart value that names a figure equals that figure", () => {
+  let checked = 0;
+  for (const s of study.sections) {
+    for (const c of s.charts ?? []) {
+      for (const d of c.data) {
+        if (!d.figure) continue;
+        const fig = study.figures.find((f) => f.id === d.figure);
+        assert.ok(fig, `${c.id}: unknown figure ${d.figure}`);
+        assert.equal(Number.parseFloat(fig.value), d.value, `${c.id} / ${d.label}: chart ${d.value} vs figure ${fig.value}`);
+        checked++;
+      }
+    }
+  }
+  assert.ok(checked >= 12, `expected the figure-backed charts to be checked, got ${checked}`);
+});
+
+test("stacked charts sum to 100 and the economics chart is the economics table", () => {
+  for (const s of study.sections) {
+    for (const c of s.charts ?? []) {
+      if (c.kind !== "stacked-single") continue;
+      const total = c.data.reduce((sum, d) => sum + d.value, 0);
+      assert.ok(Math.abs(total - 100) < 0.15, `${c.id} segments sum to ${total}`);
+    }
+  }
+  const section = study.sections.find((s) => s.id === "against-a-path-rule");
+  const chart = section?.charts?.find((c) => c.id === "compute-economics-chart");
+  const table = section?.tables?.find((t) => t.id === "compute-economics");
+  assert.ok(chart && table);
+  const tableValues = new Set(table.rows.map((r) => Number.parseFloat(r[5]!)));
+  for (const d of chart.data) assert.ok(tableValues.has(d.value), `${d.label}: ${d.value} is not in the economics table`);
+  assert.equal(chart.data.length, table.rows.length);
 });
 
 test("the page carries the disclaimer, the licence and the unflattering numbers", () => {

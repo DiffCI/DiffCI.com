@@ -40,15 +40,30 @@ export type StudyTable = {
   readonly rows: readonly TableRow[];
 };
 
-export type BarDatum = { readonly label: string; readonly value: number; readonly note?: string };
+export type BarDatum = {
+  readonly label: string;
+  readonly value: number;
+  readonly note?: string;
+  /** Id of the figure this value must equal. tests/open-study/open-study.test.ts enforces it. */
+  readonly figure?: string;
+  /** Colour slot for stacked segments: neutral (no decision possible), setup (no win), tests (a win). */
+  readonly tone?: "neutral" | "setup" | "tests";
+};
 
 export type StudyChart = {
   readonly id: string;
   readonly title: string;
-  readonly kind: "diverging-bars" | "stacked-single";
+  /** diverging-bars: signed values around zero. bars: 0..max, one colour. stacked-single: one 100% bar. */
+  readonly kind: "diverging-bars" | "stacked-single" | "bars";
   readonly unit: string;
   readonly caption: string;
   readonly data: readonly BarDatum[];
+  /** Decimal places for value labels (default 1). */
+  readonly decimals?: number;
+  /** Scale maximum for `bars` (default: the largest value). */
+  readonly max?: number;
+  /** Legend text for `diverging-bars` (default: fewer/more tests than the path rule). */
+  readonly legend?: { readonly positive: string; readonly negative: string };
 };
 
 export type StudySection = {
@@ -296,6 +311,32 @@ export const diffciOpenEvidenceStudy2026: StudyFindings = {
       ],
       charts: [
         {
+          id: "stage0-classification",
+          title: "Three-way classification of the 1,899 analysed commit deltas",
+          kind: "stacked-single",
+          unit: "%",
+          caption:
+            "Stage 0. A delta is a mandatory fallback when it touches a lockfile, a workflow file or root configuration, so no selector may skip anything. It is path-rule-optimal when the cheap comparator already selects the minimum. Only the remaining 29.8% offered any chance to be selective.",
+          data: [
+            { label: "Mandatory fallback (lockfile, workflow, root config)", value: 60.3, note: "1,146 deltas", figure: "stage0-bucket-fallback", tone: "neutral" },
+            { label: "Path rule already optimal", value: 9.9, note: "188 deltas", figure: "stage0-bucket-optimal", tone: "setup" },
+            { label: "Genuine discriminative opportunity", value: 29.8, note: "565 deltas", figure: "stage0-bucket-opportunity", tone: "tests" },
+          ],
+        },
+        {
+          id: "stage0-conditional-vs-corpus",
+          title: "Conditional win rate versus whole-corpus effect",
+          kind: "bars",
+          unit: "%",
+          max: 100,
+          caption:
+            "Stage 0. The first bar is a win rate: how often DiffCI selected fewer tests than the path rule where that was possible at all. The second is the test-count-weighted aggregate reduction across every analysed delta, most of which offered no opportunity. Both are true; the second is the one that matters for a bill.",
+          data: [
+            { label: "Win rate within the 565 discriminative opportunities", value: 94.3, note: "5.7% tied, 0% lost", figure: "stage0-win-rate" },
+            { label: "Aggregate reduction across the whole corpus", value: 4.2, note: "95% bootstrap interval -4.8% to +47.9%", figure: "stage0-agg-vs-path" },
+          ],
+        },
+        {
           id: "stage0-per-repository",
           title: "Aggregate test reduction against the path rule, per repository",
           kind: "diverging-bars",
@@ -340,6 +381,21 @@ export const diffciOpenEvidenceStudy2026: StudyFindings = {
         "Using authenticated GitHub Actions history, the same 2,000 deltas yielded <strong>280</strong> real job-level CI failures across 154 deltas. DiffCI's plan would have missed <strong>10</strong> of them; the path rule would have missed <strong>82</strong>. That is a job-level failure recall of <strong>96.4%</strong> against <strong>70.7%</strong>. Ten misses is a real finding. Earlier partial snapshots had suggested zero, and the final report refused to round to it.",
         "Where a regression could be manufactured and measured, the record is cleaner. Across five corpora, every mutation whose detection was measurable was detected: <strong>32 of 32</strong>, with zero false greens. That sum spans different harness generations and is not a reliability estimate. Twenty-five of the cases come from the canonical Linux container on hono and zod, whose frozen bundle prints its own caveat that 25 cases cannot support a rate.",
         "The one place DiffCI's prediction was honestly weak is its own repository. A pre-flight predictor replayed leakage-safe against 24 historical failures in DiffCI's own CI scored a prevention recall of <strong>0.696</strong>, and missed all nine unit-test failures in the set. The first run had scored 0.958, was investigated because it was too good, and turned out to be counting a registry declaration as a prediction.",
+      ],
+      charts: [
+        {
+          id: "stage0-recall",
+          title: "Job-level recall of 280 real historical CI failures",
+          kind: "bars",
+          unit: "%",
+          max: 100,
+          caption:
+            "Stage 0, authenticated GitHub Actions history for the same 2,000 deltas. Recall is the share of real failed jobs whose failing tests the plan would still have run. DiffCI's 10 misses are real and are listed in the source report; this is not a safety guarantee.",
+          data: [
+            { label: "DiffCI", value: 96.4, note: "10 of 280 missed", figure: "stage0-diffci-recall" },
+            { label: "Path rule", value: 70.7, note: "82 of 280 missed", figure: "stage0-path-recall" },
+          ],
+        },
       ],
       tables: [
         {
@@ -386,6 +442,25 @@ export const diffciOpenEvidenceStudy2026: StudyFindings = {
         "On honojs/hono, measured in the canonical container across 22 candidates, DiffCI's gross saving against the full suite was <strong>+1,408.92 CPU-s</strong> and its incremental result against the path rule was <strong>-80.90 CPU-s</strong>: 4 candidates positive, 18 negative. Wherever the path rule was tight, DiffCI lost; every one of the four wins was a case where the path rule blew up to 123 tests and DiffCI held at 83. DiffCI paid a fixed toll of roughly 3.3 CPU-s per candidate to insure against that, and on hono the insurance cost more than it saved. Test counts had predicted this, with 12 of 20 selections classed as over-broad, and the CPU meter agreed. A meter that reported DiffCI winning everywhere would have indicted itself.",
         "On colinhacks/zod the sign flipped: across five confirmed cases DiffCI selected <strong>629</strong> tests where the path rule selected 761 and the full suite held 967, with four of five selections classed efficient. On jest-community/eslint-plugin-jest, three candidates drawn blind under pre-committed rules cost DiffCI 4 to 6 CPU-s where the comparator cost 52 to 77 and the full suite 59 to 85, an incremental result of <strong>+71.48, +43.81 and +53.56 CPU-s</strong>.",
         "The one out-of-sample test of the economic predictor was immerjs/immer, selected by a third party before any DiffCI data existed. The rule, frozen beforehand, predicted a positive sign; the measurement was <strong>+46.97 CPU-s</strong>, positive. That is n = 1, and it validates the ordering of the experiment rather than a prediction accuracy rate. The magnitude was not validated: on a matched subset the model had predicted +85.19, and the gap exposed that the linear per-file cost model under-prices 1- and 2-file selections by roughly four times, an error whose direction inflates predicted savings.",
+      ],
+      charts: [
+        {
+          id: "compute-economics-chart",
+          title: "Incremental CPU-seconds against the free path-rule comparator",
+          kind: "diverging-bars",
+          unit: " CPU-s",
+          decimals: 2,
+          legend: { positive: "DiffCI's analysis paid for itself against the path rule", negative: "DiffCI cost more than the path rule" },
+          caption:
+            "Comparator cost minus DiffCI's selected-run cost minus DiffCI's own analysis cost, per candidate set. honojs/hono is 22 candidates in the canonical container; immerjs/immer is 7 measured candidates; the three eslint-plugin-jest rows are single sealed-target candidates. Same numbers as the table below.",
+          data: [
+            { label: "eslint-plugin-jest GEN-C", value: 71.48, figure: "genc-incremental", note: "GENERATION_C_01 sealed target" },
+            { label: "eslint-plugin-jest MI-02", value: 53.56, figure: "mi02-incremental", note: "recall unmeasurable" },
+            { label: "immerjs/immer", value: 46.97, figure: "immer-measured", note: "7 measured candidates" },
+            { label: "eslint-plugin-jest MI-01", value: 43.81, figure: "mi01-incremental", note: "recall unmeasurable" },
+            { label: "honojs/hono", value: -80.9, figure: "hono-incremental", note: "22 candidates, 4 positive and 18 negative" },
+          ],
+        },
       ],
       tables: [
         {
