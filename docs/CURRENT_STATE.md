@@ -126,7 +126,7 @@ Two GitHub Apps exist and are **deliberately never merged**:
 
 | App | Permissions | Installable by | Status |
 |---|---|---|---|
-| **DiffCI Shadow** | Read-only: Metadata, Contents, Actions, Checks, Pull requests | Design partners + own repos | **Registered, live** (`docs/github-app-registration.md`) |
+| **DiffCI Shadow** | Read-only: Metadata, Contents, Actions, Checks (Pull requests was also requested until 2026-09-03; dropped from the live App, manifest, and site because nothing used it - the webhook only acknowledged `pull_request` events) | Design partners + own repos | **Registered, live** (`docs/github-app-registration.md`) |
 | **DiffCI Runner Dispatcher** | `Administration:write`, `Actions:write` | Own repos only (DiffCI.com, DentalPresence.in) | **Registered, live** (`docs/github-app-registration-runner.md`) |
 
 ## 6. Build/test health (verified for this document)
