@@ -1,5 +1,19 @@
 # EXTERNAL_ENGINE_BRIDGE_01 — deploy + rehearsal, real Cloudflare infrastructure
 
+**Status, stated precisely (2026-09-03, after review):**
+- **Infrastructure/rehearsal: OPERATIONALLY VALIDATED.** The deployed bridge faithfully carries an
+  external repository through the real engine and persists an honest result — proven below.
+- **First newly-prepared external-repository pilot: NOT YET EXECUTED here.** eslint answers "does the
+  bridge work end-to-end" but not "can we deliberately onboard a new repository by independently
+  hand-transcribing its reference plan before seeing any outcome" — its plan pre-existed this phase,
+  authored months ago for `CI_REPRODUCTION_05`, not prepared blind as part of this rehearsal. These are
+  two distinct claims in the frozen plan's own sequence and this run only supports the first. See
+  `docs/evidence/external-engine-bridge-01-first-pilot-screening.json` for that second, still-open step.
+- **eslint's `REFUSED` is not a negative result for the bridge.** Live external HEAD `87e0a082...` → real
+  Sandbox → genuine `ci:reproduce` → honest `REFUSED` → durable R2 artifact is exactly what the bridge
+  should do with this repository's actual state. Nothing here should be read as the bridge "failing" to
+  reach `REPRODUCED` — reaching it was never the test.
+
 Implements the remaining steps of `docs/external-engine-bridge-01-plan.md`'s sequence: deploy, then
 "end-to-end rehearsal ... on a repository under an account DiffCI's team does not otherwise use for
 development." Steps 1-2 (graceful REFUSED on a missing reference plan; the container script + Worker
@@ -49,6 +63,16 @@ current engine and repository state.
 
 Verdict: eslint passes. The plan was not modified.
 
+**Methodological caveat, kept attached to this evidence rather than left implicit:** "the plan is still
+valid" was checked and confirmed narrowly — its two transcribed steps still run, on a matrix cell that
+still exists, producing the same structural refusal reason. It was **not** re-verified as a complete
+transcription of eslint's current CI. The two newer steps (`Fuzz Test`, `Test EMFILE Handling`) mean the
+plan is now a partial, not exhaustive, description of what `test_on_node` actually runs today. That
+distinction is immaterial to *this* REFUSED result only because the causal path terminates at step 0
+(the missing pinned-dependency-basis prerequisite), before step 1 or either newer step would ever run. A
+future scenario where the missing steps sit *before* the point of failure would not get the same free
+pass, and "reference plan still valid" should not be read more broadly than what was actually checked.
+
 ## Rehearsal — real run, real infrastructure
 
 `POST /v1/shadow/ci-reproduction-bridge {"repository":"eslint/eslint"}` against the deployed Worker.
@@ -91,8 +115,10 @@ the pipe works, not to change what flows through it. The plan's own note on deli
 applies unchanged: the result lands in R2, not as a GitHub check run or PR comment (Shadow's App manifest
 has no write scopes; requesting them is out of scope here).
 
-Not yet done: the plan's next step, "first genuine external repository ... the team is willing to
-hand-transcribe a reference plan for beforehand" — eslint already has one and just served as this
-rehearsal's subject, but the plan's sequence still treats "rehearsal" and "first genuine external repo"
-as two distinct steps. Whether to treat this run as satisfying both, or to pick a second repository, is
-a decision for the next session.
+Not yet done, and now explicitly not claimed by this evidence: the plan's next step, "first genuine
+external repository ... the team is willing to hand-transcribe a reference plan for beforehand." eslint's
+plan pre-existed this phase (`CI_REPRODUCTION_05`, months earlier) — it was not independently
+hand-transcribed as part of onboarding a new repository blind, which is the actual claim that step makes.
+See `docs/evidence/external-engine-bridge-01-first-pilot-screening.json` and
+`docs/evidence/ci-reproduction-05-rimraf-reference-plan.json` for that work, done separately and frozen
+before any engine run for the candidate it selected.
