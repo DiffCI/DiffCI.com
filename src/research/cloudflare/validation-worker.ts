@@ -734,6 +734,39 @@ async function executeCiReproductionBridge(env: ValidationEnv, owner: string, na
   }
 }
 
+/**
+ * EXTERNAL_ENGINE_BRIDGE_01 rehearsal route - POST /v1/shadow/ci-reproduction-bridge, bearer-gated like
+ * every other manually-dispatched /v1/shadow/* route (RESEARCH_DISPATCH_TOKEN). Exists because a
+ * repository can be a legitimate first candidate for the bridge (it has a hand-authored reference plan)
+ * without DiffCI's Shadow App being installed on it - no real GitHub push webhook will ever arrive for
+ * such a repository, so there is otherwise no way to rehearse the bridge against it. Deliberately reuses
+ * the SAME verified-source gate and the SAME executeCiReproductionBridge call the real webhook path
+ * (shadowWebhook's scheduleCiReproductionBridge) already uses - this is not a parallel/bypass code path,
+ * only a different trigger for the identical execution. Synchronous (returns the real outcome in the
+ * response) rather than ctx.waitUntil, unlike the webhook path - a manual rehearsal call is answered
+ * directly, not fire-and-forget acknowledged the way GitHub's webhook delivery must be.
+ */
+async function ciReproductionBridgeManualTrigger(request: Request, env: ValidationEnv): Promise<Response> {
+  let body: { repository?: string };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return json({ ok: false, error: "JSON body required" }, 400);
+  }
+  const repository = body.repository ?? "";
+  if (!/^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/.test(repository)) {
+    return json({ ok: false, error: "repository must be 'owner/name'" }, 400);
+  }
+  const [owner, name] = repository.split("/");
+  validateShellSafeIdentifiers(owner ?? "", name ?? "", "typescript");
+  const verified = await loadVerifiedShadowSource(env);
+  if (verified.status !== "CURRENT") {
+    return json({ ok: false, repository, error: `source-integrity-${verified.status}: ${verified.detail}` }, 503);
+  }
+  const result = await executeCiReproductionBridge(env, owner!, name!, verified.file);
+  return json({ ...result, sourceSha: verified.archiveSha });
+}
+
 async function shadowEnroll(request: Request, env: ValidationEnv): Promise<Response> {
   let body: { repository?: string; observationSource?: ObservationSource; language?: string };
   try {
@@ -1988,6 +2021,12 @@ export default {
         return json({ ok: false, error: "unauthorized" }, 401);
       }
       return shadowPoll(request, env);
+    }
+    if (request.method === "POST" && url.pathname === "/v1/shadow/ci-reproduction-bridge") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return ciReproductionBridgeManualTrigger(request, env);
     }
     if (request.method === "POST" && url.pathname === "/v1/shadow/reconcile") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
