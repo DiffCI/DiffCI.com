@@ -85,20 +85,33 @@ still-untaken founder decision from pointing DNS).
 `github.com/apps/diffci-shadow`) -> welcome page (`/welcome`, live) -> report lookup form -> hosted
 report route (live, real data for an enrolled repo, honest empty-state for an unenrolled one). The one
 link in this chain that could **not** be verified this session: the GitHub install flow's own redirect
-through `setup_url` back to `/welcome`, because `setup_url` is a GitHub-UI-only field on the App's
-settings page (not settable via the manifest API) and applying it is a founder-only action not yet
-taken. The manifest file documents the intended value; the live App does not yet have it configured.
+through `setup_url` back to `/welcome`. **2026-09-04 update: `setup_url` is now configured** - founder
+signed into the real App settings page (`https://github.com/settings/apps/diffci-shadow`, sudo-mode
+passkey re-auth required and completed by the founder), set it to `https://diffci.com/welcome`, saved
+("Your GitHub App has been updated"), confirmed live in the field itself. The actual redirect - a real
+install click landing on `/welcome` - is still not separately click-tested, since that would mean
+triggering a real install/reinstall on an account; the field being set and pointing at a real, live page
+is the verification this session can honestly claim.
 
 **Remaining founder-only actions** (none silently started, all explicitly gated by the plan or by
 prior instruction):
 1. ~~Point `diffci.com` DNS at the deployed `diffci-site` Worker~~ - **done 2026-09-04**, founder cleared
    the pre-existing blocking DNS record, custom domain attached, verified live (see above).
-2. Configure `setup_url` on the live "DiffCI Shadow" App's GitHub settings page (UI-only, not yet done).
-3. Publish the App listing publicly (currently `public: false`; explicitly gated per this task's own
-   instruction: "STOP before publicly publishing the App listing unless explicit founder authorization
-   exists").
+2. ~~Configure `setup_url` on the live App's GitHub settings page~~ - **done 2026-09-04** (see above).
+3. Publish the App listing on GitHub Marketplace. Investigated 2026-09-04 and found this is NOT a
+   simple visibility toggle: raw installability ("Any account" can install) was already set at
+   creation and is confirmed working today via the direct link
+   (`https://github.com/apps/diffci-shadow`) - a stranger genuinely can install without talking to
+   anyone, right now. "Publish the listing" specifically means GitHub Marketplace: create a draft,
+   fill in a full submission (categories, support info, a pricing plan even for a free app), then
+   submit for GitHub's own review and approval before it becomes searchable there. Founder chose to
+   **skip this for now** rather than start the draft - the submission form is exactly where the still-
+   open legal entity/contact TODO (item 4 below) would need to go in for real, and it starts a
+   third-party review process that isn't trivially reversible once submitted. Not a technical blocker
+   to installation; only affects discoverability via GitHub's own Marketplace search.
 4. Legal entity / jurisdiction / contact address - pre-existing `[TODO before launch]` on every site
-   page footer, untouched this session, **now live and publicly visible** as of the DNS change.
+   page footer, untouched this session, **now live and publicly visible** as of the DNS change, and
+   the concrete blocker on item 3 above.
 5. ~~Complete the uninstall-triggered data-deletion pipeline~~ - **done 2026-09-04** (commit `56fc205`).
    `src/research/cloudflare/shadow-erasure.ts` implements both commitments
    `site/data-handling.html` makes: `installation.deleted` now triggers real erasure (D1 rows +
@@ -110,10 +123,11 @@ prior instruction):
    remaining manual piece was never a different promise: an ad-hoc "delete my data now, without
    uninstalling" request still goes through a person, not a self-service form.
 
-**Blocker assessment for outreach beginning 2026-09-11:** none remaining that this session can resolve.
-The technical front door - domain, install flow, welcome page, hosted report, and now real erasure - is
-fully live and matches what `site/data-handling.html` promises. What's left (items 2-4 above) is
-entirely founder-owned: GitHub UI actions, a go/no-go on public listing, and legal identity.
+**Blocker assessment for outreach beginning 2026-09-11:** none. The technical front door - domain,
+install flow (including `setup_url`), welcome page, hosted report, and real erasure - is fully live and
+matches what `site/data-handling.html` promises; a stranger can already install via the direct link
+today. What's left (items 3-4 above) is a deliberate founder decision (Marketplace listing deferred
+until legal identity is settled), not a build gap.
 
 ## Dashboard, 2026-09-03 (superseded by Week 1 close-out above for infrastructure status; genuine
 install counts below still current - re-verify before Week 2 reporting)
