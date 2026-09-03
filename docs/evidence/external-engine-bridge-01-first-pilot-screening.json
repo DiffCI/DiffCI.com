@@ -7,7 +7,7 @@
   "additionalR4Exclusions": [
     "axios/date-fns/fastify/immer are excluded here too, even though they were never used by a CI_REPRODUCTION attempt specifically - they already appear elsewhere in DiffCI's validation history (the external-validation/economics thread), and reusing them here would blur the same independence this frame exists to protect."
   ],
-  "screened": 8,
+  "screened": 10,
   "rows": [
     {
       "rank": 12,
@@ -92,6 +92,27 @@
         "source": "github actions run 23321072009, job within it"
       },
       "caveat": "This workflow's most recent completed run before the pinned commit is over 5 months old relative to when this screening was performed (2026-09-03) - the largest plan-age gap of any candidate screened here so far. Real result: docs/evidence/external-engine-bridge-01-first-pilot/results.md - REFUSED. The reference arm's ./test.sh step itself failed (exit 127), but NOT because the step was mistranscribed or unexecutable as written: the raw output shows 11 of 12 sub-tests running, failing only when test/11_time.sh invokes a `time` utility this canonical container's image does not provide (`test/11_time.sh: 10: time: not found`) - a real container-provisioning gap, distinct from every prior finding. The inference arm refused for an unrelated, independent reason: purpose.ts does not recognise a bare `./test.sh` invocation as providing TEST at all."
+    },
+    {
+      "rank": 21,
+      "pkg": "rollup",
+      "repo": "rollup/rollup",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "the repository's real TEST job (.github/workflows/build-and-tests.yml, job `test`) declares matrix.node as only ['18.20.0', 24] (plus include-only overrides on those same two versions) - no cell targets major 22 at all. Also independently notable, though not reached as the rejection reason since R2 already fails: `test` structurally depends via `needs:`/artifact-restore on a separate `build` job that cross-compiles native Rust/napi bindings across dozens of platform targets - a genuine cross-job dependency a linear, single-job reference plan could not honestly represent even if a node-22 cell had existed."
+    },
+    {
+      "rank": 22,
+      "pkg": "chalk",
+      "repo": "chalk/chalk",
+      "verdict": "QUALIFIED",
+      "detail": "single job, runs-on fixed to ubuntu-latest, matrix is only node-version: [26, 22], two plainly-stated commands (npm install; npm test), no reusable-action indirection, no step-level env or if: conditions - directly transcribable with zero repair. Test runner is `ava` (via `npm test`'s `xo && c8 ava && tsc ...` chain) - a fourth distinct test runner across this corpus (mocha/native-tap/node-tap/QUnit/ava), again not pre-judged on parseability.",
+      "pinnedHeadSha": "661317e6f91fe7c90306c2c48ea9354562ee9146",
+      "groundTruth": {
+        "cell": "Node.js 22",
+        "conclusion": "success",
+        "source": "github actions run 30206948620, job within it"
+      },
+      "caveat": "No lockfile at the repository root and no packageManager field - the same missing-pinned-dependency-basis condition that has driven every eslint REFUSED in this whole project. May cause this candidate to REFUSE before the reference/inference arms' execution or output-parsing behavior is exercised at all, the same way eslint's does."
     }
   ]
 }

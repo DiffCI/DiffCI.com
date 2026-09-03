@@ -1,0 +1,35 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "chalk/chalk",
+  "headSha": "661317e6f91fe7c90306c2c48ea9354562ee9146",
+  "source": ".github/workflows/main.yml, job `test`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file, selected via docs/evidence/external-engine-bridge-01-first-pilot-screening.json's continuation of the frozen CI_REPRODUCTION_05 selection frame, after rank 21 (rollup/rollup) was rejected at R2 (no node-22 cell in its real TEST job). The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "os": "ubuntu-latest",
+    "node-version": "22"
+  },
+  "cellSelection": "The single in-environment cell: runs-on is fixed to ubuntu-latest (not itself a matrix axis), and matrix.node-version 22 matches the canonical container (node major 22) exactly, one of 2 declared values (26, 22). The node-version 26 cell is OUT_OF_ENVIRONMENT and is recorded, not executed.",
+  "githubSemanticsApplied": "No step's `run:` body or `env:` block references matrix context beyond the job `name:` field (display only), so there is no DEFINED_EMPTY/UNDEFINED_CONTEXT distinction to apply for this cell.",
+  "conditionsApplied": "The job declares no step-level `if:`, so no step is condition-skipped in this cell.",
+  "ciGroundTruth": {
+    "cell": "Node.js 22",
+    "conclusion": "success",
+    "source": "github actions run 30206948620, job within it, recorded in docs/evidence/external-engine-bridge-01-first-pilot-screening.json"
+  },
+  "steps": [
+    {
+      "command": [
+        "npm",
+        "install"
+      ],
+      "evidence": ".github/workflows/main.yml - unnamed step -> `run: npm install`"
+    },
+    {
+      "command": [
+        "npm",
+        "test"
+      ],
+      "evidence": ".github/workflows/main.yml - unnamed step -> `run: npm test`. package.json's own `scripts.test` is `xo && c8 ava && tsc --noEmit --types node source/index.d.ts` (lint, then coverage-wrapped ava, then a type-check), invoked transparently by this single command exactly as the workflow states it, no command repair applied."
+    }
+  ]
+}
