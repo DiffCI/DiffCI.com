@@ -94,7 +94,7 @@
         <b>Observe</b>
         <p>
           A read-only GitHub App sees pushes and completed workflow runs. Metadata, contents, Actions,
-          checks, pull requests — read-only, all five.
+          checks — read-only, all four.
         </p>
       </li>
       <li>
@@ -355,7 +355,7 @@
         <tr><th>What is kept</th><td>Commit SHAs, the paths of changed files, the tests DiffCI would have selected, the reason it fell back to a full run when it did, and the reconciled outcome and timings of the CI run that actually happened. Plus evidence archives for those analyses, so a result can be audited rather than taken on trust. Never file contents. Never credentials: DiffCI is not given any.</td></tr>
         <tr><th>For how long</th><td>90 days at most, counted from the analysis that produced each record. Uninstalling the App deletes that repository's records sooner, automatically.</td></tr>
         <tr><th>Actions, checks</th><td>Read the results and timings of workflow runs that have already finished. This is the same information the Actions tab shows you, used to check DiffCI's prediction against what your CI actually did.</td></tr>
-        <tr><th>Pull requests</th><td>Pull request events are received and acknowledged but not yet analyzed. The scope is held for that work; nothing is done with it today.</td></tr>
+        <tr><th>Pull requests</th><td>Not requested. DiffCI does not read pull request titles, descriptions, diffs, or review comments. The App asked for this scope in an earlier version without using it; it was removed. If pull-request-level analysis is built, the App will ask for the permission then, and GitHub will prompt you to approve it.</td></tr>
         <tr><th>Who else sees it</th><td>Nobody. Nothing is sold, shared with a third party, or used to train anything, and nothing naming your repository is published without your written agreement to that specific text.</td></tr>
       </table>
     </div>

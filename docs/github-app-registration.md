@@ -20,7 +20,7 @@ There are two prospective GitHub Apps in this repository, and they must stay **s
 
 | App | Purpose | Permissions | Who installs it |
 |---|---|---|---|
-| **DiffCI Shadow** (this doc) | Observe-only shadow validation | Read-only, exactly 5 scopes | Design partners + own repos |
+| **DiffCI Shadow** (this doc) | Observe-only shadow validation | Read-only, exactly 4 scopes (pull_requests dropped 2026-09-03, unused) | Design partners + own repos |
 | GitHub-runner dispatcher (`src/research/cloudflare/github-runner-worker.ts`) | Ephemeral self-hosted Actions runners | Administration:write, Actions:write | Own repos ONLY |
 
 The entire design-partner pitch for shadow mode is "this App cannot touch anything in your
@@ -39,9 +39,10 @@ manifest shape is noted in `wrangler.github-runner.jsonc`'s comments.
      anyway (e.g. `openssl rand -hex 32`) and stash it — you'll enable Active later without re-visiting
      secrets. Installation-token API access (the part the pipeline can use immediately, e.g. for
      private design-partner repos) works fine with the webhook inactive.
-   - Repository permissions — exactly these five, **all Read-only**, nothing else:
-     Metadata, Contents, Actions, Checks, Pull requests.
-   - Subscribe to events: `push`, `pull_request`, `workflow_run`.
+   - Repository permissions — exactly these four, **all Read-only**, nothing else:
+     Metadata, Contents, Actions, Checks. (Pull requests was requested until 2026-09-03 and dropped
+     because nothing used it; re-add it only when PR-delta analysis actually ships.)
+   - Subscribe to events: `push`, `workflow_run`.
    - "Where can this App be installed?" → **Any account** (design partners must be able to install it;
      the App being non-public just means it's not listed in the marketplace).
 2. **Generate a private key** (App settings page → "Generate a private key"). GitHub downloads a

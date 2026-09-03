@@ -7,10 +7,9 @@
     "metadata": "read",
     "contents": "read",
     "actions": "read",
-    "checks": "read",
-    "pull_requests": "read"
+    "checks": "read"
   },
-  "default_events": ["push", "pull_request", "workflow_run"],
+  "default_events": ["push", "workflow_run"],
   "setup_url": "https://diffci.com/welcome",
   "hook_attributes": {
     "url": "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/webhook",
