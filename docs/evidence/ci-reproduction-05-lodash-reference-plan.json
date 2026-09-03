@@ -1,0 +1,36 @@
+{
+  "schema": "diffci.ci.reference-plan/v2",
+  "repository": "lodash/lodash",
+  "headSha": "a666ba591064c8011988275790ad7d625279f09c",
+  "source": ".github/workflows/ci-node.yml, job `test`, transcribed by reading the repository",
+  "constructedIndependently": "Written by reading the workflow file, selected via docs/evidence/external-engine-bridge-01-first-pilot-screening.json's continuation of the frozen CI_REPRODUCTION_05 selection frame, after isaacs/rimraf (rank 13) was rejected at R3 for a reason unrelated to this repository. The inference engine was not consulted and this file is not generated from any ExecutionGraph.",
+  "matrixCell": {
+    "os": "ubuntu-latest",
+    "node-version": "22"
+  },
+  "cellSelection": "The single in-environment cell: matrix.os ubuntu-latest and matrix.node-version 22 match the canonical container (node major 22) exactly - one of 22 declared node-version entries (4 through 25) on the single declared os. Every other node-version entry is OUT_OF_ENVIRONMENT and is recorded, not executed.",
+  "githubSemanticsApplied": "The job name itself interpolates ${{ matrix.node-version }} and ${{ matrix.os }} (display only, not a command). No step's `run:` body or `env:` block references matrix context, so there is no DEFINED_EMPTY/UNDEFINED_CONTEXT distinction to apply for this cell.",
+  "conditionsApplied": "One step declares `if: matrix.node-version == '5'` (\"Use npm@3.10.10 for Node@5\") - false for this cell (node-version is '22'), so that step is condition-skipped and does not appear in the steps below.",
+  "ciGroundTruth": {
+    "cell": "Node.js 22 on ubuntu-latest",
+    "conclusion": "success",
+    "source": "github actions run 28680564540, job within it, recorded in docs/evidence/external-engine-bridge-01-first-pilot-screening.json"
+  },
+  "steps": [
+    {
+      "command": [
+        "npm",
+        "install"
+      ],
+      "evidence": ".github/workflows/ci-node.yml - `Install dependencies` -> `run: npm install`"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "validate"
+      ],
+      "evidence": ".github/workflows/ci-node.yml - `Run Validate` -> `run: npm run validate`. package.json's own `scripts.validate` is `npm run style && npm run test` (style then test:main/test:fp, invoked transparently by this single command exactly as the workflow states it), no command repair applied."
+    }
+  ]
+}

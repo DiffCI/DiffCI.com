@@ -7,7 +7,7 @@
   "additionalR4Exclusions": [
     "axios/date-fns/fastify/immer are excluded here too, even though they were never used by a CI_REPRODUCTION attempt specifically - they already appear elsewhere in DiffCI's validation history (the external-validation/economics thread), and reusing them here would blur the same independence this frame exists to protect."
   ],
-  "screened": 2,
+  "screened": 5,
   "rows": [
     {
       "rank": 12,
@@ -20,15 +20,43 @@
       "rank": 13,
       "pkg": "rimraf",
       "repo": "isaacs/rimraf",
-      "verdict": "QUALIFIED",
-      "detail": "single job, statically-declared matrix (no reusable/dynamic matrix generation), two plainly-stated commands (npm install; npm test -- -c -t0), no reusable install action, no step-level env or if: conditions referencing matrix context - directly transcribable from .github/workflows/ci.yml with zero repair.",
+      "verdict": "REJECTED_R3_FAILED",
+      "detail": "R1/R2/R4 all passed (see below); reference plan hand-transcribed and frozen (docs/evidence/ci-reproduction-05-rimraf-reference-plan.json) BEFORE running R3. R3 result: R3_FAILED - 'the reference arm executed no suite, so there is nothing to reproduce'. This is not a transcription error: both commands ran exactly as the workflow states them, both exited 0, and the real underlying test run genuinely executed and passed (17/17 suites, 782/782 asserts - visible in the raw outputTail, docs/evidence/external-engine-bridge-01-first-pilot-screening/rimraf-r3-failed.json). The cause is that rimraf's test script invokes node-tap's own CLI reporter, whose pretty-printed summary format ('Asserts: N pass', 'Suites: N pass', a decorative TEST COMPLETE banner) is not one the harness's evidence parser currently recognizes as a completed suite - a real, structural harness limitation, distinct in kind from eslint's dependency-pinning gap. Per protocol this is evidence, not something to patch around (extending the parser to recognize a new reporter format is new engine scope, out of bounds for this pilot) - rejected, moving to the next rank.",
       "pinnedHeadSha": "051e6c72a703854a029344be188d14dbe1b326c7",
       "groundTruth": {
         "cell": "build (22.x, ubuntu-latest, bash)",
         "conclusion": "success",
         "source": "github actions run 25937631695, job within it"
       },
-      "caveat": "This workflow's most recent completed run before the pinned commit is over 4 months old relative to when this screening was performed (2026-09-03) - the repository's CI runs on push-to-main and a path-filtered pull_request trigger, and simply hasn't had a qualifying event since. Recorded because the bridge rehearsal (unlike this screening) runs against the repository's live current HEAD, not this pinned ground-truth commit - the same kind of plan-age caveat noted for eslint's rehearsal, here potentially larger."
+      "caveat": "This workflow's most recent completed run before the pinned commit is over 4 months old relative to when this screening was performed (2026-09-03) - the repository's CI runs on push-to-main and a path-filtered pull_request trigger, and simply hasn't had a qualifying event since."
+    },
+    {
+      "rank": 14,
+      "pkg": "chai",
+      "repo": "chaijs/chai",
+      "verdict": "R2_NO_GROUND_TRUTH",
+      "detail": "the `build` job's matrix is node-version: [20, 25, 'latest'] on ubuntu-latest - no cell targets major 22 at all (container's canonical major), and 'latest' is not a stable claim about any specific major. No in-environment cell exists to provide ground truth."
+    },
+    {
+      "rank": 15,
+      "pkg": "@types/jest",
+      "repo": "DefinitelyTyped/DefinitelyTyped",
+      "verdict": "DEDUPED",
+      "detail": "same repository as rank 5 (@types/node), already screened and rejected (R2_NO_GROUND_TRUTH) in docs/evidence/ci-reproduction-05-screening.json - following that file's own rank-9 precedent of deduping by repository identity regardless of the earlier row's verdict."
+    },
+    {
+      "rank": 16,
+      "pkg": "lodash",
+      "repo": "lodash/lodash",
+      "verdict": "QUALIFIED",
+      "detail": "single job, statically-declared matrix including node-version '22' on ubuntu-latest, plain actions/checkout + actions/setup-node (no reusable install/matrix action), two plainly-stated commands for this cell (npm install; npm run validate) plus one step conditioned on matrix.node-version == '5' that is skipped in this cell - directly transcribable with zero repair.",
+      "pinnedHeadSha": "a666ba591064c8011988275790ad7d625279f09c",
+      "groundTruth": {
+        "cell": "Node.js 22 on ubuntu-latest",
+        "conclusion": "success",
+        "source": "github actions run 28680564540, job within it"
+      },
+      "caveat": "lodash's test scripts (test:main, test:fp) invoke QUnit directly via plain `node test/test` - a different test runner from every repository in this corpus so far. Deliberately NOT pre-judged here: whether QUnit's console output is one the harness's evidence parser recognizes is exactly what R3 tests empirically, and skipping this candidate in advance because its output format is unfamiliar would be choosing based on an outcome guess, which is precisely what this selection process must not do. The reference plan below is frozen before running R3 either way."
     }
   ]
 }
