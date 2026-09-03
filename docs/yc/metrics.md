@@ -99,23 +99,21 @@ prior instruction):
    exists").
 4. Legal entity / jurisdiction / contact address - pre-existing `[TODO before launch]` on every site
    page footer, untouched this session, **now live and publicly visible** as of the DNS change.
-5. Complete the uninstall-triggered data-deletion pipeline. **This is now a live, real problem, not a
-   future one**: `site/data-handling.html` is publicly reachable at `https://diffci.com/data-handling`
-   today (verified 200), and it still carries its own pre-existing banner - "Unfinished - do not launch
-   this page yet... the automated deletion path... is not implemented yet. Until it is, this page must
-   not be published." That page is now published, with its own banner contradicting that fact, at the
-   real domain. I verified the underlying gap is still accurate: `shadow-webhook.ts`'s
-   `installation`/`action:"deleted"` handler only logs today - it deletes nothing from D1 or R2. I did
-   not build this in this session (a new `R2Binding.delete()` capability doesn't exist yet, plus
-   deletion logic across 3 D1 tables) and did not remove the banner or the page - flagging it here and
-   in chat instead of silently either building around it or hiding it.
+5. ~~Complete the uninstall-triggered data-deletion pipeline~~ - **done 2026-09-04** (commit `56fc205`).
+   `src/research/cloudflare/shadow-erasure.ts` implements both commitments
+   `site/data-handling.html` makes: `installation.deleted` now triggers real erasure (D1 rows +
+   R2 evidence archives) for every attributed repository, fire-and-forget from the webhook handler; a
+   90-day retention sweep runs every cron tick (~10 min), keyed off `prediction_created_at` - a real
+   bug (filtering by insert-time `created_at` instead) was caught by a new SQLite-backed test before it
+   shipped. 1960/1960 tests pass. The page's "do not launch this page yet" banner is replaced with an
+   honest status note; deployed and verified live at `https://diffci.com/data-handling`. The one
+   remaining manual piece was never a different promise: an ad-hoc "delete my data now, without
+   uninstalling" request still goes through a person, not a self-service form.
 
-**Blocker assessment for outreach beginning 2026-09-11:** the technical front door is now fully live,
-including the domain. The one thing that changed status with the DNS flip: item 5 above went from
-"a gap that will matter once the site is public" to "a self-contradicting page a real visitor could
-land on right now." It's still not a blocker to the App install flow itself (data-handling.html is
-prose, not code in the install path), but it's the most credible reason to fix or gate that one page
-before outreach starts, rather than before DNS - DNS is done now.
+**Blocker assessment for outreach beginning 2026-09-11:** none remaining that this session can resolve.
+The technical front door - domain, install flow, welcome page, hosted report, and now real erasure - is
+fully live and matches what `site/data-handling.html` promises. What's left (items 2-4 above) is
+entirely founder-owned: GitHub UI actions, a go/no-go on public listing, and legal identity.
 
 ## Dashboard, 2026-09-03 (superseded by Week 1 close-out above for infrastructure status; genuine
 install counts below still current - re-verify before Week 2 reporting)
