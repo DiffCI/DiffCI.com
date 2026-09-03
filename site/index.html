@@ -339,9 +339,31 @@
         <tr><th>What you give</th><td>Read-only access to one repository, for seven days.</td></tr>
         <tr><th>What you get</th><td>A report of what your CI ran, what was avoidable, and whether any change DiffCI would have de-prioritized turned out to break something.</td></tr>
         <tr><th>What it costs</th><td>Nothing. There is no paid tier to upgrade to. The open question we are paying to answer is whether the report is worth having.</td></tr>
-        <tr><th>What we store</th><td><a href="/data-handling">Data handling →</a></td></tr>
+        <tr><th>What we store</th><td>See below, and <a href="/data-handling">data handling →</a> for the full version.</td></tr>
       </table>
     </div>
+
+    <h3>Where your code goes</h3>
+    <p>
+      "Read-only" answers what DiffCI can change. It does not answer what DiffCI can see, so here is
+      that answer, permission by permission.
+    </p>
+    <div class="table-scroll">
+      <table class="kv">
+        <tr><th>Contents</th><td>For each commit it analyzes, DiffCI makes a shallow clone of your repository at that commit, inside an ephemeral container on infrastructure operated solely for DiffCI. This is what the contents permission is for: there is no way to build a real dependency graph without reading the source.</td></tr>
+        <tr><th>What happens to the clone</th><td>The graph is computed and the container is destroyed. The clone does not outlive the analysis. No copy of your source tree is kept anywhere, and no file contents are written to any store.</td></tr>
+        <tr><th>What is kept</th><td>Commit SHAs, the paths of changed files, the tests DiffCI would have selected, the reason it fell back to a full run when it did, and the reconciled outcome and timings of the CI run that actually happened. Plus evidence archives for those analyses, so a result can be audited rather than taken on trust. Never file contents. Never credentials: DiffCI is not given any.</td></tr>
+        <tr><th>For how long</th><td>90 days at most, counted from the analysis that produced each record. Uninstalling the App deletes that repository's records sooner, automatically.</td></tr>
+        <tr><th>Actions, checks</th><td>Read the results and timings of workflow runs that have already finished. This is the same information the Actions tab shows you, used to check DiffCI's prediction against what your CI actually did.</td></tr>
+        <tr><th>Pull requests</th><td>Pull request events are received and acknowledged but not yet analyzed. The scope is held for that work; nothing is done with it today.</td></tr>
+        <tr><th>Who else sees it</th><td>Nobody. Nothing is sold, shared with a third party, or used to train anything, and nothing naming your repository is published without your written agreement to that specific text.</td></tr>
+      </table>
+    </div>
+    <p class="fine">
+      If your repository is private and the clone is the part you are not comfortable with, that is a
+      reasonable position, and the right answer is not to install. If you do install and change your
+      mind, uninstall, and the records go with it.
+    </p>
 
     <div class="cta">
       <a class="button" href="https://github.com/apps/diffci-shadow">Install the read-only App</a>
