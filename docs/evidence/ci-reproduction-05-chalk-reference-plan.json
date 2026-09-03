@@ -14,7 +14,8 @@
   "ciGroundTruth": {
     "cell": "Node.js 22",
     "conclusion": "success",
-    "source": "github actions run 30206948620, job within it, recorded in docs/evidence/external-engine-bridge-01-first-pilot-screening.json"
+    "source": "github actions run 30206948620, job within it, recorded in docs/evidence/external-engine-bridge-01-first-pilot-screening.json",
+    "jobStartedAt": "2026-07-26T14:51:09Z"
   },
   "steps": [
     {

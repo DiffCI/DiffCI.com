@@ -24,7 +24,7 @@ import { jobProvides, type InferredJob } from "./jobs.js";
 import { evaluateCondition, renderCommand, type Resolution } from "./expression.js";
 import { expandMatrix, type MatrixAssignment } from "./matrix.js";
 import { computeCompleteness, confidenceFromCompleteness, type ReferenceNode } from "./reference-graph.js";
-import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences } from "./resolve.js";
+import { expressionReferences, pinnedDependencyBasis, resetReferenceIds, resolveAction, resolveScript, serviceReferences, timeBoxedDependencyBasis } from "./resolve.js";
 import { normalizeExecutable, packageManagerCommand, purposeOfLine } from "./purpose.js";
 import type { DeclaredPrerequisite } from "./causal.js";
 import type { EvidenceRef, InferredOperation, InferredPipeline, ObservedFact, OperationKind, Unresolved } from "./schema.js";
@@ -112,7 +112,17 @@ function argvOf(line: string): { argv: string[]; unresolved?: Unresolved } {
  *
  * Never executes anything. Reads facts only.
  */
-export function inferPipeline(repoPath: string, repository: string, headSha: string, facts: ObservedFact[], now: string): InferredPipeline {
+export function inferPipeline(
+  repoPath: string,
+  repository: string,
+  headSha: string,
+  facts: ObservedFact[],
+  now: string,
+  /** ENGINE_COVERAGE_01 item 1. ISO-8601 timestamp, independently sourced from the reference plan's
+   *  ciGroundTruth.jobStartedAt — never derived here, never defaulted to `now`. Absent means no
+   *  time-boxed basis is available; behavior is then identical to before this parameter existed. */
+  dependencyCutoff?: string,
+): InferredPipeline {
   resetReferenceIds();
   const references: ReferenceNode[] = [];
   const unresolved: Unresolved[] = [];
@@ -171,6 +181,24 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
     }
     references.push(...own);
 
+    // ENGINE_COVERAGE_01 item 1. Considered ONLY for a genuine npm install operation in a repository
+    // that has no committed lockfile/packageManager (basis.pinned already false) - never re-evaluated,
+    // let alone shown in a receipt, for an already-pinned repository (computeCompleteness's own
+    // short-circuit also guards this, but the condition is repeated here so the argv mutation below
+    // never happens for a pinned repository either, not just the receipt). Distinct from, never a silent
+    // substitute for, DEPENDENCY_BASIS_PINNED - see reference-graph.ts's requirement pair and
+    // docs/engine-coverage-01-item-1-implementation-plan.md.
+    const timeBoxed =
+      kind === "install" && !basis.pinned && command[0]?.toLowerCase() === "npm"
+        ? timeBoxedDependencyBasis(facts, dependencyCutoff)
+        : { established: false as const, detail: "not applicable to this operation" };
+    if (timeBoxed.established && timeBoxed.cutoff) {
+      // Appended to the SAME array the caller's `argv` variable references (command is passed by
+      // reference), so the flag reaches the actual spawn site (scripts/ci-reproduction.ts's runArm) with
+      // no further plumbing - never lost between here and execution.
+      command.push(`--before=${timeBoxed.cutoff}`);
+    }
+
     const scriptsResolved = own.filter((n) => n.kind === "SCRIPT_REFERENCE").every((n) => n.resolution === "RESOLVED");
     // DEFECT 30. Each requirement now carries what was OBSERVED, not merely a boolean. The deleted
     // `"a resolved package manager"` was implemented as `command.length > 0` — it duplicated the
@@ -193,6 +221,7 @@ export function inferPipeline(repoPath: string, repository: string, headSha: str
               : `${scriptRefs.filter((n) => n.resolution === "RESOLVED").length}/${scriptRefs.length} script reference(s) resolved`,
         },
         DEPENDENCY_BASIS_PINNED: { satisfied: basis.pinned, observed: basis.detail },
+        DEPENDENCY_BASIS_TIME_BOXED: { satisfied: timeBoxed.established, observed: timeBoxed.detail },
       },
       own,
     );

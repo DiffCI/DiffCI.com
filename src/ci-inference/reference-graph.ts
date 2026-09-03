@@ -86,9 +86,22 @@ export const REQUIREMENT_PREDICATES = {
     label: "a pinned dependency basis (lockfile or packageManager field)",
     predicate: "the repository commits a lockfile or declares a packageManager field",
   },
+  /** ENGINE_COVERAGE_01 item 1. A distinct, WEAKER claim than DEPENDENCY_BASIS_PINNED — never merged
+   *  into it. Satisfying this means "a defensible historical basis to ATTEMPT the operation", not "the
+   *  exact dependency graph CI originally installed was reconstructed". See
+   *  docs/engine-coverage-01-item-1-implementation-plan.md. */
+  DEPENDENCY_BASIS_TIME_BOXED: {
+    label: "a defensible time-boxed dependency basis (no committed lock, resolution bounded to the repository's own historical CI run)",
+    predicate: "an independently-sourced historical cutoff exists and the install path can be bounded to it (npm only)",
+  },
 } as const;
 
 export type RequirementId = keyof typeof REQUIREMENT_PREDICATES;
+
+/** A single mandatory requirement, or a group where satisfying ANY ONE member satisfies the whole slot —
+ *  used for DEPENDENCY_BASIS_PINNED / DEPENDENCY_BASIS_TIME_BOXED, which are alternative, not additive,
+ *  bases for the same install operation. */
+export type RequirementSlot = RequirementId | readonly RequirementId[];
 
 /**
  * One requirement, its predicate, and what was actually seen.
@@ -114,13 +127,19 @@ export interface RequirementCheck {
   satisfied: boolean;
 }
 
-export const COMPLETENESS_REQUIREMENTS: Record<string, RequirementId[]> = {
+export const COMPLETENESS_REQUIREMENTS: Record<string, RequirementSlot[]> = {
   install: [
     // Without one, "install" is not reproducible: the same command resolves differently over time,
     // which is exactly how eslint-plugin-vue's generic `npm install` crashed — and what member 5 of
     // CI_REPRODUCTION_SAMPLE_01 demonstrated empirically, its CI passing on 2026-08-04 and its suite
     // failing today because `webpack@5` resolved to a version published 28 days later.
-    "DEPENDENCY_BASIS_PINNED",
+    //
+    // ENGINE_COVERAGE_01 item 1: an OR-slot, not two additive requirements. DEPENDENCY_BASIS_PINNED is
+    // tried first (genuine lockfile/packageManager pinning); DEPENDENCY_BASIS_TIME_BOXED is only
+    // evaluated - and only then shown in a receipt at all - when PINNED already failed. A repository
+    // that already pins its dependencies never gains a TIME_BOXED entry in its checks; only eslint/chalk
+    // (no lockfile, no packageManager) reach the second alternative.
+    ["DEPENDENCY_BASIS_PINNED", "DEPENDENCY_BASIS_TIME_BOXED"],
     "COMMAND_RESOLVED",
     "WORKING_DIRECTORY_KNOWN",
   ],
@@ -154,25 +173,35 @@ export function computeCompleteness(
   references: ReferenceNode[],
 ): Completeness {
   const required = COMPLETENESS_REQUIREMENTS[kind] ?? COMPLETENESS_REQUIREMENTS.default!;
-  const checks: RequirementCheck[] = required.map((id) => {
-    const spec = REQUIREMENT_PREDICATES[id];
-    const seen = observations[id];
-    return {
-      id,
-      label: spec.label,
-      predicate: spec.predicate,
-      observed: seen?.observed ?? "not observed",
-      satisfied: seen?.satisfied === true,
-    };
-  });
+  const checks: RequirementCheck[] = [];
+  const unmetLabels: string[] = [];
+  for (const slot of required) {
+    // A plain id is a mandatory requirement (a one-member slot). An array is an OR-group: satisfying ANY
+    // member satisfies the whole slot. Members are evaluated IN ORDER and evaluation stops at the first
+    // satisfied one - a later alternative is never even computed, let alone shown in a receipt, once an
+    // earlier one already held. This is what keeps every already-pinned repository's checks byte-for-byte
+    // unchanged: DEPENDENCY_BASIS_TIME_BOXED is never looked up when DEPENDENCY_BASIS_PINNED is true.
+    const ids: readonly RequirementId[] = Array.isArray(slot) ? slot : [slot];
+    const slotChecks: RequirementCheck[] = [];
+    let slotSatisfied = false;
+    for (const id of ids) {
+      if (slotSatisfied) break;
+      const spec = REQUIREMENT_PREDICATES[id];
+      const seen = observations[id];
+      const satisfied = seen?.satisfied === true;
+      slotChecks.push({ id, label: spec.label, predicate: spec.predicate, observed: seen?.observed ?? "not observed", satisfied });
+      if (satisfied) slotSatisfied = true;
+    }
+    checks.push(...slotChecks);
+    if (!slotSatisfied) unmetLabels.push(...slotChecks.map((c) => c.label));
+  }
   const blockedBy = references.filter((n) => n.resolution !== "RESOLVED");
-  const missing = checks.filter((c) => !c.satisfied);
   return {
     checks,
     satisfied: checks.filter((c) => c.satisfied).map((c) => c.label),
-    missing: missing.map((c) => c.label),
+    missing: unmetLabels,
     blockedBy,
-    executable: missing.length === 0 && blockedBy.length === 0,
+    executable: unmetLabels.length === 0 && blockedBy.length === 0,
   };
 }
 

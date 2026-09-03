@@ -201,6 +201,15 @@ export interface CiGroundTruth {
   /** GitHub check-run conclusion. Only success/failure are usable; cancelled/skipped are not results. */
   conclusion: string;
   source: string;
+  /**
+   * ENGINE_COVERAGE_01 item 1. ISO-8601 - the cited job's own `started_at`, hand-transcribed from the
+   * same GitHub Actions job page `source` already cites. Optional and additive: a plan authored before
+   * this field existed simply has none, and the time-boxed dependency basis (resolve.ts's
+   * timeBoxedDependencyBasis) is then unavailable for it - identical behavior to before this field
+   * existed. Never fetched live by the engine, never derived from the pinned commit's push time, never
+   * defaulted to "now" - see docs/engine-coverage-01-item-1-implementation-plan.md §2.
+   */
+  jobStartedAt?: string;
 }
 
 /**
@@ -584,7 +593,48 @@ export function classify(
   };
 }
 
-function main(): void {
+interface NpmLsTree {
+  dependencies?: Record<string, { version?: string }>;
+}
+
+/**
+ * ENGINE_COVERAGE_01 item 1, negative case 3 (docs/engine-coverage-01-item-1-implementation-plan.md §6):
+ * does not trust that passing `--before` was sufficient just because the install exited 0 - the
+ * registry's own `time` metadata for each DIRECT dependency is independently re-fetched and re-checked
+ * against the cutoff after the fact. Scoped to direct dependencies only, not the full transitive tree -
+ * a deliberate, stated boundary for this implementation pass (the transitive case is a real, smaller
+ * residual risk, not silently treated as covered by this check).
+ *
+ * Any violation, or any inability to confirm a resolved version's publish time at all, is reported as a
+ * failure - never assumed benign.
+ */
+export async function verifyTimeBoxedCutoff(directDependencyNames: string[], resolvedTree: NpmLsTree, cutoff: string): Promise<{ verified: boolean; detail: string }> {
+  const cutoffMs = Date.parse(cutoff);
+  let checked = 0;
+  for (const name of directDependencyNames) {
+    const resolvedVersion = resolvedTree.dependencies?.[name]?.version;
+    if (!resolvedVersion) continue; // not present under this exact name in the resolved tree (e.g. an optional/platform dependency) - nothing this check can verify
+    let packument: { time?: Record<string, string> };
+    try {
+      const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`);
+      if (!res.ok) return { verified: false, detail: `registry lookup for "${name}" failed: HTTP ${res.status} - cannot confirm the cutoff held` };
+      packument = (await res.json()) as { time?: Record<string, string> };
+    } catch (error: unknown) {
+      return { verified: false, detail: `registry lookup for "${name}" failed: ${error instanceof Error ? error.message : String(error)} - cannot confirm the cutoff held` };
+    }
+    const publishedAt = packument.time?.[resolvedVersion];
+    if (!publishedAt) {
+      return { verified: false, detail: `"${name}@${resolvedVersion}" has no publish-time metadata in the registry - cannot confirm --before actually constrained it` };
+    }
+    if (Date.parse(publishedAt) > cutoffMs) {
+      return { verified: false, detail: `"${name}@${resolvedVersion}" was published ${publishedAt}, AFTER the cutoff ${cutoff} - --before did not constrain this package as expected` };
+    }
+    checked++;
+  }
+  return { verified: true, detail: `${checked} direct dependenc${checked === 1 ? "y" : "ies"} independently confirmed published on or before ${cutoff}` };
+}
+
+async function main(): Promise<void> {
   const repository = flag("repository") ?? "jantimon/html-webpack-plugin";
   const headSha = flag("head") ?? "cf9c7012003b8d71783d6c2d72f357616957b99c";
   const work = resolve(flag("work") ?? "ci-reproduction-work");
@@ -706,11 +756,22 @@ function main(): void {
     return;
   }
 
+  // Read once, ahead of the inference arm, so ciGroundTruth.jobStartedAt (ENGINE_COVERAGE_01 item 1) is
+  // available as inferPipeline's independently-sourced dependency cutoff. Moved earlier than the
+  // reference arm otherwise needs it - the reference plan itself is unaffected either way; this is a
+  // read-ordering change, not a change to what the reference arm transcribes or when it runs.
+  const referencePlan = JSON.parse(readFileSync(referencePlanPath, "utf8")) as {
+    /** What real CI produced for this cell. Absent means REPRODUCED cannot be claimed - see defect 25. */
+    ciGroundTruth?: CiGroundTruth;
+    source: string;
+    steps: Array<{ command: string[]; environment?: Record<string, string>; allowFailure?: boolean }>;
+  };
+
   // --- inference arm: from the frozen graph ONLY ---
   const inferenceRepo = join(work, "inference");
   clone(inferenceRepo);
   const facts = collectEvidence(inferenceRepo);
-  const pipeline = inferPipeline(inferenceRepo, repository, headSha, facts, new Date().toISOString());
+  const pipeline = inferPipeline(inferenceRepo, repository, headSha, facts, new Date().toISOString(), referencePlan.ciGroundTruth?.jobStartedAt);
   // INFERENCE_03: ask the planner for the path to the outcome under reproduction, rather than taking
   // whatever operations a single collapsed job happened to contain. The reference question here is TEST
   // reproduction, so the plan is the TEST path - install included, later steps excluded.
@@ -739,12 +800,6 @@ function main(): void {
     : [];
 
   // --- reference arm: transcribed from the repository's workflow, engine not consulted ---
-  const referencePlan = JSON.parse(readFileSync(referencePlanPath, "utf8")) as {
-    /** What real CI produced for this cell. Absent means REPRODUCED cannot be claimed - see defect 25. */
-    ciGroundTruth?: CiGroundTruth;
-    source: string;
-    steps: Array<{ command: string[]; environment?: Record<string, string>; allowFailure?: boolean }>;
-  };
   const referenceRepo = join(work, "reference");
   clone(referenceRepo);
 
@@ -772,7 +827,53 @@ function main(): void {
       };
   if (!plan.executable) console.log(`    inference  REFUSED - executed nothing: ${plan.refusal}`);
   assertBoundaryHonoured(plan.executable, inference);
-  const { outcome, reason } = classify(reference, inference, plan.executable, referencePlan.ciGroundTruth);
+
+  // ENGINE_COVERAGE_01 item 1: for any inference arm that used the time-boxed basis, persist the actual
+  // resolved dependency versions ("the install succeeded" is a different, weaker claim than "here is
+  // exactly what it resolved") AND independently re-verify (negative case 3) that --before genuinely
+  // constrained every direct dependency, rather than trusting the flag was sufficient just because the
+  // install exited 0. A failed verification downgrades this run to REFUSED before classify() ever
+  // compares the arms - the executable install this basis produced is not treated as equivalent to a
+  // confirmed one. Capturing dependency-resolution.json is best-effort (never allowed to affect the
+  // outcome by throwing); the cutoff verification itself IS load-bearing and does affect the outcome.
+  const usedTimeBoxedStep = inference.steps.find((s) => s.command.some((token) => token.startsWith("--before=")));
+  let timeBoxedCutoffVerification: { verified: boolean; detail: string } | undefined;
+  if (usedTimeBoxedStep) {
+    const cutoffToken = usedTimeBoxedStep.command.find((token) => token.startsWith("--before="))!;
+    const cutoff = cutoffToken.slice("--before=".length);
+    let resolvedTree: NpmLsTree = {};
+    try {
+      const ls = execBounded("npm", ["ls", "--all", "--json"], { cwd: inferenceRepo, timeoutMs: 5 * 60_000, shell: false });
+      writeFileSync(join(outDir, "dependency-resolution.json"), ls.stdout || "{}");
+      resolvedTree = ls.stdout ? (JSON.parse(ls.stdout) as NpmLsTree) : {};
+    } catch {
+      /* best-effort persistence - a failure here does not itself refuse the run; the verification below,
+         which reads directDependencyNames from package.json rather than from this tree, still runs and
+         will itself refuse if it cannot confirm the cutoff held. */
+    }
+    let directDependencyNames: string[] = [];
+    try {
+      const pkg = JSON.parse(readFileSync(join(inferenceRepo, "package.json"), "utf8")) as { dependencies?: Record<string, string>; devDependencies?: Record<string, string> };
+      directDependencyNames = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
+    } catch {
+      /* falls through to the verification below, which reports zero confirmable dependencies as a failure */
+    }
+    timeBoxedCutoffVerification = await verifyTimeBoxedCutoff(directDependencyNames, resolvedTree, cutoff);
+    console.log(`  time-boxed cutoff verification: ${timeBoxedCutoffVerification.verified ? "OK" : "FAILED"} - ${timeBoxedCutoffVerification.detail}`);
+  }
+
+  // A failed verification means this run cannot stand behind what it just executed - not merely a
+  // caveat attached after the fact. classify() is not asked to compare arms it cannot vouch for; the
+  // outcome is REFUSED directly, the same terminal vocabulary a pre-execution refusal already uses, so
+  // no new blurred-confidence outcome category is introduced (see the investigation's Candidate F,
+  // rejected on exactly this ground).
+  const { outcome, reason } =
+    timeBoxedCutoffVerification && !timeBoxedCutoffVerification.verified
+      ? {
+          outcome: "REFUSED" as const,
+          reason: `the inference arm executed, but its time-boxed dependency basis could not be independently confirmed: ${timeBoxedCutoffVerification.detail}`,
+        }
+      : classify(reference, inference, plan.executable, referencePlan.ciGroundTruth);
 
   writeFileSync(
     join(outDir, "reproduction.json"),

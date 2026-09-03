@@ -193,3 +193,32 @@ export function pinnedDependencyBasis(facts: ObservedFact[]): { pinned: boolean;
   if (pm) return { pinned: true, evidence: pm.evidence, detail: `packageManager ${pm.value}` };
   return { pinned: false, detail: "no lockfile and no packageManager field" };
 }
+
+/**
+ * ENGINE_COVERAGE_01 item 1. A SEPARATE, WEAKER basis than `pinnedDependencyBasis` — never a silent
+ * substitute for it. Established only when an independently-sourced historical cutoff (the pinned
+ * commit's own CI run start time, hand-transcribed into the reference plan's `ciGroundTruth.jobStartedAt`
+ * — never "now", never derived from a successful install) is available, letting `npm install
+ * --before=<cutoff>` bound resolution to versions that existed at that moment. This answers "is there a
+ * defensible basis to ATTEMPT the operation", not "does this reconstruct exactly what CI installed" —
+ * see docs/engine-coverage-01-item-1-implementation-plan.md for the full reasoning and the six required
+ * negative cases this function's callers must preserve.
+ *
+ * npm-only, this phase: extending the same claim to yarn/pnpm/bun would need each one's own equivalent
+ * flag verified the way `--before` was verified here, not an assumption that the shape carries over.
+ */
+export function timeBoxedDependencyBasis(
+  facts: ObservedFact[],
+  cutoff: string | undefined,
+): { established: boolean; cutoff?: string; detail: string } {
+  if (!cutoff) return { established: false, detail: "no independently-sourced historical cutoff supplied" };
+  if (Number.isNaN(Date.parse(cutoff))) return { established: false, detail: `cutoff "${cutoff}" is not a valid ISO-8601 timestamp` };
+  const pm = facts.find((f) => f.kind === "package.packageManager");
+  if (pm) {
+    const manager = String(pm.value).split("@")[0]?.toLowerCase();
+    if (manager !== "npm") {
+      return { established: false, detail: `time-boxed resolution is implemented for npm only in this phase; declared packageManager is "${pm.value}"` };
+    }
+  }
+  return { established: true, cutoff, detail: `install bounded to versions published on or before ${cutoff} (npm --before)` };
+}

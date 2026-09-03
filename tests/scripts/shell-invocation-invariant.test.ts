@@ -95,6 +95,19 @@ describe("shell-invocation invariant", () => {
     assert.doesNotThrow(() => assertShellSafeArgs(["wrangler", "d1", "execute", "diffci-product", "--remote", "--file=src/ingest/cloudflare/schema.sql"], "test"));
   });
 
+  it("ENGINE_COVERAGE_01 item 1: an npm --before=<ISO-8601 cutoff> argument is shell-safe, verified not assumed", () => {
+    // src/ci-inference/infer.ts appends this flag to a genuine npm install operation's argv. Its own
+    // implementation plan (docs/engine-coverage-01-item-1-implementation-plan.md §5.4) claims this stays
+    // on the shell-safe path because an ISO-8601 timestamp shares no character with SHELL_METACHARACTERS
+    // - asserted here as a real test, not left as a comment's claim.
+    const cutoffs = ["2026-09-01T08:25:03Z", "2026-07-26T14:51:09Z", "2026-01-01T00:00:00.000Z"];
+    for (const cutoff of cutoffs) {
+      const arg = `--before=${cutoff}`;
+      assert.equal(findShellUnsafeArgument([arg]), undefined, `"${arg}" must stay on the shell-safe path`);
+      assert.doesNotThrow(() => assertShellSafeArgs(["install", arg], "ci-reproduction inference arm"));
+    }
+  });
+
   it("catches every character a shell would reinterpret, not only spaces", () => {
     // A space is the one that actually bit, which makes the others easy to forget.
     for (const hostile of ["a&b", "a|b", "a>b", "a<b", "a;b", "a$b", "a`b", "a(b", "a*b", "a?b", 'a"b', "a'b", "a\\b", "a\tb"]) {

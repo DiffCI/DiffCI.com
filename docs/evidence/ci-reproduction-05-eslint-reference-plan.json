@@ -15,7 +15,8 @@
   "ciGroundTruth": {
     "cell": "Test (ubuntu-latest, 22.x)",
     "conclusion": "success",
-    "source": "github actions job, recorded in docs/evidence/ci-reproduction-05-screening.json"
+    "source": "github actions job, recorded in docs/evidence/ci-reproduction-05-screening.json",
+    "jobStartedAt": "2026-09-01T08:25:03Z"
   },
   "steps": [
     {
