@@ -153,34 +153,64 @@ Two independent things went wrong, and it matters that they're different:
 Same four proofs verified the same way as lodash's; raw evidence at
 `docs/evidence/external-engine-bridge-01-first-pilot/husky/`.
 
-## What this establishes, across both candidates
+## Candidate 3: chalk/chalk (rank 22, after rollup rejected at R2) — REFUSED, a repeat, not a new class
+
+Rank 21 (`rollup/rollup`) rejected mechanically: its real `test` job declares `node: ['18.20.0', 24]`,
+no `22` cell at all - a clean R2 failure (also structurally dependent on artifacts from a separate native
+Rust cross-compilation job, which would have made transcription infeasible even had R2 passed). Rank 22
+(`chalk/chalk`) qualified - about as simple as this corpus gets: single job, matrix is only
+`node-version: [26, 22]`, two plain commands (`npm install`, `npm test`, running `ava` underneath). Plan
+frozen (`c165968`) before running anything, having flagged in advance (in the screening record, not
+after seeing the result) that chalk has no lockfile and no `packageManager` field.
+
+**Result:**
+```
+outcome: REFUSED
+reason: the engine did not mark the path executable, so the inference arm executed nothing:
+        1 operation(s) in the TEST path are not executable: test-node-version26-install-0
+        (a pinned dependency basis (lockfile or packageManager field))
+```
+
+`referenceArm.reachedEnd: true`, both steps exit 0 — the reference arm ran genuinely clean end to end
+(`ava`'s own output format, a fifth distinct test-runner shape in this corpus, also isn't one the parser
+derives a count from, though it's moot here since the refusal happens upstream of that). The refusal
+reason is **byte-for-byte the same structural cause as eslint's `REFUSED`** throughout this whole
+project: no committed lockfile, no `packageManager` field, so the causal graph cannot establish that the
+TEST path's install step is executable.
+
+**This is the first repeat within the mechanically-selected corpus, and it matters more than a fourth
+distinct edge case would have.** Two candidates independently selected by the same bias-free process
+(chalk here, eslint earlier) have now hit the identical refusal mechanism. That is a frequency signal,
+not just another isolated gap: "popular npm libraries that don't commit a lockfile" is starting to look
+like a real, non-trivial slice of the population this engine's causal-prerequisite check currently
+refuses outright, independent of anything about their actual test suites.
+
+## What this establishes, across four mechanically-selected candidates
 
 This is the "first newly-prepared external-repository pilot" step eslint's rehearsal could not stand in
-for: a repository chosen by a mechanical, external, bias-free process; a reference plan independently
-authored and frozen before any engine output existed for it; carried through the real deployed
-infrastructure to an honest, persisted, immutable result — done twice now, both times landing on
-`REFUSED` for a reason genuinely emergent from the engine's own analysis, never engineered or adjusted
-after the fact.
-
-**Three real, distinct gaps have surfaced across three candidates so far — not yet one systematic root
-cause, but a describable pattern:**
+for — done three times now (rimraf/lodash/husky/chalk, four candidates, three executed to a real bridge
+result), every one landing on an honest outcome genuinely emergent from the engine's own analysis, never
+engineered or adjusted after the fact.
 
 | candidate | reference-arm gap | inference-arm gap |
 |---|---|---|
 | rimraf | `node-tap`'s CLI reporter format unrecognized (suite ran clean) | (not reached — R3-level) |
 | lodash | none (ran clean once tested in the real Linux container) | an unresolved TEST-path operation the engine couldn't tie to a command |
 | husky | canonical container missing the `time` utility (11/12 sub-tests ran) | a bare `./test.sh` invocation not recognized as providing TEST at all |
+| chalk | none (ran clean, `ava`'s output also unparsed but moot) | **same missing-pinned-dependency-basis refusal as eslint** — a repeat |
 
-The higher-level theme: **the engine's TEST-purpose detection and output-format coverage are calibrated
-to conventional package.json script/test-runner idioms** (`npm test`, mocha, jest, native `node --test`)
-**and each candidate whose real CI diverges from that idiom — an unfamiliar reporter, a bare script
-entrypoint — has produced a different kind of gap rather than the same one twice.** That is still useful,
-real signal, distinct from "the engine is broken" — but it is three data points, not a survey, and none
-of it is a defect to fix as part of this pilot (extending parser/purpose coverage, or the container image,
-is new engine/infrastructure work). Recorded here for whoever picks it up next.
+Two things are now visible simultaneously, and they point in different directions:
 
-Still zero `REPRODUCED` and zero candidates that got past outcome-level refusal to compare against ground
-truth. Continuing the same mechanical rank order (next: rank 21, rollup) can keep accumulating evidence
-either toward a `REPRODUCED` case or toward a tighter characterization of this pattern — logged as an open
-decision rather than continued unprompted, given each additional candidate now costs real Cloudflare
-infrastructure time and the pattern above is already substantive enough to report.
+1. **Diversity of gaps.** rimraf, lodash, and husky each hit a *different* proximate mechanism (an
+   unrecognized reporter format, an unresolved graph operation, a missing container utility plus an
+   unrecognized bare-script TEST entrypoint) — real breadth in how the engine's coverage is calibrated to
+   conventional `npm test`-shaped idioms.
+2. **A repeating dominant cause.** chalk repeating eslint's exact missing-pinned-dependency-basis refusal
+   is the first evidence of *frequency* rather than *variety* — the single most concrete, most actionable
+   signal in this pilot so far, because it suggests one identifiable, common real-world condition (no
+   lockfile committed) rather than an open-ended list of one-off idiosyncrasies.
+
+Still zero `REPRODUCED`. None of these findings were repaired or worked around - fixing parser/purpose
+coverage, the container image, or the dependency-pinning gate is explicitly out of scope for this pilot,
+left for a deliberate, bounded engine-coverage phase decided separately from this evidence-gathering
+work.
