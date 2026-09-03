@@ -24,6 +24,11 @@ export const PERMALINKS: readonly Permalink[] = [
     file: "site/research/2026/diffci-path-rule-article-v1.pdf",
     sha256: "8f763996fa0b5cca8d8e70464cec4c2bb5ae62d6dfb928d32adf582cc82303fa",
   },
+  {
+    url: "/research/2026/diffci-path-rule-article-v2.pdf",
+    file: "site/research/2026/diffci-path-rule-article-v2.pdf",
+    sha256: "1734897edfab05ca5598f7f9813da4c5c3ec54ebce23784aff4aac6f4022f56a",
+  },
 ];
 
 test("every registered permalink resolves to a file under site/", () => {

@@ -493,9 +493,9 @@ export const diffciOpenEvidenceStudy2026: StudyFindings = {
   ],
   companionDocuments: [
     {
-      label: "Editorial article (PDF, v1)",
-      href: "/research/2026/diffci-path-rule-article-v1.pdf",
-      what: "\"We Tried to Prove Intelligent Test Selection Beats a Path Rule. The Answer Was Complicated.\" A 2,200-word article derived from this study, with three figures. Permanent URL; this file will not change.",
+      label: "Editorial article (PDF, v2)",
+      href: "/research/2026/diffci-path-rule-article-v2.pdf",
+      what: "\"We Tried to Prove Intelligent Test Selection Beats a Path Rule. The Answer Was Complicated.\" A 2,200-word article derived from this study, with five figures. Permanent URL; this file will not change. v2 supersedes v1 (same text and numbers; three figure labels re-set so none overlaps or is clipped). v1 stays at its own URL.",
     },
   ],
 };

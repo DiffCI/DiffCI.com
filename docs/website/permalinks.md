@@ -26,10 +26,18 @@ if a path below goes missing or a pinned file's SHA-256 changes.
 | `https://diffci.com/research/2026/diffci-open-evidence-2026.pdf` | `site/research/2026/diffci-open-evidence-2026.pdf` | re-rendered, never moved | none |
 | `https://diffci.com/research/2026/LICENSE.txt` | `site/research/2026/LICENSE.txt` | re-rendered, never moved | none |
 | `https://diffci.com/research/2026/diffci-path-rule-article-v1.pdf` | `site/research/2026/diffci-path-rule-article-v1.pdf` | **immutable** | `8f763996fa0b5cca8d8e70464cec4c2bb5ae62d6dfb928d32adf582cc82303fa` |
+| `https://diffci.com/research/2026/diffci-path-rule-article-v2.pdf` | `site/research/2026/diffci-path-rule-article-v2.pdf` | **immutable** | `1734897edfab05ca5598f7f9813da4c5c3ec54ebce23784aff4aac6f4022f56a` |
 
 The article PDF (v1, 6 pages, three figures, footer "DiffCI - contributed article draft - September
 2026") was supplied by the founder on 2026-09-03 and copied in unmodified. It cites the study page
-URL above. If it is ever revised, publish `diffci-path-rule-article-v2.pdf`, add a row, and leave v1.
+URL above.
+
+v2 (2026-09-03, 6 pages, five figures, same footer) is the founder's expanded typeset version with
+three figure-label corrections applied to the embedded chart images: figure 1's "4.2%" no longer
+overlaps the bootstrap-interval note, figure 3's "-13.6%" (trpc/trpc) is no longer clipped by the
+axis, and figure 4's "96.4% recall" no longer crosses the frame line. Text and numbers are unchanged
+from the founder's file. The study page's "Download and cite" links v2; v1 stays at its URL. A
+further revision is `-v3`, add a row, leave v1 and v2.
 
 ## Adding a permalink
 

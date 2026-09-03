@@ -5,11 +5,13 @@
 are all still open; nothing below has been sent anywhere. Every number is in the study's CSV with its
 evidence level. Target length 1,800–2,500 words; the body below is about 2,250.
 
-**Published form:** the founder's typeset PDF of this text (three figures) is at the permanent URL
-`https://diffci.com/research/2026/diffci-path-rule-article-v1.pdf` (file
-`site/research/2026/diffci-path-rule-article-v1.pdf`, hash-pinned in [`permalinks.md`](permalinks.md)).
-That URL is the one to cite externally once the site is deployed. This markdown is the working text;
-if it is revised, the PDF is republished as `-v2` at a new URL and v1 stays.
+**Published form:** the founder's typeset PDF of this text (five figures) is at the permanent URL
+`https://diffci.com/research/2026/diffci-path-rule-article-v2.pdf` (file
+`site/research/2026/diffci-path-rule-article-v2.pdf`, hash-pinned in [`permalinks.md`](permalinks.md)).
+That URL is the one to cite externally once the site is deployed. v2 corrects three figure labels in
+the chart images (an overlap, a clipped value and a label crossing the frame); the earlier three-figure
+v1 stays at its own URL, unedited. This markdown is the working text; if it is revised, the PDF is
+republished as `-v3` at a new URL and v1 and v2 stay.
 
 ---
 
