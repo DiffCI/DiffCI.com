@@ -778,6 +778,39 @@ td.num, th.num {
 
 .button:active { transform: translateY(0); }
 
+/* Post-install report lookup (site/welcome.html) - a single labeled input matching the .button style,
+   no separate form framework, consistent with the rest of the site's "one stylesheet, no build step". */
+.report-lookup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1.1rem 0 0.5rem;
+}
+.report-lookup input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--rule-2);
+  border-radius: 9px;
+  padding: 0.82rem 1rem;
+}
+.report-lookup input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-wash);
+}
+.report-lookup .button {
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 640;
+  font-size: 0.97rem;
+}
+
 .cta-note {
   font-size: 0.85rem;
   color: var(--ink-3);

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You're set up — DiffCI</title>
+<meta name="description" content="What happens now that you've installed the read-only DiffCI Shadow App.">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="/">DiffCI</a>
+    <nav>
+      <a href="/#how">How it works</a>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#pilot">Pilot</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<article class="wrap">
+
+  <p class="eyebrow">Installed</p>
+  <h1>You're set up. Nothing changed in your CI.</h1>
+
+  <p class="lede">
+    The App has exactly the five read-only permissions it asked for — metadata, contents, Actions,
+    checks, pull requests — and nothing else. It cannot push, comment, label, cancel a run, or change a
+    check status. That's not a promise about our conduct; GitHub enforces it structurally.
+  </p>
+
+  <h2 class="no-rule">What happens now</h2>
+  <div class="table-scroll">
+    <table class="kv">
+      <tr><th>Right now</th><td>DiffCI starts observing pushes to your default branch and reading the results of workflow runs that finish. It changes nothing about how those runs execute.</td></tr>
+      <tr><th>Over the next 7 days</th><td>Each observed commit gets analyzed: a real dependency graph, a selection DiffCI would have made, then a reconciliation against what your CI actually did. Every one of those is stored so it can be inspected later, not just asserted.</td></tr>
+      <tr><th>On day 7</th><td>Your first report is ready — what DiffCI observed, what it thinks was avoidable, and whether any change it would have deprioritized turned out to break something. See below for where to find it.</td></tr>
+      <tr><th>If you don't want to wait</th><td>The report updates continuously as more commits are observed — check it any time; a thin sample just means DiffCI says so plainly instead of guessing.</td></tr>
+    </table>
+  </div>
+
+  <h2>Find your report</h2>
+  <p>
+    Every enrolled repository has a live report at a URL built from its "owner/name" — bookmark yours now:
+  </p>
+  <form class="report-lookup" onsubmit="event.preventDefault(); var v=document.getElementById('repo-input').value.trim(); if(v) window.location.href='https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/report?repository=' + encodeURIComponent(v) + '&days=7';">
+    <input id="repo-input" type="text" placeholder="owner/repository" required pattern="[A-Za-z0-9._-]+/[A-Za-z0-9._-]+">
+    <button type="submit" class="button">View my report →</button>
+  </form>
+  <p class="fine">
+    The report is a plain-text page, not a dashboard yet — deliberately: every figure on it is labeled
+    MEASURED, ESTIMATED, or UNKNOWN, and that discipline matters more right now than the styling does.
+    The same URL always shows the current state; there's nothing to configure or refresh manually.
+  </p>
+
+  <h2>What DiffCI never does in shadow mode</h2>
+  <ul class="limits">
+    <li><strong>Never skips, cancels, or modifies a run.</strong> Shadow mode has no CI authority to give away — the install itself grants none.</li>
+    <li><strong>Never writes to your repository.</strong> No commits, comments, labels, or check statuses.</li>
+    <li><strong>Never turns an estimate into an invoice.</strong> Everything in the report is labeled by evidence level, and nothing is billed against an ESTIMATED figure, ever.</li>
+  </ul>
+
+  <p class="more"><a href="/data-handling">Full data-handling commitments →</a></p>
+
+  <h2>Changed your mind?</h2>
+  <p>
+    Uninstalling the App from GitHub's own Settings → Installations page stops all future observation
+    immediately. See <a href="/data-handling">data handling</a> for what happens to records already
+    collected.
+  </p>
+
+</article>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p>
+    <nav>
+      <a href="/case-studies/calcom">cal.com</a>
+      <a href="/case-studies/deepseek-harness">deepseek-harness</a>
+      <a href="/case-studies/diffci-own-ci">our own CI</a>
+      <a href="/data-handling">Data handling</a>
+    </nav>
+    <p class="fine">[TODO before launch: legal entity, jurisdiction, contact address.]</p>
+  </div>
+</footer>
+
+</body>
+</html>

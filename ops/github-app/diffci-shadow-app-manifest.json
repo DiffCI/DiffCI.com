@@ -11,8 +11,9 @@
     "pull_requests": "read"
   },
   "default_events": ["push", "pull_request", "workflow_run"],
+  "setup_url": "https://diffci-site.damp-waterfall-0cd8.workers.dev/welcome",
   "hook_attributes": {
     "url": "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/webhook",
-    "active": false
+    "active": true
   }
 }
