@@ -38,7 +38,7 @@ to be an average of two things that aren't alike.
 ## How it works
 
 > **1 · Observe** — A read-only GitHub App sees pushes and completed workflow runs. Metadata, contents,
-> Actions, checks, pull requests. Read-only, all five.
+> Actions, checks. Read-only, all four.
 >
 > **2 · Analyze** — For each change, DiffCI builds a real TypeScript compiler-backed dependency graph,
 > computes what is reachable from the changed files, and produces a confidence-scored plan: which tests
