@@ -14,9 +14,19 @@
   },
   "observability": {
     "enabled": true
-  }
-  // NOTE: no "routes" entry yet. Deploying this publishes to *.workers.dev only; pointing diffci.com
-  // at it is a separate, deliberate step, and must not happen before the TODOs on the site itself
-  // (legal entity, contact, App install slug, and the deletion path promised in data-handling.html)
-  // are resolved.
+  },
+  // Adding "routes" makes wrangler default workers_dev to false - keep it explicitly on so the
+  // existing workers.dev URL (referenced elsewhere, and useful as a fallback) stays live regardless
+  // of custom-domain/DNS state.
+  "workers_dev": true,
+  // Founder-authorized 2026-09-04: point the live domain at this Worker. custom_domain:true has
+  // wrangler provision the DNS record itself (the zone was already active on Cloudflare beforehand,
+  // independent of this repo). The remaining site TODOs (legal entity, contact, the deletion path
+  // promised in data-handling.html) are still open - authorized to go live with them still open.
+  // BLOCKED as of 2026-09-04: diffci.com already has an externally-managed DNS record (A/CNAME) at
+  // the apex, and this account's API token lacks DNS-record read/write scope to inspect or clear it.
+  // Custom-domain provisioning fails until that record is removed - see chat for what's needed.
+  "routes": [
+    { "pattern": "diffci.com", "custom_domain": true }
+  ]
 }
