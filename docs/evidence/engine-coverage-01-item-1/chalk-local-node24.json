@@ -1,0 +1,571 @@
+{
+  "schema": "diffci.ci.reproduction/v1",
+  "attempt": 1,
+  "repository": "chalk/chalk",
+  "headSha": "661317e6f91fe7c90306c2c48ea9354562ee9146",
+  "protocol": "docs/ci-reproduction-01-protocol.md",
+  "optimisable": true,
+  "jobs": [
+    {
+      "id": "main.yml#test-node-version26",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version26-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "--before=2026-07-26T14:51:09Z"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version26-test-1",
+          "kind": "test",
+          "command": [
+            "npm",
+            "test"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "main.yml#test-node-version22",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "test-node-version22-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install",
+            "--before=2026-07-26T14:51:09Z"
+          ],
+          "executable": true
+        },
+        {
+          "id": "test-node-version22-test-1",
+          "kind": "test",
+          "command": [
+            "npm",
+            "test"
+          ],
+          "executable": true
+        }
+      ]
+    }
+  ],
+  "testPlan": {
+    "purpose": "TEST",
+    "jobId": "main.yml#test-node-version26",
+    "operations": [
+      {
+        "id": "test-node-version26-install-0",
+        "kind": "install",
+        "command": [
+          "npm",
+          "install",
+          "--before=2026-07-26T14:51:09Z"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "${{ matrix.node-version }}",
+          "source": {
+            "file": ".github/workflows/main.yml",
+            "text": "actions/setup-node@v6",
+            "line": 17
+          }
+        },
+        "environment": {},
+        "dependsOn": [],
+        "evidence": [
+          {
+            "file": ".github/workflows/main.yml",
+            "text": "npm install",
+            "line": 20
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "requirementChecks": [
+          {
+            "id": "DEPENDENCY_BASIS_PINNED",
+            "label": "a pinned dependency basis (lockfile or packageManager field)",
+            "predicate": "the repository commits a lockfile or declares a packageManager field",
+            "observed": "no lockfile and no packageManager field",
+            "satisfied": false
+          },
+          {
+            "id": "DEPENDENCY_BASIS_TIME_BOXED",
+            "label": "a defensible time-boxed dependency basis (no committed lock, resolution bounded to the repository's own historical CI run)",
+            "predicate": "an independently-sourced historical cutoff exists and the install path can be bounded to it (npm only)",
+            "observed": "install bounded to versions published on or before 2026-07-26T14:51:09Z (npm --before)",
+            "satisfied": true
+          },
+          {
+            "id": "COMMAND_RESOLVED",
+            "label": "a resolved command",
+            "predicate": "the operation has a non-empty argv",
+            "observed": "argv of 3 token(s)",
+            "satisfied": true
+          },
+          {
+            "id": "WORKING_DIRECTORY_KNOWN",
+            "label": "a known working directory",
+            "predicate": "the operation runs at a directory this engine can name",
+            "observed": "repository root",
+            "satisfied": true
+          }
+        ],
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true,
+        "executionRepresentation": "RESOLVED",
+        "purposeBasis": "EXECUTABLE_POSITION"
+      },
+      {
+        "id": "test-node-version26-test-1",
+        "kind": "test",
+        "command": [
+          "npm",
+          "test"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "${{ matrix.node-version }}",
+          "source": {
+            "file": ".github/workflows/main.yml",
+            "text": "actions/setup-node@v6",
+            "line": 17
+          }
+        },
+        "environment": {},
+        "dependsOn": [
+          "test-node-version26-install-0"
+        ],
+        "evidence": [
+          {
+            "file": ".github/workflows/main.yml",
+            "text": "npm test",
+            "line": 21
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [],
+        "executable": true,
+        "requirementChecks": [
+          {
+            "id": "COMMAND_RESOLVED",
+            "label": "a resolved command",
+            "predicate": "the operation has a non-empty argv",
+            "observed": "argv of 2 token(s)",
+            "satisfied": true
+          },
+          {
+            "id": "WORKING_DIRECTORY_KNOWN",
+            "label": "a known working directory",
+            "predicate": "the operation runs at a directory this engine can name",
+            "observed": "repository root",
+            "satisfied": true
+          },
+          {
+            "id": "SCRIPTS_RESOLVED",
+            "label": "all referenced scripts resolved",
+            "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+            "observed": "1/1 script reference(s) resolved",
+            "satisfied": true
+          }
+        ],
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true,
+        "executionRepresentation": "RESOLVED",
+        "purposeBasis": "SCRIPT_NAME"
+      }
+    ],
+    "executable": true,
+    "causal": {
+      "outcome": "test",
+      "outcomePresent": true,
+      "targetId": "test-node-version26-test-1",
+      "nodes": [
+        {
+          "id": "test-node-version26-test-1",
+          "kind": "OPERATION",
+          "label": "npm test"
+        },
+        {
+          "id": "test-node-version26-install-0",
+          "kind": "OPERATION",
+          "label": "npm install --before=2026-07-26T14:51:09Z"
+        }
+      ],
+      "edges": [
+        {
+          "from": "test-node-version26-install-0",
+          "to": "test-node-version26-test-1",
+          "relation": "PROVIDES_DEPENDENCIES",
+          "resolution": "RESOLVED"
+        }
+      ],
+      "unresolved": [],
+      "complete": true,
+      "reason": "TEST is provided by test-node-version26-test-1 and every required cause is established"
+    }
+  },
+  "inferredOperations": [
+    {
+      "id": "test-node-version26-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "--before=2026-07-26T14:51:09Z"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v6",
+          "line": 17
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm install",
+          "line": 20
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "no lockfile and no packageManager field",
+          "satisfied": false
+        },
+        {
+          "id": "DEPENDENCY_BASIS_TIME_BOXED",
+          "label": "a defensible time-boxed dependency basis (no committed lock, resolution bounded to the repository's own historical CI run)",
+          "predicate": "an independently-sourced historical cutoff exists and the install path can be bounded to it (npm only)",
+          "observed": "install bounded to versions published on or before 2026-07-26T14:51:09Z (npm --before)",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-node-version26-test-1",
+      "kind": "test",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v6",
+          "line": 17
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version26-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm test",
+          "line": 21
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    },
+    {
+      "id": "test-node-version22-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install",
+        "--before=2026-07-26T14:51:09Z"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v6",
+          "line": 17
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm install",
+          "line": 20
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "no lockfile and no packageManager field",
+          "satisfied": false
+        },
+        {
+          "id": "DEPENDENCY_BASIS_TIME_BOXED",
+          "label": "a defensible time-boxed dependency basis (no committed lock, resolution bounded to the repository's own historical CI run)",
+          "predicate": "an independently-sourced historical cutoff exists and the install path can be bounded to it (npm only)",
+          "observed": "install bounded to versions published on or before 2026-07-26T14:51:09Z (npm --before)",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "test-node-version22-test-1",
+      "kind": "test",
+      "command": [
+        "npm",
+        "test"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/main.yml",
+          "text": "actions/setup-node@v6",
+          "line": 17
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "test-node-version22-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/main.yml",
+          "text": "npm test",
+          "line": 21
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_NAME"
+    }
+  ],
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/main.yml, job `test`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "install"
+        ],
+        "commandIdentity": "npm install",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\chalk-regression-work\\reference",
+        "environment": {},
+        "startedAt": "2026-09-03T04:28:13.707Z",
+        "endedAt": "2026-09-03T04:28:54.422Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "wallMs": 40712,
+        "outputTail": "\nadded 495 packages, and audited 496 packages in 40s\n\n230 packages are looking for funding\n  run `npm fund` for details\n\n2 vulnerabilities (1 moderate, 1 critical)\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details.\n\nnpm warn deprecated electron@0.4.1: The original electron project has been moved. Visit github.com/logicalparadox/electron for more details.\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "test"
+        ],
+        "commandIdentity": "npm test",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\chalk-regression-work\\reference",
+        "environment": {},
+        "startedAt": "2026-09-03T04:28:54.424Z",
+        "endedAt": "2026-09-03T04:31:40.908Z",
+        "exitStatus": 1,
+        "outcomeLayer": "repository",
+        "wallMs": 166483,
+        "outputTail": "\n> chalk@6.0.0 test\n> xo && c8 ava && tsc --noEmit --types node source/index.d.ts\n\n\n  ..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\Swati Kale\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\chalk-regression-work\\reference\\source\\index.d.ts\n  ✖  Parsing error: C:\\Users\\Swati Kale\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\chalk-regression-work\\reference\\source\\index.d.ts was not found by the project service. Consider either including it in the tsconfig.json or including it in allowDefaultProject.  \n\n  1 error\n\n\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v24.16.0",
+    "npm": "11.13.0"
+  },
+  "inferenceArm": {
+    "arm": "inference",
+    "source": "inferred ExecutionGraph",
+    "steps": [
+      {
+        "stepId": "inference#0",
+        "arm": "inference",
+        "command": [
+          "npm",
+          "install",
+          "--before=2026-07-26T14:51:09Z"
+        ],
+        "commandIdentity": "npm install --before=2026-07-26T14:51:09Z",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\chalk-regression-work\\inference",
+        "environment": {},
+        "startedAt": "2026-09-03T04:31:41.459Z",
+        "endedAt": "2026-09-03T04:32:00.214Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "wallMs": 18754,
+        "outputTail": "\nadded 491 packages, and audited 492 packages in 18s\n\n229 packages are looking for funding\n  run `npm fund` for details\n\n4 vulnerabilities (1 moderate, 2 high, 1 critical)\n\nTo address issues that do not require attention, run:\n  npm audit fix\n\nTo address all issues (including breaking changes), run:\n  npm audit fix --force\n\nRun `npm audit` for details.\n\nnpm warn deprecated electron@0.4.1: The original electron project has been moved. Visit github.com/logicalparadox/electron for more details.\n"
+      },
+      {
+        "stepId": "inference#1",
+        "arm": "inference",
+        "command": [
+          "npm",
+          "test"
+        ],
+        "commandIdentity": "npm test",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\chalk-regression-work\\inference",
+        "environment": {},
+        "startedAt": "2026-09-03T04:32:00.217Z",
+        "endedAt": "2026-09-03T04:34:08.461Z",
+        "exitStatus": 1,
+        "outcomeLayer": "repository",
+        "wallMs": 128244,
+        "outputTail": "\n> chalk@6.0.0 test\n> xo && c8 ava && tsc --noEmit --types node source/index.d.ts\n\n\n  ..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\Swati Kale\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\chalk-regression-work\\inference\\source\\index.d.ts\n  ✖  Parsing error: C:\\Users\\Swati Kale\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\chalk-regression-work\\inference\\source\\index.d.ts was not found by the project service. Consider either including it in the tsconfig.json or including it in allowDefaultProject.  \n\n  1 error\n\n\n"
+      }
+    ],
+    "reachedEnd": false,
+    "node": "v24.16.0",
+    "npm": "11.13.0"
+  },
+  "outcome": "DIVERGED",
+  "reason": "neither arm executed a suite, so no reproduction can be claimed",
+  "producedAt": "2026-09-03T04:34:09.040Z"
+}

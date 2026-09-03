@@ -1,0 +1,573 @@
+{
+  "schema": "diffci.ci.reproduction/v1",
+  "attempt": 1,
+  "repository": "isaacs/rimraf",
+  "headSha": "051e6c72a703854a029344be188d14dbe1b326c7",
+  "protocol": "docs/ci-reproduction-01-protocol.md",
+  "optimisable": true,
+  "jobs": [
+    {
+      "id": "ci.yml#build",
+      "provides": [
+        "INSTALL",
+        "TEST"
+      ],
+      "operations": [
+        {
+          "id": "build-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": true
+        },
+        {
+          "id": "build-test-1",
+          "kind": "test",
+          "command": [
+            "npm",
+            "test",
+            "--",
+            "-c",
+            "-t0"
+          ],
+          "executable": true
+        }
+      ]
+    },
+    {
+      "id": "typedoc.yml#deploy",
+      "provides": [
+        "INSTALL"
+      ],
+      "operations": [
+        {
+          "id": "deploy-install-0",
+          "kind": "install",
+          "command": [
+            "npm",
+            "install"
+          ],
+          "executable": true
+        },
+        {
+          "id": "deploy-unknown-1",
+          "kind": "unknown",
+          "command": [
+            "npm",
+            "run",
+            "typedoc"
+          ],
+          "executable": true
+        }
+      ]
+    }
+  ],
+  "testPlan": {
+    "purpose": "TEST",
+    "jobId": "ci.yml#build",
+    "operations": [
+      {
+        "id": "build-install-0",
+        "kind": "install",
+        "command": [
+          "npm",
+          "install"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "${{ matrix.node-version }}",
+          "source": {
+            "file": ".github/workflows/ci.yml",
+            "text": "actions/setup-node@v6",
+            "line": 48
+          }
+        },
+        "environment": {},
+        "dependsOn": [],
+        "evidence": [
+          {
+            "file": ".github/workflows/ci.yml",
+            "text": "npm install",
+            "line": 53
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [
+          {
+            "what": "npm install",
+            "why": "the job's matrix contains a construct this expander does not model, so no instance can be trusted"
+          }
+        ],
+        "executable": true,
+        "requirementChecks": [
+          {
+            "id": "DEPENDENCY_BASIS_PINNED",
+            "label": "a pinned dependency basis (lockfile or packageManager field)",
+            "predicate": "the repository commits a lockfile or declares a packageManager field",
+            "observed": "lockfile package-lock.json",
+            "satisfied": true
+          },
+          {
+            "id": "COMMAND_RESOLVED",
+            "label": "a resolved command",
+            "predicate": "the operation has a non-empty argv",
+            "observed": "argv of 2 token(s)",
+            "satisfied": true
+          },
+          {
+            "id": "WORKING_DIRECTORY_KNOWN",
+            "label": "a known working directory",
+            "predicate": "the operation runs at a directory this engine can name",
+            "observed": "repository root",
+            "satisfied": true
+          }
+        ],
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true,
+        "executionRepresentation": "RESOLVED",
+        "purposeBasis": "EXECUTABLE_POSITION"
+      },
+      {
+        "id": "build-test-1",
+        "kind": "test",
+        "command": [
+          "npm",
+          "test",
+          "--",
+          "-c",
+          "-t0"
+        ],
+        "workingDirectory": ".",
+        "runtime": {
+          "name": "node",
+          "version": "${{ matrix.node-version }}",
+          "source": {
+            "file": ".github/workflows/ci.yml",
+            "text": "actions/setup-node@v6",
+            "line": 48
+          }
+        },
+        "environment": {},
+        "dependsOn": [
+          "build-install-0"
+        ],
+        "evidence": [
+          {
+            "file": ".github/workflows/ci.yml",
+            "text": "npm test -- -c -t0",
+            "line": 56
+          }
+        ],
+        "confidence": "OBSERVED",
+        "unresolved": [
+          {
+            "what": "npm test -- -c -t0",
+            "why": "the job's matrix contains a construct this expander does not model, so no instance can be trusted"
+          }
+        ],
+        "executable": true,
+        "requirementChecks": [
+          {
+            "id": "COMMAND_RESOLVED",
+            "label": "a resolved command",
+            "predicate": "the operation has a non-empty argv",
+            "observed": "argv of 5 token(s)",
+            "satisfied": true
+          },
+          {
+            "id": "WORKING_DIRECTORY_KNOWN",
+            "label": "a known working directory",
+            "predicate": "the operation runs at a directory this engine can name",
+            "observed": "repository root",
+            "satisfied": true
+          },
+          {
+            "id": "SCRIPTS_RESOLVED",
+            "label": "all referenced scripts resolved",
+            "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+            "observed": "1/1 script reference(s) resolved",
+            "satisfied": true
+          }
+        ],
+        "missingRequirements": [],
+        "blockedBy": [],
+        "willExecute": true,
+        "executionRepresentation": "RESOLVED",
+        "purposeBasis": "SCRIPT_BODY"
+      }
+    ],
+    "executable": true,
+    "causal": {
+      "outcome": "test",
+      "outcomePresent": true,
+      "targetId": "build-test-1",
+      "nodes": [
+        {
+          "id": "build-test-1",
+          "kind": "OPERATION",
+          "label": "npm test -- -c -t0"
+        },
+        {
+          "id": "build-install-0",
+          "kind": "OPERATION",
+          "label": "npm install"
+        }
+      ],
+      "edges": [
+        {
+          "from": "build-install-0",
+          "to": "build-test-1",
+          "relation": "PROVIDES_DEPENDENCIES",
+          "resolution": "RESOLVED"
+        }
+      ],
+      "unresolved": [],
+      "complete": true,
+      "reason": "TEST is provided by build-test-1 and every required cause is established"
+    }
+  },
+  "inferredOperations": [
+    {
+      "id": "build-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v6",
+          "line": 48
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm install",
+          "line": 53
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "npm install",
+          "why": "the job's matrix contains a construct this expander does not model, so no instance can be trusted"
+        }
+      ],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile package-lock.json",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "build-test-1",
+      "kind": "test",
+      "command": [
+        "npm",
+        "test",
+        "--",
+        "-c",
+        "-t0"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v6",
+          "line": 48
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "build-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/ci.yml",
+          "text": "npm test -- -c -t0",
+          "line": 56
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [
+        {
+          "what": "npm test -- -c -t0",
+          "why": "the job's matrix contains a construct this expander does not model, so no instance can be trusted"
+        }
+      ],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 5 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        },
+        {
+          "id": "SCRIPTS_RESOLVED",
+          "label": "all referenced scripts resolved",
+          "predicate": "every SCRIPT_REFERENCE this operation depends on resolved to a body",
+          "observed": "1/1 script reference(s) resolved",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "SCRIPT_BODY"
+    },
+    {
+      "id": "deploy-install-0",
+      "kind": "install",
+      "command": [
+        "npm",
+        "install"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v6",
+          "line": 48
+        }
+      },
+      "environment": {},
+      "dependsOn": [],
+      "evidence": [
+        {
+          "file": ".github/workflows/typedoc.yml",
+          "text": "npm install",
+          "line": 31
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "DEPENDENCY_BASIS_PINNED",
+          "label": "a pinned dependency basis (lockfile or packageManager field)",
+          "predicate": "the repository commits a lockfile or declares a packageManager field",
+          "observed": "lockfile package-lock.json",
+          "satisfied": true
+        },
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 2 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "EXECUTABLE_POSITION"
+    },
+    {
+      "id": "deploy-unknown-1",
+      "kind": "unknown",
+      "command": [
+        "npm",
+        "run",
+        "typedoc"
+      ],
+      "workingDirectory": ".",
+      "runtime": {
+        "name": "node",
+        "version": "${{ matrix.node-version }}",
+        "source": {
+          "file": ".github/workflows/ci.yml",
+          "text": "actions/setup-node@v6",
+          "line": 48
+        }
+      },
+      "environment": {},
+      "dependsOn": [
+        "deploy-install-0"
+      ],
+      "evidence": [
+        {
+          "file": ".github/workflows/typedoc.yml",
+          "text": "npm run typedoc",
+          "line": 33
+        }
+      ],
+      "confidence": "OBSERVED",
+      "unresolved": [],
+      "executable": true,
+      "requirementChecks": [
+        {
+          "id": "COMMAND_RESOLVED",
+          "label": "a resolved command",
+          "predicate": "the operation has a non-empty argv",
+          "observed": "argv of 3 token(s)",
+          "satisfied": true
+        },
+        {
+          "id": "WORKING_DIRECTORY_KNOWN",
+          "label": "a known working directory",
+          "predicate": "the operation runs at a directory this engine can name",
+          "observed": "repository root",
+          "satisfied": true
+        }
+      ],
+      "missingRequirements": [],
+      "blockedBy": [],
+      "willExecute": true,
+      "executionRepresentation": "RESOLVED",
+      "purposeBasis": "NONE"
+    }
+  ],
+  "referenceArm": {
+    "arm": "reference",
+    "source": ".github/workflows/ci.yml, job `build`, transcribed by reading the repository",
+    "steps": [
+      {
+        "stepId": "reference#0",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "install"
+        ],
+        "commandIdentity": "npm install",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\rimraf-item1-regression-work2\\reference",
+        "environment": {},
+        "startedAt": "2026-09-03T05:01:50.971Z",
+        "endedAt": "2026-09-03T05:02:09.819Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "wallMs": 18847,
+        "outputTail": "\n> rimraf@6.1.3 prepare\n> tshy\n\n\nadded 320 packages, and audited 321 packages in 18s\n\n75 packages are looking for funding\n  run `npm fund` for details\n\n11 vulnerabilities (3 moderate, 7 high, 1 critical)\n\nTo address all issues, run:\n  npm audit fix\n\nRun `npm audit` for details.\n\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\n"
+      },
+      {
+        "stepId": "reference#1",
+        "arm": "reference",
+        "command": [
+          "npm",
+          "test",
+          "--",
+          "-c",
+          "-t0"
+        ],
+        "commandIdentity": "npm test -- -c -t0",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\rimraf-item1-regression-work2\\reference",
+        "environment": {},
+        "startedAt": "2026-09-03T05:02:09.822Z",
+        "endedAt": "2026-09-03T05:03:18.508Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "wallMs": 68685,
+        "outputTail": "\n> rimraf@6.1.3 pretest\n> npm run prepare\n\n\n> rimraf@6.1.3 prepare\n> tshy\n\n\n> rimraf@6.1.3 test\n> tap -c -t0\n\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/ignore-enoent.ts \u001b[1m6\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m9.477s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/path-arg.ts \u001b[1m25\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m9.282s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/fs.ts \u001b[1m44\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m9.618s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/default-tmp.ts \u001b[1m26\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m9.724s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/fix-eperm.ts \u001b[1m37\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m9.903s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/index.ts \u001b[1m24\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m11s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/opt-arg.ts \u001b[1m17\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m11s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/readdir-or-error.ts \u001b[1m6\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m6.567s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/retry-busy.ts \u001b[1m103\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m6.758s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-manual.ts \u001b[1m4\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m7.123s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-native.ts \u001b[1m1\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m6.834s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-posix.ts \u001b[1m85\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m8.853s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/bin.ts \u001b[1m194\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m19s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-move-remove.ts \u001b[1m97\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m10s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-windows.ts \u001b[1m95\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m8.847s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/use-native.ts \u001b[1m12\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m4.537s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/integration/delete-many-files.ts \u001b[1m6\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m23s\u001b[22m\n\u001b[?25h\n\u001b[107m                       \u001b[49m\n\u001b[1m\u001b[107m\u001b[30m  🌈 TEST COMPLETE 🌈  \u001b[39m\u001b[49m\u001b[22m\n\u001b[107m                       \u001b[49m\n\n\u001b[1mAsserts:\u001b[22m  \u001b[32m782 pass\u001b[39m  \u001b[31m\u001b[2m0 fail\u001b[22m\u001b[39m  \u001b[2m782 of 782 complete\u001b[22m\n\u001b[1mSuites:\u001b[22m    \u001b[32m17 pass\u001b[39m  \u001b[31m\u001b[2m0 fail\u001b[22m\u001b[39m    \u001b[2m17 of 17 complete\u001b[22m\n\n\u001b[2m# { total: 782, pass: 782 }\u001b[22m\n\u001b[2m# time=23540.045ms\u001b[22m\n\n\n"
+      }
+    ],
+    "reachedEnd": true,
+    "node": "v24.16.0",
+    "npm": "11.13.0"
+  },
+  "inferenceArm": {
+    "arm": "inference",
+    "source": "inferred ExecutionGraph",
+    "steps": [
+      {
+        "stepId": "inference#0",
+        "arm": "inference",
+        "command": [
+          "npm",
+          "install"
+        ],
+        "commandIdentity": "npm install",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\rimraf-item1-regression-work2\\inference",
+        "environment": {},
+        "startedAt": "2026-09-03T05:03:18.991Z",
+        "endedAt": "2026-09-03T05:03:36.237Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "wallMs": 17245,
+        "outputTail": "\n> rimraf@6.1.3 prepare\n> tshy\n\n\nadded 320 packages, and audited 321 packages in 17s\n\n75 packages are looking for funding\n  run `npm fund` for details\n\n11 vulnerabilities (3 moderate, 7 high, 1 critical)\n\nTo address all issues, run:\n  npm audit fix\n\nRun `npm audit` for details.\n\nnpm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me\n"
+      },
+      {
+        "stepId": "inference#1",
+        "arm": "inference",
+        "command": [
+          "npm",
+          "test",
+          "--",
+          "-c",
+          "-t0"
+        ],
+        "commandIdentity": "npm test -- -c -t0",
+        "workingDirectory": "C:\\Users\\SWATIK~1\\AppData\\Local\\Temp\\claude\\C--Users-Swati-Kale-OneDrive-Desktop-DiffCI-com\\a2cda0c5-5e1c-47df-9b83-81e909849412\\scratchpad\\rimraf-item1-regression-work2\\inference",
+        "environment": {},
+        "startedAt": "2026-09-03T05:03:36.239Z",
+        "endedAt": "2026-09-03T05:04:18.780Z",
+        "exitStatus": 0,
+        "outcomeLayer": "repository",
+        "wallMs": 42540,
+        "outputTail": "\n> rimraf@6.1.3 pretest\n> npm run prepare\n\n\n> rimraf@6.1.3 prepare\n> tshy\n\n\n> rimraf@6.1.3 test\n> tap -c -t0\n\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/ignore-enoent.ts \u001b[1m6\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m7.882s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/default-tmp.ts \u001b[1m26\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m8.020s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/path-arg.ts \u001b[1m25\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m7.821s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/fs.ts \u001b[1m44\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m8.054s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/fix-eperm.ts \u001b[1m37\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m8.250s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/index.ts \u001b[1m24\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m9.500s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/opt-arg.ts \u001b[1m17\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m10s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/readdir-or-error.ts \u001b[1m6\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m7.034s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/retry-busy.ts \u001b[1m103\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m7.058s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-native.ts \u001b[1m1\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m7.099s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-manual.ts \u001b[1m4\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m7.586s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/bin.ts \u001b[1m194\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m18s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-posix.ts \u001b[1m85\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m8.367s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-move-remove.ts \u001b[1m97\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m10s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/rimraf-windows.ts \u001b[1m95\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m8.814s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/use-native.ts \u001b[1m12\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m4.250s\u001b[22m\n\u001b[1m\u001b[42m\u001b[30m PASS \u001b[39m\u001b[49m\u001b[22m test/integration/delete-many-files.ts \u001b[1m6\u001b[22m \u001b[32mOK\u001b[39m \u001b[2m21s\u001b[22m\n\u001b[?25h\n\u001b[107m                       \u001b[49m\n\u001b[1m\u001b[107m\u001b[30m  🌈 TEST COMPLETE 🌈  \u001b[39m\u001b[49m\u001b[22m\n\u001b[107m                       \u001b[49m\n\n\u001b[1mAsserts:\u001b[22m  \u001b[32m782 pass\u001b[39m  \u001b[31m\u001b[2m0 fail\u001b[22m\u001b[39m  \u001b[2m782 of 782 complete\u001b[22m\n\u001b[1mSuites:\u001b[22m    \u001b[32m17 pass\u001b[39m  \u001b[31m\u001b[2m0 fail\u001b[22m\u001b[39m    \u001b[2m17 of 17 complete\u001b[22m\n\n\u001b[2m# { total: 782, pass: 782 }\u001b[22m\n\u001b[2m# time=21659.378ms\u001b[22m\n\n\n"
+      }
+    ],
+    "reachedEnd": true,
+    "node": "v24.16.0",
+    "npm": "11.13.0"
+  },
+  "outcome": "DIVERGED",
+  "reason": "neither arm executed a suite, so no reproduction can be claimed",
+  "producedAt": "2026-09-03T05:04:19.243Z"
+}
