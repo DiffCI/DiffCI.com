@@ -6,6 +6,42 @@ hand-transcribed and frozen before any engine run — and carry it through the d
 honest, immutable result?* Chain: **unknown external repo → independent human reference transcription →
 frozen plan → live HEAD → deployed bridge → engine → immutable result.**
 
+**Stated precisely (2026-09-03, after review) — three claims this run supports, and two it does not:**
+
+Supported:
+- **External onboarding integrity** — selection → transcription → freeze → live HEAD → deployed
+  execution → persisted result, evidenced end to end on a genuinely new external repository.
+- **Fail-closed behavior, demonstrated unusually well** — a stale deployment produced `REFUSED`
+  (`no reference plan exists`); the inference arm's unresolved operation produced `REFUSED`. Neither
+  became a synthetic success.
+- **Canonical execution reality** — the real Linux container resolving `fp/*.js` (rimraf's screening
+  step) while the local Windows R3 check failed on the identical command is evidence the deployed
+  environment does real work, not a replay of local observations.
+
+Not (yet) supported by this evidence:
+- **Broad CI compatibility** — lodash exposed a QUnit output-parsing gap; rimraf exposed a `node-tap`
+  CLI-reporter gap. Two data points, not a survey.
+- **Successful external reproduction** — this run proves a new external repository can reach an honest,
+  immutable engine result. It does not show the stronger chain ending in an independently evidenced
+  `REPRODUCED`.
+
+The `REFUSED` outcome is not a shortfall against this pilot's actual claim — it strengthens it. Had
+lodash immediately produced `REPRODUCED`, there would be a standing concern that the pilot happened to
+land on an easy case. Instead the pipeline hit three independent complications (a Windows/Linux shell
+difference, an unfamiliar test-output format, and a genuine engine-derived unresolved operation) and
+still produced a coherent, honest refusal rather than the candidate being repaired after seeing the
+result.
+
+**Investor-facing wording, corrected accordingly:** do not describe this as proof that DiffCI "works on
+lodash." lodash validated the external execution and evidence pipeline while exposing a genuine engine
+refusal — that is the defensible claim, and at this stage the more useful one.
+
+**Direction for what comes next:** continue exactly this mechanical ranking protocol and accumulate
+external pilots until the process naturally produces either a `REPRODUCED` case or enough refusals to
+reveal a systematic engine limitation. Not another hand-picked success, and not parser repair yet - see
+`docs/evidence/external-engine-bridge-01-first-pilot-screening.json` for the next candidate onward from
+rank 17.
+
 ## Selection — mechanical, not mine
 
 Continued the exact frame `CI_REPRODUCTION_05` used (`npm-high-impact@1.13.0 topDependent`, ascending
