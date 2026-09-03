@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>You're set up — DiffCI</title>
-<meta name="description" content="What happens now that you've installed the read-only DiffCI Shadow App.">
+<meta name="description" content="What happens now that you've installed the read-only DiffCI Shadow App, and exactly where your code goes.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DiffCI">
 <meta property="og:title" content="You're set up — DiffCI">
-<meta property="og:description" content="What happens now that you've installed the read-only DiffCI Shadow App.">
+<meta property="og:description" content="What happens now that you've installed the read-only DiffCI Shadow App, and exactly where your code goes.">
 <meta property="og:url" content="https://diffci.com/welcome">
 <meta name="twitter:card" content="summary">
 <link rel="canonical" href="https://diffci.com/welcome">
@@ -40,7 +40,29 @@
     check status. That's not a promise about our conduct; GitHub enforces it structurally.
   </p>
 
-  <h2 class="no-rule">What happens now</h2>
+  <h2 class="no-rule">Where your code goes</h2>
+  <p>
+    "Read-only" answers what DiffCI can change. It does not answer what DiffCI can see, so here is
+    that answer, permission by permission.
+  </p>
+  <div class="table-scroll">
+    <table class="kv">
+      <tr><th>Contents</th><td>For each commit it analyzes, DiffCI makes a shallow clone of your repository at that commit, inside an ephemeral container on infrastructure operated solely for DiffCI. This is what the contents permission is for: there is no way to build a real dependency graph without reading the source.</td></tr>
+      <tr><th>What happens to the clone</th><td>The graph is computed and the container is destroyed. The clone does not outlive the analysis. No copy of your source tree is kept anywhere, and no file contents are written to any store.</td></tr>
+      <tr><th>What is kept</th><td>Commit SHAs, the paths of changed files, the tests DiffCI would have selected, the reason it fell back to a full run when it did, and the reconciled outcome and timings of the CI run that actually happened. Plus evidence archives for those analyses, so a result can be audited rather than taken on trust. Never file contents. Never credentials: DiffCI is not given any.</td></tr>
+      <tr><th>For how long</th><td>90 days at most, counted from the analysis that produced each record. Uninstalling the App deletes that repository's records sooner, automatically.</td></tr>
+      <tr><th>Actions, checks</th><td>Read the results and timings of workflow runs that have already finished. This is the same information the Actions tab shows you, used to check DiffCI's prediction against what your CI actually did.</td></tr>
+      <tr><th>Pull requests</th><td>Pull request events are received and acknowledged but not yet analyzed. The scope is held for that work; nothing is done with it today.</td></tr>
+      <tr><th>Who else sees it</th><td>Nobody. Nothing is sold, shared with a third party, or used to train anything, and nothing naming your repository is published without your written agreement to that specific text.</td></tr>
+    </table>
+  </div>
+  <p class="fine">
+    If your repository is private and the clone is the part you are not comfortable with, that is a
+    reasonable position. Uninstall, and the records go with it. The
+    <a href="/data-handling">data-handling page</a> is the full version of this section.
+  </p>
+
+  <h2>What happens now</h2>
   <div class="table-scroll">
     <table class="kv">
       <tr><th>Right now</th><td>DiffCI starts observing pushes to your default branch and reading the results of workflow runs that finish. It changes nothing about how those runs execute.</td></tr>
