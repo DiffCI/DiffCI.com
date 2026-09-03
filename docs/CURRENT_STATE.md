@@ -104,8 +104,13 @@ runs on GitHub-hosted runners. It dispatches to `[self-hosted, cloudflare]`: a `
 (`ops/github-runner/Dockerfile`, GitHub Actions runner agent 2.336.0) per queued job. The runner
 registers, runs the job, deregisters, and self-terminates.
 
-**Status: green, steady-state verified.** Last 8 consecutive `CI` runs on `main` all `success`, most
-recent one 1m3s. Job cost ~$0.004; zero GitHub Actions compute billed. Getting here required fixing six
+**Status: green, steady-state verified.** Last 10 consecutive `CI` runs on `main` all `success`.
+**Re-measured 2026-09-04** (`scripts/remeasure-own-ci-cost.ts`, real job timings from the GitHub Actions
+API, priced against the real `standard-2` Cloudflare Containers shape this runner actually uses):
+job wall time 126s–325s (median 146s, mean 176s); job cost $0.0045–$0.0116 (median $0.0052, mean $0.0063).
+Materially higher than the original 2026-08-21 figures (~1m3s, ~$0.004) because the test suite has grown
+roughly 4x since (286 → 384 suites) - not a regression in the runner itself. Zero GitHub Actions compute
+billed. Getting here required fixing six
 real, distinct bugs in sequence (all in commit history 2026-08-20/21): a missing `User-Agent` header that
 403'd every Worker→GitHub API call, a CRLF-mangled `entrypoint.sh` shebang, missing `libicu74`/`libssl3`
 on Ubuntu 24.04, a 15-releases-stale runner agent, a container `sleepAfter` killing idle containers

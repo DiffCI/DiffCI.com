@@ -78,4 +78,42 @@ export function createCloudflareContainersLiteCostModel(): ComputeCostModel {
   };
 }
 
-export { CLOUDFLARE_CONTAINERS_LITE_PRICING };
+/**
+ * Real Cloudflare Containers pricing for the "standard-2" instance shape (YC readiness Week 1,
+ * 2026-09-04) - the SHAPE `ops/github-runner/`'s own runner actually uses (`wrangler.github-runner.jsonc`
+ * `"instance_type": "standard-2"`), not "lite". DiffCI's own CI cost figure on the website evidence
+ * ledger was re-measured against this shape specifically, rather than reusing the lite-tier model above
+ * for a runner that never runs on lite - a real, distinct instance size deserves a real, distinct rate,
+ * not an approximation borrowed from a smaller one.
+ *
+ * Per-vCPU-second and per-GiB-second rates are the SAME published number across every Cloudflare
+ * Containers instance type (docs.cloudflare.com/containers/pricing, checked 2026-09-04); what differs
+ * per type is how much vCPU/memory/disk one running instance actually consumes. standard-2 also bills a
+ * disk-second rate, included here since a runner container is provisioned with real disk, unlike the
+ * lite model above which omits it (lite's disk allocation is small enough to be immaterial at the rates
+ * this project has published so far - kept exactly as it was rather than touched as part of this change).
+ */
+const CLOUDFLARE_CONTAINERS_STANDARD_2_PRICING = {
+  instanceType: "standard-2",
+  vcpu: 1,
+  memoryGiB: 6,
+  diskGB: 12,
+  vcpuSecondUsd: 0.00002,
+  gibSecondUsd: 0.0000025,
+  gbDiskSecondUsd: 0.00000007,
+  sourceNote: "Cloudflare Containers published pricing (docs.cloudflare.com/containers/pricing), referenced 2026-09-04",
+} as const;
+
+export function createCloudflareContainersStandard2CostModel(): ComputeCostModel {
+  const { vcpu, memoryGiB, diskGB, vcpuSecondUsd, gibSecondUsd, gbDiskSecondUsd } = CLOUDFLARE_CONTAINERS_STANDARD_2_PRICING;
+  const ratePerComputeSecondUsd = vcpu * vcpuSecondUsd + memoryGiB * gibSecondUsd + diskGB * gbDiskSecondUsd;
+  return {
+    name: "cloudflare-containers-standard-2",
+    estimateCost({ computeSeconds }) {
+      const seconds = Math.max(0, computeSeconds);
+      return { estimatedUsd: seconds * ratePerComputeSecondUsd, basis: "provider_estimate", ratePerComputeSecondUsd };
+    },
+  };
+}
+
+export { CLOUDFLARE_CONTAINERS_LITE_PRICING, CLOUDFLARE_CONTAINERS_STANDARD_2_PRICING };

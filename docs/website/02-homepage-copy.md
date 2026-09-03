@@ -115,10 +115,10 @@ exists? Illustrative numbers must be visibly labeled as such.]*
 >
 > ### DiffCI's own CI
 >
-> DiffCI's test suite — **1,342 tests across 286 suites, currently green** — does not run on
-> GitHub-hosted runners. It runs on ephemeral Cloudflare containers at roughly **$0.004 per job**, about
-> a minute per run, with zero GitHub Actions minutes billed. We built our own runner fleet because we
-> needed the timing data to be ours.
+> DiffCI's test suite — **1,940 tests across 384 suites, currently green** — does not run on
+> GitHub-hosted runners. It runs on ephemeral Cloudflare containers at **$0.0045–$0.0116 per job**
+> (median $0.0052), **2–5 minutes per run**, with zero GitHub Actions minutes billed. We built our own
+> runner fleet because we needed the timing data to be ours.
 >
 > [Read how](case-studies/03-diffci-own-ci.md)
 

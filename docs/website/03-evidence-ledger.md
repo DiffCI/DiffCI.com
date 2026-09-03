@@ -60,9 +60,9 @@ report figures are **Potential**.
 
 | Claim | Value | Level | Source |
 |---|---|---|---|
-| Test suite size and status | 1,342 tests / 286 suites, 0 failures, ~36s | MEASURED, local run 2026-08-26 | `npm run test` on the working tree of this date |
-| CI cost per job | ~$0.004 | MEASURED **as of 2026-08-21** | [`CURRENT_STATE.md`](../CURRENT_STATE.md) §5 — **not re-verified since; re-measure before publishing** |
-| CI wall time | ~1m3s once warm | MEASURED as of 2026-08-21 | `CURRENT_STATE.md` §5 — same caveat |
+| Test suite size and status | 1,940 tests / 384 suites, 0 failures | MEASURED, local run 2026-09-04 | `npm run test` on the working tree of this date — grown substantially since the 2026-08-26 figure (1,342/286); re-check before publishing, this rots fast |
+| CI cost per job | **$0.0044 – $0.0116** (median duration $0.0052, mean $0.0063) | provider_estimate, **re-measured 2026-09-04** | `scripts/remeasure-own-ci-cost.ts`, 10 most recent real `check` job(s) on `main`, priced with `createCloudflareContainersStandard2CostModel()` (`src/usage/cost-model.ts`) — the real `standard-2` shape (1 vCPU / 6 GiB / 12 GB disk) `ops/github-runner/wrangler.github-runner.jsonc` actually runs, not the smaller `lite` shape. Real Cloudflare-published rate x measured job duration; not an invoice line — see the script's own output for the basis. |
+| CI wall time | **126s – 325s** (median 146s, mean 176s) once warm | MEASURED, **re-measured 2026-09-04** | Same script/run as above — real job `started_at`/`completed_at` from the GitHub Actions API, not an estimate. Materially higher than the 2026-08-21 figure (~1m3s): the test suite has grown roughly 4x in the same window (286 → 381 suites). |
 | GitHub Actions minutes billed | zero | MEASURED as of 2026-08-21 | `CURRENT_STATE.md` §5 |
 | Six runner bugs, including the `HOSTNAME=cloudchamber` collision | as listed | Process fact | `CURRENT_STATE.md` §5 |
 | Unquoted-glob test-discovery bug; 579 → 734 tests | as stated | MEASURED, 2026-08-22 | [`2026-08-22-preflight-p1-test-discovery-bug.md`](../research/2026-08-22-preflight-p1-test-discovery-bug.md) |
