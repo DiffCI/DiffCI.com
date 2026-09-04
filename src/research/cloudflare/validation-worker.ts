@@ -174,7 +174,12 @@ async function prepareContainer(sandbox: any, sourceTarball: File): Promise<void
     }
   }
 
-  const install = await sandbox.exec("cd /opt/diffci && npm ci", { timeout: 120_000 });
+  // 300 s (was 120 s until 2026-09-04): on a cold container the 120 s bound killed real polls -
+  // DentalPresence.in's 11:10Z cron attempt, the same push's ci-reproduction bridge, and an astro
+  // launch the same morning - each costing a launch slot for nothing. The other DiffCI containers
+  // already allow 10-15 min for this step. The cap still exists so a genuinely hung install cannot
+  // hold a slot for the whole 15-minute consumer budget.
+  const install = await sandbox.exec("cd /opt/diffci && npm ci", { timeout: 300_000 });
   if (!install.success) throw new Error(`npm-ci-failed: ${errorTail(install)}`);
 }
 

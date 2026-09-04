@@ -115,6 +115,6 @@ the `logicalDeltaKey` dedup handles).
   - **Bridge.** The same push's ci-reproduction-bridge message ran 11:05:53–11:07:59Z and failed on
     the same 120 s `npm ci` timeout inside its own container. Under `waitUntil` this failure was
     invisible; it is now a `shadow_push_polls` row with the error text. The `npm ci` timeout
-    (`prepareContainer`, 120 s) is a pre-existing constraint that bites on a cold container — it
-    also failed withastro/astro's slot 4 earlier the same day — and is left as-is here; it is now
-    measurable rather than silent.
+    (`prepareContainer`, 120 s) was a pre-existing constraint that bit on a cold container — it
+    also failed withastro/astro's slot 4 earlier the same day. Raised to 300 s the same day, on the
+    founder's instruction, once the trail made it measurable rather than silent.
