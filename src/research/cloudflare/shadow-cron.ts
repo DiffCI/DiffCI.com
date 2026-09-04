@@ -47,6 +47,9 @@ export interface ShadowCronRunRecord {
   dailyCeilingRefusals?: number;
   /** Head transitions detected this sweep, whether or not they were analysed. */
   headTransitionsDetected?: number;
+  /** Head changes observed on repositories whose push-triggered poll was already running - deferred to
+   * that poll, never a second container. Distinct from a ceiling refusal and from an error. */
+  inFlightSkipped?: number;
   /** Repositories auto-paused this sweep for persistent failure. Recorded loudly: a repository silently
    * dropping out of observation is exactly the ambiguity M3.2 exists to prevent. */
   autoPaused?: string[];
@@ -112,10 +115,15 @@ export interface ShadowCronDeps {
   /** Optional (M3.2): persists the liveness facts above. Absent in older fakes/tests, which simply do not
    * record liveness - never a reason to fail a sweep. */
   recordRepositoryLiveness?(updates: RepositoryLivenessUpdate[]): Promise<void>;
-  /** Enrolled cloudflare-poll repositories in a pollable state, oldest-polled first (store-side order
-   * is advisory; selection re-sorts defensively). */
+  /** Enrolled cloudflare-poll AND github-app-webhook repositories in a pollable state, oldest-polled
+   * first (store-side order is advisory; selection re-sorts defensively). Webhook repositories poll
+   * event-driven from the Queue consumer (shadow-push-poll.ts); this sweep is their safety net. */
   listPollableRepositories(): Promise<PollableRepository[]>;
-  /** Repositories eligible for the reconcile sweep - a SUPERSET of the pollable list: webhook-enrolled
+  /** Optional (2026-09-04): true when a push-triggered poll for this repository is currently running.
+   * The sweep still head-checks and records the transition, but never launches a second container
+   * against the same sandbox session - the running poll will advance the cursor itself. */
+  pollInFlight?(repository: string): Promise<boolean>;
+  /** Repositories eligible for the reconcile sweep - any observation source: webhook-enrolled
    * ('github-app-webhook') repositories reconcile event-driven when workflow_run deliveries arrive, but
    * this cron sweep is their safety net against missed deliveries. */
   listReconcilableRepositories(): Promise<PollableRepository[]>;
@@ -266,9 +274,31 @@ export async function runShadowCronOnce(
     changedNeedingAnalysis.push(repo);
   }
 
+  // A repository whose push-triggered poll is still running is observed (head transition recorded
+  // below) but not launched: two polls sharing one sandbox session would wipe each other's workspace.
+  let inFlightSkipped = 0;
+  const launchable: PollableRepository[] = [];
+  for (const repo of changedNeedingAnalysis) {
+    let inFlight = false;
+    if (deps.pollInFlight) {
+      try {
+        inFlight = await deps.pollInFlight(repo.repository);
+      } catch (error: unknown) {
+        // An unanswerable in-flight check must not suppress observation - launch as if idle.
+        deps.log(`shadow-cron: in-flight check failed for ${repo.repository}, launching anyway: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+    if (inFlight) {
+      inFlightSkipped++;
+      deps.log(`shadow-cron: ${repo.repository} head moved but a push-triggered poll is in flight - deferring to it`);
+      continue;
+    }
+    launchable.push(repo);
+  }
+
   // Ceiling applied HERE - at the container launch, not at the observation. One slot is reserved per
   // repository immediately before its container starts, and is never refunded whatever the outcome.
-  const wantToLaunch = changedNeedingAnalysis.slice(0, config.maxPollsPerRun);
+  const wantToLaunch = launchable.slice(0, config.maxPollsPerRun);
   const toPoll: PollableRepository[] = [];
   const slotByRepository = new Map<string, number>();
   let launchesAttempted = 0;
@@ -288,7 +318,7 @@ export async function runShadowCronOnce(
     toPoll.push(repo);
   }
   // Head changes beyond maxPollsPerRun are NOT ceiling refusals - they are simply next sweep's work.
-  const deferredToNextSweep = changedNeedingAnalysis.length - wantToLaunch.length;
+  const deferredToNextSweep = launchable.length - wantToLaunch.length;
   if (dailyCeilingRefusals > 0) {
     deps.log(`shadow-cron: ${dailyCeilingRefusals} observed head change(s) refused - daily launch ceiling (${config.maxPollsPerDay}) spent; head checks continue`);
   }
@@ -448,6 +478,7 @@ export async function runShadowCronOnce(
     errors,
     dailyCeilingRefusals,
     headTransitionsDetected: changedNeedingAnalysis.length,
+    inFlightSkipped,
     autoPaused,
     launchesAttempted,
     launchesAllowed: toPoll.length,

@@ -27,6 +27,7 @@ import { reconcilePrediction } from "../../shadow/reconcile.js";
 import { computeLogicalEventKey } from "../../shadow/event-identity.js";
 import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps, type VerifiedSourceArchive } from "./shadow-cron.js";
 import { handleShadowWebhook } from "./shadow-webhook.js";
+import { IN_FLIGHT_WINDOW_MS, parsePushPollMessage, runPushTriggeredPoll, type PushPollDeps, type PushPollMessage } from "./shadow-push-poll.js";
 import { exchangeInstallationToken, signAppJwt, verifyWebhookSignature } from "../../shadow/github-app.js";
 import { computeSourceIntegrity, isValidSha, type SourceArchiveMeta } from "./shadow-source-integrity.js";
 // External Shadow Pilot M1 (2026-08-25). makeD1ShadowReadBoundary is nominally the product layer's
@@ -81,6 +82,11 @@ interface ValidationEnv {
   SHADOW_GITHUB_APP_ID?: string;
   SHADOW_GITHUB_APP_PRIVATE_KEY?: string;
   SHADOW_GITHUB_WEBHOOK_SECRET?: string;
+  /** Queue producer binding (wrangler.research-sandbox.jsonc "queues") for push-triggered polls -
+   * consumed by this same Worker's queue() handler below. Optional in the type only so a deploy
+   * without the binding fails loudly at the webhook (logged, cron safety net still observes) rather
+   * than at module load. */
+  SHADOW_POLL_QUEUE?: { send(body: unknown): Promise<void> };
   /** The git commit SHA this exact Worker deployment expects its shadow source archive to be built
    * from - stamped at deploy time via `wrangler deploy --var EXPECTED_SOURCE_SHA:<HEAD>`
    * (scripts/deploy-research-sandbox.ts), deliberately NOT a static value in wrangler.research-
@@ -1233,6 +1239,9 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
     reserveLaunchSlot: (repository, maxPerDay) => store.reserveLaunchSlot(repository, maxPerDay),
     recordLaunchOutcome: (slotNo, outcome) => store.recordLaunchOutcome(slotNo, outcome),
     recordHeadTransition: (t) => store.recordHeadTransition(t),
+    // A push-triggered poll (queue consumer) that started inside the window and hasn't finished owns the
+    // repository's sandbox session; the sweep records the head change and leaves the launch to it.
+    pollInFlight: (repository) => store.hasInFlightPushPoll(repository, new Date(Date.now() - IN_FLIGHT_WINDOW_MS).toISOString()),
     listReconcilableRepositories: () => store.listReconcilableRepositories(),
     // Per-repo token so the head pre-check also works on private repositories with an App
     // installation; githubTokenForRepo degrades to GITHUB_TOKEN/anonymous for everything else.
@@ -1301,30 +1310,12 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
       verifySignature: (body, signature) => verifyWebhookSignature(body, signature, secret),
       ensureRepository: (repository, language) => store.ensureRepository(repository, "github-app-webhook", language),
       setInstallationId: (repository, installationId) => store.setInstallationId(repository, installationId),
-      schedulePoll: (repository) => {
-        ctx.waitUntil(
-          (async () => {
-            const [owner, name] = repository.split("/");
-            const pollState = await store.getRepositoryPollState(repository);
-            const language = pollState?.language ?? "typescript";
-            validateShellSafeIdentifiers(owner ?? "", name ?? "", language);
-            const verified = await loadVerifiedShadowSource(env);
-            if (verified.status !== "CURRENT") {
-              // Same fail-closed rule as the cron path (shadow-cron.ts) - a STALE/MISSING/UNKNOWN source
-              // must not silently produce a prediction. The next cron tick's reconcile sweep still covers
-              // this repository regardless; only the instant-poll latency benefit is lost this once.
-              console.log(`shadow-webhook: push for ${repository} refused - source-integrity-${verified.status}: ${verified.detail}`);
-              return;
-            }
-            const result = await executeShadowPoll(env, owner!, name!, language, verified.file, verified.archiveSha);
-            // pollErrors carries per-commit analysis failures even when ok=true - a poll that saw new
-            // commits but predicted nothing is invisible without them (real debugging gap 2026-08-21).
-            console.log(
-              `shadow-webhook: push-triggered poll for ${repository}: ok=${result.ok} predictions=${result.predictionsRecorded}${result.error ? ` error=${result.error}` : ""}${result.pollErrors.length ? ` pollErrors=${JSON.stringify(result.pollErrors).slice(0, 2000)}` : ""}`,
-            );
-          })().catch((error: unknown) => console.log(`shadow-webhook: push-triggered poll for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
-        );
-      },
+      // 2026-09-04: the container poll NO LONGER runs here. It used to run inside ctx.waitUntil, which
+      // the runtime cancels 30 s after the response - long enough only for a tiny repository on a warm
+      // container, so DentalPresence.in went unobserved for 168 commits with nothing durable recording
+      // it (docs/research/2026-09-04-shadow-push-poll-lifetime.md). The handler now enqueues one
+      // message (milliseconds) and the queue() consumer below runs the poll with a 15-minute budget.
+      schedulePoll: (repository, headSha) => enqueuePushPoll(env, ctx, { kind: "poll", repository, headSha, enqueuedAt: new Date().toISOString() }),
       scheduleReconcile: (repository) => {
         ctx.waitUntil(
           executeShadowReconcile(env, repository, DEFAULT_SHADOW_CRON_CONFIG.reconcileLimitPerRepo)
@@ -1332,25 +1323,12 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
             .catch((error: unknown) => console.log(`shadow-webhook: reconcile for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
         );
       },
-      // EXTERNAL_ENGINE_BRIDGE_01. Same verified-source gate schedulePoll above already uses - both
-      // pipelines extract the identical diffci source tarball into their own (separate) container, so
-      // both refuse identically when that source is stale/missing/unverifiable, never running the
-      // CI-reproduction engine against an unverified build of itself.
-      scheduleCiReproductionBridge: (repository) => {
-        ctx.waitUntil(
-          (async () => {
-            const [owner, name] = repository.split("/");
-            validateShellSafeIdentifiers(owner ?? "", name ?? "", "typescript");
-            const verified = await loadVerifiedShadowSource(env);
-            if (verified.status !== "CURRENT") {
-              console.log(`shadow-webhook: ci-reproduction-bridge for ${repository} refused - source-integrity-${verified.status}: ${verified.detail}`);
-              return;
-            }
-            const result = await executeCiReproductionBridge(env, owner!, name!, verified.file);
-            console.log(`shadow-webhook: push-triggered ci-reproduction-bridge for ${repository}: ok=${result.ok} outcome=${result.outcome ?? "?"}${result.error ? ` error=${result.error}` : ""}`);
-          })().catch((error: unknown) => console.log(`shadow-webhook: ci-reproduction-bridge for ${repository} failed: ${error instanceof Error ? error.message : String(error)}`)),
-        );
-      },
+      // EXTERNAL_ENGINE_BRIDGE_01. Same verified-source gate the poll uses (applied in the consumer,
+      // shadow-push-poll.ts) - both pipelines extract the identical diffci source tarball into their own
+      // (separate) container, so both refuse identically when that source is stale/missing/unverifiable,
+      // never running the CI-reproduction engine against an unverified build of itself. Same queue, same
+      // reason as schedulePoll: the bridge's container run is minutes long, waitUntil gave it 30 s.
+      scheduleCiReproductionBridge: (repository) => enqueuePushPoll(env, ctx, { kind: "ci-reproduction-bridge", repository, enqueuedAt: new Date().toISOString() }),
       // site/data-handling.html: "Uninstalling deletes it." Real erasure (shadow-erasure.ts) against
       // this Worker's own D1 store and R2 bucket - not a log line. See shadow-webhook.ts's own doc
       // comment for why suspend does NOT go through this path.
@@ -1371,11 +1349,63 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
   return json(outcome.body, outcome.status);
 }
 
+/** Queue send, fire-and-forget from the webhook's point of view: GitHub only needs the 2xx. A missing
+ * binding (a deploy from a config without "queues") is logged loudly rather than silently falling back
+ * to the waitUntil poll - the cron sweep's head check still observes the repository within 10 minutes,
+ * so observation degrades to cron latency instead of stopping. */
+function enqueuePushPoll(env: ValidationEnv, ctx: ExecutionCtx, message: PushPollMessage): void {
+  const queue = env.SHADOW_POLL_QUEUE;
+  if (!queue) {
+    console.log(`shadow-webhook: ${message.kind} for ${message.repository} NOT enqueued - SHADOW_POLL_QUEUE binding missing; the cron sweep is the only poll path until redeployed with the queue`);
+    return;
+  }
+  ctx.waitUntil(
+    queue
+      .send(message)
+      .then(() => console.log(`shadow-webhook: enqueued ${message.kind} for ${message.repository}${message.headSha ? ` at ${message.headSha.slice(0, 7)}` : ""}`))
+      .catch((error: unknown) => console.log(`shadow-webhook: enqueue ${message.kind} for ${message.repository} failed (cron sweep will catch it): ${error instanceof Error ? error.message : String(error)}`)),
+  );
+}
+
+function makePushPollDeps(env: ValidationEnv): PushPollDeps {
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+  return {
+    getRepositoryState: async (repository) => {
+      const s = await store.getRepositoryPollState(repository);
+      return s ? { state: s.state, language: s.language } : undefined;
+    },
+    getVerifiedSourceArchive: () => loadVerifiedShadowSource(env),
+    reserveLaunchSlot: (repository, maxPerDay) => store.reserveLaunchSlot(repository, maxPerDay),
+    recordLaunchOutcome: (slotNo, outcome) => store.recordLaunchOutcome(slotNo, outcome),
+    async pollRepository(repository, language, source, engineSourceSha) {
+      const [owner, name] = repository.split("/");
+      validateShellSafeIdentifiers(owner ?? "", name ?? "", language);
+      const outcome = await executeShadowPoll(env, owner!, name!, language, source, engineSourceSha);
+      if (!outcome.ok) throw new Error(outcome.error ?? "shadow-poll-failed");
+      // pollErrors carries per-commit analysis failures even when ok=true - a poll that saw new commits
+      // but predicted nothing is invisible without them (real debugging gap 2026-08-21).
+      return { predictionsRecorded: outcome.predictionsRecorded, errors: outcome.pollErrors, newHeadSha: outcome.newHeadSha };
+    },
+    async runCiReproductionBridge(repository, source) {
+      const [owner, name] = repository.split("/");
+      validateShellSafeIdentifiers(owner ?? "", name ?? "", "typescript");
+      return executeCiReproductionBridge(env, owner!, name!, source);
+    },
+    recordRepositoryLiveness: (updates) => store.recordRepositoryLiveness(updates),
+    consecutivePollErrors: (repository) => store.consecutivePollErrors(repository),
+    pauseRepository: (repository, reason) => store.pauseRepository(repository, reason),
+    beginPushPoll: (input) => store.beginPushPoll(input),
+    finishPushPoll: (id, record) => store.finishPushPoll(id, record),
+    now: () => new Date(),
+    log: (message) => console.log(message),
+  };
+}
+
 /** Diagnostic: what GitHub actually has on file for the registered App (GET /app authenticated as
  * the App itself) - added while debugging why installation events arrived but push events did not
  * (installation events are delivered unconditionally; push/workflow_run require the App's event
  * subscriptions to include them, which only this endpoint can confirm without the App owner's UI). */
-async function shadowAppInfo(env: ValidationEnv, deliveryId?: string): Promise<Response> {
+async function shadowAppInfo(env: ValidationEnv, deliveryId?: string, paging?: { limit?: string | null; cursor?: string | null }): Promise<Response> {
   if (!env.SHADOW_GITHUB_APP_ID || !env.SHADOW_GITHUB_APP_PRIVATE_KEY) {
     return json({ ok: false, error: "app-credentials-not-configured" }, 503);
   }
@@ -1419,23 +1449,33 @@ async function shadowAppInfo(env: ValidationEnv, deliveryId?: string): Promise<R
     const app = (await res.json()) as { slug?: string; name?: string; events?: string[]; permissions?: Record<string, string> };
 
     // GitHub's own webhook delivery log for this App - status per delivery, from the horse's mouth.
-    const deliveriesRes = await fetch("https://api.github.com/app/hook/deliveries?per_page=15", {
+    // `limit` (1-100, default 15) and `cursor` (the nextCursor of a previous page) page backwards
+    // through the log - added 2026-09-04 when a 15-item app-wide sample turned out to be far too small
+    // to find one repository's push deliveries among another's workflow_run bursts.
+    const limit = Math.max(1, Math.min(100, Number.parseInt(paging?.limit ?? "15", 10) || 15));
+    const cursor = paging?.cursor && /^[A-Za-z0-9_=:.-]{1,200}$/.test(paging.cursor) ? paging.cursor : undefined;
+    const deliveriesUrl = `https://api.github.com/app/hook/deliveries?per_page=${limit}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
+    const deliveriesRes = await fetch(deliveriesUrl, {
       headers: { Authorization: `Bearer ${jwt}`, Accept: "application/vnd.github+json", "User-Agent": "diffci-shadow" },
     });
     // Delivery ids are 19-digit integers - beyond Number.MAX_SAFE_INTEGER, so JSON.parse silently
     // rounds them (a real 404 bug hit while debugging: the rounded id doesn't exist). Extract the
     // exact id strings from the raw body BEFORE parsing.
     let deliveries: unknown;
+    let nextCursor: string | undefined;
     if (deliveriesRes.ok) {
       const rawList = await deliveriesRes.text();
       const exactIds = [...rawList.matchAll(/"id":\s*(\d+)/g)].map((m) => m[1]!);
-      const parsed = JSON.parse(rawList) as Array<{ event: string; action: string | null; status: string; status_code: number; delivered_at: string; redelivery: boolean }>;
-      deliveries = parsed.map((d, i) => ({ id: exactIds[i], event: d.event, action: d.action, status: d.status, statusCode: d.status_code, deliveredAt: d.delivered_at, redelivery: d.redelivery }));
+      const parsed = JSON.parse(rawList) as Array<{ event: string; action: string | null; status: string; status_code: number; delivered_at: string; redelivery: boolean; repository_id?: number }>;
+      deliveries = parsed.map((d, i) => ({ id: exactIds[i], event: d.event, action: d.action, status: d.status, statusCode: d.status_code, deliveredAt: d.delivered_at, redelivery: d.redelivery, repositoryId: d.repository_id }));
+      // GitHub pages this endpoint by cursor in the Link header: <...?cursor=X>; rel="next".
+      const link = deliveriesRes.headers.get("Link") ?? "";
+      nextCursor = link.match(/[?&]cursor=([^>&]+)>;\s*rel="next"/)?.[1];
     } else {
       deliveries = `GET /app/hook/deliveries failed (${deliveriesRes.status})`;
     }
 
-    return json({ ok: true, slug: app.slug, name: app.name, events: app.events, permissions: app.permissions, recentDeliveries: deliveries });
+    return json({ ok: true, slug: app.slug, name: app.name, events: app.events, permissions: app.permissions, recentDeliveries: deliveries, nextCursor: nextCursor ?? null });
   } catch (error: unknown) {
     return json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 500);
   }
@@ -1444,14 +1484,16 @@ async function shadowAppInfo(env: ValidationEnv, deliveryId?: string): Promise<R
 async function shadowCronStatus(request: Request, env: ValidationEnv): Promise<Response> {
   const limit = Math.max(1, Math.min(50, Number.parseInt(new URL(request.url).searchParams.get("limit") ?? "10", 10) || 10));
   const store = makeD1ShadowStore(env.RESEARCH_DB);
-  const [runs, repositories, integrity] = await Promise.all([
+  const [runs, repositories, integrity, pushPolls] = await Promise.all([
     store.listRecentCronRuns(limit),
     store.listPollableRepositories(),
     checkSourceIntegrity(env),
+    store.listRecentPushPolls(limit),
   ]);
   return json({
     ok: true,
     cronEnabled: env.SHADOW_CRON_ENABLED === "true",
+    pushPollQueueBound: !!env.SHADOW_POLL_QUEUE,
     // Kept for back-compat with anything already reading this field; sourceIntegrity below is the
     // authoritative, gate-equivalent answer (same computeSourceIntegrity() call the cron/webhook poll
     // paths use before running any analysis - see checkSourceIntegrity's doc comment).
@@ -1459,6 +1501,9 @@ async function shadowCronStatus(request: Request, env: ValidationEnv): Promise<R
     sourceIntegrity: integrity.result,
     pollableRepositories: repositories,
     recentRuns: runs,
+    // shadow_push_polls (2026-09-04): every push-triggered attempt, including refusals and rows still
+    // in flight (finished_at null) - the durable answer to "did the push for X ever get analysed?".
+    recentPushPolls: pushPolls,
   });
 }
 
@@ -2156,7 +2201,7 @@ export default {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
         return json({ ok: false, error: "unauthorized" }, 401);
       }
-      return shadowAppInfo(env, url.searchParams.get("delivery") ?? undefined);
+      return shadowAppInfo(env, url.searchParams.get("delivery") ?? undefined, { limit: url.searchParams.get("limit"), cursor: url.searchParams.get("cursor") });
     }
     if (request.method === "GET" && url.pathname === "/v1/shadow/reconcile-diagnostics") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
@@ -2181,6 +2226,33 @@ export default {
       }
     }
     return json({ ok: false, error: "not-found" }, 404);
+  },
+
+  /** Queue consumer (wrangler.research-sandbox.jsonc "queues.consumers") - runs the push-triggered
+   * shadow poll and ci-reproduction bridge the webhook handler enqueues (shadow-push-poll.ts). One
+   * message per container launch (max_batch_size 1); every message is acked whatever happens, because
+   * the durable shadow_push_polls row plus the cron sweep's head check ARE the retry - re-queuing a
+   * deterministic failure would only double-spend containers. Gated by DIFFCI_RESEARCH_ENABLED like
+   * everything else; a disabled Worker acks-and-logs rather than letting messages pile up. */
+  async queue(batch: { messages: Array<{ body: unknown; ack(): void }> }, env: ValidationEnv): Promise<void> {
+    for (const message of batch.messages) {
+      try {
+        if (env.DIFFCI_RESEARCH_ENABLED !== "true") {
+          console.log("shadow-push-poll: disabled (DIFFCI_RESEARCH_ENABLED) - message acked without polling");
+          continue;
+        }
+        const parsed = parsePushPollMessage(message.body);
+        if (!parsed) {
+          console.log(`shadow-push-poll: malformed message acked without polling: ${JSON.stringify(message.body).slice(0, 300)}`);
+          continue;
+        }
+        await runPushTriggeredPoll(parsed, makePushPollDeps(env), DEFAULT_SHADOW_CRON_CONFIG);
+      } catch (error: unknown) {
+        console.log(`shadow-push-poll: consumer failed: ${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        message.ack();
+      }
+    }
   },
 
   /** Cron Trigger entry point (wrangler.research-sandbox.jsonc "triggers.crons") - the autonomous

@@ -93,7 +93,11 @@ cost/savings) remains genuinely unmeasured — not a defect, just insufficient e
 final report says.
 
 This repository (`DiffCI.com`) and `DentalPresence.in` shadow-observe **themselves** via the installed
-App (installation id `155368612`) — every push to `main` triggers an immediate poll.
+App (installation id `155368612`) — every push to `main` enqueues an immediate poll (Queue consumer,
+`shadow-push-poll.ts`), and the 10-minute cron sweep is the safety net. Until 2026-09-04 the push poll
+ran inside `ctx.waitUntil` and was killed at 30 s for anything but a tiny repository — DentalPresence.in
+went unobserved from 2026-08-27 for 168 commits; see
+`docs/research/2026-09-04-shadow-push-poll-lifetime.md`.
 
 ## 5. CI / self-hosted runner infrastructure
 

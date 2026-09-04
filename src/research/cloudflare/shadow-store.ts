@@ -7,6 +7,7 @@
  */
 
 import type { RepositoryLivenessUpdate } from "./shadow-cron.js";
+import type { PushPollKind, PushPollRecord } from "./shadow-push-poll.js";
 
 // Duplicated minimal shape rather than exported from validation-worker.ts - keeps this module
 // independently importable/testable without pulling in the whole Worker file.
@@ -190,9 +191,18 @@ export interface ShadowStore {
    * initial enrollment insert; it never overwrites an existing row's value. */
   ensureRepository(repository: string, observationSource: ObservationSource, language?: string): Promise<void>;
   getRepositoryPollState(repository: string): Promise<{ state: ShadowRepositoryState; lastPolledSha?: string; language: string } | undefined>;
-  /** Repositories the cron runner may poll: observation_source = 'cloudflare-poll' in a pollable state,
-   * never-polled first, then oldest-polled first. */
+  /** Repositories the cron runner may poll: observation_source 'cloudflare-poll' OR 'github-app-webhook'
+   * in a pollable state, never-polled first, then oldest-polled first. Webhook-enrolled repositories
+   * were excluded until 2026-09-04; the cron's cheap head check is now their safety net for a lost push
+   * delivery or a push-triggered poll that never finished (shadow-push-poll.ts). */
   listPollableRepositories(): Promise<PollableRepositoryRow[]>;
+  /** shadow_push_polls: durable trail of push-triggered poll attempts (schema-migration-2026-09-04). */
+  beginPushPoll(input: { kind: PushPollKind; repository: string; headSha?: string; enqueuedAt: string; startedAt: string }): Promise<number>;
+  finishPushPoll(id: number, record: PushPollRecord): Promise<void>;
+  listRecentPushPolls(limit: number): Promise<unknown[]>;
+  /** True when a push-triggered poll for this repository started after `sinceIso` and has not finished -
+   * the cron uses it to avoid launching a second container against the same sandbox session. */
+  hasInFlightPushPoll(repository: string, sinceIso: string): Promise<boolean>;
   /** Repositories whose pending predictions the cron sweep may reconcile: any observation source, any
    * pollable/active state - webhook-enrolled repositories reconcile event-driven (workflow_run), but the
    * cron sweep is the safety net for missed deliveries. */
@@ -341,7 +351,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
       const { results } = await db
         .prepare(
           `SELECT repository, state, language, last_polled_sha, last_polled_at FROM shadow_repositories
-           WHERE observation_source = 'cloudflare-poll' AND state IN ('VALIDATING', 'SHADOW_ACTIVE', 'SHADOW_LIMITED')
+           WHERE observation_source IN ('cloudflare-poll', 'github-app-webhook') AND state IN ('VALIDATING', 'SHADOW_ACTIVE', 'SHADOW_LIMITED')
            ORDER BY last_polled_at IS NOT NULL, last_polled_at ASC, repository ASC`,
         )
         .bind()
@@ -406,6 +416,48 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .bind(Math.max(1, Math.min(100, limit)))
         .all();
       return results;
+    },
+
+    async beginPushPoll(input) {
+      const row = await db
+        .prepare(
+          `INSERT INTO shadow_push_polls (repository, kind, head_sha, enqueued_at, started_at)
+           VALUES (?, ?, ?, ?, ?) RETURNING id`,
+        )
+        .bind(input.repository, input.kind, input.headSha ?? null, input.enqueuedAt, input.startedAt)
+        .first<{ id: number }>();
+      if (!row) throw new Error("shadow_push_polls insert returned no id");
+      return row.id;
+    },
+
+    async finishPushPoll(id, record) {
+      const error = [record.error, record.detail].filter(Boolean).join(" | ") || null;
+      await db
+        .prepare(
+          `UPDATE shadow_push_polls SET finished_at = ?, outcome = ?, predictions_recorded = ?, slot_no = ?, error = ?
+           WHERE id = ?`,
+        )
+        .bind(record.finishedAt, record.outcome, record.predictionsRecorded, record.slotNo ?? null, error, id)
+        .run();
+    },
+
+    async listRecentPushPolls(limit) {
+      const { results } = await db
+        .prepare(`SELECT * FROM shadow_push_polls ORDER BY id DESC LIMIT ?`)
+        .bind(Math.max(1, Math.min(100, limit)))
+        .all();
+      return results;
+    },
+
+    async hasInFlightPushPoll(repository, sinceIso) {
+      const row = await db
+        .prepare(
+          `SELECT COUNT(*) as n FROM shadow_push_polls
+           WHERE repository = ? AND kind = 'poll' AND finished_at IS NULL AND started_at > ?`,
+        )
+        .bind(repository, sinceIso)
+        .first<{ n: number }>();
+      return (row?.n ?? 0) > 0;
     },
 
     async getRepositoryPollState(repository) {

@@ -588,3 +588,46 @@ describe("explicit refusal for persistently failing repositories", () => {
     assert.equal(calls.slots[0]?.outcome, "failed");
   });
 });
+
+describe("runShadowCronOnce: push-triggered polls in flight (2026-09-04)", () => {
+  const CFG = { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 };
+
+  it("head-checks and records the transition for a repository whose push poll is running, but never launches a second container", async () => {
+    const repos = [
+      repo({ repository: "a/in-flight", lastPolledSha: "old", lastPolledAt: "2026-08-27T01:58:57Z" }),
+      repo({ repository: "b/idle-moved", lastPolledSha: "old", lastPolledAt: "2026-09-03T13:21:27Z" }),
+    ];
+    const { deps, calls } = makeDeps({ repos, heads: { "a/in-flight": { sha: "new-a" }, "b/idle-moved": { sha: "new-b" } } });
+    deps.pollInFlight = async (repository) => repository === "a/in-flight";
+    const record = await runShadowCronOnce(deps, CFG, "cron");
+
+    assert.deepEqual(calls.headChecked, ["a/in-flight", "b/idle-moved"], "observation is never suppressed");
+    assert.deepEqual(calls.polled, ["b/idle-moved"]);
+    assert.equal(record.inFlightSkipped, 1);
+    assert.equal(record.headTransitionsDetected, 2);
+    assert.deepEqual(
+      calls.transitions.map((t) => [t.repository, t.analysed]),
+      [["a/in-flight", false], ["b/idle-moved", true]],
+      "the deferred change is still a real observation",
+    );
+    assert.equal(calls.slots.length, 1, "no slot spent on the deferred repository");
+    assert.ok(calls.logs.some((l) => l.includes("a/in-flight head moved but a push-triggered poll is in flight")));
+  });
+
+  it("an in-flight check that throws does not suppress the launch", async () => {
+    const repos = [repo({ repository: "a/moved", lastPolledSha: "old", lastPolledAt: "2026-09-03T13:21:27Z" })];
+    const { deps, calls } = makeDeps({ repos, heads: { "a/moved": { sha: "new" } } });
+    deps.pollInFlight = async () => { throw new Error("d1 unavailable"); };
+    const record = await runShadowCronOnce(deps, CFG, "cron");
+    assert.deepEqual(calls.polled, ["a/moved"]);
+    assert.equal(record.inFlightSkipped, 0);
+  });
+
+  it("without a pollInFlight dependency (older wiring) behaviour is unchanged", async () => {
+    const repos = [repo({ repository: "a/moved", lastPolledSha: "old", lastPolledAt: "2026-09-03T13:21:27Z" })];
+    const { deps, calls } = makeDeps({ repos, heads: { "a/moved": { sha: "new" } } });
+    const record = await runShadowCronOnce(deps, CFG, "cron");
+    assert.deepEqual(calls.polled, ["a/moved"]);
+    assert.equal(record.inFlightSkipped, 0);
+  });
+});

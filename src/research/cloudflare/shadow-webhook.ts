@@ -22,7 +22,8 @@
  * - push to the DEFAULT branch: schedule an immediate shadow poll - the whole point of the webhook
  *   source is predicting closer to the push than a 10-minute cron tick can, which is what makes the
  *   prospectiveness evidence (prediction strictly before CI completion) strong. Non-default refs are
- *   acknowledged and ignored (the poll pipeline observes the default branch).
+ *   acknowledged and ignored (the poll pipeline observes the default branch). The cron sweep is the
+ *   safety net for a lost or refused push (shadow-push-poll.ts, 2026-09-04).
  * - workflow_run completed: schedule reconciliation for that repository - ground truth exactly when
  *   it exists, instead of waiting for the next cron sweep.
  * - pull_request: acknowledged, not yet processed (PR-delta shadow support is a designed-but-not-built
@@ -37,9 +38,12 @@ export interface ShadowWebhookDeps {
   /** Idempotent enrollment, source 'github-app-webhook'. */
   ensureRepository(repository: string, language: string): Promise<void>;
   setInstallationId(repository: string, installationId: string): Promise<void>;
-  /** Fire-and-forget (the Worker uses ctx.waitUntil) - failures must be logged by the implementation,
-   * never thrown back into webhook handling: GitHub only needs the 2xx acknowledgment. */
-  schedulePoll(repository: string): void;
+  /** Fire-and-forget - failures must be logged by the implementation, never thrown back into webhook
+   * handling: GitHub only needs the 2xx acknowledgment. Since 2026-09-04 the Worker implements this as
+   * a Queue send (shadow-push-poll.ts), NOT as ctx.waitUntil around the container poll - waitUntil is
+   * cancelled 30 s after the response, which silently killed every non-trivial poll. `headSha` is the
+   * push payload's `after` when present, recorded for the audit trail only. */
+  schedulePoll(repository: string, headSha?: string): void;
   scheduleReconcile(repository: string): void;
   /**
    * EXTERNAL_ENGINE_BRIDGE_01. Fire-and-forget, same rule as schedulePoll - triggers the independent
@@ -141,7 +145,8 @@ export async function handleShadowWebhook(
       await deps.ensureRepository(repository, "typescript");
       const installationId = String(payload?.installation?.id ?? "");
       if (installationId) await deps.setInstallationId(repository, installationId);
-      deps.schedulePoll(repository);
+      const after = String(payload?.after ?? "");
+      deps.schedulePoll(repository, /^[0-9a-f]{40}$/.test(after) ? after : undefined);
       // Independent of the poll above: same push, same enrolled repository, a SEPARATE analysis engine.
       // Never blocks or replaces schedulePoll, and its absence from the response body when unwired keeps
       // this byte-for-byte compatible with every caller that doesn't yet supply it.

@@ -26,6 +26,8 @@ function freshDb(): DatabaseSync {
     "schema-migration-2026-08-21-shadow-source-integrity.sql",
     "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql",
     "schema-migration-2026-08-25-shadow-economics.sql",
+    "schema-migration-2026-08-26-shadow-liveness.sql",
+    "schema-migration-2026-09-04-shadow-push-polls.sql",
   ]) {
     db.exec(readFileSync(join(SCHEMA_DIR, file), "utf8"));
   }
@@ -517,5 +519,52 @@ describe("shadow-store: erasure (site/data-handling.html's two deletion commitme
     assert.deepEqual(remaining.map((r) => r.logical_delta_key), ["fresh"]);
     const remainingEconomics = db.prepare(`SELECT logical_delta_key FROM shadow_economics_observations`).all() as Array<{ logical_delta_key: string }>;
     assert.deepEqual(remainingEconomics.map((r) => r.logical_delta_key), ["fresh"]);
+  });
+});
+
+describe("shadow-store: push-triggered polls (schema-migration-2026-09-04-shadow-push-polls)", () => {
+  it("listPollableRepositories includes webhook-enrolled repositories so the cron sweep is their safety net", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/webhook", "github-app-webhook");
+    await store.ensureRepository("acme/polled", "cloudflare-poll");
+    await store.ensureRepository("acme/step", "github-actions-step");
+    await store.ensureRepository("acme/paused", "github-app-webhook");
+    await store.pauseRepository("acme/paused", "test");
+
+    const pollable = (await store.listPollableRepositories()).map((r) => r.repository).sort();
+    assert.deepEqual(pollable, ["acme/polled", "acme/webhook"]);
+  });
+
+  it("beginPushPoll leaves an in-flight row that finishPushPoll closes; hasInFlightPushPoll honours the window", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    const id = await store.beginPushPoll({ kind: "poll", repository: "acme/web", headSha: "a".repeat(40), enqueuedAt: "2026-09-04T10:00:00.000Z", startedAt: "2026-09-04T10:00:01.000Z" });
+    assert.equal(typeof id, "number");
+
+    assert.equal(await store.hasInFlightPushPoll("acme/web", "2026-09-04T09:45:00.000Z"), true);
+    assert.equal(await store.hasInFlightPushPoll("acme/web", "2026-09-04T10:30:00.000Z"), false, "started before the window - presumed dead");
+    assert.equal(await store.hasInFlightPushPoll("acme/other", "2026-09-04T09:45:00.000Z"), false);
+
+    await store.finishPushPoll(id, {
+      kind: "poll", repository: "acme/web", headSha: "a".repeat(40), enqueuedAt: "2026-09-04T10:00:00.000Z", startedAt: "2026-09-04T10:00:01.000Z",
+      finishedAt: "2026-09-04T10:03:00.000Z", outcome: "succeeded", predictionsRecorded: 2, slotNo: 4, autoPaused: false, error: "poll acme/web: one commit skipped",
+    });
+    assert.equal(await store.hasInFlightPushPoll("acme/web", "2026-09-04T09:45:00.000Z"), false);
+
+    const rows = (await store.listRecentPushPolls(10)) as Array<Record<string, unknown>>;
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0]!.outcome, "succeeded");
+    assert.equal(rows[0]!.predictions_recorded, 2);
+    assert.equal(rows[0]!.slot_no, 4);
+    assert.equal(rows[0]!.finished_at, "2026-09-04T10:03:00.000Z");
+    assert.match(String(rows[0]!.error), /one commit skipped/);
+  });
+
+  it("a bridge row never counts as an in-flight analysis poll", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.beginPushPoll({ kind: "ci-reproduction-bridge", repository: "acme/web", enqueuedAt: "2026-09-04T10:00:00.000Z", startedAt: "2026-09-04T10:00:01.000Z" });
+    assert.equal(await store.hasInFlightPushPoll("acme/web", "2026-09-04T09:45:00.000Z"), false);
   });
 });

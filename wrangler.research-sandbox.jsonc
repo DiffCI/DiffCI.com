@@ -65,6 +65,24 @@
   "r2_buckets": [
     { "binding": "RESEARCH_BUCKET", "bucket_name": "diffci-research-evidence" }
   ],
+  // Push-triggered shadow polls (2026-09-04, src/research/cloudflare/shadow-push-poll.ts). The webhook
+  // handler used to run the container poll inside ctx.waitUntil(), which the runtime cancels 30 s after
+  // the response - every poll slower than that died silently (DentalPresence.in: 168 unobserved commits;
+  // see docs/research/2026-09-04-shadow-push-poll-lifetime.md). A Queue consumer invocation may run for
+  // 15 minutes, comfortably above the longest poll path. One message = one container launch, so
+  // max_batch_size is 1; max_concurrency 2 lets a push's analysis poll and its ci-reproduction bridge
+  // (separate sandbox sessions) proceed together while staying far inside the container max_instances.
+  // max_retries 0: a poll that fails is recorded durably (shadow_push_polls) and the 10-minute cron
+  // sweep's head check is the retry - re-queuing would double-spend containers on a deterministic
+  // failure, the exact pattern maxConsecutivePollErrors exists to stop.
+  "queues": {
+    "producers": [
+      { "binding": "SHADOW_POLL_QUEUE", "queue": "diffci-shadow-poll" }
+    ],
+    "consumers": [
+      { "queue": "diffci-shadow-poll", "max_batch_size": 1, "max_batch_timeout": 0, "max_retries": 0, "max_concurrency": 2 }
+    ]
+  },
   "d1_databases": [
     { "binding": "RESEARCH_DB", "database_name": "diffci-research", "database_id": "84ddc2e5-0f1d-424f-8bfc-81f4e39dc534" }
   ],

@@ -134,13 +134,18 @@ actually receiving events on our own two repos, not just installed. Checked dire
   `requestRepository: "adityankale190895/DiffCI.com"`, all within the last hour, correctly triggering
   `poll-scheduled`/`reconcile-scheduled`. 297 predictions, 65 reconciled ground-truth rows; the latest
   prediction's engine commit (`56fc205`) matches this session's own deploy exactly.
-- **DentalPresence.in**: 20 predictions, 18 reconciled ground-truth rows; its live shadow report shows
-  18 of 20 eligible commits observed in the last 14 days, through today. This can only come from real
-  webhook deliveries - it's enrolled `observation_source = 'github-app-webhook'`, which the separate
-  polling-cron path explicitly excludes (`listPollableRepositories()` only pulls `cloudflare-poll`
-  repos), so there is no other mechanism that could have produced these rows. It didn't appear in the
-  same 15-item recent-deliveries sample as DiffCI.com only because that sample is capped app-wide and
-  all of today's push/CI activity happened to land on DiffCI.com.
+- **DentalPresence.in**: 20 predictions, 18 reconciled ground-truth rows. ~~Its live shadow report
+  shows 18 of 20 eligible commits observed in the last 14 days, through today.~~ **Corrected
+  2026-09-04:** that was a misreading. All 20 predictions date from 2026-08-21; the repository was last
+  polled on 2026-08-27T01:58Z at the squash root `a852252` and the 168 commits pushed since then
+  produced nothing. The push-triggered poll ran inside `ctx.waitUntil`, which the Workers runtime
+  cancels 30 s after the response - long enough only for a tiny repository on a warm container, which
+  is why DiffCI.com's own record looked fine at a glance (and even it lost `70d8e48`). Fixed the same
+  day: polls now run from a Queue consumer with a durable `shadow_push_polls` trail, and the cron
+  sweep head-checks webhook-enrolled repositories as a safety net. Full evidence and what was lost:
+  `docs/research/2026-09-04-shadow-push-poll-lifetime.md`. The "confirmed actually receiving and
+  processing real events" conclusion below therefore held for DiffCI.com's small pushes only, and the
+  blocker assessment is re-verified against the post-fix trail, not this entry.
 
 **Blocker assessment for outreach beginning 2026-09-11:** none. The technical front door - domain,
 install flow (including `setup_url`), welcome page, hosted report, and real erasure - is fully live and
