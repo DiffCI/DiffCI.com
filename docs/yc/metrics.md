@@ -145,7 +145,12 @@ actually receiving events on our own two repos, not just installed. Checked dire
   sweep head-checks webhook-enrolled repositories as a safety net. Full evidence and what was lost:
   `docs/research/2026-09-04-shadow-push-poll-lifetime.md`. The "confirmed actually receiving and
   processing real events" conclusion below therefore held for DiffCI.com's small pushes only, and the
-  blocker assessment is re-verified against the post-fix trail, not this entry.
+  blocker assessment is re-verified against the post-fix trail, not this entry. Post-fix trail, same
+  day: DiffCI.com's push of the fix itself polled via the queue in 96 s (`shadow_push_polls`
+  `succeeded`, 2 predictions, cursor at `95edf28`); DentalPresence.in was polled by the 11:20Z cron
+  tick and re-baselined at `db01257` (0 predictions — the 168-commit backlog is not recoverable as
+  prospective evidence). DentalPresence.in's next default-branch push is the first real test of its
+  own queue path; check `recentPushPolls` on `/v1/shadow/cron-status` rather than this entry.
 
 **Blocker assessment for outreach beginning 2026-09-11:** none. The technical front door - domain,
 install flow (including `setup_url`), welcome page, hosted report, and real erasure - is fully live and

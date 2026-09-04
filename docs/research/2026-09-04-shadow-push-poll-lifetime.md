@@ -98,7 +98,23 @@ the `logicalDeltaKey` dedup handles).
 
 - Unit: `tests/research/cloudflare/shadow-push-poll.test.ts` (12 cases), cron in-flight cases in
   `shadow-cron.test.ts`, store cases in `shadow-store.test.ts`.
-- Live: after deploy, `cron-status.pollableRepositories` lists both own repositories; the next cron
-  tick polls DentalPresence.in (rebaseline expected); the deploy commit's own push to DiffCI.com
-  produces a `shadow_push_polls` row with `outcome = succeeded` and advances `last_polled_sha` to that
-  commit. Results are recorded in the commit message / `docs/yc/metrics.md` entry for 2026-09-04.
+- Live, deploy 2026-09-04T11:03Z (Worker version `f7952e1c`, source `95edf28`, integrity CURRENT,
+  `pushPollQueueBound: true`):
+  - **DiffCI.com, queue path.** The fix commit's own push at 11:04:12Z was enqueued at 11:04:1xZ
+    (Worker log: `enqueued poll … at 95edf28`), the consumer opened its `shadow_push_polls` row at
+    11:04:17Z and closed it `succeeded` at 11:05:53Z — **96 s**, three times the `waitUntil` limit
+    that killed the previous poll. 3 new commits seen (`f85cf10`, `70d8e48`, `95edf28`), 2 predictions
+    recorded (`f85cf10`'s already existed — the `logicalDeltaKey` dedup), launch slot 8 consumed,
+    `last_polled_sha` advanced to `95edf28`.
+  - **DentalPresence.in, cron safety net.** 11:10Z tick: head check saw `a852252 → db01257`,
+    transition recorded, launch attempted, failed `npm-ci-failed: Command timed out after 120000ms`
+    (recorded in `shadow_cron_runs.errors`, `consecutive_poll_errors` 1). 11:20Z tick: succeeded,
+    re-baselined at `db01257` with 0 predictions exactly as predicted above, counter reset to 0,
+    `last_poll_success_at` written for the first time since 2026-08-21. First poll of this repository
+    in 8 days.
+  - **Bridge.** The same push's ci-reproduction-bridge message ran 11:05:53–11:07:59Z and failed on
+    the same 120 s `npm ci` timeout inside its own container. Under `waitUntil` this failure was
+    invisible; it is now a `shadow_push_polls` row with the error text. The `npm ci` timeout
+    (`prepareContainer`, 120 s) is a pre-existing constraint that bites on a cold container — it
+    also failed withastro/astro's slot 4 earlier the same day — and is left as-is here; it is now
+    measurable rather than silent.
