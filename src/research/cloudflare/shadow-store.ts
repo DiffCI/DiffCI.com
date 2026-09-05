@@ -282,6 +282,9 @@ export interface ShadowStore {
   /** Report access: a private repository's report needs its token. Generates the token on first call. */
   setRepositoryPrivacy(repository: string, isPrivate: boolean): Promise<void>;
   getReportAccess(repository: string): Promise<{ isPrivate: boolean; token?: string } | undefined>;
+  /** Every enrolled repository not removed, with its privacy and report token - the candidates a
+   * signed-in user's report access is checked against (shadow-report-access.ts). Read-only. */
+  listReportAccessCandidates(limit: number): Promise<Array<{ repository: string; state: string; isPrivate: boolean; reportToken?: string }>>;
   /** Sets state/notes for a repository the automatic path found ineligible or observable again. */
   setRepositoryStateWithNote(repository: string, state: ShadowRepositoryState, note: string | undefined): Promise<void>;
   /** Telemetry self-health invariants (research note, "Decisions"): facts a human should never have to
@@ -714,6 +717,14 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
       const r = await db.prepare(`SELECT is_private, report_token FROM shadow_repositories WHERE repository = ?`).bind(repository).first<{ is_private: number | null; report_token: string | null }>();
       if (!r) return undefined;
       return { isPrivate: r.is_private === 1, token: r.report_token ?? undefined };
+    },
+
+    async listReportAccessCandidates(limit) {
+      const { results } = await db
+        .prepare(`SELECT repository, state, is_private, report_token FROM shadow_repositories WHERE state != 'REMOVED' ORDER BY enrolled_at ASC LIMIT ?`)
+        .bind(limit)
+        .all<{ repository: string; state: string; is_private: number | null; report_token: string | null }>();
+      return results.map((r) => ({ repository: r.repository, state: r.state, isPrivate: r.is_private === 1, reportToken: r.report_token ?? undefined }));
     },
 
     async setRepositoryStateWithNote(repository, state, note) {

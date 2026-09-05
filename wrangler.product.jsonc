@@ -63,7 +63,13 @@
   // call), NOT a fetch() to that Worker's own workers.dev URL (blocked outright, error 1042 - see the
   // SYNTHETIC_RUNNER_URL comment above). Same pattern already proven for diffci-preflight ->
   // diffci-github-runner.
-  "services": [{ "binding": "SYNTHETIC_RUNNER_WORKER", "service": "diffci-synthetic-runner" }],
+  "services": [
+    { "binding": "SYNTHETIC_RUNNER_WORKER", "service": "diffci-synthetic-runner" },
+    // 2026-09-05 private-repository reports: the dashboard asks the research Worker which enrolled
+    // repositories GitHub says the signed-in user can access (/v1/shadow/report-access), authenticated
+    // with RESEARCH_DISPATCH_TOKEN (secret, same value as on wrangler.research-sandbox.jsonc).
+    { "binding": "RESEARCH_WORKER", "service": "diffci-research-sandbox" }
+  ],
   "d1_databases": [
     // Writable - this Worker owns diffci-product (accounts/billing/sessions/usage/runners/queue/audit).
     { "binding": "PRODUCT_DB", "database_name": "diffci-product", "database_id": "b3951dbd-e253-46bf-907e-ae07d0998aa5" },
@@ -79,7 +85,7 @@
   //     routes correctly return 503 "billing is not configured" until they are)
   //   LEMONSQUEEZY_VARIANT_IDS - optional JSON, e.g. '{"developer":"123"}'
   //   GITHUB_OAUTH_CLIENT_ID, GITHUB_OAUTH_CLIENT_SECRET - GitHub OAuth App credentials (Part 6) - see
-  //     docs/product/2026-08-22-github-oauth-app-registration.md for the exact registration steps
+  //     docs/product/2026-09-05-github-oauth-app-registration.md for the exact registration steps
   //   CSRF_SECRET - signs the double-submit CSRF token (Part 9); generate with
   //     `openssl rand -base64 32` or equivalent, never reused across environments
 }

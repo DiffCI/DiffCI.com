@@ -34,6 +34,7 @@ import { makeD1SessionStore } from "../../auth/sessions.js";
 import { authenticateRequest } from "../../auth/authenticate.js";
 import { parseAuthConfig, AuthConfigError, type RawAuthEnv } from "../../auth/config.js";
 import { makeD1OAuthStore } from "../../auth/oauth-store.js";
+import { loadUserReports } from "../report-access.js";
 import { buildGithubAuthorizeUrl } from "../../auth/oauth.js";
 import { handleGithubCallback } from "../../auth/login.js";
 import { generateCsrfToken, verifyCsrfToken, CSRF_COOKIE_NAME, CSRF_HEADER_NAME } from "../../auth/csrf.js";
@@ -125,6 +126,11 @@ export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   GITHUB_APP_ID?: string;
   GITHUB_APP_PRIVATE_KEY?: string; // PKCS#8 PEM (secret)
   GITHUB_APP_WEBHOOK_SECRET?: string; // secret
+  // 2026-09-05 private-repository reports: Service Binding to diffci-research-sandbox (a plain fetch to
+  // its workers.dev URL is blocked, error 1042) plus the research dispatch token it authenticates with.
+  RESEARCH_WORKER?: { fetch(request: Request): Promise<Response> };
+  RESEARCH_DISPATCH_TOKEN?: string; // secret - the same value the research Worker holds
+  DIFFCI_REPORT_BASE_URL?: string; // optional override of the public report route
   SYNTHETIC_RUNNER_WORKER?: { fetch(request: Request): Promise<Response> }; // real Service Binding to diffci-synthetic-runner - see wrangler.product.jsonc's own comment on why this exists instead of a plain fetch(SYNTHETIC_RUNNER_URL)
 }
 
@@ -386,8 +392,15 @@ export default {
       if (!principal) {
         return htmlResponse(renderSignedOut({ githubConfigured: Boolean(env.GITHUB_OAUTH_CLIENT_ID && env.GITHUB_OAUTH_CLIENT_SECRET) }));
       }
-      const [user, organizations] = await Promise.all([store.getUser(principal.userId), store.listOrganizationsForUser(principal.userId)]);
-      return htmlResponse(renderHome({ email: user?.email ?? "", organizations }));
+      const [user, organizations, login] = await Promise.all([
+        store.getUser(principal.userId),
+        store.listOrganizationsForUser(principal.userId),
+        oauthStore.getProviderLoginForUser(principal.userId, "github").catch(() => null), // no OAuth schema = no login to look up
+      ]);
+      // 2026-09-05: the user's shadow reports, authorised by GitHub's collaborator answer through the
+      // research Worker (Service Binding + dispatch token). Unavailable is rendered as unavailable.
+      const reports = await loadUserReports({ researchWorker: env.RESEARCH_WORKER, dispatchToken: env.RESEARCH_DISPATCH_TOKEN, reportBaseUrl: env.DIFFCI_REPORT_BASE_URL }, login);
+      return htmlResponse(renderHome({ email: user?.email ?? "", organizations, reports }));
     }
 
     const consoleInvoicesMatch = url.pathname.match(/^\/app\/orgs\/([^/]+)\/invoices\/?$/);

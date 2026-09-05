@@ -58,7 +58,7 @@ async function tenant(db: ReturnType<typeof freshProductDb>, seed: { email: stri
 
 describe("product-worker.ts - self-serve install, ingest, and isolation", () => {
   it("a stranger connects a repository, is handed an installation, and their CI's report lands and is readable", async () => {
-    const db = freshProductDb(["ingest", "usage"]);
+    const db = freshProductDb(["ingest", "usage", "auth"]);
     const env = buildEnv(db);
     const acme = await tenant(db, { email: "dev@acme.test", slug: "acme" });
 
@@ -115,7 +115,7 @@ describe("product-worker.ts - self-serve install, ingest, and isolation", () => 
   });
 
   it("refuses ingest without a credential, and with one belonging to another repository", async () => {
-    const db = freshProductDb(["ingest", "usage"]);
+    const db = freshProductDb(["ingest", "usage", "auth"]);
     const env = buildEnv(db);
     const acme = await tenant(db, { email: "dev@acme.test", slug: "acme" });
     const other = await tenant(db, { email: "dev@other.test", slug: "other" });
@@ -139,7 +139,7 @@ describe("product-worker.ts - self-serve install, ingest, and isolation", () => 
   });
 
   it("one organization cannot read, mint for, or erase another's data through any route", async () => {
-    const db = freshProductDb(["ingest", "usage"]);
+    const db = freshProductDb(["ingest", "usage", "auth"]);
     const env = buildEnv(db);
     const acme = await tenant(db, { email: "dev@acme.test", slug: "acme" });
     const other = await tenant(db, { email: "dev@other.test", slug: "other" });
@@ -167,7 +167,7 @@ describe("product-worker.ts - self-serve install, ingest, and isolation", () => 
   });
 
   it("erases on request, which is what the data-handling page promises", async () => {
-    const db = freshProductDb(["ingest", "usage"]);
+    const db = freshProductDb(["ingest", "usage", "auth"]);
     const env = buildEnv(db);
     const acme = await tenant(db, { email: "dev@acme.test", slug: "acme" });
     const repo = (await call(env, "POST", `/v1/organizations/${acme.org.id}/repositories`, { headers: acme.headers, body: { providerRepositoryId: "111", ownerName: "acme/checkout" } })).body
@@ -184,7 +184,7 @@ describe("product-worker.ts - self-serve install, ingest, and isolation", () => 
   });
 
   it("serves the console: signed out, signed in, and never another organization's pages", async () => {
-    const db = freshProductDb(["ingest", "usage"]);
+    const db = freshProductDb(["ingest", "usage", "auth"]);
     const env = buildEnv(db);
     const acme = await tenant(db, { email: "dev@acme.test", slug: "acme" });
     const other = await tenant(db, { email: "dev@other.test", slug: "other" });
@@ -224,7 +224,7 @@ describe("product-worker.ts - self-serve install, ingest, and isolation", () => 
   });
 
   it("a revoked credential stops working immediately", async () => {
-    const db = freshProductDb(["ingest", "usage"]);
+    const db = freshProductDb(["ingest", "usage", "auth"]);
     const env = buildEnv(db);
     const acme = await tenant(db, { email: "dev@acme.test", slug: "acme" });
     const repo = (await call(env, "POST", `/v1/organizations/${acme.org.id}/repositories`, { headers: acme.headers, body: { providerRepositoryId: "111", ownerName: "acme/checkout" } })).body

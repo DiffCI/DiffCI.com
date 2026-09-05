@@ -27,6 +27,7 @@ import { reconcilePrediction } from "../../shadow/reconcile.js";
 import { confirmNoWorkflowRuns, decideEvidenceRunTerminal, decideNoMatchingWorkflowTerminal, precheckNoMatchingWorkflowTerminal } from "./shadow-reconcile-terminal.js";
 import { normaliseEvidenceWorkflowPaths } from "../../shadow/execution-outcome.js";
 import { identifyRepository, makeGitHubIdentificationSource, type IdentificationJobDeps } from "./shadow-identification-job.js";
+import { isValidGitHubLogin, listReportAccessForLogin, makeGitHubCollaboratorCheck } from "./shadow-report-access.js";
 import { verifyDerivedShape } from "../../shadow/workflow-identification.js";
 import { computeLogicalEventKey } from "../../shadow/event-identity.js";
 import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps, type VerifiedSourceArchive } from "./shadow-cron.js";
@@ -2412,6 +2413,25 @@ export default {
       const outcome = await identifyRepository(makeIdentificationDeps(env), repository);
       const ident = await makeD1ShadowStore(env.RESEARCH_DB).getIdentification(repository);
       return json({ ok: true, outcome, identification: ident ? { ...ident, derivation: ident.derivationJson ? JSON.parse(ident.derivationJson) : undefined, derivationJson: undefined } : null });
+    }
+    // 2026-09-05 private-repository reports: which enrolled repositories may this GitHub login see?
+    // Answered by GitHub (collaborator check with the Shadow App's installation token), consumed by the
+    // product dashboard over its Service Binding. Unknown answers are returned as unknown, never as access.
+    if (request.method === "GET" && url.pathname === "/v1/shadow/report-access") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      const login = url.searchParams.get("login") ?? "";
+      if (!isValidGitHubLogin(login)) return json({ ok: false, error: "login must be a GitHub username" }, 400);
+      const result = await listReportAccessForLogin(
+        {
+          store: makeD1ShadowStore(env.RESEARCH_DB),
+          isCollaborator: makeGitHubCollaboratorCheck((repository) => githubTokenForRepo(env, repository)),
+          log: (message) => console.log(message),
+        },
+        login,
+      );
+      return json({ ok: true, ...result });
     }
     if ((request.method === "GET" || request.method === "POST") && url.pathname === "/v1/shadow/evidence-workflow") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {

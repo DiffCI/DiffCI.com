@@ -92,8 +92,8 @@
   </p>
   <p>
     A <strong>private</strong> repository’s report is not public by URL: its link (with a report token) is
-    shown in the DiffCI dashboard after signing in with GitHub, so nobody can read your CI timings by
-    guessing the repository name.
+    shown in the <a href="https://app.diffci.com/app">DiffCI dashboard</a> after signing in with GitHub - GitHub itself
+    confirms you can access the repository - so nobody can read your CI timings by guessing the repository name.
   </p>
   <form class="report-lookup" onsubmit="event.preventDefault(); var v=document.getElementById('repo-input').value.trim(); if(v) window.location.href='https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/report?repository=' + encodeURIComponent(v) + '&days=7';">
     <input id="repo-input" type="text" placeholder="owner/repository" required pattern="[A-Za-z0-9._-]+/[A-Za-z0-9._-]+">

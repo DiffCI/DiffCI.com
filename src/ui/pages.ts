@@ -10,6 +10,7 @@
  * permission check - and none of them can, since they never see a store.
  */
 import type { Organization, Repository } from "../product/types.js";
+import type { UserReports } from "../product/report-access.js";
 import type { InstallInstructions } from "../ingest/install.js";
 import type { ObservationRecord } from "../ingest/types.js";
 import type { ObservationSummary } from "../ingest/store.js";
@@ -47,12 +48,13 @@ export function renderSignedOut(options: { githubConfigured: boolean }): string 
   });
 }
 
-export function renderHome(options: { email: string; organizations: Organization[] }): string {
+export function renderHome(options: { email: string; organizations: Organization[]; reports?: UserReports }): string {
   return layout({
     title: "Organizations",
     subtitle: options.email,
     signedIn: true,
     body: html`
+      ${options.reports ? renderUserReports(options.reports) : html``}
       <h1>Your organizations</h1>
       <p class="lede">An organization is the billing and tenancy boundary. Repositories belong to exactly one.</p>
       ${options.organizations.length === 0
@@ -85,6 +87,36 @@ export function renderHome(options: { email: string; organizations: Organization
       </div>
     `,
   });
+}
+
+/** 2026-09-05: the signed-in user's shadow reports - every enrolled repository GitHub confirms they can
+ * access, with the private ones' tokenised links. Failure to ask is said out loud, never shown as an
+ * empty list: "no repositories" is a claim this page may only make after GitHub answered. */
+function renderUserReports(reports: UserReports): SafeHtml {
+  if (reports.status === "unavailable") {
+    return html`
+      <h1>Your shadow reports</h1>
+      <p class="empty">Report access could not be checked right now: ${reports.reason}.</p>`;
+  }
+  return html`
+    <h1>Your shadow reports</h1>
+    <p class="lede">Repositories with DiffCI installed that GitHub confirms <code>${reports.login}</code> can access. A private repository's link carries its report token - share it only with people who may read that repository's CI timings.</p>
+    ${reports.links.length === 0
+      ? html`<p class="empty">No repository with DiffCI installed lists you as a collaborator yet. Just installed? Identification takes about a minute - reload after that.</p>`
+      : html`<table>
+          <thead><tr><th>Repository</th><th>Visibility</th><th>Observation</th><th></th></tr></thead>
+          <tbody>
+            ${reports.links.map(
+              (link) => html`<tr>
+                <td><code>${link.repository}</code></td>
+                <td>${link.isPrivate ? "private" : "public"}</td>
+                <td>${link.state}</td>
+                <td>${link.url ? html`<a href="${link.url}">Open report</a>` : html`<span class="muted">report token not generated yet - reload in a minute</span>`}</td>
+              </tr>`,
+            )}
+          </tbody>
+        </table>`}
+    ${reports.unknown.length > 0 ? html`<p class="muted">Could not check: ${reports.unknown.join(", ")} (GitHub did not answer for these; they are not hidden, just unverified).</p>` : html``}`;
 }
 
 export interface OrganizationPageData {

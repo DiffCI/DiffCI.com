@@ -48,6 +48,9 @@ export interface OAuthStore {
   getUserIdForProviderIdentity(provider: "github", providerUserId: string): Promise<string | null>;
   /** Keeps provider_login current on every login, without changing the identity lookup key. */
   touchProviderLogin(provider: "github", providerUserId: string, providerLogin: string): Promise<void>;
+  /** The user's current GitHub username (display/authorization-lookup only - refreshed on every login),
+   * or null when this user never signed in with GitHub. */
+  getProviderLoginForUser(userId: string, provider: "github"): Promise<string | null>;
 }
 
 export function makeD1OAuthStore(db: D1Binding): OAuthStore {
@@ -93,6 +96,11 @@ export function makeD1OAuthStore(db: D1Binding): OAuthStore {
 
     async touchProviderLogin(provider, providerUserId, providerLogin) {
       await db.prepare(`UPDATE provider_identities SET provider_login = ?, updated_at = ? WHERE provider = ? AND provider_user_id = ?`).bind(providerLogin, nowIso(), provider, providerUserId).run();
+    },
+
+    async getProviderLoginForUser(userId, provider) {
+      const row = await db.prepare(`SELECT provider_login FROM provider_identities WHERE user_id = ? AND provider = ? ORDER BY updated_at DESC LIMIT 1`).bind(userId, provider).first<{ provider_login: string | null }>();
+      return row?.provider_login ?? null;
     },
   };
 }
