@@ -706,3 +706,30 @@ automatic and how a private repository's report is reached.
 **Founder one-time action done (2026-09-05):** the Shadow App's Setup URL is `https://diffci.com/welcome`
 with redirect-on-update, so GitHub lands installers on the welcome page; verified live with GitHub's
 query parameters. Nothing per install remains. The stranger install journey is now complete end to end.
+
+### Fix 6 addendum — private-repository reports reachable, 2026-09-05 (`ebb4d96`, `ab959df`)
+
+**Gap found after the founder set the Setup URL:** the dashboard's sign-in was unconfigured, so a private
+repository's report token - shown only there - could reach nobody. Public-repository installs were
+complete; private ones enrolled and observed correctly but their owners could not read the report, and
+the welcome page promised otherwise. Recorded as an overstatement in the earlier closing report.
+
+**Fix.** The founder registered a GitHub OAuth App (login only, `read:user user:email`; runbook in
+`docs/product/2026-09-05-github-oauth-app-registration.md`) and set its credentials plus `CSRF_SECRET`
+on the product Worker. Authorisation is GitHub's own answer, not ours: the research Worker's new
+`GET /v1/shadow/report-access?login=` (dispatch token) asks, with the Shadow App's installation token,
+whether that login is a collaborator on each App-installed repository (`shadow-report-access.ts`);
+204 is access, 404 is not, anything else is *unknown* and rendered as "could not check", never as
+access and never as "no repositories". Only App-installed repositories are candidates - the polled
+corpus has no installer. The product dashboard calls it over a Service Binding (`RESEARCH_WORKER`) and
+lists the user's accessible repositories with tokenised links for private ones; every failure is
+"unavailable, because …" rather than an empty list. The private token appears nowhere else.
+
+**Verified live:** sign-in button rendered; `/auth/github` redirects to GitHub with the
+`app.diffci.com` callback and identity-only scopes; report-access for the founder login returns both
+private repositories with tokens and for `octocat` returns none, `unknown: []`. **Outstanding:** the
+product Worker's `RESEARCH_DISPATCH_TOKEN` secret is founder-set (the automated attempt was blocked by
+the assistant's own permission gate); until it is set the dashboard says the report service is not
+connected. Deploy note: re-running `shadow:deploy` on an already-uploaded commit is refused by the
+source-integrity gate (archive hash differs run to run); the Worker itself had deployed - the gate
+protects the source record, not the deploy.
