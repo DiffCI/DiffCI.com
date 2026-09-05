@@ -213,6 +213,11 @@ Working tree is clean; `main` is up to date with `origin/main`.
    2F clock restarts. ~~Add telemetry self-health invariants~~ — **first set live** on
    `/v1/shadow/cron-status` → `selfHealth` (never-attempted backlog + age, unlabelled ground truth,
    verified rows awaiting stage economics, unconfigured / unverified repositories).
+   **Freeze (2026-09-05):** step 1 CLOSED @ `b163a83`, step 2 CLOSED @ `54122be`, step 3 CLOSED @
+   `8d0f365`, all production-verified; step 4 OPEN with the success condition recorded in the note
+   (two consecutive fresh commits progress queued → assigned → executing → terminal with no further
+   push, with per-stage lifecycle provenance). Until then: test-stage work is measured and correctly
+   classified, avoidable test-stage work remains UNKNOWN where execution is inseparable.
    **Founder decisions on record:** steps 1 and 2 CLOSED / PRODUCTION-VERIFIED at `54122be`; the six
    corpus repositories stay unconfigured until mechanically verified (never "ci.yml by name"); the 77
    contaminated DiffCI.com rows stay immutable and excluded (a retrospective dataset, if ever wanted,

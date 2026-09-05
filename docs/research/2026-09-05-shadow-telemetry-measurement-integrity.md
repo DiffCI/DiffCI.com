@@ -432,3 +432,36 @@ registered. The step-4 repair is unchanged: make the runner reliable and make it
 **Still open after Fix 3:** step 4 (runner); corpus evidence workflows (mechanical verification, not
 `ci.yml` by name); a retrospective dataset for the 77 contaminated rows if ever wanted; a manual
 trigger for the stage sweep (today it runs only from the cron tick).
+
+## Freeze (founder, 2026-09-05)
+
+| Step | State |
+|---|---|
+| 1 — reconciliation fairness + explicit terminal unevaluable | **CLOSED / PRODUCTION-VERIFIED @ `b163a83`** |
+| 2 — explicit workflow identity + execution-outcome admission + historical validity labelling | **CLOSED / PRODUCTION-VERIFIED @ `54122be`** |
+| 3 — stage classification on admitted evidence, separate economics dataset, report | **CLOSED / PRODUCTION-VERIFIED @ `8d0f365`** |
+| Historical contamination | **PRESERVED / EXCLUDED**, not rewritten |
+| 4 — runner lifecycle / independent forward progress | **OPEN** |
+
+What steps 1–3 establish is a clean evidence chain: *prediction → VERIFIED ground truth → identified
+evidence run → actual jobs/steps → explicit stage classification → separate economics dataset →
+report*. `UNKNOWN` is now a meaningful result, not missing functionality. The economics statement to
+carry until step 4 produces separable observations: **test-stage work is now measured and correctly
+classified, but avoidable test-stage work remains UNKNOWN where execution is inseparable.**
+
+Not to be done before step 4: manual stage-sweep trigger (operational, not correctness-critical);
+corpus repository configuration (a later, bounded qualification exercise - configuration requires
+mechanical verification).
+
+**Step 4 success condition (founder).** Not "the runner starts jobs again". Required: *for a
+controlled new commit, the intended evidence workflow progresses from queued → runner assigned →
+executing → terminal without requiring a subsequent push or any other unrelated repository event* -
+and it must repeat: at least **two consecutive fresh commits** execute without either needing another
+push to release it; if either stalls, the qualification sequence resets. Provenance must distinguish
+`workflow queued → runner requested → runner registered/online → job assigned → execution started →
+execution completed → runner disposition`, so a future failure is attributable to GitHub scheduling,
+runner provisioning, registration, assignment, execution, or teardown rather than "runner failed".
+The eight already-queued runs are incident evidence, contaminated by backlog dynamics: preserved and
+observed, never the primary proof. Once step 4 passes, a fresh DiffCI.com run with separate
+`Typecheck` / `Test` steps flows through VERIFIED admission and stage economics on its own - the
+end-to-end production check, without a manufactured sweep result.
