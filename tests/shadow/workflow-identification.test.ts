@@ -251,3 +251,78 @@ describe("verifyDerivedShape", () => {
     assert.equal(verifyDerivedShape(config, [{ jobName: "check" }]).ok, true);
   });
 });
+
+describe("corpus shapes found live on 2026-09-05", () => {
+  it("unjs/nitro: test steps nested under a `parallel:` group are seen; pnpm vitest resolves to a test step", () => {
+    const nitro = `name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  tests-checks:
+    runs-on: \${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - run: pnpm install
+      - run: pnpm build
+      - parallel:
+          - run: pnpm typecheck
+          - run: pnpm vitest run test/unit
+          - run: pnpm vitest run test/minimal
+`;
+    const r = identifyEvidenceWorkflow({ workflows: [{ path: ".github/workflows/ci.yml", content: nitro }], packageScripts: { typecheck: "tsc --noEmit", build: "obuild" }, defaultBranch: "main" }, NOW);
+    assert.equal(r.status, "IDENTIFIED");
+    if (r.status !== "IDENTIFIED") return;
+    const steps = r.stageClassification.steps;
+    assert.deepEqual(steps.filter((s) => s.stage === "test").map((s) => s.step), ["Run pnpm vitest run test/unit", "Run pnpm vitest run test/minimal"]);
+    assert.deepEqual(steps.find((s) => s.step === "Run pnpm typecheck"), { job: "tests-checks", step: "Run pnpm typecheck", stage: "typecheck" });
+  });
+
+  it("withastro/astro: `turbo run test` and a matrix-provided test script both count as test steps", () => {
+    const astro = `name: CI
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    name: "Test (\${{ matrix.TEST_SUITE.name }}): \${{ matrix.os }}"
+    runs-on: \${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        TEST_SUITE:
+          - name: astro
+            script: pnpm run test:citgm
+          - name: playwright
+            script: pnpm run test:e2e
+    steps:
+      - run: pnpm install
+      - name: Build Packages
+        run: turbo run build --filter=astro
+      - name: Test \${{ matrix.TEST_SUITE.name }}
+        run: \${{ matrix.TEST_SUITE.script }}
+  language:
+    name: Test (language-tools)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test
+        run: node ./scripts/turbo-run-affected.js test --filter=astro
+      - name: Test (Linux)
+        run: turbo run test --filter="@astrojs/language-server"
+`;
+    const r = identifyEvidenceWorkflow({ workflows: [{ path: ".github/workflows/ci.yml", content: astro }], packageScripts: { "test:citgm": "pnpm run build && vitest run --coverage", "test:e2e": "playwright test" }, defaultBranch: "main" }, NOW);
+    assert.equal(r.status, "IDENTIFIED");
+    if (r.status !== "IDENTIFIED") return;
+    const steps = r.stageClassification.steps;
+    const matrixStep = steps.find((s) => s.step === "Test ${{ matrix.TEST_SUITE.name }}");
+    assert.ok(matrixStep, "the matrix step was expanded through both suites");
+    assert.equal(matrixStep!.stage, "test");
+    assert.equal(matrixStep!.inseparable, true, "one suite builds then tests, the other is e2e - mixed, so inseparable");
+    assert.equal(steps.find((s) => s.step === "Test (Linux)")?.stage, "test", "turbo run test executes the packages' test scripts");
+    assert.equal(steps.find((s) => s.step === "Build Packages")?.stage, "build");
+  });
+});

@@ -90,6 +90,10 @@ export type IdentificationResult =
 // --- command classification -------------------------------------------------------------------
 
 const TEST_RUNNERS = /\b(vitest|jest|mocha|ava|uvu|tap|tape|node\s+--test|tsx\s+--test|ts-node\s+--test|bun\s+test|deno\s+test|c8\s|nyc\s)\b/;
+// Monorepo task runners executing the packages' own test scripts: `turbo run test`, `turbo test`,
+// `nx test`, `nx run-many -t test`, `lerna run test`, `pnpm -r test` / `pnpm --filter x test`.
+// Mechanical: the command runs a task literally named test/test:* across packages.
+const TASK_RUNNER_TEST = /\b(turbo\s+(run\s+)?test(:[\w-]+)?\b|nx\s+(test\b|run-many\b[^\n]*\b(-t|--targets?)[= ]+test\b)|lerna\s+run\s+test\b|pnpm\s+(-r|--recursive|--filter[= ]\S+)(\s+\S+)*\s+(run\s+)?test(:[\w-]+)?\b)/;
 const E2E_RUNNERS = /\b(playwright\s+test|cypress\s+run|cypress\s+open|wdio|nightwatch|puppeteer)\b/;
 const TYPECHECK = /(^|\s)(tsc|vue-tsc|svelte-check)(\s|$)|--noEmit|\btypecheck\b|\btype-check\b/;
 const LINT = /\b(eslint|prettier|biome|oxlint|stylelint|tslint|dprint|markdownlint|knip)\b/;
@@ -101,7 +105,7 @@ export function classifyCommand(command: string): CiStage | "install" | undefine
   if (!c) return undefined;
   if (INSTALL.test(c)) return "install";
   if (E2E_RUNNERS.test(c)) return "e2e";
-  if (TEST_RUNNERS.test(c)) return "test";
+  if (TEST_RUNNERS.test(c) || TASK_RUNNER_TEST.test(c)) return "test";
   if (TYPECHECK.test(c)) return "typecheck";
   if (LINT.test(c)) return "lint";
   if (BUILD.test(c)) return "build";
@@ -207,6 +211,65 @@ export function defaultStepName(step: Yaml): string {
   return "Run";
 }
 
+/** GitHub's step groups (`parallel:` / `group:` lists of steps) are flattened - the nested steps run and
+ * are named exactly as top-level ones. Unknown shapes are skipped, never guessed. */
+export function flattenSteps(steps: readonly unknown[]): Yaml[] {
+  const out: Yaml[] = [];
+  for (const s of steps) {
+    const step = asRecord(s);
+    if (!step) continue;
+    const nested = Array.isArray(step.parallel) ? step.parallel : Array.isArray(step.group) ? step.group : undefined;
+    if (nested) {
+      out.push(...flattenSteps(nested));
+      continue;
+    }
+    out.push(step);
+  }
+  return out;
+}
+
+type MatrixValues = Map<string, unknown[]>;
+
+/** `strategy.matrix` as a map of variable -> candidate values (objects allowed, e.g. { name, script }). */
+export function matrixValues(matrix: unknown): MatrixValues {
+  const out: MatrixValues = new Map();
+  const m = asRecord(matrix);
+  if (!m) return out;
+  for (const [k, v] of Object.entries(m)) {
+    if (k === "include" || k === "exclude") continue;
+    if (Array.isArray(v)) out.set(k, v);
+  }
+  const include = Array.isArray(m.include) ? m.include : [];
+  for (const entry of include) {
+    const r = asRecord(entry);
+    if (!r) continue;
+    for (const [k, v] of Object.entries(r)) out.set(k, [...(out.get(k) ?? []), v]);
+  }
+  return out;
+}
+
+/**
+ * A `run:` that references `${{ matrix.X }}` or `${{ matrix.X.field }}` executes one of the matrix's values
+ * per job instance. Every candidate value is substituted (the union of what can execute); an
+ * unresolvable reference is left in place and proves nothing.
+ */
+export function expandMatrixReferences(run: string, matrix: MatrixValues): string[] {
+  const refs = [...run.matchAll(/\$\{\{\s*matrix\.([A-Za-z0-9_-]+)(?:\.([A-Za-z0-9_-]+))?\s*\}\}/g)];
+  if (refs.length === 0) return [run];
+  let texts = [run];
+  for (const ref of refs) {
+    const values = matrix.get(ref[1]!) ?? [];
+    const substitutions = values
+      .map((v) => (ref[2] ? asRecord(v)?.[ref[2]] : v))
+      .filter((v): v is string | number | boolean => typeof v === "string" || typeof v === "number" || typeof v === "boolean")
+      .map(String);
+    if (substitutions.length === 0) continue;
+    texts = texts.flatMap((t) => substitutions.map((sub) => t.split(ref[0]).join(sub)));
+    if (texts.length > 64) texts = texts.slice(0, 64);
+  }
+  return texts;
+}
+
 export function parseWorkflow(file: WorkflowFile, input: IdentificationInput): WorkflowCandidate {
   const fileName = file.path.split("/").pop() ?? file.path;
   const base: WorkflowCandidate = { path: file.path, name: fileName, triggers: { push: false, pushDefaultBranch: false, pullRequest: false }, jobs: [], testSteps: 0, separableTestSteps: 0, score: 0 };
@@ -231,10 +294,11 @@ export function parseWorkflow(file: WorkflowFile, input: IdentificationInput): W
     if (typeof job.uses === "string") continue; // reusable-workflow call: its steps live elsewhere
     const jobName = typeof job.name === "string" && job.name.trim() ? job.name.trim() : key;
     const steps: ResolvedStep[] = [];
-    for (const s of Array.isArray(job.steps) ? job.steps : []) {
-      const step = asRecord(s);
-      if (!step || typeof step.run !== "string") continue;
-      const commands = resolveCommands(splitCommands(step.run), input.packageScripts);
+    const matrix = matrixValues(asRecord(job.strategy)?.matrix);
+    for (const step of flattenSteps(Array.isArray(job.steps) ? job.steps : [])) {
+      if (typeof step.run !== "string") continue;
+      const expanded = expandMatrixReferences(step.run, matrix);
+      const commands = resolveCommands(expanded.flatMap((text) => splitCommands(text)), input.packageScripts);
       const cls = classifyStep(commands);
       steps.push({ jobKey: key, jobName, stepName: defaultStepName(step), commands, ...cls });
     }

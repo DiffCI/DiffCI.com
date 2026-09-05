@@ -12,6 +12,9 @@
   "main": "./src/site/site-worker.ts",
   "assets": {
     "binding": "ASSETS",
+    // Without this, a request that matches an asset is served without ever invoking the script - the
+    // http->https and www->apex redirects would never run (observed 2026-09-05: http:// answered 200).
+    "run_worker_first": true,
     "directory": "./site",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page"
@@ -32,7 +35,9 @@
   // http:// currently serves the page without redirecting) and a www record (www.diffci.com returns 522).
   "routes": [
     { "pattern": "diffci.com", "custom_domain": true },
-    // 2026-09-05: www used to 522 (no DNS). A custom domain creates the record; the Worker redirects to the apex.
-    { "pattern": "www.diffci.com", "custom_domain": true }
+    // 2026-09-05: www used to 522. The hostname already has an externally managed DNS record (Cloudflare
+    // refuses a custom domain over it, code 100117), so the Worker is attached as a ROUTE on that record and
+    // redirects to the apex. If the record is ever removed, switch this back to custom_domain: true.
+    { "pattern": "www.diffci.com/*", "zone_name": "diffci.com" }
   ]
 }

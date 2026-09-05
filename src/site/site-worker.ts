@@ -13,7 +13,16 @@ export interface SiteEnv {
 export default {
   async fetch(request: Request, env: SiteEnv): Promise<Response> {
     const url = new URL(request.url);
-    if (url.protocol === "http:" || url.hostname === "www.diffci.com") {
+    // Cloudflare may present the URL as https even when the visitor connected over http; the original
+    // scheme is in the cf-visitor header.
+    const visitorScheme = (() => {
+      try {
+        return (JSON.parse(request.headers.get("cf-visitor") ?? "{}") as { scheme?: string }).scheme;
+      } catch {
+        return undefined;
+      }
+    })();
+    if (url.protocol === "http:" || visitorScheme === "http" || url.hostname === "www.diffci.com") {
       url.protocol = "https:";
       if (url.hostname === "www.diffci.com") url.hostname = "diffci.com";
       return Response.redirect(url.toString(), 301);
