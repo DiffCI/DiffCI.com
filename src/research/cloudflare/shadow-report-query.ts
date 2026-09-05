@@ -123,14 +123,14 @@ export async function buildLiveShadowReport(db: D1Binding, repository: string, d
   const { results: rawRows } = await db
     .prepare(
       `SELECT e.logical_delta_key, e.stage, e.repository, e.head_sha,
-              [ || e.evidence_run_id || ] AS workflow_run_ids, e.job_ids, e.full_workload_ms,
+              '[' || CAST(e.evidence_run_id AS TEXT) || ']' AS workflow_run_ids, e.job_ids, e.full_workload_ms,
               e.tests_total_full, e.tests_selected_diffci, e.tests_selected_path, e.diffci_analysis_overhead_ms, e.plan_mode,
               e.selected_workload_ms, e.selected_workload_confidence, e.avoidable_ms, e.avoidable_tier, e.estimation_method,
               e.estimator_version, e.observed_at AS estimated_at, 2 AS schema_version, e.observed_at,
               e.classification_basis, e.evidence_workflow_path
        FROM shadow_stage_economics e
        JOIN shadow_predictions p ON p.logical_delta_key = e.logical_delta_key
-       WHERE e.repository = ? AND e.evidence_validity = VERIFIED AND p.created_at >= ? AND p.created_at < ?
+       WHERE e.repository = ? AND e.evidence_validity = 'VERIFIED' AND p.created_at >= ? AND p.created_at < ?
        ORDER BY e.observed_at ASC`,
     )
     .bind(repository, windowStartIso, windowEndIso)
@@ -142,7 +142,7 @@ export async function buildLiveShadowReport(db: D1Binding, repository: string, d
     .prepare(
       `SELECT COALESCE(SUM(g.relevant_failures_evaluable), 0) as evaluable, COALESCE(SUM(g.failures_preserved_by_diffci), 0) as preserved
        FROM shadow_ground_truth g JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
-       WHERE p.repository = ? AND g.evidence_validity = VERIFIED`,
+       WHERE p.repository = ? AND g.evidence_validity = 'VERIFIED'`,
     )
     .bind(repository)
     .first<{ evaluable: number; preserved: number }>();

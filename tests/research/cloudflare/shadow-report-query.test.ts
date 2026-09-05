@@ -114,9 +114,9 @@ describe("buildLiveShadowReport - evidence admission (2026-09-05)", () => {
     const db = fakeD1({ predictions: [{}], observations: [observationRow()], groundTruth: [] });
     const spy: D1Binding = { prepare(q: string) { seen.push(q); return db.prepare(q); } };
     await buildLiveShadowReport(spy, "acme/web", 7);
-    assert.ok(seen.some((q) => q.includes("FROM shadow_stage_economics e") && q.includes("e.evidence_validity = VERIFIED")));
+    assert.ok(seen.some((q) => q.includes("FROM shadow_stage_economics e") && q.includes("e.evidence_validity = 'VERIFIED'")));
     assert.ok(!seen.some((q) => q.includes("shadow_economics_observations")), "the legacy table is retired from the report");
-    assert.ok(seen.some((q) => q.includes("relevant_failures_evaluable") && q.includes("g.evidence_validity = VERIFIED")), "safety counts VERIFIED rows only");
+    assert.ok(seen.some((q) => q.includes("relevant_failures_evaluable") && q.includes("g.evidence_validity = 'VERIFIED'")), "safety counts VERIFIED rows only");
   });
 
   it("contaminated ground truth never reaches the safety figures", async () => {
