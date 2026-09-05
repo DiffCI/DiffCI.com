@@ -15,7 +15,10 @@ on:
 
 jobs:
   check:
-    runs-on: [self-hosted, cloudflare]
+    # 2026-09-05 (repair step 4): a job-unique label pins the ephemeral runner spawned for this job to
+    # THIS job. Every runner used to register with the same two labels, so GitHub handed each new runner
+    # the oldest queued job and new work was starved by its own backlog (research note, Fix 4).
+    runs-on: [self-hosted, cloudflare, "diffci-job-${{ github.run_id }}-${{ github.job }}"]
     steps:
       - uses: actions/checkout@v4
         with:

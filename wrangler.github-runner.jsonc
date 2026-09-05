@@ -19,6 +19,26 @@
   // deployed (removing it isn't necessary and Workers can answer on multiple hostnames at once) but
   // GitHub no longer calls it.
   "routes": [{ "pattern": "runner.diffci.com", "custom_domain": true }],
+  // 2026-09-05 (repair step 4): dispatch runs from a Queue consumer, never from the webhook handler's
+  // ctx.waitUntil() (cancelled ~30 s after the response - the live tail showed every dispatch
+  // "canceled" at 29.6 s with no record of the runner's fate). One message per GitHub job; the consumer
+  // owns the whole runner lifecycle (<= 10 min exec inside the 15-minute consumer limit). max_retries
+  // 2 with the consumer's own delayed retry on a capacity/start failure; a deterministic failure is
+  // stopped by MAX_DISPATCH_ATTEMPTS in runner-dispatch.ts and stays visible in runner_job_lifecycle.
+  "queues": {
+    "producers": [{ "binding": "RUNNER_DISPATCH_QUEUE", "queue": "diffci-runner-dispatch" }],
+    "consumers": [{ "queue": "diffci-runner-dispatch", "max_batch_size": 1, "max_batch_timeout": 0, "max_retries": 2, "max_concurrency": 3 }]
+  },
+  // Lifecycle provenance lives in the same D1 as the shadow tables (runner_job_lifecycle,
+  // runner_job_events) so one query joins "which run was the evidence" with "how did its runner live".
+  "d1_databases": [
+    { "binding": "RUNNER_DB", "database_name": "diffci-research", "database_id": "84ddc2e5-0f1d-424f-8bfc-81f4e39dc534" }
+  ],
+  // Reconciler: every 5 minutes, queued jobs that never got a dispatch, whose dispatch failed, or whose
+  // dispatch went stale are re-enqueued (runner-dispatch.ts decideReconcileDispatches) - the safety net
+  // for a lost delivery, a cancelled consumer, or the container ceiling. GitHub never re-delivers
+  // workflow_job.queued, so without this a job whose first dispatch died waited 24 h and was cancelled.
+  "triggers": { "crons": ["*/5 * * * *"] },
   //
   // No `vars` block for secrets - GITHUB_WEBHOOK_SECRET, GITHUB_APP_ID, and GITHUB_APP_PRIVATE_KEY are
   // set with `wrangler secret put <NAME> --config wrangler.github-runner.jsonc`, never committed here.
