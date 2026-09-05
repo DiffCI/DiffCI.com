@@ -527,3 +527,15 @@ them a pinned runner (never the reverse). The observation job stays queued until
 re-dispatches it; the hazard disappears once the legacy backlog is drained, which the reconciler is
 doing (two legacy CI runs in progress at 07:29Z). The eight pre-fix queued runs are being processed
 as incident evidence, not cleaned up.
+
+**Qualification reset.** Commit 2 (`c9d026d`, 07:37:16Z) reproduced the same hazard on its CI job:
+its pinned runner `cf-job-101271285538` was assigned legacy job 101266031670 at 07:37:59 (recorded,
+not inferred), and the CI job stayed queued; the same commit's observation job ran on its own runner
+and completed (its `failure` conclusion is the self-observation action's own pre-existing failure,
+unrelated to the runner). A stall resets the sequence, so commits 1 and 2 do not count. Root cause of
+the residual hazard: a pinned runner still carried `cloudflare`, so its labels were a superset of a
+legacy job's. Fixed in `f9d20c3` (runner Worker deployed 07:40Z): pinned jobs require only the pin
+label (`runs-on: [self-hosted, "diffci-job-<run id>"]`) and pinned runners register with the pin label
+alone - no cross-eligibility with the legacy backlog in either direction. The reconciler also
+re-dispatches a job whose runner exited without ever being assigned it (`runner_gone`), immediately
+rather than after the stale window.
