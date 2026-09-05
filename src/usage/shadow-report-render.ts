@@ -187,6 +187,13 @@ export function renderShadowReport(report: ShadowRepositoryReport): string {
   // A repository that is not observing at all says so first: an ineligible or paused repository has
   // no evidence for a reason that is neither "insufficient data" nor "awaiting identification".
   const rs = report.repositoryStatus;
+  if (rs && rs.state === "NOT_ENROLLED") {
+    L.push("STATUS: NOT ENROLLED");
+    L.push("");
+    L.push("DiffCI is not installed on this repository, so there is nothing to report. Installing the DiffCI");
+    L.push("Shadow App on it enrolls it automatically; nothing else is needed.");
+    return L.join("\n");
+  }
   if (rs && (rs.state === "UNSUPPORTED" || rs.state === "PAUSED")) {
     L.push(rs.state === "UNSUPPORTED" ? "STATUS: SHADOW - CANNOT OBSERVE THIS REPOSITORY" : "STATUS: SHADOW - OBSERVATION PAUSED");
     L.push("");

@@ -111,7 +111,8 @@ export async function buildLiveShadowReport(db: D1Binding, repository: string, d
   const evidenceWorkflow: EvidenceWorkflowState = evidencePaths
     ? { state: "IDENTIFIED", paths: evidencePaths, source, reason: repoRow?.identification_note ?? undefined, identificationStatus: identificationStatus ?? undefined }
     : { state: "AWAITING_IDENTIFICATION", source, reason: repoRow?.identification_note ?? undefined, identificationStatus: identificationStatus ?? undefined };
-  const repositoryStatus = repoRow?.state ? { state: repoRow.state, note: repoRow.notes ?? undefined } : undefined;
+  // A repository that is not enrolled at all is a different state from one awaiting identification.
+  const repositoryStatus = repoRow ? (repoRow.state ? { state: repoRow.state, note: repoRow.notes ?? undefined } : undefined) : { state: "NOT_ENROLLED" };
 
   const eligibleRow = await db
     .prepare(`SELECT COUNT(*) as n FROM shadow_predictions WHERE repository = ? AND created_at >= ? AND created_at < ?`)

@@ -140,6 +140,9 @@ describe("command resolution and classification", () => {
     assert.equal(classifyCommand("npm ci --no-audit"), "install");
     assert.equal(classifyCommand("node scripts/check-links.js"), undefined);
     assert.equal(classifyCommand("npm run deploy:cloudflare:ci -- staging"), undefined, "an unresolved script name proves nothing");
+    assert.equal(classifyCommand("pnpm --filter nuxt test:size"), undefined, "a task merely named test:* is not a test runner (bundle-size checks, type tests)");
+    assert.equal(classifyCommand("turbo run test"), "test");
+    assert.equal(classifyCommand("node scripts/check-typecheck-results.js"), undefined, "the word typecheck in a path is not tsc");
   });
 
   it("a step spanning stages, or bundling an install with tests, is inseparable", () => {
@@ -240,15 +243,19 @@ describe("identifyEvidenceWorkflow", () => {
 
 describe("verifyDerivedShape", () => {
   const config = { version: 1 as const, jobs: [{ job: "check", stage: "other" as const }], steps: [{ job: "check", step: "Test", stage: "test" as const }] };
-  it("passes when the executed run has the derived job and step", () => {
-    assert.equal(verifyDerivedShape(config, [{ jobName: "check", steps: [{ name: "Run npm ci" }, { name: "Test" }] }]).ok, true);
+  it("verifies when the derived test step executed in the run", () => {
+    const v = verifyDerivedShape(config, [{ jobName: "check", steps: [{ name: "Run npm ci" }, { name: "Test" }] }]);
+    assert.deepEqual([v.ok, v.verified], [true, true]);
   });
-  it("fails when no derived job exists in the run, or a derived step is missing from its job", () => {
-    assert.equal(verifyDerivedShape(config, [{ jobName: "build" }]).ok, false);
+  it("fails when no derived job exists in the run, or an executed job lacks a derived step", () => {
+    assert.equal(verifyDerivedShape(config, [{ jobName: "build", steps: [{ name: "x" }] }]).ok, false);
     assert.equal(verifyDerivedShape(config, [{ jobName: "check", steps: [{ name: "Run npm run check" }] }]).ok, false);
   });
-  it("tolerates a run whose job carries no step list", () => {
-    assert.equal(verifyDerivedShape(config, [{ jobName: "check" }]).ok, true);
+  it("a derived job that was skipped in this run (no steps) neither confirms nor contradicts - nuxt/nuxt on a docs-only commit", () => {
+    const v = verifyDerivedShape(config, [{ jobName: "check", steps: [] }, { jobName: "docs", steps: [{ name: "Build docs" }] }]);
+    assert.deepEqual([v.ok, v.verified], [true, false]);
+    const w = verifyDerivedShape(config, [{ jobName: "check" }]);
+    assert.deepEqual([w.ok, w.verified], [true, false]);
   });
 });
 

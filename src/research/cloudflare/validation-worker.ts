@@ -2606,7 +2606,9 @@ export default {
             const v = verifyDerivedShape(config, jobs);
             const now = new Date().toISOString();
             if (v.ok) {
-              if (ident.status !== "verified") {
+              // "verified" only when a derived test step actually executed in this run; a run whose
+              // test jobs were skipped neither confirms nor contradicts the derivation.
+              if (v.verified && ident.status !== "verified") {
                 await shadowStore.recordIdentification({ repository, status: "verified", evidenceWorkflowPaths: ident.evidenceWorkflowPaths, stageClassificationJson: raw, derivationJson: ident.derivationJson, note: ident.note, at: now });
               }
               return { ok: true, detail: v.detail };

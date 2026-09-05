@@ -93,9 +93,13 @@ const TEST_RUNNERS = /\b(vitest|jest|mocha|ava|uvu|tap|tape|node\s+--test|tsx\s+
 // Monorepo task runners executing the packages' own test scripts: `turbo run test`, `turbo test`,
 // `nx test`, `nx run-many -t test`, `lerna run test`, `pnpm -r test` / `pnpm --filter x test`.
 // Mechanical: the command runs a task literally named test/test:* across packages.
-const TASK_RUNNER_TEST = /\b(turbo\s+(run\s+)?test(:[\w-]+)?\b|nx\s+(test\b|run-many\b[^\n]*\b(-t|--targets?)[= ]+test\b)|lerna\s+run\s+test\b|pnpm\s+(-r|--recursive|--filter[= ]\S+)(\s+\S+)*\s+(run\s+)?test(:[\w-]+)?\b)/;
+// Only a task literally named `test`: `test:size`, `test:types` and friends are routinely bundle-size
+// checks or type tests, not test runners, and a name proves nothing (nuxt/nuxt, 2026-09-05).
+const TASK_RUNNER_TEST = /\b(turbo\s+(run\s+)?test(?![:\w-])|nx\s+(test(?![:\w-])|run-many\b[^\n]*\b(-t|--targets?)[= ]+test(?![:\w-]))|lerna\s+run\s+test(?![:\w-])|pnpm\s+(-r|--recursive|--filter[= ]\S+)(\s+\S+)*\s+(run\s+)?test(?![:\w-]))/;
 const E2E_RUNNERS = /\b(playwright\s+test|cypress\s+run|cypress\s+open|wdio|nightwatch|puppeteer)\b/;
-const TYPECHECK = /(^|\s)(tsc|vue-tsc|svelte-check)(\s|$)|--noEmit|\btypecheck\b|\btype-check\b/;
+// Executables only: the bare words "typecheck"/"type-check" name things (a job, a script path) and
+// prove nothing - nuxt/nuxt's "Check required jobs" step was misread as typecheck through one.
+const TYPECHECK = /(^|\s)(tsc|vue-tsc|svelte-check)(\s|$)|--noEmit/;
 const LINT = /\b(eslint|prettier|biome|oxlint|stylelint|tslint|dprint|markdownlint|knip)\b/;
 const BUILD = /\b(next\s+build|vite\s+build|nuxt\s+build|astro\s+build|tsup|rollup|webpack|esbuild|parcel|turbo\s+run\s+build|nx\s+build|tsc\s+-b|tsc\s+--build|unbuild)\b/;
 const INSTALL = /^(npm\s+(ci|install|i)\b|pnpm\s+(install|i)\b|yarn(\s+install)?\s*$|yarn\s+install\b|bun\s+install\b)/;
@@ -358,17 +362,30 @@ export function identifyEvidenceWorkflow(input: IdentificationInput, nowIso: str
  * a job that exists. A shape mismatch means the derivation cannot be trusted for THIS run and the
  * repository goes back to awaiting identification, with the mismatch recorded.
  */
-export function verifyDerivedShape(config: StageClassificationConfig, observedJobs: readonly { jobName: string; steps?: readonly { name: string }[] }[]): { ok: boolean; detail: string } {
-  const observedNames = new Set(observedJobs.map((j) => j.jobName));
+export function verifyDerivedShape(
+  config: StageClassificationConfig,
+  observedJobs: readonly { jobName: string; steps?: readonly { name: string }[] }[],
+): { ok: boolean; verified: boolean; detail: string } {
+  // Only jobs that actually executed can confirm or contradict the derivation: a job the run skipped
+  // (path filters, `if:` conditions, a matrix leg that did not apply) reports no steps at all and says
+  // nothing either way (nuxt/nuxt, 2026-09-05: five test jobs skipped on a docs-only commit).
+  const executed = observedJobs.filter((j) => (j.steps?.length ?? 0) > 0);
+  const executedNames = new Set(executed.map((j) => j.jobName));
+  const allNames = new Set(observedJobs.map((j) => j.jobName));
   const configuredJobs = new Set([...config.jobs.map((j) => j.job), ...config.steps.map((s) => s.job)]);
-  const present = [...configuredJobs].filter((j) => observedNames.has(j));
-  if (present.length === 0) return { ok: false, detail: `none of the derived jobs (${[...configuredJobs].join(", ")}) appear in the executed run (${[...observedNames].join(", ")})` };
+  const known = [...configuredJobs].filter((j) => allNames.has(j));
+  if (known.length === 0) return { ok: false, verified: false, detail: `none of the derived jobs (${[...configuredJobs].join(", ")}) appear in the run (${[...allNames].join(", ")})` };
   const missingSteps: string[] = [];
+  let testStepConfirmed = false;
   for (const rule of config.steps) {
-    const job = observedJobs.find((j) => j.jobName === rule.job);
-    if (!job) continue;
-    if (job.steps && !job.steps.some((s) => s.name === rule.step)) missingSteps.push(`${rule.job} :: ${rule.step}`);
+    if (!executedNames.has(rule.job)) continue;
+    const job = executed.find((j) => j.jobName === rule.job)!;
+    const present = job.steps!.some((s) => s.name === rule.step);
+    if (!present) missingSteps.push(`${rule.job} :: ${rule.step}`);
+    else if (rule.stage === "test" || rule.stage === "e2e") testStepConfirmed = true;
   }
-  if (missingSteps.length > 0) return { ok: false, detail: `derived step(s) not present in the executed run: ${missingSteps.join("; ")}` };
-  return { ok: true, detail: `jobs matched: ${present.join(", ")}` };
+  if (missingSteps.length > 0) return { ok: false, verified: false, detail: `derived step(s) not present in the executed job(s): ${missingSteps.join("; ")}` };
+  const executedKnown = known.filter((j) => executedNames.has(j));
+  if (executedKnown.length === 0) return { ok: true, verified: false, detail: `derived jobs present but none executed in this run (skipped/conditional): ${known.join(", ")}` };
+  return { ok: true, verified: testStepConfirmed, detail: testStepConfirmed ? `executed jobs matched, test step confirmed: ${executedKnown.join(", ")}` : `executed jobs matched (${executedKnown.join(", ")}) but no derived test step ran in this run` };
 }

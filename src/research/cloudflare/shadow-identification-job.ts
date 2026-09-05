@@ -62,10 +62,6 @@ export async function identifyRepository(deps: IdentificationJobDeps, repository
   const log = deps.log ?? (() => {});
   const existing = await deps.store.getIdentification(repository);
   if (!existing) return { repository, status: "error", note: "repository is not enrolled" };
-  if (existing.source === "explicit") {
-    await deps.store.recordIdentification({ repository, status: "identified", at: now() }); // records the check time only
-    return { repository, status: "explicit", note: "explicit configuration takes precedence" };
-  }
 
   const facts = await deps.github.repositoryFacts(repository);
   if ("error" in facts) {
@@ -73,7 +69,14 @@ export async function identifyRepository(deps: IdentificationJobDeps, repository
     log(`shadow-identify: ${repository}: ${note}`);
     return { repository, status: "error", note };
   }
+  // Privacy is a fact about the repository, not about who configured it: recorded for explicit
+  // configurations too, so a private repository's report is never public by URL.
   await deps.store.setRepositoryPrivacy(repository, facts.isPrivate);
+
+  if (existing.source === "explicit") {
+    await deps.store.recordIdentification({ repository, status: "identified", at: now() }); // records the check time only
+    return { repository, status: "explicit", note: "explicit configuration takes precedence" };
+  }
 
   // Eligibility the poll container would otherwise discover after paying for a launch.
   let ineligible: string | undefined;
