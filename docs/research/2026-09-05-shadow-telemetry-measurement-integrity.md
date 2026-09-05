@@ -601,3 +601,44 @@ admitted evidence, an identified run, an executed job, and a separably measured 
   in-flight guard skipped the duplicate (recorded as such). A dedupe on enqueue would be tidier.
 - Dispatch-to-assignment latency for a pinned job is 30–45 s (runner download, dependency install,
   registration), the disclosed cost of the pre-published-image design.
+
+## Fix 5 — the customer-facing read boundaries, 2026-09-05
+
+**Found after the freeze, by asking how an external user would see any of this.** The public
+per-repository report (`GET /v1/shadow/report`, no auth, the URL the welcome page hands every
+installer) and the product dashboard (`/app`) both still read pre-repair data. Fetched live for
+DiffCI.com: 9431 s across 94 runs, all "other", 18 evaluable failures - the retired legacy economics
+table (self-observation runs merged in, substring classification) and ground truth with no validity
+filter. The report's footer described the evidence discipline correctly; its numbers predated it.
+The offline script had been switched in step 3; the live route and the dashboard boundary had not.
+
+**Fix (commits `e29d1fc`, `140e4db`; research and product Workers deployed):**
+- The live report reads `shadow_stage_economics` (VERIFIED) with the same aliasing as the offline
+  script, counts safety over VERIFIED ground truth only, and says so on the safety line.
+- **Explicit missing-evidence-workflow state.** A repository with no identified evidence workflow now
+  renders, before any number: *"STATUS: SHADOW - AWAITING CI EVIDENCE WORKFLOW IDENTIFICATION …
+  Predictions may be generated (N in this window), but ground truth and savings evidence are not yet
+  available. Zero observations here means nothing has been admitted as evidence - not zero
+  opportunity."* An identified repository names its evidence workflow at the top. This is a distinct
+  state from "insufficient data", by design. Self-service workflow selection was deliberately NOT
+  built (founder: product work before the problem is understood); founder configuration stands for
+  the first installs, and the report tells the user that is how identification happens.
+- The dashboard's safety snapshot counts VERIFIED rows only and carries `evidenceBasis` +
+  `verifiedGroundTruthRows`; the safety block carries an `evidenceWorkflow` state
+  (`identified` / `awaiting_identification` with the notice above / `no_repositories`); the overview's
+  savings figures carry `savingsBasis: "count_based_projection"` and a `savingsNotice` a consumer must
+  show - they are projected from selected-test counts, not derived from admitted CI evidence.
+
+**Live after the fix (07:5xZ–08:3xZ):** DiffCI.com - "Evidence workflow: .github/workflows/ci.yml",
+112 observed runs, 19 785 s measured, test stage 17 407 s with 672.5 s estimated avoidable across the
+9 separable split-step observations, 17/17 evaluable failures preserved over VERIFIED rows only.
+unjs/nitro (unconfigured) - the AWAITING state with "34 in this window". DentalPresence.in -
+COLLECTING, 2 observed runs, test stage measured 293 s with unknown opportunity (inseparable), 1/1
+preserved over VERIFIED rows.
+
+**Operational finding, recorded.** The first deploy of the repaired route answered every request with
+a Worker exception: three SQL string literals (`'['`, `']'`, `'VERIFIED'`) lost their quotes in transit
+through a shell-quoted patch, and the fake-D1 unit test could not notice. A real-SQLite regression
+test (`tests/research/cloudflare/shadow-report-query-sqlite.test.ts`) now runs the route's actual
+queries against the actual migration files and caught the second casualty before the second deploy.
+Public routes that assemble SQL get a real-database test, not a fake, from here on.

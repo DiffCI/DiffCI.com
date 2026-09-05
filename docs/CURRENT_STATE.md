@@ -228,6 +228,13 @@ Working tree is clean; `main` is up to date with `origin/main`.
    correctly classified; avoidable test-stage work is UNKNOWN where execution is inseparable and
    ESTIMATED (potential, not validated, not billable) only on the separable split-step runs - the
    first such row is commit `70e3dda`.
+   **Customer-facing boundaries repaired 2026-09-05 (`e29d1fc`, `140e4db`, both Workers deployed):**
+   the public report and the dashboard read admitted stage economics and VERIFIED-only safety; a
+   repository with no identified evidence workflow shows an explicit "awaiting CI evidence workflow
+   identification" state (predictions may exist, ground truth and savings evidence do not; zero
+   observations is not zero opportunity); the dashboard's savings figures are labelled
+   `count_based_projection` with a notice. Self-service workflow selection deliberately not built;
+   founder configuration for the first installs. See the note's "Fix 5".
    **Founder decisions on record:** steps 1 and 2 CLOSED / PRODUCTION-VERIFIED at `54122be`; the six
    corpus repositories stay unconfigured until mechanically verified (never "ci.yml by name"); the 77
    contaminated DiffCI.com rows stay immutable and excluded (a retrospective dataset, if ever wanted,
