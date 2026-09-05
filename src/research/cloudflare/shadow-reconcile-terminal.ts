@@ -10,9 +10,11 @@
  * Rules, all of which must hold - deliberately NOT age alone (Task 2 §11: age must never convert a
  * normal delay into a failure):
  *   1. This attempt classified the prediction `no_matching_workflow`.
- *   2. A PREVIOUS attempt also classified it `no_matching_workflow`, at least MIN_OBSERVATION_GAP_MS
- *      earlier - two independent observations, because classifyPendingReason degrades a transient
- *      GitHub error to the same label.
+ *   2. A PREVIOUS attempt also classified it `no_matching_workflow` - two independent observations,
+ *      because classifyPendingReason degrades a transient GitHub error to the same label. No minimum
+ *      spacing: a repository with fewer pending rows than the window is re-attempted every cron tick,
+ *      so any spacing rule would silently never fire there; rule 5's strict direct confirmation is
+ *      what actually rules out a transient error.
  *   3. The prediction is at least MIN_PREDICTION_AGE_MS old - a push-triggered run is created within
  *      seconds of the push; a commit still without one hours later will not get one.
  *   4. The repository's observed head has moved past this commit - a prediction for the CURRENT head
@@ -27,8 +29,6 @@
 
 export type ReconcileTerminalReason = "NO_MATCHING_WORKFLOW";
 
-/** Two observations of `no_matching_workflow` must be at least this far apart. */
-export const MIN_OBSERVATION_GAP_MS = 60 * 60 * 1000; // 1h
 /** The prediction must be at least this old before it can be terminalised. */
 export const MIN_PREDICTION_AGE_MS = 6 * 60 * 60 * 1000; // 6h
 
@@ -49,21 +49,17 @@ export interface TerminalPrecheck {
   /** True when rules 1-4 hold and the GitHub confirmation (rule 5) is worth making. */
   candidate: boolean;
   /** Which rule stopped it, for logs/tests. */
-  blockedBy?: "reason" | "no_prior_observation" | "observation_gap" | "prediction_age" | "current_head";
+  blockedBy?: "reason" | "no_prior_observation" | "prediction_age" | "current_head";
 }
 
 export function precheckNoMatchingWorkflowTerminal(facts: TerminalCandidateFacts): TerminalPrecheck {
   if (facts.pendingReason !== "no_matching_workflow") return { candidate: false, blockedBy: "reason" };
-  if (facts.previousReason !== "no_matching_workflow" || !facts.previousAttemptAt) {
+  if (facts.previousReason !== "no_matching_workflow" || !facts.previousAttemptAt || !Number.isFinite(Date.parse(facts.previousAttemptAt))) {
     return { candidate: false, blockedBy: "no_prior_observation" };
   }
   const nowMs = Date.parse(facts.nowIso);
-  const previousMs = Date.parse(facts.previousAttemptAt);
-  if (!Number.isFinite(nowMs) || !Number.isFinite(previousMs) || nowMs - previousMs < MIN_OBSERVATION_GAP_MS) {
-    return { candidate: false, blockedBy: "observation_gap" };
-  }
   const createdMs = Date.parse(facts.predictionCreatedAt);
-  if (!Number.isFinite(createdMs) || nowMs - createdMs < MIN_PREDICTION_AGE_MS) {
+  if (!Number.isFinite(nowMs) || !Number.isFinite(createdMs) || nowMs - createdMs < MIN_PREDICTION_AGE_MS) {
     return { candidate: false, blockedBy: "prediction_age" };
   }
   if (!facts.repositoryHeadSha || facts.repositoryHeadSha === facts.headSha) {
@@ -97,7 +93,7 @@ export function decideNoMatchingWorkflowTerminal(facts: TerminalCandidateFacts, 
     terminal: true,
     reason: "NO_MATCHING_WORKFLOW",
     detail: {
-      rule: "two no_matching_workflow observations >= 1h apart, prediction >= 6h old, superseded by a newer head, direct runs query returned 0",
+      rule: "no_matching_workflow on two attempts, prediction >= 6h old, superseded by a newer head, direct runs query returned 0",
       previousAttemptAt: facts.previousAttemptAt,
       decidedAt: facts.nowIso,
       predictionCreatedAt: facts.predictionCreatedAt,

@@ -6,7 +6,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  MIN_OBSERVATION_GAP_MS,
   MIN_PREDICTION_AGE_MS,
   confirmNoWorkflowRuns,
   decideNoMatchingWorkflowTerminal,
@@ -24,7 +23,7 @@ function facts(overrides: Partial<TerminalCandidateFacts> = {}): TerminalCandida
     predictionCreatedAt: "2026-08-22T06:14:16.162Z", // the real oldest stuck DiffCI.com row
     headSha: "066bba4caa660a145ae93fbb0d4d1ca0134bb297",
     previousReason: "no_matching_workflow",
-    previousAttemptAt: iso(nowMs - 10 * 60 * 1000 - MIN_OBSERVATION_GAP_MS),
+    previousAttemptAt: iso(nowMs - 10 * 60 * 1000), // the previous cron tick
     repositoryHeadSha: "c83e30f0a85e8a248c21226e331b1b5a47d1a92b",
     nowIso: NOW,
     ...overrides,
@@ -47,9 +46,8 @@ describe("precheckNoMatchingWorkflowTerminal", () => {
     assert.equal(precheckNoMatchingWorkflowTerminal(facts({ previousReason: "ci_queued" })).blockedBy, "no_prior_observation", "a prior attempt with a different reason does not count");
   });
 
-  it("rule 2: the two observations must be at least the minimum gap apart", () => {
-    assert.equal(precheckNoMatchingWorkflowTerminal(facts({ previousAttemptAt: iso(nowMs - MIN_OBSERVATION_GAP_MS + 1) })).blockedBy, "observation_gap");
-    assert.equal(precheckNoMatchingWorkflowTerminal(facts({ previousAttemptAt: iso(nowMs - MIN_OBSERVATION_GAP_MS) })).candidate, true, "exactly the gap is enough");
+  it("rule 2: no minimum spacing between the two observations - a small backlog is re-attempted every 10-minute tick and must still be able to terminalise", () => {
+    assert.equal(precheckNoMatchingWorkflowTerminal(facts({ previousAttemptAt: iso(nowMs - 60 * 1000) })).candidate, true);
   });
 
   it("rule 3: a young prediction stays pending even with two observations - age is a floor, never the trigger", () => {
@@ -63,7 +61,7 @@ describe("precheckNoMatchingWorkflowTerminal", () => {
   });
 
   it("garbage timestamps block rather than throw", () => {
-    assert.equal(precheckNoMatchingWorkflowTerminal(facts({ previousAttemptAt: "not-a-date" })).blockedBy, "observation_gap");
+    assert.equal(precheckNoMatchingWorkflowTerminal(facts({ previousAttemptAt: "not-a-date" })).blockedBy, "no_prior_observation");
     assert.equal(precheckNoMatchingWorkflowTerminal(facts({ predictionCreatedAt: "not-a-date" })).blockedBy, "prediction_age");
   });
 });

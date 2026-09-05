@@ -219,8 +219,10 @@ row exists or the row is already terminal. Reversible by a data change (NULL the
 never decides, per Task 2 §11):
 
 1. this attempt classified the row `no_matching_workflow`;
-2. a previous attempt did too, at least 1 h earlier (two independent observations, because
-   `classifyPendingReason` degrades a transient GitHub error to the same label);
+2. a previous attempt did too (two independent observations, because `classifyPendingReason`
+   degrades a transient GitHub error to the same label; no minimum spacing - a repository with fewer
+   pending rows than the window is re-attempted every tick, so a spacing rule would silently never
+   fire there, and rule 5 is what actually excludes a transient error);
 3. the prediction is at least 6 h old;
 4. the repository's observed head has moved past the commit (a current head with no run at all is a
    different situation - Actions disabled, billing, an outage - and stays visible as pending);
