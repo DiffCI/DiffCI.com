@@ -539,3 +539,25 @@ label (`runs-on: [self-hosted, "diffci-job-<run id>"]`) and pinned runners regis
 alone - no cross-eligibility with the legacy backlog in either direction. The reconciler also
 re-dispatches a job whose runner exited without ever being assigned it (`runner_gone`), immediately
 rather than after the stale window.
+
+One more correction before the clean sequence (`70e3dda`, deployed 07:48Z): the first pin-only
+registration stripped `cloudflare` even for jobs whose workflow (at their commit) still required it,
+so two re-dispatched runners registered with fewer labels than their jobs required and sat idle while
+the jobs stayed queued. Registration now mirrors the job's own required labels exactly; pin-only
+follows from the pin-only workflow, not from stripping. The reconciler recovered both jobs on their
+third attempt (07:49–07:52Z); the backlog was then empty: **zero queued runs at 07:56Z**, every
+pre-fix run resolved by the reconciler, none cancelled by hand.
+
+**Qualification, clean sequence - commit 3 (`70e3dda`, pushed 07:56:33Z, queue empty before it):**
+
+| stage | CI job 101273625704 | observation job 101273625154 |
+|---|---|---|
+| labels (as delivered) | `self-hosted, diffci-job-33953910146` | `self-hosted, diffci-job-33953910050` |
+| workflow queued → dispatch requested (webhook) | 07:56:36 | 07:56:36 |
+| container started (registered `diffci-job-…` only) | 07:57:17 | 07:56:38 |
+| job assigned, to its **own** runner | 07:57:58 `cf-job-101273625704` | 07:57:08 `cf-job-101273625154` |
+| execution completed | 08:00:31 `success` | 07:57:15 (`failure` - the self-observation action's own pre-existing failure) |
+| runner disposition | `exec-succeeded` | `exec-succeeded` |
+
+No subsequent push, no reconciler action, no other repository event. Commit 4 is the docs commit
+that records this table; its own trail is recorded in the entry below it.
