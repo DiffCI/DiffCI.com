@@ -99,6 +99,17 @@ ran inside `ctx.waitUntil` and was killed at 30 s for anything but a tiny reposi
 went unobserved from 2026-08-27 for 168 commits; see
 `docs/research/2026-09-04-shadow-push-poll-lifetime.md`.
 
+**Measurement-integrity caveat (2026-09-05, unfixed):** predictions flow, ground truth does not.
+DiffCI.com has had no new ground-truth row since 2026-08-23 because the reconciler's
+`ORDER BY created_at LIMIT 10` window is permanently occupied by ten `no_matching_workflow` rows
+(intermediate commits of multi-commit pushes); 249 newer predictions have never been attempted.
+DentalPresence.in's 23 ground-truth rows are contaminated: its instantly-skipped CodeQL run is taken
+as "the" CI result before the deploy/test run finishes. Economics are `UNKNOWN` on both because
+neither repo has a job whose name contains "test". None of this is selector degradation. Do not read
+own-repo recall or savings numbers until the repair sequence in
+`docs/research/2026-09-05-shadow-telemetry-measurement-integrity.md` is done and a known cohort has
+been re-verified by hand.
+
 ## 5. CI / self-hosted runner infrastructure
 
 This repo's own CI (`.github/workflows/ci.yml`, `npm run check` — typecheck + full test suite) no longer
@@ -108,7 +119,13 @@ runs on GitHub-hosted runners. It dispatches to `[self-hosted, cloudflare]`: a `
 (`ops/github-runner/Dockerfile`, GitHub Actions runner agent 2.336.0) per queued job. The runner
 registers, runs the job, deregisters, and self-terminates.
 
-**Status: green, steady-state verified.** Last 10 consecutive `CI` runs on `main` all `success`.
+**Status: DOWN since 2026-09-03T03:38Z (found 2026-09-05, not yet repaired).** From that point
+`CI` runs on `main` wait 24 h for a runner and GitHub cancels them ("awaiting a runner for 24h0m0s"):
+36 cancelled, 6 still queued on 2026-09-05, 0 registered runners. The few runners that did start
+claimed the oldest queued job instead of the job that triggered them. Evidence in
+`docs/research/2026-09-05-shadow-telemetry-measurement-integrity.md` (F2). Repair belongs to this
+runner workstream, kept separate from selector work. The paragraph below describes the verified
+steady state before the outage. Last 10 consecutive `CI` runs on `main` all `success` (as of 2026-09-03T03:25Z).
 **Re-measured 2026-09-04** (`scripts/remeasure-own-ci-cost.ts`, real job timings from the GitHub Actions
 API, priced against the real `standard-2` Cloudflare Containers shape this runner actually uses):
 job wall time 135s–354s (median 147s, mean 185s); job cost $0.0048–$0.0127 (median $0.0053, mean $0.0066) — re-measured 2026-09-03 in the launch audit (previous 2026-09-04 run: 126s–325s, $0.0045–$0.0116).
@@ -172,6 +189,20 @@ Working tree is clean; `main` is up to date with `origin/main`.
    project memory as of this writing — not independently re-verified in this session since it's a
    separate repository; switching them to `[self-hosted, cloudflare]` (same pattern as this repo's
    `ci.yml`) would put its CI on Cloudflare too and unblock its own shadow ground truth.
+   *2026-09-05:* re-verified — they run on GitHub-hosted runners (`Actions Linux` minutes billed to
+   DentalPresence.in: 2094 in August, 957 in the first four days of September).
+8. **Shadow measurement integrity (2026-09-05, open).** Four distinct defects, all in measurement,
+   none in selection — see `research/2026-09-05-shadow-telemetry-measurement-integrity.md`. Agreed
+   repair order: (1) terminalise permanent `no_matching_workflow` rows with an explicit reason so the
+   reconciler window is never head-of-line blocked; (2) require an explicitly identified evidence
+   workflow per repository instead of "first non-shadow run to complete" (DentalPresence.in's 23
+   ground-truth rows are contaminated); (3) replace substring stage classification with explicit
+   repository configuration plus conservative inference; (4) repair the runner separately (§5). Then
+   run a small known cohort end-to-end and verify D1/R2 by hand before the Stage 2F clock restarts.
+   Add telemetry self-health invariants (oldest unattempted prediction age, repeated pending window,
+   predictions rising while ground truth does not, zero classified test work for N observations).
+9. **Stage 2F daily observation routine is gone.** `trig_01AZTyUSfZcHtMMxvaKMAFoC` returns 404; the
+   observation log has only Day 1 and Day 3 entries. Gate E is not satisfied by elapsed time.
 
 ## 8. Architecture map
 

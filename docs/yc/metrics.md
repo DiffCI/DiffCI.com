@@ -151,6 +151,14 @@ actually receiving events on our own two repos, not just installed. Checked dire
   tick and re-baselined at `db01257` (0 predictions — the 168-commit backlog is not recoverable as
   prospective evidence). DentalPresence.in's next default-branch push is the first real test of its
   own queue path; check `recentPushPolls` on `/v1/shadow/cron-status` rather than this entry.
+  **Further caveat, 2026-09-05:** the "65 reconciled ground-truth rows" above are all dated
+  2026-08-21/23; DiffCI.com has reconciled nothing since, because ten permanently-pending rows
+  monopolise the reconciler's 10-row window (249 predictions never attempted). DentalPresence.in's
+  reconciled rows are contaminated (CodeQL `skipped` run taken as the CI result). DiffCI.com's own
+  self-hosted CI has been down since 2026-09-03T03:38Z. Own-repo recall and savings figures are
+  therefore not quotable until the repair sequence in
+  `docs/research/2026-09-05-shadow-telemetry-measurement-integrity.md` completes. The install/webhook
+  path itself remains verified live.
 
 **Blocker assessment for outreach beginning 2026-09-11:** none. The technical front door - domain,
 install flow (including `setup_url`), welcome page, hosted report, and real erasure - is fully live and
