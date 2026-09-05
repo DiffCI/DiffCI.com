@@ -117,6 +117,15 @@ async function main() {
     `SELECT COUNT(*) as n FROM shadow_predictions WHERE repository = ${sqlString(repository)} AND created_at >= ${sqlString(windowStartIso)} AND created_at < ${sqlString(windowEndIso)}`,
   );
   const eligiblePredictions = eligible[0]?.n ?? 0;
+  // 2026-09-05: state whether the evidence workflow has been identified (same rule as the live route).
+  const repoRow = d1Query<{ evidence_workflow_paths: string | null }>(`SELECT evidence_workflow_paths FROM shadow_repositories WHERE repository = ${sqlString(repository)}`)[0];
+  let evidencePaths: string[] | undefined;
+  try {
+    const parsed = repoRow?.evidence_workflow_paths ? (JSON.parse(repoRow.evidence_workflow_paths) as unknown) : undefined;
+    evidencePaths = Array.isArray(parsed) && parsed.length > 0 ? (parsed as string[]) : undefined;
+  } catch {
+    evidencePaths = undefined;
+  }
 
   // Observations are selected by their PREDICTION's window membership, not by capture time, so the
   // numerator and denominator describe the same set of commits. Filtering economics rows by observed_at
@@ -157,6 +166,7 @@ async function main() {
     observations: rows.map(toObservation),
     eligiblePredictions,
     safety: { evaluableFailures, failuresPreserved, falseNegatives: Math.max(0, evaluableFailures - failuresPreserved) },
+    evidenceWorkflow: evidencePaths ? { state: "IDENTIFIED", paths: evidencePaths } : { state: "AWAITING_IDENTIFICATION" },
   });
 
   const text = renderShadowReport(report);

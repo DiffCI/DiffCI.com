@@ -124,10 +124,14 @@ export async function getDashboardForOrganization(deps: RouteDeps, userId: strin
   const savings = aggregateSavings(perPredictionSavings);
 
   const safetySnapshot = await deps.shadowBoundary.getSafetySnapshot(repositories[0]?.ownerName);
+  // 2026-09-05: every repository's evidence-workflow state, so the dashboard can say "awaiting
+  // identification" instead of showing zeros for a repository whose CI workflow nobody has named yet.
+  const evidenceWorkflows = [];
+  for (const repo of repositories) evidenceWorkflows.push(await deps.shadowBoundary.getEvidenceWorkflowState(repo.ownerName));
   const recentRunners = await deps.runnerStore.listRunnersForOrganization(organizationId, 10);
 
   const overview = buildDashboardOverview(org, repositories.length, usageSummary, { selective: selectiveCount, full: fullCount }, savings);
-  const safety = buildDashboardSafety(safetySnapshot);
+  const safety = buildDashboardSafety(safetySnapshot, evidenceWorkflows);
   const usage = buildDashboardUsage(entitlements, allowance);
   const recentActivity = buildDashboardRecentActivity(allPredictions.slice(0, 10), recentRunners);
 

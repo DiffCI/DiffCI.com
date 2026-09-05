@@ -16,7 +16,7 @@ const SCHEMA_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../src/rese
 
 function freshDb(): DatabaseSync {
   const db = new DatabaseSync(":memory:");
-  for (const file of ["schema-migration-2026-08-21-stage2-shadow.sql", "schema-migration-2026-08-21-shadow-cron.sql", "schema-migration-2026-08-21-shadow-webhook.sql", "schema-migration-2026-08-21-shadow-source-integrity.sql", "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql"]) {
+  for (const file of ["schema-migration-2026-08-21-stage2-shadow.sql", "schema-migration-2026-08-21-shadow-cron.sql", "schema-migration-2026-08-21-shadow-webhook.sql", "schema-migration-2026-08-21-shadow-source-integrity.sql", "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql", "schema-migration-2026-09-05-shadow-reconcile-terminal.sql", "schema-migration-2026-09-05-shadow-evidence-workflow.sql"]) {
     db.exec(readFileSync(join(SCHEMA_DIR, file), "utf8"));
   }
   return db;
@@ -95,11 +95,12 @@ function seedGroundTruth(db: DatabaseSync, overrides: Record<string, unknown> = 
     ground_truth_fetched_at: "2026-08-22T00:05:00Z",
     created_at: "2026-08-22T00:05:00Z",
     workflow_conclusion: "failure",
+    evidence_validity: "VERIFIED", // 2026-09-05: only VERIFIED rows count - the contamination case below overrides this
     ...overrides,
   };
   db.prepare(
-    `INSERT INTO shadow_ground_truth (logical_event_key, logical_delta_key, repository, head_sha, workflow_run_attempt, event_type, ground_truth_status, relevant_failures_observed, relevant_failures_evaluable, failures_preserved_by_diffci, failures_preserved_by_path, prediction_preceded_ground_truth, r2_evidence_key, ground_truth_fetched_at, created_at, workflow_conclusion)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO shadow_ground_truth (logical_event_key, logical_delta_key, repository, head_sha, workflow_run_attempt, event_type, ground_truth_status, relevant_failures_observed, relevant_failures_evaluable, failures_preserved_by_diffci, failures_preserved_by_path, prediction_preceded_ground_truth, r2_evidence_key, ground_truth_fetched_at, created_at, workflow_conclusion, evidence_validity)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(...(Object.values(base) as never[]));
 }
 
@@ -141,6 +142,34 @@ describe("ShadowReadBoundary - Part 20 (read-only, real Stage 2F schema)", () =>
     const global = await boundary.getSafetySnapshot();
     assert.equal(global.evaluableFailures, 3);
     assert.equal(global.falseNegatives, 1, "the acme/other false negative must be visible in the unscoped snapshot");
+  });
+
+  it("getSafetySnapshot counts VERIFIED rows only and reports the evidence basis; contaminated and unverified rows are excluded (2026-09-05)", async () => {
+    const db = freshDb();
+    seedPrediction(db);
+    seedGroundTruth(db);
+    seedPrediction(db, { logical_delta_key: "k2", head_sha: "h2" });
+    seedGroundTruth(db, { logical_event_key: "e2", logical_delta_key: "k2", head_sha: "h2", relevant_failures_evaluable: 5, failures_preserved_by_diffci: 0, evidence_validity: "CONTAMINATED_WORKFLOW_IDENTITY" });
+    seedPrediction(db, { logical_delta_key: "k3", head_sha: "h3" });
+    seedGroundTruth(db, { logical_event_key: "e3", logical_delta_key: "k3", head_sha: "h3", relevant_failures_evaluable: 2, failures_preserved_by_diffci: 0, evidence_validity: "UNVERIFIED" });
+    const boundary = makeD1ShadowReadBoundary(makeD1(db));
+    const s = await boundary.getSafetySnapshot("acme/web");
+    assert.equal(s.evaluableFailures, 1, "the contaminated and unverified failures must not count");
+    assert.equal(s.falseNegatives, 0);
+    assert.equal(s.verifiedGroundTruthRows, 1);
+    assert.equal(s.evidenceBasis, "verified_ground_truth_only");
+  });
+
+  it("getEvidenceWorkflowState is awaiting_identification until evidence_workflow_paths is set, and reads garbage as awaiting", async () => {
+    const db = freshDb();
+    seedShadowRepository(db, "acme/web");
+    const boundary = makeD1ShadowReadBoundary(makeD1(db));
+    assert.deepEqual(await boundary.getEvidenceWorkflowState("acme/web"), { ownerName: "acme/web", state: "awaiting_identification" });
+    db.prepare(`UPDATE shadow_repositories SET evidence_workflow_paths = ? WHERE repository = ?`).run(JSON.stringify([".github/workflows/ci.yml"]), "acme/web");
+    assert.deepEqual(await boundary.getEvidenceWorkflowState("acme/web"), { ownerName: "acme/web", state: "identified", paths: [".github/workflows/ci.yml"] });
+    db.prepare(`UPDATE shadow_repositories SET evidence_workflow_paths = ? WHERE repository = ?`).run("not json", "acme/web");
+    assert.equal((await boundary.getEvidenceWorkflowState("acme/web")).state, "awaiting_identification");
+    assert.equal((await boundary.getEvidenceWorkflowState("acme/unknown")).state, "awaiting_identification");
   });
 
   // 2026-08-25 (External Shadow Pilot M1) - listEnrolledRepositories

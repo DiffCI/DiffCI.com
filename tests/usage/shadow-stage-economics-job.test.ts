@@ -23,6 +23,7 @@ function boundary(rowsByRepo: Record<string, ShadowVerifiedGroundTruth[]>): Shad
     listPredictions: async () => { throw new Error("the stage sweep must never read unverified predictions"); },
     getGroundTruthForDelta: async () => null,
     getSafetySnapshot: async () => { throw new Error("not used"); },
+    getEvidenceWorkflowState: async (ownerName) => ({ ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }),
   };
 }
 

@@ -181,6 +181,31 @@ export function renderShadowReport(report: ShadowRepositoryReport): string {
   L.push(`Window: last ${days} days (${report.windowStartIso.slice(0, 10)} to ${report.windowEndIso.slice(0, 10)})`);
   L.push("");
 
+  // 2026-09-05: nothing is admitted as evidence until the repository's CI evidence workflow has been
+  // explicitly identified. This state comes BEFORE any number, and it is not "insufficient data": there
+  // may be plenty of predictions - there is no ground truth and no savings evidence, by construction.
+  if (report.evidenceWorkflow.state === "AWAITING_IDENTIFICATION") {
+    L.push("STATUS: SHADOW - AWAITING CI EVIDENCE WORKFLOW IDENTIFICATION");
+    L.push("");
+    L.push("DiffCI has not yet been told which of this repository's GitHub Actions workflows is the CI");
+    L.push("evidence it should measure against. Until that is identified, no workflow run is admitted as");
+    L.push("ground truth and no savings evidence is produced.");
+    L.push("");
+    L.push(`  Predictions may be generated (${report.evidence.eligiblePredictions} in this window), but ground truth and`);
+    L.push("  savings evidence are not yet available.");
+    L.push("  Zero observations here means nothing has been admitted as evidence - not zero opportunity.");
+    L.push("");
+    L.push("  Identification is a one-time step done with the DiffCI team for now (it names the workflow file,");
+    L.push("  e.g. .github/workflows/ci.yml, and never changes anything in the repository).");
+    L.push("");
+    L.push("  DiffCI made no change to this repository's CI. Nothing was skipped, cancelled or modified.");
+    return L.join("\n");
+  }
+  if (report.evidenceWorkflow.state === "IDENTIFIED" && report.evidenceWorkflow.paths?.length) {
+    L.push(`Evidence workflow: ${report.evidenceWorkflow.paths.join(", ")}  (only runs of this workflow are admitted as evidence)`);
+    L.push("");
+  }
+
   if (!report.hasSufficientData) {
     // Never a page of zeros. "Nothing was observed" and "your CI consumed nothing" are entirely different
     // claims, and only the first one is true here.
@@ -229,6 +254,7 @@ export function renderShadowReport(report: ShadowRepositoryReport): string {
   } else {
     L.push(`${report.safety.falseNegatives} observed missed failures, out of ${report.safety.evaluableFailures} evaluable failures (${report.safety.failuresPreserved} preserved by DiffCI's selection)`);
   }
+  L.push("  (safety is counted over VERIFIED ground truth only: runs of the identified evidence workflow that actually executed)");
 
   const testStage = report.stages.find((s) => s.stage === "test");
   if (testStage) L.push(...renderCommitEvidence(testStage));

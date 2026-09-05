@@ -86,7 +86,9 @@ export interface ShadowRepositoryReport {
    * falsifiable metric: a low value is useful information about DiffCI's coverage, not a failure to hide
    * by narrowing the denominator to just the tests. */
   classifiedFraction: number;
+  /** Computed over VERIFIED ground truth only (evidence_validity), since 2026-09-05. */
   safety: { evaluableFailures: number; failuresPreserved: number; falseNegatives: number };
+  evidenceWorkflow: EvidenceWorkflowState;
 }
 
 export interface RollupInput {
@@ -100,6 +102,17 @@ export interface RollupInput {
    * the total was 4 or 47. */
   eligiblePredictions: number;
   thresholds?: EvidenceThresholds;
+  /** 2026-09-05 (repair step 2 follow-through): whether this repository's CI evidence workflow has been
+   * explicitly identified. Until it has, nothing can be admitted as ground truth or economics, and the
+   * report must say so - zero observations must never read as zero opportunity. */
+  evidenceWorkflow?: EvidenceWorkflowState;
+}
+
+export interface EvidenceWorkflowState {
+  /** IDENTIFIED: evidence workflow(s) configured. AWAITING_IDENTIFICATION: none configured yet.
+   * NOT_STATED: the caller did not look it up (legacy callers / unit fixtures). */
+  state: "IDENTIFIED" | "AWAITING_IDENTIFICATION" | "NOT_STATED";
+  paths?: string[];
 }
 
 export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
@@ -164,6 +177,7 @@ export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
     windowStartIso: input.windowStartIso,
     windowEndIso: input.windowEndIso,
     hasSufficientData: rows.length > 0,
+    evidenceWorkflow: input.evidenceWorkflow ?? { state: "NOT_STATED" },
     insufficientReason: rows.length === 0 ? "No completed CI workload was observed for this repository in this window." : undefined,
     commitsObserved: distinctCommits.size,
     workflowRunsObserved: distinctRuns.size,

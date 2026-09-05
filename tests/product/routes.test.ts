@@ -22,7 +22,7 @@ const RESEARCH_SCHEMA_DIR = join(HERE, "../../src/research/cloudflare");
 
 function freshResearchDb(): DatabaseSync {
   const db = new DatabaseSync(":memory:");
-  for (const file of ["schema-migration-2026-08-21-stage2-shadow.sql", "schema-migration-2026-08-21-shadow-cron.sql", "schema-migration-2026-08-21-shadow-webhook.sql", "schema-migration-2026-08-21-shadow-source-integrity.sql", "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql"]) {
+  for (const file of ["schema-migration-2026-08-21-stage2-shadow.sql", "schema-migration-2026-08-21-shadow-cron.sql", "schema-migration-2026-08-21-shadow-webhook.sql", "schema-migration-2026-08-21-shadow-source-integrity.sql", "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql", "schema-migration-2026-09-05-shadow-reconcile-terminal.sql", "schema-migration-2026-09-05-shadow-evidence-workflow.sql"]) {
     db.exec(readFileSync(join(RESEARCH_SCHEMA_DIR, file), "utf8"));
   }
   return db;
@@ -126,5 +126,10 @@ describe("product routes - Part 23 (user A cannot read organization B)", () => {
     const outcome = await getDashboardForOrganization(deps, userA.id, orgA.id);
     assert.equal(outcome.ok, true);
     assert.ok(outcome.ok && outcome.data.safety.observationMode === "shadow_observation_only", "must never claim more than shadow observation");
+    // 2026-09-05: the dashboard must state its evidence basis and label its savings figure as a projection.
+    assert.ok(outcome.ok && outcome.data.safety.evidenceBasis === "verified_ground_truth_only");
+    assert.ok(outcome.ok && outcome.data.safety.evidenceWorkflow.state === "no_repositories", "no repositories claimed yet - not identified, not awaiting");
+    assert.ok(outcome.ok && outcome.data.overview.savingsBasis === "count_based_projection");
+    assert.ok(outcome.ok && outcome.data.overview.savingsNotice.includes("not derived from admitted CI evidence"));
   });
 });

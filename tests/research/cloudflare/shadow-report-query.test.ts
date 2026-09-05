@@ -11,19 +11,26 @@ interface FakeRow {
   [key: string]: unknown;
 }
 
-function fakeD1(tables: { predictions: FakeRow[]; observations: FakeRow[]; groundTruth: FakeRow[] }): D1Binding {
+function fakeD1(tables: { predictions: FakeRow[]; observations: FakeRow[]; groundTruth: FakeRow[]; evidencePaths?: string[] | null }): D1Binding {
   return {
     prepare(query: string) {
       return {
         bind(..._values: unknown[]) {
           return {
             async first<T>(): Promise<T | null> {
+              if (query.includes("evidence_workflow_paths FROM shadow_repositories")) {
+                // Configured by default (the pre-2026-09-05 fixtures describe an identified repository); null = awaiting.
+                const paths = tables.evidencePaths === undefined ? [".github/workflows/ci.yml"] : tables.evidencePaths;
+                return { evidence_workflow_paths: paths ? JSON.stringify(paths) : null } as T;
+              }
               if (query.includes("COUNT(*) as n FROM shadow_predictions")) {
                 return { n: tables.predictions.length } as T;
               }
               if (query.includes("relevant_failures_evaluable")) {
-                const evaluable = tables.groundTruth.reduce((sum, r) => sum + (Number(r.relevant_failures_evaluable) || 0), 0);
-                const preserved = tables.groundTruth.reduce((sum, r) => sum + (Number(r.failures_preserved_by_diffci) || 0), 0);
+                // The live query filters evidence_validity = VERIFIED; the fake honours the same rule.
+                const verified = tables.groundTruth.filter((r) => (r.evidence_validity ?? "VERIFIED") === "VERIFIED");
+                const evaluable = verified.reduce((sum, r) => sum + (Number(r.relevant_failures_evaluable) || 0), 0);
+                const preserved = verified.reduce((sum, r) => sum + (Number(r.failures_preserved_by_diffci) || 0), 0);
                 return { evaluable, preserved } as T;
               }
               return null;
@@ -98,5 +105,36 @@ describe("buildLiveShadowReport", () => {
     });
     const report = await buildLiveShadowReport(db, "acme/web", 7);
     assert.equal(report.hasSufficientData, true);
+  });
+});
+
+describe("buildLiveShadowReport - evidence admission (2026-09-05)", () => {
+  it("reads only shadow_stage_economics (VERIFIED) and never the legacy economics table", async () => {
+    const seen: string[] = [];
+    const db = fakeD1({ predictions: [{}], observations: [observationRow()], groundTruth: [] });
+    const spy: D1Binding = { prepare(q: string) { seen.push(q); return db.prepare(q); } };
+    await buildLiveShadowReport(spy, "acme/web", 7);
+    assert.ok(seen.some((q) => q.includes("FROM shadow_stage_economics e") && q.includes("e.evidence_validity = VERIFIED")));
+    assert.ok(!seen.some((q) => q.includes("shadow_economics_observations")), "the legacy table is retired from the report");
+    assert.ok(seen.some((q) => q.includes("relevant_failures_evaluable") && q.includes("g.evidence_validity = VERIFIED")), "safety counts VERIFIED rows only");
+  });
+
+  it("contaminated ground truth never reaches the safety figures", async () => {
+    const db = fakeD1({ predictions: [{}], observations: [observationRow()], groundTruth: [
+      { relevant_failures_evaluable: 1, failures_preserved_by_diffci: 1, evidence_validity: "VERIFIED" },
+      { relevant_failures_evaluable: 5, failures_preserved_by_diffci: 0, evidence_validity: "CONTAMINATED_WORKFLOW_IDENTITY" },
+    ] });
+    const r = await buildLiveShadowReport(db, "acme/web", 7);
+    assert.equal(r.safety.evaluableFailures, 1);
+    assert.equal(r.safety.falseNegatives, 0);
+    assert.deepEqual(r.evidenceWorkflow, { state: "IDENTIFIED", paths: [".github/workflows/ci.yml"] });
+  });
+
+  it("a repository with no identified evidence workflow reports AWAITING_IDENTIFICATION, with its prediction count, never a page of zeros", async () => {
+    const db = fakeD1({ predictions: [{}, {}, {}], observations: [], groundTruth: [], evidencePaths: null });
+    const r = await buildLiveShadowReport(db, "acme/new", 7);
+    assert.equal(r.evidenceWorkflow.state, "AWAITING_IDENTIFICATION");
+    assert.equal(r.evidence.eligiblePredictions, 3);
+    assert.equal(r.hasSufficientData, false);
   });
 });

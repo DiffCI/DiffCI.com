@@ -36,9 +36,10 @@ function fakeShadowBoundary(repositories: string[], predictions: ShadowPredictio
       return null;
     },
     async getSafetySnapshot() {
-      return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0 };
+      return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0, evidenceBasis: "verified_ground_truth_only" as const, verifiedGroundTruthRows: 0 };
     },
     async listVerifiedGroundTruth() { return []; },
+    async getEvidenceWorkflowState(ownerName: string) { return { ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }; },
     async listEnrolledRepositories() {
       return repositories;
     },
@@ -198,9 +199,10 @@ describe("runShadowEconomicsCaptureSweep", () => {
         return null;
       },
       async getSafetySnapshot() {
-        return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0 };
+        return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0, evidenceBasis: "verified_ground_truth_only" as const, verifiedGroundTruthRows: 0 };
       },
       async listVerifiedGroundTruth() { return []; },
+      async getEvidenceWorkflowState(ownerName: string) { return { ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }; },
       async listEnrolledRepositories() {
         return ["a/busy", "z/quiet"];
       },
@@ -281,9 +283,10 @@ describe("runShadowEconomicsCaptureSweep", () => {
         return null;
       },
       async getSafetySnapshot() {
-        return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0 };
+        return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0, evidenceBasis: "verified_ground_truth_only" as const, verifiedGroundTruthRows: 0 };
       },
       async listVerifiedGroundTruth() { return []; },
+      async getEvidenceWorkflowState(ownerName: string) { return { ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }; },
       async listEnrolledRepositories() {
         return ["a/has-work", "b/idle"];
       },

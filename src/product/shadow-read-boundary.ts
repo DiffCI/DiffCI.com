@@ -74,6 +74,17 @@ export interface ShadowSafetySnapshot {
   evaluableFailures: number;
   failuresPreserved: number;
   falseNegatives: number;
+  /** 2026-09-05 (repair step 2): every figure above is summed over ground-truth rows with
+   * evidence_validity 'VERIFIED' only - runs of the repository's identified evidence workflow that
+   * actually executed. UNVERIFIED and CONTAMINATED rows are kept in the table and never counted. */
+  evidenceBasis: "verified_ground_truth_only";
+  verifiedGroundTruthRows: number;
+}
+
+export interface ShadowEvidenceWorkflowState {
+  ownerName: string;
+  state: "identified" | "awaiting_identification";
+  paths?: string[];
 }
 
 export interface ShadowReadBoundary {
@@ -89,6 +100,10 @@ export interface ShadowReadBoundary {
    * ownerName is omitted, the whole shadow system) since Stage 2 has no organization concept to scope by
    * directly. */
   getSafetySnapshot(ownerName?: string): Promise<ShadowSafetySnapshot>;
+  /** Whether a repository's CI evidence workflow has been explicitly identified (shadow_repositories.
+   * evidence_workflow_paths). Until it has, the dashboard must say that ground truth and savings evidence
+   * are not yet available rather than show zeros. Read-only. */
+  getEvidenceWorkflowState(ownerName: string): Promise<ShadowEvidenceWorkflowState>;
   /** Repositories currently in an active shadow-observation state (SHADOW_ACTIVE/SHADOW_LIMITED) -
    * External Shadow Pilot M1 (2026-08-25). Deliberately excludes INSTALLING/VALIDATING (not yet producing
    * trustworthy predictions), PAUSED/REMOVED (no longer observed), and UNSUPPORTED/
@@ -171,20 +186,50 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
     },
 
     async getSafetySnapshot(ownerName) {
+      // VERIFIED rows only (2026-09-05, repair step 2) - see ShadowSafetySnapshot.evidenceBasis.
       const row = ownerName
         ? await db
             .prepare(
               `SELECT COALESCE(SUM(g.relevant_failures_evaluable), 0) as evaluable,
-                      COALESCE(SUM(g.failures_preserved_by_diffci), 0) as preserved
+                      COALESCE(SUM(g.failures_preserved_by_diffci), 0) as preserved,
+                      COUNT(*) as verified_rows
                FROM shadow_ground_truth g JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
-               WHERE p.repository = ?`,
+               WHERE p.repository = ? AND g.evidence_validity = 'VERIFIED'`,
             )
             .bind(ownerName)
-            .first<{ evaluable: number; preserved: number }>()
-        : await db.prepare(`SELECT COALESCE(SUM(relevant_failures_evaluable), 0) as evaluable, COALESCE(SUM(failures_preserved_by_diffci), 0) as preserved FROM shadow_ground_truth`).bind().first<{ evaluable: number; preserved: number }>();
+            .first<{ evaluable: number; preserved: number; verified_rows: number }>()
+        : await db
+            .prepare(
+              `SELECT COALESCE(SUM(relevant_failures_evaluable), 0) as evaluable, COALESCE(SUM(failures_preserved_by_diffci), 0) as preserved, COUNT(*) as verified_rows
+               FROM shadow_ground_truth WHERE evidence_validity = 'VERIFIED'`,
+            )
+            .bind()
+            .first<{ evaluable: number; preserved: number; verified_rows: number }>();
       const evaluableFailures = row?.evaluable ?? 0;
       const failuresPreserved = row?.preserved ?? 0;
-      return { evaluableFailures, failuresPreserved, falseNegatives: Math.max(0, evaluableFailures - failuresPreserved) };
+      return {
+        evaluableFailures,
+        failuresPreserved,
+        falseNegatives: Math.max(0, evaluableFailures - failuresPreserved),
+        evidenceBasis: "verified_ground_truth_only",
+        verifiedGroundTruthRows: row?.verified_rows ?? 0,
+      };
+    },
+
+    async getEvidenceWorkflowState(ownerName) {
+      const row = await db
+        .prepare(`SELECT evidence_workflow_paths FROM shadow_repositories WHERE repository = ?`)
+        .bind(ownerName)
+        .first<{ evidence_workflow_paths: string | null }>();
+      try {
+        const parsed = row?.evidence_workflow_paths ? (JSON.parse(row.evidence_workflow_paths) as unknown) : undefined;
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed.every((x) => typeof x === "string")) {
+          return { ownerName, state: "identified", paths: parsed as string[] };
+        }
+      } catch {
+        /* garbage reads as unconfigured, never as a workflow */
+      }
+      return { ownerName, state: "awaiting_identification" };
     },
 
     async listEnrolledRepositories() {
