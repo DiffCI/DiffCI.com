@@ -234,5 +234,36 @@ failure there is "not confirmed" and the row stays pending (the safe direction).
 
 **Verification:** `npm run check` - typecheck clean, 2009/2009 tests, including the regression shape
 (ten attempted-every-sweep rows plus one fresh row: the fresh row is first in the window), the
-refusal cases, and every blocking rule. Live verification is recorded below the commit hash once the
-migration is applied and the Worker deployed.
+refusal cases, and every blocking rule.
+
+**Live verification, 2026-09-05T03:52–04:05Z.** Commits `1c1eae0` (fix) and `b163a83` (removed a
+minimum spacing between the two observations, which a small backlog re-attempted every tick could
+never satisfy); migration applied to remote `diffci-research`; deployed via `npm run shadow:deploy`,
+`sourceIntegrity: CURRENT` at `b163a83`. Then one manual `POST /v1/shadow/reconcile` per repository:
+
+| | DentalPresence.in (limit 10) | DiffCI.com (limit 25) |
+|---|---:|---:|
+| attempted | 4 | 25 |
+| reconciled | 1 | 25 |
+| terminalized | **3** | 0 |
+| stillPending | 3 (the same 3, before their terminal write) | 0 |
+
+The three DentalPresence.in rows carry `reconcile_terminal_reason = NO_MATCHING_WORKFLOW` and a
+detail payload naming the previous attempt, the superseding head (`84b00baa`) and
+`workflowRunsForHeadSha: 0` from the direct GitHub query; their prediction rows are otherwise unchanged
+and their R2 evidence keys resolve. `reconcile-diagnostics` for the repository now reads
+`pending: 0, terminalUnevaluable: 3, terminalReasons: [{NO_MATCHING_WORKFLOW: 3}]`. DiffCI.com's
+window contained never-attempted rows for the first time since 2026-08-26: after the manual call and
+the next cron tick, `reconciled` had gone from 65 to 108 (43 new rows, all `success`, predictions
+dated 2026-08-26 to 2026-08-30, 29 of 43 prospective), `not_yet_attempted` from 249 to 196, and
+`no_matching_workflow` from 10 to 23 - thirteen more intermediate commits surfaced in the newly
+attempted range. Each of those 23 will be terminalised on its second attempt once the rotation
+returns to it (about 20 ticks), without any manual step.
+
+**Caveat carried forward to step 2.** The fair window will reach DiffCI.com's 2026-09-03/04 cohort
+(about 50 predictions whose CI runs were cancelled after 24 h in queue, F2) within a few hours. The
+current reconciler records those as ground truth with `workflow_conclusion NULL` in D1 and
+`conclusion: "cancelled"` inside the R2 record - provenance retained, but not labelled as
+infrastructure. Step 2 (workflow identity) should classify a cancelled/skipped run explicitly before
+those rows are counted anywhere. DentalPresence.in's F3 contamination also continues as expected: its
+push at 03:54Z was polled by the queue path and "reconciled" against the CodeQL skip within a minute.
