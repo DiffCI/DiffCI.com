@@ -25,6 +25,10 @@ export interface StageEconomicsJobDeps {
   fetchJobs?: (repository: string, runId: string, token?: string) => Promise<BaselineJobInfo[]>;
   resolveToken?: (repository: string) => Promise<string | undefined>;
   nowIso?: () => string;
+  /** 2026-09-05 seamless install: for an automatically derived classification, the executed run must
+   * match the derived job/step shape before any economics row is written. Returns ok:true for explicit
+   * configurations. A mismatch is recorded by the implementation (the repository returns to awaiting). */
+  verifyDerivation?: (repository: string, jobs: readonly BaselineJobInfo[]) => Promise<{ ok: boolean; detail?: string }>;
 }
 
 export interface StageEconomicsJobResult {
@@ -34,6 +38,7 @@ export interface StageEconomicsJobResult {
   skippedAlreadyRecorded: number;
   skippedNoDerivableRows: number;
   unconfiguredRepositories: string[];
+  derivationMismatches: number;
   fetchErrors: number;
   errors: number;
   repositoriesAttempted: string[];
@@ -49,6 +54,7 @@ export async function runStageEconomicsCaptureSweep(deps: StageEconomicsJobDeps,
     skippedAlreadyRecorded: 0,
     skippedNoDerivableRows: 0,
     unconfiguredRepositories: [],
+    derivationMismatches: 0,
     fetchErrors: 0,
     errors: 0,
     repositoriesAttempted: [],
@@ -87,6 +93,13 @@ export async function runStageEconomicsCaptureSweep(deps: StageEconomicsJobDeps,
       } catch {
         result.fetchErrors++;
         continue;
+      }
+      if (deps.verifyDerivation && queue.config) {
+        const v = await deps.verifyDerivation(queue.repository, jobs);
+        if (!v.ok) {
+          result.derivationMismatches++;
+          continue; // never classify against a shape the executed run does not have
+        }
       }
       try {
         const observations = deriveStageEconomics(

@@ -24,6 +24,7 @@ function boundary(rowsByRepo: Record<string, ShadowVerifiedGroundTruth[]>): Shad
     getGroundTruthForDelta: async () => null,
     getSafetySnapshot: async () => { throw new Error("not used"); },
     getEvidenceWorkflowState: async (ownerName) => ({ ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }),
+    getReportAccess: async () => ({ isPrivate: false }),
   };
 }
 

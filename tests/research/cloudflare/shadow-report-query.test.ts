@@ -18,7 +18,7 @@ function fakeD1(tables: { predictions: FakeRow[]; observations: FakeRow[]; groun
         bind(..._values: unknown[]) {
           return {
             async first<T>(): Promise<T | null> {
-              if (query.includes("evidence_workflow_paths FROM shadow_repositories")) {
+              if (query.includes("evidence_workflow_paths") && query.includes("FROM shadow_repositories")) {
                 // Configured by default (the pre-2026-09-05 fixtures describe an identified repository); null = awaiting.
                 const paths = tables.evidencePaths === undefined ? [".github/workflows/ci.yml"] : tables.evidencePaths;
                 return { evidence_workflow_paths: paths ? JSON.stringify(paths) : null } as T;
@@ -127,7 +127,8 @@ describe("buildLiveShadowReport - evidence admission (2026-09-05)", () => {
     const r = await buildLiveShadowReport(db, "acme/web", 7);
     assert.equal(r.safety.evaluableFailures, 1);
     assert.equal(r.safety.falseNegatives, 0);
-    assert.deepEqual(r.evidenceWorkflow, { state: "IDENTIFIED", paths: [".github/workflows/ci.yml"] });
+    assert.equal(r.evidenceWorkflow.state, "IDENTIFIED");
+    assert.deepEqual(r.evidenceWorkflow.paths, [".github/workflows/ci.yml"]);
   });
 
   it("a repository with no identified evidence workflow reports AWAITING_IDENTIFICATION, with its prediction count, never a page of zeros", async () => {

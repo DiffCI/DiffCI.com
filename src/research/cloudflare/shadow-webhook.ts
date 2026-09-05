@@ -36,7 +36,10 @@ export interface ShadowWebhookDeps {
   /** verifyWebhookSignature bound to the configured secret. */
   verifySignature(rawBody: string, signatureHeader: string | null): Promise<boolean>;
   /** Idempotent enrollment, source 'github-app-webhook'. */
-  ensureRepository(repository: string, language: string): Promise<void>;
+  ensureRepository(repository: string, language: string, meta?: { isPrivate?: boolean }): Promise<void>;
+  /** 2026-09-05 seamless install: fire-and-forget automatic evidence-workflow identification for a newly
+   * enrolled repository, or one whose workflow files changed. Optional so existing fixtures are unaffected. */
+  scheduleIdentification?(repository: string): void;
   setInstallationId(repository: string, installationId: string): Promise<void>;
   /** Fire-and-forget - failures must be logged by the implementation, never thrown back into webhook
    * handling: GitHub only needs the 2xx acknowledgment. Since 2026-09-04 the Worker implements this as
@@ -111,10 +114,13 @@ export async function handleShadowWebhook(
         deps.log(`shadow-webhook: App installation ${installationId} suspend - repositories keep their state (human decision per spec); a suspension is reversible by the same tenant and is deliberately not erased, unlike a deletion`);
         return ok("installation-suspend-acknowledged");
       }
-      const repos: string[] = (payload?.repositories ?? []).map((r: any) => String(r?.full_name ?? "")).filter((r: string) => REPOSITORY_PATTERN.test(r));
-      for (const repository of repos) {
-        await deps.ensureRepository(repository, "typescript");
+      const repoRecords: Array<{ full_name: string; private?: boolean }> = (payload?.repositories ?? []).filter((r: any) => REPOSITORY_PATTERN.test(String(r?.full_name ?? "")));
+      const repos: string[] = repoRecords.map((r) => String(r.full_name));
+      for (const r of repoRecords) {
+        const repository = String(r.full_name);
+        await deps.ensureRepository(repository, "typescript", { isPrivate: r.private === true });
         if (installationId) await deps.setInstallationId(repository, installationId);
+        deps.scheduleIdentification?.(repository);
       }
       deps.log(`shadow-webhook: installation ${action} - enrolled ${repos.length} repository(ies): ${repos.join(", ")}`);
       return ok("installation-enrolled", { repositories: repos });
@@ -122,11 +128,14 @@ export async function handleShadowWebhook(
 
     case "installation_repositories": {
       const installationId = String(payload?.installation?.id ?? "");
-      const added: string[] = (payload?.repositories_added ?? []).map((r: any) => String(r?.full_name ?? "")).filter((r: string) => REPOSITORY_PATTERN.test(r));
+      const addedRecords: Array<{ full_name: string; private?: boolean }> = (payload?.repositories_added ?? []).filter((r: any) => REPOSITORY_PATTERN.test(String(r?.full_name ?? "")));
+      const added: string[] = addedRecords.map((r) => String(r.full_name));
       const removed: string[] = (payload?.repositories_removed ?? []).map((r: any) => String(r?.full_name ?? "")).filter(Boolean);
-      for (const repository of added) {
-        await deps.ensureRepository(repository, "typescript");
+      for (const r of addedRecords) {
+        const repository = String(r.full_name);
+        await deps.ensureRepository(repository, "typescript", { isPrivate: r.private === true });
         if (installationId) await deps.setInstallationId(repository, installationId);
+        deps.scheduleIdentification?.(repository);
       }
       if (removed.length > 0) {
         deps.log(`shadow-webhook: repositories removed from installation ${installationId} (state unchanged, human decision per spec): ${removed.join(", ")}`);
@@ -142,11 +151,17 @@ export async function handleShadowWebhook(
       if (!defaultBranch || ref !== `refs/heads/${defaultBranch}`) {
         return ok("push-non-default-branch-ignored", { repository, ref });
       }
-      await deps.ensureRepository(repository, "typescript");
+      await deps.ensureRepository(repository, "typescript", { isPrivate: payload?.repository?.private === true });
       const installationId = String(payload?.installation?.id ?? "");
       if (installationId) await deps.setInstallationId(repository, installationId);
       const after = String(payload?.after ?? "");
       deps.schedulePoll(repository, /^[0-9a-f]{40}$/.test(after) ? after : undefined);
+      // A push that touches the workflow files may change which workflow runs the tests, or the job/step
+      // names the stage layout is keyed on: re-derive (an explicit configuration is never overwritten).
+      const touchedWorkflows = (Array.isArray(payload?.commits) ? payload.commits : []).some((c: any) =>
+        [...(c?.added ?? []), ...(c?.modified ?? []), ...(c?.removed ?? [])].some((f: unknown) => String(f).startsWith(".github/workflows/")),
+      );
+      if (touchedWorkflows) deps.scheduleIdentification?.(repository);
       // Independent of the poll above: same push, same enrolled repository, a SEPARATE analysis engine.
       // Never blocks or replaces schedulePoll, and its absence from the response body when unwired keeps
       // this byte-for-byte compatible with every caller that doesn't yet supply it.

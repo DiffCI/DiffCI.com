@@ -80,11 +80,31 @@ export interface DashboardRecentActivity {
   recentRunnerJobs: Array<{ runnerId: string; status: Runner["status"]; createdAt: string }>;
 }
 
+export interface DashboardReportLink {
+  repository: string;
+  /** The per-repository report URL. For a private repository it carries the report token, which is why
+   * this contract is only ever served to an authenticated member of the organization. */
+  url: string;
+  isPrivate: boolean;
+}
+
 export interface DashboardContract {
   overview: DashboardOverview;
   safety: DashboardSafety;
   usage: DashboardUsage;
   recentActivity: DashboardRecentActivity;
+  /** 2026-09-05 seamless install: where each repository's evidence-labelled report lives. */
+  reports: DashboardReportLink[];
+}
+
+export function buildDashboardReportLinks(reportBaseUrl: string, access: readonly { repository: string; isPrivate: boolean; token?: string }[]): DashboardReportLink[] {
+  return access.map((a) => {
+    const url = new URL(reportBaseUrl);
+    url.searchParams.set("repository", a.repository);
+    url.searchParams.set("days", "7");
+    if (a.isPrivate && a.token) url.searchParams.set("token", a.token);
+    return { repository: a.repository, url: url.toString(), isPrivate: a.isPrivate };
+  });
 }
 
 export function buildDashboardOverview(
@@ -150,6 +170,7 @@ export function buildDashboardContract(
   safety: DashboardSafety,
   usage: DashboardUsage,
   recentActivity: DashboardRecentActivity,
+  reports: DashboardReportLink[] = [],
 ): DashboardContract {
-  return { overview, safety, usage, recentActivity };
+  return { overview, safety, usage, recentActivity, reports };
 }

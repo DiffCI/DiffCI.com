@@ -467,10 +467,14 @@ export default {
         );
       }
 
-      const [repositories, tokens, observations] = await Promise.all([
+      const [repositories, tokens, observations, dashboard] = await Promise.all([
         listRepositoriesForOrganization(routeDeps, principal.userId, organizationId),
         listIngestTokensForOrganization(ingestDeps, principal.userId, organizationId),
         listObservationsForOrganization(ingestDeps, principal.userId, organizationId, { limit: 10 }),
+        // 2026-09-05 seamless install: report links (with the token for private repositories) for a
+        // verified member - the only place a private repository's report token is ever shown. A research
+        // database problem must never take the console page down: links are simply absent.
+        getDashboardForOrganization(routeDeps, principal.userId, organizationId).catch(() => ({ ok: false as const, error: "not_found" as const })),
       ]);
       return htmlResponse(
         renderOrganization({
@@ -481,6 +485,7 @@ export default {
           summary: observations.ok ? observations.data.summary : { total: 0, observed: 0, refused: 0, errored: 0, selective: 0, full: 0, worktreeUnchanged: 0, distinctRepositories: 0 },
           recent: observations.ok ? observations.data.observations : [],
           installUrl: env.GITHUB_APP_SLUG ? `/app/install?organizationId=${encodeURIComponent(organizationId)}` : undefined,
+          reports: dashboard.ok ? dashboard.data.reports : [],
         }),
       );
     }

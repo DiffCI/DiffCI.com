@@ -27,6 +27,7 @@ const MIGRATIONS = [
   "schema-migration-2026-09-05-shadow-reconcile-terminal.sql",
   "schema-migration-2026-09-05-shadow-evidence-workflow.sql",
   "schema-migration-2026-09-05-shadow-stage-economics.sql",
+  "schema-migration-2026-09-05-shadow-auto-identification.sql",
 ];
 
 function freshDb(): DatabaseSync {
@@ -89,7 +90,8 @@ describe("buildLiveShadowReport on real SQLite", () => {
     const db = freshDb();
     seed(db, "acme/web", { evidencePaths: [".github/workflows/ci.yml"], withEvidence: true });
     const r = await buildLiveShadowReport(makeD1(db), "acme/web", 7);
-    assert.deepEqual(r.evidenceWorkflow, { state: "IDENTIFIED", paths: [".github/workflows/ci.yml"] });
+    assert.equal(r.evidenceWorkflow.state, "IDENTIFIED");
+    assert.deepEqual(r.evidenceWorkflow.paths, [".github/workflows/ci.yml"]);
     assert.equal(r.hasSufficientData, true);
     assert.equal(r.totalObservedMs, 120_000, "the 999999 ms legacy row must not appear");
     assert.deepEqual(r.stages.map((s) => s.stage), ["test"]);

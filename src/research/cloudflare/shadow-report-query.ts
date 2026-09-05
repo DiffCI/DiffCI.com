@@ -96,9 +96,9 @@ export async function buildLiveShadowReport(db: D1Binding, repository: string, d
   // 2026-09-05 (repair step 2): the repository's explicitly identified CI evidence workflow. Without it
   // nothing is admitted as ground truth or economics, and the report says so instead of showing zeros.
   const repoRow = await db
-    .prepare(`SELECT evidence_workflow_paths FROM shadow_repositories WHERE repository = ?`)
+    .prepare(`SELECT evidence_workflow_paths, evidence_workflow_source, identification_status, identification_note, state, notes FROM shadow_repositories WHERE repository = ?`)
     .bind(repository)
-    .first<{ evidence_workflow_paths: string | null }>();
+    .first<{ evidence_workflow_paths: string | null; evidence_workflow_source: string | null; identification_status: string | null; identification_note: string | null; state: string | null; notes: string | null }>();
   let evidencePaths: string[] | undefined;
   try {
     const parsed = repoRow?.evidence_workflow_paths ? (JSON.parse(repoRow.evidence_workflow_paths) as unknown) : undefined;
@@ -106,7 +106,12 @@ export async function buildLiveShadowReport(db: D1Binding, repository: string, d
   } catch {
     evidencePaths = undefined;
   }
-  const evidenceWorkflow: EvidenceWorkflowState = evidencePaths ? { state: "IDENTIFIED", paths: evidencePaths } : { state: "AWAITING_IDENTIFICATION" };
+  const source = repoRow?.evidence_workflow_source === "auto" || repoRow?.evidence_workflow_source === "explicit" ? repoRow.evidence_workflow_source : undefined;
+  const identificationStatus = repoRow?.identification_status as EvidenceWorkflowState["identificationStatus"] | null | undefined;
+  const evidenceWorkflow: EvidenceWorkflowState = evidencePaths
+    ? { state: "IDENTIFIED", paths: evidencePaths, source, reason: repoRow?.identification_note ?? undefined, identificationStatus: identificationStatus ?? undefined }
+    : { state: "AWAITING_IDENTIFICATION", source, reason: repoRow?.identification_note ?? undefined, identificationStatus: identificationStatus ?? undefined };
+  const repositoryStatus = repoRow?.state ? { state: repoRow.state, note: repoRow.notes ?? undefined } : undefined;
 
   const eligibleRow = await db
     .prepare(`SELECT COUNT(*) as n FROM shadow_predictions WHERE repository = ? AND created_at >= ? AND created_at < ?`)
@@ -157,5 +162,6 @@ export async function buildLiveShadowReport(db: D1Binding, repository: string, d
     eligiblePredictions,
     safety: { evaluableFailures, failuresPreserved, falseNegatives: Math.max(0, evaluableFailures - failuresPreserved) },
     evidenceWorkflow,
+    repositoryStatus,
   });
 }

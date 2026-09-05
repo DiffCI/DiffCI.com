@@ -104,6 +104,10 @@ export interface ShadowReadBoundary {
    * evidence_workflow_paths). Until it has, the dashboard must say that ground truth and savings evidence
    * are not yet available rather than show zeros. Read-only. */
   getEvidenceWorkflowState(ownerName: string): Promise<ShadowEvidenceWorkflowState>;
+  /** 2026-09-05 seamless install: how this repository's report is reached. A private repository's report
+   * needs its token; the dashboard is the only place the token is shown (after GitHub sign-in and an
+   * installation claim). Read-only. */
+  getReportAccess(ownerName: string): Promise<{ isPrivate: boolean; token?: string } | undefined>;
   /** Repositories currently in an active shadow-observation state (SHADOW_ACTIVE/SHADOW_LIMITED) -
    * External Shadow Pilot M1 (2026-08-25). Deliberately excludes INSTALLING/VALIDATING (not yet producing
    * trustworthy predictions), PAUSED/REMOVED (no longer observed), and UNSUPPORTED/
@@ -214,6 +218,12 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
         evidenceBasis: "verified_ground_truth_only",
         verifiedGroundTruthRows: row?.verified_rows ?? 0,
       };
+    },
+
+    async getReportAccess(ownerName) {
+      const row = await db.prepare(`SELECT is_private, report_token FROM shadow_repositories WHERE repository = ?`).bind(ownerName).first<{ is_private: number | null; report_token: string | null }>();
+      if (!row) return undefined;
+      return { isPrivate: row.is_private === 1, token: row.report_token ?? undefined };
     },
 
     async getEvidenceWorkflowState(ownerName) {

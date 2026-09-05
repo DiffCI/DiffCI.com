@@ -40,6 +40,7 @@ function fakeShadowBoundary(repositories: string[], predictions: ShadowPredictio
     },
     async listVerifiedGroundTruth() { return []; },
     async getEvidenceWorkflowState(ownerName: string) { return { ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }; },
+    async getReportAccess() { return { isPrivate: false }; },
     async listEnrolledRepositories() {
       return repositories;
     },
@@ -203,6 +204,7 @@ describe("runShadowEconomicsCaptureSweep", () => {
       },
       async listVerifiedGroundTruth() { return []; },
       async getEvidenceWorkflowState(ownerName: string) { return { ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }; },
+      async getReportAccess() { return { isPrivate: false }; },
       async listEnrolledRepositories() {
         return ["a/busy", "z/quiet"];
       },
@@ -287,6 +289,7 @@ describe("runShadowEconomicsCaptureSweep", () => {
       },
       async listVerifiedGroundTruth() { return []; },
       async getEvidenceWorkflowState(ownerName: string) { return { ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }; },
+      async getReportAccess() { return { isPrivate: false }; },
       async listEnrolledRepositories() {
         return ["a/has-work", "b/idle"];
       },

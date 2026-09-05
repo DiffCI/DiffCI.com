@@ -7,7 +7,11 @@
   // Held at a date the locally-installed wrangler's workerd binary supports, so `npm run site:dev`
   // works offline. Irrelevant to behaviour here - this Worker runs no code, it only serves files.
   "compatibility_date": "2026-08-08",
+  // 2026-09-05: a script in front of the assets for http->https and www->apex redirects only
+  // (src/site/site-worker.ts); every other request is served from ./site unchanged.
+  "main": "./src/site/site-worker.ts",
   "assets": {
+    "binding": "ASSETS",
     "directory": "./site",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page"
@@ -27,6 +31,8 @@
   // Still founder-owned (Cloudflare dashboard, not this file): "Always Use HTTPS" for the zone (plain
   // http:// currently serves the page without redirecting) and a www record (www.diffci.com returns 522).
   "routes": [
-    { "pattern": "diffci.com", "custom_domain": true }
+    { "pattern": "diffci.com", "custom_domain": true },
+    // 2026-09-05: www used to 522 (no DNS). A custom domain creates the record; the Worker redirects to the apex.
+    { "pattern": "www.diffci.com", "custom_domain": true }
   ]
 }

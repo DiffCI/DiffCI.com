@@ -24,6 +24,7 @@ const MIGRATIONS_BEFORE_IDENTITY = [
   "schema-migration-2026-09-05-shadow-reconcile-terminal.sql",
 ];
 const IDENTITY_MIGRATION = "schema-migration-2026-09-05-shadow-evidence-workflow.sql";
+const AUTO_MIGRATION = "schema-migration-2026-09-05-shadow-auto-identification.sql";
 
 function dbWith(files: string[]): DatabaseSync {
   const db = new DatabaseSync(":memory:");
@@ -73,7 +74,7 @@ function groundTruth(overrides: Partial<RecordGroundTruthInput> & { logicalEvent
 
 describe("shadow-store: evidence workflow identity", () => {
   it("evidence workflow paths are unconfigured until explicitly set, then round-trip", async () => {
-    const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION]);
+    const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION, AUTO_MIGRATION]);
     const store = makeD1ShadowStore(makeD1(db));
     await store.ensureRepository("acme/web", "github-app-webhook");
     assert.equal(await store.getEvidenceWorkflowPaths("acme/web"), undefined);
@@ -85,7 +86,7 @@ describe("shadow-store: evidence workflow identity", () => {
   });
 
   it("recordGroundTruth stores VERIFIED with the evidence workflow path under identity mode, UNVERIFIED without it", async () => {
-    const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION]);
+    const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION, AUTO_MIGRATION]);
     const store = makeD1ShadowStore(makeD1(db));
     await store.ensureRepository("acme/web", "cloudflare-poll");
     await store.recordPrediction(prediction({ logicalDeltaKey: "p1" }), "r2/p1");
@@ -127,7 +128,7 @@ describe("shadow-store: evidence workflow identity", () => {
   });
 
   it("getRepositorySummary counts recall over VERIFIED rows only - contaminated and unverified rows are reported in the raw count but never in the evidence", async () => {
-    const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION]);
+    const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION, AUTO_MIGRATION]);
     const store = makeD1ShadowStore(makeD1(db));
     await store.ensureRepository("acme/web", "cloudflare-poll");
     for (const k of ["v", "u", "c"]) await store.recordPrediction(prediction({ logicalDeltaKey: k, headSha: `h-${k}` }), `r2/${k}`);

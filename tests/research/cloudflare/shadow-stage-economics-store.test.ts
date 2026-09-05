@@ -27,6 +27,7 @@ const MIGRATIONS = [
   "schema-migration-2026-09-05-shadow-reconcile-terminal.sql",
   "schema-migration-2026-09-05-shadow-evidence-workflow.sql",
   "schema-migration-2026-09-05-shadow-stage-economics.sql",
+  "schema-migration-2026-09-05-shadow-auto-identification.sql",
 ];
 
 function freshDb(): DatabaseSync {

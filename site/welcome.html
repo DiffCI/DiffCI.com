@@ -84,6 +84,17 @@
     DiffCI does not collect an email address and will not send you anything: there is no message on day
     7, only this URL.
   </p>
+  <p>
+    Nothing to configure. Within a minute of installing, DiffCI reads the repository’s own workflow files
+    and package.json scripts to identify which GitHub Actions workflow runs its tests, and the report shows
+    that identification and its reasoning. If no workflow runs the tests on push or pull request, the
+    report says exactly that instead of showing zeros.
+  </p>
+  <p>
+    A <strong>private</strong> repository’s report is not public by URL: its link (with a report token) is
+    shown in the DiffCI dashboard after signing in with GitHub, so nobody can read your CI timings by
+    guessing the repository name.
+  </p>
   <form class="report-lookup" onsubmit="event.preventDefault(); var v=document.getElementById('repo-input').value.trim(); if(v) window.location.href='https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/report?repository=' + encodeURIComponent(v) + '&days=7';">
     <input id="repo-input" type="text" placeholder="owner/repository" required pattern="[A-Za-z0-9._-]+/[A-Za-z0-9._-]+">
     <button type="submit" class="button">View my report →</button>
@@ -122,6 +133,7 @@
       <a href="/case-studies/diffci-own-ci">our own CI</a>
       <a href="/research/diffci-open-evidence-2026">Open study</a>
       <a href="/data-handling">Data handling</a>
+      <a href="/contact">Contact</a>
     </nav>
     <p class="fine">
       DiffCI currently ships under its founder's personal GitHub account,

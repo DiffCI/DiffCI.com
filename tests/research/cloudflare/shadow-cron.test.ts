@@ -121,7 +121,7 @@ describe("runShadowCronOnce", () => {
   it("polls up to maxPollsPerRun and reconciles every pollable repository", async () => {
     const repos = [repo({ repository: "a/one" }), repo({ repository: "b/two" }), repo({ repository: "c/three" }), repo({ repository: "d/four" })];
     const { deps, calls } = makeDeps({ repos });
-    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 });
+    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10, maxPollsPerDayPerRepository: 1000, maxPollsPerDayForCloudflarePoll: 1000, maxIdentificationsPerRun: 0 });
 
     assert.deepEqual(calls.polled, ["a/one", "b/two"]);
     assert.deepEqual(calls.reconciled, ["a/one", "b/two", "c/three", "d/four"]);
@@ -141,7 +141,7 @@ describe("runShadowCronOnce", () => {
       repos,
       heads: { "a/unchanged": { sha: "same-sha" }, "b/moved": { sha: "new-sha" }, "c/also-moved": { sha: "new-sha" } },
     });
-    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 });
+    const record = await runShadowCronOnce(deps, { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10, maxPollsPerDayPerRepository: 1000, maxPollsPerDayForCloudflarePoll: 1000, maxIdentificationsPerRun: 0 });
 
     // a/unchanged was skipped, so BOTH moved repositories fit within maxPollsPerRun=2.
     assert.deepEqual(calls.polled, ["b/moved", "c/also-moved"]);
@@ -326,7 +326,7 @@ describe("runShadowCronOnce", () => {
 });
 
 describe("daily launch ceiling", () => {
-  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 };
+  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10, maxPollsPerDayPerRepository: 1000, maxPollsPerDayForCloudflarePoll: 1000, maxIdentificationsPerRun: 0 };
 
   it("NEVER suppresses head checks when the ceiling is spent - observation must continue", async () => {
     // The bug this pins: gating the ceiling before the head check made a repository whose head HAD moved
@@ -392,7 +392,7 @@ describe("daily launch ceiling", () => {
 });
 
 describe("atomic launch-slot accounting", () => {
-  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 };
+  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10, maxPollsPerDayPerRepository: 1000, maxPollsPerDayForCloudflarePoll: 1000, maxIdentificationsPerRun: 0 };
 
   // (1) The defect vitest-dev/vitest exposed live: a clone-excluded poll still burned a real container,
   // yet the old success-counting ceiling read 1/60 while it happened every ten minutes.
@@ -539,7 +539,7 @@ describe("atomic launch-slot accounting", () => {
 });
 
 describe("explicit refusal for persistently failing repositories", () => {
-  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 };
+  const CFG = { maxPollsPerRun: 3, maxReconcilesPerRun: 10, maxPollsPerDay: 60, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10, maxPollsPerDayPerRepository: 1000, maxPollsPerDayForCloudflarePoll: 1000, maxIdentificationsPerRun: 0 };
 
   it("auto-pauses a repository that reaches the consecutive-failure threshold", async () => {
     // The vitest-dev/vitest shape: deterministically ineligible, so it re-fails every sweep at real
@@ -590,7 +590,7 @@ describe("explicit refusal for persistently failing repositories", () => {
 });
 
 describe("runShadowCronOnce: push-triggered polls in flight (2026-09-04)", () => {
-  const CFG = { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10 };
+  const CFG = { maxPollsPerRun: 2, maxReconcilesPerRun: 10, maxPollsPerDay: 1000, maxHeadChecksPerRun: 25, maxConsecutivePollErrors: 5, reconcileLimitPerRepo: 10, maxPollsPerDayPerRepository: 1000, maxPollsPerDayForCloudflarePoll: 1000, maxIdentificationsPerRun: 0 };
 
   it("head-checks and records the transition for a repository whose push poll is running, but never launches a second container", async () => {
     const repos = [

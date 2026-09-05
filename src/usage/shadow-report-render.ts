@@ -184,25 +184,65 @@ export function renderShadowReport(report: ShadowRepositoryReport): string {
   // 2026-09-05: nothing is admitted as evidence until the repository's CI evidence workflow has been
   // explicitly identified. This state comes BEFORE any number, and it is not "insufficient data": there
   // may be plenty of predictions - there is no ground truth and no savings evidence, by construction.
-  if (report.evidenceWorkflow.state === "AWAITING_IDENTIFICATION") {
-    L.push("STATUS: SHADOW - AWAITING CI EVIDENCE WORKFLOW IDENTIFICATION");
+  // A repository that is not observing at all says so first: an ineligible or paused repository has
+  // no evidence for a reason that is neither "insufficient data" nor "awaiting identification".
+  const rs = report.repositoryStatus;
+  if (rs && (rs.state === "UNSUPPORTED" || rs.state === "PAUSED")) {
+    L.push(rs.state === "UNSUPPORTED" ? "STATUS: SHADOW - CANNOT OBSERVE THIS REPOSITORY" : "STATUS: SHADOW - OBSERVATION PAUSED");
     L.push("");
-    L.push("DiffCI has not yet been told which of this repository's GitHub Actions workflows is the CI");
-    L.push("evidence it should measure against. Until that is identified, no workflow run is admitted as");
-    L.push("ground truth and no savings evidence is produced.");
+    L.push(rs.state === "UNSUPPORTED" ? "DiffCI cannot observe this repository yet:" : "DiffCI has paused observing this repository:");
+    L.push(`  ${rs.note ?? "no reason recorded"}`);
+    L.push("");
+    L.push("  No prediction, ground truth or savings figure is offered, because none can be produced honestly.");
+    L.push("  This is a statement about what DiffCI can do, not about this repository's CI.");
+    L.push("");
+    L.push("  DiffCI made no change to this repository's CI. Nothing was skipped, cancelled or modified.");
+    return L.join("\n");
+  }
+
+  if (report.evidenceWorkflow.state === "AWAITING_IDENTIFICATION") {
+    const ew = report.evidenceWorkflow;
+    if (ew.identificationStatus === "none_found") {
+      L.push("STATUS: SHADOW - NO CI TEST WORKFLOW FOUND");
+      L.push("");
+      L.push("DiffCI read this repository's GitHub Actions workflows and found none that runs the");
+      L.push("repository's tests on push or pull_request, so there is no CI evidence to measure against:");
+      L.push(`  ${ew.reason ?? "no reason recorded"}`);
+      L.push("");
+      L.push("  DiffCI re-reads the workflows automatically whenever they change on the default branch.");
+    } else if (ew.identificationStatus === "shape_mismatch") {
+      L.push("STATUS: SHADOW - AWAITING CI EVIDENCE WORKFLOW IDENTIFICATION");
+      L.push("");
+      L.push("DiffCI identified a workflow from this repository's files, but the first executed run did not");
+      L.push("match the derived job and step names, so the identification was withdrawn:");
+      L.push(`  ${ew.reason ?? "no detail recorded"}`);
+      L.push("");
+      L.push("  DiffCI re-derives automatically; nothing is admitted as evidence until a run matches.");
+    } else {
+      L.push("STATUS: SHADOW - AWAITING CI EVIDENCE WORKFLOW IDENTIFICATION");
+      L.push("");
+      L.push("DiffCI identifies which of this repository's GitHub Actions workflows runs its tests by reading");
+      L.push("the workflow files and package.json scripts. That has not completed yet. Until it has, no");
+      L.push("workflow run is admitted as ground truth and no savings evidence is produced.");
+    }
     L.push("");
     L.push(`  Predictions may be generated (${report.evidence.eligiblePredictions} in this window), but ground truth and`);
     L.push("  savings evidence are not yet available.");
     L.push("  Zero observations here means nothing has been admitted as evidence - not zero opportunity.");
     L.push("");
-    L.push("  Identification is a one-time step done with the DiffCI team for now (it names the workflow file,");
-    L.push("  e.g. .github/workflows/ci.yml, and never changes anything in the repository).");
+    L.push("  Identification is automatic and reads only the repository's own files; it never changes anything");
+    L.push("  in the repository.");
     L.push("");
     L.push("  DiffCI made no change to this repository's CI. Nothing was skipped, cancelled or modified.");
     return L.join("\n");
   }
   if (report.evidenceWorkflow.state === "IDENTIFIED" && report.evidenceWorkflow.paths?.length) {
-    L.push(`Evidence workflow: ${report.evidenceWorkflow.paths.join(", ")}  (only runs of this workflow are admitted as evidence)`);
+    const ew = report.evidenceWorkflow;
+    L.push(`Evidence workflow: ${ew.paths!.join(", ")}  (only runs of this workflow are admitted as evidence)`);
+    if (ew.source === "auto") {
+      L.push(`  identified automatically from the repository's own workflow files: ${ew.reason ?? ""}`.trimEnd());
+      L.push(ew.identificationStatus === "verified" ? "  verified against an executed run of that workflow" : "  not yet verified against an executed run - no economics row is written until one matches");
+    }
     L.push("");
   }
 

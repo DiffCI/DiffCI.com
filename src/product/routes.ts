@@ -12,7 +12,7 @@ import type { UsageStore } from "../usage/store.js";
 import { summarizeUsage, computeAllowanceStatus, startOfUtcMonth, endOfUtcMonth } from "../usage/aggregation.js";
 import { getEntitlementsForOrganization } from "../billing/entitlements.js";
 import { computeSavingsForPrediction, aggregateSavings, type SavingsOptions } from "../usage/savings.js";
-import { buildDashboardContract, buildDashboardOverview, buildDashboardRecentActivity, buildDashboardSafety, buildDashboardUsage, type DashboardContract } from "./dashboard.js";
+import { buildDashboardContract, buildDashboardOverview, buildDashboardRecentActivity, buildDashboardReportLinks, buildDashboardSafety, buildDashboardUsage, type DashboardContract } from "./dashboard.js";
 import type { Organization, Repository } from "./types.js";
 import type { Runner } from "../runner/types.js";
 import type { QueueItem } from "../execution-queue/types.js";
@@ -24,7 +24,12 @@ export interface RouteDeps {
   queueStore: ExecutionQueueStore;
   usageStore: UsageStore;
   savingsOptions?: SavingsOptions;
+  /** Base URL of the public per-repository report route (the research Worker). */
+  reportBaseUrl?: string;
 }
+
+/** The live report route today; overridable per environment via RouteDeps.reportBaseUrl. */
+export const DEFAULT_REPORT_BASE_URL = "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/report";
 
 /**
  * `agent_not_pinned` (2026-08-27) is an ENVIRONMENT fault, not a caller fault: the request was
@@ -134,6 +139,14 @@ export async function getDashboardForOrganization(deps: RouteDeps, userId: strin
   const safety = buildDashboardSafety(safetySnapshot, evidenceWorkflows);
   const usage = buildDashboardUsage(entitlements, allowance);
   const recentActivity = buildDashboardRecentActivity(allPredictions.slice(0, 10), recentRunners);
+  // 2026-09-05 seamless install: report links, with the token for private repositories - served only to
+  // a verified member (requireMembership above).
+  const access: Array<{ repository: string; isPrivate: boolean; token?: string }> = [];
+  for (const repo of repositories) {
+    const a = await deps.shadowBoundary.getReportAccess(repo.ownerName);
+    if (a) access.push({ repository: repo.ownerName, ...a });
+  }
+  const reports = buildDashboardReportLinks(deps.reportBaseUrl ?? DEFAULT_REPORT_BASE_URL, access);
 
-  return { ok: true, data: buildDashboardContract(overview, safety, usage, recentActivity) };
+  return { ok: true, data: buildDashboardContract(overview, safety, usage, recentActivity, reports) };
 }

@@ -89,6 +89,7 @@ export interface ShadowRepositoryReport {
   /** Computed over VERIFIED ground truth only (evidence_validity), since 2026-09-05. */
   safety: { evaluableFailures: number; failuresPreserved: number; falseNegatives: number };
   evidenceWorkflow: EvidenceWorkflowState;
+  repositoryStatus?: RepositoryStatus;
 }
 
 export interface RollupInput {
@@ -106,6 +107,7 @@ export interface RollupInput {
    * explicitly identified. Until it has, nothing can be admitted as ground truth or economics, and the
    * report must say so - zero observations must never read as zero opportunity. */
   evidenceWorkflow?: EvidenceWorkflowState;
+  repositoryStatus?: RepositoryStatus;
 }
 
 export interface EvidenceWorkflowState {
@@ -113,6 +115,18 @@ export interface EvidenceWorkflowState {
    * NOT_STATED: the caller did not look it up (legacy callers / unit fixtures). */
   state: "IDENTIFIED" | "AWAITING_IDENTIFICATION" | "NOT_STATED";
   paths?: string[];
+  /** 2026-09-05 seamless install: who identified it and on what basis. `auto` identifications carry the
+   * chosen-workflow reason; an awaiting repository carries why (none_found / shape_mismatch / not yet
+   * attempted); a verified one carries when the first executed run matched the derived shape. */
+  source?: "auto" | "explicit";
+  reason?: string;
+  identificationStatus?: "identified" | "verified" | "none_found" | "shape_mismatch" | "ineligible";
+}
+
+/** The repository's observation state when it is not simply observing - rendered before any number. */
+export interface RepositoryStatus {
+  state: string;
+  note?: string;
 }
 
 export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
@@ -178,6 +192,7 @@ export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
     windowEndIso: input.windowEndIso,
     hasSufficientData: rows.length > 0,
     evidenceWorkflow: input.evidenceWorkflow ?? { state: "NOT_STATED" },
+    repositoryStatus: input.repositoryStatus,
     insufficientReason: rows.length === 0 ? "No completed CI workload was observed for this repository in this window." : undefined,
     commitsObserved: distinctCommits.size,
     workflowRunsObserved: distinctRuns.size,

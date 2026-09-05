@@ -30,7 +30,7 @@
 
 import type { ShadowCronConfig, VerifiedSourceArchive, RepositoryLivenessUpdate } from "./shadow-cron.js";
 
-export type PushPollKind = "poll" | "ci-reproduction-bridge";
+export type PushPollKind = "poll" | "ci-reproduction-bridge" | "identify-evidence-workflow";
 
 export interface PushPollMessage {
   kind: PushPollKind;
@@ -82,7 +82,7 @@ export function parsePushPollMessage(body: unknown): PushPollMessage | undefined
   const kind = b.kind;
   const repository = b.repository;
   const enqueuedAt = b.enqueuedAt;
-  if (kind !== "poll" && kind !== "ci-reproduction-bridge") return undefined;
+  if (kind !== "poll" && kind !== "ci-reproduction-bridge" && kind !== "identify-evidence-workflow") return undefined;
   if (typeof repository !== "string" || !REPOSITORY_PATTERN.test(repository)) return undefined;
   if (typeof enqueuedAt !== "string" || !enqueuedAt) return undefined;
   const headSha = typeof b.headSha === "string" && SHA_PATTERN.test(b.headSha) ? b.headSha : undefined;
@@ -93,7 +93,7 @@ export interface PushPollDeps {
   getRepositoryState(repository: string): Promise<{ state: string; language: string } | undefined>;
   getVerifiedSourceArchive(): Promise<VerifiedSourceArchive>;
   /** Same contract as ShadowCronDeps.reserveLaunchSlot - one slot per container launch, never refunded. */
-  reserveLaunchSlot(repository: string, maxPerDay: number): Promise<{ granted: boolean; slotNo?: number }>;
+  reserveLaunchSlot(repository: string, maxPerDay: number, caps?: { perRepositoryPerDay?: number; perSourcePerDay?: Partial<Record<string, number>> }): Promise<{ granted: boolean; slotNo?: number }>;
   recordLaunchOutcome(slotNo: number, outcome: "succeeded" | "failed"): Promise<void>;
   pollRepository(repository: string, language: string, source: File, engineSourceSha: string): Promise<{ predictionsRecorded: number; errors: string[]; newHeadSha?: string }>;
   /** EXTERNAL_ENGINE_BRIDGE_01's independent engine. Optional: an environment without it acks bridge
@@ -174,7 +174,10 @@ export async function runPushTriggeredPoll(message: PushPollMessage, deps: PushP
     }
   }
 
-  const reservation = await deps.reserveLaunchSlot(message.repository, config.maxPollsPerDay);
+  const reservation = await deps.reserveLaunchSlot(message.repository, config.maxPollsPerDay, {
+    perRepositoryPerDay: config.maxPollsPerDayPerRepository,
+    perSourcePerDay: { "cloudflare-poll": config.maxPollsPerDayForCloudflarePoll },
+  });
   if (!reservation.granted) {
     // Deliberate, recorded refusal - identical semantics to the cron's dailyCeilingRefusals. The head
     // change is real; the cron's head check still records the transition so coverage attributes the

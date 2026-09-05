@@ -96,9 +96,13 @@ export interface OrganizationPageData {
   recent: ObservationRecord[];
   /** Where "Install the GitHub App" points. Absent when the App is not configured in this environment. */
   installUrl?: string;
+  /** 2026-09-05 seamless install: each connected repository's evidence-labelled report link. A private
+   * repository's link carries its report token - this page is only ever rendered for a verified member. */
+  reports?: Array<{ repository: string; url: string; isPrivate: boolean }>;
 }
 
 export function renderOrganization(data: OrganizationPageData): string {
+  const reportByRepository = new Map((data.reports ?? []).map((r) => [r.repository, r]));
   const tokensByRepository = new Map<string, number>();
   for (const token of data.tokens) {
     if (token.revokedAt) continue;
@@ -126,7 +130,7 @@ export function renderOrganization(data: OrganizationPageData): string {
       ${data.repositories.length === 0
         ? html`<p class="empty">No repositories connected yet.</p>`
         : html`<table>
-            <thead><tr><th>Repository</th><th>Status</th><th>Branch</th><th class="num">Live tokens</th><th></th></tr></thead>
+            <thead><tr><th>Repository</th><th>Status</th><th>Branch</th><th class="num">Live tokens</th><th>Report</th><th></th></tr></thead>
             <tbody>
               ${data.repositories.map(
                 (repository) => html`<tr>
@@ -134,6 +138,10 @@ export function renderOrganization(data: OrganizationPageData): string {
                   <td>${repository.status}</td>
                   <td><code>${repository.defaultBranch}</code></td>
                   <td class="num">${tokensByRepository.get(repository.id) ?? 0}</td>
+                  <td>${(() => {
+                    const r = reportByRepository.get(repository.ownerName);
+                    return r ? html`<a href="${r.url}">Open report</a>${r.isPrivate ? html` <span class="muted">(private link - keep it to your team)</span>` : ""}` : html`<span class="muted">not enrolled yet</span>`;
+                  })()}</td>
                   <td><a href="/app/orgs/${data.organization.id}/repos/${repository.id}">Set up</a></td>
                 </tr>`,
               )}

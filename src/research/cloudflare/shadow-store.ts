@@ -82,6 +82,40 @@ export interface RecordGroundTruthInput {
 
 export type GroundTruthValidity = "VERIFIED" | "UNVERIFIED" | "CONTAMINATED_WORKFLOW_IDENTITY";
 
+export interface LaunchCaps {
+  /** Launches one repository may consume per UTC day. */
+  perRepositoryPerDay?: number;
+  /** Launches all repositories of one observation source may consume per UTC day together. */
+  perSourcePerDay?: Partial<Record<ObservationSource, number>>;
+}
+
+export type IdentificationStatus = "identified" | "verified" | "none_found" | "shape_mismatch" | "ineligible";
+
+export interface RecordIdentificationInput {
+  repository: string;
+  status: IdentificationStatus;
+  /** Present for identified/verified. */
+  evidenceWorkflowPaths?: string[];
+  stageClassificationJson?: string;
+  derivationJson?: string;
+  note?: string;
+  workflowsTreeSha?: string;
+  at: string;
+}
+
+export interface RepositoryIdentification {
+  repository: string;
+  state: ShadowRepositoryState;
+  notes?: string;
+  source?: "auto" | "explicit";
+  evidenceWorkflowPaths?: string[];
+  status?: IdentificationStatus;
+  checkedAt?: string;
+  note?: string;
+  derivationJson?: string;
+  workflowsTreeSha?: string;
+}
+
 /** Telemetry self-health invariants (2026-09-05). Every value is something the 2026-09-05 incident
  * review said a human should not have to discover by hand again. */
 export interface ShadowSelfHealth {
@@ -216,8 +250,11 @@ export interface ShadowStore {
   pauseRepository(repository: string, reason: string): Promise<void>;
   /** Consecutive prior poll failures for a repository. */
   consecutivePollErrors(repository: string): Promise<number>;
-  /** Atomically reserves one daily launch slot. Granted:false when the day's budget is spent. */
-  reserveLaunchSlot(repository: string, maxPerDay: number): Promise<{ granted: boolean; slotNo?: number }>;
+  /** Atomically reserves one daily launch slot. Granted:false when the day's budget is spent, when the
+   * repository has used its own daily cap, or when its observation source has used its share
+   * (2026-09-05: one busy repository, or the research corpus as a whole, can no longer starve an
+   * external installation). */
+  reserveLaunchSlot(repository: string, maxPerDay: number, caps?: LaunchCaps): Promise<{ granted: boolean; slotNo?: number; refusedBy?: "day" | "repository" | "source" }>;
   /** Records how a reserved launch finished. Never frees the slot. */
   recordLaunchOutcome(slotNo: number, outcome: "succeeded" | "failed"): Promise<void>;
   /** M3.2 liveness facts for the repositories examined in one sweep. */
@@ -236,6 +273,17 @@ export interface ShadowStore {
    * validated by stage-classification-config.ts), or undefined when none is configured. */
   getStageClassificationRaw(repository: string): Promise<string | undefined>;
   setStageClassificationRaw(repository: string, json: string): Promise<{ changed: boolean }>;
+  /** 2026-09-05 seamless install: persists an automatic identification (never over an 'explicit' one). */
+  recordIdentification(input: RecordIdentificationInput): Promise<{ applied: boolean; reason?: string }>;
+  getIdentification(repository: string): Promise<RepositoryIdentification | undefined>;
+  /** Repositories in an observable state that have no evidence workflow yet, or whose automatic
+   * identification should be re-checked (none_found / shape_mismatch older than `recheckAfterMs`). */
+  listRepositoriesNeedingIdentification(nowIso: string, recheckAfterMs: number, limit: number): Promise<string[]>;
+  /** Report access: a private repository's report needs its token. Generates the token on first call. */
+  setRepositoryPrivacy(repository: string, isPrivate: boolean): Promise<void>;
+  getReportAccess(repository: string): Promise<{ isPrivate: boolean; token?: string } | undefined>;
+  /** Sets state/notes for a repository the automatic path found ineligible or observable again. */
+  setRepositoryStateWithNote(repository: string, state: ShadowRepositoryState, note: string | undefined): Promise<void>;
   /** Telemetry self-health invariants (research note, "Decisions"): facts a human should never have to
    * discover by hand again. Each is a count or an age; the cron-status route exposes them. */
   getSelfHealth(nowIso: string): Promise<ShadowSelfHealth>;
@@ -344,16 +392,33 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
       return row?.n ?? 0;
     },
 
-    async reserveLaunchSlot(repository: string, maxPerDay: number) {
+    async reserveLaunchSlot(repository: string, maxPerDay: number, caps?: LaunchCaps) {
       const now = new Date();
       const day = now.toISOString().slice(0, 10);
+      // 2026-09-05 fairness caps, checked before the global ceiling: a repository's own share and its
+      // observation source's share. Counted from the same table the ceiling uses.
+      if (caps?.perRepositoryPerDay !== undefined) {
+        const own = await db.prepare(`SELECT COUNT(*) as n FROM shadow_analysis_launches WHERE day = ? AND repository = ?`).bind(day, repository).first<{ n: number }>();
+        if ((own?.n ?? 0) >= caps.perRepositoryPerDay) return { granted: false, refusedBy: "repository" };
+      }
+      if (caps?.perSourcePerDay) {
+        const src = await db.prepare(`SELECT observation_source FROM shadow_repositories WHERE repository = ?`).bind(repository).first<{ observation_source: ObservationSource }>();
+        const cap = src ? caps.perSourcePerDay[src.observation_source] : undefined;
+        if (src && cap !== undefined) {
+          const used = await db
+            .prepare(`SELECT COUNT(*) as n FROM shadow_analysis_launches l JOIN shadow_repositories r ON r.repository = l.repository WHERE l.day = ? AND r.observation_source = ?`)
+            .bind(day, src.observation_source)
+            .first<{ n: number }>();
+          if ((used?.n ?? 0) >= cap) return { granted: false, refusedBy: "source" };
+        }
+      }
       // Bounded retry: PRIMARY KEY (day, slot_no) is the arbiter. Two overlapping sweeps that both read
       // the same count will both try the same slot number and exactly one insert survives; the loser
       // re-reads and either takes the next slot or is refused because the budget really is spent.
       for (let attempt = 0; attempt < 8; attempt++) {
         const row = await db.prepare(`SELECT COUNT(*) as n FROM shadow_analysis_launches WHERE day = ?`).bind(day).first<{ n: number }>();
         const next = (row?.n ?? 0) + 1;
-        if (next > maxPerDay) return { granted: false };
+        if (next > maxPerDay) return { granted: false, refusedBy: "day" };
         try {
           await db
             .prepare(`INSERT INTO shadow_analysis_launches (day, slot_no, repository, reserved_at) VALUES (?, ?, ?, ?)`)
@@ -538,11 +603,121 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
     },
 
     async setEvidenceWorkflowPaths(repository, paths) {
+      // A founder-set configuration is 'explicit' and is never overwritten by automatic identification.
       const result = await db
-        .prepare(`UPDATE shadow_repositories SET evidence_workflow_paths = ? WHERE repository = ?`)
+        .prepare(`UPDATE shadow_repositories SET evidence_workflow_paths = ?, evidence_workflow_source = 'explicit', identification_status = 'identified', identification_note = NULL WHERE repository = ?`)
         .bind(JSON.stringify(paths), repository)
         .run();
       return { changed: (result.meta?.changes ?? 0) > 0 };
+    },
+
+    async recordIdentification(input) {
+      const current = await db
+        .prepare(`SELECT evidence_workflow_source FROM shadow_repositories WHERE repository = ?`)
+        .bind(input.repository)
+        .first<{ evidence_workflow_source: string | null }>();
+      if (!current) return { applied: false, reason: "repository is not enrolled" };
+      if (current.evidence_workflow_source === "explicit") {
+        // Still record that the automatic path looked, so the check time is honest - but touch nothing else.
+        await db.prepare(`UPDATE shadow_repositories SET identification_checked_at = ? WHERE repository = ?`).bind(input.at, input.repository).run();
+        return { applied: false, reason: "explicit configuration takes precedence" };
+      }
+      if (input.status === "identified" || input.status === "verified") {
+        await db
+          .prepare(
+            `UPDATE shadow_repositories
+             SET evidence_workflow_paths = ?, stage_classification = ?, evidence_workflow_source = 'auto', evidence_workflow_derivation = ?,
+                 identification_status = ?, identification_checked_at = ?, identification_note = ?, workflows_tree_sha = COALESCE(?, workflows_tree_sha)
+             WHERE repository = ?`,
+          )
+          .bind(
+            JSON.stringify(input.evidenceWorkflowPaths ?? []), input.stageClassificationJson ?? null, input.derivationJson ?? null,
+            input.status, input.at, input.note ?? null, input.workflowsTreeSha ?? null, input.repository,
+          )
+          .run();
+      } else {
+        // none_found / shape_mismatch / ineligible: withdraw the automatic evidence workflow so nothing
+        // is admitted on a derivation that no longer holds; keep the derivation for the record.
+        await db
+          .prepare(
+            `UPDATE shadow_repositories
+             SET evidence_workflow_paths = NULL, stage_classification = NULL, evidence_workflow_source = 'auto',
+                 evidence_workflow_derivation = COALESCE(?, evidence_workflow_derivation),
+                 identification_status = ?, identification_checked_at = ?, identification_note = ?, workflows_tree_sha = COALESCE(?, workflows_tree_sha)
+             WHERE repository = ?`,
+          )
+          .bind(input.derivationJson ?? null, input.status, input.at, input.note ?? null, input.workflowsTreeSha ?? null, input.repository)
+          .run();
+      }
+      return { applied: true };
+    },
+
+    async getIdentification(repository) {
+      const r = await db
+        .prepare(
+          `SELECT repository, state, notes, evidence_workflow_source, evidence_workflow_paths, identification_status, identification_checked_at,
+                  identification_note, evidence_workflow_derivation, workflows_tree_sha
+           FROM shadow_repositories WHERE repository = ?`,
+        )
+        .bind(repository)
+        .first<Record<string, unknown>>();
+      if (!r) return undefined;
+      let paths: string[] | undefined;
+      try {
+        const p = r.evidence_workflow_paths ? (JSON.parse(String(r.evidence_workflow_paths)) as unknown) : undefined;
+        paths = Array.isArray(p) && p.length > 0 ? (p as string[]) : undefined;
+      } catch {
+        paths = undefined;
+      }
+      const s = (k: string) => (typeof r[k] === "string" ? (r[k] as string) : undefined);
+      return {
+        repository: r.repository as string,
+        state: r.state as ShadowRepositoryState,
+        notes: s("notes"),
+        source: (s("evidence_workflow_source") as "auto" | "explicit" | undefined) ?? undefined,
+        evidenceWorkflowPaths: paths,
+        status: s("identification_status") as IdentificationStatus | undefined,
+        checkedAt: s("identification_checked_at"),
+        note: s("identification_note"),
+        derivationJson: s("evidence_workflow_derivation"),
+        workflowsTreeSha: s("workflows_tree_sha"),
+      };
+    },
+
+    async listRepositoriesNeedingIdentification(nowIso, recheckAfterMs, limit) {
+      const cutoff = new Date(Date.parse(nowIso) - recheckAfterMs).toISOString();
+      const { results } = await db
+        .prepare(
+          `SELECT repository FROM shadow_repositories
+           WHERE state IN ('VALIDATING', 'SHADOW_ACTIVE', 'SHADOW_LIMITED')
+             AND (evidence_workflow_source IS NULL OR evidence_workflow_source = 'auto')
+             AND (
+               evidence_workflow_paths IS NULL AND (identification_checked_at IS NULL OR identification_checked_at < ?)
+             )
+           ORDER BY COALESCE(identification_checked_at, '') ASC, enrolled_at ASC
+           LIMIT ?`,
+        )
+        .bind(cutoff, limit)
+        .all<{ repository: string }>();
+      return results.map((r) => r.repository);
+    },
+
+    async setRepositoryPrivacy(repository, isPrivate) {
+      const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+      await db
+        .prepare(`UPDATE shadow_repositories SET is_private = ?, report_token = COALESCE(report_token, ?) WHERE repository = ?`)
+        .bind(isPrivate ? 1 : 0, token, repository)
+        .run();
+    },
+
+    async getReportAccess(repository) {
+      const r = await db.prepare(`SELECT is_private, report_token FROM shadow_repositories WHERE repository = ?`).bind(repository).first<{ is_private: number | null; report_token: string | null }>();
+      if (!r) return undefined;
+      return { isPrivate: r.is_private === 1, token: r.report_token ?? undefined };
+    },
+
+    async setRepositoryStateWithNote(repository, state, note) {
+      await db.prepare(`UPDATE shadow_repositories SET state = ?, notes = ? WHERE repository = ?`).bind(state, note ?? null, repository).run();
     },
 
     async setGroundTruthValidity(logicalEventKey, validity, evidenceWorkflowPath) {
@@ -563,7 +738,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
 
     async setStageClassificationRaw(repository, jsonText) {
       const result = await db
-        .prepare(`UPDATE shadow_repositories SET stage_classification = ? WHERE repository = ?`)
+        .prepare(`UPDATE shadow_repositories SET stage_classification = ?, evidence_workflow_source = 'explicit' WHERE repository = ?`)
         .bind(jsonText, repository)
         .run();
       return { changed: (result.meta?.changes ?? 0) > 0 };

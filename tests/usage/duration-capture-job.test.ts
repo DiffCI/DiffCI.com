@@ -40,6 +40,7 @@ function fakeShadowBoundary(predictions: ShadowPredictionSummary[]): ShadowReadB
     },
     async listVerifiedGroundTruth() { return []; },
     async getEvidenceWorkflowState(ownerName: string) { return { ownerName, state: "identified" as const, paths: [".github/workflows/ci.yml"] }; },
+    async getReportAccess() { return { isPrivate: false }; },
     async listEnrolledRepositories() {
       return [];
     },

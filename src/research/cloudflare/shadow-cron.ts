@@ -100,7 +100,11 @@ export interface ShadowCronDeps {
    * turns out - success, clone-exclusion, timeout or crash - because the container cost is incurred
    * either way. Never called for work refused before a launch.
    */
-  reserveLaunchSlot?(repository: string, maxPerDay: number): Promise<{ granted: boolean; slotNo?: number }>;
+  reserveLaunchSlot?(repository: string, maxPerDay: number, caps?: { perRepositoryPerDay?: number; perSourcePerDay?: Partial<Record<string, number>> }): Promise<{ granted: boolean; slotNo?: number }>;
+  /** Optional (2026-09-05 seamless install): runs automatic evidence-workflow identification for up to
+   * `limit` repositories that have none yet (self-heal for a lost enrollment message, re-check of
+   * none_found). Returns the repositories attempted. */
+  identifyPendingRepositories?(limit: number): Promise<string[]>;
   /** Optional: records how a reserved launch finished. Never frees the slot. */
   recordLaunchOutcome?(slotNo: number, outcome: "succeeded" | "failed"): Promise<void>;
   /** Optional: pauses a repository that keeps failing, with a durable reason. Explicit refusal - the
@@ -174,6 +178,14 @@ export interface ShadowCronConfig {
   /** Head checks per sweep. Bounds the cheap GitHub call independently of container launches, so the
    * launch ceiling can never suppress observation. */
   maxHeadChecksPerRun: number;
+  /** 2026-09-05 fairness: launches one repository may take per day, and the research corpus
+   * (observation_source cloudflare-poll) may take together - the rest of maxPollsPerDay stays available
+   * to installed (github-app-webhook) repositories. */
+  maxPollsPerDayPerRepository: number;
+  maxPollsPerDayForCloudflarePoll: number;
+  /** Automatic evidence-workflow identifications attempted per sweep (self-heal for a lost enrollment
+   * message and re-check of none_found repositories). */
+  maxIdentificationsPerRun: number;
 }
 
 export const DEFAULT_SHADOW_CRON_CONFIG: ShadowCronConfig = {
@@ -186,6 +198,9 @@ export const DEFAULT_SHADOW_CRON_CONFIG: ShadowCronConfig = {
   maxPollsPerDay: 60,
   maxHeadChecksPerRun: 25,
   maxConsecutivePollErrors: 5,
+  maxPollsPerDayPerRepository: 20,
+  maxPollsPerDayForCloudflarePoll: 24,
+  maxIdentificationsPerRun: 2,
 };
 
 const POLLABLE_STATES = new Set(["VALIDATING", "SHADOW_ACTIVE", "SHADOW_LIMITED"]);
@@ -309,7 +324,10 @@ export async function runShadowCronOnce(
       toPoll.push(repo);
       continue;
     }
-    const reservation = await deps.reserveLaunchSlot(repo.repository, config.maxPollsPerDay);
+    const reservation = await deps.reserveLaunchSlot(repo.repository, config.maxPollsPerDay, {
+      perRepositoryPerDay: config.maxPollsPerDayPerRepository,
+      perSourcePerDay: { "cloudflare-poll": config.maxPollsPerDayForCloudflarePoll },
+    });
     if (!reservation.granted) {
       dailyCeilingRefusals++;
       continue;
@@ -422,6 +440,17 @@ export async function runShadowCronOnce(
         predictionsRecorded += r.result.predictionsRecorded;
         errors.push(...r.result.errors.map((e) => `poll ${r.repo.repository}: ${e}`));
       }
+    }
+  }
+
+  // 2026-09-05: automatic evidence-workflow identification for repositories that still have none - the
+  // enrollment webhook schedules it immediately; this is the safety net, bounded per sweep.
+  if (deps.identifyPendingRepositories && config.maxIdentificationsPerRun > 0) {
+    try {
+      const attempted = await deps.identifyPendingRepositories(config.maxIdentificationsPerRun);
+      if (attempted.length > 0) deps.log(`shadow-cron: identification attempted for ${attempted.join(", ")}`);
+    } catch (error: unknown) {
+      errors.push(`identify: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

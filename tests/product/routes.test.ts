@@ -22,7 +22,7 @@ const RESEARCH_SCHEMA_DIR = join(HERE, "../../src/research/cloudflare");
 
 function freshResearchDb(): DatabaseSync {
   const db = new DatabaseSync(":memory:");
-  for (const file of ["schema-migration-2026-08-21-stage2-shadow.sql", "schema-migration-2026-08-21-shadow-cron.sql", "schema-migration-2026-08-21-shadow-webhook.sql", "schema-migration-2026-08-21-shadow-source-integrity.sql", "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql", "schema-migration-2026-09-05-shadow-reconcile-terminal.sql", "schema-migration-2026-09-05-shadow-evidence-workflow.sql"]) {
+  for (const file of ["schema-migration-2026-08-21-stage2-shadow.sql", "schema-migration-2026-08-21-shadow-cron.sql", "schema-migration-2026-08-21-shadow-webhook.sql", "schema-migration-2026-08-21-shadow-source-integrity.sql", "schema-migration-2026-08-21-shadow-reconcile-diagnostics.sql", "schema-migration-2026-09-05-shadow-reconcile-terminal.sql", "schema-migration-2026-09-05-shadow-evidence-workflow.sql", "schema-migration-2026-09-05-shadow-auto-identification.sql"]) {
     db.exec(readFileSync(join(RESEARCH_SCHEMA_DIR, file), "utf8"));
   }
   return db;

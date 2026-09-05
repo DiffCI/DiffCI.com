@@ -26,6 +26,8 @@ import { makeD1ShadowStore, type ObservationSource } from "./shadow-store.js";
 import { reconcilePrediction } from "../../shadow/reconcile.js";
 import { confirmNoWorkflowRuns, decideEvidenceRunTerminal, decideNoMatchingWorkflowTerminal, precheckNoMatchingWorkflowTerminal } from "./shadow-reconcile-terminal.js";
 import { normaliseEvidenceWorkflowPaths } from "../../shadow/execution-outcome.js";
+import { identifyRepository, makeGitHubIdentificationSource, type IdentificationJobDeps } from "./shadow-identification-job.js";
+import { verifyDerivedShape } from "../../shadow/workflow-identification.js";
 import { computeLogicalEventKey } from "../../shadow/event-identity.js";
 import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps, type VerifiedSourceArchive } from "./shadow-cron.js";
 import { handleShadowWebhook } from "./shadow-webhook.js";
@@ -799,6 +801,23 @@ async function ciReproductionBridgeManualTrigger(request: Request, env: Validati
  */
 const REPORT_REPOSITORY_PATTERN = /^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/;
 
+function timingSafeEqualString(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/** Real GitHub-backed dependencies for the automatic identification job (shadow-identification-job.ts). */
+function makeIdentificationDeps(env: ValidationEnv): IdentificationJobDeps {
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+  return {
+    store,
+    github: makeGitHubIdentificationSource((repository) => githubTokenForRepo(env, repository)),
+    log: (message) => console.log(message),
+  };
+}
+
 async function shadowReport(request: Request, env: ValidationEnv): Promise<Response> {
   const url = new URL(request.url);
   const repository = url.searchParams.get("repository") ?? "";
@@ -807,6 +826,18 @@ async function shadowReport(request: Request, env: ValidationEnv): Promise<Respo
   }
   const daysParam = Number.parseInt(url.searchParams.get("days") ?? "7", 10);
   const days = Number.isFinite(daysParam) && daysParam > 0 && daysParam <= 90 ? daysParam : 7;
+
+  // 2026-09-05 seamless install: a private repository's report is reachable only with its report token
+  // (delivered in the signed-in product dashboard). A public repository's report stays public by URL.
+  // The refusal is indistinguishable from "not enrolled" on purpose - the URL must not confirm that a
+  // private repository exists.
+  const access = await makeD1ShadowStore(env.RESEARCH_DB).getReportAccess(repository);
+  if (access?.isPrivate) {
+    const token = url.searchParams.get("token") ?? "";
+    if (!access.token || token.length !== access.token.length || !timingSafeEqualString(token, access.token)) {
+      return new Response("No public report exists for this repository. A private repository's report link is available in the DiffCI dashboard after signing in with GitHub.\n", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
+    }
+  }
 
   const report = await buildLiveShadowReport(env.RESEARCH_DB as unknown as ShadowReportD1, repository, days);
   const text = renderShadowReport(report);
@@ -1416,7 +1447,7 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
     // Hard daily ceiling on analysis launches - maxPollsPerRun bounds a sweep, never the day's spend.
     pauseRepository: (repository, reason) => store.pauseRepository(repository, reason),
     consecutivePollErrors: (repository) => store.consecutivePollErrors(repository),
-    reserveLaunchSlot: (repository, maxPerDay) => store.reserveLaunchSlot(repository, maxPerDay),
+    reserveLaunchSlot: (repository, maxPerDay, caps) => store.reserveLaunchSlot(repository, maxPerDay, caps as Parameters<typeof store.reserveLaunchSlot>[2]),
     recordLaunchOutcome: (slotNo, outcome) => store.recordLaunchOutcome(slotNo, outcome),
     recordHeadTransition: (t) => store.recordHeadTransition(t),
     // A push-triggered poll (queue consumer) that started inside the window and hasn't finished owns the
@@ -1436,6 +1467,15 @@ function makeShadowCronDeps(env: ValidationEnv): ShadowCronDeps {
     },
     async reconcileRepository(repository: string) {
       return executeShadowReconcile(env, repository, DEFAULT_SHADOW_CRON_CONFIG.reconcileLimitPerRepo);
+    },
+    // 2026-09-05 seamless install: the safety net behind the enrollment webhook's identify message.
+    async identifyPendingRepositories(limit: number) {
+      const pending = await store.listRepositoriesNeedingIdentification(new Date().toISOString(), 6 * 60 * 60 * 1000, limit);
+      for (const repository of pending) {
+        const outcome = await identifyRepository(makeIdentificationDeps(env), repository);
+        console.log(`shadow-identify (cron): ${JSON.stringify(outcome)}`);
+      }
+      return pending;
     },
     recordCronRun: (run) =>
       store.recordCronRun({
@@ -1488,8 +1528,15 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
     rawBody,
     {
       verifySignature: (body, signature) => verifyWebhookSignature(body, signature, secret),
-      ensureRepository: (repository, language) => store.ensureRepository(repository, "github-app-webhook", language),
+      ensureRepository: async (repository, language, meta) => {
+        await store.ensureRepository(repository, "github-app-webhook", language);
+        // 2026-09-05 seamless install: a private repository's report is reachable only with its token.
+        if (meta && typeof meta.isPrivate === "boolean") await store.setRepositoryPrivacy(repository, meta.isPrivate);
+      },
       setInstallationId: (repository, installationId) => store.setInstallationId(repository, installationId),
+      // 2026-09-05 seamless install: automatic evidence-workflow identification, run from the Queue
+      // consumer (GitHub reads of every workflow file + package.json can exceed the webhook budget).
+      scheduleIdentification: (repository) => enqueuePushPoll(env, ctx, { kind: "identify-evidence-workflow", repository, enqueuedAt: new Date().toISOString() }),
       // 2026-09-04: the container poll NO LONGER runs here. It used to run inside ctx.waitUntil, which
       // the runtime cancels 30 s after the response - long enough only for a tiny repository on a warm
       // container, so DentalPresence.in went unobserved for 168 commits with nothing durable recording
@@ -1555,7 +1602,7 @@ function makePushPollDeps(env: ValidationEnv): PushPollDeps {
       return s ? { state: s.state, language: s.language } : undefined;
     },
     getVerifiedSourceArchive: () => loadVerifiedShadowSource(env),
-    reserveLaunchSlot: (repository, maxPerDay) => store.reserveLaunchSlot(repository, maxPerDay),
+    reserveLaunchSlot: (repository, maxPerDay, caps) => store.reserveLaunchSlot(repository, maxPerDay, caps as Parameters<typeof store.reserveLaunchSlot>[2]),
     recordLaunchOutcome: (slotNo, outcome) => store.recordLaunchOutcome(slotNo, outcome),
     async pollRepository(repository, language, source, engineSourceSha) {
       const [owner, name] = repository.split("/");
@@ -2327,6 +2374,45 @@ export default {
       }
       return shadowEnroll(request, env);
     }
+    // 2026-09-05: contact inbox for the public site (site/contact.html). Public POST, no mailbox
+    // involved; the founder reads messages with the bearer-gated GET. Deliberately tiny and bounded.
+    if (url.pathname === "/v1/contact" && (request.method === "POST" || request.method === "OPTIONS")) {
+      const cors = { "Access-Control-Allow-Origin": "https://diffci.com", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "content-type" };
+      if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
+      let body: { email?: unknown; repository?: unknown; message?: unknown };
+      try {
+        body = (await request.json()) as typeof body;
+      } catch {
+        return new Response(JSON.stringify({ ok: false, error: "JSON body required" }), { status: 400, headers: { ...cors, "content-type": "application/json" } });
+      }
+      const message = typeof body.message === "string" ? body.message.trim() : "";
+      if (message.length === 0 || message.length > 4000) return new Response(JSON.stringify({ ok: false, error: "message must be 1-4000 characters" }), { status: 400, headers: { ...cors, "content-type": "application/json" } });
+      const email = typeof body.email === "string" && body.email.length <= 200 ? body.email.trim() : null;
+      const repository = typeof body.repository === "string" && /^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/.test(body.repository) ? body.repository : null;
+      await env.RESEARCH_DB.prepare(`INSERT INTO contact_messages (received_at, email, repository, message, user_agent) VALUES (?, ?, ?, ?, ?)`)
+        .bind(new Date().toISOString(), email, repository, message, (request.headers.get("user-agent") ?? "").slice(0, 200))
+        .run();
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { ...cors, "content-type": "application/json" } });
+    }
+    if (url.pathname === "/v1/contact/inbox" && request.method === "GET") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      const { results } = await env.RESEARCH_DB.prepare(`SELECT id, received_at, email, repository, message, read_at FROM contact_messages ORDER BY id DESC LIMIT 100`).bind().all();
+      return json({ ok: true, messages: results });
+    }
+    // 2026-09-05 seamless install: run (or re-run) automatic identification for one repository now and
+    // return the outcome with its derivation - the same code path the enrollment webhook and the cron use.
+    if (request.method === "POST" && url.pathname === "/v1/shadow/identify") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      const repository = url.searchParams.get("repository") ?? "";
+      if (!/^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/.test(repository)) return json({ ok: false, error: "repository must be 'owner/name'" }, 400);
+      const outcome = await identifyRepository(makeIdentificationDeps(env), repository);
+      const ident = await makeD1ShadowStore(env.RESEARCH_DB).getIdentification(repository);
+      return json({ ok: true, outcome, identification: ident ? { ...ident, derivation: ident.derivationJson ? JSON.parse(ident.derivationJson) : undefined, derivationJson: undefined } : null });
+    }
     if ((request.method === "GET" || request.method === "POST") && url.pathname === "/v1/shadow/evidence-workflow") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
         return json({ ok: false, error: "unauthorized" }, 401);
@@ -2444,6 +2530,11 @@ export default {
           console.log(`shadow-push-poll: malformed message acked without polling: ${JSON.stringify(message.body).slice(0, 300)}`);
           continue;
         }
+        if (parsed.kind === "identify-evidence-workflow") {
+          const outcome = await identifyRepository(makeIdentificationDeps(env), parsed.repository);
+          console.log(`shadow-identify: ${JSON.stringify(outcome)}`);
+          continue;
+        }
         await runPushTriggeredPoll(parsed, makePushPollDeps(env), DEFAULT_SHADOW_CRON_CONFIG);
       } catch (error: unknown) {
         console.log(`shadow-push-poll: consumer failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -2496,6 +2587,33 @@ export default {
             } catch {
               return undefined;
             }
+          },
+          // 2026-09-05 seamless install: an automatically derived layout must match the executed run's
+          // real job/step names before any economics row is written; a mismatch withdraws the
+          // identification (the report shows why) and the cron re-derives.
+          verifyDerivation: async (repository, jobs) => {
+            const ident = await shadowStore.getIdentification(repository);
+            if (!ident || ident.source !== "auto") return { ok: true };
+            const raw = await shadowStore.getStageClassificationRaw(repository);
+            if (!raw) return { ok: true };
+            let config;
+            try {
+              config = parseStageClassificationConfig(JSON.parse(raw)).config;
+            } catch {
+              return { ok: true };
+            }
+            if (!config) return { ok: true };
+            const v = verifyDerivedShape(config, jobs);
+            const now = new Date().toISOString();
+            if (v.ok) {
+              if (ident.status !== "verified") {
+                await shadowStore.recordIdentification({ repository, status: "verified", evidenceWorkflowPaths: ident.evidenceWorkflowPaths, stageClassificationJson: raw, derivationJson: ident.derivationJson, note: ident.note, at: now });
+              }
+              return { ok: true, detail: v.detail };
+            }
+            await shadowStore.recordIdentification({ repository, status: "shape_mismatch", note: v.detail, derivationJson: ident.derivationJson, at: now });
+            console.log(`shadow-identify: ${repository} shape mismatch - identification withdrawn: ${v.detail}`);
+            return { ok: false, detail: v.detail };
           },
           resolveToken: (repository) => githubTokenForRepo(env, repository),
         },
