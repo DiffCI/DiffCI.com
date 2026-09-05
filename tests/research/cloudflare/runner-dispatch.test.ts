@@ -24,17 +24,20 @@ const nowMs = Date.parse(NOW);
 const iso = (ms: number) => new Date(ms).toISOString();
 
 describe("labels", () => {
-  it("only jobs carrying both fleet labels are ours; a pinned label is recognised by its prefix", () => {
+  it("a pinned job or a legacy plain-label job is ours; anything else is not", () => {
     assert.equal(jobAddressedToFleet(["self-hosted", "cloudflare"]), true);
-    assert.equal(jobAddressedToFleet(["self-hosted", "cloudflare", "diffci-job-33951761194-check"]), true);
+    assert.equal(jobAddressedToFleet(["self-hosted", "diffci-job-33953059449"]), true);
+    assert.equal(jobAddressedToFleet(["self-hosted", "cloudflare", "diffci-job-33951761194"]), true);
     assert.equal(jobAddressedToFleet(["ubuntu-latest"]), false);
     assert.equal(jobAddressedToFleet(["self-hosted", "linux"]), false);
-    assert.equal(isPinned(["self-hosted", "cloudflare", "diffci-job-33951761194-check"]), true);
+    assert.equal(jobAddressedToFleet(["diffci-job-1"]), false, "self-hosted is what routes a job away from GitHub-hosted runners");
+    assert.equal(isPinned(["self-hosted", "diffci-job-33953059449"]), true);
     assert.equal(isPinned(["self-hosted", "cloudflare"]), false);
   });
 
-  it("registration keeps the job's own labels (including the pin) and never GitHub's implicit ones", () => {
-    assert.deepEqual(registrationLabels(["self-hosted", "cloudflare", "diffci-job-1-check"]), ["cloudflare", "diffci-job-1-check"]);
+  it("a pinned runner registers with the pin label ONLY, so a legacy plain-label job can never be handed it; a legacy runner registers plain", () => {
+    assert.deepEqual(registrationLabels(["self-hosted", "diffci-job-33953059449"]), ["diffci-job-33953059449"]);
+    assert.deepEqual(registrationLabels(["self-hosted", "cloudflare", "diffci-job-33951761194"]), ["diffci-job-33951761194"], "even a pinned job that also asked for cloudflare gets a pin-only runner");
     assert.deepEqual(registrationLabels(["self-hosted", "cloudflare"]), ["cloudflare"], "a legacy plain-label job registers a plain runner - GitHub's oldest-first choice, as before");
     assert.deepEqual(registrationLabels([]), ["cloudflare"]);
   });
@@ -42,8 +45,8 @@ describe("labels", () => {
 
 describe("parseDispatchMessage", () => {
   it("accepts a well-formed message and rejects malformed ones", () => {
-    const m = parseDispatchMessage({ jobId: 1, owner: "acme", repo: "web", installationId: 7, labels: ["self-hosted", "cloudflare", "diffci-job-9-check", "bad label!"], workflowRunId: 9, source: "reconcile" });
-    assert.deepEqual(m, { jobId: 1, owner: "acme", repo: "web", installationId: 7, labels: ["self-hosted", "cloudflare", "diffci-job-9-check"], workflowRunId: 9, source: "reconcile" });
+    const m = parseDispatchMessage({ jobId: 1, owner: "acme", repo: "web", installationId: 7, labels: ["self-hosted", "diffci-job-9", "bad label!"], workflowRunId: 9, source: "reconcile" });
+    assert.deepEqual(m, { jobId: 1, owner: "acme", repo: "web", installationId: 7, labels: ["self-hosted", "diffci-job-9"], workflowRunId: 9, source: "reconcile" });
     assert.equal(parseDispatchMessage({ jobId: "1", owner: "acme", repo: "web", installationId: 7 }), undefined);
     assert.equal(parseDispatchMessage({ jobId: 1, owner: "../x", repo: "web", installationId: 7 }), undefined);
     assert.equal(parseDispatchMessage(null), undefined);

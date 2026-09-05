@@ -57,26 +57,31 @@ export function parseDispatchMessage(body: unknown): DispatchMessage | undefined
   return { jobId: o.jobId, owner: o.owner, repo: o.repo, installationId: o.installationId, labels, workflowRunId, source };
 }
 
-/** Only jobs that ask for this fleet's labels are ours; everything else is GitHub-hosted or another fleet. */
-export function jobAddressedToFleet(labels: readonly string[]): boolean {
-  return CLAIM_LABELS.every((l) => labels.includes(l));
-}
-
 export function isPinned(labels: readonly string[]): boolean {
   return labels.some((l) => l.startsWith(PINNED_LABEL_PREFIX));
 }
 
+/** Ours: a pinned job (runs-on [self-hosted, "diffci-job-<run id>"]) or a legacy plain-label job
+ * (runs-on [self-hosted, cloudflare]). Everything else is GitHub-hosted or another fleet. */
+export function jobAddressedToFleet(labels: readonly string[]): boolean {
+  if (!labels.includes("self-hosted")) return false;
+  return isPinned(labels) || CLAIM_LABELS.every((l) => labels.includes(l));
+}
+
 /**
- * The labels the runner registers with. The job's own labels, in order, minus GitHub's implicit
- * defaults (`self-hosted` and the OS/arch labels are added by the runner itself and were tolerated
- * when passed explicitly, but the pinned label is what matters): a pinned job's runner carries its
- * unique label and can only ever be assigned that job; a legacy plain-label job's runner carries the
- * plain labels and takes GitHub's oldest matching job, exactly as before.
+ * The labels the runner registers with. GitHub assigns a runner any queued job whose required labels
+ * are a SUBSET of the runner's, oldest first - so eligibility is decided entirely here:
+ *   - a pinned job's runner registers with the pin label ONLY: it qualifies for exactly that job, and a
+ *     legacy plain-label job (which requires `cloudflare`) can never be handed it - the 07:27Z and
+ *     07:37Z qualification runs both lost their pinned runner to a legacy job while the runner still
+ *     carried `cloudflare`;
+ *   - a legacy plain-label job's runner registers with `cloudflare` and takes GitHub's oldest plain
+ *     job, exactly as before.
+ * `self-hosted` and the OS/arch labels are added by the runner itself.
  */
 export function registrationLabels(labels: readonly string[]): string[] {
-  const custom = labels.filter((l) => l !== "self-hosted" && l !== "linux" && l !== "x64" && l !== "X64" && l !== "Linux");
-  if (!custom.includes("cloudflare")) custom.unshift("cloudflare");
-  return custom;
+  const pin = labels.find((l) => l.startsWith(PINNED_LABEL_PREFIX));
+  return pin ? [pin] : ["cloudflare"];
 }
 
 export interface QueuedJobView {
