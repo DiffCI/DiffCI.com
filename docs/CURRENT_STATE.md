@@ -233,8 +233,16 @@ Working tree is clean; `main` is up to date with `origin/main`.
    repository with no identified evidence workflow shows an explicit "awaiting CI evidence workflow
    identification" state (predictions may exist, ground truth and savings evidence do not; zero
    observations is not zero opportunity); the dashboard's savings figures are labelled
-   `count_based_projection` with a notice. Self-service workflow selection deliberately not built;
-   founder configuration for the first installs. See the note's "Fix 5".
+   `count_based_projection` with a notice. See the note's "Fix 5".
+   **Seamless install (2026-09-05, `25dbbe6`…`58b7282`, all Workers deployed):** the evidence workflow
+   and stage layout are identified automatically and mechanically from the repository's own workflow
+   files and package.json scripts, with the derivation persisted and verified against the first
+   executed run before any economics row; every non-observing condition is an explicit report state;
+   private repositories' reports need a token shown only on the signed-in dashboard (app.diffci.com);
+   per-repository and corpus budget caps; http/www redirects and a contact inbox on the site. Whole
+   research corpus identified automatically (each `ci.yml`, by mechanism). No per-install founder
+   action remains; the one-time GitHub App Setup URL (→ diffci.com/welcome) is the last founder step.
+   See the note's "Fix 6".
    **Founder decisions on record:** steps 1 and 2 CLOSED / PRODUCTION-VERIFIED at `54122be`; the six
    corpus repositories stay unconfigured until mechanically verified (never "ci.yml by name"); the 77
    contaminated DiffCI.com rows stay immutable and excluded (a retrospective dataset, if ever wanted,

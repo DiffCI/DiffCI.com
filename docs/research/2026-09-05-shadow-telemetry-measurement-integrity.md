@@ -642,3 +642,67 @@ through a shell-quoted patch, and the fake-D1 unit test could not notice. A real
 test (`tests/research/cloudflare/shadow-report-query-sqlite.test.ts`) now runs the route's actual
 queries against the actual migration files and caught the second casualty before the second deploy.
 Public routes that assemble SQL get a real-database test, not a fake, from here on.
+
+## Fix 6 — seamless installation, 2026-09-05
+
+**Founder requirement, superseding the earlier "founder configuration for the first installs":** an
+install must need no intervention. The evidence standard does not move; the proof moves from a
+person to a mechanism that shows its work. Commits `25dbbe6`, `f3b959d`, `58b7282`; migrations
+`schema-migration-2026-09-05-shadow-auto-identification.sql` and `…-contact-inbox.sql`; research,
+product and site Workers deployed.
+
+**Automatic, mechanical evidence-workflow identification** (`src/shadow/workflow-identification.ts`,
+pure; `shadow-identification-job.ts` gathers the facts). Every workflow file under `.github/workflows`
+is parsed; only push/pull_request-triggered ones qualify; every `run:` command is resolved through
+package.json scripts (npm/pnpm/yarn/bun, pre/post hooks, depth-limited, cycle-safe); GitHub's step
+groups (`parallel:`) are flattened and `${{ matrix.* }}` references expanded to every candidate value;
+steps are classified by what they execute (test runners, `turbo run test`-style task runners for a task
+literally named `test`, tsc/vue-tsc/svelte-check, linters, bundlers, e2e runners; mixed or
+install-bundled steps are inseparable); the stage layout is derived with GitHub's real job and step
+names (`Run <first line>` for unnamed steps); the workflow that runs the tests on the default branch
+is chosen, runners-up recorded. The derivation - every candidate, why chosen or excluded, the resolved
+commands - is persisted verbatim. NONE_FOUND names every workflow and its reason. The derivation
+reproduces both hand-written configurations (DiffCI.com pre- and post-split, DentalPresence.in) in
+tests. It runs from the enrollment webhook (Queue message), on any push that touches
+`.github/workflows`, and from the cron for any repository still without an evidence workflow.
+A founder-set configuration (`evidence_workflow_source = 'explicit'`) is never overwritten.
+
+**Verification before economics.** The stage sweep checks an automatically derived layout against the
+executed run's real job/step names before writing any economics row: only executed jobs count (a
+skipped job says nothing either way - found on nuxt/nuxt, where a docs-only commit skipped every test
+job); a derivation is `verified` only when a derived test step actually ran; a contradiction withdraws
+the identification, records why, and the cron re-derives.
+
+**Explicit states, never zeros.** The report renders, before any number: NOT ENROLLED; CANNOT OBSERVE
+(archived / no tsconfig anywhere, with the reason); OBSERVATION PAUSED (with the reason); NO CI TEST
+WORKFLOW FOUND (with every workflow's reason); AWAITING IDENTIFICATION (not yet attempted, or shape
+mismatch with the detail). An automatically identified repository shows the reasoning and whether an
+executed run has verified it.
+
+**Corpus run, the mechanical verification the founder asked for.** Running identification across the
+research corpus found two classifier gaps and one verification gap before any external install could:
+nitro's `parallel:` step groups, astro's task-runner and matrix-provided test scripts, and nuxt's
+skipped test jobs; plus two over-eager heuristics (a bare "typecheck" word, a task named `test:size`).
+All fixed and pinned in tests. Result: unstorage, h3, defu, nitro, astro and nuxt all identified
+automatically (`ci.yml` in each case - by mechanism, not by name); nuxt already has 5 VERIFIED
+ground-truth rows and stage rows under its derived layout. DiffCI.com and DentalPresence.in keep their
+explicit configurations, which the derivation reproduces.
+
+**Private repositories.** Enrollment records the installation payload's `private` flag and generates a
+report token; a private repository's report answers 404 without the exact token (indistinguishable
+from "not enrolled"; verified live on DiffCI.com and DentalPresence.in: 404 / 404 wrong token / 200
+right token). The token is shown only on the signed-in dashboard (report links per repository), now
+at `app.diffci.com`. Public repositories stay public by URL.
+
+**Budget fairness.** `reserveLaunchSlot` refuses past a per-repository cap (20/day) and a research-corpus
+cap (24/day) ahead of the 60/day ceiling, each refusal labelled.
+
+**Site.** A script now runs in front of the assets (`run_worker_first`): http → https and
+www → apex redirect (both verified 301); www attached as a route because the hostname's pre-existing
+DNS record blocks a custom domain; `/contact` posts to a D1 inbox (`POST /v1/contact`, founder reads
+`GET /v1/contact/inbox`) - no mailbox required; the welcome page states that identification is
+automatic and how a private repository's report is reached.
+
+**Remaining founder one-time action (GitHub UI, not per install):** set the Shadow App's Setup URL to
+`https://diffci.com/welcome` so GitHub lands the installer on the welcome page after installing.
+Nothing per install remains.
