@@ -122,10 +122,21 @@ async function main() {
   // numerator and denominator describe the same set of commits. Filtering economics rows by observed_at
   // would drift: a commit predicted inside the window but captured just after it would vanish from the
   // numerator while remaining in the denominator, understating coverage for no real reason.
+  // 2026-09-05 (measurement-integrity repair step 3): reports read shadow_stage_economics ONLY - rows
+  // derived from VERIFIED ground truth, the evidence run's own jobs, and the repository's explicit
+  // stage classification. The legacy shadow_economics_observations table (labelled LEGACY_UNVERIFIED)
+  // is never read here. Legacy column names are aliased so the rollup input is unchanged.
   const rows = d1Query<RawRow>(
-    `SELECT e.* FROM shadow_economics_observations e
+    `SELECT e.logical_delta_key, e.stage, e.repository, e.head_sha,
+            '[' || e.evidence_run_id || ']' AS workflow_run_ids, e.job_ids, e.full_workload_ms,
+            e.tests_total_full, e.tests_selected_diffci, e.tests_selected_path, e.diffci_analysis_overhead_ms, e.plan_mode,
+            e.selected_workload_ms, e.selected_workload_confidence, e.avoidable_ms, e.avoidable_tier, e.estimation_method,
+            e.estimator_version, e.observed_at AS estimated_at, 2 AS schema_version, e.observed_at,
+            e.classification_basis, e.evidence_workflow_path
+     FROM shadow_stage_economics e
      JOIN shadow_predictions p ON p.logical_delta_key = e.logical_delta_key
-     WHERE e.repository = ${sqlString(repository)} AND p.created_at >= ${sqlString(windowStartIso)} AND p.created_at < ${sqlString(windowEndIso)}
+     WHERE e.repository = ${sqlString(repository)} AND e.evidence_validity = 'VERIFIED'
+       AND p.created_at >= ${sqlString(windowStartIso)} AND p.created_at < ${sqlString(windowEndIso)}
      ORDER BY e.observed_at ASC`,
   );
 
@@ -134,7 +145,7 @@ async function main() {
   const safetyRows = d1Query<{ evaluable: number; preserved: number }>(
     `SELECT COALESCE(SUM(g.relevant_failures_evaluable), 0) as evaluable, COALESCE(SUM(g.failures_preserved_by_diffci), 0) as preserved
      FROM shadow_ground_truth g JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
-     WHERE p.repository = ${sqlString(repository)}`,
+     WHERE p.repository = ${sqlString(repository)} AND g.evidence_validity = 'VERIFIED'`,
   );
   const evaluableFailures = safetyRows[0]?.evaluable ?? 0;
   const failuresPreserved = safetyRows[0]?.preserved ?? 0;

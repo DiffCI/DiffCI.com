@@ -118,6 +118,17 @@ function parseRun(run: Record<string, unknown>): BaselineRunInfo {
 }
 
 /**
+ * The jobs (with steps, timestamps, runner) of ONE run identified by id - step 3 of the 2026-09-05
+ * repair reads economics evidence from the VERIFIED ground-truth row's evidence run and nothing else.
+ * One GitHub call. Throws on any failure (the caller decides whether that is a skip or an error).
+ */
+export async function fetchRunJobs(repository: string, runId: string | number, token?: string): Promise<BaselineJobInfo[]> {
+  const data = (await githubFetch(`https://api.github.com/repos/${repository}/actions/runs/${runId}/jobs?per_page=100`, token)) as Record<string, unknown>;
+  const jobs = Array.isArray(data.jobs) ? (data.jobs as Record<string, unknown>[]) : [];
+  return jobs.map(parseJob);
+}
+
+/**
  * Identity mode (see FetchBaselineOptions.evidenceWorkflowPaths). `runs` is GitHub's unfiltered run list
  * for the SHA (every status). Exactly one further call (the evidence run's jobs) is made, and only when
  * the evidence run has completed.

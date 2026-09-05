@@ -14,7 +14,7 @@
 
 export type CiStage = "test" | "build" | "lint" | "typecheck" | "e2e" | "other";
 
-const STAGE_PATTERNS: readonly { stage: CiStage; pattern: RegExp }[] = [
+export const STAGE_PATTERNS: readonly { stage: CiStage; pattern: RegExp }[] = [
   // Order matters: more specific patterns first, so e.g. "e2e-test" classifies as e2e, not test.
   { stage: "e2e", pattern: /\b(e2e|end-to-end|playwright|cypress|integration)\b/i },
   { stage: "typecheck", pattern: /\b(typecheck|type-check|tsc)\b/i },

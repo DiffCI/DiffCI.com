@@ -47,6 +47,20 @@ export interface ShadowPredictionSummary {
   createdAt: string;
 }
 
+export interface ShadowVerifiedGroundTruth {
+  logicalDeltaKey: string;
+  repository: string;
+  headSha: string;
+  evidenceRunId: string;
+  evidenceWorkflowPath: string;
+  planMode: "FULL" | "SELECTIVE";
+  testsSelectedDiffci: number;
+  testsTotalFull: number;
+  testsSelectedPath: number;
+  diffciAnalysisOverheadMs: number;
+  predictionCreatedAt: string;
+}
+
 export interface ShadowGroundTruthSummary {
   logicalDeltaKey: string;
   relevantFailuresObserved: number;
@@ -67,6 +81,10 @@ export interface ShadowReadBoundary {
    * see the Part 1 audit) within a time window. Read-only. */
   listPredictions(ownerName: string, startIso: string, endIso: string): Promise<ShadowPredictionSummary[]>;
   getGroundTruthForDelta(logicalDeltaKey: string): Promise<ShadowGroundTruthSummary | null>;
+  /** 2026-09-05 repair step 3: the ONLY evidence the stage-economics sweep may consume - predictions
+   * whose ground-truth row is evidence_validity 'VERIFIED', with that row's evidence run. UNVERIFIED and
+   * CONTAMINATED rows never reach the classifier. Read-only. */
+  listVerifiedGroundTruth(ownerName: string, startIso: string, endIso: string): Promise<ShadowVerifiedGroundTruth[]>;
   /** The dashboard "Safety" section's numbers (Part 21) - deliberately scoped to a repository (or, if
    * ownerName is omitted, the whole shadow system) since Stage 2 has no organization concept to scope by
    * directly. */
@@ -102,6 +120,34 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
         testsSelectedPath: row.tests_selected_path as number,
         diffciAnalysisOverheadMs: row.diffci_analysis_overhead_ms as number,
         createdAt: row.created_at as string,
+      }));
+    },
+
+    async listVerifiedGroundTruth(ownerName, startIso, endIso) {
+      const { results } = await db
+        .prepare(
+          `SELECT p.logical_delta_key, p.repository, p.head_sha, g.workflow_run_id, g.evidence_workflow_path, p.plan_mode,
+                  p.tests_selected_diffci, p.tests_total_full, p.tests_selected_path, p.diffci_analysis_overhead_ms, p.created_at
+           FROM shadow_ground_truth g
+           JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
+           WHERE g.repository = ? AND g.evidence_validity = 'VERIFIED' AND g.workflow_run_id IS NOT NULL
+             AND g.evidence_workflow_path IS NOT NULL AND p.created_at >= ? AND p.created_at < ?
+           ORDER BY p.created_at DESC`,
+        )
+        .bind(ownerName, startIso, endIso)
+        .all<Record<string, unknown>>();
+      return results.map((row) => ({
+        logicalDeltaKey: row.logical_delta_key as string,
+        repository: row.repository as string,
+        headSha: row.head_sha as string,
+        evidenceRunId: String(row.workflow_run_id),
+        evidenceWorkflowPath: row.evidence_workflow_path as string,
+        planMode: row.plan_mode as "FULL" | "SELECTIVE",
+        testsSelectedDiffci: row.tests_selected_diffci as number,
+        testsTotalFull: row.tests_total_full as number,
+        testsSelectedPath: row.tests_selected_path as number,
+        diffciAnalysisOverheadMs: row.diffci_analysis_overhead_ms as number,
+        predictionCreatedAt: row.created_at as string,
       }));
     },
 

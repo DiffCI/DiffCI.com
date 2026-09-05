@@ -38,6 +38,7 @@ function fakeShadowBoundary(repositories: string[], predictions: ShadowPredictio
     async getSafetySnapshot() {
       return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0 };
     },
+    async listVerifiedGroundTruth() { return []; },
     async listEnrolledRepositories() {
       return repositories;
     },
@@ -199,6 +200,7 @@ describe("runShadowEconomicsCaptureSweep", () => {
       async getSafetySnapshot() {
         return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0 };
       },
+      async listVerifiedGroundTruth() { return []; },
       async listEnrolledRepositories() {
         return ["a/busy", "z/quiet"];
       },
@@ -281,6 +283,7 @@ describe("runShadowEconomicsCaptureSweep", () => {
       async getSafetySnapshot() {
         return { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0 };
       },
+      async listVerifiedGroundTruth() { return []; },
       async listEnrolledRepositories() {
         return ["a/has-work", "b/idle"];
       },

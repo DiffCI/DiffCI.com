@@ -41,8 +41,10 @@ import { makeD1ShadowReadBoundary, type D1Binding as ShadowBoundaryD1 } from "..
 import { makeD1ShadowEconomicsStore, type D1Binding as ShadowEconomicsD1 } from "../../usage/shadow-economics-store.js";
 import { buildLiveShadowReport, type D1Binding as ShadowReportD1 } from "./shadow-report-query.js";
 import { renderShadowReport } from "../../usage/shadow-report-render.js";
-import { runShadowEconomicsCaptureSweep } from "../../usage/shadow-economics-job.js";
-import { runShadowEconomicsRecompute } from "../../usage/shadow-economics-recompute.js";
+import { runStageEconomicsCaptureSweep } from "../../usage/shadow-stage-economics-job.js";
+import { makeD1ShadowStageEconomicsStore, type D1Binding as StageEconomicsD1 } from "../../usage/shadow-stage-economics-store.js";
+import { parseStageClassificationConfig } from "../../shadow/stage-classification-config.js";
+import { fetchRunJobs } from "../../shadow/github-baseline.js";
 import { eraseInstallation as eraseShadowInstallation, sweepExpiredEvidence } from "./shadow-erasure.js";
 
 // standard-2 Sandbox instance type (wrangler.research-sandbox.jsonc): 1 vCPU, 6 GiB memory, 12 GB disk.
@@ -866,6 +868,52 @@ async function shadowEvidenceWorkflow(request: Request, env: ValidationEnv): Pro
   return json({ ok: true, repository, configured: requested, changed });
 }
 
+/**
+ * Stage classification configuration (2026-09-05, measurement-integrity repair step 3). Bearer-gated.
+ *
+ *   GET  /v1/shadow/stage-classification?repository=owner/name
+ *        -> the configured rules plus the job and step names (with durations) of the repository's most
+ *           recent VERIFIED evidence run, so rules are written against names that actually exist.
+ *   POST /v1/shadow/stage-classification { repository, config: { version: 1, jobs: [...], steps: [...] } }
+ *        -> validates the shape (stage-classification-config.ts) and stores it.
+ */
+async function shadowStageClassification(request: Request, env: ValidationEnv): Promise<Response> {
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+  const url = new URL(request.url);
+  if (request.method === "GET") {
+    const repository = url.searchParams.get("repository") ?? "";
+    if (!/^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/.test(repository)) return json({ ok: false, error: "repository must be 'owner/name'" }, 400);
+    if (!(await store.getRepositoryPollState(repository))) return json({ ok: false, error: "repository is not enrolled" }, 404);
+    const raw = await store.getStageClassificationRaw(repository);
+    const boundary = makeD1ShadowReadBoundary(env.RESEARCH_DB as unknown as ShadowBoundaryD1);
+    const latest = (await boundary.listVerifiedGroundTruth(repository, "1970-01-01T00:00:00.000Z", "9999-12-31T00:00:00.000Z"))[0];
+    let observedJobs: unknown = null;
+    if (latest) {
+      try {
+        const jobs = await fetchRunJobs(repository, latest.evidenceRunId, await githubTokenForRepo(env, repository));
+        observedJobs = { evidenceRunId: latest.evidenceRunId, evidenceWorkflowPath: latest.evidenceWorkflowPath, jobs: jobs.map((j) => ({ job: j.jobName, durationMs: j.durationMs ?? null, steps: (j.steps ?? []).map((s) => ({ step: s.name, durationMs: s.durationMs ?? null })) })) };
+      } catch (error: unknown) {
+        observedJobs = { error: error instanceof Error ? error.message : String(error) };
+      }
+    }
+    return json({ ok: true, repository, configured: raw ? (JSON.parse(raw) as unknown) : null, observedJobs });
+  }
+  let body: { repository?: string; config?: unknown };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return json({ ok: false, error: "JSON body required" }, 400);
+  }
+  const repository = body.repository ?? "";
+  if (!/^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/.test(repository)) return json({ ok: false, error: "repository must be 'owner/name'" }, 400);
+  if (!(await store.getRepositoryPollState(repository))) return json({ ok: false, error: "repository is not enrolled" }, 404);
+  const parsed = parseStageClassificationConfig(body.config);
+  if (!parsed.config) return json({ ok: false, error: parsed.error ?? "invalid config" }, 400);
+  const { changed } = await store.setStageClassificationRaw(repository, JSON.stringify(parsed.config));
+  console.log(`shadow stage-classification: ${repository} -> ${JSON.stringify(parsed.config)}`);
+  return json({ ok: true, repository, configured: parsed.config, changed });
+}
+
 async function shadowEnroll(request: Request, env: ValidationEnv): Promise<Response> {
   let body: { repository?: string; observationSource?: ObservationSource; language?: string };
   try {
@@ -1616,16 +1664,22 @@ async function shadowAppInfo(env: ValidationEnv, deliveryId?: string, paging?: {
 async function shadowCronStatus(request: Request, env: ValidationEnv): Promise<Response> {
   const limit = Math.max(1, Math.min(50, Number.parseInt(new URL(request.url).searchParams.get("limit") ?? "10", 10) || 10));
   const store = makeD1ShadowStore(env.RESEARCH_DB);
-  const [runs, repositories, integrity, pushPolls] = await Promise.all([
+  const [runs, repositories, integrity, pushPolls, selfHealth] = await Promise.all([
     store.listRecentCronRuns(limit),
     store.listPollableRepositories(),
     checkSourceIntegrity(env),
     store.listRecentPushPolls(limit),
+    store.getSelfHealth(new Date().toISOString()).catch((error: unknown) => ({ error: error instanceof Error ? error.message : String(error) })),
   ]);
   return json({
     ok: true,
     cronEnabled: env.SHADOW_CRON_ENABLED === "true",
     pushPollQueueBound: !!env.SHADOW_POLL_QUEUE,
+    // 2026-09-05 telemetry self-health invariants (research note, "Decisions"): never-attempted backlog
+    // and its age, unlabelled ground truth (migration/deploy mixed-version window), verified rows still
+    // awaiting stage economics, repositories reconciling nothing for lack of an evidence workflow, and
+    // observed repositories with predictions but no verified ground truth at all.
+    selfHealth,
     // Kept for back-compat with anything already reading this field; sourceIntegrity below is the
     // authoritative, gate-equivalent answer (same computeSourceIntegrity() call the cron/webhook poll
     // paths use before running any analysis - see checkSourceIntegrity's doc comment).
@@ -2279,6 +2333,12 @@ export default {
       }
       return shadowEvidenceWorkflow(request, env);
     }
+    if ((request.method === "GET" || request.method === "POST") && url.pathname === "/v1/shadow/stage-classification") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return shadowStageClassification(request, env);
+    }
     if (request.method === "POST" && url.pathname === "/v1/shadow/poll") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
         return json({ ok: false, error: "unauthorized" }, 401);
@@ -2412,31 +2472,38 @@ export default {
     // this Worker has (githubTokenForRepo: least-privilege App installation token where the Shadow App is
     // actually installed, GITHUB_TOKEN for public repositories observed by poll only). It first ran in
     // the product Worker and failed on every commit against the unauthenticated 60 req/hour/IP limit.
+    //
+    // 2026-09-05 (measurement-integrity repair step 3): the legacy sweep (shadow-economics-job.ts) and its
+    // recompute are no longer scheduled - they re-fetched "any completed run", merged every workflow's
+    // jobs and classified by substring. The stage-economics sweep consumes VERIFIED ground truth only,
+    // reads the jobs of that row's evidence run, and classifies against the repository's explicit
+    // configuration. The legacy table is kept, labelled LEGACY_UNVERIFIED, and never read by a report.
     try {
       const boundary = makeD1ShadowReadBoundary(env.RESEARCH_DB as unknown as ShadowBoundaryD1);
-      const economicsStore = makeD1ShadowEconomicsStore(env.RESEARCH_DB as unknown as ShadowEconomicsD1);
+      const stageStore = makeD1ShadowStageEconomicsStore(env.RESEARCH_DB as unknown as StageEconomicsD1);
+      const shadowStore = makeD1ShadowStore(env.RESEARCH_DB);
       const windowEnd = new Date();
       const windowStart = new Date(windowEnd.getTime() - 30 * 24 * 60 * 60 * 1000); // rolling 30-day window
-      const economicsResult = await runShadowEconomicsCaptureSweep(
+      const stageResult = await runStageEconomicsCaptureSweep(
         {
           shadowBoundary: boundary,
-          store: economicsStore,
+          store: stageStore,
+          resolveClassification: async (repository) => {
+            const raw = await shadowStore.getStageClassificationRaw(repository);
+            if (!raw) return undefined;
+            try {
+              return parseStageClassificationConfig(JSON.parse(raw)).config;
+            } catch {
+              return undefined;
+            }
+          },
           resolveToken: (repository) => githubTokenForRepo(env, repository),
         },
         windowStart.toISOString(),
         windowEnd.toISOString(),
-        5, // bounded per sweep; authenticated now, but still deliberately conservative
+        10, // bounded per sweep: one GitHub call per admitted prediction
       );
-      console.log(`shadow-economics: ${JSON.stringify({ event: "shadow_economics.sweep_completed", ...economicsResult })}`);
-
-      // M2 backfill: correct rows produced by a withdrawn estimator, and fill in rows left UNKNOWN when
-      // their inputs were not yet usable. Bounded and self-terminating - once every row carries the
-      // current estimator version this selects nothing and mutates nothing, so it costs one indexed query
-      // per tick in steady state. Runs after capture so freshly-written rows are already current.
-      const recomputeResult = await runShadowEconomicsRecompute({ store: economicsStore }, 50);
-      if (recomputeResult.examined > 0) {
-        console.log(`shadow-economics: ${JSON.stringify({ event: "shadow_economics.recompute_completed", ...recomputeResult })}`);
-      }
+      console.log(`shadow-stage-economics: ${JSON.stringify({ event: "shadow_stage_economics.sweep_completed", ...stageResult })}`);
     } catch (error: unknown) {
       console.log(`shadow-economics: sweep failed: ${error instanceof Error ? error.message : String(error)}`);
     }

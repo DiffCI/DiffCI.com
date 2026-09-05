@@ -82,6 +82,25 @@ export interface RecordGroundTruthInput {
 
 export type GroundTruthValidity = "VERIFIED" | "UNVERIFIED" | "CONTAMINATED_WORKFLOW_IDENTITY";
 
+/** Telemetry self-health invariants (2026-09-05). Every value is something the 2026-09-05 incident
+ * review said a human should not have to discover by hand again. */
+export interface ShadowSelfHealth {
+  /** Pending predictions never attempted by the reconciler, and the oldest one's age. A large age with
+   * a working cron was the two-week head-of-line block (F1). */
+  neverAttemptedPredictions: number;
+  oldestNeverAttemptedAgeMs?: number;
+  /** Ground-truth rows with no evidence_validity label - only possible from a mixed-version window
+   * between a schema migration and the Worker deploy that writes the column (19 rows on 2026-09-05). */
+  unlabelledGroundTruthRows: number;
+  /** Predictions whose ground truth is VERIFIED but which have no stage-economics row yet - the
+   * step-3 sweep's backlog; growing without bound means the sweep is not running or cannot classify. */
+  verifiedWithoutStageEconomics: number;
+  /** Repositories in an observed state with no evidence workflow configured - reconciling nothing. */
+  unconfiguredEvidenceRepositories: string[];
+  /** Repositories in an observed state that have predictions but no VERIFIED ground truth at all. */
+  observedWithoutVerifiedGroundTruth: string[];
+}
+
 export interface PendingPredictionRow {
   logicalDeltaKey: string;
   repository: string;
@@ -213,6 +232,13 @@ export interface ShadowStore {
   setEvidenceWorkflowPaths(repository: string, paths: string[]): Promise<{ changed: boolean }>;
   /** Re-labels an existing ground-truth row's validity (backfill / contamination marking). Never deletes. */
   setGroundTruthValidity(logicalEventKey: string, validity: GroundTruthValidity, evidenceWorkflowPath?: string): Promise<{ changed: boolean }>;
+  /** 2026-09-05 repair step 3: the repository's explicit stage classification JSON (raw; parsed and
+   * validated by stage-classification-config.ts), or undefined when none is configured. */
+  getStageClassificationRaw(repository: string): Promise<string | undefined>;
+  setStageClassificationRaw(repository: string, json: string): Promise<{ changed: boolean }>;
+  /** Telemetry self-health invariants (research note, "Decisions"): facts a human should never have to
+   * discover by hand again. Each is a count or an age; the cron-status route exposes them. */
+  getSelfHealth(nowIso: string): Promise<ShadowSelfHealth>;
   /** Repositories the cron runner may poll: observation_source 'cloudflare-poll' OR 'github-app-webhook'
    * in a pollable state, never-polled first, then oldest-polled first. Webhook-enrolled repositories
    * were excluded until 2026-09-04; the cron's cheap head check is now their safety net for a lost push
@@ -525,6 +551,61 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .bind(validity, evidenceWorkflowPath ?? null, logicalEventKey)
         .run();
       return { changed: (result.meta?.changes ?? 0) > 0 };
+    },
+
+    async getStageClassificationRaw(repository) {
+      const row = await db
+        .prepare(`SELECT stage_classification FROM shadow_repositories WHERE repository = ?`)
+        .bind(repository)
+        .first<{ stage_classification: string | null }>();
+      return row?.stage_classification ?? undefined;
+    },
+
+    async setStageClassificationRaw(repository, jsonText) {
+      const result = await db
+        .prepare(`UPDATE shadow_repositories SET stage_classification = ? WHERE repository = ?`)
+        .bind(jsonText, repository)
+        .run();
+      return { changed: (result.meta?.changes ?? 0) > 0 };
+    },
+
+    async getSelfHealth(nowIso) {
+      const never = await db
+        .prepare(
+          `SELECT COUNT(*) AS n, MIN(p.prediction_created_at) AS oldest
+           FROM shadow_predictions p
+           LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
+           WHERE g.logical_delta_key IS NULL AND p.reconcile_terminal_reason IS NULL AND p.last_reconcile_attempted_at IS NULL`,
+        )
+        .bind()
+        .first<{ n: number; oldest: string | null }>();
+      const unlabelled = await db.prepare(`SELECT COUNT(*) AS n FROM shadow_ground_truth WHERE evidence_validity IS NULL`).bind().first<{ n: number }>();
+      const backlog = await db
+        .prepare(
+          `SELECT COUNT(*) AS n FROM shadow_ground_truth g
+           WHERE g.evidence_validity = 'VERIFIED'
+             AND NOT EXISTS (SELECT 1 FROM shadow_stage_economics e WHERE e.logical_delta_key = g.logical_delta_key)`,
+        )
+        .bind()
+        .first<{ n: number }>();
+      const observed = await db
+        .prepare(
+          `SELECT r.repository, r.evidence_workflow_paths,
+                  (SELECT COUNT(*) FROM shadow_predictions p WHERE p.repository = r.repository) AS predictions,
+                  (SELECT COUNT(*) FROM shadow_ground_truth g WHERE g.repository = r.repository AND g.evidence_validity = 'VERIFIED') AS verified
+           FROM shadow_repositories r WHERE r.state IN ('SHADOW_ACTIVE', 'SHADOW_LIMITED', 'VALIDATING')`,
+        )
+        .bind()
+        .all<{ repository: string; evidence_workflow_paths: string | null; predictions: number; verified: number }>();
+      const oldestMs = never?.oldest ? Date.parse(never.oldest) : Number.NaN;
+      return {
+        neverAttemptedPredictions: never?.n ?? 0,
+        oldestNeverAttemptedAgeMs: Number.isFinite(oldestMs) ? Math.max(0, Date.parse(nowIso) - oldestMs) : undefined,
+        unlabelledGroundTruthRows: unlabelled?.n ?? 0,
+        verifiedWithoutStageEconomics: backlog?.n ?? 0,
+        unconfiguredEvidenceRepositories: observed.results.filter((r) => !r.evidence_workflow_paths).map((r) => r.repository),
+        observedWithoutVerifiedGroundTruth: observed.results.filter((r) => r.predictions > 0 && r.verified === 0).map((r) => r.repository),
+      };
     },
 
     async updateLastPolled(repository, sha) {
