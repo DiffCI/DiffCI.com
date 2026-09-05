@@ -69,20 +69,27 @@ export function jobAddressedToFleet(labels: readonly string[]): boolean {
 }
 
 /**
- * The labels the runner registers with. GitHub assigns a runner any queued job whose required labels
- * are a SUBSET of the runner's, oldest first - so eligibility is decided entirely here:
- *   - a pinned job's runner registers with the pin label ONLY: it qualifies for exactly that job, and a
- *     legacy plain-label job (which requires `cloudflare`) can never be handed it - the 07:27Z and
- *     07:37Z qualification runs both lost their pinned runner to a legacy job while the runner still
- *     carried `cloudflare`;
- *   - a legacy plain-label job's runner registers with `cloudflare` and takes GitHub's oldest plain
- *     job, exactly as before.
- * `self-hosted` and the OS/arch labels are added by the runner itself.
+ * The labels the runner registers with: EXACTLY the job's own required labels (minus `self-hosted`
+ * and the OS/arch labels, which the runner adds itself). GitHub assigns a runner any queued job whose
+ * required labels are a subset of the runner's, oldest first, so eligibility is decided by what the
+ * WORKFLOW requires:
+ *   - a job whose workflow requires only [self-hosted, "diffci-job-<run id>"] gets a pin-only runner,
+ *     which qualifies for exactly that job and can never be handed a legacy job (which requires
+ *     `cloudflare`);
+ *   - a job whose workflow still requires `cloudflare` as well (commits before the pin-only workflow)
+ *     needs a runner with both, and that runner remains eligible for legacy jobs - a transition-only
+ *     hazard the reconciler's `runner_gone` rule recovers from;
+ *   - a legacy plain-label job's runner registers with `cloudflare` and takes GitHub's oldest plain job.
+ * Registering FEWER labels than the job requires strands the job: the 07:43Z re-dispatches registered
+ * pin-only runners for jobs that still required `cloudflare`, and both sat idle while the jobs stayed
+ * queued.
  */
 export function registrationLabels(labels: readonly string[]): string[] {
-  const pin = labels.find((l) => l.startsWith(PINNED_LABEL_PREFIX));
-  return pin ? [pin] : ["cloudflare"];
+  const custom = labels.filter((l) => !IMPLICIT_LABELS.has(l));
+  return custom.length > 0 ? custom : ["cloudflare"];
 }
+
+const IMPLICIT_LABELS = new Set(["self-hosted", "linux", "Linux", "x64", "X64"]);
 
 export interface QueuedJobView {
   jobId: number;

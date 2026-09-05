@@ -35,10 +35,10 @@ describe("labels", () => {
     assert.equal(isPinned(["self-hosted", "cloudflare"]), false);
   });
 
-  it("a pinned runner registers with the pin label ONLY, so a legacy plain-label job can never be handed it; a legacy runner registers plain", () => {
-    assert.deepEqual(registrationLabels(["self-hosted", "diffci-job-33953059449"]), ["diffci-job-33953059449"]);
-    assert.deepEqual(registrationLabels(["self-hosted", "cloudflare", "diffci-job-33951761194"]), ["diffci-job-33951761194"], "even a pinned job that also asked for cloudflare gets a pin-only runner");
-    assert.deepEqual(registrationLabels(["self-hosted", "cloudflare"]), ["cloudflare"], "a legacy plain-label job registers a plain runner - GitHub's oldest-first choice, as before");
+  it("a runner registers with exactly the job's required custom labels - never fewer (a stranded job) and never more (a stealable runner)", () => {
+    assert.deepEqual(registrationLabels(["self-hosted", "diffci-job-33953059449"]), ["diffci-job-33953059449"], "pin-only workflow -> pin-only runner");
+    assert.deepEqual(registrationLabels(["self-hosted", "cloudflare", "diffci-job-33951761194"]), ["cloudflare", "diffci-job-33951761194"], "a job that still requires cloudflare needs both, or it strands (07:43Z)");
+    assert.deepEqual(registrationLabels(["self-hosted", "Linux", "X64", "cloudflare"]), ["cloudflare"], "a legacy plain-label job registers a plain runner - GitHub's oldest-first choice, as before");
     assert.deepEqual(registrationLabels([]), ["cloudflare"]);
   });
 });
