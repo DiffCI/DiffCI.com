@@ -165,7 +165,7 @@ async function main() {
     writeFileSync(args.out, text + "\n", "utf8");
     console.log(`\n[written to ${args.out}]`);
   }
-  console.log(`\n[traceability: ${rows.length} shadow_economics_observations rows in window]`);
+  console.log(`\n[traceability: ${rows.length} shadow_stage_economics rows in window (VERIFIED evidence only)]`);
 }
 
 main().catch((e) => {

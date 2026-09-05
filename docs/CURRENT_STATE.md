@@ -203,11 +203,20 @@ Working tree is clean; `main` is up to date with `origin/main`.
    `evidence_validity` on every ground-truth row; DentalPresence.in's 26 legacy rows and 77 of
    DiffCI.com's are labelled `CONTAMINATED_WORKFLOW_IDENTITY`, kept, never counted; the six corpus
    repositories are held as `evidence_workflow_unconfigured` until the founder picks their evidence
-   workflow — see the note's "Fix 2"); (3) replace substring stage classification with explicit
-   repository configuration plus conservative inference; (4) repair the runner separately (§5). Then
-   run a small known cohort end-to-end and verify D1/R2 by hand before the Stage 2F clock restarts.
-   Add telemetry self-health invariants (oldest unattempted prediction age, repeated pending window,
-   predictions rising while ground truth does not, zero classified test work for N observations).
+   workflow — see the note's "Fix 2"); (3) ~~replace substring stage classification with explicit
+   repository configuration plus conservative inference~~ — **done 2026-09-05** (`dd4b056`:
+   `shadow_stage_economics` written from VERIFIED evidence and the evidence run's own jobs only,
+   explicit job/step rules via `/v1/shadow/stage-classification`, inseparable work measured but never
+   estimated; legacy economics table labelled `LEGACY_UNVERIFIED` and unscheduled; reports read the
+   new table only; own CI split into named Typecheck/Test steps in `48ffc53`); (4) repair the runner
+   separately (§5). Then run a small known cohort end-to-end and verify D1/R2 by hand before the Stage
+   2F clock restarts. ~~Add telemetry self-health invariants~~ — **first set live** on
+   `/v1/shadow/cron-status` → `selfHealth` (never-attempted backlog + age, unlabelled ground truth,
+   verified rows awaiting stage economics, unconfigured / unverified repositories).
+   **Founder decisions on record:** steps 1 and 2 CLOSED / PRODUCTION-VERIFIED at `54122be`; the six
+   corpus repositories stay unconfigured until mechanically verified (never "ci.yml by name"); the 77
+   contaminated DiffCI.com rows stay immutable and excluded (a retrospective dataset, if ever wanted,
+   is separate and marked); the migration/deploy mixed-version window is an operational finding.
 9. **Stage 2F daily observation routine is gone.** `trig_01AZTyUSfZcHtMMxvaKMAFoC` returns 404; the
    observation log has only Day 1 and Day 3 entries. Gate E is not satisfied by elapsed time.
 

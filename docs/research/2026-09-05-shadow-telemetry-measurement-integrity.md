@@ -332,7 +332,103 @@ selector outcome. The remaining ~40 cohort rows drain through the cron under the
 `NO_MATCHING_WORKFLOW` terminalisation also fired on its own during the window on nuxt (2), nitro
 (5) and unstorage (2) - before those repositories became unconfigured-and-held under step 2.
 
-**Still open after Fix 2:** the corpus repositories' evidence workflows (founder choice); step 3
-(stage classification) - DiffCI.com's `check` job and DentalPresence.in's "Build and deploy" job still
-classify as `other`/`build`; step 4 (runner); the telemetry self-health invariants; and re-deriving
-the 77 contaminated DiffCI.com rows if wanted.
+**Founder decisions on Fix 2 (2026-09-05).** Steps 1 and 2 are **CLOSED / PRODUCTION-VERIFIED** at
+`54122be`; historical contamination is **PRESERVED / EXCLUDED, not rewritten**.
+
+- *Corpus workflows:* the six `cloudflare-poll` repositories stay `evidence_workflow_unconfigured`
+  until each workflow is mechanically verified against the repository's actual test/evidence
+  execution. Bulk-configuring them because each has a `ci.yml` would weaken the invariant from
+  "explicitly identified evidence workflow" to "file named ci.yml" - exactly the inference step 2
+  exists to eliminate.
+- *The 77 contaminated DiffCI.com rows:* immutable as `CONTAMINATED_WORKFLOW_IDENTITY`, excluded
+  from every claim, never deleted or reconciled in place. If corrected historical coverage is ever
+  needed, it is a separate, clearly-marked retrospective dataset linked to the original prediction -
+  both records survive, history is not rewritten.
+- *The migration/deploy race* (19 rows written unlabelled between the schema migration and the
+  Worker deploy) is an operational finding in its own right: schema migration and application rollout
+  create a mixed-version evidence window. It is now a self-health invariant
+  (`unlabelledGroundTruthRows`, Fix 3) rather than a manual clean-up.
+- What step 2 proves: *ground truth is admitted only when workflow identity is explicitly configured
+  and GitHub execution evidence shows the identified workflow actually executed; non-execution and
+  identity contamination remain provenance, not ground truth.* `VERIFIED` establishes the
+  identity/execution admission boundary only - it does not yet say what work occurred inside the run
+  (that is step 3). The 17/17 preserved failures surviving the boundary is preservation of existing
+  evidence, not new independent validation. DiffCI.com 254 raw → 177 verified and DentalPresence.in
+  26 raw → 0 verified is a major correction to what the telemetry can legitimately support, and zero
+  trustworthy observations are better than 26 attributed to the wrong workflow.
+
+## Fix 3 (F4) — stage classification on admitted evidence only, 2026-09-05
+
+Commit `dd4b056` (+ `48ffc53` for this repository's own CI); migration
+`schema-migration-2026-09-05-shadow-stage-economics.sql`. Consumes only `VERIFIED` evidence from the
+point of admission - contaminated and unverified rows never reach the classifier, rather than being
+filtered from its output.
+
+**Three faults in the legacy economics path, each fixed structurally.** (1) *No identity:* the legacy
+sweep re-fetched "any completed run" and merged every workflow's jobs; the new sweep
+(`shadow-stage-economics-job.ts`) reads the VERIFIED ground-truth row's evidence run and fetches THAT
+run's jobs by id, nothing else. (2) *No admission:* predictions with contaminated or no ground truth
+were measured; the new sweep's only input is `ShadowReadBoundary.listVerifiedGroundTruth`. (3) *A
+substring classifier:* replaced by explicit per-repository configuration
+(`src/shadow/stage-classification-config.ts`, set through the bearer-gated
+`GET/POST /v1/shadow/stage-classification`, whose GET shows the latest verified run's real job and
+step names with durations so rules are written against names that exist). Rules match job and step
+names exactly; a step rule attributes that step's own measured duration, a job rule the job's
+remainder; a configured repository's unmatched work is `other`/`unclassified`, never inferred.
+Conservative inference (exactly one stage keyword) applies only where no configuration exists.
+`inseparable` marks work that cannot be separated from non-stage work (one `npm run check` step that
+typechecks AND tests; `npm ci && npm test` in one step): the measurement is kept with its basis, and
+no avoidable-work estimate is derived from it (`estimation_method = 'inseparable_workload'`).
+
+**Storage and reports.** New table `shadow_stage_economics` with full provenance per row: evidence run
+id, workflow path, `classification_basis`, classifier version, job ids, step refs. The legacy
+`shadow_economics_observations` (652 rows) is labelled `LEGACY_UNVERIFIED`, no longer written, no
+longer read; its sweep and recompute are unscheduled. `scripts/generate-shadow-report.ts` reads the
+new table only and counts safety over VERIFIED ground truth only. The status summary's recall
+figures are computed over VERIFIED rows only (`groundTruthVerified` beside the raw count).
+
+**Configuration applied 2026-09-05** (against the observed names):
+
+| Repository | Rule | Stage | Basis |
+|---|---|---|---|
+| DiffCI.com | step `check :: Run npm run check` | test | inseparable (typecheck + test in one step, until `48ffc53`) |
+| DiffCI.com | step `check :: Typecheck` / `check :: Test` | typecheck / test | separable (runs after `48ffc53` split the step) |
+| DiffCI.com | job `check` remainder (setup, checkout, `npm ci`) | other | explicit |
+| DentalPresence.in | step `Typecheck, lint, and portability :: Run checks` | typecheck | inseparable (typecheck + lint + link/route checks) |
+| DentalPresence.in | step `Build and deploy … :: Install and test` | test | inseparable (`npm ci` + `npm test` in one step) |
+| DentalPresence.in | steps `… :: Validate Cloudflare deployment plan`, `… :: Deploy Cloudflare staging` | build | separable (no `deploy` stage exists in the vocabulary; "Build and deploy" is the job) |
+| DentalPresence.in | both jobs' remainders | other | explicit |
+
+**Live verification, first cron tick after deploy (2026-09-05T07:00Z, 10 admitted predictions,
+round-robin: 9 DiffCI.com + 1 DentalPresence.in):**
+
+| Repository | stage | basis | rows | measured ms | avoidable |
+|---|---|---|---:|---:|---|
+| DiffCI.com | test | explicit_step_inseparable | 9 | 1,402,000 | UNKNOWN (inseparable, by design) |
+| DiffCI.com | other | explicit_job | 9 | 187,000 | UNKNOWN |
+| DentalPresence.in | test | explicit_step_inseparable | 1 | 147,000 | UNKNOWN (inseparable) |
+| DentalPresence.in | build | explicit_step | 1 | 437,000 | UNKNOWN (no selection concept) |
+| DentalPresence.in | typecheck | explicit_step_inseparable | 1 | 51,000 | UNKNOWN |
+| DentalPresence.in | other | explicit_job | 1 | 54,000 | UNKNOWN |
+
+For the first time both repositories carry a `test` stage with a real measured duration - and for the
+first time the absence of an avoidable-work estimate has an explicit, correct reason (the work is
+inseparable) instead of a substring miss. The remaining ~170 verified DiffCI.com rows drain at 10 per
+tick. An ESTIMATED test-stage figure for DiffCI.com becomes possible only for runs after `48ffc53`,
+which requires the runner (step 4) to execute them.
+
+**Self-health invariants (on `GET /v1/shadow/cron-status` → `selfHealth`):** never-attempted
+predictions and the oldest one's age; unlabelled ground-truth rows (the migration/deploy window);
+verified rows awaiting stage economics; repositories with no evidence workflow; observed repositories
+with predictions but no verified ground truth. First live reading: `neverAttempted 0`, `unlabelled 0`,
+`verifiedWithoutStageEconomics 179`, unconfigured = the five active corpus repositories, and the four
+corpus repositories with predictions but nothing verified.
+
+**Runner observation during the window (step 4, not touched):** three DiffCI.com CI runs did
+complete today (`c83e30f0` after ~15 h, `d0b0eb90` after 2.5 h, `1c1eae00` after 3 h) - each new push
+spawns a runner that claims the OLDEST queued job - while 8 runs remain queued and 0 runners are
+registered. The step-4 repair is unchanged: make the runner reliable and make it claim its own job.
+
+**Still open after Fix 3:** step 4 (runner); corpus evidence workflows (mechanical verification, not
+`ci.yml` by name); a retrospective dataset for the 77 contaminated rows if ever wanted; a manual
+trigger for the stage sweep (today it runs only from the cron tick).

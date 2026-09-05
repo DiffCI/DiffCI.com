@@ -76,7 +76,9 @@ interface ComparatorEstimate {
 }
 
 function comparatorFor(c: CommitDetail): ComparatorEstimate {
-  if (typeof c.testsTotalFull !== "number" || c.testsTotalFull <= 0) {
+  // An inseparable measurement (one step that installs/typechecks AND tests) is not a test-stage
+  // workload, so neither side of the comparator may be estimated from it (2026-09-05, step 3).
+  if (c.workloadInseparable || typeof c.testsTotalFull !== "number" || c.testsTotalFull <= 0) {
     return { pathSelectedMs: undefined, diffciSelectedMs: undefined, analysisMs: c.diffciAnalysisOverheadMs, incrementalMs: undefined };
   }
   // planMode is deliberately NOT passed to either call: it names DiffCI's own plan, and applying it to
@@ -124,8 +126,9 @@ function renderCommitEvidence(stage: StageRollup): string[] {
     if (typeof c.testsSelectedPath === "number" && typeof c.testsTotalFull === "number") {
       lines.push(`              path-rule would select (comparator): ${c.testsSelectedPath} / ${c.testsTotalFull} tests`);
     }
-    lines.push(`              path-rule estimated cost:        ${typeof cmp.pathSelectedMs === "number" ? `${seconds(cmp.pathSelectedMs)}s [ESTIMATED]` : "not estimable"}`);
-    lines.push(`              DiffCI selected estimated cost: ${typeof cmp.diffciSelectedMs === "number" ? `${seconds(cmp.diffciSelectedMs)}s [ESTIMATED]` : "not estimable"}`);
+    const notEstimable = c.workloadInseparable ? "not estimable (inseparable workload: measured step mixes non-test work)" : "not estimable";
+    lines.push(`              path-rule estimated cost:        ${typeof cmp.pathSelectedMs === "number" ? `${seconds(cmp.pathSelectedMs)}s [ESTIMATED]` : notEstimable}`);
+    lines.push(`              DiffCI selected estimated cost: ${typeof cmp.diffciSelectedMs === "number" ? `${seconds(cmp.diffciSelectedMs)}s [ESTIMATED]` : notEstimable}`);
     lines.push(`              DiffCI analysis cost:            ${typeof cmp.analysisMs === "number" ? `${seconds(cmp.analysisMs)}s [MEASURED]` : "not recorded"}`);
     if (typeof cmp.incrementalMs === "number") {
       const sign = cmp.incrementalMs > 0 ? "DiffCI ahead" : cmp.incrementalMs < 0 ? "path rule ahead" : "no difference";

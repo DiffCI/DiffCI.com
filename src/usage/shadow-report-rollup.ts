@@ -41,6 +41,10 @@ export interface CommitDetail {
   /** YC readiness Week 2, incremental-economics comparator. */
   testsSelectedPath: number | undefined;
   diffciAnalysisOverheadMs: number | undefined;
+  /** 2026-09-05 repair step 3: the measured workload contains non-stage work that cannot be separated
+   * (estimation_method 'inseparable_workload'). No estimate - avoidable OR comparator - may be derived
+   * from it; the renderer must say so rather than print an [ESTIMATED] figure. */
+  workloadInseparable?: boolean;
 }
 
 export interface StageRollup {
@@ -130,6 +134,7 @@ export function rollUpShadowReport(input: RollupInput): ShadowRepositoryReport {
         avoidableTier: r.avoidableTier,
         testsSelectedPath: r.testsSelectedPath,
         diffciAnalysisOverheadMs: r.diffciAnalysisOverheadMs,
+        workloadInseparable: r.estimationMethod === "inseparable_workload",
       })),
     });
   }
