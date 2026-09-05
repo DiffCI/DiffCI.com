@@ -241,7 +241,8 @@ Working tree is clean; `main` is up to date with `origin/main`.
    private repositories' reports need a token shown only on the signed-in dashboard (app.diffci.com);
    per-repository and corpus budget caps; http/www redirects and a contact inbox on the site. Whole
    research corpus identified automatically (each `ci.yml`, by mechanism). No per-install founder
-   action remains; the one-time GitHub App Setup URL (→ diffci.com/welcome) is the last founder step.
+   action remains. The GitHub App Setup URL was set to diffci.com/welcome by the founder on 2026-09-05
+   (verified: the welcome page answers 200 with GitHub's installation_id/setup_action parameters).
    See the note's "Fix 6".
    **Founder decisions on record:** steps 1 and 2 CLOSED / PRODUCTION-VERIFIED at `54122be`; the six
    corpus repositories stay unconfigured until mechanically verified (never "ci.yml by name"); the 77

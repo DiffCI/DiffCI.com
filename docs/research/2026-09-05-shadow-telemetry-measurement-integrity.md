@@ -703,6 +703,6 @@ DNS record blocks a custom domain; `/contact` posts to a D1 inbox (`POST /v1/con
 `GET /v1/contact/inbox`) - no mailbox required; the welcome page states that identification is
 automatic and how a private repository's report is reached.
 
-**Remaining founder one-time action (GitHub UI, not per install):** set the Shadow App's Setup URL to
-`https://diffci.com/welcome` so GitHub lands the installer on the welcome page after installing.
-Nothing per install remains.
+**Founder one-time action done (2026-09-05):** the Shadow App's Setup URL is `https://diffci.com/welcome`
+with redirect-on-update, so GitHub lands installers on the welcome page; verified live with GitHub's
+query parameters. Nothing per install remains. The stranger install journey is now complete end to end.
