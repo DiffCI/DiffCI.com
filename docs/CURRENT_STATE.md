@@ -100,9 +100,11 @@ went unobserved from 2026-08-27 for 168 commits; see
 `docs/research/2026-09-04-shadow-push-poll-lifetime.md`.
 
 **Measurement-integrity caveat (2026-09-05, unfixed):** predictions flow, ground truth does not.
-DiffCI.com has had no new ground-truth row since 2026-08-23 because the reconciler's
-`ORDER BY created_at LIMIT 10` window is permanently occupied by ten `no_matching_workflow` rows
-(intermediate commits of multi-commit pushes); 249 newer predictions have never been attempted.
+DiffCI.com had no new ground-truth row from 2026-08-23 to 2026-09-05 because the reconciler's
+`ORDER BY created_at LIMIT 10` window was permanently occupied by ten `no_matching_workflow` rows
+(intermediate commits of multi-commit pushes); 249 newer predictions were never attempted. Fixed
+2026-09-05 (fair window + explicit terminal state, research note "Fix 1"); the backlog drains through
+the normal cron.
 DentalPresence.in's 23 ground-truth rows are contaminated: its instantly-skipped CodeQL run is taken
 as "the" CI result before the deploy/test run finishes. Economics are `UNKNOWN` on both because
 neither repo has a job whose name contains "test". None of this is selector degradation. Do not read
@@ -193,8 +195,9 @@ Working tree is clean; `main` is up to date with `origin/main`.
    DentalPresence.in: 2094 in August, 957 in the first four days of September).
 8. **Shadow measurement integrity (2026-09-05, open).** Four distinct defects, all in measurement,
    none in selection — see `research/2026-09-05-shadow-telemetry-measurement-integrity.md`. Agreed
-   repair order: (1) terminalise permanent `no_matching_workflow` rows with an explicit reason so the
-   reconciler window is never head-of-line blocked; (2) require an explicitly identified evidence
+   repair order: (1) ~~terminalise permanent `no_matching_workflow` rows with an explicit reason so the
+   reconciler window is never head-of-line blocked~~ — **done 2026-09-05** (fair pending window +
+   `reconcile_terminal_*` columns, decided on positive evidence only; see the note's "Fix 1"); (2) require an explicitly identified evidence
    workflow per repository instead of "first non-shadow run to complete" (DentalPresence.in's 23
    ground-truth rows are contaminated); (3) replace substring stage classification with explicit
    repository configuration plus conservative inference; (4) repair the runner separately (§5). Then

@@ -137,7 +137,7 @@ export interface ShadowCronDeps {
    * below refuses to poll in every non-CURRENT case. */
   getVerifiedSourceArchive(): Promise<VerifiedSourceArchive>;
   pollRepository(repo: PollableRepository, source: File, engineSourceSha: string): Promise<{ predictionsRecorded: number; errors: string[] }>;
-  reconcileRepository(repository: string): Promise<{ reconciled: number; stillPending: number; errors: string[] }>;
+  reconcileRepository(repository: string): Promise<{ reconciled: number; stillPending: number; terminalized?: number; errors: string[] }>;
   recordCronRun(run: ShadowCronRunRecord): Promise<void>;
   now(): Date;
   log(message: string): void;

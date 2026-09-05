@@ -84,6 +84,10 @@ export interface PendingPredictionRow {
   r2EvidenceKey: string;
   diffciAnalysisOverheadMs: number;
   predictionCreatedAt: string;
+  /** The most recent STILL_PENDING attempt BEFORE this one, as recorded by recordReconcileAttempt -
+   * the prior observation that shadow-reconcile-terminal.ts needs (2026-09-05). Undefined = never attempted. */
+  lastReconcileAttemptedAt?: string;
+  lastReconcileReason?: string;
 }
 
 export interface RepositorySummaryRow {
@@ -144,11 +148,13 @@ export interface ReconcileDiagnostics {
   total: number;
   reconciled: number;
   pending: number;
-  /** Always 0 today - nothing in this codebase ever auto-terminalizes a pending prediction (Task 2 §11:
-   * age alone must never convert a normal delay into a failure). Reported explicitly, not omitted, so a
-   * future terminal-state feature has an obvious existing field to populate rather than inventing a new
-   * response shape. */
+  /** Predictions with a non-NULL reconcile_terminal_reason: ground truth provably cannot exist (today only
+   * NO_MATCHING_WORKFLOW, decided by shadow-reconcile-terminal.ts on positive evidence, never age alone -
+   * the Task 2 §11 rule stands). Excluded from `pending`; the prediction row itself is untouched. Reserved
+   * as "always 0" on 2026-08-21 for exactly this feature; populated since 2026-09-05. */
   terminalUnevaluable: number;
+  /** Breakdown of terminalUnevaluable by reconcile_terminal_reason. */
+  terminalReasons: PendingReasonBreakdown[];
   pendingReasons: PendingReasonBreakdown[];
   oldestPendingAgeMs?: number;
   /** Pending predictions older than the stuck threshold - a diagnostic label computed at read time, never
@@ -215,8 +221,14 @@ export interface ShadowStore {
   setRepositoryState(repository: string, state: ShadowRepositoryState): Promise<void>;
   recordPrediction(input: RecordPredictionInput, r2EvidenceKey: string): Promise<{ inserted: boolean }>;
   recordGroundTruth(input: RecordGroundTruthInput, r2EvidenceKey: string): Promise<{ inserted: boolean }>;
-  /** Predictions with no corresponding shadow_ground_truth row yet, oldest first, capped at `limit`. */
+  /** Predictions with no shadow_ground_truth row and no terminal reason, capped at `limit`. Ordered
+   * never-attempted first, then least recently attempted (2026-09-05) - NOT oldest first: that order let
+   * ten permanently-pending rows occupy the whole window for two weeks (research note 2026-09-05, F1). */
   findPendingPredictions(repository: string, limit: number): Promise<PendingPredictionRow[]>;
+  /** Marks a prediction's ground truth as provably unobtainable (shadow-reconcile-terminal.ts). Refuses
+   * (changed:false) when a ground-truth row already exists or the row is already terminal, so a decision
+   * can never overwrite real evidence. The prediction row is otherwise untouched. */
+  terminalizePrediction(logicalDeltaKey: string, reason: string, at: string, detail: Record<string, unknown>): Promise<{ changed: boolean }>;
   getRepositorySummary(repository: string): Promise<RepositorySummaryRow | undefined>;
   /** Called after EVERY reconciliation attempt that returns STILL_PENDING (never for RECONCILED - see
    * the migration file's comment on why that's fine). Never throws in a way that should fail the
@@ -531,15 +543,19 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
     async findPendingPredictions(repository, limit) {
       const { results } = await db
         .prepare(
-          `SELECT p.logical_delta_key, p.repository, p.head_sha, p.r2_evidence_key, p.diffci_analysis_overhead_ms, p.prediction_created_at
+          `SELECT p.logical_delta_key, p.repository, p.head_sha, p.r2_evidence_key, p.diffci_analysis_overhead_ms, p.prediction_created_at,
+                  p.last_reconcile_attempted_at, p.last_reconcile_reason
            FROM shadow_predictions p
            LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
-           WHERE p.repository = ? AND g.logical_delta_key IS NULL
-           ORDER BY p.created_at ASC
+           WHERE p.repository = ? AND g.logical_delta_key IS NULL AND p.reconcile_terminal_reason IS NULL
+           ORDER BY (p.last_reconcile_attempted_at IS NOT NULL) ASC, p.last_reconcile_attempted_at ASC, p.created_at ASC
            LIMIT ?`,
         )
         .bind(repository, limit)
-        .all<{ logical_delta_key: string; repository: string; head_sha: string; r2_evidence_key: string; diffci_analysis_overhead_ms: number; prediction_created_at: string }>();
+        .all<{
+          logical_delta_key: string; repository: string; head_sha: string; r2_evidence_key: string; diffci_analysis_overhead_ms: number;
+          prediction_created_at: string; last_reconcile_attempted_at: string | null; last_reconcile_reason: string | null;
+        }>();
       return results.map((r) => ({
         logicalDeltaKey: r.logical_delta_key,
         repository: r.repository,
@@ -547,7 +563,23 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         r2EvidenceKey: r.r2_evidence_key,
         diffciAnalysisOverheadMs: r.diffci_analysis_overhead_ms,
         predictionCreatedAt: r.prediction_created_at,
+        lastReconcileAttemptedAt: r.last_reconcile_attempted_at ?? undefined,
+        lastReconcileReason: r.last_reconcile_reason ?? undefined,
       }));
+    },
+
+    async terminalizePrediction(logicalDeltaKey, reason, at, detail) {
+      const result = await db
+        .prepare(
+          `UPDATE shadow_predictions
+           SET reconcile_terminal_reason = ?, reconcile_terminal_at = ?, reconcile_terminal_detail = ?
+           WHERE logical_delta_key = ?
+             AND reconcile_terminal_reason IS NULL
+             AND NOT EXISTS (SELECT 1 FROM shadow_ground_truth g WHERE g.logical_delta_key = shadow_predictions.logical_delta_key)`,
+        )
+        .bind(reason, at, JSON.stringify(detail), logicalDeltaKey)
+        .run();
+      return { changed: (result.meta?.changes ?? 0) > 0 };
     },
 
     async getRepositorySummary(repository) {
@@ -647,20 +679,33 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .prepare(
           `SELECT
              COUNT(*) AS total,
-             SUM(CASE WHEN g.logical_delta_key IS NOT NULL THEN 1 ELSE 0 END) AS reconciled
+             SUM(CASE WHEN g.logical_delta_key IS NOT NULL THEN 1 ELSE 0 END) AS reconciled,
+             SUM(CASE WHEN g.logical_delta_key IS NULL AND p.reconcile_terminal_reason IS NOT NULL THEN 1 ELSE 0 END) AS terminal
            FROM shadow_predictions p
            LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
            WHERE 1=1 ${repoFilter}`,
         )
         .bind(...bindArgs)
-        .first<{ total: number; reconciled: number | null }>();
+        .first<{ total: number; reconciled: number | null; terminal: number | null }>();
+
+      const terminalRows = await db
+        .prepare(
+          `SELECT p.reconcile_terminal_reason AS reason, COUNT(*) AS count
+           FROM shadow_predictions p
+           LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
+           WHERE g.logical_delta_key IS NULL AND p.reconcile_terminal_reason IS NOT NULL ${repoFilter}
+           GROUP BY reason
+           ORDER BY count DESC`,
+        )
+        .bind(...bindArgs)
+        .all<{ reason: string; count: number }>();
 
       const reasonRows = await db
         .prepare(
           `SELECT COALESCE(p.last_reconcile_reason, 'not_yet_attempted') AS reason, COUNT(*) AS count
            FROM shadow_predictions p
            LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
-           WHERE g.logical_delta_key IS NULL ${repoFilter}
+           WHERE g.logical_delta_key IS NULL AND p.reconcile_terminal_reason IS NULL ${repoFilter}
            GROUP BY reason
            ORDER BY count DESC`,
         )
@@ -673,7 +718,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
                   p.last_reconcile_attempted_at, p.last_reconcile_reason
            FROM shadow_predictions p
            LEFT JOIN shadow_ground_truth g ON g.logical_delta_key = p.logical_delta_key
-           WHERE g.logical_delta_key IS NULL ${repoFilter}
+           WHERE g.logical_delta_key IS NULL AND p.reconcile_terminal_reason IS NULL ${repoFilter}
            ORDER BY p.prediction_created_at ASC`,
         )
         .bind(...bindArgs)
@@ -697,7 +742,8 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         total: totals?.total ?? 0,
         reconciled: totals?.reconciled ?? 0,
         pending: allPending.length,
-        terminalUnevaluable: 0,
+        terminalUnevaluable: totals?.terminal ?? 0,
+        terminalReasons: terminalRows.results.map((r) => ({ reason: r.reason, count: r.count })),
         pendingReasons: reasonRows.results.map((r) => ({ reason: r.reason, count: r.count })),
         oldestPendingAgeMs: allPending.length > 0 ? Math.max(...allPending.map((p) => p.ageMs)) : undefined,
         stuck: allPending

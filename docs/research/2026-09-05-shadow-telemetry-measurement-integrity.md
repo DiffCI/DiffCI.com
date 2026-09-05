@@ -1,9 +1,10 @@
 # 2026-09-05 — Own-repo shadow telemetry: prediction healthy, ground truth stalled and invalid, economics unobservable
 
-**Status:** diagnosed 2026-09-05, **nothing fixed yet**. Read-only investigation: every D1 statement was
-a `SELECT`, every GitHub call a `GET`, every R2 access a `get`. No Worker was redeployed, no row was
-written, no routine was created or changed. The founder's review (same day) fixed the repair order and
-the evidence standard recorded in "Decisions" below; none of it is implemented at the time of writing.
+**Status:** diagnosed 2026-09-05 by a read-only investigation: every D1 statement was a `SELECT`,
+every GitHub call a `GET`, every R2 access a `get`; no Worker was redeployed, no row was written, no
+routine was created or changed. The founder's review (same day) fixed the repair order and the evidence
+standard recorded in "Decisions" below. **Repair step 1 (F1, reconciler head-of-line block) is
+implemented - see "Fix 1" at the end.** Steps 2-4 are not.
 
 **One-line state:** shadow prediction generation → healthy · ground-truth collection → invalid on
 DentalPresence.in, stalled on DiffCI.com since 2026-08-23 · economics → structurally unobservable on
@@ -193,3 +194,43 @@ for N consecutive observations.
   own history; no engine code was executed.
 - One CLI detail worth keeping: `wrangler r2 object get` under Git Bash needs `MSYS_NO_PATHCONV=1`
   or the colon-bearing keys are mangled and report "key does not exist".
+
+## Fix 1 (F1) — reconciler head-of-line block, 2026-09-05
+
+Two halves, both in the same commit; migration
+`src/research/cloudflare/schema-migration-2026-09-05-shadow-reconcile-terminal.sql`.
+
+**Fair pending window.** `findPendingPredictions` now orders never-attempted rows first, then least
+recently attempted (`last_reconcile_attempted_at`), then creation time - instead of oldest first. With
+`reconcileLimitPerRepo = 10` and a 10-minute cron, every pending row of a repository is attempted at
+least once per `ceil(pending / 10)` ticks whatever any other row's reason is. No reason can monopolise
+the window again, terminal or not.
+
+**Explicit terminal state, never silent.** Three additive columns on `shadow_predictions`:
+`reconcile_terminal_reason` (NULL = normal; today only `NO_MATCHING_WORKFLOW`),
+`reconcile_terminal_at`, `reconcile_terminal_detail` (JSON audit of the evidence). A terminal row is
+excluded from the pending window and reported under reconcile-diagnostics' `terminalUnevaluable`
+(the field reserved for this on 2026-08-21) with a `terminalReasons` breakdown - never under
+`pending`, never as ground truth, and the prediction row itself is untouched. "Prediction made" and
+"ground truth unavailable" stay two distinct facts. `terminalizePrediction` refuses when a ground-truth
+row exists or the row is already terminal. Reversible by a data change (NULL the three columns).
+
+**Decision rules** (`src/research/cloudflare/shadow-reconcile-terminal.ts`, all required; age alone
+never decides, per Task 2 §11):
+
+1. this attempt classified the row `no_matching_workflow`;
+2. a previous attempt did too, at least 1 h earlier (two independent observations, because
+   `classifyPendingReason` degrades a transient GitHub error to the same label);
+3. the prediction is at least 6 h old;
+4. the repository's observed head has moved past the commit (a current head with no run at all is a
+   different situation - Actions disabled, billing, an outage - and stays visible as pending);
+5. a fresh, direct `GET /actions/runs?head_sha=<sha>` answered HTTP 200 with zero runs of any status.
+
+Rule 5 is one extra GitHub call per genuine candidate and none on the ordinary pending path; any
+failure there is "not confirmed" and the row stays pending (the safe direction). The manual
+`POST /v1/shadow/reconcile` response and the cron's per-repository result gain a `terminalized` count.
+
+**Verification:** `npm run check` - typecheck clean, 2009/2009 tests, including the regression shape
+(ten attempted-every-sweep rows plus one fresh row: the fresh row is first in the window), the
+refusal cases, and every blocking rule. Live verification is recorded below the commit hash once the
+migration is applied and the Worker deployed.

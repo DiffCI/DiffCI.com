@@ -24,6 +24,7 @@ import { computeExperimentProgress, planOrchestratorDispatch, type CorpusEntry, 
 import { evaluateBudgetStatus } from "../config/cost-model.js";
 import { makeD1ShadowStore, type ObservationSource } from "./shadow-store.js";
 import { reconcilePrediction } from "../../shadow/reconcile.js";
+import { confirmNoWorkflowRuns, decideNoMatchingWorkflowTerminal, precheckNoMatchingWorkflowTerminal } from "./shadow-reconcile-terminal.js";
 import { computeLogicalEventKey } from "../../shadow/event-identity.js";
 import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps, type VerifiedSourceArchive } from "./shadow-cron.js";
 import { handleShadowWebhook } from "./shadow-webhook.js";
@@ -979,14 +980,18 @@ async function githubTokenForRepo(env: ValidationEnv, repository: string): Promi
 
 /** The reconcile flow shared by POST /v1/shadow/reconcile and the autonomous cron runner. No container
  * involved - GitHub API + D1/R2 only. */
-async function executeShadowReconcile(env: ValidationEnv, repository: string, limit: number): Promise<{ attempted: number; reconciled: number; stillPending: number; errors: string[] }> {
+async function executeShadowReconcile(env: ValidationEnv, repository: string, limit: number): Promise<{ attempted: number; reconciled: number; stillPending: number; terminalized: number; errors: string[] }> {
   const store = makeD1ShadowStore(env.RESEARCH_DB);
   const evidenceStore = new R2EvidenceStore(env.RESEARCH_BUCKET);
   const pending = await store.findPendingPredictions(repository, limit);
   const githubToken = pending.length > 0 ? await githubTokenForRepo(env, repository) : undefined;
+  // Rule 4 of shadow-reconcile-terminal.ts: only a commit the repository has moved past can be
+  // terminalised. Read once per sweep, lazily - most sweeps never have a candidate.
+  let repositoryHeadSha: string | undefined | null = null;
 
   let reconciled = 0;
   let stillPending = 0;
+  let terminalized = 0;
   const errors: string[] = [];
   for (const row of pending) {
     try {
@@ -1012,6 +1017,40 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
         } catch (telemetryError: unknown) {
           console.log(`executeShadowReconcile: failed to record reconcile-attempt telemetry for ${row.logicalDeltaKey}: ${telemetryError instanceof Error ? telemetryError.message : String(telemetryError)}`);
         }
+        // 2026-09-05: terminalise a prediction whose ground truth provably cannot exist, so it stops
+        // occupying the pending window (research note 2026-09-05, F1). Every rule lives in
+        // shadow-reconcile-terminal.ts; this block only gathers the facts. `row` still carries the
+        // attempt BEFORE the recordReconcileAttempt above - the required prior observation.
+        try {
+          if (result.pendingReason === "no_matching_workflow") {
+            if (repositoryHeadSha === null) repositoryHeadSha = (await store.getRepositoryPollState(repository))?.lastPolledSha;
+            const facts = {
+              pendingReason: result.pendingReason,
+              predictionCreatedAt: row.predictionCreatedAt,
+              headSha: row.headSha,
+              previousReason: row.lastReconcileReason,
+              previousAttemptAt: row.lastReconcileAttemptedAt,
+              repositoryHeadSha,
+              nowIso: result.groundTruthFetchedAt,
+            };
+            // The GitHub confirmation (rule 5) is made only once rules 1-4 hold - one extra call per
+            // genuine candidate, none on the ordinary pending path.
+            const decision = precheckNoMatchingWorkflowTerminal(facts).candidate
+              ? decideNoMatchingWorkflowTerminal(facts, await confirmNoWorkflowRuns(repository, row.headSha, githubToken))
+              : decideNoMatchingWorkflowTerminal(facts, undefined);
+            if (decision.terminal && decision.reason && decision.detail) {
+              const { changed } = await store.terminalizePrediction(row.logicalDeltaKey, decision.reason, result.groundTruthFetchedAt, decision.detail);
+              if (changed) {
+                terminalized++;
+                console.log(`executeShadowReconcile: terminalised ${row.logicalDeltaKey} as ${decision.reason} (${JSON.stringify(decision.detail)})`);
+              }
+            }
+          }
+        } catch (terminalError: unknown) {
+          // Same posture as the telemetry write: a terminalisation failure leaves the row pending,
+          // which is the safe direction, and never fails the sweep.
+          console.log(`executeShadowReconcile: terminalisation check failed for ${row.logicalDeltaKey}: ${terminalError instanceof Error ? terminalError.message : String(terminalError)}`);
+        }
         continue;
       }
       const logicalEventKey = computeLogicalEventKey({ repository, headSha: row.headSha, workflowRunId: result.workflowRunId });
@@ -1035,7 +1074,7 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
     }
   }
 
-  return { attempted: pending.length, reconciled, stillPending, errors };
+  return { attempted: pending.length, reconciled, stillPending, terminalized, errors };
 }
 
 async function shadowReconcile(request: Request, env: ValidationEnv): Promise<Response> {

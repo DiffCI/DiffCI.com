@@ -28,6 +28,7 @@ function freshDb(): DatabaseSync {
     "schema-migration-2026-08-25-shadow-economics.sql",
     "schema-migration-2026-08-26-shadow-liveness.sql",
     "schema-migration-2026-09-04-shadow-push-polls.sql",
+    "schema-migration-2026-09-05-shadow-reconcile-terminal.sql",
   ]) {
     db.exec(readFileSync(join(SCHEMA_DIR, file), "utf8"));
   }
@@ -566,5 +567,84 @@ describe("shadow-store: push-triggered polls (schema-migration-2026-09-04-shadow
     const store = makeD1ShadowStore(makeD1(db));
     await store.beginPushPoll({ kind: "ci-reproduction-bridge", repository: "acme/web", enqueuedAt: "2026-09-04T10:00:00.000Z", startedAt: "2026-09-04T10:00:01.000Z" });
     assert.equal(await store.hasInFlightPushPoll("acme/web", "2026-09-04T09:45:00.000Z"), false);
+  });
+});
+
+describe("shadow-store: reconcile terminal state (2026-09-05, research note F1)", () => {
+  it("findPendingPredictions orders never-attempted rows first, then least recently attempted - a permanently pending row can no longer monopolise the window", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    // The incident shape: ten old rows that have been attempted every sweep, one fresh row behind them.
+    for (let i = 0; i < 10; i++) {
+      await store.recordPrediction(prediction({ logicalDeltaKey: `stuck-${i}`, headSha: `stuck-${i}`, predictionCreatedAt: `2026-08-22T0${i}:00:00.000Z` }), `r2/stuck-${i}`);
+      await store.recordReconcileAttempt(`stuck-${i}`, "no_matching_workflow", `2026-09-05T03:0${i}:00.000Z`);
+    }
+    await store.recordPrediction(prediction({ logicalDeltaKey: "fresh", headSha: "fresh", predictionCreatedAt: "2026-09-05T02:00:00.000Z" }), "r2/fresh");
+
+    const window = await store.findPendingPredictions("acme/web", 10);
+    assert.equal(window[0]!.logicalDeltaKey, "fresh", "the never-attempted row must be inside the window, ahead of every already-attempted row");
+    assert.equal(window[1]!.logicalDeltaKey, "stuck-0", "then the least recently attempted");
+    assert.equal(window.length, 10);
+    assert.equal(window[0]!.lastReconcileAttemptedAt, undefined);
+    assert.equal(window[1]!.lastReconcileReason, "no_matching_workflow", "the prior observation rides along for the terminal decision");
+  });
+
+  it("terminalizePrediction records reason/time/detail and removes the row from the pending window without touching the prediction", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "p1" }), "r2/p1");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "p2", headSha: "head2" }), "r2/p2");
+
+    const first = await store.terminalizePrediction("p1", "NO_MATCHING_WORKFLOW", "2026-09-05T04:00:00.000Z", { workflowRunsForHeadSha: 0 });
+    assert.equal(first.changed, true);
+    const again = await store.terminalizePrediction("p1", "NO_MATCHING_WORKFLOW", "2026-09-05T05:00:00.000Z", { workflowRunsForHeadSha: 0 });
+    assert.equal(again.changed, false, "already terminal - never overwritten");
+
+    const row = db.prepare(`SELECT reconcile_terminal_reason, reconcile_terminal_at, reconcile_terminal_detail, plan_mode, r2_evidence_key FROM shadow_predictions WHERE logical_delta_key = ?`).get("p1") as Record<string, string>;
+    assert.equal(row.reconcile_terminal_reason, "NO_MATCHING_WORKFLOW");
+    assert.equal(row.reconcile_terminal_at, "2026-09-05T04:00:00.000Z");
+    assert.deepEqual(JSON.parse(row.reconcile_terminal_detail!), { workflowRunsForHeadSha: 0 });
+    assert.equal(row.plan_mode, "SELECTIVE", "the prediction itself is untouched");
+    assert.equal(row.r2_evidence_key, "r2/p1");
+
+    const pending = await store.findPendingPredictions("acme/web", 10);
+    assert.deepEqual(pending.map((p) => p.logicalDeltaKey), ["p2"]);
+  });
+
+  it("terminalizePrediction refuses to mark a prediction that already has ground truth", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "p1" }), "r2/p1");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge1", logicalDeltaKey: "p1" }), "r2/ge1");
+
+    const result = await store.terminalizePrediction("p1", "NO_MATCHING_WORKFLOW", "2026-09-05T04:00:00.000Z", {});
+    assert.equal(result.changed, false);
+    const row = db.prepare(`SELECT reconcile_terminal_reason FROM shadow_predictions WHERE logical_delta_key = ?`).get("p1") as { reconcile_terminal_reason: string | null };
+    assert.equal(row.reconcile_terminal_reason, null, "real evidence can never be shadowed by a terminal marker");
+  });
+
+  it("getReconcileDiagnostics counts terminal rows under terminalUnevaluable, never under pending/stuck, and keeps prediction made vs ground truth unavailable distinct", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "reconciled" }), "r2/reconciled");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge", logicalDeltaKey: "reconciled" }), "r2/ge");
+    await store.recordPrediction(prediction({ logicalDeltaKey: "terminal", headSha: "t", predictionCreatedAt: "2026-08-22T00:00:00.000Z" }), "r2/terminal");
+    await store.recordReconcileAttempt("terminal", "no_matching_workflow", "2026-09-05T03:00:00.000Z");
+    await store.terminalizePrediction("terminal", "NO_MATCHING_WORKFLOW", "2026-09-05T04:00:00.000Z", {});
+    await store.recordPrediction(prediction({ logicalDeltaKey: "pending", headSha: "p", predictionCreatedAt: "2026-09-05T03:30:00.000Z" }), "r2/pending");
+
+    const d = await store.getReconcileDiagnostics({ nowIso: "2026-09-05T04:00:00.000Z", stuckThresholdMs: 4 * 60 * 60 * 1000, stuckLimit: 20 });
+    assert.equal(d.total, 3, "the terminal prediction is still a prediction that was made");
+    assert.equal(d.reconciled, 1);
+    assert.equal(d.pending, 1);
+    assert.equal(d.terminalUnevaluable, 1);
+    assert.deepEqual(d.terminalReasons, [{ reason: "NO_MATCHING_WORKFLOW", count: 1 }]);
+    assert.deepEqual(d.pendingReasons, [{ reason: "not_yet_attempted", count: 1 }], "the terminal row's old no_matching_workflow label must not linger in the pending breakdown");
+    assert.equal(d.stuck.length, 0, "a terminal row is not stuck - it is resolved, explicitly");
+    assert.equal(d.oldestPendingAgeMs, 30 * 60 * 1000);
   });
 });
