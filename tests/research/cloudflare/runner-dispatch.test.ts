@@ -66,9 +66,12 @@ describe("decideReconcileDispatches", () => {
       view(2, { dispatchRequestedAt: iso(nowMs - STALE_DISPATCH_MS - 1), containerStartedAt: iso(nowMs - STALE_DISPATCH_MS - 1), dispatchAttempts: 1 }),
       view(3, { dispatchRequestedAt: iso(nowMs - 60_000), containerStartedAt: iso(nowMs - 60_000), dispatchAttempts: 1 }),
       view(4, { dispatchRequestedAt: iso(nowMs - 60_000), assignedAt: iso(nowMs - 30_000), dispatchAttempts: 1 }),
+      // The live 07:27Z shape: the pinned runner exited (exec-succeeded) after GitHub gave it a legacy job;
+      // this job was never assigned and certainly has no runner now.
+      view(5, { dispatchRequestedAt: iso(nowMs - 60_000), containerStartedAt: iso(nowMs - 60_000), disposition: "exec-succeeded", dispatchAttempts: 1 }),
     ]);
-    const d = decideReconcileDispatches([1, 2, 3, 4].map((id) => queued(id, 10 * 60_000)), rows, NOW, 5);
-    assert.deepEqual(d, [{ jobId: 1, reason: "dispatch_failed" }, { jobId: 2, reason: "dispatch_stale" }]);
+    const d = decideReconcileDispatches([1, 2, 3, 4, 5].map((id) => queued(id, 10 * 60_000)), rows, NOW, 5);
+    assert.deepEqual(d, [{ jobId: 1, reason: "dispatch_failed" }, { jobId: 2, reason: "dispatch_stale" }, { jobId: 5, reason: "runner_gone" }]);
   });
 
   it("stops retrying after the attempt cap, ignores jobs not addressed to the fleet, and respects the capacity cap oldest-first", () => {

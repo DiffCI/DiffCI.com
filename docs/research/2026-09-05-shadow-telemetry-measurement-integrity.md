@@ -465,3 +465,65 @@ The eight already-queued runs are incident evidence, contaminated by backlog dyn
 observed, never the primary proof. Once step 4 passes, a fresh DiffCI.com run with separate
 `Typecheck` / `Test` steps flows through VERIFIED admission and stage economics on its own - the
 end-to-end production check, without a manufactured sweep result.
+
+## Fix 4 (F2) — runner lifecycle: durable, job-pinned dispatch with provenance, 2026-09-05
+
+**Diagnosis, from a live tail of the runner Worker during a controlled push (07:09Z) and the
+container application's own state.** Three faults, each now attributable rather than "runner failed":
+
+1. *Dispatch ran inside the webhook's `ctx.waitUntil()`.* Every dispatch event in the tail ended
+   `"outcome": "canceled"` at 29.6 s; "minted registration token, starting sandbox runner" was the last
+   line the Worker ever logged for a job. The container kept running (jobs did complete), but the
+   Worker never learned a runner's fate, and a dispatch that failed to start left no trace at all.
+2. *Every runner registered with the same two labels.* GitHub assigns a runner the OLDEST queued job
+   its labels qualify for. The runner spawned for job 101267766892 (`cf-job-101267766892`) executed job
+   101260055348, queued an hour earlier; the runner spawned for the observation job executed a CI job
+   from the previous push. New work was starved by its own backlog - exactly the "pushes create runners
+   that service old work" dynamic - and a job whose first dispatch was lost waited 24 h and was
+   cancelled, because GitHub never re-delivers `workflow_job.queued`.
+3. *Capacity.* The container application (`diffci-github-runner-githubrunner`) showed 5 live instances
+   against `max_instances: 5` with `sleepAfter: 12m`: an instance idling for 12 minutes after its job
+   held a slot the next job could not get. The burst of ten pushes between 02:12Z and 03:38Z on
+   2026-09-03 is the plausible onset; the tail could not prove a capacity failure directly (no dispatch
+   failed during the capture window), so it is recorded as the mechanism that fits, not as observed.
+
+**Fix (commit `293b69c`, runner Worker deployed 07:22Z; migration
+`schema-migration-2026-09-05-runner-job-lifecycle.sql`; queue `diffci-runner-dispatch`):**
+
+- *Job-unique label.* Both workflows run on `[self-hosted, cloudflare, "diffci-job-${{ github.run_id }}"]`
+  and the runner registers with the job's own labels, so no other runner can take a pinned job and a
+  pinned runner cannot be assigned another pinned job. (`${{ github.job }}` renders empty in the
+  `runs-on` context; the run id alone is unique for these single-job workflows.)
+- *Durable dispatch.* The webhook only records the stage and enqueues; the Queue consumer owns the
+  whole runner lifecycle inside its 15-minute limit, records every stage in `runner_job_lifecycle`
+  plus an append-only `runner_job_events` trail (queued → dispatch requested → dispatch started →
+  token minted → container started → job assigned, with the runner GitHub actually assigned →
+  execution completed, with conclusion → runner disposition), classifies a start failure as
+  capacity / timeout / other and retries with delay; `MAX_DISPATCH_ATTEMPTS` stops a deterministic
+  failure visibly. `in_progress` and `completed` deliveries are the assignment and execution
+  provenance - a runner serving a job other than the one it was spawned for is now recorded, not
+  inferred.
+- *Reconciler* (cron every 5 minutes, also `GET /lifecycle?reconcile=1`): queued jobs never
+  dispatched, failed, or stale are re-enqueued within the application's remaining capacity.
+- *`sleepAfter` 3 m* (was 12 m), so an idle instance stops holding one of the five slots.
+- `GET /lifecycle` (bearer) is the qualification tool: recent jobs, or one job's full stage trail.
+
+**Qualification, commit 1 (`293b69c`, pushed 07:23:48Z - the commit that carries the pinned
+workflows):**
+
+| stage | CI job 101269602409 (pinned) |
+|---|---|
+| workflow queued | 07:23:49 |
+| dispatch requested (webhook) → container started | 07:23:49 → 07:23:53 |
+| runner registered / job assigned | 07:24:29, to **its own** runner `cf-job-101269602409` |
+| execution completed | 07:27:15, `success` |
+| runner disposition | `exec-succeeded` |
+
+No subsequent push or other repository event was needed; the reconciler's first tick (07:25) came
+after the assignment. **Observed and recorded honestly:** the same commit's *observation* job's pinned
+runner (`cf-job-101269602490`) was assigned legacy job 101260055854 instead - a pinned runner's labels
+are a superset of a legacy plain-label job's, so while plain-label jobs remain queued GitHub may hand
+them a pinned runner (never the reverse). The observation job stays queued until the reconciler
+re-dispatches it; the hazard disappears once the legacy backlog is drained, which the reconciler is
+doing (two legacy CI runs in progress at 07:29Z). The eight pre-fix queued runs are being processed
+as incident evidence, not cleaned up.

@@ -99,7 +99,10 @@ export interface LifecycleView {
 
 export interface ReconcileDecision {
   jobId: number;
-  reason: "never_dispatched" | "dispatch_failed" | "dispatch_stale";
+  /** runner_gone: the dispatched runner's exec resolved (the ephemeral runner exited) yet GitHub never
+   * assigned it this job - while legacy plain-label jobs remain queued, GitHub may hand them a pinned
+   * runner (a pinned runner's labels are a superset of theirs). The job certainly has no runner now. */
+  reason: "never_dispatched" | "dispatch_failed" | "dispatch_stale" | "runner_gone";
 }
 
 /** A dispatch older than this without an assignment is presumed lost (container capacity, cancelled
@@ -136,6 +139,10 @@ export function decideReconcileDispatches(
     if (row.dispatchAttempts >= MAX_DISPATCH_ATTEMPTS) continue; // stop retrying a deterministic failure; visible in the lifecycle row
     if (row.disposition && row.disposition !== "exec-succeeded") {
       decisions.push({ jobId: job.jobId, reason: "dispatch_failed" });
+      continue;
+    }
+    if (row.disposition === "exec-succeeded") {
+      decisions.push({ jobId: job.jobId, reason: "runner_gone" });
       continue;
     }
     const anchor = row.containerStartedAt ?? row.dispatchRequestedAt;

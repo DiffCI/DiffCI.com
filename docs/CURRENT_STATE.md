@@ -121,13 +121,18 @@ runs on GitHub-hosted runners. It dispatches to `[self-hosted, cloudflare]`: a `
 (`ops/github-runner/Dockerfile`, GitHub Actions runner agent 2.336.0) per queued job. The runner
 registers, runs the job, deregisters, and self-terminates.
 
-**Status: DOWN since 2026-09-03T03:38Z (found 2026-09-05, not yet repaired).** From that point
-`CI` runs on `main` wait 24 h for a runner and GitHub cancels them ("awaiting a runner for 24h0m0s"):
-36 cancelled, 6 still queued on 2026-09-05, 0 registered runners. The few runners that did start
-claimed the oldest queued job instead of the job that triggered them. Evidence in
-`docs/research/2026-09-05-shadow-telemetry-measurement-integrity.md` (F2). Repair belongs to this
-runner workstream, kept separate from selector work. The paragraph below describes the verified
-steady state before the outage. Last 10 consecutive `CI` runs on `main` all `success` (as of 2026-09-03T03:25Z).
+**Status: REPAIRED 2026-09-05 (`293b69c`), qualification in progress.** Down from
+2026-09-03T03:38Z: `CI` runs waited 24 h for a runner and were cancelled (36 of them), because the
+dispatch ran inside the webhook's `ctx.waitUntil()` (cancelled at ~30 s, no record of the runner's
+fate), every runner registered with the same labels (GitHub gave each new runner the oldest queued
+job - new work starved by its own backlog), and idle instances held the 5-instance container ceiling.
+Now: workflows carry a job-unique label (`diffci-job-<run id>`), dispatch runs from a Queue consumer
+with every lifecycle stage recorded in `runner_job_lifecycle` / `runner_job_events` (D1
+`diffci-research`), a 5-minute reconciler re-dispatches lost/failed/stale jobs, `sleepAfter` is 3 m,
+and `GET runner.diffci.com/lifecycle` (bearer) shows the stage trail. First qualification commit's CI
+job ran on its own runner within 40 s of queueing and completed with no further push - see the
+research note's "Fix 4". The paragraph below describes the verified steady state before the outage.
+Last 10 consecutive `CI` runs on `main` all `success` (as of 2026-09-03T03:25Z).
 **Re-measured 2026-09-04** (`scripts/remeasure-own-ci-cost.ts`, real job timings from the GitHub Actions
 API, priced against the real `standard-2` Cloudflare Containers shape this runner actually uses):
 job wall time 135s–354s (median 147s, mean 185s); job cost $0.0048–$0.0127 (median $0.0053, mean $0.0066) — re-measured 2026-09-03 in the launch audit (previous 2026-09-04 run: 126s–325s, $0.0045–$0.0116).
