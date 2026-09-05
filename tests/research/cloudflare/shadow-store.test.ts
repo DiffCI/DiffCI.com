@@ -218,6 +218,11 @@ function groundTruth(overrides: Partial<RecordGroundTruthInput> & { logicalEvent
     failuresPreservedByPath: 0,
     predictionPrecededGroundTruth: true,
     groundTruthFetchedAt: "2026-08-21T12:00:00.000Z",
+    // 2026-09-05 workflow identity: rows written with an evidence workflow are VERIFIED, and only
+    // VERIFIED rows count in getRepositorySummary's recall figures. These tests are about counting
+    // semantics on evidence that counts, so the fixture is verified by default; the identity-specific
+    // cases live in shadow-store-evidence-workflow.test.ts.
+    evidenceWorkflowPath: ".github/workflows/ci.yml",
     ...overrides,
   };
 }

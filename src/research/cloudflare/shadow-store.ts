@@ -99,7 +99,12 @@ export interface RepositorySummaryRow {
   repository: string;
   state: ShadowRepositoryState;
   predictionsRecorded: number;
+  /** Every ground-truth row, whatever its evidence_validity - the raw count. */
   groundTruthRecorded: number;
+  /** Rows written (or re-labelled) as VERIFIED under workflow identity (2026-09-05). Every recall /
+   * failure figure below is computed over these rows only; UNVERIFIED and CONTAMINATED rows are kept
+   * but never counted. */
+  groundTruthVerified: number;
   reconciledComplete: number;
   relevantFailuresObserved: number;
   relevantFailuresEvaluable: number;
@@ -644,16 +649,17 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .prepare(
           `SELECT
              COUNT(*) AS ground_truth_recorded,
-             SUM(CASE WHEN ground_truth_status = 'COMPLETE' THEN 1 ELSE 0 END) AS reconciled_complete,
-             SUM(relevant_failures_observed) AS relevant_failures_observed,
-             SUM(relevant_failures_evaluable) AS relevant_failures_evaluable,
-             SUM(failures_preserved_by_diffci) AS failures_preserved_by_diffci,
-             SUM(failures_preserved_by_path) AS failures_preserved_by_path
+             SUM(CASE WHEN evidence_validity = 'VERIFIED' THEN 1 ELSE 0 END) AS ground_truth_verified,
+             SUM(CASE WHEN evidence_validity = 'VERIFIED' AND ground_truth_status = 'COMPLETE' THEN 1 ELSE 0 END) AS reconciled_complete,
+             SUM(CASE WHEN evidence_validity = 'VERIFIED' THEN relevant_failures_observed ELSE 0 END) AS relevant_failures_observed,
+             SUM(CASE WHEN evidence_validity = 'VERIFIED' THEN relevant_failures_evaluable ELSE 0 END) AS relevant_failures_evaluable,
+             SUM(CASE WHEN evidence_validity = 'VERIFIED' THEN failures_preserved_by_diffci ELSE 0 END) AS failures_preserved_by_diffci,
+             SUM(CASE WHEN evidence_validity = 'VERIFIED' THEN failures_preserved_by_path ELSE 0 END) AS failures_preserved_by_path
            FROM shadow_ground_truth WHERE repository = ?`,
         )
         .bind(repository)
         .first<{
-          ground_truth_recorded: number; reconciled_complete: number; relevant_failures_observed: number | null;
+          ground_truth_recorded: number; ground_truth_verified: number | null; reconciled_complete: number | null; relevant_failures_observed: number | null;
           relevant_failures_evaluable: number | null; failures_preserved_by_diffci: number | null; failures_preserved_by_path: number | null;
         }>();
 
@@ -677,7 +683,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
              SUM(g.failures_preserved_by_path) AS failures_preserved_by_path
            FROM shadow_ground_truth g
            JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
-           WHERE g.repository = ? AND p.opportunity_category = 'DISCRIMINATIVE_OPPORTUNITY'`,
+           WHERE g.repository = ? AND p.opportunity_category = 'DISCRIMINATIVE_OPPORTUNITY' AND g.evidence_validity = 'VERIFIED'`,
         )
         .bind(repository)
         .first<{
@@ -690,6 +696,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         state: repoRow.state,
         predictionsRecorded: predictionCounts?.predictions_recorded ?? 0,
         groundTruthRecorded: groundTruthCounts?.ground_truth_recorded ?? 0,
+        groundTruthVerified: groundTruthCounts?.ground_truth_verified ?? 0,
         reconciledComplete: groundTruthCounts?.reconciled_complete ?? 0,
         relevantFailuresObserved: groundTruthCounts?.relevant_failures_observed ?? 0,
         relevantFailuresEvaluable: groundTruthCounts?.relevant_failures_evaluable ?? 0,

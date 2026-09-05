@@ -125,4 +125,26 @@ describe("shadow-store: evidence workflow identity", () => {
     assert.deepEqual(read(), { v: "CONTAMINATED_WORKFLOW_IDENTITY", p: ".github/workflows/codeql.yml" });
     assert.equal((db.prepare(`SELECT COUNT(*) n FROM shadow_ground_truth`).get() as { n: number }).n, 1, "never deleted");
   });
+
+  it("getRepositorySummary counts recall over VERIFIED rows only - contaminated and unverified rows are reported in the raw count but never in the evidence", async () => {
+    const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION]);
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "cloudflare-poll");
+    for (const k of ["v", "u", "c"]) await store.recordPrediction(prediction({ logicalDeltaKey: k, headSha: `h-${k}` }), `r2/${k}`);
+    // A verified failure that DiffCI preserved, an unverified one, and a contaminated one with the same numbers.
+    const failing = { relevantFailuresObserved: 1, relevantFailuresEvaluable: 1, failuresPreservedByDiffci: 1, failuresPreservedByPath: 1 };
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge-v", logicalDeltaKey: "v", evidenceWorkflowPath: ".github/workflows/ci.yml", ...failing }), "r2/ge-v");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge-u", logicalDeltaKey: "u", ...failing }), "r2/ge-u");
+    await store.recordGroundTruth(groundTruth({ logicalEventKey: "ge-c", logicalDeltaKey: "c", ...failing }), "r2/ge-c");
+    await store.setGroundTruthValidity("ge-c", "CONTAMINATED_WORKFLOW_IDENTITY", ".github/workflows/codeql.yml");
+
+    const s = await store.getRepositorySummary("acme/web");
+    assert.equal(s?.groundTruthRecorded, 3, "raw count keeps every row");
+    assert.equal(s?.groundTruthVerified, 1);
+    assert.equal(s?.reconciledComplete, 1);
+    assert.equal(s?.relevantFailuresEvaluable, 1, "only the verified failure counts");
+    assert.equal(s?.failuresPreservedByDiffci, 1);
+    assert.equal(s?.discriminativeRelevantFailuresEvaluable, 1);
+    assert.equal(s?.discriminativeFailuresPreservedByDiffci, 1);
+  });
 });

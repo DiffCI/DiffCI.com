@@ -267,3 +267,72 @@ current reconciler records those as ground truth with `workflow_conclusion NULL`
 infrastructure. Step 2 (workflow identity) should classify a cancelled/skipped run explicitly before
 those rows are counted anywhere. DentalPresence.in's F3 contamination also continues as expected: its
 push at 03:54Z was polled by the queue path and "reconciled" against the CodeQL skip within a minute.
+
+## Fix 2 (F2/F3) — workflow identity, then execution outcome, 2026-09-05
+
+**Invariant (founder, 2026-09-05):** a GitHub workflow run is not ground truth merely because it is
+associated with the predicted commit. It must first be proven to be the workflow the prediction is
+about; only then is its execution outcome classified; only an executed run may enter the ground-truth
+population. Repository outcome ≠ execution infrastructure outcome. Commit `8fa8524`; migration
+`schema-migration-2026-09-05-shadow-evidence-workflow.sql`.
+
+**Identity is explicit, never inferred.** `shadow_repositories.evidence_workflow_paths` holds the
+repository's evidence workflow file(s), set through the bearer-gated
+`GET/POST /v1/shadow/evidence-workflow` route, which validates every path against the workflows
+GitHub lists for the repository. A repository without this configuration reconciles nothing: the
+reconciler records `evidence_workflow_unconfigured` on every pending prediction, makes no GitHub call,
+and the diagnostics show it. Configured on 2026-09-05: DiffCI.com → `.github/workflows/ci.yml`;
+DentalPresence.in → `.github/workflows/cloudflare-staging-deploy.yml` (its tests run inside that
+workflow; CodeQL is excluded by construction). The six `cloudflare-poll` corpus repositories are
+deliberately left unconfigured pending the founder's choice - every one of them lists a `ci.yml`,
+plus autofix/publish/docs/release workflows that must not be evidence.
+
+**Execution outcome is a closed vocabulary** (`src/shadow/execution-outcome.ts`): `EXECUTED`
+(success or failure - the repository's own code ran), `NOT_EXECUTED_INFRASTRUCTURE` (cancelled with no
+job ever assigned a runner or a step), `CANCELLED_DURING_EXECUTION`, `SKIPPED`, `TIMED_OUT`,
+`NOT_EXECUTED_OTHER`. `fetchBaselineEvidence` in identity mode lists every run for the SHA once, selects
+the latest run of the evidence workflow, keeps every other workflow's run in `otherRunsObserved` as
+audit, fetches only the evidence run's jobs, and classifies. Only `EXECUTED` yields evidence. A
+completed evidence run that did not execute is terminal as `EVIDENCE_RUN_<outcome>` with the run id,
+attempt, conclusion and its jobs' runner/step evidence in `reconcile_terminal_detail` - never a
+ground-truth row. New ground-truth rows carry `evidence_workflow_path`, `workflow_run_attempt` and
+`evidence_validity = 'VERIFIED'`. Legacy (no-identity) mode is unchanged for the research replay
+tooling; the production reconciler never uses it.
+
+**Existing rows are labelled, never deleted.** The migration marks every pre-existing ground-truth
+row `UNVERIFIED`; `scripts/backfill-ground-truth-validity.ts` re-labels each one from GitHub's own
+record of the run it was reconciled from - `VERIFIED` only when that run is the evidence workflow and
+concluded success/failure, otherwise `CONTAMINATED_WORKFLOW_IDENTITY`. Applied 2026-09-05:
+
+| | rows | VERIFIED | CONTAMINATED_WORKFLOW_IDENTITY |
+|---|---:|---:|---:|
+| DentalPresence.in | 26 | 0 | 26 (CodeQL failures and deploy-`skipped` runs) |
+| DiffCI.com | 221 | 144 | 77 (rows whose recorded run was the self-observation workflow, `.github/workflows/diffci-observe.yml`) |
+
+The 77 DiffCI.com rows are a second identity contamination this fix surfaced: the legacy
+`SHADOW_WORKFLOW_PATH` constant excluded `diffci-shadow.yml`, but this repository's observation
+workflow is `diffci-observe.yml`, so its run was never excluded - it was recorded as the ground-truth
+run on 77 rows and its "Observe this repository" job was merged into the CI evidence (which is also
+why every DiffCI.com economics row landed in the `other` stage). Whether to re-derive those 77 rows
+under identity mode (delete + re-reconcile) is a founder decision; they are kept and labelled.
+
+**Live verification, 2026-09-05T05:41–06:00Z.** Deployed at `8fa8524`, `sourceIntegrity: CURRENT`.
+Between the migration and the deploy the old Worker wrote 19 rows without a label; corrected to
+`UNVERIFIED` by hand before the backfill. Manual reconciles after configuring both repositories:
+
+| call | attempted | reconciled | terminalized |
+|---|---:|---:|---:|
+| DiffCI.com, limit 25 (Sep 1–3 pre-outage rows) | 25 | 25, all `VERIFIED` on `ci.yml`, `success` | 0 |
+| DiffCI.com, limit 10 (into the Sep 3 cohort) | 10 | 3 (03:04–03:25Z, before the runner died) | **7 × `EVIDENCE_RUN_NOT_EXECUTED_INFRASTRUCTURE`** |
+
+Each of the seven carries e.g. `{"workflowRunId":33712077088,"conclusion":"cancelled",
+"executionOutcome":"NOT_EXECUTED_INFRASTRUCTURE","jobs":[{"name":"check","conclusion":"cancelled",
+"runnerName":null,"steps":0}]}` - the cohort keeps its infrastructure provenance and never became a
+selector outcome. The remaining ~40 cohort rows drain through the cron under the same rule. Step 1's
+`NO_MATCHING_WORKFLOW` terminalisation also fired on its own during the window on nuxt (2), nitro
+(5) and unstorage (2) - before those repositories became unconfigured-and-held under step 2.
+
+**Still open after Fix 2:** the corpus repositories' evidence workflows (founder choice); step 3
+(stage classification) - DiffCI.com's `check` job and DentalPresence.in's "Build and deploy" job still
+classify as `other`/`build`; step 4 (runner); the telemetry self-health invariants; and re-deriving
+the 77 contaminated DiffCI.com rows if wanted.

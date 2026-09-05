@@ -197,9 +197,13 @@ Working tree is clean; `main` is up to date with `origin/main`.
    none in selection — see `research/2026-09-05-shadow-telemetry-measurement-integrity.md`. Agreed
    repair order: (1) ~~terminalise permanent `no_matching_workflow` rows with an explicit reason so the
    reconciler window is never head-of-line blocked~~ — **done 2026-09-05** (fair pending window +
-   `reconcile_terminal_*` columns, decided on positive evidence only; see the note's "Fix 1"); (2) require an explicitly identified evidence
-   workflow per repository instead of "first non-shadow run to complete" (DentalPresence.in's 23
-   ground-truth rows are contaminated); (3) replace substring stage classification with explicit
+   `reconcile_terminal_*` columns, decided on positive evidence only; see the note's "Fix 1"); (2) ~~require an explicitly identified evidence
+   workflow per repository instead of "first non-shadow run to complete"~~ — **done 2026-09-05**
+   (`evidence_workflow_paths` via `/v1/shadow/evidence-workflow`, execution-outcome classification,
+   `evidence_validity` on every ground-truth row; DentalPresence.in's 26 legacy rows and 77 of
+   DiffCI.com's are labelled `CONTAMINATED_WORKFLOW_IDENTITY`, kept, never counted; the six corpus
+   repositories are held as `evidence_workflow_unconfigured` until the founder picks their evidence
+   workflow — see the note's "Fix 2"); (3) replace substring stage classification with explicit
    repository configuration plus conservative inference; (4) repair the runner separately (§5). Then
    run a small known cohort end-to-end and verify D1/R2 by hand before the Stage 2F clock restarts.
    Add telemetry self-health invariants (oldest unattempted prediction age, repeated pending window,
