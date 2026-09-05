@@ -27,7 +27,63 @@
  * unit-testable with fixed clocks; the GitHub confirmation is a separate injectable step.
  */
 
-export type ReconcileTerminalReason = "NO_MATCHING_WORKFLOW";
+export type ReconcileTerminalReason =
+  | "NO_MATCHING_WORKFLOW"
+  // Step 2 (workflow identity): the identified evidence workflow's run completed WITHOUT executing the
+  // repository's code - an execution infrastructure outcome, never a repository outcome. One reason per
+  // ExecutionOutcome class so reconcile-diagnostics keeps them apart (research note F2: "cancelled,
+  // skipped, queued/never-executed, infrastructure failure and actual execution must not collapse into
+  // the same population").
+  | "EVIDENCE_RUN_NOT_EXECUTED_INFRASTRUCTURE"
+  | "EVIDENCE_RUN_CANCELLED_DURING_EXECUTION"
+  | "EVIDENCE_RUN_SKIPPED"
+  | "EVIDENCE_RUN_TIMED_OUT"
+  | "EVIDENCE_RUN_NOT_EXECUTED_OTHER";
+
+/**
+ * Step 2: a completed evidence-workflow run whose execution outcome is not EXECUTED is terminal on
+ * that single, positive observation - GitHub reported the run itself, its conclusion and its jobs.
+ * A later re-run of the same run id would change GitHub's answer; that is a founder action, and the
+ * terminal marker is reversible by a data change (NULL the reconcile_terminal_* columns).
+ */
+export function decideEvidenceRunTerminal(result: {
+  pendingReason?: string;
+  executionOutcome?: string;
+  evidenceRun?: { workflowPath: string; workflowRunId: number; runAttempt?: number; conclusion: string | null; htmlUrl: string; event?: string };
+  baseline?: { jobs: readonly { jobName: string; conclusion?: string; runnerName?: string; steps?: readonly unknown[] }[] };
+  groundTruthFetchedAt: string;
+}): TerminalDecision {
+  if (result.pendingReason !== "evidence_run_not_executed") return { terminal: false, blockedBy: "reason" };
+  const outcome = result.executionOutcome;
+  const run = result.evidenceRun;
+  if (!run || !outcome || outcome === "EXECUTED") return { terminal: false, blockedBy: "confirmation" };
+  const reason = `EVIDENCE_RUN_${outcome}` as ReconcileTerminalReason;
+  if (!EVIDENCE_RUN_TERMINAL_REASONS.has(reason)) return { terminal: false, blockedBy: "confirmation" };
+  return {
+    terminal: true,
+    reason,
+    detail: {
+      rule: "identified evidence workflow run completed without executing the repository's code (execution infrastructure outcome, not a repository outcome)",
+      decidedAt: result.groundTruthFetchedAt,
+      workflowPath: run.workflowPath,
+      workflowRunId: run.workflowRunId,
+      runAttempt: run.runAttempt ?? null,
+      conclusion: run.conclusion,
+      event: run.event ?? null,
+      htmlUrl: run.htmlUrl,
+      executionOutcome: outcome,
+      jobs: (result.baseline?.jobs ?? []).map((j) => ({ name: j.jobName, conclusion: j.conclusion ?? null, runnerName: j.runnerName ?? null, steps: j.steps?.length ?? 0 })),
+    },
+  };
+}
+
+const EVIDENCE_RUN_TERMINAL_REASONS = new Set<string>([
+  "EVIDENCE_RUN_NOT_EXECUTED_INFRASTRUCTURE",
+  "EVIDENCE_RUN_CANCELLED_DURING_EXECUTION",
+  "EVIDENCE_RUN_SKIPPED",
+  "EVIDENCE_RUN_TIMED_OUT",
+  "EVIDENCE_RUN_NOT_EXECUTED_OTHER",
+]);
 
 /** The prediction must be at least this old before it can be terminalised. */
 export const MIN_PREDICTION_AGE_MS = 6 * 60 * 60 * 1000; // 6h

@@ -24,7 +24,8 @@ import { computeExperimentProgress, planOrchestratorDispatch, type CorpusEntry, 
 import { evaluateBudgetStatus } from "../config/cost-model.js";
 import { makeD1ShadowStore, type ObservationSource } from "./shadow-store.js";
 import { reconcilePrediction } from "../../shadow/reconcile.js";
-import { confirmNoWorkflowRuns, decideNoMatchingWorkflowTerminal, precheckNoMatchingWorkflowTerminal } from "./shadow-reconcile-terminal.js";
+import { confirmNoWorkflowRuns, decideEvidenceRunTerminal, decideNoMatchingWorkflowTerminal, precheckNoMatchingWorkflowTerminal } from "./shadow-reconcile-terminal.js";
+import { normaliseEvidenceWorkflowPaths } from "../../shadow/execution-outcome.js";
 import { computeLogicalEventKey } from "../../shadow/event-identity.js";
 import { DEFAULT_SHADOW_CRON_CONFIG, runShadowCronOnce, type PollableRepository, type ShadowCronDeps, type VerifiedSourceArchive } from "./shadow-cron.js";
 import { handleShadowWebhook } from "./shadow-webhook.js";
@@ -810,6 +811,61 @@ async function shadowReport(request: Request, env: ValidationEnv): Promise<Respo
   return new Response(`${text}\n`, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" } });
 }
 
+/**
+ * Workflow identity configuration (2026-09-05, measurement-integrity repair step 2). Bearer-gated like
+ * every other manually-dispatched /v1/shadow/* route.
+ *
+ *   GET  /v1/shadow/evidence-workflow?repository=owner/name
+ *        -> the configured evidence workflow file(s) plus the workflows GitHub lists for the
+ *           repository (path, name, state), so the founder picks from what actually exists.
+ *   POST /v1/shadow/evidence-workflow  { repository, workflowPaths: [".github/workflows/ci.yml"] }
+ *        -> validates the shape and that every path is a workflow GitHub knows, then stores it.
+ *
+ * Deliberately explicit: no inference. A repository without this configuration reconciles nothing
+ * (executeShadowReconcile records `evidence_workflow_unconfigured` on every pending prediction).
+ */
+async function shadowEvidenceWorkflow(request: Request, env: ValidationEnv): Promise<Response> {
+  const store = makeD1ShadowStore(env.RESEARCH_DB);
+  const url = new URL(request.url);
+  let repository: string;
+  let requested: string[] | undefined;
+  if (request.method === "GET") {
+    repository = url.searchParams.get("repository") ?? "";
+  } else {
+    let body: { repository?: string; workflowPaths?: unknown };
+    try {
+      body = (await request.json()) as typeof body;
+    } catch {
+      return json({ ok: false, error: "JSON body required" }, 400);
+    }
+    repository = body.repository ?? "";
+    requested = normaliseEvidenceWorkflowPaths(body.workflowPaths);
+    if (!requested) return json({ ok: false, error: "workflowPaths must be a non-empty array of '.github/workflows/<file>.yml' paths" }, 400);
+  }
+  if (!/^[A-Za-z0-9._-]{1,100}\/[A-Za-z0-9._-]{1,100}$/.test(repository)) {
+    return json({ ok: false, error: "repository must be 'owner/name'" }, 400);
+  }
+  if (!(await store.getRepositoryPollState(repository))) return json({ ok: false, error: "repository is not enrolled" }, 404);
+
+  const token = await githubTokenForRepo(env, repository);
+  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "User-Agent": "diffci-shadow" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`https://api.github.com/repos/${repository}/actions/workflows?per_page=100`, { headers });
+  if (!res.ok) return json({ ok: false, error: `GitHub workflows list failed (${res.status})` }, 502);
+  const listed = ((await res.json()) as { workflows?: { path?: string; name?: string; state?: string }[] }).workflows ?? [];
+  const available = listed.filter((w) => typeof w.path === "string").map((w) => ({ path: w.path!, name: w.name ?? "", state: w.state ?? "" }));
+
+  if (request.method === "GET") {
+    return json({ ok: true, repository, configured: (await store.getEvidenceWorkflowPaths(repository)) ?? null, available });
+  }
+  const known = new Set(available.map((w) => w.path));
+  const unknown = requested!.filter((p) => !known.has(p));
+  if (unknown.length > 0) return json({ ok: false, error: `not a workflow GitHub lists for ${repository}: ${unknown.join(", ")}`, available }, 400);
+  const { changed } = await store.setEvidenceWorkflowPaths(repository, requested!);
+  console.log(`shadow evidence-workflow: ${repository} -> ${requested!.join(", ")}`);
+  return json({ ok: true, repository, configured: requested, changed });
+}
+
 async function shadowEnroll(request: Request, env: ValidationEnv): Promise<Response> {
   let body: { repository?: string; observationSource?: ObservationSource; language?: string };
   try {
@@ -984,7 +1040,6 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
   const store = makeD1ShadowStore(env.RESEARCH_DB);
   const evidenceStore = new R2EvidenceStore(env.RESEARCH_BUCKET);
   const pending = await store.findPendingPredictions(repository, limit);
-  const githubToken = pending.length > 0 ? await githubTokenForRepo(env, repository) : undefined;
   // Rule 4 of shadow-reconcile-terminal.ts: only a commit the repository has moved past can be
   // terminalised. Read once per sweep, lazily - most sweeps never have a candidate.
   let repositoryHeadSha: string | undefined | null = null;
@@ -993,6 +1048,26 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
   let stillPending = 0;
   let terminalized = 0;
   const errors: string[] = [];
+
+  // 2026-09-05 workflow identity (repair step 2): without an explicitly identified evidence workflow
+  // nothing may become ground truth. Record the reason on every pending row (visible on
+  // reconcile-diagnostics), make no GitHub call, and stop.
+  const evidenceWorkflowPaths = pending.length > 0 ? await store.getEvidenceWorkflowPaths(repository) : undefined;
+  if (pending.length > 0 && !evidenceWorkflowPaths) {
+    const now = new Date().toISOString();
+    for (const row of pending) {
+      try {
+        await store.recordReconcileAttempt(row.logicalDeltaKey, "evidence_workflow_unconfigured", now);
+      } catch (telemetryError: unknown) {
+        console.log(`executeShadowReconcile: failed to record unconfigured-evidence telemetry for ${row.logicalDeltaKey}: ${telemetryError instanceof Error ? telemetryError.message : String(telemetryError)}`);
+      }
+      stillPending++;
+    }
+    console.log(`executeShadowReconcile: ${repository} has no evidence workflow configured - ${pending.length} pending prediction(s) held, no GitHub calls made`);
+    return { attempted: pending.length, reconciled, stillPending, terminalized, errors };
+  }
+  const githubToken = pending.length > 0 ? await githubTokenForRepo(env, repository) : undefined;
+
   for (const row of pending) {
     try {
       const predictionBlob = (await evidenceStore.get(row.r2EvidenceKey)) as any;
@@ -1006,7 +1081,7 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
           plan: predictionBlob.plan, pathSelectedTaskIds: predictionBlob.pathSelectedTaskIds,
           diffciAnalysisOverheadMs: predictionBlob.diffciAnalysisOverheadMs, predictionCreatedAt: predictionBlob.predictionCreatedAt,
         },
-        { token: githubToken, checkFlakiness: true },
+        { token: githubToken, checkFlakiness: true, evidenceWorkflowPaths },
       );
       if (result.status === "STILL_PENDING") {
         stillPending++;
@@ -1022,7 +1097,19 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
         // shadow-reconcile-terminal.ts; this block only gathers the facts. `row` still carries the
         // attempt BEFORE the recordReconcileAttempt above - the required prior observation.
         try {
-          if (result.pendingReason === "no_matching_workflow") {
+          if (result.pendingReason === "evidence_run_not_executed") {
+            // Step 2: the identified evidence run completed without executing - an execution
+            // infrastructure outcome. Terminal on that single positive observation, with the run and
+            // its jobs recorded as the audit trail; never written as ground truth.
+            const decision = decideEvidenceRunTerminal(result);
+            if (decision.terminal && decision.reason && decision.detail) {
+              const { changed } = await store.terminalizePrediction(row.logicalDeltaKey, decision.reason, result.groundTruthFetchedAt, decision.detail);
+              if (changed) {
+                terminalized++;
+                console.log(`executeShadowReconcile: terminalised ${row.logicalDeltaKey} as ${decision.reason} (run ${result.evidenceRun?.workflowRunId}, ${result.evidenceRun?.conclusion})`);
+              }
+            }
+          } else if (result.pendingReason === "no_matching_workflow") {
             if (repositoryHeadSha === null) repositoryHeadSha = (await store.getRepositoryPollState(repository))?.lastPolledSha;
             const facts = {
               pendingReason: result.pendingReason,
@@ -1059,12 +1146,13 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
       await store.recordGroundTruth(
         {
           logicalEventKey, logicalDeltaKey: row.logicalDeltaKey, repository, headSha: row.headSha,
-          workflowRunId: result.workflowRunId, workflowRunAttempt: 1, eventType: "poll-detected",
+          workflowRunId: result.workflowRunId, workflowRunAttempt: result.workflowRunAttempt ?? 1, eventType: "poll-detected",
           workflowConclusion: result.workflowConclusion, workflowCompletedAt: result.workflowCompletedAt,
           groundTruthStatus: result.groundTruthStatus ?? "UNAVAILABLE", relevantFailuresObserved: result.relevantFailuresObserved ?? 0,
           relevantFailuresEvaluable: result.relevantFailuresEvaluable ?? 0, failuresPreservedByDiffci: result.failuresPreservedByDiffci ?? 0,
           failuresPreservedByPath: result.failuresPreservedByPath ?? 0, predictionPrecededGroundTruth: result.predictionPrecededGroundTruth ?? false,
           groundTruthFetchedAt: result.groundTruthFetchedAt,
+          evidenceWorkflowPath: result.evidenceRun?.workflowPath,
         },
         r2Key,
       );
@@ -2184,6 +2272,12 @@ export default {
         return json({ ok: false, error: "unauthorized" }, 401);
       }
       return shadowEnroll(request, env);
+    }
+    if ((request.method === "GET" || request.method === "POST") && url.pathname === "/v1/shadow/evidence-workflow") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      return shadowEvidenceWorkflow(request, env);
     }
     if (request.method === "POST" && url.pathname === "/v1/shadow/poll") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {

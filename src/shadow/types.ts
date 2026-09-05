@@ -146,7 +146,25 @@ export interface BaselineRunInfo {
   status: string;
   conclusion: string | null;
   htmlUrl: string;
+  /** GitHub's run_attempt (re-runs increment it on the same run id). 2026-09-05 workflow-identity fix. */
+  runAttempt?: number;
+  /** GitHub's triggering event (push, workflow_dispatch, ...). */
+  event?: string;
 }
+
+/**
+ * Step 2 of the 2026-09-05 measurement-integrity repair: what actually happened to the identified
+ * evidence workflow's run. Only EXECUTED is a repository outcome; every other value is an execution
+ * infrastructure outcome and must never enter the ground-truth population (repository outcome !=
+ * execution infrastructure outcome). See src/shadow/execution-outcome.ts.
+ */
+export type ExecutionOutcome =
+  | "EXECUTED" // completed with success or failure - the repository's own code ran and answered
+  | "NOT_EXECUTED_INFRASTRUCTURE" // cancelled/failed before any job ever started (e.g. 24 h waiting for a runner)
+  | "CANCELLED_DURING_EXECUTION" // cancelled after at least one job had started - partial, unevaluable
+  | "SKIPPED" // the workflow's own condition skipped it
+  | "TIMED_OUT" // ran, but GitHub timed it out - unevaluable
+  | "NOT_EXECUTED_OTHER"; // startup_failure, action_required, stale, neutral, anything else
 
 export interface BaselineStepInfo {
   name: string;
@@ -164,6 +182,8 @@ export interface BaselineJobInfo {
   completedAt?: string;
   durationMs?: number;
   steps?: BaselineStepInfo[];
+  /** Empty/absent when no runner ever picked the job up - the evidence behind NOT_EXECUTED_INFRASTRUCTURE. */
+  runnerName?: string;
 }
 
 /** Task 2 (2026-08-21 reconciliation observability): a closed vocabulary for WHY a prediction has no
@@ -175,7 +195,11 @@ export interface BaselineJobInfo {
 export type ReconcilePendingReason =
   | "no_matching_workflow" // no run (queued, in-flight, or completed) exists yet for this SHA at all
   | "ci_queued" // a run exists but has not started
-  | "ci_in_progress"; // a run exists and is currently running
+  | "ci_in_progress" // a run exists and is currently running
+  // 2026-09-05 workflow identity (measurement-integrity repair step 2):
+  | "evidence_workflow_unconfigured" // the repository has no identified evidence workflow - nothing may be ground truth
+  | "evidence_workflow_run_missing" // other workflows ran for this SHA, the identified evidence workflow did not
+  | "evidence_run_not_executed"; // the evidence workflow's run completed WITHOUT executing (see ExecutionOutcome) - terminal, not ground truth
 
 export interface BaselineEvidence {
   repository: string;
@@ -184,6 +208,14 @@ export interface BaselineEvidence {
   completenessNotes?: string;
   /** Only meaningful when status is UNAVAILABLE with no fetchError - see ReconcilePendingReason. */
   pendingReason?: ReconcilePendingReason;
+  /** 2026-09-05 workflow identity: set when the fetch ran in identity mode (FetchBaselineOptions.
+   * evidenceWorkflowPaths). `evidenceRun` is THE run this evidence is about; fullRunsObserved then
+   * contains exactly that run. `otherRunsObserved` keeps every other workflow's run for the same SHA as
+   * an audit trail - never as evidence. */
+  evidenceWorkflowPaths?: string[];
+  evidenceRun?: BaselineRunInfo;
+  executionOutcome?: ExecutionOutcome;
+  otherRunsObserved?: BaselineRunInfo[];
   fullRunsObserved: BaselineRunInfo[];
   jobs: BaselineJobInfo[];
   failedJobNames: string[];

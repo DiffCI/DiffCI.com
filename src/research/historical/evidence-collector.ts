@@ -23,7 +23,7 @@
  * ids (see matchFailedTaskIds() below), which is repo-agnostic by construction.
  */
 import type { ExecutionPlan } from "../../planner/types.js";
-import type { BaselineEvidence } from "../../shadow/types.js";
+import type { BaselineEvidence, ReconcilePendingReason } from "../../shadow/types.js";
 import { fetchBaselineEvidence } from "../../shadow/github-baseline.js";
 import type { HistoricalEvidenceStatus } from "../types.js";
 import { chargeBudget, hasBudgetFor, type RateBudget } from "./rate-budget.js";
@@ -141,7 +141,7 @@ export interface HistoricalEvidenceResult {
   /** Structured classification of `reason` when status is UNAVAILABLE with no fetch/rate-limit error -
    * "github_rate_limit" or "fetch_error" cover the other two UNAVAILABLE causes (see `reason`'s prefix
    * for those). Task 2 (2026-08-21) reconciliation-observability addition - see BaselineEvidence.pendingReason. */
-  pendingReason?: "no_matching_workflow" | "ci_queued" | "ci_in_progress" | "github_rate_limit" | "fetch_error";
+  pendingReason?: ReconcilePendingReason | "github_rate_limit" | "fetch_error";
   /** Every matched failed task id, unfiltered - kept as the raw/complete record. */
   failedTargets: string[];
   /** Subset of failedTargets that are (a) test-category tasks and (b) SKIP_CANDIDATE in DiffCI's plan -

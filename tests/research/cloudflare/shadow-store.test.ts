@@ -29,6 +29,7 @@ function freshDb(): DatabaseSync {
     "schema-migration-2026-08-26-shadow-liveness.sql",
     "schema-migration-2026-09-04-shadow-push-polls.sql",
     "schema-migration-2026-09-05-shadow-reconcile-terminal.sql",
+    "schema-migration-2026-09-05-shadow-evidence-workflow.sql",
   ]) {
     db.exec(readFileSync(join(SCHEMA_DIR, file), "utf8"));
   }

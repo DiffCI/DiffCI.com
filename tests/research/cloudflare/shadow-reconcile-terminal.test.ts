@@ -8,6 +8,7 @@ import { describe, it } from "node:test";
 import {
   MIN_PREDICTION_AGE_MS,
   confirmNoWorkflowRuns,
+  decideEvidenceRunTerminal,
   decideNoMatchingWorkflowTerminal,
   precheckNoMatchingWorkflowTerminal,
   type TerminalCandidateFacts,
@@ -122,5 +123,42 @@ describe("confirmNoWorkflowRuns", () => {
     const thrown = await confirmNoWorkflowRuns("acme/web", "x", undefined, (async () => { throw new Error("network down"); }) as typeof fetch);
     assert.equal(thrown.confirmedNoRuns, false);
     assert.equal(thrown.error, "network down");
+  });
+});
+
+describe("decideEvidenceRunTerminal (step 2: execution outcome is not a repository outcome)", () => {
+  const cancelledNeverStarted = {
+    pendingReason: "evidence_run_not_executed",
+    executionOutcome: "NOT_EXECUTED_INFRASTRUCTURE",
+    evidenceRun: { workflowPath: ".github/workflows/ci.yml", workflowRunId: 33757508013, runAttempt: 1, conclusion: "cancelled", htmlUrl: "https://github.com/x/y/actions/runs/33757508013", event: "push" },
+    baseline: { jobs: [{ jobName: "check", conclusion: "cancelled", runnerName: undefined, steps: [] }] },
+    groundTruthFetchedAt: NOW,
+  };
+
+  it("terminalises a completed evidence run that never executed, with the run and its jobs as the audit trail", () => {
+    const d = decideEvidenceRunTerminal(cancelledNeverStarted);
+    assert.equal(d.terminal, true);
+    assert.equal(d.reason, "EVIDENCE_RUN_NOT_EXECUTED_INFRASTRUCTURE");
+    assert.equal(d.detail?.workflowRunId, 33757508013);
+    assert.equal(d.detail?.conclusion, "cancelled");
+    assert.deepEqual(d.detail?.jobs, [{ name: "check", conclusion: "cancelled", runnerName: null, steps: 0 }]);
+  });
+
+  it("one terminal reason per execution-outcome class - the populations never collapse", () => {
+    for (const [outcome, reason] of [
+      ["CANCELLED_DURING_EXECUTION", "EVIDENCE_RUN_CANCELLED_DURING_EXECUTION"],
+      ["SKIPPED", "EVIDENCE_RUN_SKIPPED"],
+      ["TIMED_OUT", "EVIDENCE_RUN_TIMED_OUT"],
+      ["NOT_EXECUTED_OTHER", "EVIDENCE_RUN_NOT_EXECUTED_OTHER"],
+    ] as const) {
+      assert.equal(decideEvidenceRunTerminal({ ...cancelledNeverStarted, executionOutcome: outcome }).reason, reason);
+    }
+  });
+
+  it("never fires for any other pending reason, an EXECUTED outcome, or a missing evidence run", () => {
+    assert.equal(decideEvidenceRunTerminal({ ...cancelledNeverStarted, pendingReason: "no_matching_workflow" }).terminal, false);
+    assert.equal(decideEvidenceRunTerminal({ ...cancelledNeverStarted, executionOutcome: "EXECUTED" }).terminal, false);
+    assert.equal(decideEvidenceRunTerminal({ ...cancelledNeverStarted, executionOutcome: "made-up" }).terminal, false);
+    assert.equal(decideEvidenceRunTerminal({ ...cancelledNeverStarted, evidenceRun: undefined }).terminal, false);
   });
 });

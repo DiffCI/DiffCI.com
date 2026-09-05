@@ -75,7 +75,12 @@ export interface RecordGroundTruthInput {
   failuresPreservedByPath: number;
   predictionPrecededGroundTruth: boolean;
   groundTruthFetchedAt: string;
+  /** 2026-09-05 workflow identity: the evidence workflow file this row's run belongs to. When set the
+   * row is stored as evidence_validity 'VERIFIED'; when absent, 'UNVERIFIED'. */
+  evidenceWorkflowPath?: string;
 }
+
+export type GroundTruthValidity = "VERIFIED" | "UNVERIFIED" | "CONTAMINATED_WORKFLOW_IDENTITY";
 
 export interface PendingPredictionRow {
   logicalDeltaKey: string;
@@ -197,6 +202,12 @@ export interface ShadowStore {
    * initial enrollment insert; it never overwrites an existing row's value. */
   ensureRepository(repository: string, observationSource: ObservationSource, language?: string): Promise<void>;
   getRepositoryPollState(repository: string): Promise<{ state: ShadowRepositoryState; lastPolledSha?: string; language: string } | undefined>;
+  /** 2026-09-05 workflow identity: the repository's explicitly configured evidence workflow file(s), or
+   * undefined when nobody has identified one yet (then nothing may become ground truth). */
+  getEvidenceWorkflowPaths(repository: string): Promise<string[] | undefined>;
+  setEvidenceWorkflowPaths(repository: string, paths: string[]): Promise<{ changed: boolean }>;
+  /** Re-labels an existing ground-truth row's validity (backfill / contamination marking). Never deletes. */
+  setGroundTruthValidity(logicalEventKey: string, validity: GroundTruthValidity, evidenceWorkflowPath?: string): Promise<{ changed: boolean }>;
   /** Repositories the cron runner may poll: observation_source 'cloudflare-poll' OR 'github-app-webhook'
    * in a pollable state, never-polled first, then oldest-polled first. Webhook-enrolled repositories
    * were excluded until 2026-09-04; the cron's cheap head check is now their safety net for a lost push
@@ -481,6 +492,36 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
       return { state: row.state, lastPolledSha: row.last_polled_sha ?? undefined, language: row.language };
     },
 
+    async getEvidenceWorkflowPaths(repository) {
+      const row = await db
+        .prepare(`SELECT evidence_workflow_paths FROM shadow_repositories WHERE repository = ?`)
+        .bind(repository)
+        .first<{ evidence_workflow_paths: string | null }>();
+      if (!row?.evidence_workflow_paths) return undefined;
+      try {
+        const parsed = JSON.parse(row.evidence_workflow_paths) as unknown;
+        return Array.isArray(parsed) && parsed.every((p) => typeof p === "string") && parsed.length > 0 ? (parsed as string[]) : undefined;
+      } catch {
+        return undefined;
+      }
+    },
+
+    async setEvidenceWorkflowPaths(repository, paths) {
+      const result = await db
+        .prepare(`UPDATE shadow_repositories SET evidence_workflow_paths = ? WHERE repository = ?`)
+        .bind(JSON.stringify(paths), repository)
+        .run();
+      return { changed: (result.meta?.changes ?? 0) > 0 };
+    },
+
+    async setGroundTruthValidity(logicalEventKey, validity, evidenceWorkflowPath) {
+      const result = await db
+        .prepare(`UPDATE shadow_ground_truth SET evidence_validity = ?, evidence_workflow_path = COALESCE(?, evidence_workflow_path) WHERE logical_event_key = ?`)
+        .bind(validity, evidenceWorkflowPath ?? null, logicalEventKey)
+        .run();
+      return { changed: (result.meta?.changes ?? 0) > 0 };
+    },
+
     async updateLastPolled(repository, sha) {
       const now = new Date().toISOString();
       await db.prepare(`UPDATE shadow_repositories SET last_polled_sha = ?, last_polled_at = ? WHERE repository = ?`).bind(sha, now, repository).run();
@@ -524,8 +565,8 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
              event_type, pull_request_number, workflow_conclusion, workflow_completed_at, ground_truth_status,
              relevant_failures_observed, relevant_failures_evaluable, failures_preserved_by_diffci,
              failures_preserved_by_path, prediction_preceded_ground_truth, r2_evidence_key,
-             ground_truth_fetched_at, created_at
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ground_truth_fetched_at, created_at, evidence_workflow_path, evidence_validity
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(logical_event_key) DO NOTHING`,
         )
         .bind(
@@ -535,6 +576,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
           input.relevantFailuresObserved, input.relevantFailuresEvaluable, input.failuresPreservedByDiffci,
           input.failuresPreservedByPath, input.predictionPrecededGroundTruth ? 1 : 0, r2EvidenceKey,
           input.groundTruthFetchedAt, now,
+          input.evidenceWorkflowPath ?? null, input.evidenceWorkflowPath ? "VERIFIED" : "UNVERIFIED",
         )
         .run();
       return { inserted: (result.meta?.changes ?? 0) > 0 };

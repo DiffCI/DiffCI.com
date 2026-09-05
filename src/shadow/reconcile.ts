@@ -18,7 +18,7 @@ import { checkJobFlakiness } from "../research/historical/flakiness-check.js";
 import { computeMeasuredMetrics } from "./task-mapping.js";
 import { predictionPrecededGroundTruth } from "./event-identity.js";
 import { createRateBudget, type RateBudget } from "../research/historical/rate-budget.js";
-import type { BaselineEvidence } from "./types.js";
+import type { BaselineEvidence, BaselineRunInfo, ExecutionOutcome, ReconcilePendingReason } from "./types.js";
 
 export interface PendingPrediction {
   logicalDeltaKey: string;
@@ -37,12 +37,18 @@ export interface ReconcileResult {
   reason?: string;
   /** Structured classification of `reason` for STILL_PENDING - see HistoricalEvidenceResult.pendingReason.
    * Undefined for RECONCILED (not meaningful there). */
-  pendingReason?: "no_matching_workflow" | "ci_queued" | "ci_in_progress" | "github_rate_limit" | "fetch_error";
+  pendingReason?: ReconcilePendingReason | "github_rate_limit" | "fetch_error";
   logicalDeltaKey: string;
   repository: string;
   headSha: string;
   groundTruthStatus?: "COMPLETE" | "PARTIAL" | "UNAVAILABLE";
   workflowRunId?: string;
+  /** 2026-09-05 workflow identity: the evidence run this result is about (RECONCILED: the run the
+   * ground truth came from; STILL_PENDING evidence_run_not_executed: the run that did not execute), its
+   * attempt, and the classified execution outcome. Absent in legacy (no-identity) mode. */
+  evidenceRun?: BaselineRunInfo;
+  workflowRunAttempt?: number;
+  executionOutcome?: ExecutionOutcome;
   workflowConclusion?: string;
   workflowCompletedAt?: string;
   relevantFailuresObserved?: number;
@@ -68,6 +74,9 @@ export interface ReconcilePredictionOptions {
   /** Injectable for testing without live GitHub calls. */
   fetchFn?: FetchBaselineFn;
   flakinessCheckFn?: typeof checkJobFlakiness;
+  /** 2026-09-05 workflow identity: the repository's explicitly configured evidence workflow file(s).
+   * Passed through to fetchBaselineEvidence (identity mode). Ignored when `fetchFn` is injected. */
+  evidenceWorkflowPaths?: string[];
 }
 
 /**
@@ -80,9 +89,17 @@ export async function reconcilePrediction(
   prediction: PendingPrediction,
   options: ReconcilePredictionOptions = {},
 ): Promise<ReconcileResult> {
-  const { token, checkFlakiness = true, fetchFn, flakinessCheckFn } = options;
+  const { token, checkFlakiness = true, flakinessCheckFn, evidenceWorkflowPaths } = options;
   const budget = options.budget ?? createRateBudget(token ? 4500 : 50);
   const groundTruthFetchedAt = new Date().toISOString();
+
+  // One baseline fetch per reconciliation, shared by the safety matcher and the workflow-level metadata
+  // below (previously two identical fetches). Identity mode is applied here so the matcher never sees a
+  // run the repository did not identify as evidence.
+  const underlyingFetch: FetchBaselineFn = options.fetchFn
+    ?? (async (o) => (await import("./github-baseline.js")).fetchBaselineEvidence({ ...o, evidenceWorkflowPaths }));
+  let memoised: Promise<BaselineEvidence> | undefined;
+  const fetchFn: FetchBaselineFn = (o) => (memoised ??= underlyingFetch(o));
 
   const evidence = await collectHistoricalEvidenceForDelta({
     repository: prediction.repository,
@@ -98,6 +115,10 @@ export async function reconcilePrediction(
   });
 
   if (evidence.status === "UNAVAILABLE") {
+    // The memoised baseline (already fetched by the matcher) carries the evidence run and its execution
+    // outcome when identity mode decided this is not a repository outcome - the caller terminalises on
+    // exactly that evidence.
+    const unavailableBaseline = memoised ? await memoised.catch(() => undefined) : undefined;
     return {
       status: "STILL_PENDING",
       reason: evidence.reason,
@@ -105,16 +126,18 @@ export async function reconcilePrediction(
       logicalDeltaKey: prediction.logicalDeltaKey,
       repository: prediction.repository,
       headSha: prediction.headSha,
+      evidenceRun: unavailableBaseline?.evidenceRun,
+      workflowRunAttempt: unavailableBaseline?.evidenceRun?.runAttempt,
+      executionOutcome: unavailableBaseline?.executionOutcome,
       groundTruthFetchedAt,
+      baseline: unavailableBaseline,
     };
   }
 
   // Re-fetch the raw baseline once more only to compute workflow-level metadata (completion timestamp,
   // conclusion, run id) that collectHistoricalEvidenceForDelta's return type doesn't carry through -
   // charged against the same budget, so it's still accounted for, not free.
-  const rawBaseline = fetchFn
-    ? await fetchFn({ repository: prediction.repository, headSha: prediction.headSha, token })
-    : await (await import("./github-baseline.js")).fetchBaselineEvidence({ repository: prediction.repository, headSha: prediction.headSha, token });
+  const rawBaseline = await fetchFn({ repository: prediction.repository, headSha: prediction.headSha, token });
 
   const { testTargets: allRelevantFailures } = filterToTestCategoryTaskIds(evidence.failedTargets, prediction.plan);
   const relevantFailuresObserved = allRelevantFailures.length;
@@ -147,7 +170,10 @@ export async function reconcilePrediction(
     // onto Stage 2's own ground-truth status vocabulary (COMPLETE/PARTIAL) - deliberately explicit rather
     // than a same-shape cast, since the two enums' literal values don't actually match.
     groundTruthStatus: evidence.status === "MEASURABLE" ? "COMPLETE" : "PARTIAL",
-    workflowRunId: rawBaseline.fullRunsObserved[0]?.workflowRunId?.toString(),
+    workflowRunId: (rawBaseline.evidenceRun ?? rawBaseline.fullRunsObserved[0])?.workflowRunId?.toString(),
+    evidenceRun: rawBaseline.evidenceRun,
+    workflowRunAttempt: rawBaseline.evidenceRun?.runAttempt,
+    executionOutcome: rawBaseline.executionOutcome,
     workflowConclusion,
     workflowCompletedAt: latestJobCompletedAt,
     relevantFailuresObserved,
