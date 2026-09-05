@@ -23,4 +23,11 @@ jobs:
           # (tests/git/*), and delta analysis of HEAD^..HEAD needs parent commits to exist.
           fetch-depth: 0
       - run: npm ci
-      - run: npm run check
+      # 2026-09-05 (measurement-integrity repair step 3): typecheck and test are separate, NAMED steps so
+      # the shadow stage classifier can attribute each one's real duration separably - a single
+      # `npm run check` step (typecheck && test) can only ever be measured as inseparable test work,
+      # which is honest but yields no avoidable-work estimate. Same commands, same gate, same order.
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test
+        run: npm run test
