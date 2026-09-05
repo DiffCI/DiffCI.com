@@ -121,7 +121,10 @@ runs on GitHub-hosted runners. It dispatches to `[self-hosted, cloudflare]`: a `
 (`ops/github-runner/Dockerfile`, GitHub Actions runner agent 2.336.0) per queued job. The runner
 registers, runs the job, deregisters, and self-terminates.
 
-**Status: REPAIRED 2026-09-05 (`293b69c`), qualification in progress.** Down from
+**Status: REPAIRED and QUALIFIED 2026-09-05 (`293b69c`…`70e3dda`).** Two consecutive fresh commits
+(`70e3dda`, `f63d139`) ran on their own pinned runners from queued to terminal with no further push
+or other event; queue depth 0 afterwards; full stage trail on `GET runner.diffci.com/lifecycle`.
+Down from
 2026-09-03T03:38Z: `CI` runs waited 24 h for a runner and were cancelled (36 of them), because the
 dispatch ran inside the webhook's `ctx.waitUntil()` (cancelled at ~30 s, no record of the runner's
 fate), every runner registered with the same labels (GitHub gave each new runner the oldest queued
@@ -219,10 +222,12 @@ Working tree is clean; `main` is up to date with `origin/main`.
    `/v1/shadow/cron-status` → `selfHealth` (never-attempted backlog + age, unlabelled ground truth,
    verified rows awaiting stage economics, unconfigured / unverified repositories).
    **Freeze (2026-09-05):** step 1 CLOSED @ `b163a83`, step 2 CLOSED @ `54122be`, step 3 CLOSED @
-   `8d0f365`, all production-verified; step 4 OPEN with the success condition recorded in the note
-   (two consecutive fresh commits progress queued → assigned → executing → terminal with no further
-   push, with per-stage lifecycle provenance). Until then: test-stage work is measured and correctly
-   classified, avoidable test-stage work remains UNKNOWN where execution is inseparable.
+   `8d0f365`, step 4 CLOSED @ `70e3dda` (qualified by two consecutive fresh commits progressing
+   queued → assigned → executing → terminal on their own runners, no further push, full per-stage
+   provenance), all production-verified. Economics statement: test-stage work is measured and
+   correctly classified; avoidable test-stage work is UNKNOWN where execution is inseparable and
+   ESTIMATED (potential, not validated, not billable) only on the separable split-step runs - the
+   first such row is commit `70e3dda`.
    **Founder decisions on record:** steps 1 and 2 CLOSED / PRODUCTION-VERIFIED at `54122be`; the six
    corpus repositories stay unconfigured until mechanically verified (never "ci.yml by name"); the 77
    contaminated DiffCI.com rows stay immutable and excluded (a retrospective dataset, if ever wanted,

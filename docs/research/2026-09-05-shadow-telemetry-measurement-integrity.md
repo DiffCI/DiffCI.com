@@ -441,7 +441,7 @@ trigger for the stage sweep (today it runs only from the cron tick).
 | 2 — explicit workflow identity + execution-outcome admission + historical validity labelling | **CLOSED / PRODUCTION-VERIFIED @ `54122be`** |
 | 3 — stage classification on admitted evidence, separate economics dataset, report | **CLOSED / PRODUCTION-VERIFIED @ `8d0f365`** |
 | Historical contamination | **PRESERVED / EXCLUDED**, not rewritten |
-| 4 — runner lifecycle / independent forward progress | **OPEN** |
+| 4 — runner lifecycle / independent forward progress | **CLOSED / PRODUCTION-VERIFIED @ `70e3dda`** (qualified by commits `70e3dda` and `f63d139`, see Fix 4) |
 
 What steps 1–3 establish is a clean evidence chain: *prediction → VERIFIED ground truth → identified
 evidence run → actual jobs/steps → explicit stage classification → separate economics dataset →
@@ -561,3 +561,43 @@ pre-fix run resolved by the reconciler, none cancelled by hand.
 
 No subsequent push, no reconciler action, no other repository event. Commit 4 is the docs commit
 that records this table; its own trail is recorded in the entry below it.
+
+**Qualification, clean sequence - commit 4 (`f63d139`, pushed 08:02:39Z, queue empty before it):**
+
+| stage | CI job 101274360897 | observation job 101274361028 |
+|---|---|---|
+| workflow queued → dispatch requested (webhook) | 08:02:41 | 08:02:41 |
+| container started | 08:02:43 | 08:05:37 |
+| job assigned, to its **own** runner | 08:03:15 `cf-job-101274360897` | 08:06:19 `cf-job-101274361028` |
+| execution completed | 08:05:37 `success` | 08:06:28 (`failure`, self-observation action, pre-existing) |
+| runner disposition | `exec-succeeded` | `exec-succeeded` |
+
+**Two consecutive fresh commits (3 and 4) progressed queued → runner assigned → executing → terminal
+on their own runners with no subsequent push and no other repository event. Step 4's success
+condition is met.** Queue depth after both: 0. Every stage is attributable from the trail.
+
+**The step-3 payoff, end to end, without a manufactured result.** Commit 3 (`70e3dda`) was a
+SELECTIVE prediction (2 of 208 tests selected) whose CI run - executed by its pinned runner with the
+split `Typecheck` / `Test` steps - was admitted as VERIFIED ground truth (identity mode, run
+33953910146) and, on the next stage-economics tick, produced the first separable test-stage row for
+this repository: `test / explicit_step / ESTIMATED`, measured test-step duration with an estimated
+avoidable figure of ~122 s for that commit. Six such separable rows now exist (the split-step commits
+that ran); the 72 earlier rows remain `explicit_step_inseparable / UNKNOWN`, as they should. This is
+an ESTIMATED figure on a single commit - potential, not validated, not billable (the savings evidence
+levels stand) - but it is the first test-stage estimate in this repository's history that rests on
+admitted evidence, an identified run, an executed job, and a separably measured step.
+
+**Observations recorded, not fixed (none affects the success condition):**
+- The Queue consumer dispatched the two jobs of one push serially in commit 4 (the observation
+  container started only when the CI exec resolved, ~3 minutes later), so a push's second job waits
+  behind its first. Cloudflare Queues scale consumer concurrency up gradually; a per-job Durable
+  Object alarm or a higher steady concurrency would remove the wait. Assignment still followed within
+  40 s of each container start.
+- The self-observation workflow's job fails on every run (`failure` conclusion, the `./` action
+  itself) - pre-existing, unrelated to the runner, visible now because the runner executes it.
+- Two idle pin-only runners from the 07:43Z mis-registration remain as `offline` ephemeral
+  registrations on GitHub until GitHub prunes them; harmless.
+- A cron tick and a manual reconcile within the same minute enqueued a job twice; the consumer's
+  in-flight guard skipped the duplicate (recorded as such). A dedupe on enqueue would be tidier.
+- Dispatch-to-assignment latency for a pinned job is 30–45 s (runner download, dependency install,
+  registration), the disclosed cost of the pre-published-image design.
