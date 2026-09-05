@@ -282,7 +282,7 @@ export interface ShadowStore {
   /** Report access: a private repository's report needs its token. Generates the token on first call. */
   setRepositoryPrivacy(repository: string, isPrivate: boolean): Promise<void>;
   getReportAccess(repository: string): Promise<{ isPrivate: boolean; token?: string } | undefined>;
-  /** Every enrolled repository not removed, with its privacy and report token - the candidates a
+  /** Every App-installed repository not removed, with its privacy and report token - the candidates a
    * signed-in user's report access is checked against (shadow-report-access.ts). Read-only. */
   listReportAccessCandidates(limit: number): Promise<Array<{ repository: string; state: string; isPrivate: boolean; reportToken?: string }>>;
   /** Sets state/notes for a repository the automatic path found ineligible or observable again. */
@@ -721,7 +721,9 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
 
     async listReportAccessCandidates(limit) {
       const { results } = await db
-        .prepare(`SELECT repository, state, is_private, report_token FROM shadow_repositories WHERE state != 'REMOVED' ORDER BY enrolled_at ASC LIMIT ?`)
+        // Only repositories someone installed the App on: the polled research corpus has no installer
+        // and no installation token, so a collaborator check there could only ever answer "unknown".
+        .prepare(`SELECT repository, state, is_private, report_token FROM shadow_repositories WHERE state != 'REMOVED' AND installation_id IS NOT NULL ORDER BY enrolled_at ASC LIMIT ?`)
         .bind(limit)
         .all<{ repository: string; state: string; is_private: number | null; report_token: string | null }>();
       return results.map((r) => ({ repository: r.repository, state: r.state, isPrivate: r.is_private === 1, reportToken: r.report_token ?? undefined }));

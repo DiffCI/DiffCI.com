@@ -192,3 +192,26 @@ describe("launch-budget fairness caps", () => {
     assert.equal(ceiling.refusedBy, "day");
   });
 });
+
+describe("listReportAccessCandidates (real sqlite)", () => {
+  it("lists App-installed repositories with privacy and token, never the polled corpus or removed rows", async () => {
+    const db = freshDb();
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/private-app", "github-app-webhook");
+    await store.setInstallationId("acme/private-app", "1001");
+    await store.setRepositoryPrivacy("acme/private-app", true);
+    await store.ensureRepository("acme/public-lib", "github-app-webhook");
+    await store.setInstallationId("acme/public-lib", "1001");
+    await store.setRepositoryPrivacy("acme/public-lib", false);
+    await store.ensureRepository("corpus/polled", "cloudflare-poll"); // no installation: nobody installed anything
+    await store.ensureRepository("acme/gone", "github-app-webhook");
+    await store.setInstallationId("acme/gone", "1002");
+    await store.setRepositoryState("acme/gone", "REMOVED");
+
+    const candidates = await store.listReportAccessCandidates(50);
+    assert.deepEqual(candidates.map((c) => c.repository), ["acme/private-app", "acme/public-lib"]);
+    assert.equal(candidates[0]!.isPrivate, true);
+    assert.equal(typeof candidates[0]!.reportToken, "string", "a private repository's token exists once privacy is recorded");
+    assert.equal(candidates[1]!.isPrivate, false);
+  });
+});
