@@ -6,6 +6,7 @@ import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
 
 import { buildReportUrl, loadUserReports } from "../../src/product/report-access.js";
+import { DEFAULT_REPORT_BASE_URL } from "../../src/product/routes.js";
 import { renderHome } from "../../src/ui/pages.js";
 
 function researchWorker(status: number, body: unknown, seen: Request[] = []) {
@@ -54,6 +55,11 @@ describe("loadUserReports", () => {
 
   it("buildReportUrl keeps the base route's path and encodes the repository", () => {
     assert.equal(buildReportUrl("https://r.test/v1/shadow/report", "a/b", "x y"), "https://r.test/v1/shadow/report?repository=a%2Fb&days=7&token=x+y");
+  });
+
+  it("uses the stable app domain for report links by default", () => {
+    assert.equal(DEFAULT_REPORT_BASE_URL, "https://app.diffci.com/report");
+    assert.equal(buildReportUrl(DEFAULT_REPORT_BASE_URL, "acme/private", "token"), "https://app.diffci.com/report?repository=acme%2Fprivate&days=7&token=token");
   });
 });
 

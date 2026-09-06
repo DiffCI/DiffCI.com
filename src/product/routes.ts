@@ -28,8 +28,12 @@ export interface RouteDeps {
   reportBaseUrl?: string;
 }
 
-/** The live report route today; overridable per environment via RouteDeps.reportBaseUrl. */
-export const DEFAULT_REPORT_BASE_URL = "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/report";
+/**
+ * The customer-facing report route. The product Worker proxies this path to the research Worker over
+ * its Service Binding, so private tokenised links stay on DiffCI's custom domain instead of exposing a
+ * `workers.dev` hostname that browser content blockers commonly reject.
+ */
+export const DEFAULT_REPORT_BASE_URL = "https://app.diffci.com/report";
 
 /**
  * `agent_not_pinned` (2026-08-27) is an ENVIRONMENT fault, not a caller fault: the request was

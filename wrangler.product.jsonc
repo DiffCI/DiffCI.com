@@ -19,9 +19,10 @@
   // DIFFCI_ENVIRONMENT comment just below), and going live on the apex domain is a product decision, not
   // a DNS one. Uncomment when actually ready to serve production traffic on diffci.com:
   // "routes": [{ "pattern": "diffci.com/*", "custom_domain": true }],
-  // 2026-09-05 (seamless install): the dashboard is where a private repository's report link (with its
-  // token) is shown after GitHub sign-in, so it needs a public address. app.diffci.com only - the apex
-  // stays the static site.
+    // 2026-09-05 (seamless install): the dashboard is where a private repository's report link (with its
+    // token) is shown after GitHub sign-in. It also proxies the read-only report route (/report) through the
+    // research Worker's Service Binding, keeping tokenised links on app.diffci.com rather than a
+    // block-prone workers.dev hostname. The apex stays the static site.
   "routes": [{ "pattern": "app.diffci.com", "custom_domain": true }],
   //
   // DIFFCI_ENVIRONMENT="production" is the correct value here even though this deploys only to the

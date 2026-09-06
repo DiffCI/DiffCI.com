@@ -184,6 +184,19 @@ function json(payload: unknown, status = 200, extraHeaders?: Headers): Response 
   return Response.json(payload, { status, headers });
 }
 
+/**
+ * Public, read-only report proxy. The research Worker owns report rendering and validation; this
+ * Worker only gives the report a stable custom-domain address and forwards the complete query string
+ * (including a private report token when one is required) through Cloudflare's Service Binding.
+ */
+export function proxyShadowReport(request: Request, researchWorker?: { fetch(request: Request): Promise<Response> }): Promise<Response> {
+  if (!researchWorker) return Promise.resolve(json({ ok: false, error: "the report service is not connected in this environment" }, 503));
+  const sourceUrl = new URL(request.url);
+  const upstreamUrl = new URL("https://diffci-research-sandbox.internal/v1/shadow/report");
+  upstreamUrl.search = sourceUrl.search;
+  return researchWorker.fetch(new Request(upstreamUrl, { method: "GET" }));
+}
+
 /** Part 27: stable-named structured telemetry. One line per event, never a credential/token value in
  * the data payload - every call site below passes only ids/booleans/counts. */
 function logEvent(name: string, data: Record<string, unknown> = {}): void {
@@ -283,6 +296,16 @@ export default {
     }
 
     const url = new URL(request.url);
+
+    // Customer-facing report address: app.diffci.com/report (one path, no aliases). Intentionally public:
+    // the research Worker validates the optional private-report token before it renders any data.
+    if (
+      request.method === "GET"
+      && (url.pathname === "/report" || url.pathname === "/report/")
+    ) {
+      return proxyShadowReport(request, env.RESEARCH_WORKER);
+    }
+
     const store = makeD1ProductStore(env.PRODUCT_DB);
     const billingStore = makeD1BillingStore(env.PRODUCT_DB);
     const sessionStore = makeD1SessionStore(env.PRODUCT_DB);
