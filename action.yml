@@ -77,8 +77,11 @@ inputs:
     default: ""
   api-token:
     description: >-
-      Ingest token for THIS repository, from a repository secret. Pass it as
-      ${{ secrets.DIFFCI_TOKEN }}, never as a literal. Nothing is sent without it.
+      Ingest token for THIS repository, from a repository secret. Pass it as the workflow expression
+      for secrets.DIFFCI_TOKEN, never as a literal. Nothing is sent without it. (This text deliberately
+      does not spell out the expression: GitHub evaluates expressions inside action metadata, and
+      "secrets" is not a context an action file may use - a literal expression here made the whole
+      action fail to load on every run until 2026-09-06.)
     required: false
     default: ""
   fail-on-error:
