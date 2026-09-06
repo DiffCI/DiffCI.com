@@ -762,3 +762,14 @@ file cannot see. First real run (34034221992): job success, `OBSERVED (complete)
 report artifact uploaded. Guard false positive fixed the same day (`6012efe`): `run:` text is matched after stripping shell comments
 and URLs line by line, so a hostname handed to curl is data, not an invocation; every run form the product
 generates still matches, pinned by tests.
+
+**Serial queue dispatch fixed, 2026-09-06 (`a8ce499`, runner Worker deployed).** The Fix 4 observation
+that a push's second job waited behind the first's whole runner lifecycle (~3 min) is closed. Cause: one
+message per consumer invocation plus Cloudflare scaling consumer concurrency up only gradually.
+Fix: messages arriving within 3 s are delivered as one batch (`max_batch_size 5`, `max_batch_timeout 3`)
+and `consumeDispatchBatch` (runner-dispatch.ts) dispatches them concurrently, each message keeping its
+own ack/retry. Cost: up to 3 s before a lone job dispatches. Proof on the fix commit's own push
+(jobs 101491021507 / 101491021509, queued 13:02:29.7Z both): containers started 13:02:34.8Z and
+13:02:35.4Z - 0.6 s apart - assigned at 13:03:10.9Z and 13:03:22.2Z, both `exec-succeeded`, both
+GitHub runs `success`. The Step 4 success condition (queued → assigned → executing → terminal, no other
+event) held for both jobs of one push simultaneously.
