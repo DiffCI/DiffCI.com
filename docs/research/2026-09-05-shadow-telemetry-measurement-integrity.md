@@ -773,3 +773,19 @@ own ack/retry. Cost: up to 3 s before a lone job dispatches. Proof on the fix co
 13:02:35.4Z - 0.6 s apart - assigned at 13:03:10.9Z and 13:03:22.2Z, both `exec-succeeded`, both
 GitHub runs `success`. The Step 4 success condition (queued → assigned → executing → terminal, no other
 event) held for both jobs of one push simultaneously.
+
+**Manual stage-sweep trigger, 2026-09-06 (`5c3c40e`, research Worker deployed).**
+`POST /v1/shadow/stage-sweep` (dispatch token) runs the stage-economics sweep now, on the cron's own
+extracted code path (`runStageSweep`), with `repository=owner/name` (optional; one enrolled repository),
+`max=1..50` (default 10) and `days=1..90` (default 30). It returns the sweep result and the self-health
+counters afterwards. Racing the cron is harmless (primary key on delta+stage, `INSERT OR IGNORE`). It
+never enrols, configures, or invents: a repository not enrolled is simply not considered. Verified live:
+401 without the token, 400 with the reason for a bad `max` or a malformed repository (a GitHub owner is
+alphanumerics and hyphens, so `../x` is refused), GET 404, and real sweeps for `nuxt/nuxt` and for every
+repository that found nothing left to measure (237 rows already recorded,
+`verifiedWithoutStageEconomics: 0`). Usage:
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $(tr -d '\r\n' < .research/dispatch-token)" \
+  "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/stage-sweep?repository=OWNER/REPO&max=20"
+```
