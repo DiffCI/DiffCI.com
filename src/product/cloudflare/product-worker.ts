@@ -34,6 +34,7 @@ import { makeD1SessionStore } from "../../auth/sessions.js";
 import { authenticateRequest } from "../../auth/authenticate.js";
 import { parseAuthConfig, AuthConfigError, type RawAuthEnv } from "../../auth/config.js";
 import { makeD1OAuthStore } from "../../auth/oauth-store.js";
+import { readGithubOAuthEnv } from "../../auth/oauth-env.js";
 import { loadUserReports } from "../report-access.js";
 import { buildGithubAuthorizeUrl } from "../../auth/oauth.js";
 import { handleGithubCallback } from "../../auth/login.js";
@@ -364,7 +365,7 @@ export default {
         authConfigValid: true, // reaching this line already proves parseAuthConfig() didn't throw
         environment: authConfig.environment,
         billingConfigured: billingConfig !== undefined,
-        githubOAuthConfigured: Boolean(env.GITHUB_OAUTH_CLIENT_ID && env.GITHUB_OAUTH_CLIENT_SECRET),
+        githubOAuthConfigured: readGithubOAuthEnv(env).ok, // validated, not merely present - a malformed id reads as unconfigured
         csrfConfigured: Boolean(env.CSRF_SECRET),
         queueSubsystemReachable: dbReachable, // queue/runner/usage all live in the same PRODUCT_DB binding as organizations
         runnerProvider: env.SYNTHETIC_RUNNER_URL && env.RUNNER_CONTROL_TOKEN ? "cloudflare-containers" : "mock",
@@ -390,7 +391,9 @@ export default {
     if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/app" || url.pathname === "/app/")) {
       const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
       if (!principal) {
-        return htmlResponse(renderSignedOut({ githubConfigured: Boolean(env.GITHUB_OAUTH_CLIENT_ID && env.GITHUB_OAUTH_CLIENT_SECRET) }));
+        const oauth = readGithubOAuthEnv(env);
+        if (!oauth.ok) console.log(`github-oauth: sign-in disabled - ${oauth.reason}`);
+        return htmlResponse(renderSignedOut({ githubConfigured: oauth.ok }));
       }
       const [user, organizations, login] = await Promise.all([
         store.getUser(principal.userId),
@@ -643,19 +646,27 @@ export default {
 
     // --- GitHub OAuth login (Part 6) --------------------------------------------------------------
     if (request.method === "GET" && url.pathname === "/auth/github") {
-      if (!env.GITHUB_OAUTH_CLIENT_ID || !env.GITHUB_OAUTH_CLIENT_SECRET) return json({ ok: false, error: "GitHub OAuth is not configured in this environment" }, 503);
+      const oauth = readGithubOAuthEnv(env); // validated, not merely present: a malformed id must never reach GitHub
+      if (!oauth.ok) {
+        console.log(`github-oauth: refusing ${url.pathname} - ${oauth.reason}`);
+        return json({ ok: false, error: "GitHub OAuth is not configured in this environment" }, 503);
+      }
       const redirectTo = url.searchParams.get("redirect_to") ?? undefined;
       if (redirectTo && env.DIFFCI_APP_ORIGIN && !redirectTo.startsWith(env.DIFFCI_APP_ORIGIN)) {
         return json({ ok: false, error: "redirect_to is outside the allowed app origin" }, 400);
       }
       const state = await oauthStore.createState(10 * 60 * 1000, redirectTo); // 10 min - long enough for a real login, short enough to bound replay exposure
-      const authorizeUrl = buildGithubAuthorizeUrl({ clientId: env.GITHUB_OAUTH_CLIENT_ID, clientSecret: env.GITHUB_OAUTH_CLIENT_SECRET, redirectUri: `${url.origin}/auth/github/callback` }, state);
+      const authorizeUrl = buildGithubAuthorizeUrl({ ...oauth.credentials, redirectUri: `${url.origin}/auth/github/callback` }, state);
       logEvent("oauth.redirect", { provider: "github" });
       return new Response(null, { status: 302, headers: { Location: authorizeUrl } });
     }
 
     if (request.method === "GET" && url.pathname === "/auth/github/callback") {
-      if (!env.GITHUB_OAUTH_CLIENT_ID || !env.GITHUB_OAUTH_CLIENT_SECRET) return json({ ok: false, error: "GitHub OAuth is not configured in this environment" }, 503);
+      const oauth = readGithubOAuthEnv(env); // validated, not merely present: a malformed id must never reach GitHub
+      if (!oauth.ok) {
+        console.log(`github-oauth: refusing ${url.pathname} - ${oauth.reason}`);
+        return json({ ok: false, error: "GitHub OAuth is not configured in this environment" }, 503);
+      }
       const code = url.searchParams.get("code");
       const state = url.searchParams.get("state");
       if (!code || !state) {
@@ -664,7 +675,7 @@ export default {
       }
       const outcome = await handleGithubCallback(
         {
-          oauthConfig: { clientId: env.GITHUB_OAUTH_CLIENT_ID, clientSecret: env.GITHUB_OAUTH_CLIENT_SECRET, redirectUri: `${url.origin}/auth/github/callback` },
+          oauthConfig: { ...oauth.credentials, redirectUri: `${url.origin}/auth/github/callback` },
           oauthStore,
           sessionStore,
           productStore: store,

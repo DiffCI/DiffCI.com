@@ -34,8 +34,8 @@ function buildEnv(db: ReturnType<typeof freshProductDb>) {
     DIFFCI_ALLOW_DEV_HEADER_AUTH: "true",
     DIFFCI_SESSION_TTL_MS: "2592000000",
     DIFFCI_API_ORIGIN: ORIGIN,
-    GITHUB_OAUTH_CLIENT_ID: "test-client-id",
-    GITHUB_OAUTH_CLIENT_SECRET: "test-client-secret",
+    GITHUB_OAUTH_CLIENT_ID: "Ov23liTESTCLIENTID00",
+    GITHUB_OAUTH_CLIENT_SECRET: "0123456789abcdef0123456789abcdef01234567",
   } as unknown as Record<string, unknown>;
 }
 
