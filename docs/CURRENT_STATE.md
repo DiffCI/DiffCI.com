@@ -245,8 +245,9 @@ Working tree is clean; `main` is up to date with `origin/main`.
    (verified: the welcome page answers 200 with GitHub's installation_id/setup_action parameters).
    See the note's "Fix 6". Private-repository reports: GitHub OAuth sign-in configured by the founder,
    dashboard lists report links authorised by GitHub's collaborator answer (research route
-   /v1/shadow/report-access over a Service Binding); founder still to set RESEARCH_DISPATCH_TOKEN on
-   the product Worker, then sign in once to confirm end to end. See the note's Fix 6 addendum.
+   /v1/shadow/report-access over a Service Binding); founder confirmed end to end on 2026-09-05
+   (signed in, both private reports visible with working links); OAuth values validated before use
+   (05f5dbe) after a Ctrl-V paste mishap. See the note's Fix 6 addendum.
    **Founder decisions on record:** steps 1 and 2 CLOSED / PRODUCTION-VERIFIED at `54122be`; the six
    corpus repositories stay unconfigured until mechanically verified (never "ci.yml by name"); the 77
    contaminated DiffCI.com rows stay immutable and excluded (a retrospective dataset, if ever wanted,

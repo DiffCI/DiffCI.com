@@ -733,3 +733,10 @@ the assistant's own permission gate); until it is set the dashboard says the rep
 connected. Deploy note: re-running `shadow:deploy` on an already-uploaded commit is refused by the
 source-integrity gate (archive hash differs run to run); the Worker itself had deployed - the gate
 protects the source record, not the deploy.
+
+**Closed 2026-09-05.** The first credential entry had stored a lone Ctrl-V byte as the client id (Git
+Bash does not paste on Ctrl-V), which sent sign-in to a GitHub 404; `05f5dbe` validates both OAuth values
+before use so a malformed pair reads as "not configured" with the reason logged. The founder re-entered
+both values and `RESEARCH_DISPATCH_TOKEN`, signed in at app.diffci.com, and saw both private
+repositories (DiffCI.com, DentalPresence.in) under "Your shadow reports" with working tokenised links.
+Private-repository reports are reachable end to end; no per-install founder action remains.
