@@ -240,3 +240,93 @@ jobs:
     }
   });
 });
+
+describe("run: steps - what counts as running DiffCI (2026-09-06)", () => {
+  const RUN_FORMS = `
+name: CI
+jobs:
+  npm-form:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          npm install --prefix "\${RUNNER_TEMP}/diffci" --no-audit --no-fund @diffci/observer@1.4.2
+          "\${RUNNER_TEMP}/diffci/node_modules/.bin/diffci" observe
+  docker-form:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: docker run --rm -v "\${{ github.workspace }}:/workspace:ro" ghcr.io/diffci/observer@sha256:${"a".repeat(64)} observe --repo /workspace
+`;
+  const URL_ONLY = `
+name: Deploy shadow research Worker
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - name: Deploy and verify source integrity
+        run: |
+          # talks to the diffci research Worker - a URL, not an invocation
+          npx tsx scripts/deploy-research-sandbox.ts --url https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev
+          curl -fsS "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/cron-status?limit=1"
+`;
+
+  it("recognises every run: form the product generates - npm install + .bin/diffci, and docker image@digest", () => {
+    const dir = repoWithWorkflow(RUN_FORMS);
+    try {
+      const result = auditWorkflows(dir);
+      assert.deepEqual(result.observerJobs.sort(), [`${join(".github", "workflows", "ci.yml")}#docker-form`, `${join(".github", "workflows", "ci.yml")}#npm-form`]);
+      assert.deepEqual(result.findings, []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("a URL or comment naming diffci is data, not an invocation - the deploy workflow is not an observer job", () => {
+    const dir = repoWithWorkflow(URL_ONLY, "shadow-deploy.yml");
+    try {
+      const result = auditWorkflows(dir);
+      assert.deepEqual(result.observerJobs, [], "no job here runs DiffCI");
+      assert.deepEqual(codes(dir), [], "and so nothing about the deploy job is a finding");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("still flags a mutable agent reference on a real invocation, and ignores an @ inside a URL", () => {
+    const dir = repoWithWorkflow(`
+name: CI
+jobs:
+  diffci:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          curl -fsS https://user@diffci-research-sandbox.example.workers.dev/health
+          npx @diffci/observer@latest observe
+`);
+    try {
+      const found = codes(dir);
+      assert.ok(found.length === 1 && /MUTABLE|PIN/i.test(found[0]!), `expected exactly one pin finding for @latest, got ${JSON.stringify(found)}`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});

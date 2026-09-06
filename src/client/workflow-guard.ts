@@ -107,7 +107,23 @@ function listWorkflowFiles(repoPath: string): string[] {
  * safety check, so it is matched explicitly here.
  */
 function runReferencesDiffCi(run: string, actionPattern: RegExp): boolean {
-  return actionPattern.test(run);
+  return actionPattern.test(commandText(run));
+}
+
+/**
+ * The part of a `run:` script that can invoke something: shell comments and URLs are removed line by
+ * line before matching. A URL is data handed to a command, not a command - DiffCI's own deploy
+ * workflow curls `https://diffci-research-sandbox.….workers.dev/…` and was reported as running the
+ * observer, then told its deploy job was a badly installed DiffCI job (2026-09-06). Everything the
+ * product generates keeps matching: `npm install … @diffci/observer@1.4.2`,
+ * `"${RUNNER_TEMP}/diffci/node_modules/.bin/diffci" observe`, `docker run … <image>@sha256:… observe`,
+ * `npx @diffci/observer observe` all name DiffCI outside any URL.
+ */
+function commandText(run: string): string {
+  return run
+    .split("\n")
+    .map((line) => line.replace(/(^|\s)#.*$/, "$1").replace(/[a-z][a-z0-9+.-]*:\/\/\S+/gi, " "))
+    .join("\n");
 }
 
 /**
@@ -117,7 +133,7 @@ function runReferencesDiffCi(run: string, actionPattern: RegExp): boolean {
  * workflow was written to close, and should be told so rather than getting a clean report.
  */
 function findMutableAgentReference(run: string): string | undefined {
-  for (const match of run.matchAll(/(@?[A-Za-z0-9._/-]*diffci[A-Za-z0-9._/-]*)@([^\s"']+)/gi)) {
+  for (const match of commandText(run).matchAll(/(@?[A-Za-z0-9._/-]*diffci[A-Za-z0-9._/-]*)@([^\s"']+)/gi)) {
     const version = match[2]!;
     if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) continue;
     if (/^sha256:[0-9a-f]{64}$/.test(version)) continue;
