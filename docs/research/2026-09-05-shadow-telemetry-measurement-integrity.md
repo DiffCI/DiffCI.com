@@ -789,3 +789,28 @@ repository that found nothing left to measure (237 rows already recorded,
 curl -s -X POST -H "Authorization: Bearer $(tr -d '\r\n' < .research/dispatch-token)" \
   "https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/shadow/stage-sweep?repository=OWNER/REPO&max=20"
 ```
+
+**Retrospective dataset for the 77 contaminated DiffCI.com rows, 2026-09-06.** Built as the separate
+dataset step 2 reserved, by `scripts/retrospective-contaminated-ground-truth.ts` over
+`src/shadow/retrospective-evidence.ts` (pure, tested); files under
+`docs/evidence/retrospective-contaminated-ground-truth/adityankale190895--DiffCI.com/` with a README.
+Zero production writes (every D1 statement a SELECT, every GitHub call a GET); 77 GitHub calls, one per
+head. It admits nothing and is read by nothing.
+
+Findings, DiffCI.com (evidence workflow `ci.yml`, explicit):
+
+| Fact | Count |
+|---|---:|
+| Contamination reason: wrong workflow (76 × `diffci-observe.yml`, 1 × `_one-off-build-runner-image.yml`) | 77 / 77 |
+| An executed `ci.yml` run exists for the head (75 success, 2 failure) | 77 / 77 |
+| Prediction created before that run **completed** (the live rule) | 72 / 77 |
+| Prediction created before that run was **created** (stricter) | 0 / 77 |
+
+Every one of these predictions was made after its push had already started CI (median 0.3 min after the
+`ci.yml` run was created): under the live completion rule 72 would have been prospective, under the
+stricter start rule none. The two heads whose evidence run failed were both `FULL` predictions, so no
+recall question arises from them. The five non-preceding rows are re-polls of commits whose CI had
+finished hours earlier. None of this changes any label: the 77 rows stay `CONTAMINATED_WORKFLOW_IDENTITY`.
+What the dataset establishes is that the contamination was entirely workflow identity (the reconciler
+took the observation workflow's run), not missing or unexecuted evidence - the evidence existed for all
+77 heads. DentalPresence.in's 26 contaminated rows can be produced with the same command.

@@ -1,0 +1,33 @@
+{
+  "repository": "adityankale190895/DiffCI.com",
+  "builtAt": "2026-09-06T13:29:48.956Z",
+  "evidenceWorkflowPaths": [
+    ".github/workflows/ci.yml"
+  ],
+  "evidenceWorkflowSource": "explicit",
+  "rule": "earliest-created run of an evidence workflow for the head that executed (success|failure); precedence = prediction_created_at < that run's created_at",
+  "githubCalls": 77,
+  "distinctHeads": 77,
+  "productionWrites": 0,
+  "rows": 77,
+  "byContaminationReason": {
+    "WRONG_WORKFLOW": 77
+  },
+  "byRetroVerdict": {
+    "EVIDENCE_EXECUTED": 77
+  },
+  "byRetroEvidenceConclusion": {
+    "failure": 2,
+    "success": 75
+  },
+  "predictionPrecededRetroEvidence": {
+    "true": 72,
+    "false": 5,
+    "null": 0
+  },
+  "predictionPrecededRetroEvidenceStart": {
+    "true": 0,
+    "false": 77,
+    "null": 0
+  }
+}

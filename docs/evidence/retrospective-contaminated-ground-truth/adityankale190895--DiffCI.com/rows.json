@@ -1,0 +1,2788 @@
+[
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:39faa170edd7d3d5ef5e9bb1b46297d854e09252:32563752741:1",
+    "headSha": "39faa170edd7d3d5ef5e9bb1b46297d854e09252",
+    "predictionCreatedAt": "2026-08-22T09:00:05.824Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 80,
+    "testsTotalFull": 80,
+    "recordedRunId": "32563752741",
+    "recordedRunPath": ".github/workflows/_one-off-build-runner-image.yml",
+    "recordedConclusion": "failure",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 32563747922,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "failure",
+        "status": "completed",
+        "createdAt": "2026-08-22T08:59:53Z"
+      },
+      {
+        "id": 32563752741,
+        "path": ".github/workflows/_one-off-build-runner-image.yml",
+        "conclusion": "failure",
+        "status": "completed",
+        "createdAt": "2026-08-22T08:59:59Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 32563747922,
+    "retroEvidenceConclusion": "failure",
+    "retroEvidenceCreatedAt": "2026-08-22T08:59:53Z",
+    "retroEvidenceCompletedAt": "2026-08-22T09:01:09Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:8acf96d8c57b6b0d69fd46ad1618fb6633483755:33035140593:1",
+    "headSha": "8acf96d8c57b6b0d69fd46ad1618fb6633483755",
+    "predictionCreatedAt": "2026-08-27T09:54:10.157Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 162,
+    "recordedRunId": "33035140593",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33035140593,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-27T03:02:24Z"
+      },
+      {
+        "id": 33035140541,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-27T03:02:24Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33035140541,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-27T03:02:24Z",
+    "retroEvidenceCompletedAt": "2026-08-27T03:04:43Z",
+    "predictionPrecededRetroEvidence": false,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:5a0471b60330d04ca34585809cbb8acdf3759f15:33060609533:1",
+    "headSha": "5a0471b60330d04ca34585809cbb8acdf3759f15",
+    "predictionCreatedAt": "2026-08-27T09:54:11.298Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 162,
+    "testsTotalFull": 162,
+    "recordedRunId": "33060609533",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33060609533,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-27T09:53:32Z"
+      },
+      {
+        "id": 33060609517,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-27T09:53:32Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33060609517,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-27T09:53:32Z",
+    "retroEvidenceCompletedAt": "2026-08-27T09:57:58Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:05e137c166d1689ee876d78814bdb7dc40bdc8af:33069527904:1",
+    "headSha": "05e137c166d1689ee876d78814bdb7dc40bdc8af",
+    "predictionCreatedAt": "2026-08-27T11:56:05.575Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 163,
+    "testsTotalFull": 163,
+    "recordedRunId": "33069527904",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33069527904,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-27T11:55:46Z"
+      },
+      {
+        "id": 33069527820,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-27T11:55:46Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33069527820,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-27T11:55:46Z",
+    "retroEvidenceCompletedAt": "2026-08-27T11:58:59Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:2633568152dc6935f54c0be0b192acfc980702d3:33158480809:1",
+    "headSha": "2633568152dc6935f54c0be0b192acfc980702d3",
+    "predictionCreatedAt": "2026-08-28T09:13:45.211Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 164,
+    "recordedRunId": "33158480809",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33158480809,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T09:13:31Z"
+      },
+      {
+        "id": 33158480834,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T09:13:31Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33158480834,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-28T09:13:31Z",
+    "retroEvidenceCompletedAt": "2026-08-28T09:16:42Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:a5a4ef15cf304ce92ec81fbaac4675a36593e521:33161473505:1",
+    "headSha": "a5a4ef15cf304ce92ec81fbaac4675a36593e521",
+    "predictionCreatedAt": "2026-08-28T09:57:42.838Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 164,
+    "testsTotalFull": 164,
+    "recordedRunId": "33161473505",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33161473505,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T09:57:29Z"
+      },
+      {
+        "id": 33161473499,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T09:57:29Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33161473499,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-28T09:57:29Z",
+    "retroEvidenceCompletedAt": "2026-08-28T10:00:47Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:9e1cb23d8bba035aea9c87a817e6786a0cdaaaa2:33180874820:1",
+    "headSha": "9e1cb23d8bba035aea9c87a817e6786a0cdaaaa2",
+    "predictionCreatedAt": "2026-08-28T14:50:00.448Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 164,
+    "recordedRunId": "33180874820",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33180874820,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T14:34:50Z"
+      },
+      {
+        "id": 33180874745,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T14:34:50Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33180874745,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-28T14:34:50Z",
+    "retroEvidenceCompletedAt": "2026-08-28T14:39:52Z",
+    "predictionPrecededRetroEvidence": false,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:9b5d100b705fa85fa634210cdafe00d7e9b65b45:33182109372:1",
+    "headSha": "9b5d100b705fa85fa634210cdafe00d7e9b65b45",
+    "predictionCreatedAt": "2026-08-28T14:50:02.100Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 164,
+    "testsTotalFull": 164,
+    "recordedRunId": "33182109372",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33182109372,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T14:49:41Z"
+      },
+      {
+        "id": 33182109391,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T14:49:41Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33182109391,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-28T14:49:41Z",
+    "retroEvidenceCompletedAt": "2026-08-28T14:52:27Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:cb48ab59dd4cdc68381f03a3413fa62d52964ed1:33182692487:1",
+    "headSha": "cb48ab59dd4cdc68381f03a3413fa62d52964ed1",
+    "predictionCreatedAt": "2026-08-28T14:56:58.222Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 164,
+    "recordedRunId": "33182692487",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33182692487,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T14:56:41Z"
+      },
+      {
+        "id": 33182692503,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T14:56:41Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33182692503,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-28T14:56:41Z",
+    "retroEvidenceCompletedAt": "2026-08-28T15:09:14Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:c3cc1fe918f37ea36b399c902dce881d346720d9:33186525246:1",
+    "headSha": "c3cc1fe918f37ea36b399c902dce881d346720d9",
+    "predictionCreatedAt": "2026-08-29T05:54:28.626Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 167,
+    "testsTotalFull": 167,
+    "recordedRunId": "33186525246",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33186525246,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T15:43:18Z"
+      },
+      {
+        "id": 33186525187,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T15:43:18Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33186525187,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-28T15:43:18Z",
+    "retroEvidenceCompletedAt": "2026-08-28T15:51:15Z",
+    "predictionPrecededRetroEvidence": false,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:54400da759af75ad57efc371d953e5c96e7adf01:33188929923:1",
+    "headSha": "54400da759af75ad57efc371d953e5c96e7adf01",
+    "predictionCreatedAt": "2026-08-29T05:54:32.057Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 167,
+    "recordedRunId": "33188929923",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33188929847,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T16:13:22Z"
+      },
+      {
+        "id": 33188929923,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-28T16:13:23Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33188929847,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-28T16:13:22Z",
+    "retroEvidenceCompletedAt": "2026-08-28T17:23:10Z",
+    "predictionPrecededRetroEvidence": false,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:a674d70e3bcd3f0cc7964ca77e371756ed521eab:33229033983:1",
+    "headSha": "a674d70e3bcd3f0cc7964ca77e371756ed521eab",
+    "predictionCreatedAt": "2026-08-29T08:02:27.330Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 168,
+    "testsTotalFull": 168,
+    "recordedRunId": "33229033983",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33229033983,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-29T02:28:21Z"
+      },
+      {
+        "id": 33229033995,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-29T02:28:21Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33229033995,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-29T02:28:21Z",
+    "retroEvidenceCompletedAt": "2026-08-29T03:51:42Z",
+    "predictionPrecededRetroEvidence": false,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:296f9efa448d73440713f0a3b0db065c11637277:33245451745:1",
+    "headSha": "296f9efa448d73440713f0a3b0db065c11637277",
+    "predictionCreatedAt": "2026-08-29T09:25:31.075Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 168,
+    "testsTotalFull": 168,
+    "recordedRunId": "33245451745",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33245451745,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-29T09:25:18Z"
+      },
+      {
+        "id": 33245451769,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-29T09:25:18Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33245451769,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-29T09:25:18Z",
+    "retroEvidenceCompletedAt": "2026-08-29T09:38:20Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:46c22b8722f786cd1dc080947443c9dc6b81703b:33246316532:1",
+    "headSha": "46c22b8722f786cd1dc080947443c9dc6b81703b",
+    "predictionCreatedAt": "2026-08-29T09:47:59.353Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 2,
+    "testsTotalFull": 169,
+    "recordedRunId": "33246316532",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33246316532,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-29T09:47:45Z"
+      },
+      {
+        "id": 33246316535,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-29T09:47:45Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33246316535,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-29T09:47:45Z",
+    "retroEvidenceCompletedAt": "2026-08-29T10:43:11Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:2cc58bb6eb581106ef26320755e1437855a30bfe:33246480804:1",
+    "headSha": "2cc58bb6eb581106ef26320755e1437855a30bfe",
+    "predictionCreatedAt": "2026-08-29T09:52:18.143Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 169,
+    "recordedRunId": "33246480804",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33246480804,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-29T09:52:05Z"
+      },
+      {
+        "id": 33246480813,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-29T09:52:05Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33246480813,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-29T09:52:05Z",
+    "retroEvidenceCompletedAt": "2026-08-30T03:17:32Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:8d9937672dea9e2828c229bd8d8f62dbdd4fcf0d:33289741290:1",
+    "headSha": "8d9937672dea9e2828c229bd8d8f62dbdd4fcf0d",
+    "predictionCreatedAt": "2026-08-30T03:27:07.196Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 171,
+    "testsTotalFull": 171,
+    "recordedRunId": "33289741290",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33289741290,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T03:12:42Z"
+      },
+      {
+        "id": 33289741293,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T03:12:42Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33289741293,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T03:12:42Z",
+    "retroEvidenceCompletedAt": "2026-08-30T04:20:34Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:8f64aed0785771acecd90f39704dbf4a7459dda4:33290279764:1",
+    "headSha": "8f64aed0785771acecd90f39704dbf4a7459dda4",
+    "predictionCreatedAt": "2026-08-30T03:27:10.133Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 171,
+    "testsTotalFull": 171,
+    "recordedRunId": "33290279764",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33290279764,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T03:26:50Z"
+      },
+      {
+        "id": 33290279758,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T03:26:50Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33290279758,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T03:26:50Z",
+    "retroEvidenceCompletedAt": "2026-08-30T04:33:05Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:e5daeac15f7c70df2f4f20d982e06402e8910378:33292183017:1",
+    "headSha": "e5daeac15f7c70df2f4f20d982e06402e8910378",
+    "predictionCreatedAt": "2026-08-30T04:18:16.314Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 171,
+    "recordedRunId": "33292183017",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33292183017,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T04:17:59Z"
+      },
+      {
+        "id": 33292183028,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T04:17:59Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33292183028,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T04:17:59Z",
+    "retroEvidenceCompletedAt": "2026-08-30T05:20:16Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:89794368d4934f0eea31c202bb51988cd2bbf63d:33292628044:1",
+    "headSha": "89794368d4934f0eea31c202bb51988cd2bbf63d",
+    "predictionCreatedAt": "2026-08-30T04:30:21.115Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 171,
+    "testsTotalFull": 171,
+    "recordedRunId": "33292628044",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33292628044,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T04:30:06Z"
+      },
+      {
+        "id": 33292627951,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T04:30:06Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33292627951,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T04:30:06Z",
+    "retroEvidenceCompletedAt": "2026-08-30T06:03:04Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:142d60ef56416fab46e9a9ea913f4b80af3b8a2e:33294307777:1",
+    "headSha": "142d60ef56416fab46e9a9ea913f4b80af3b8a2e",
+    "predictionCreatedAt": "2026-08-30T05:16:14.671Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 172,
+    "recordedRunId": "33294307777",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33294307777,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T05:15:55Z"
+      },
+      {
+        "id": 33294307779,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T05:15:55Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33294307779,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T05:15:55Z",
+    "retroEvidenceCompletedAt": "2026-08-30T07:13:38Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:55dc45b3eebb9742706f973f677085bae9fab249:33295904748:1",
+    "headSha": "55dc45b3eebb9742706f973f677085bae9fab249",
+    "predictionCreatedAt": "2026-08-30T06:00:35.622Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 172,
+    "recordedRunId": "33295904748",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33295904748,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T06:00:19Z"
+      },
+      {
+        "id": 33295904720,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T06:00:19Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33295904720,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T06:00:19Z",
+    "retroEvidenceCompletedAt": "2026-08-30T07:15:27Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:1ff2fd10c78c655a6679fa67841d7876ee4a8775:33299398479:1",
+    "headSha": "1ff2fd10c78c655a6679fa67841d7876ee4a8775",
+    "predictionCreatedAt": "2026-08-30T07:31:22.335Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 173,
+    "recordedRunId": "33299398479",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33299398479,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T07:31:08Z"
+      },
+      {
+        "id": 33299398466,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T07:31:08Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33299398466,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T07:31:08Z",
+    "retroEvidenceCompletedAt": "2026-08-30T07:55:56Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:18fbf075beaf9e3a9406b16b7915a057185a6809:33300517893:1",
+    "headSha": "18fbf075beaf9e3a9406b16b7915a057185a6809",
+    "predictionCreatedAt": "2026-08-30T09:03:51.267Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 173,
+    "recordedRunId": "33300517893",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33300517893,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T08:00:26Z"
+      },
+      {
+        "id": 33300517857,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T08:00:26Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33300517857,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T08:00:26Z",
+    "retroEvidenceCompletedAt": "2026-08-30T09:26:49Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:bb377a80e6dab37c739fca3f647663eecf64d39d:33303103682:1",
+    "headSha": "bb377a80e6dab37c739fca3f647663eecf64d39d",
+    "predictionCreatedAt": "2026-08-30T09:03:54.930Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33303103682",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33303103682,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T09:03:36Z"
+      },
+      {
+        "id": 33303103683,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T09:03:36Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33303103683,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T09:03:36Z",
+    "retroEvidenceCompletedAt": "2026-08-30T09:30:44Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:04750a3d8f3941d542cc8abf5f9779be00042804:33305394577:1",
+    "headSha": "04750a3d8f3941d542cc8abf5f9779be00042804",
+    "predictionCreatedAt": "2026-08-30T10:00:25.020Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33305394577",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33305394577,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T10:00:11Z"
+      },
+      {
+        "id": 33305394574,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T10:00:11Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33305394574,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T10:00:11Z",
+    "retroEvidenceCompletedAt": "2026-08-30T11:04:46Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:cafe1d6c0d7ff5f047df9ae5253f1c9835203489:33305736531:1",
+    "headSha": "cafe1d6c0d7ff5f047df9ae5253f1c9835203489",
+    "predictionCreatedAt": "2026-08-30T10:08:32.149Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33305736531",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33305736531,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T10:08:16Z"
+      },
+      {
+        "id": 33305736473,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T10:08:16Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33305736473,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T10:08:16Z",
+    "retroEvidenceCompletedAt": "2026-08-30T11:05:28Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:f3229a5eb91c1b17ee6906884f5ab3a5499114d7:33305956369:1",
+    "headSha": "f3229a5eb91c1b17ee6906884f5ab3a5499114d7",
+    "predictionCreatedAt": "2026-08-30T10:13:48.547Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 173,
+    "recordedRunId": "33305956369",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33305956369,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T10:13:33Z"
+      },
+      {
+        "id": 33305956370,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T10:13:33Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33305956370,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T10:13:33Z",
+    "retroEvidenceCompletedAt": "2026-08-30T11:09:10Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:e0d75511fd21aaaeb40a80c445574ccb960cd308:33307406514:1",
+    "headSha": "e0d75511fd21aaaeb40a80c445574ccb960cd308",
+    "predictionCreatedAt": "2026-08-30T10:49:40.336Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33307406514",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33307406514,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T10:49:29Z"
+      },
+      {
+        "id": 33307406546,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T10:49:29Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33307406546,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T10:49:29Z",
+    "retroEvidenceCompletedAt": "2026-08-30T11:21:39Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:236c88f07e4e36404b97aca7149d6a56ac7a55e0:33308599561:1",
+    "headSha": "236c88f07e4e36404b97aca7149d6a56ac7a55e0",
+    "predictionCreatedAt": "2026-08-30T11:18:51.331Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 173,
+    "recordedRunId": "33308599561",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33308599561,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:18:34Z"
+      },
+      {
+        "id": 33308599608,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:18:34Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33308599608,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T11:18:34Z",
+    "retroEvidenceCompletedAt": "2026-08-30T11:48:10Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:3c1ad866dc979e68915520f850af869320332d09:33308901043:1",
+    "headSha": "3c1ad866dc979e68915520f850af869320332d09",
+    "predictionCreatedAt": "2026-08-30T11:26:03.904Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33308901043",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33308901043,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:25:46Z"
+      },
+      {
+        "id": 33308901041,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:25:46Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33308901041,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T11:25:46Z",
+    "retroEvidenceCompletedAt": "2026-08-30T12:14:58Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:c4d4f8043b44506b7d44dd031062efa6f0162d46:33309082350:1",
+    "headSha": "c4d4f8043b44506b7d44dd031062efa6f0162d46",
+    "predictionCreatedAt": "2026-08-30T11:30:32.418Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33309082350",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33309082350,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:30:16Z"
+      },
+      {
+        "id": 33309082394,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:30:16Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33309082394,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T11:30:16Z",
+    "retroEvidenceCompletedAt": "2026-08-30T12:17:38Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:7fb1d3a5d1b3c78be495d9d2d13b0e6f67f7eea3:33309335884:1",
+    "headSha": "7fb1d3a5d1b3c78be495d9d2d13b0e6f67f7eea3",
+    "predictionCreatedAt": "2026-08-30T11:36:21.995Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 173,
+    "recordedRunId": "33309335884",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33309335884,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:36:05Z"
+      },
+      {
+        "id": 33309335847,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:36:05Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33309335847,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T11:36:05Z",
+    "retroEvidenceCompletedAt": "2026-08-30T12:21:18Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:bae2d00c78e3a2dd85386f155c4b8ffd73e21e73:33309694998:1",
+    "headSha": "bae2d00c78e3a2dd85386f155c4b8ffd73e21e73",
+    "predictionCreatedAt": "2026-08-30T11:45:14.451Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33309694998",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33309694998,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:44:55Z"
+      },
+      {
+        "id": 33309695022,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:44:55Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33309695022,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T11:44:55Z",
+    "retroEvidenceCompletedAt": "2026-08-30T13:43:28Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:6a6cfad6d339e723bf5aec9ab3c2a7038867e811:33309785162:1",
+    "headSha": "6a6cfad6d339e723bf5aec9ab3c2a7038867e811",
+    "predictionCreatedAt": "2026-08-30T11:47:21.190Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 173,
+    "recordedRunId": "33309785162",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33309785162,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:47:03Z"
+      },
+      {
+        "id": 33309785166,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:47:03Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33309785166,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T11:47:03Z",
+    "retroEvidenceCompletedAt": "2026-08-30T13:47:07Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:4753ff586859e1cfae2aaeb85bf555ab045447ce:33310122454:1",
+    "headSha": "4753ff586859e1cfae2aaeb85bf555ab045447ce",
+    "predictionCreatedAt": "2026-08-30T11:55:31.242Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33310122454",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33310122454,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:55:10Z"
+      },
+      {
+        "id": 33310122438,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T11:55:10Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33310122438,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T11:55:10Z",
+    "retroEvidenceCompletedAt": "2026-08-30T14:24:48Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:ac46264ab40bf788b601f9900e502444c3cb41ea:33310831165:1",
+    "headSha": "ac46264ab40bf788b601f9900e502444c3cb41ea",
+    "predictionCreatedAt": "2026-08-30T12:12:02.309Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33310831165",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33310831165,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T12:11:42Z"
+      },
+      {
+        "id": 33310831146,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T12:11:42Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33310831146,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T12:11:42Z",
+    "retroEvidenceCompletedAt": "2026-08-30T14:38:44Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:e91ca0bfe704398a67b424d7ac7e75ac860207f9:33310964015:1",
+    "headSha": "e91ca0bfe704398a67b424d7ac7e75ac860207f9",
+    "predictionCreatedAt": "2026-08-30T12:15:08.251Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 173,
+    "recordedRunId": "33310964015",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33310964015,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T12:14:48Z"
+      },
+      {
+        "id": 33310964021,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T12:14:48Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33310964021,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T12:14:48Z",
+    "retroEvidenceCompletedAt": "2026-08-30T15:03:45Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:e01fc2cea05f1065b9d44a9292ddaedf981dc272:33316560143:1",
+    "headSha": "e01fc2cea05f1065b9d44a9292ddaedf981dc272",
+    "predictionCreatedAt": "2026-08-31T05:06:52.960Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 174,
+    "recordedRunId": "33316560143",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33316560143,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T14:19:43Z"
+      },
+      {
+        "id": 33316560173,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T14:19:43Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33316560173,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T14:19:43Z",
+    "retroEvidenceCompletedAt": "2026-08-31T05:12:48Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:2f03a82132349574a17f2c06ce1a1cacbb024c01:33317292658:1",
+    "headSha": "2f03a82132349574a17f2c06ce1a1cacbb024c01",
+    "predictionCreatedAt": "2026-08-31T05:06:53.749Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 174,
+    "recordedRunId": "33317292658",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33317292658,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T14:35:43Z"
+      },
+      {
+        "id": 33317292709,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T14:35:43Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33317292709,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T14:35:43Z",
+    "retroEvidenceCompletedAt": "2026-08-31T05:20:01Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:d633042b2d6c610c024f1550fe1865f873d24fbb:33318920628:1",
+    "headSha": "d633042b2d6c610c024f1550fe1865f873d24fbb",
+    "predictionCreatedAt": "2026-08-31T05:06:55.111Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 174,
+    "recordedRunId": "33318920628",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33318920628,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T15:11:02Z"
+      },
+      {
+        "id": 33318920625,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-30T15:11:02Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33318920625,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-30T15:11:02Z",
+    "retroEvidenceCompletedAt": "2026-08-31T05:39:41Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:3814f37f1a0bbaa6b0e8afd0b72a3d2ad9d13775:33352990832:1",
+    "headSha": "3814f37f1a0bbaa6b0e8afd0b72a3d2ad9d13775",
+    "predictionCreatedAt": "2026-08-31T05:06:55.823Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 174,
+    "recordedRunId": "33352990832",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33352990832,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T03:10:44Z"
+      },
+      {
+        "id": 33352990828,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T03:10:44Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33352990828,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T03:10:44Z",
+    "retroEvidenceCompletedAt": "2026-08-31T05:43:48Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:bef7029907ec5bd0c3216949e12f95bceacff1bf:33359189935:1",
+    "headSha": "bef7029907ec5bd0c3216949e12f95bceacff1bf",
+    "predictionCreatedAt": "2026-08-31T05:06:58.101Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 174,
+    "recordedRunId": "33359189935",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33359189935,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T05:03:53Z"
+      },
+      {
+        "id": 33359189745,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T05:03:53Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33359189745,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T05:03:53Z",
+    "retroEvidenceCompletedAt": "2026-08-31T06:13:19Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:a82a5e1c417887114bf63c7c279bd43b7db8125c:33359568423:1",
+    "headSha": "a82a5e1c417887114bf63c7c279bd43b7db8125c",
+    "predictionCreatedAt": "2026-08-31T05:10:39.127Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 174,
+    "recordedRunId": "33359568423",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33359568423,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T05:10:22Z"
+      },
+      {
+        "id": 33359568369,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T05:10:22Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33359568369,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T05:10:22Z",
+    "retroEvidenceCompletedAt": "2026-08-31T06:59:59Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:fea70e378cc10e34f2e356d39754f097deac113d:33359973570:1",
+    "headSha": "fea70e378cc10e34f2e356d39754f097deac113d",
+    "predictionCreatedAt": "2026-08-31T05:17:07.636Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 174,
+    "testsTotalFull": 174,
+    "recordedRunId": "33359973570",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33359973570,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T05:16:51Z"
+      },
+      {
+        "id": 33359973597,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T05:16:51Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33359973597,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T05:16:51Z",
+    "retroEvidenceCompletedAt": "2026-08-31T07:00:50Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:7cda6e533bfcf61192a4fe0008f3fc2e9ef329dc:33362677356:1",
+    "headSha": "7cda6e533bfcf61192a4fe0008f3fc2e9ef329dc",
+    "predictionCreatedAt": "2026-08-31T06:03:36.939Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 174,
+    "recordedRunId": "33362677356",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33362677356,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:03:22Z"
+      },
+      {
+        "id": 33362677414,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:03:22Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33362677414,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T06:03:22Z",
+    "retroEvidenceCompletedAt": "2026-08-31T08:01:25Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:f5f3decfbb04fdf5563d2ad7f78fc856fdc03e1f:33362866984:1",
+    "headSha": "f5f3decfbb04fdf5563d2ad7f78fc856fdc03e1f",
+    "predictionCreatedAt": "2026-08-31T06:06:35.345Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 174,
+    "recordedRunId": "33362866984",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33362866984,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:06:20Z"
+      },
+      {
+        "id": 33362866991,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:06:20Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33362866991,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T06:06:20Z",
+    "retroEvidenceCompletedAt": "2026-08-31T08:21:10Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:4dcefefe5b523637edc96e8c2365ec6822f79b10:33363390392:1",
+    "headSha": "4dcefefe5b523637edc96e8c2365ec6822f79b10",
+    "predictionCreatedAt": "2026-08-31T06:14:41.572Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 174,
+    "recordedRunId": "33363390392",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33363390392,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:14:26Z"
+      },
+      {
+        "id": 33363390383,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:14:26Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33363390383,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T06:14:26Z",
+    "retroEvidenceCompletedAt": "2026-08-31T09:45:50Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:e4cdc14d96cf9292d601f743f7de8adbf34ef2a2:33364634785:1",
+    "headSha": "e4cdc14d96cf9292d601f743f7de8adbf34ef2a2",
+    "predictionCreatedAt": "2026-08-31T06:33:07.343Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 174,
+    "recordedRunId": "33364634785",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33364634785,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:32:50Z"
+      },
+      {
+        "id": 33364634857,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:32:50Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33364634857,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T06:32:50Z",
+    "retroEvidenceCompletedAt": "2026-08-31T09:46:11Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:f46c78375f4ddc92296ba3598bd917a4f77aad15:33366239047:1",
+    "headSha": "f46c78375f4ddc92296ba3598bd917a4f77aad15",
+    "predictionCreatedAt": "2026-08-31T06:56:59.360Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 174,
+    "recordedRunId": "33366239047",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33366239047,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:56:44Z"
+      },
+      {
+        "id": 33366239049,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T06:56:44Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33366239049,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T06:56:44Z",
+    "retroEvidenceCompletedAt": "2026-08-31T09:58:24Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:2c9063f3a590523e8c676befa786324670fe4c14:33366526252:1",
+    "headSha": "2c9063f3a590523e8c676befa786324670fe4c14",
+    "predictionCreatedAt": "2026-08-31T07:01:11.203Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 174,
+    "testsTotalFull": 174,
+    "recordedRunId": "33366526252",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33366526252,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T07:00:56Z"
+      },
+      {
+        "id": 33366526247,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T07:00:56Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33366526247,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T07:00:56Z",
+    "retroEvidenceCompletedAt": "2026-08-31T10:06:18Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:6590e0c58673ef9849b26b8a44be86ba991e25e6:33366974496:1",
+    "headSha": "6590e0c58673ef9849b26b8a44be86ba991e25e6",
+    "predictionCreatedAt": "2026-08-31T07:07:27.334Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 174,
+    "testsTotalFull": 174,
+    "recordedRunId": "33366974496",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33366974496,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T07:07:11Z"
+      },
+      {
+        "id": 33366974463,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T07:07:11Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33366974463,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T07:07:11Z",
+    "retroEvidenceCompletedAt": "2026-08-31T10:06:04Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:07bc3d1ca35623a0f76bf2c459ae5c9408808df0:33367362936:1",
+    "headSha": "07bc3d1ca35623a0f76bf2c459ae5c9408808df0",
+    "predictionCreatedAt": "2026-08-31T07:12:53.413Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 174,
+    "recordedRunId": "33367362936",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33367362936,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T07:12:36Z"
+      },
+      {
+        "id": 33367362934,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T07:12:36Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33367362934,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T07:12:36Z",
+    "retroEvidenceCompletedAt": "2026-08-31T10:37:02Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:84dd44e1cf353707ee469079491f8b8e11b8d316:33372223301:1",
+    "headSha": "84dd44e1cf353707ee469079491f8b8e11b8d316",
+    "predictionCreatedAt": "2026-08-31T08:17:50.264Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 175,
+    "recordedRunId": "33372223301",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33372223301,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T08:17:35Z"
+      },
+      {
+        "id": 33372223311,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T08:17:35Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33372223311,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T08:17:35Z",
+    "retroEvidenceCompletedAt": "2026-08-31T12:42:12Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:ccd743e1b88c640d8a42a091a1889ba66cd927d9:33375351099:1",
+    "headSha": "ccd743e1b88c640d8a42a091a1889ba66cd927d9",
+    "predictionCreatedAt": "2026-08-31T08:58:06.073Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 175,
+    "recordedRunId": "33375351099",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33375351099,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T08:57:50Z"
+      },
+      {
+        "id": 33375351076,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T08:57:50Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33375351076,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T08:57:50Z",
+    "retroEvidenceCompletedAt": "2026-08-31T12:44:20Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:89fc23615d7879e50299f80b2a0298b96b16e66c:33375813602:1",
+    "headSha": "89fc23615d7879e50299f80b2a0298b96b16e66c",
+    "predictionCreatedAt": "2026-08-31T09:04:01.646Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 175,
+    "recordedRunId": "33375813602",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33375813602,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T09:03:45Z"
+      },
+      {
+        "id": 33375813586,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T09:03:45Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33375813586,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T09:03:45Z",
+    "retroEvidenceCompletedAt": "2026-08-31T13:21:39Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:5fb0183214be6bbffaa9f2455a331e489c1407d7:33377950663:1",
+    "headSha": "5fb0183214be6bbffaa9f2455a331e489c1407d7",
+    "predictionCreatedAt": "2026-08-31T09:30:06.272Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 43,
+    "testsTotalFull": 176,
+    "recordedRunId": "33377950663",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33377950663,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T09:29:48Z"
+      },
+      {
+        "id": 33377950847,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T09:29:48Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33377950847,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T09:29:48Z",
+    "retroEvidenceCompletedAt": "2026-08-31T13:24:32Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:0beb661188732af9e7cec0509a78adc920710828:33379029537:1",
+    "headSha": "0beb661188732af9e7cec0509a78adc920710828",
+    "predictionCreatedAt": "2026-08-31T09:43:04.814Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 177,
+    "testsTotalFull": 177,
+    "recordedRunId": "33379029537",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33379029537,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T09:42:49Z"
+      },
+      {
+        "id": 33379029458,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T09:42:49Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33379029458,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T09:42:49Z",
+    "retroEvidenceCompletedAt": "2026-08-31T13:38:09Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:9ded4bbd3b4fc3acae9ef434a08737bceaff08ac:33379941142:1",
+    "headSha": "9ded4bbd3b4fc3acae9ef434a08737bceaff08ac",
+    "predictionCreatedAt": "2026-08-31T09:54:38.374Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 177,
+    "recordedRunId": "33379941142",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33379941142,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T09:54:22Z"
+      },
+      {
+        "id": 33379941147,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T09:54:22Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33379941147,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T09:54:22Z",
+    "retroEvidenceCompletedAt": "2026-08-31T13:46:08Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:7d8e213c6adfdf38221d7acd8afa41be4d8dde54:33392767929:1",
+    "headSha": "7d8e213c6adfdf38221d7acd8afa41be4d8dde54",
+    "predictionCreatedAt": "2026-08-31T13:39:04.152Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 178,
+    "testsTotalFull": 178,
+    "recordedRunId": "33392767929",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33392767929,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T12:38:26Z"
+      },
+      {
+        "id": 33392767930,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T12:38:26Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33392767930,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T12:38:26Z",
+    "retroEvidenceCompletedAt": "2026-09-01T03:13:14Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:648958ed2f822faf27811b12bf339a74565fa083:33397320375:1",
+    "headSha": "648958ed2f822faf27811b12bf339a74565fa083",
+    "predictionCreatedAt": "2026-08-31T13:39:08.264Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 3,
+    "testsTotalFull": 178,
+    "recordedRunId": "33397320375",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33397319844,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T13:30:14Z"
+      },
+      {
+        "id": 33397319879,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T13:30:14Z"
+      },
+      {
+        "id": 33397320375,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T13:30:15Z"
+      },
+      {
+        "id": 33397320367,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T13:30:15Z"
+      }
+    ],
+    "evidenceRunsForHead": 2,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33397319879,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T13:30:14Z",
+    "retroEvidenceCompletedAt": "2026-09-01T03:45:05Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:0f6ea3f6f70d22136c15778fccfda254cdab4cf8:33406470304:1",
+    "headSha": "0f6ea3f6f70d22136c15778fccfda254cdab4cf8",
+    "predictionCreatedAt": "2026-08-31T15:11:49.828Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33406470304",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33406470304,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T15:05:54Z"
+      },
+      {
+        "id": 33406470520,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T15:05:54Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33406470520,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T15:05:54Z",
+    "retroEvidenceCompletedAt": "2026-09-01T05:15:45Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:209c56b45c70638f7d2f7fb2c040f285803664ce:33406873300:1",
+    "headSha": "209c56b45c70638f7d2f7fb2c040f285803664ce",
+    "predictionCreatedAt": "2026-08-31T15:11:52.467Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33406873300",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33406873300,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T15:10:05Z"
+      },
+      {
+        "id": 33406873339,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T15:10:05Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33406873339,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T15:10:05Z",
+    "retroEvidenceCompletedAt": "2026-09-01T05:23:53Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:059a5612223f70652bdd2ca4b0998b9b82e116aa:33407007167:1",
+    "headSha": "059a5612223f70652bdd2ca4b0998b9b82e116aa",
+    "predictionCreatedAt": "2026-08-31T15:11:53.782Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33407007167",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33407007167,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T15:11:28Z"
+      },
+      {
+        "id": 33407007225,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T15:11:28Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33407007225,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T15:11:28Z",
+    "retroEvidenceCompletedAt": "2026-09-01T06:35:37Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:d151f764c2c60fa73564ea82d24d6b41a145fcfe:33407201561:1",
+    "headSha": "d151f764c2c60fa73564ea82d24d6b41a145fcfe",
+    "predictionCreatedAt": "2026-09-01T03:12:47.854Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33407201561",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33407201561,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T15:13:28Z"
+      },
+      {
+        "id": 33407201509,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-08-31T15:13:28Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33407201509,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-08-31T15:13:28Z",
+    "retroEvidenceCompletedAt": "2026-09-01T06:44:25Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:b6f1bdac262cdd1a4668148efd6ea4ccf3b6b76e:33465219463:1",
+    "headSha": "b6f1bdac262cdd1a4668148efd6ea4ccf3b6b76e",
+    "predictionCreatedAt": "2026-09-01T03:12:50.655Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33465219463",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33465219463,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:10:08Z"
+      },
+      {
+        "id": 33465219441,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:10:08Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33465219441,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T03:10:08Z",
+    "retroEvidenceCompletedAt": "2026-09-01T07:30:00Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:26dafdc633686af8dcd7a1cf2a37bcbfe5d99bfe:33465375661:1",
+    "headSha": "26dafdc633686af8dcd7a1cf2a37bcbfe5d99bfe",
+    "predictionCreatedAt": "2026-09-01T03:12:51.461Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 3,
+    "testsTotalFull": 179,
+    "recordedRunId": "33465375661",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33465375662,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:12:35Z"
+      },
+      {
+        "id": 33465375661,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:12:36Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33465375662,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T03:12:35Z",
+    "retroEvidenceCompletedAt": "2026-09-01T07:33:31Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:35fcca04e9a3836e961a1af2bd94110cd396418f:33465653098:1",
+    "headSha": "35fcca04e9a3836e961a1af2bd94110cd396418f",
+    "predictionCreatedAt": "2026-09-01T03:28:54.510Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33465653098",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33465653098,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:17:06Z"
+      },
+      {
+        "id": 33465653156,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:17:06Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33465653156,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T03:17:06Z",
+    "retroEvidenceCompletedAt": "2026-09-01T07:40:52Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:5978f0348ab3527e3cd53e93e5bce601709acf38:33466346961:1",
+    "headSha": "5978f0348ab3527e3cd53e93e5bce601709acf38",
+    "predictionCreatedAt": "2026-09-01T03:28:58.748Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 3,
+    "testsTotalFull": 179,
+    "recordedRunId": "33466346961",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33466346961,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:28:34Z"
+      },
+      {
+        "id": 33466346965,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:28:34Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33466346965,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T03:28:34Z",
+    "retroEvidenceCompletedAt": "2026-09-01T07:55:44Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:517baea79affcb7d4fe37815c6cccae83460b183:33466888629:1",
+    "headSha": "517baea79affcb7d4fe37815c6cccae83460b183",
+    "predictionCreatedAt": "2026-09-01T03:37:54.952Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 1,
+    "testsTotalFull": 179,
+    "recordedRunId": "33466888629",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33466888629,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:37:35Z"
+      },
+      {
+        "id": 33466888698,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T03:37:35Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33466888698,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T03:37:35Z",
+    "retroEvidenceCompletedAt": "2026-09-01T07:56:50Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:c528f729c77a4a1e329d41c14b31905a03d86860:33471610983:1",
+    "headSha": "c528f729c77a4a1e329d41c14b31905a03d86860",
+    "predictionCreatedAt": "2026-09-01T04:55:11.639Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33471610983",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33471610983,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T04:54:55Z"
+      },
+      {
+        "id": 33471611026,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T04:54:55Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33471611026,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T04:54:55Z",
+    "retroEvidenceCompletedAt": "2026-09-01T08:27:38Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:7e1ce57767e4bc0f31954ada634bc423bd11ba3f:33472299050:1",
+    "headSha": "7e1ce57767e4bc0f31954ada634bc423bd11ba3f",
+    "predictionCreatedAt": "2026-09-01T05:06:23.823Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 3,
+    "testsTotalFull": 179,
+    "recordedRunId": "33472299050",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33472299050,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T05:06:03Z"
+      },
+      {
+        "id": 33472299075,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T05:06:03Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33472299075,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T05:06:03Z",
+    "retroEvidenceCompletedAt": "2026-09-01T09:19:29Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:0d91bf831cb3028fa8712ac942fd9583e6fb4c61:33472689353:1",
+    "headSha": "0d91bf831cb3028fa8712ac942fd9583e6fb4c61",
+    "predictionCreatedAt": "2026-09-01T05:12:35.773Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33472689353",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33472689353,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T05:12:19Z"
+      },
+      {
+        "id": 33472689355,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T05:12:19Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33472689355,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T05:12:19Z",
+    "retroEvidenceCompletedAt": "2026-09-01T09:41:08Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:8fcddcec8fdbe7bea319f205f2e95e2e4a143503:33473284676:1",
+    "headSha": "8fcddcec8fdbe7bea319f205f2e95e2e4a143503",
+    "predictionCreatedAt": "2026-09-01T06:31:42.114Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33473284676",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33473284676,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T05:21:22Z"
+      },
+      {
+        "id": 33473284524,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T05:21:22Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33473284524,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T05:21:22Z",
+    "retroEvidenceCompletedAt": "2026-09-01T12:48:26Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:6b4c25f22af1635cc0130d83d8e1f25155518663:33478665873:1",
+    "headSha": "6b4c25f22af1635cc0130d83d8e1f25155518663",
+    "predictionCreatedAt": "2026-09-01T06:41:18.170Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33478665873",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33478665873,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T06:41:04Z"
+      },
+      {
+        "id": 33478665816,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T06:41:04Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33478665816,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T06:41:04Z",
+    "retroEvidenceCompletedAt": "2026-09-01T12:50:36Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:263c534de5d9ab39268c8d3c5539385d028e5a04:33481895110:1",
+    "headSha": "263c534de5d9ab39268c8d3c5539385d028e5a04",
+    "predictionCreatedAt": "2026-09-01T07:23:42.296Z",
+    "planMode": "FULL",
+    "testsSelectedDiffci": 179,
+    "testsTotalFull": 179,
+    "recordedRunId": "33481895110",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "failure",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33481895110,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T07:23:23Z"
+      },
+      {
+        "id": 33481895113,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "failure",
+        "status": "completed",
+        "createdAt": "2026-09-01T07:23:23Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33481895113,
+    "retroEvidenceConclusion": "failure",
+    "retroEvidenceCreatedAt": "2026-09-01T07:23:23Z",
+    "retroEvidenceCompletedAt": "2026-09-01T13:11:57Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:bad9628e85fa8195b9d425950eaca18e9fe2c791:33482087284:1",
+    "headSha": "bad9628e85fa8195b9d425950eaca18e9fe2c791",
+    "predictionCreatedAt": "2026-09-01T07:26:09.251Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33482087284",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33482087284,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T07:25:48Z"
+      },
+      {
+        "id": 33482087327,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T07:25:48Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33482087327,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T07:25:48Z",
+    "retroEvidenceCompletedAt": "2026-09-01T13:16:14Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  },
+  {
+    "logicalEventKey": "adityankale190895/DiffCI.com:3b19394d00d3a224cbba782ebc4fc6a0658b0c4c:33482471857:1",
+    "headSha": "3b19394d00d3a224cbba782ebc4fc6a0658b0c4c",
+    "predictionCreatedAt": "2026-09-01T07:30:49.823Z",
+    "planMode": "SELECTIVE",
+    "testsSelectedDiffci": 0,
+    "testsTotalFull": 179,
+    "recordedRunId": "33482471857",
+    "recordedRunPath": ".github/workflows/diffci-observe.yml",
+    "recordedConclusion": "success",
+    "contaminationReason": "WRONG_WORKFLOW",
+    "runsForHead": [
+      {
+        "id": 33482471857,
+        "path": ".github/workflows/diffci-observe.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T07:30:34Z"
+      },
+      {
+        "id": 33482472006,
+        "path": ".github/workflows/ci.yml",
+        "conclusion": "success",
+        "status": "completed",
+        "createdAt": "2026-09-01T07:30:34Z"
+      }
+    ],
+    "evidenceRunsForHead": 1,
+    "retroVerdict": "EVIDENCE_EXECUTED",
+    "retroEvidenceRunId": 33482472006,
+    "retroEvidenceConclusion": "success",
+    "retroEvidenceCreatedAt": "2026-09-01T07:30:34Z",
+    "retroEvidenceCompletedAt": "2026-09-01T13:16:46Z",
+    "predictionPrecededRetroEvidence": true,
+    "predictionPrecededRetroEvidenceStart": false
+  }
+]
