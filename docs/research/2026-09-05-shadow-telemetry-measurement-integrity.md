@@ -740,3 +740,13 @@ before use so a malformed pair reads as "not configured" with the reason logged.
 both values and `RESEARCH_DISPATCH_TOKEN`, signed in at app.diffci.com, and saw both private
 repositories (DiffCI.com, DentalPresence.in) under "Your shadow reports" with working tokenised links.
 Private-repository reports are reachable end to end; no per-install founder action remains.
+
+**Report address, 2026-09-06 (`bdb1805`).** Customer-facing report links now live on
+`https://app.diffci.com/report?repository=…&days=7[&token=…]`, proxied read-only (GET only) to the
+research Worker over the Service Binding; the research Worker still decides private-token access.
+This finishes a concurrent session's uncommitted-but-deployed proxy: that session had read the Chrome
+integration's site allowlist as a browser block and stacked three aliases, one of which
+(`/app?view=detail`) never worked because the dashboard's `/app` handler matched first. One path now;
+dashboard links and the welcome-page lookup use it. Verified live: public 200, private 404 without or
+with a wrong token, 200 with the right token, aliases 404, POST 404. Lesson for the record: a path the
+browser tool cannot open is not evidence the path is blocked - check it with a plain HTTP client first.
