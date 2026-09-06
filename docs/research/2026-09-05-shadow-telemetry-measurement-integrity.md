@@ -750,3 +750,14 @@ integration's site allowlist as a browser block and stacked three aliases, one o
 dashboard links and the welcome-page lookup use it. Verified live: public 200, private 404 without or
 with a wrong token, 200 with the right token, aliases 404, POST 404. Lesson for the record: a path the
 browser tool cannot open is not evidence the path is blocked - check it with a plain HTTP client first.
+
+**Self-observation workflow fixed, 2026-09-06 (`ea5fa07`).** `diffci-observe.yml` had failed at
+`Run ./` on every run since the action was created (2026-08-26), hidden by `continue-on-error`. Cause:
+a literal `${{ secrets.DIFFCI_TOKEN }}` inside the `api-token` input's *description* in `action.yml`;
+GitHub's template engine evaluates expressions in action metadata and rejects the `secrets` context
+there, so the action never loaded. Any third party installing the action would have failed identically -
+this was a customer-facing defect, not just a dogfood one. Description reworded; a test
+(`tests/client/action-metadata.test.ts`) forbids expressions in descriptions and any context an action
+file cannot see. First real run (34034221992): job success, `OBSERVED (complete)`, worktree unchanged,
+report artifact uploaded. Known false positive left alone: the workflow guard flags
+`shadow-deploy.yml` because its `run:` text contains the research Worker hostname.
