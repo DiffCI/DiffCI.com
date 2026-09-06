@@ -22,12 +22,16 @@
   // 2026-09-05 (repair step 4): dispatch runs from a Queue consumer, never from the webhook handler's
   // ctx.waitUntil() (cancelled ~30 s after the response - the live tail showed every dispatch
   // "canceled" at 29.6 s with no record of the runner's fate). One message per GitHub job; the consumer
-  // owns the whole runner lifecycle (<= 10 min exec inside the 15-minute consumer limit). max_retries
+  // owns the whole runner lifecycle (<= 10 min exec inside the 15-minute consumer limit). 2026-09-06:
+  // messages arriving within 3 s (the jobs of one push: CI + observation) are delivered as ONE batch
+  // (max_batch_size 5) and dispatched concurrently by consumeDispatchBatch - previously each message
+  // was its own invocation and Cloudflare scaled concurrency up too slowly, so the second job waited
+  // behind the first's whole lifecycle (~3 min). Cost: up to 3 s added before a lone job dispatches. max_retries
   // 2 with the consumer's own delayed retry on a capacity/start failure; a deterministic failure is
   // stopped by MAX_DISPATCH_ATTEMPTS in runner-dispatch.ts and stays visible in runner_job_lifecycle.
   "queues": {
     "producers": [{ "binding": "RUNNER_DISPATCH_QUEUE", "queue": "diffci-runner-dispatch" }],
-    "consumers": [{ "queue": "diffci-runner-dispatch", "max_batch_size": 1, "max_batch_timeout": 0, "max_retries": 2, "max_concurrency": 3 }]
+    "consumers": [{ "queue": "diffci-runner-dispatch", "max_batch_size": 5, "max_batch_timeout": 3, "max_retries": 2, "max_concurrency": 3 }]
   },
   // Lifecycle provenance lives in the same D1 as the shadow tables (runner_job_lifecycle,
   // runner_job_events) so one query joins "which run was the evidence" with "how did its runner live".

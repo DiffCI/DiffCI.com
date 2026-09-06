@@ -170,3 +170,57 @@ export function classifyStartError(message: string): RunnerDisposition {
   if (/timeout|timed out/.test(m)) return "exec-timeout";
   return "start-failed";
 }
+
+// ---------------------------------------------------------------------------------------------------
+// Batch consumption (2026-09-06). A push produces several jobs within a second of each other (CI plus
+// observation); with one message per invocation and Cloudflare scaling consumer concurrency up only
+// gradually, the second job used to wait behind the first's whole runner lifecycle (~3 minutes,
+// research note Fix 4 observations). The queue now groups messages arriving within a short window
+// into one batch, and this consumes a batch's messages concurrently - each message keeps its own
+// ack/retry, so one job's failure never decides another's fate.
+// ---------------------------------------------------------------------------------------------------
+
+export interface DispatchQueueMessage {
+  body: unknown;
+  ack(): void;
+  retry(options?: { delaySeconds?: number }): void;
+}
+
+export interface BatchOutcome {
+  dispatched: number;
+  retried: number;
+  malformed: number;
+}
+
+export const DISPATCH_RETRY_DELAY_SECONDS = 90;
+
+export async function consumeDispatchBatch(
+  messages: readonly DispatchQueueMessage[],
+  dispatch: (message: DispatchMessage) => Promise<void>,
+  log: (message: string) => void = () => {},
+  retryDelaySeconds: number = DISPATCH_RETRY_DELAY_SECONDS,
+): Promise<BatchOutcome> {
+  const outcome: BatchOutcome = { dispatched: 0, retried: 0, malformed: 0 };
+  await Promise.all(
+    messages.map(async (message) => {
+      const parsed = parseDispatchMessage(message.body);
+      if (!parsed) {
+        log(`github-runner: malformed dispatch message acked: ${JSON.stringify(message.body).slice(0, 300)}`);
+        outcome.malformed += 1;
+        message.ack();
+        return;
+      }
+      try {
+        await dispatch(parsed);
+        outcome.dispatched += 1;
+        message.ack();
+      } catch (error: unknown) {
+        log(`github-runner: dispatch for job ${parsed.jobId} will retry: ${error instanceof Error ? error.message : String(error)}`);
+        outcome.retried += 1;
+        message.retry({ delaySeconds: retryDelaySeconds });
+      }
+    }),
+  );
+  if (messages.length > 1) log(`github-runner: batch of ${messages.length} dispatched concurrently: ${JSON.stringify(outcome)}`);
+  return outcome;
+}

@@ -45,12 +45,13 @@ import {
   MAX_DISPATCH_ATTEMPTS,
   STALE_DISPATCH_MS,
   classifyStartError,
+  consumeDispatchBatch,
   decideReconcileDispatches,
   isPinned,
   jobAddressedToFleet,
-  parseDispatchMessage,
   registrationLabels,
   type DispatchMessage,
+  type DispatchQueueMessage,
   type QueuedJobView,
 } from "./runner-dispatch.js";
 import { makeD1RunnerLifecycleStore, type D1Binding as RunnerD1, type RunnerLifecycleStore } from "./runner-lifecycle-store.js";
@@ -535,23 +536,10 @@ export default {
     return new Response("accepted", { status: 202 });
   },
 
-  /** Queue consumer (wrangler.github-runner.jsonc "queues.consumers"): one runner lifecycle per message. */
-  async queue(batch: { messages: Array<{ body: unknown; ack(): void; retry(options?: { delaySeconds?: number }): void }> }, env: RunnerEnv): Promise<void> {
-    for (const message of batch.messages) {
-      const parsed = parseDispatchMessage(message.body);
-      if (!parsed) {
-        console.log(`github-runner: malformed dispatch message acked: ${JSON.stringify(message.body).slice(0, 300)}`);
-        message.ack();
-        continue;
-      }
-      try {
-        await dispatchFromQueue(parsed, env);
-        message.ack();
-      } catch (error: unknown) {
-        console.log(`github-runner: dispatch for job ${parsed.jobId} will retry: ${error instanceof Error ? error.message : String(error)}`);
-        message.retry({ delaySeconds: 90 });
-      }
-    }
+  /** Queue consumer (wrangler.github-runner.jsonc "queues.consumers"): one runner lifecycle per message; a
+   * batch's messages - the jobs of one push - run concurrently (runner-dispatch.ts consumeDispatchBatch). */
+  async queue(batch: { messages: DispatchQueueMessage[] }, env: RunnerEnv): Promise<void> {
+    await consumeDispatchBatch(batch.messages, (message) => dispatchFromQueue(message, env), (line) => console.log(line));
   },
 
   /** Cron (wrangler.github-runner.jsonc "triggers.crons"): the reconciler safety net. */
