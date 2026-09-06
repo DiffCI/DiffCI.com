@@ -29,6 +29,9 @@ export interface StageEconomicsJobDeps {
    * match the derived job/step shape before any economics row is written. Returns ok:true for explicit
    * configurations. A mismatch is recorded by the implementation (the repository returns to awaiting). */
   verifyDerivation?: (repository: string, jobs: readonly BaselineJobInfo[]) => Promise<{ ok: boolean; detail?: string }>;
+  /** 2026-09-06 manual trigger: restrict the sweep to one enrolled repository. Absent = every enrolled
+   * repository, as the cron runs it. A repository not enrolled is simply not considered. */
+  onlyRepository?: string;
 }
 
 export interface StageEconomicsJobResult {
@@ -59,7 +62,8 @@ export async function runStageEconomicsCaptureSweep(deps: StageEconomicsJobDeps,
     errors: 0,
     repositoriesAttempted: [],
   };
-  const repositories = await deps.shadowBoundary.listEnrolledRepositories();
+  const enrolled = await deps.shadowBoundary.listEnrolledRepositories();
+  const repositories = deps.onlyRepository ? enrolled.filter((r) => r === deps.onlyRepository) : enrolled;
   result.repositoriesConsidered = repositories.length;
 
   type Queue = { repository: string; rows: Awaited<ReturnType<ShadowReadBoundary["listVerifiedGroundTruth"]>>; index: number; token?: string; config?: StageClassificationConfig };
@@ -132,4 +136,36 @@ export async function runStageEconomicsCaptureSweep(deps: StageEconomicsJobDeps,
     if (!progressed || result.predictionsAttempted >= maxPerSweep) break;
   }
   return result;
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Manual trigger (2026-09-06). The cron sweeps every 10 minutes with a cap of 10 predictions; a founder
+// who has just configured or re-identified a repository should not have to wait for ticks to see
+// whether economics rows appear. The request is parsed here, pure and tested; the Worker runs the same
+// sweep function the cron does.
+// ---------------------------------------------------------------------------------------------------
+
+export interface StageSweepOptions {
+  /** One enrolled repository, or every enrolled repository when absent. */
+  onlyRepository?: string;
+  /** Upper bound on predictions attempted - one GitHub jobs call each. */
+  maxPerSweep: number;
+  /** Rolling window of prediction time considered, in days. */
+  windowDays: number;
+}
+
+export const STAGE_SWEEP_LIMITS = { defaultMax: 10, maxMax: 50, defaultDays: 30, maxDays: 90 } as const;
+
+export function parseStageSweepRequest(params: { get(name: string): string | null }): { ok: true; options: StageSweepOptions } | { ok: false; error: string } {
+  const repository = params.get("repository");
+  // A GitHub owner is alphanumerics and hyphens (no leading hyphen); a repository name may carry dots
+  // but is never "." or "..". Written out so "../x" cannot pass as an owner.
+  if (repository !== null && !/^[A-Za-z0-9][A-Za-z0-9-]{0,38}\/(?!\.{1,2}$)[A-Za-z0-9._-]{1,100}$/.test(repository)) return { ok: false, error: "repository must be 'owner/name'" };
+  const maxRaw = params.get("max");
+  const maxPerSweep = maxRaw === null ? STAGE_SWEEP_LIMITS.defaultMax : Number.parseInt(maxRaw, 10);
+  if (!Number.isInteger(maxPerSweep) || maxPerSweep < 1 || maxPerSweep > STAGE_SWEEP_LIMITS.maxMax) return { ok: false, error: `max must be an integer from 1 to ${STAGE_SWEEP_LIMITS.maxMax}` };
+  const daysRaw = params.get("days");
+  const windowDays = daysRaw === null ? STAGE_SWEEP_LIMITS.defaultDays : Number.parseInt(daysRaw, 10);
+  if (!Number.isInteger(windowDays) || windowDays < 1 || windowDays > STAGE_SWEEP_LIMITS.maxDays) return { ok: false, error: `days must be an integer from 1 to ${STAGE_SWEEP_LIMITS.maxDays}` };
+  return { ok: true, options: { onlyRepository: repository ?? undefined, maxPerSweep, windowDays } };
 }

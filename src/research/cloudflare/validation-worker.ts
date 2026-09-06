@@ -44,7 +44,7 @@ import { makeD1ShadowReadBoundary, type D1Binding as ShadowBoundaryD1 } from "..
 import { makeD1ShadowEconomicsStore, type D1Binding as ShadowEconomicsD1 } from "../../usage/shadow-economics-store.js";
 import { buildLiveShadowReport, type D1Binding as ShadowReportD1 } from "./shadow-report-query.js";
 import { renderShadowReport } from "../../usage/shadow-report-render.js";
-import { runStageEconomicsCaptureSweep } from "../../usage/shadow-stage-economics-job.js";
+import { parseStageSweepRequest, runStageEconomicsCaptureSweep, type StageEconomicsJobResult, type StageSweepOptions } from "../../usage/shadow-stage-economics-job.js";
 import { makeD1ShadowStageEconomicsStore, type D1Binding as StageEconomicsD1 } from "../../usage/shadow-stage-economics-store.js";
 import { parseStageClassificationConfig } from "../../shadow/stage-classification-config.js";
 import { fetchRunJobs } from "../../shadow/github-baseline.js";
@@ -2312,6 +2312,67 @@ async function scanUnsafeMisses(request: Request, env: ValidationEnv): Promise<R
   return json({ ok: true, totalRows: rows.length, scanned, fetchErrors, diffciUnsafeMisses: misses.filter((m: any) => m.historicalUnsafeMissTargets.length > 0).length, pathUnsafeMisses: misses.filter((m: any) => m.historicalPathUnsafeMissTargets.length > 0).length, misses });
 }
 
+/** The stage-economics sweep, exactly as the cron runs it (2026-09-06: also the manual trigger
+ * POST /v1/shadow/stage-sweep). One code path: whatever the cron would write, the trigger writes, and
+ * the primary key on (delta, stage) plus INSERT OR IGNORE makes a trigger racing the cron harmless. */
+async function runStageSweep(env: ValidationEnv, options: StageSweepOptions): Promise<StageEconomicsJobResult> {
+  const boundary = makeD1ShadowReadBoundary(env.RESEARCH_DB as unknown as ShadowBoundaryD1);
+  const stageStore = makeD1ShadowStageEconomicsStore(env.RESEARCH_DB as unknown as StageEconomicsD1);
+  const shadowStore = makeD1ShadowStore(env.RESEARCH_DB);
+  const windowEnd = new Date();
+  const windowStart = new Date(windowEnd.getTime() - options.windowDays * 24 * 60 * 60 * 1000); // rolling window, 30 days for the cron
+  const stageResult = await runStageEconomicsCaptureSweep(
+    {
+      shadowBoundary: boundary,
+      store: stageStore,
+      resolveClassification: async (repository) => {
+        const raw = await shadowStore.getStageClassificationRaw(repository);
+        if (!raw) return undefined;
+        try {
+          return parseStageClassificationConfig(JSON.parse(raw)).config;
+        } catch {
+          return undefined;
+        }
+      },
+      // 2026-09-05 seamless install: an automatically derived layout must match the executed run's
+      // real job/step names before any economics row is written; a mismatch withdraws the
+      // identification (the report shows why) and the cron re-derives.
+      verifyDerivation: async (repository, jobs) => {
+        const ident = await shadowStore.getIdentification(repository);
+        if (!ident || ident.source !== "auto") return { ok: true };
+        const raw = await shadowStore.getStageClassificationRaw(repository);
+        if (!raw) return { ok: true };
+        let config;
+        try {
+          config = parseStageClassificationConfig(JSON.parse(raw)).config;
+        } catch {
+          return { ok: true };
+        }
+        if (!config) return { ok: true };
+        const v = verifyDerivedShape(config, jobs);
+        const now = new Date().toISOString();
+        if (v.ok) {
+          // "verified" only when a derived test step actually executed in this run; a run whose
+          // test jobs were skipped neither confirms nor contradicts the derivation.
+          if (v.verified && ident.status !== "verified") {
+            await shadowStore.recordIdentification({ repository, status: "verified", evidenceWorkflowPaths: ident.evidenceWorkflowPaths, stageClassificationJson: raw, derivationJson: ident.derivationJson, note: ident.note, at: now });
+          }
+          return { ok: true, detail: v.detail };
+        }
+        await shadowStore.recordIdentification({ repository, status: "shape_mismatch", note: v.detail, derivationJson: ident.derivationJson, at: now });
+        console.log(`shadow-identify: ${repository} shape mismatch - identification withdrawn: ${v.detail}`);
+        return { ok: false, detail: v.detail };
+      },
+      resolveToken: (repository) => githubTokenForRepo(env, repository),
+      onlyRepository: options.onlyRepository,
+    },
+    windowStart.toISOString(),
+    windowEnd.toISOString(),
+    options.maxPerSweep, // bounded per sweep: one GitHub call per admitted prediction
+  );
+  return stageResult;
+}
+
 export default {
   async fetch(request: Request, env: ValidationEnv, ctx: { waitUntil(promise: Promise<unknown>): void }): Promise<Response> {
     if (env.DIFFCI_RESEARCH_ENABLED !== "true") {
@@ -2401,6 +2462,20 @@ export default {
       }
       const { results } = await env.RESEARCH_DB.prepare(`SELECT id, received_at, email, repository, message, read_at FROM contact_messages ORDER BY id DESC LIMIT 100`).bind().all();
       return json({ ok: true, messages: results });
+    }
+    // 2026-09-06: run the stage-economics sweep now, without waiting for the cron tick - the same code
+    // path, bounded by the same cap, optionally for one repository. Returns the sweep result and the
+    // self-health counters afterwards so the caller sees what is still unmeasured.
+    if (request.method === "POST" && url.pathname === "/v1/shadow/stage-sweep") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
+        return json({ ok: false, error: "unauthorized" }, 401);
+      }
+      const parsed = parseStageSweepRequest(url.searchParams);
+      if (!parsed.ok) return json({ ok: false, error: parsed.error }, 400);
+      const result = await runStageSweep(env, parsed.options);
+      console.log(`shadow-stage-economics: ${JSON.stringify({ event: "shadow_stage_economics.manual_sweep_completed", ...parsed.options, ...result })}`);
+      const selfHealth = await makeD1ShadowStore(env.RESEARCH_DB).getSelfHealth(new Date().toISOString());
+      return json({ ok: true, options: parsed.options, result, selfHealth });
     }
     // 2026-09-05 seamless install: run (or re-run) automatic identification for one repository now and
     // return the outcome with its derivation - the same code path the enrollment webhook and the cron use.
@@ -2590,59 +2665,7 @@ export default {
     // reads the jobs of that row's evidence run, and classifies against the repository's explicit
     // configuration. The legacy table is kept, labelled LEGACY_UNVERIFIED, and never read by a report.
     try {
-      const boundary = makeD1ShadowReadBoundary(env.RESEARCH_DB as unknown as ShadowBoundaryD1);
-      const stageStore = makeD1ShadowStageEconomicsStore(env.RESEARCH_DB as unknown as StageEconomicsD1);
-      const shadowStore = makeD1ShadowStore(env.RESEARCH_DB);
-      const windowEnd = new Date();
-      const windowStart = new Date(windowEnd.getTime() - 30 * 24 * 60 * 60 * 1000); // rolling 30-day window
-      const stageResult = await runStageEconomicsCaptureSweep(
-        {
-          shadowBoundary: boundary,
-          store: stageStore,
-          resolveClassification: async (repository) => {
-            const raw = await shadowStore.getStageClassificationRaw(repository);
-            if (!raw) return undefined;
-            try {
-              return parseStageClassificationConfig(JSON.parse(raw)).config;
-            } catch {
-              return undefined;
-            }
-          },
-          // 2026-09-05 seamless install: an automatically derived layout must match the executed run's
-          // real job/step names before any economics row is written; a mismatch withdraws the
-          // identification (the report shows why) and the cron re-derives.
-          verifyDerivation: async (repository, jobs) => {
-            const ident = await shadowStore.getIdentification(repository);
-            if (!ident || ident.source !== "auto") return { ok: true };
-            const raw = await shadowStore.getStageClassificationRaw(repository);
-            if (!raw) return { ok: true };
-            let config;
-            try {
-              config = parseStageClassificationConfig(JSON.parse(raw)).config;
-            } catch {
-              return { ok: true };
-            }
-            if (!config) return { ok: true };
-            const v = verifyDerivedShape(config, jobs);
-            const now = new Date().toISOString();
-            if (v.ok) {
-              // "verified" only when a derived test step actually executed in this run; a run whose
-              // test jobs were skipped neither confirms nor contradicts the derivation.
-              if (v.verified && ident.status !== "verified") {
-                await shadowStore.recordIdentification({ repository, status: "verified", evidenceWorkflowPaths: ident.evidenceWorkflowPaths, stageClassificationJson: raw, derivationJson: ident.derivationJson, note: ident.note, at: now });
-              }
-              return { ok: true, detail: v.detail };
-            }
-            await shadowStore.recordIdentification({ repository, status: "shape_mismatch", note: v.detail, derivationJson: ident.derivationJson, at: now });
-            console.log(`shadow-identify: ${repository} shape mismatch - identification withdrawn: ${v.detail}`);
-            return { ok: false, detail: v.detail };
-          },
-          resolveToken: (repository) => githubTokenForRepo(env, repository),
-        },
-        windowStart.toISOString(),
-        windowEnd.toISOString(),
-        10, // bounded per sweep: one GitHub call per admitted prediction
-      );
+      const stageResult = await runStageSweep(env, { maxPerSweep: 10, windowDays: 30 });
       console.log(`shadow-stage-economics: ${JSON.stringify({ event: "shadow_stage_economics.sweep_completed", ...stageResult })}`);
     } catch (error: unknown) {
       console.log(`shadow-economics: sweep failed: ${error instanceof Error ? error.message : String(error)}`);

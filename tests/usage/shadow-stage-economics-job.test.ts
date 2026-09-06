@@ -5,7 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { runStageEconomicsCaptureSweep } from "../../src/usage/shadow-stage-economics-job.js";
+import { parseStageSweepRequest, runStageEconomicsCaptureSweep } from "../../src/usage/shadow-stage-economics-job.js";
 import type { ShadowReadBoundary, ShadowVerifiedGroundTruth } from "../../src/product/shadow-read-boundary.js";
 import type { ShadowStageEconomicsStore } from "../../src/usage/shadow-stage-economics-store.js";
 import type { StageEconomicsObservation } from "../../src/usage/shadow-stage-economics.js";
@@ -109,5 +109,45 @@ describe("runStageEconomicsCaptureSweep", () => {
     );
     assert.equal(result.fetchErrors, 1);
     assert.equal(s.written.length, 0);
+  });
+});
+
+describe("manual stage sweep (2026-09-06)", () => {
+  it("onlyRepository restricts the sweep to that enrolled repository and nothing else is touched", async () => {
+    const rows = { "acme/a": [verified("acme/a", "a-1", "101")], "acme/b": [verified("acme/b", "b-1", "202")] };
+    const s = store();
+    const fetched: string[] = [];
+    const result = await runStageEconomicsCaptureSweep(
+      { shadowBoundary: boundary(rows), store: s, resolveClassification: async () => CONFIG, fetchJobs: async (repo) => { fetched.push(repo); return JOBS; }, onlyRepository: "acme/b" },
+      "2026-09-01T00:00:00Z",
+      "2026-09-30T00:00:00Z",
+      10,
+    );
+    assert.equal(result.repositoriesConsidered, 1);
+    assert.deepEqual(result.repositoriesAttempted, ["acme/b"]);
+    assert.deepEqual(fetched, ["acme/b"]);
+    assert.ok(s.written.every((o) => o.repository === "acme/b"));
+  });
+
+  it("onlyRepository naming a repository that is not enrolled considers nothing - it does not enrol or invent", async () => {
+    const result = await runStageEconomicsCaptureSweep(
+      { shadowBoundary: boundary({ "acme/a": [verified("acme/a", "a-1", "101")] }), store: store(), resolveClassification: async () => CONFIG, fetchJobs: async () => JOBS, onlyRepository: "acme/none" },
+      "2026-09-01T00:00:00Z",
+      "2026-09-30T00:00:00Z",
+      10,
+    );
+    assert.equal(result.repositoriesConsidered, 0);
+    assert.equal(result.predictionsAttempted, 0);
+  });
+
+  it("parseStageSweepRequest: defaults, bounds, and a malformed repository", () => {
+    const q = (o: Record<string, string>) => ({ get: (k: string) => (k in o ? o[k]! : null) });
+    assert.deepEqual(parseStageSweepRequest(q({})), { ok: true, options: { onlyRepository: undefined, maxPerSweep: 10, windowDays: 30 } });
+    assert.deepEqual(parseStageSweepRequest(q({ repository: "nuxt/nuxt", max: "50", days: "90" })), { ok: true, options: { onlyRepository: "nuxt/nuxt", maxPerSweep: 50, windowDays: 90 } });
+    assert.equal(parseStageSweepRequest(q({ max: "51" })).ok, false);
+    assert.equal(parseStageSweepRequest(q({ max: "0" })).ok, false);
+    assert.equal(parseStageSweepRequest(q({ days: "91" })).ok, false);
+    assert.equal(parseStageSweepRequest(q({ days: "x" })).ok, false);
+    assert.equal(parseStageSweepRequest(q({ repository: "../etc" })).ok, false);
   });
 });
