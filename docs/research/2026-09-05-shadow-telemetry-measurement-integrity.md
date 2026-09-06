@@ -759,5 +759,6 @@ there, so the action never loaded. Any third party installing the action would h
 this was a customer-facing defect, not just a dogfood one. Description reworded; a test
 (`tests/client/action-metadata.test.ts`) forbids expressions in descriptions and any context an action
 file cannot see. First real run (34034221992): job success, `OBSERVED (complete)`, worktree unchanged,
-report artifact uploaded. Known false positive left alone: the workflow guard flags
-`shadow-deploy.yml` because its `run:` text contains the research Worker hostname.
+report artifact uploaded. Guard false positive fixed the same day (`6012efe`): `run:` text is matched after stripping shell comments
+and URLs line by line, so a hostname handed to curl is data, not an invocation; every run form the product
+generates still matches, pinned by tests.
