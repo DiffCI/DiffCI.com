@@ -29,7 +29,9 @@ have seen first. Precedence is stated two ways:
 ## Columns (`rows.csv`; `rows.json` adds `runsForHead`, the whole field the choice was made from)
 
 `logicalEventKey`, `headSha`, `predictionCreatedAt`, `planMode`, `testsSelectedDiffci`, `testsTotalFull`,
-`recordedRunId` / `recordedRunPath` / `recordedConclusion` (what the row was reconciled against),
+`recordedRunId` / `recordedRunPath` / `recordedConclusion` (what the row was reconciled against, as stored),
+`recordedConclusionOnGitHub` (that run's conclusion as GitHub reports it now - execution is judged on this when
+known, because the pre-fix reconciler stored `failure` for runs GitHub reports as `skipped`),
 `contaminationReason` (`WRONG_WORKFLOW` | `NOT_EXECUTED` | `WRONG_WORKFLOW_AND_NOT_EXECUTED` |
 `NO_RUN_RECORDED` | `UNRESOLVABLE`), `evidenceRunsForHead`, `retroVerdict` (`EVIDENCE_EXECUTED` |
 `EVIDENCE_NOT_EXECUTED` | `NO_EVIDENCE_RUN` | `UNRESOLVABLE`), `retroEvidenceRunId`,

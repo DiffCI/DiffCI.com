@@ -50,7 +50,12 @@ export interface RetrospectiveRow {
   testsTotalFull: number;
   recordedRunId: string | null;
   recordedRunPath: string | null;
+  /** The conclusion stored in shadow_ground_truth at reconcile time. */
   recordedConclusion: string | null;
+  /** The same run's conclusion as GitHub reports it now; null when GitHub no longer lists the run for
+   * this head. Execution is judged on this when known: the pre-fix reconciler stored `failure` for runs
+   * GitHub reports as `skipped` (DentalPresence.in, 2026-08-21). */
+  recordedConclusionOnGitHub: string | null;
   contaminationReason: ContaminationReason;
   /** Every run GitHub lists for this head, by path and conclusion - the whole field the choice was made from. */
   runsForHead: Array<{ id: number; path: string; conclusion: string | null; status: string; createdAt: string }>;
@@ -73,11 +78,11 @@ export function isExecutedConclusion(conclusion: string | null | undefined): boo
   return conclusion === "success" || conclusion === "failure";
 }
 
-export function contaminationReason(input: ContaminatedRowInput, evidenceWorkflowPaths: readonly string[]): ContaminationReason {
+export function contaminationReason(input: ContaminatedRowInput, evidenceWorkflowPaths: readonly string[], conclusionOnGitHub: string | null = null): ContaminationReason {
   if (!input.recordedRunId) return "NO_RUN_RECORDED";
   if (!input.recordedRunPath) return "UNRESOLVABLE";
   const wrongWorkflow = !evidenceWorkflowPaths.includes(input.recordedRunPath);
-  const notExecuted = !isExecutedConclusion(input.recordedConclusion);
+  const notExecuted = !isExecutedConclusion(conclusionOnGitHub ?? input.recordedConclusion);
   if (wrongWorkflow && notExecuted) return "WRONG_WORKFLOW_AND_NOT_EXECUTED";
   if (wrongWorkflow) return "WRONG_WORKFLOW";
   if (notExecuted) return "NOT_EXECUTED";
@@ -97,6 +102,8 @@ export function classifyRetrospective(
   evidenceWorkflowPaths: readonly string[],
   runsForHead: readonly GitHubRunSummary[] | undefined,
 ): RetrospectiveRow {
+  const recordedOnGitHub = runsForHead?.find((r) => String(r.id) === input.recordedRunId);
+  const recordedConclusionOnGitHub = recordedOnGitHub ? recordedOnGitHub.conclusion : null;
   const base = {
     logicalEventKey: input.logicalEventKey,
     headSha: input.headSha,
@@ -107,7 +114,8 @@ export function classifyRetrospective(
     recordedRunId: input.recordedRunId,
     recordedRunPath: input.recordedRunPath,
     recordedConclusion: input.recordedConclusion,
-    contaminationReason: contaminationReason(input, evidenceWorkflowPaths),
+    recordedConclusionOnGitHub,
+    contaminationReason: contaminationReason(input, evidenceWorkflowPaths, recordedOnGitHub ? recordedConclusionOnGitHub : null),
   };
   if (!runsForHead) {
     return { ...base, runsForHead: [], evidenceRunsForHead: 0, retroVerdict: "UNRESOLVABLE", retroEvidenceRunId: null, retroEvidenceConclusion: null, retroEvidenceCreatedAt: null, retroEvidenceCompletedAt: null, predictionPrecededRetroEvidence: null, predictionPrecededRetroEvidenceStart: null };
@@ -180,7 +188,7 @@ export function summarize(rows: readonly RetrospectiveRow[]): RetrospectiveSumma
 
 const CSV_COLUMNS = [
   "logicalEventKey", "headSha", "predictionCreatedAt", "planMode", "testsSelectedDiffci", "testsTotalFull",
-  "recordedRunId", "recordedRunPath", "recordedConclusion", "contaminationReason", "evidenceRunsForHead",
+  "recordedRunId", "recordedRunPath", "recordedConclusion", "recordedConclusionOnGitHub", "contaminationReason", "evidenceRunsForHead",
   "retroVerdict", "retroEvidenceRunId", "retroEvidenceConclusion", "retroEvidenceCreatedAt", "retroEvidenceCompletedAt",
   "predictionPrecededRetroEvidence", "predictionPrecededRetroEvidenceStart",
 ] as const;

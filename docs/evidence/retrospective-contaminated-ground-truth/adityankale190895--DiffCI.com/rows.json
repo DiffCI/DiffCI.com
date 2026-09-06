@@ -9,6 +9,7 @@
     "recordedRunId": "32563752741",
     "recordedRunPath": ".github/workflows/_one-off-build-runner-image.yml",
     "recordedConclusion": "failure",
+    "recordedConclusionOnGitHub": "failure",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -45,6 +46,7 @@
     "recordedRunId": "33035140593",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -81,6 +83,7 @@
     "recordedRunId": "33060609533",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -117,6 +120,7 @@
     "recordedRunId": "33069527904",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -153,6 +157,7 @@
     "recordedRunId": "33158480809",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -189,6 +194,7 @@
     "recordedRunId": "33161473505",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -225,6 +231,7 @@
     "recordedRunId": "33180874820",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -261,6 +268,7 @@
     "recordedRunId": "33182109372",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -297,6 +305,7 @@
     "recordedRunId": "33182692487",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -333,6 +342,7 @@
     "recordedRunId": "33186525246",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -369,6 +379,7 @@
     "recordedRunId": "33188929923",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -405,6 +416,7 @@
     "recordedRunId": "33229033983",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -441,6 +453,7 @@
     "recordedRunId": "33245451745",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -477,6 +490,7 @@
     "recordedRunId": "33246316532",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -513,6 +527,7 @@
     "recordedRunId": "33246480804",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -549,6 +564,7 @@
     "recordedRunId": "33289741290",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -585,6 +601,7 @@
     "recordedRunId": "33290279764",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -621,6 +638,7 @@
     "recordedRunId": "33292183017",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -657,6 +675,7 @@
     "recordedRunId": "33292628044",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -693,6 +712,7 @@
     "recordedRunId": "33294307777",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -729,6 +749,7 @@
     "recordedRunId": "33295904748",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -765,6 +786,7 @@
     "recordedRunId": "33299398479",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -801,6 +823,7 @@
     "recordedRunId": "33300517893",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -837,6 +860,7 @@
     "recordedRunId": "33303103682",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -873,6 +897,7 @@
     "recordedRunId": "33305394577",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -909,6 +934,7 @@
     "recordedRunId": "33305736531",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -945,6 +971,7 @@
     "recordedRunId": "33305956369",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -981,6 +1008,7 @@
     "recordedRunId": "33307406514",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1017,6 +1045,7 @@
     "recordedRunId": "33308599561",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1053,6 +1082,7 @@
     "recordedRunId": "33308901043",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1089,6 +1119,7 @@
     "recordedRunId": "33309082350",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1125,6 +1156,7 @@
     "recordedRunId": "33309335884",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1161,6 +1193,7 @@
     "recordedRunId": "33309694998",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1197,6 +1230,7 @@
     "recordedRunId": "33309785162",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1233,6 +1267,7 @@
     "recordedRunId": "33310122454",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1269,6 +1304,7 @@
     "recordedRunId": "33310831165",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1305,6 +1341,7 @@
     "recordedRunId": "33310964015",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1341,6 +1378,7 @@
     "recordedRunId": "33316560143",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1377,6 +1415,7 @@
     "recordedRunId": "33317292658",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1413,6 +1452,7 @@
     "recordedRunId": "33318920628",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1449,6 +1489,7 @@
     "recordedRunId": "33352990832",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1485,6 +1526,7 @@
     "recordedRunId": "33359189935",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1521,6 +1563,7 @@
     "recordedRunId": "33359568423",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1557,6 +1600,7 @@
     "recordedRunId": "33359973570",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1593,6 +1637,7 @@
     "recordedRunId": "33362677356",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1629,6 +1674,7 @@
     "recordedRunId": "33362866984",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1665,6 +1711,7 @@
     "recordedRunId": "33363390392",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1701,6 +1748,7 @@
     "recordedRunId": "33364634785",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1737,6 +1785,7 @@
     "recordedRunId": "33366239047",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1773,6 +1822,7 @@
     "recordedRunId": "33366526252",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1809,6 +1859,7 @@
     "recordedRunId": "33366974496",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1845,6 +1896,7 @@
     "recordedRunId": "33367362936",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1881,6 +1933,7 @@
     "recordedRunId": "33372223301",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1917,6 +1970,7 @@
     "recordedRunId": "33375351099",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1953,6 +2007,7 @@
     "recordedRunId": "33375813602",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -1989,6 +2044,7 @@
     "recordedRunId": "33377950663",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2025,6 +2081,7 @@
     "recordedRunId": "33379029537",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2061,6 +2118,7 @@
     "recordedRunId": "33379941142",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2097,6 +2155,7 @@
     "recordedRunId": "33392767929",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2133,6 +2192,7 @@
     "recordedRunId": "33397320375",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2183,6 +2243,7 @@
     "recordedRunId": "33406470304",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2219,6 +2280,7 @@
     "recordedRunId": "33406873300",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2255,6 +2317,7 @@
     "recordedRunId": "33407007167",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2291,6 +2354,7 @@
     "recordedRunId": "33407201561",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2327,6 +2391,7 @@
     "recordedRunId": "33465219463",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2363,6 +2428,7 @@
     "recordedRunId": "33465375661",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2399,6 +2465,7 @@
     "recordedRunId": "33465653098",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2435,6 +2502,7 @@
     "recordedRunId": "33466346961",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2471,6 +2539,7 @@
     "recordedRunId": "33466888629",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2507,6 +2576,7 @@
     "recordedRunId": "33471610983",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2543,6 +2613,7 @@
     "recordedRunId": "33472299050",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2579,6 +2650,7 @@
     "recordedRunId": "33472689353",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2615,6 +2687,7 @@
     "recordedRunId": "33473284676",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2651,6 +2724,7 @@
     "recordedRunId": "33478665873",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2687,6 +2761,7 @@
     "recordedRunId": "33481895110",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "failure",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2723,6 +2798,7 @@
     "recordedRunId": "33482087284",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {
@@ -2759,6 +2835,7 @@
     "recordedRunId": "33482471857",
     "recordedRunPath": ".github/workflows/diffci-observe.yml",
     "recordedConclusion": "success",
+    "recordedConclusionOnGitHub": "success",
     "contaminationReason": "WRONG_WORKFLOW",
     "runsForHead": [
       {

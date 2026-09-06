@@ -814,3 +814,26 @@ finished hours earlier. None of this changes any label: the 77 rows stay `CONTAM
 What the dataset establishes is that the contamination was entirely workflow identity (the reconciler
 took the observation workflow's run), not missing or unexecuted evidence - the evidence existed for all
 77 heads. DentalPresence.in's 26 contaminated rows can be produced with the same command.
+
+**Retrospective dataset, DentalPresence.in's 26 contaminated rows, 2026-09-06.** Same script, files
+under `…/adityankale190895--DentalPresence.in/`; 26 GitHub calls, zero production writes. Evidence
+workflow `cloudflare-staging-deploy.yml` (explicit).
+
+| Fact | Count |
+|---|---:|
+| Reconciled against CodeQL (wrong workflow; 8 of these also never executed) | 18 / 26 |
+| Reconciled against the deploy workflow itself, but a run GitHub reports as `skipped` | 8 / 26 |
+| Head has an executed deploy run (7 success, 1 failure - a `FULL` prediction) | 8 / 26 |
+| Head's deploy runs were all `skipped` - no evidence exists for that commit | 18 / 26 |
+| Prediction preceded the evidence run's completion, where one exists | 8 / 8 |
+| Prediction preceded the evidence run's creation | 0 / 8 |
+
+Two things this surfaced. First, a stored-value discrepancy: those 8 rows carry
+`workflow_conclusion = 'failure'` in `shadow_ground_truth` while GitHub reports the same run ids as
+`skipped` - the pre-fix reconciler mis-mapped a skipped run as a failure. The classifier therefore judges
+execution by GitHub's conclusion when the run is still listed (`recordedConclusionOnGitHub`) and keeps
+the stored value beside it; the labels stand, and nothing is rewritten. Second, unlike DiffCI.com, most
+of DentalPresence.in's contamination was not recoverable even in principle: for 18 of 26 commits the
+evidence workflow never executed, so under today's rule those predictions would have terminated as
+`EVIDENCE_RUN_skipped` rather than produced ground truth. The retrospective is complete for both
+own-repo installs.

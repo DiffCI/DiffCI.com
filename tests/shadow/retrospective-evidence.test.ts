@@ -36,6 +36,20 @@ describe("contaminationReason", () => {
 });
 
 describe("classifyRetrospective", () => {
+  it("judges execution by GitHub, not by the stored conclusion: a stored failure that GitHub reports as skipped is NOT_EXECUTED (the DentalPresence.in 2026-08-21 shape)", () => {
+    const row = classifyRetrospective(
+      input({ recordedRunId: "21", recordedRunPath: ".github/workflows/ci.yml", recordedConclusion: "failure" }),
+      EVIDENCE,
+      [run(21, ".github/workflows/ci.yml", "skipped", "2026-08-21T13:00:00.000Z")],
+    );
+    assert.equal(row.recordedConclusionOnGitHub, "skipped");
+    assert.equal(row.contaminationReason, "NOT_EXECUTED");
+    assert.equal(row.retroVerdict, "EVIDENCE_NOT_EXECUTED");
+    const gone = classifyRetrospective(input({ recordedRunId: "99", recordedRunPath: ".github/workflows/ci.yml", recordedConclusion: "success" }), EVIDENCE, [run(13, ".github/workflows/ci.yml", "success", "2026-08-27T10:00:00.000Z")]);
+    assert.equal(gone.recordedConclusionOnGitHub, null, "GitHub no longer lists the recorded run");
+    assert.equal(gone.contaminationReason, "UNRESOLVABLE", "falls back to the stored conclusion and stays visible");
+  });
+
   it("picks the earliest EXECUTED evidence-workflow run and says whether the prediction preceded it", () => {
     const row = classifyRetrospective(input(), EVIDENCE, [
       run(10, ".github/workflows/diffci-observe.yml", "success", "2026-08-27T09:50:00.000Z"),
@@ -99,6 +113,7 @@ describe("summarize + toCsv", () => {
     const lines = csv.trimEnd().split("\n");
     assert.equal(lines.length, 4);
     assert.match(lines[0]!, /^logicalEventKey,headSha,/);
+    assert.match(lines[0]!, /,recordedConclusion,recordedConclusionOnGitHub,contaminationReason,/);
     assert.match(lines[1]!, /,EVIDENCE_EXECUTED,13,failure,2026-08-27T10:00:00.000Z,2026-08-27T10:05:00.000Z,true,true$/);
   });
 });

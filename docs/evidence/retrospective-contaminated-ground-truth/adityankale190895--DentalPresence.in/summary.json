@@ -1,0 +1,37 @@
+{
+  "repository": "adityankale190895/DentalPresence.in",
+  "builtAt": "2026-09-06T13:36:04.143Z",
+  "evidenceWorkflowPaths": [
+    ".github/workflows/cloudflare-staging-deploy.yml"
+  ],
+  "evidenceWorkflowSource": "explicit",
+  "rule": "earliest-created run of an evidence workflow for the head that executed (success|failure); precedence = prediction_created_at < that run's created_at",
+  "githubCalls": 26,
+  "distinctHeads": 26,
+  "productionWrites": 0,
+  "rows": 26,
+  "byContaminationReason": {
+    "WRONG_WORKFLOW": 10,
+    "NOT_EXECUTED": 8,
+    "WRONG_WORKFLOW_AND_NOT_EXECUTED": 8
+  },
+  "byRetroVerdict": {
+    "EVIDENCE_NOT_EXECUTED": 18,
+    "EVIDENCE_EXECUTED": 8
+  },
+  "byRetroEvidenceConclusion": {
+    "null": 18,
+    "success": 7,
+    "failure": 1
+  },
+  "predictionPrecededRetroEvidence": {
+    "true": 8,
+    "false": 0,
+    "null": 18
+  },
+  "predictionPrecededRetroEvidenceStart": {
+    "true": 0,
+    "false": 8,
+    "null": 18
+  }
+}
