@@ -15,7 +15,7 @@
 <meta name="twitter:card" content="summary">
 <link rel="canonical" href="https://diffci.com/">
 <link rel="stylesheet" href="/styles.css">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
+<link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
 </head>
 <body>
 
@@ -39,21 +39,36 @@
 
 <section class="hero">
   <div class="wrap wrap-wide">
-    <p class="hero-claim">Read-only · zero CI authority</p>
-    <h1>Find out what your CI is wasting. Without changing your CI.</h1>
-    <p class="lede">
-      DiffCI watches your repository's real CI runs, works out which tests each change could actually
-      have affected, and reports how much compute was avoidable — in hindsight, against what your CI
-      really did.
-    </p>
-    <p>
-      It has no permission to skip, cancel, or modify anything. That is not a setting. It is the only
-      mode that exists.
-    </p>
+    <div class="hero-grid">
+      <div>
+        <p class="hero-claim">Read-only · zero CI authority</p>
+        <h1>Find out what your CI is wasting. Without changing your CI.</h1>
+        <p class="lede">
+          DiffCI watches your repository's real CI runs, works out which jobs each change could actually
+          have affected, and reports how much compute was avoidable — in hindsight, against what your CI
+          really did.
+        </p>
+        <p>
+          It has no permission to skip, cancel, or modify anything. That is not a setting. It is the only
+          mode that exists.
+        </p>
 
-    <div class="hero-actions">
-      <a class="button" href="https://github.com/apps/diffci-shadow">Install the read-only App</a>
-      <a class="button-secondary" href="#evidence">Read the evidence</a>
+        <div class="hero-actions">
+          <a class="button" href="https://github.com/apps/diffci-shadow">Install the read-only App</a>
+          <a class="button-secondary" href="#evidence">Read the evidence</a>
+        </div>
+      </div>
+      <figure class="hero-route" aria-label="A selected, evidence-backed route through CI jobs">
+        <figcaption><span>Change-aware CI</span><b>Shortest verified route</b></figcaption>
+        <svg viewBox="0 0 420 260" role="img" aria-label="A highlighted route through selected CI jobs">
+          <g class="route-links"><path d="M58 196L138 108 217 166 312 72"/><path d="M138 108v88M217 166V78M312 72v94"/><path d="M58 196h260"/></g>
+          <g class="route-jobs"><rect x="38" y="177" width="40" height="38" rx="8"/><rect x="118" y="89" width="40" height="38" rx="8"/><rect x="197" y="147" width="40" height="38" rx="8"/><rect x="292" y="53" width="40" height="38" rx="8"/><rect x="292" y="147" width="40" height="38" rx="8"/></g>
+          <path class="route-trace" d="M58 196L138 108 312 72"/>
+          <g class="route-selected"><rect x="38" y="177" width="40" height="38" rx="8"/><rect x="292" y="53" width="40" height="38" rx="8"/></g>
+          <circle class="route-proof" cx="138" cy="108" r="22"/><circle class="route-core" cx="138" cy="108" r="6"/>
+        </svg>
+        <p><i></i> only work reached by the change <span>·</span> proof retained</p>
+      </figure>
     </div>
 
     <div class="stats">

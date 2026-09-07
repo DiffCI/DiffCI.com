@@ -166,17 +166,17 @@ body {
 }
 
 .wordmark::before {
-  content: "";
-  width: 0.76rem;
-  height: 0.76rem;
-  border-radius: 3px;
-  background: linear-gradient(135deg, var(--accent) 50%, transparent 50%);
-  border: 1.5px solid var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent), 0 0 14px var(--accent-glow);
+  content: url("/assets/diffci-mark.svg");
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  filter: drop-shadow(0 0 6px var(--accent-glow));
   transition: transform 0.3s var(--ease);
 }
 
-.wordmark:hover::before { transform: rotate(90deg); }
+:root[data-theme="light"] .wordmark::before { content: url("/assets/diffci-mark-light.svg"); }
+
+.wordmark:hover::before { transform: scale(1.06); }
 
 .masthead nav {
   display: flex;
@@ -368,6 +368,13 @@ section + section { border-top: 1px solid var(--rule); }
 
 .hero .wrap { position: relative; }
 
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.65fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+}
+
 .hero h1 {
   background: linear-gradient(180deg, var(--ink) 0%, color-mix(in srgb, var(--ink) 72%, var(--ink-2)) 100%);
   -webkit-background-clip: text;
@@ -437,6 +444,35 @@ section + section { border-top: 1px solid var(--rule); }
   padding-left: 1rem;
   margin: 1.9rem 0 0;
   max-width: 34rem;
+}
+
+.hero-route {
+  margin: 0;
+  padding: 1.15rem;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--rule));
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(8px);
+}
+
+.hero-route figcaption { display: grid; gap: 0.1rem; margin-bottom: 0.35rem; }
+.hero-route figcaption span { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+.hero-route figcaption b { font-size: 1rem; letter-spacing: -0.02em; color: var(--ink); }
+.hero-route svg { display: block; width: 100%; height: auto; }
+.route-links { fill: none; stroke: var(--rule-2); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.route-jobs rect { fill: color-mix(in srgb, var(--ink-3) 42%, var(--surface)); }
+.route-trace { fill: none; stroke: var(--accent); stroke-width: 12; stroke-linecap: round; stroke-linejoin: round; }
+.route-selected rect { fill: var(--accent); }
+.route-proof { fill: var(--surface); stroke: var(--accent); stroke-width: 9; }
+.route-core { fill: var(--accent); }
+.hero-route > p { display: flex; align-items: center; gap: 0.45rem; margin: 0.2rem 0 0; color: var(--ink-2); font-size: 0.75rem; line-height: 1.35; }
+.hero-route > p i { width: 0.55rem; height: 0.55rem; border-radius: 2px; background: var(--accent); display: inline-block; flex: 0 0 auto; }
+.hero-route > p span { color: var(--accent); }
+
+@media (max-width: 44rem) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-route { max-width: 30rem; }
 }
 
 /* ---------------- stat band ---------------- */
