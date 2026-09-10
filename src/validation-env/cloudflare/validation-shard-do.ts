@@ -879,6 +879,9 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
       record.resultKeys = [key, logKey];
       record.timings.collectMs = deps.now() - t0;
       record.step = "done";
+      if (deps.job.id.startsWith("language-benchmark-")) {
+        try { await sandbox.destroy(); } catch { /* evidence is durable; release can be retried */ }
+      }
       return { record, nextAlarmDelayMs: null };
     }
     // A pair job that mutates produces results.jsonl, a manifest and run directories like any other
@@ -1609,6 +1612,15 @@ export class ValidationShard {
           await this.state.storage.put(STATE_KEY, record);
         }
         return Response.json({ ok: true });
+      }
+
+      if (request.method === "POST" && url.pathname === "/release-benchmark-container") {
+        const record = await this.state.storage.get<ValidationRecord>(STATE_KEY);
+        if (!record?.jobId.startsWith("language-benchmark-") || !TERMINAL_STEPS.has(record.step)) return Response.json({ ok: false, error: "terminal-benchmark-required" }, { status: 409 });
+        const { getSandbox } = await import("@cloudflare/sandbox");
+        const sandbox: SandboxLike = getSandbox(this.env.VALIDATION_CONTAINER as never, `validation-${record.runId}`, SANDBOX_OPTS);
+        await sandbox.destroy();
+        return Response.json({ ok: true, runId: record.runId, released: true });
       }
 
       return Response.json({ ok: false, error: "not-found" }, { status: 404 });
