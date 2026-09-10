@@ -16,7 +16,7 @@ function run(cmd, args, cwd = root, required = true, timeout = 600000) {
   const result = { command: [cmd, ...args], exitCode: r.status, signal: r.signal, error: r.error?.message, mutationMarkerSeen: `${r.stdout ?? ''}\n${r.stderr ?? ''}`.includes('DIFFCI_MUTATION'), elapsedMs: Math.round(performance.now() - start), tail: `${r.stdout ?? ''}\n${r.stderr ?? ''}`.slice(-6000) };
   if (r.status !== 0) {
     const lines = `${r.stdout ?? ''}\n${r.stderr ?? ''}`.split('\n');
-    result.failureDetails = lines.flatMap((line, i) => /not ok|Error:|ERR_|FAIL/.test(line) ? lines.slice(Math.max(0, i - 1), i + 32) : []).join('\n').slice(0, 30000);
+    result.failureDetails = lines.flatMap((line, i) => /^\s*not ok\b/.test(line) ? lines.slice(Math.max(0, i - 1), i + 32) : []).join('\n').slice(0, 30000);
   }
   console.log(JSON.stringify({ event: 'completed', command: cmd, exitCode: r.status, elapsedMs: result.elapsedMs }));
   if (required && r.status !== 0) throw new Error(JSON.stringify(result));

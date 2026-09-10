@@ -118,6 +118,7 @@ function summarise(report: ObservationReport): string {
   const result = report.result;
   if (result) {
     lines.push(`  verdict: ${result.mode}`);
+    if (result.goScope) lines.push("  Go scope: root module only; nested-module CI remains separate");
     lines.push(
       `  selection: ${result.selectedTests.length}/${result.totalTestCount} test files, from ${result.changedFileCount} changed file(s)`,
     );

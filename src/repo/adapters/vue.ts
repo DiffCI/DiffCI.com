@@ -39,7 +39,7 @@ import { contribution, type RepositoryAdapter } from "./types.js";
 
 /** Explicit Vue SFC imports. Runtime component registries and preprocessors require full CI. */
 export const vueAdapter: RepositoryAdapter = {
-  id: "vue", version: "1", kind: "framework",
+  id: "vue", version: "2", kind: "framework",
   detect: ({ files }) => files.some((file) => file.endsWith(".vue")),
   analyze(context) {
     const result = contribution(this);

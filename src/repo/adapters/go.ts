@@ -115,7 +115,7 @@ export function analyzeGoMetadata(context: AdapterContext, output: string): Adap
 }
 
 export const goAdapter: RepositoryAdapter = {
-  id: "go", version: "1", kind: "language",
+  id: "go", version: "2", kind: "language",
   detect: ({ files }) => files.some((file) => file === "go.mod" || file.endsWith(".go")),
   analyze(context) {
     const failure = contribution(this);
