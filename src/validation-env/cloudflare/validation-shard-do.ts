@@ -29,6 +29,8 @@
  * establishing whether the evidence reproduces, not for improving the thing being measured.
  */
 import type { R2BucketLike, SandboxLike } from "../../analysis-fanout/sandbox-like.js";
+import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 import { apparatusMismatches } from "../apparatus-identity.js";
 import { buildExecutionReceipt, type GuardRecord } from "../execution-receipt.js";
 import {
@@ -1530,6 +1532,26 @@ export class ValidationShard {
         const record = await this.state.storage.get<ValidationRecord>(STATE_KEY);
         if (!record) return Response.json({ ok: false, error: "not-found" }, { status: 404 });
         return Response.json(record);
+      }
+
+      // Export the already-qualified bytes, not a fresh build or a caller-supplied path.
+      if (request.method === "POST" && url.pathname === "/export-observer-012") {
+        const record = await this.state.storage.get<ValidationRecord>(STATE_KEY);
+        if (record?.step !== "done" || record.runId !== "adapters-012-20260910-v3") return Response.json({ ok: false, error: "qualified-run-required" }, { status: 409 });
+        const expected = "sha512-FiVDAHdmzEZKE1Gh0EzfyTv0LNxfzy6JsrcEGR52G41ErixoS7DOha9qr1m+D1fRwVk6o3j+UbXcRk+jupuQUg==";
+        const { getSandbox } = await import("@cloudflare/sandbox");
+        const sandbox: SandboxLike = getSandbox(this.env.VALIDATION_CONTAINER as never, `validation-${record.runId}`, SANDBOX_OPTS);
+        const output = await sandbox.exec("base64 -w0 /opt/diffci/dist-agent/diffci-observer-0.1.2.tgz", { timeout: 30_000 });
+        if (output.exitCode !== 0) throw new Error("qualified artifact is no longer present in the container");
+        const bytes = Buffer.from(output.stdout.trim(), "base64");
+        const integrity = "sha512-" + createHash("sha512").update(bytes).digest("base64");
+        if (integrity !== expected) throw new Error("qualified artifact integrity mismatch; export refused");
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        const key = `agents/observer-${sha256.slice(0, 16)}.tgz`;
+        await this.env.VALIDATION_BUCKET.put(key, bytes);
+        const descriptor = { version: "0.1.2", key, sha256, integrity, qualificationRunId: record.runId, sourceTarballSha256: record.sourceTarballSha256, sizeBytes: bytes.length };
+        await this.env.VALIDATION_BUCKET.put("releases/observer/0.1.2.json", JSON.stringify(descriptor));
+        return Response.json({ ok: true, ...descriptor });
       }
 
       if (request.method === "POST" && url.pathname === "/cancel") {

@@ -214,6 +214,11 @@ export default {
         return stub.fetch(new Request("https://do/cancel", { method: "POST" }));
       }
 
+      if (request.method === "POST" && url.pathname === "/v1/export-observer-012") {
+        const stub = env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName("adapters-012-20260910-v3"));
+        return stub.fetch(new Request("https://do/export-observer-012", { method: "POST" }));
+      }
+
       if (request.method === "GET" && url.pathname === "/v1/result") {
         const runId = url.searchParams.get("runId");
         const file = url.searchParams.get("file") ?? "";
