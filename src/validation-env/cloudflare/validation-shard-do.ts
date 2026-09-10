@@ -837,7 +837,36 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const t0 = deps.now();
   try {
     if (deps.job.mode === "language-qualification") {
-      const content = (await deps.sandbox.readFile("/workspace/language-qualification.json")).content;
+      let content = (await deps.sandbox.readFile("/workspace/language-qualification.json")).content;
+      if (deps.job.id.startsWith("language-benchmark-")) {
+        const report = JSON.parse(content);
+        // Vitest's JSON output-file reporter need not print the thrown error to stdout.
+        // Preserve its actual structured failure messages before the container expires.
+        for (const item of report.cases ?? []) {
+          if (!item.fault?.full) continue;
+          for (const execution of [item.fault.full, item.fault.policy].filter(Boolean)) {
+            const argument = execution.command?.find((arg: unknown) => typeof arg === "string" && /^--outputFile=\/workspace\/broad-benchmark\/tests-\d+\.json$/.test(arg));
+            if (!argument) continue;
+            try {
+              const data = JSON.parse((await sandbox.readFile(argument.slice("--outputFile=".length))).content);
+              const messages: string[] = [];
+              for (const suite of data.testResults ?? []) {
+                if (suite.message) messages.push(String(suite.message));
+                for (const assertion of suite.assertionResults ?? []) for (const message of assertion.failureMessages ?? []) messages.push(String(message));
+              }
+              execution.structuredFailureMessages = messages.join("\n").slice(0, 20000);
+              execution.mutationMarkerSeen = execution.mutationMarkerSeen || messages.some(message => message.includes("DIFFCI_BENCHMARK_FAULT"));
+            } catch { /* absent/unreadable JSON remains inconclusive */ }
+          }
+          const detects = (execution: { exitCode: number | null; error?: string; mutationMarkerSeen?: boolean; summary: { readable?: boolean; failed?: number; failedSuites?: number } }) => execution.exitCode !== null && execution.exitCode !== 0 && !execution.error && execution.mutationMarkerSeen === true && execution.summary.readable === true && ((execution.summary.failed ?? 0) > 0 || (execution.summary.failedSuites ?? 0) > 0);
+          item.fault.originalConsoleOutcome = item.fault.outcome;
+          item.fault.fullDetected = detects(item.fault.full);
+          item.fault.policyDetected = item.fault.policyIdenticalToFull ? item.fault.fullDetected : detects(item.fault.policy);
+          item.fault.outcome = !item.fault.fullDetected ? "INCONCLUSIVE_FULL_DID_NOT_DETECT" : item.fault.policyDetected ? "DETECTED" : "MISSED_OR_UNREADABLE_POLICY";
+        }
+        report.structuredFaultEvidenceCollected = true;
+        content = JSON.stringify(report, null, 2);
+      }
       JSON.parse(content);
       const key = `${resultPrefix(record)}/language-qualification.json`;
       const logKey = `${resultPrefix(record)}/language-qualification.log`;
