@@ -12,7 +12,7 @@ of the latest HEADs or a representative random sample of either ecosystem.
 | Repository | Pinned release | Measured suite |
 | --- | --- | --- |
 | vuejs/test-utils | v2.4.6 | Root Vitest unit suite |
-| vuejs/router | v4.5.1 | packages/router Vitest unit suite |
+| vuejs/router | v4.5.1 | packages/router configured Vitest suite, including its type tests |
 | unovue/reka-ui | v2.2.0 | packages/core Vitest unit suite |
 | go-chi/chi | v5.2.1 | Root-module go test ./... |
 | spf13/cobra | v1.9.1 | Root-module go test ./... |
@@ -32,11 +32,18 @@ bootstrap and again in the harness. No engine changes or candidate rebuilds occu
 Go 1.27.1's Linux archive is checksum verified. Each Go checkout receives the same
 declared root-module scope as an explicitly recorded untracked configuration
 overlay, outside the historical delta. Existing DiffCI config is never overwritten.
-Nested-module CI is not claimed. Vue measurements cover the named unit suite,
-not browser, type, build or coverage-threshold CI.
+Nested-module CI is not claimed. Vue measurements cover the configured Vitest suite,
+not browser or coverage-threshold CI. Vue Router's config enables type tests; its
+documented build and declaration-build steps are prepared before observation and
+timing. These type tests remain included, despite the initial harness's generic
+scope label saying otherwise; the emitted command and test identities are authoritative.
 
 Each candidate gets freshly reconciled dependencies from its own lock/manifests.
-Freeze its observation, then run full/policy and policy/full pairs. Both full runs
+Freeze its observation, then run full/policy and policy/full pairs for a genuine
+selection. When the policy is exactly the full suite, run only two full baselines
+and report observer overhead: duplicate full-policy arms provide no selection
+comparison. Likewise a full-policy fault has one actual full execution, explicitly
+marked as identical policy behavior rather than two independent executions. Both full runs
 must pass and report the same test universe before timing results count. Go test
 result caching is disabled; Vue runs two workers with a fixed seed. Child CPU,
 elapsed time, peak RSS, actual commands and structured test outcomes are recorded.
@@ -55,10 +62,21 @@ before mutation. Full and selected outcomes are retained, including unreadable
 policy runs. Fault injection establishes only bounded detection evidence; it is
 not a false-negative rate estimate or proof of general safety.
 
-Six independent Cloudflare jobs run concurrently, each bounded to 45 minutes with
+Six independent Cloudflare jobs run in batches of at most three, each bounded to 45 minutes with
 a 40-minute harness budget and a three-minute limit per suite execution. No job
 accepts arbitrary commands. Per-run JSON, logs and execution receipts are stored
 in private R2 bucket `diffci-validation-env`, beneath `validation/<runId>/`.
 All setup failures, red baselines, unstable universes, refusals and full fallbacks
 remain in the denominator. No production deployment or automatic skipping is part
 of this experiment.
+
+## Environment correction before the primary cohort
+
+The first attempts ran as root. Cobra's permission tests intentionally require a
+permission-denied error; root bypassed that restriction and caused baseline failures.
+Their results are retained as diagnostic attempts, and unfinished root jobs were
+cancelled after preserving partial evidence and destroying their containers. The
+same candidate-selection rules are rerun as an unprivileged user. Neither Cobra's
+tests nor its source were patched. Validator also had two container bootstrap
+failures, retained separately. The primary reports record uid/gid and do not mix
+these earlier attempts into the timing sample.
