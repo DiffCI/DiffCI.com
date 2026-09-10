@@ -213,7 +213,8 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     if (graphResult.graph.nodes.length === 0) {
       return finish("REFUSED", "graph", {
         reason:
-          "the dependency graph came back empty - DiffCI will not propose a selection from a graph that sees none of this repository",
+          "the dependency graph came back empty - DiffCI will not propose a selection from a graph that sees none of this repository" +
+          (graphResult.adapterBlockers?.length ? `; ${graphResult.adapterBlockers.join("; ")}` : ""),
       });
     }
     const profile = graphResult.profile;
@@ -242,6 +243,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         totalTestCount: profile.testFilePaths.length,
         fallbackReasons: impact.fallbackReasons,
         proposedCommands: (commandPlan?.commands ?? []).map(commandSpecToString),
+        goScope: profile.diffciConfig?.go?.scope,
         commandRefusalReason: commandPlan?.refusalReason,
         unroutedTestPaths: (commandPlan?.unroutedPaths ?? []).map(hashPath),
         blindSpot: profile.testUniverse?.blindSpot === true,

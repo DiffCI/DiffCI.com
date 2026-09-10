@@ -119,7 +119,9 @@ export const goAdapter: RepositoryAdapter = {
   detect: ({ files }) => files.some((file) => file === "go.mod" || file.endsWith(".go")),
   analyze(context) {
     const failure = contribution(this);
-    if (!context.files.includes("go.mod") || context.files.some((f) => f === "go.work" || f.endsWith("/go.mod"))) {
+    const nestedRoots = context.files.filter(f => f.endsWith("/go.mod")).map(f => f.slice(0, -"go.mod".length));
+    const scoped = context.profile.diffciConfig?.go?.scope === "root-module";
+    if (!context.files.includes("go.mod") || context.files.includes("go.work") || (nestedRoots.length && !scoped)) {
       failure.blockers.push("Go support requires one root go.mod; workspaces and nested modules require full validation");
       return failure;
     }
@@ -140,7 +142,14 @@ export const goAdapter: RepositoryAdapter = {
         env,
         stdio: ["ignore", "pipe", "pipe"],
       });
-      const result = analyzeGoMetadata(context, output);
+      const excluded = (file: string) => nestedRoots.some(root => file.startsWith(root));
+      const scopedContext = scoped ? { ...context, files: context.files.filter(file => !excluded(file)) } : context;
+      const result = analyzeGoMetadata(scopedContext, output);
+      if (scoped) {
+        context.profile.goExcludedModuleRoots = nestedRoots;
+        // A local replacement can make an excluded module part of the root module's build.
+        if (parseGoList(output).some(pkg => pkg.Module?.Replace?.Dir)) result.blockers.push("Go root-module scope with local replacements requires full validation");
+      }
       result.executionEnv = { GOOS: buildEnv.GOOS, GOARCH: buildEnv.GOARCH, CGO_ENABLED: buildEnv.CGO_ENABLED, GOFLAGS: "" };
       return result;
     } catch {

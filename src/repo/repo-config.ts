@@ -27,6 +27,8 @@ import { join } from "node:path";
 export interface DiffCiRepositoryConfig {
   /** Globs for tests that must be selected on every analysed change, regardless of reachability. */
   alwaysRunTests?: string[];
+  /** Explicitly limit Go selection to the root module's `go test ./...` universe. */
+  go?: { scope: "root-module" };
 }
 
 function readJsonFile(path: string): Record<string, unknown> | undefined {
@@ -49,7 +51,11 @@ function parseConfig(raw: unknown): DiffCiRepositoryConfig {
   const alwaysRunTests = Array.isArray(record.alwaysRunTests)
     ? record.alwaysRunTests.filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "")
     : undefined;
-  return alwaysRunTests && alwaysRunTests.length > 0 ? { alwaysRunTests } : {};
+  const go = record.go as Record<string, unknown> | undefined;
+  return {
+    ...(alwaysRunTests && alwaysRunTests.length > 0 ? { alwaysRunTests } : {}),
+    ...(go?.scope === "root-module" ? { go: { scope: "root-module" as const } } : {}),
+  };
 }
 
 /**
@@ -60,7 +66,7 @@ export function readRepositoryConfig(repoPath: string, packageJson?: Record<stri
   const dedicated = readJsonFile(join(repoPath, "diffci.json"));
   if (dedicated) {
     const parsed = parseConfig(dedicated);
-    if (parsed.alwaysRunTests) return parsed;
+    if (parsed.alwaysRunTests || parsed.go) return parsed;
   }
   const pkg = packageJson ?? readJsonFile(join(repoPath, "package.json"));
   return parseConfig(pkg?.diffci);

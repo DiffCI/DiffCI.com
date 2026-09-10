@@ -242,8 +242,12 @@ export class ImpactAnalyzer {
     const evidence: ImpactEvidence[] = [];
     const riskSignals: ImpactRiskSignal[] = [];
     const fallbackReasons: string[] = [...(graphResult.adapterBlockers ?? [])];
+    const excludedGoRoots = profile.goExcludedModuleRoots ?? [];
+    if (delta.files.some(file => allChangePaths(file).some(path => excludedGoRoots.some(root => path.startsWith(root))))) {
+      fallbackReasons.push("Changes in a Go module outside the declared root-module scope require full validation");
+    }
     for (const file of delta.files) {
-      if (allChangePaths(file).some((path) => /(?:^|\/)(?:go\.(?:mod|sum|work)|go\.work\.sum|(?:vite|vue|nuxt)\.config\.[^/]+)$/.test(path))) {
+      if (allChangePaths(file).some((path) => /(?:^|\/)(?:diffci\.json|go\.(?:mod|sum|work)|go\.work\.sum|(?:vite|vue|nuxt)\.config\.[^/]+)$/.test(path))) {
         fallbackReasons.push(`Language/framework configuration changed: ${file.path}`);
       }
     }

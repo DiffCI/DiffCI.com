@@ -133,6 +133,13 @@ export interface ValidationJob {
 }
 
 const JOBS: Record<string, ValidationJob> = {
+  "vue-go-qualification-v2": {
+    id: "vue-go-qualification-v2",
+    description: "Build and test observer 0.1.2 candidate in Cloudflare; qualify Vue and explicitly scoped root-module Go.",
+    mode: "language-qualification",
+    expectedAgentIntegrity: "sha512-hVSGB09NQww115gTpqOB2lCVjETCxQXErsyvDEJ2lKXbt5BZ/VRMCzZ+R/IZE9P40HtPQ7ADWrKpUrUF+iwsNg==",
+    maxRunMs: 30 * 60_000,
+  },
   "vue-go-qualification-v1": {
     id: "vue-go-qualification-v1",
     description: "Cloudflare-only qualification of Vue test-utils and Go chi with observer 0.1.1, full/subset timings and controlled faults.",

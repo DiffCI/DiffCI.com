@@ -175,6 +175,8 @@ export interface ObservationResult {
   fallbackReasons: string[];
   /** The command DiffCI would have run. Present even in observe mode - it is the claim being tested. */
   proposedCommands: string[];
+  /** Explicit Go CI universe, when configured by the repository. */
+  goScope?: "root-module";
   /** Set when a selection was made but no runnable command could be built for it. */
   commandRefusalReason?: string;
   /** Selected paths no runner claimed. Non-empty means the command does not cover the selection. */

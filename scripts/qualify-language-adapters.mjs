@@ -40,12 +40,15 @@ try {
   Object.assign(process.env, { GOTOOLCHAIN: 'local', GOFLAGS: '', GOOS: 'linux', GOARCH: 'amd64', CGO_ENABLED: '0' });
   report.go = { checksum: goHash, version: run('go', ['version']).tail, env: run('go', ['env', 'GOOS', 'GOARCH', 'CGO_ENABLED', 'GOFLAGS']).tail };
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false));
-  report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/validation-env/*.test.ts'], '/opt/diffci', false));
+  report.checks.push(run('npm', ['test'], '/opt/diffci', false));
   if (report.checks.some(r => r.exitCode !== 0)) throw new Error('Remote validation source checks failed');
+  report.bootstrapAgentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync('/opt/diffci/dist-agent/agent.tgz')).digest('base64');
+  report.candidateBuild = run('npm', ['exec', '--', 'tsx', 'scripts/build-agent.ts', '--version=0.1.2'], '/opt/diffci');
+  const candidate = '/opt/diffci/dist-agent/diffci-observer-0.1.2.tgz';
   const host = `${root}/observer`; mkdirSync(host);
   writeFileSync(`${host}/package.json`, JSON.stringify({ name: 'qualification-host', private: true }));
-  run('npm', ['install', '--no-audit', '--no-fund', '/opt/diffci/dist-agent/agent.tgz'], host);
-  report.agentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync('/opt/diffci/dist-agent/agent.tgz')).digest('base64');
+  run('npm', ['install', '--no-audit', '--no-fund', candidate], host);
+  report.agentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync(candidate)).digest('base64');
   for (const spec of specs) {
     const entry = { ...spec, phase: 'setup' }; report.repositories.push(entry); save();
     const cwd = `${root}/${spec.name}-repo`;
@@ -54,6 +57,15 @@ try {
       run('git', ['checkout', '--detach', spec.sha], cwd);
       run('git', ['config', 'user.email', 'qualification@diffci.com'], cwd);
       run('git', ['config', 'user.name', 'DiffCI qualification'], cwd);
+      let base = spec.sha;
+      if (spec.name === 'go') {
+        entry.configuration = { go: { scope: 'root-module' } };
+        writeFileSync(`${cwd}/diffci.json`, JSON.stringify(entry.configuration));
+        run('git', ['add', 'diffci.json'], cwd);
+        run('git', ['commit', '-m', 'Declare root-module CI scope for qualification'], cwd);
+        base = run('git', ['rev-parse', 'HEAD'], cwd).tail.trim();
+      }
+      entry.baselineCommit = base;
       if (spec.name === 'vue') run('corepack', ['pnpm', 'install', '--frozen-lockfile'], cwd);
       else run('go', ['mod', 'download'], cwd);
       const full = spec.name === 'vue' ? ['node', ['node_modules/vitest/vitest.mjs', 'run', '--maxWorkers=2', '--minWorkers=2', '--sequence.seed=42']] : ['go', ['test', '-mod=readonly', '-json', '-count=1', './...']];
@@ -67,7 +79,7 @@ try {
       const head = run('git', ['rev-parse', 'HEAD'], cwd).tail.trim();
       const out = `${root}/${spec.name}-observation.json`;
       entry.phase = 'observe'; save();
-      entry.observerExecution = measured('node', [`${host}/node_modules/@diffci/observer/index.mjs`, 'observe', '--repo', cwd, '--base', spec.sha, '--head', head, '--out', out, '--no-send'], cwd);
+      entry.observerExecution = measured('node', [`${host}/node_modules/@diffci/observer/index.mjs`, 'observe', '--repo', cwd, '--base', base, '--head', head, '--out', out, '--no-send'], cwd);
       entry.observation = JSON.parse(readFileSync(out, 'utf8')); save();
       if (entry.observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observer changed the worktree');
       if (!['OBSERVED', 'REFUSED'].includes(entry.observation.status)) throw new Error('Observer failed');

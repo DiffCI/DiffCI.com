@@ -73,6 +73,28 @@ test("Vue unsupported templates, styles and malformed SFCs remain globally unsaf
   }
 });
 
+test("Vue literal Options API registrations preserve transitive dependencies", async () => {
+  const root = fixture({ ...jsBase,
+    "src/Empty.vue": '<script setup lang="ts"></script>',
+    "src/Parent.vue": '<script lang="ts">import { defineComponent } from "vue"; import Child from "./Child.vue"; export default defineComponent({components: { Child }})</script><template><Child /></template>',
+  });
+  try {
+    const graph = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(graph.adapterBlockers, []);
+    const impact = new ImpactAnalyzer().analyze(delta("src/value.ts"), graph, graph.profile);
+    assert.equal(impact.fallbackRequired, false);
+    assert.deepEqual(impact.affectedTests.map(t => t.path), ["tests/component.test.ts"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue spread or computed registrations cannot hide runtime dependencies", async () => {
+  for (const options of ['components: { Child, ...registry }', '...options, components: { Child }', 'components: { [name]: Child }']) {
+    const root = fixture({ ...jsBase, "src/Parent.vue": `<script>import Child from './Child.vue'; export default {${options}}</script><template><Child /></template>` });
+    try { assert.ok((await buildDependencyGraph({ repoPath: root })).adapterBlockers?.length); }
+    finally { rmSync(root, { recursive: true, force: true }); }
+  }
+});
+
 test("Vue without tsconfig still parses transitive JavaScript dependencies and test imports", async () => {
   const root = fixture({
     "package.json": JSON.stringify({ devDependencies: { vitest: "1" } }),
@@ -153,6 +175,31 @@ test("Go test JSON requires complete package outcomes", () => {
 
 let hasGo = false;
 try { execFileSync("go", ["version"], { stdio: "ignore", windowsHide: true }); hasGo = true; } catch { /* explicit skip on hosts without Go */ }
+test("explicit Go root scope isolates nested modules but never skips changes there", { skip: !hasGo }, async () => {
+  const root = fixture({
+    "diffci.json": JSON.stringify({ go: { scope: "root-module" } }),
+    "go.mod": "module example\n\ngo 1.22\n",
+    "lib.go": "package example\nfunc Value() int { return 1 }\n",
+    "lib_test.go": 'package example\nimport "testing"\nfunc TestValue(t *testing.T) { if Value() != 1 { t.Fatal("value") } }\n',
+    "nested/go.mod": "module nested\n\ngo 1.22\n",
+    "nested/nested.go": "package nested\n",
+    "nested/README.md": "nested module",
+  });
+  try {
+    const graph = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(graph.adapterBlockers, []);
+    assert.deepEqual(graph.profile.goExcludedModuleRoots, ["nested/"]);
+    assert.equal(new ImpactAnalyzer().analyze(delta("lib.go"), graph, graph.profile).fallbackRequired, false);
+    for (const path of ["nested/nested.go", "nested/README.md", "diffci.json"]) assert.equal(new ImpactAnalyzer().analyze(delta(path), graph, graph.profile).fallbackRequired, true);
+    const renamed = delta("README.md"); renamed.files[0].oldPath = "nested/README.md"; renamed.files[0].changeType = "renamed";
+    assert.equal(new ImpactAnalyzer().analyze(renamed, graph, graph.profile).fallbackRequired, true);
+    const command = planSelectiveTestCommands(graph.profile, ["lib_test.go"]).commands[0];
+    assert.ok(!command.args.some(arg => arg.includes("nested")));
+    execFileSync(command.executable, command.args, { cwd: root, env: { ...process.env, ...command.env }, stdio: "pipe" });
+    writeFileSync(join(root, "go.work"), "go 1.22\nuse .\n");
+    assert.ok((await buildDependencyGraph({ repoPath: root })).adapterBlockers?.length);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
 test("native Go graph and emitted subset command execute successfully", { skip: !hasGo }, async () => {
   const root = fixture({
     "go.mod": "module example\n\ngo 1.22\n",
