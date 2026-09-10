@@ -53,7 +53,7 @@ test('failed delivery remains pending and retry sends identical UUID and timesta
   try {
     assert.equal((await flushAnalytics(env)).pending, 1);
     assert.equal(db.prepare('SELECT sent_at FROM shadow_analytics_outbox').get()!.sent_at, null);
-    stub.mock.mockImplementation(async (_url: unknown, init: RequestInit) => { bodies.push(String(init.body)); return Response.json({status:1}); });
+    stub.mock.mockImplementation(async (_url: unknown, init: RequestInit) => { bodies.push(String(init.body)); return Response.json({status:'Ok'}); });
     assert.equal((await flushAnalytics(env)).pending, 0);
     assert.equal(bodies[0], bodies[1]);
     assert.equal((await flushAnalytics(env)).sent, 0);

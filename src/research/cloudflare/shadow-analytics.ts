@@ -68,8 +68,8 @@ export async function flushAnalytics(env: AnalyticsEnv): Promise<{ sent: number;
         body: JSON.stringify({ api_key: env.POSTHOG_API_KEY, batch: results.map(row => JSON.parse(row.payload)) }),
       });
       if (!r.ok) throw new Error(`PostHog HTTP ${r.status}`);
-      const body = await r.json() as { status?: number };
-      if (body.status !== 1) throw new Error('PostHog did not acknowledge batch');
+      const body = await r.json() as { status?: number | string };
+      if (body.status !== 1 && body.status !== 'Ok') throw new Error('PostHog did not acknowledge batch');
       for (const row of results) await env.RESEARCH_DB.prepare('UPDATE shadow_analytics_outbox SET sent_at = ?, attempts = attempts + 1, last_error = NULL WHERE event_key = ?').bind(new Date().toISOString(), row.event_key).run();
     } catch (e) {
       error = e instanceof Error ? e.message : 'delivery failed';
