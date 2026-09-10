@@ -840,6 +840,10 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
       let content = (await deps.sandbox.readFile("/workspace/language-qualification.json")).content;
       if (deps.job.id.startsWith("language-benchmark-")) {
         const report = JSON.parse(content);
+        if (report.spec?.id === "vue-router") {
+          report.originalScopeLabel = report.scope;
+          report.scope = "Configured Vitest unit and type tests in packages/router; browser CI not measured; prerequisite builds outside timing";
+        }
         // Vitest's JSON output-file reporter need not print the thrown error to stdout.
         // Preserve its actual structured failure messages before the container expires.
         for (const item of report.cases ?? []) {
@@ -858,7 +862,7 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
               execution.mutationMarkerSeen = execution.mutationMarkerSeen || messages.some(message => message.includes("DIFFCI_BENCHMARK_FAULT"));
             } catch { /* absent/unreadable JSON remains inconclusive */ }
           }
-          const detects = (execution: { exitCode: number | null; error?: string; mutationMarkerSeen?: boolean; summary: { readable?: boolean; failed?: number; failedSuites?: number } }) => execution.exitCode !== null && execution.exitCode !== 0 && !execution.error && execution.mutationMarkerSeen === true && execution.summary.readable === true && ((execution.summary.failed ?? 0) > 0 || (execution.summary.failedSuites ?? 0) > 0);
+          const detects = (execution?: { exitCode: number | null; error?: string; mutationMarkerSeen?: boolean; summary: { readable?: boolean; failed?: number; failedSuites?: number } }) => !!execution && execution.exitCode !== null && execution.exitCode !== 0 && !execution.error && execution.mutationMarkerSeen === true && execution.summary.readable === true && ((execution.summary.failed ?? 0) > 0 || (execution.summary.failedSuites ?? 0) > 0);
           item.fault.originalConsoleOutcome = item.fault.outcome;
           item.fault.fullDetected = detects(item.fault.full);
           item.fault.policyDetected = item.fault.policyIdenticalToFull ? item.fault.fullDetected : detects(item.fault.policy);
