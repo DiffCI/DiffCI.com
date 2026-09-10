@@ -79,6 +79,7 @@ import { makeD1IngestTokenStore } from "../../ingest/token.js";
 import { parseAgentArtifact } from "../../ingest/agent-artifact.js";
 import { decideRepositoryAdmission, EARLY_ACCESS_ENABLED } from "../../billing/repository-admission.js";
 import { makeD1ObservationStore } from "../../ingest/store.js";
+import { reportInstallationCreated, reportInstallationFailure } from "./conversion-telemetry.js";
 import { ingestObservation, MAX_REPORT_BYTES } from "../../ingest/ingest.js";
 import type { IngestRejection } from "../../ingest/types.js";
 import { runRetentionSweep } from "../../ingest/retention.js";
@@ -127,6 +128,9 @@ export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   GITHUB_APP_ID?: string;
   GITHUB_APP_PRIVATE_KEY?: string; // PKCS#8 PEM (secret)
   GITHUB_APP_WEBHOOK_SECRET?: string; // secret
+  POSTHOG_API_KEY?: string; // project capture token; installation telemetry only
+  POSTHOG_HOST?: string;
+  SENTRY_DSN?: string; // server-side error/installation telemetry
   // 2026-09-05 private-repository reports: Service Binding to diffci-research-sandbox (a plain fetch to
   // its workers.dev URL is blocked, error 1042) plus the research dispatch token it authenticates with.
   RESEARCH_WORKER?: { fetch(request: Request): Promise<Response> };
@@ -661,9 +665,11 @@ export default {
       );
       if (!result.ok) {
         logEvent("installation_webhook.rejected", { error: result.error });
+        ctx.waitUntil(reportInstallationFailure(env, result.error));
         return json({ ok: false, error: result.error }, result.error === "bad_signature" ? 401 : 400);
       }
       logEvent("installation_webhook.handled", { ...result });
+      if (result.action === "parked") ctx.waitUntil(reportInstallationCreated(env, result.repositories));
       return json(result, 200);
     }
 
