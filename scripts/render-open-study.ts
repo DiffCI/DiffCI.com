@@ -473,11 +473,6 @@ ${study.companionDocuments.map((d) => `    <li><a href="${d.href}">${escapeHtml(
       <a href="/${study.pagePath}">Open study</a>
       <a href="/data-handling">Data handling</a>
     </nav>
-    <p class="fine">
-      DiffCI currently ships under its founder's personal GitHub account,
-      <a href="https://github.com/adityankale190895">@adityankale190895</a>. A company identity and a
-      contact address for this site are not yet published; they will appear here when they are.
-    </p>
   </div>
 </footer>
 
