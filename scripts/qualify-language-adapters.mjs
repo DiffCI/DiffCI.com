@@ -14,6 +14,10 @@ function run(cmd, args, cwd = root, required = true, timeout = 600000) {
   const start = performance.now();
   const r = spawnSync(cmd, args, { cwd, env: process.env, encoding: 'utf8', timeout, maxBuffer: 32 * 1024 * 1024 });
   const result = { command: [cmd, ...args], exitCode: r.status, signal: r.signal, error: r.error?.message, mutationMarkerSeen: `${r.stdout ?? ''}\n${r.stderr ?? ''}`.includes('DIFFCI_MUTATION'), elapsedMs: Math.round(performance.now() - start), tail: `${r.stdout ?? ''}\n${r.stderr ?? ''}`.slice(-6000) };
+  if (r.status !== 0) {
+    const lines = `${r.stdout ?? ''}\n${r.stderr ?? ''}`.split('\n');
+    result.failureDetails = lines.flatMap((line, i) => /not ok|Error:|ERR_|FAIL/.test(line) ? lines.slice(Math.max(0, i - 1), i + 32) : []).join('\n').slice(0, 30000);
+  }
   console.log(JSON.stringify({ event: 'completed', command: cmd, exitCode: r.status, elapsedMs: result.elapsedMs }));
   if (required && r.status !== 0) throw new Error(JSON.stringify(result));
   return result;
@@ -40,6 +44,8 @@ try {
   Object.assign(process.env, { GOTOOLCHAIN: 'local', GOFLAGS: '', GOOS: 'linux', GOARCH: 'amd64', CGO_ENABLED: '0' });
   report.go = { checksum: goHash, version: run('go', ['version']).tail, env: run('go', ['env', 'GOOS', 'GOARCH', 'CGO_ENABLED', 'GOFLAGS']).tail };
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false));
+  report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/repo-config.test.ts', 'tests/client/observe.test.ts'], '/opt/diffci', false));
+  if (report.checks.some(r => r.exitCode !== 0)) throw new Error('Focused remote checks failed');
   report.checks.push(run('npm', ['test'], '/opt/diffci', false));
   if (report.checks.some(r => r.exitCode !== 0)) throw new Error('Remote validation source checks failed');
   report.bootstrapAgentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync('/opt/diffci/dist-agent/agent.tgz')).digest('base64');
