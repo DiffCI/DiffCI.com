@@ -187,11 +187,20 @@ try {
       if (!green(firstFull)) { c.status = 'BASELINE_RED_OR_UNREADABLE'; continue; }
       if (selected && spec.language === 'vue' && selected.some(p => !firstFull.summary.files.includes(p))) { c.policy = 'OUTSIDE_MEASURED_SUITE_FULL'; selected = undefined; }
       c.executedSelection = selected ?? null;
-      const firstPolicy = execute(selected);
-      c.pairs.push({ full: firstFull, policy: firstPolicy, netSavedMs: firstFull.elapsedMs - firstPolicy.elapsedMs - c.analysis.elapsedMs }); save();
-      const secondPolicy = execute(selected); const secondFull = execute();
-      c.pairs.push({ full: secondFull, policy: secondPolicy, netSavedMs: secondFull.elapsedMs - secondPolicy.elapsedMs - c.analysis.elapsedMs });
-      if (!c.pairs.every(p => green(p.full) && green(p.policy))) { c.status = 'UNSTABLE_OR_POLICY_FAILED'; continue; }
+      let secondFull;
+      if (selected === undefined) {
+        secondFull = execute();
+        c.baselines = [firstFull, secondFull];
+        c.fullPolicyIsIdentical = true;
+        c.observerOverheadMs = c.analysis.elapsedMs;
+        if (!green(secondFull)) { c.status = 'UNSTABLE_OR_POLICY_FAILED'; continue; }
+      } else {
+        const firstPolicy = execute(selected);
+        c.pairs.push({ full: firstFull, policy: firstPolicy, netSavedMs: firstFull.elapsedMs - firstPolicy.elapsedMs - c.analysis.elapsedMs }); save();
+        const secondPolicy = execute(selected); secondFull = execute();
+        c.pairs.push({ full: secondFull, policy: secondPolicy, netSavedMs: secondFull.elapsedMs - secondPolicy.elapsedMs - c.analysis.elapsedMs });
+        if (!c.pairs.every(p => green(p.full) && green(p.policy))) { c.status = 'UNSTABLE_OR_POLICY_FAILED'; continue; }
+      }
       const universe = s => JSON.stringify({ files: s.files, packages: Object.keys(s.packages ?? {}).sort(), total: s.total });
       if (universe(firstFull.summary) !== universe(secondFull.summary)) { c.status = 'FULL_UNIVERSE_CHANGED'; continue; }
       c.status = selected === undefined ? 'FULL_POLICY_MEASURED' : selected.length === 0 ? 'EMPTY_SELECTION_MEASURED' : 'SELECTIVE_POLICY_MEASURED';
@@ -206,9 +215,11 @@ try {
             c.fault = { path, kind: m.kind, selectionFrozenBeforeMutation: true };
             writeFileSync(join(checkout, path), m.changed);
             try {
-              c.fault.full = execute(); c.fault.policy = execute(selected);
+              c.fault.full = execute();
+              if (selected !== undefined) c.fault.policy = execute(selected);
+              else c.fault.policyIdenticalToFull = true;
               const detects = r => r.exitCode !== null && r.exitCode !== 0 && !r.error && r.mutationMarkerSeen && r.summary.readable && (r.summary.failed > 0 || r.summary.failedSuites > 0);
-              c.fault.fullDetected = detects(c.fault.full); c.fault.policyDetected = detects(c.fault.policy);
+              c.fault.fullDetected = detects(c.fault.full); c.fault.policyDetected = c.fault.policyIdenticalToFull ? c.fault.fullDetected : detects(c.fault.policy);
               c.fault.outcome = !c.fault.fullDetected ? 'INCONCLUSIVE_FULL_DID_NOT_DETECT' : c.fault.policyDetected ? 'DETECTED' : 'MISSED_OR_UNREADABLE_POLICY';
             } finally { writeFileSync(join(checkout, path), m.original); }
           }
