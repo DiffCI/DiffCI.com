@@ -13,7 +13,7 @@ function run(cmd, args, cwd = root, required = true, timeout = 600000) {
   console.log(JSON.stringify({ event: 'command', cmd, args, cwd }));
   const start = performance.now();
   const r = spawnSync(cmd, args, { cwd, env: process.env, encoding: 'utf8', timeout, maxBuffer: 32 * 1024 * 1024 });
-  const result = { command: [cmd, ...args], exitCode: r.status, signal: r.signal, error: r.error?.message, elapsedMs: Math.round(performance.now() - start), tail: `${r.stdout ?? ''}\n${r.stderr ?? ''}`.slice(-6000) };
+  const result = { command: [cmd, ...args], exitCode: r.status, signal: r.signal, error: r.error?.message, mutationMarkerSeen: `${r.stdout ?? ''}\n${r.stderr ?? ''}`.includes('DIFFCI_MUTATION'), elapsedMs: Math.round(performance.now() - start), tail: `${r.stdout ?? ''}\n${r.stderr ?? ''}`.slice(-6000) };
   console.log(JSON.stringify({ event: 'completed', command: cmd, exitCode: r.status, elapsedMs: result.elapsedMs }));
   if (required && r.status !== 0) throw new Error(JSON.stringify(result));
   return result;
@@ -40,7 +40,7 @@ try {
   Object.assign(process.env, { GOTOOLCHAIN: 'local', GOFLAGS: '', GOOS: 'linux', GOARCH: 'amd64', CGO_ENABLED: '0' });
   report.go = { checksum: goHash, version: run('go', ['version']).tail, env: run('go', ['env', 'GOOS', 'GOARCH', 'CGO_ENABLED', 'GOFLAGS']).tail };
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false));
-  report.checks.push(run('npm', ['exec', '--', 'vitest', 'run', 'tests/validation-env'], '/opt/diffci', false));
+  report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/validation-env/*.test.ts'], '/opt/diffci', false));
   if (report.checks.some(r => r.exitCode !== 0)) throw new Error('Remote validation source checks failed');
   const host = `${root}/observer`; mkdirSync(host);
   writeFileSync(`${host}/package.json`, JSON.stringify({ name: 'qualification-host', private: true }));
@@ -89,7 +89,7 @@ try {
       writeFileSync(path, original.replace(spec.from, spec.to));
       try {
         entry.fault = { full: measured(...full, cwd), policy: measured(...policy, cwd) };
-        const detects = r => r.exitCode !== null && r.exitCode !== 0 && r.tail.includes('DIFFCI_MUTATION');
+        const detects = r => r.exitCode !== null && r.exitCode !== 0 && !r.error && r.mutationMarkerSeen;
         entry.fault.fullDetected = detects(entry.fault.full); entry.fault.policyDetected = detects(entry.fault.policy);
       } finally { writeFileSync(path, original + '\n'); }
       entry.outcome = !entry.fault.fullDetected ? 'INCONCLUSIVE_FAULT' : !entry.fault.policyDetected ? 'UNSAFE' : result.mode === 'FULL' ? 'FULL_FALLBACK_NO_SELECTIVE_QUALIFICATION' : 'BOUNDED_SELECTIVE_CASE_PASSED';
