@@ -160,7 +160,14 @@ try {
         c.configurationOverlay = { go: { scope: 'root-module' } };
         writeFileSync(join(checkout, 'diffci.json'), JSON.stringify(c.configurationOverlay));
         c.setup = run('go', ['mod', 'download'], checkout).record;
-      } else c.setup = run('corepack', ['pnpm', 'install', '--frozen-lockfile'], checkout, true, 480000).record;
+      } else {
+        c.setup = run('corepack', ['pnpm', 'install', '--frozen-lockfile'], checkout, true, 480000).record;
+        if (spec.id === 'vue-router') {
+          // Its Vitest type tests consume the outputs of the documented preceding builds.
+          c.build = run('corepack', ['pnpm', '--filter', 'vue-router', 'run', 'build'], checkout).record;
+          c.declarations = run('corepack', ['pnpm', '--filter', 'vue-router', 'run', 'build:dts'], checkout).record;
+        }
+      }
       const out = join(root, `observation-${index}.json`);
       c.analysis = run('node', [join(host, 'node_modules/@diffci/observer/index.mjs'), 'observe', '--repo', checkout, '--base', candidate.base, '--head', candidate.head, '--out', out, '--no-send'], checkout, false, 180000).record;
       c.observation = JSON.parse(readFileSync(out, 'utf8'));
