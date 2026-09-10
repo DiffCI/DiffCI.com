@@ -1,5 +1,18 @@
 # Cloudflare language qualification
 
+## Observer 0.1.2 candidate
+
+`vue-go-qualification-v2` runs the full DiffCI test suite and builds the candidate
+observer inside Cloudflare before installing it. Its report records both the verified
+bootstrap artifact integrity and the newly built candidate integrity. The repository
+pins and faults are unchanged. For Go only, a committed `diffci.json` declaring
+`go.scope: root-module` is added before baselines and observation; both the upstream
+pin and the resulting baseline commit are recorded. This qualifies that declared CI
+scope, not every module in the repository. The candidate is not automatically promoted
+to production by the job.
+
+## Original observer 0.1.1 protocol
+
 The `vue-go-qualification-v1` validation job runs only in a Linux Cloudflare
 validation container. The desktop performs source editing, archive upload,
 Worker deployment, and evidence retrieval. No desktop test workloads are needed.
