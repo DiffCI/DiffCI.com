@@ -1560,6 +1560,18 @@ export class ValidationShard {
         await this.state.storage.deleteAlarm();
         const record = await this.state.storage.get<ValidationRecord>(STATE_KEY);
         if (record && !TERMINAL_STEPS.has(record.step)) {
+          if (record.jobId.startsWith("language-benchmark-")) {
+            const { getSandbox } = await import("@cloudflare/sandbox");
+            const sandbox: SandboxLike = getSandbox(this.env.VALIDATION_CONTAINER as never, `validation-${record.runId}`, SANDBOX_OPTS);
+            const key = `${resultPrefix(record)}/language-qualification.json`;
+            try {
+              const partial = await sandbox.readFile("/workspace/language-qualification.json");
+              await this.env.VALIDATION_BUCKET.put(key, partial.content);
+              record.resultKeys = [...(record.resultKeys ?? []), key];
+            } catch { /* bootstrap may not have produced a report yet */ }
+            if (record.processId) await sandbox.killProcess(record.processId);
+            await sandbox.destroy();
+          }
           record.step = "cancelled";
           await this.state.storage.put(STATE_KEY, record);
         }

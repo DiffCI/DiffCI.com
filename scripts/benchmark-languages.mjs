@@ -111,6 +111,17 @@ try {
     writeFileSync(join(root, 'offset.go'), 'package main\nimport("go/parser";"go/token";"go/ast";"fmt";"os")\nfunc main(){fset:=token.NewFileSet(); f,e:=parser.ParseFile(fset,os.Args[1],nil,0);if e!=nil{panic(e)};for _,d:=range f.Decls{if fn,ok:=d.(*ast.FuncDecl);ok&&fn.Body!=nil&&fn.Name.Name!="init"{fmt.Println(fset.Position(fn.Body.Lbrace).Offset+1);return}};fmt.Println(-1)}\n');
     run('go', ['build', '-o', join(root, 'go-function-offset'), join(root, 'offset.go')]);
   }
+  // Standard CI users cannot bypass chmod-based permission tests (Cobra exposed this).
+  run('useradd', ['--create-home', '--home-dir', join(root, 'home'), 'diffci-benchmark']);
+  const uid = Number(run('id', ['-u', 'diffci-benchmark']).stdout.trim());
+  const gid = Number(run('id', ['-g', 'diffci-benchmark']).stdout.trim());
+  run('chown', ['-R', `${uid}:${gid}`, root]);
+  run('chown', [`${uid}:${gid}`, '/workspace/language-qualification.json']);
+  Object.assign(process.env, { HOME: join(root, 'home'), GOPATH: join(root, 'gopath'), GOCACHE: join(root, 'gocache'), COREPACK_HOME: join(root, 'corepack'), npm_config_cache: join(root, 'npm-cache'), TMPDIR: root });
+  process.setgroups([]); process.setgid(gid); process.setuid(uid);
+  report.identity = { uid: process.getuid(), gid: process.getgid(), root: false };
+  // The report lives outside the target checkout, in our writable benchmark directory.
+  // /workspace is owned by bootstrap's root user, so establish this file before dropping privileges.
   if (spec.id === 'vue-test-utils') {
     report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
     report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/validation-env/*.test.ts'], '/opt/diffci', false).record);
