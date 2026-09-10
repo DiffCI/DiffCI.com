@@ -49,6 +49,8 @@ import { makeD1ShadowStageEconomicsStore, type D1Binding as StageEconomicsD1 } f
 import { parseStageClassificationConfig } from "../../shadow/stage-classification-config.js";
 import { fetchRunJobs } from "../../shadow/github-baseline.js";
 import { eraseInstallation as eraseShadowInstallation, sweepExpiredEvidence } from "./shadow-erasure.js";
+import { reportInstallationFailure } from "../../product/cloudflare/conversion-telemetry.js";
+import { recordInstallationWebhook, recordReportServed, syncAnalytics, flushAnalytics, enqueueAnalytics } from "./shadow-analytics.js";
 
 // standard-2 Sandbox instance type (wrangler.research-sandbox.jsonc): 1 vCPU, 6 GiB memory, 12 GB disk.
 // Real Container CPU billing is active-use-only, but wall-clock is used as a conservative (over-, not
@@ -89,6 +91,11 @@ interface ValidationEnv {
   SHADOW_GITHUB_APP_ID?: string;
   SHADOW_GITHUB_APP_PRIVATE_KEY?: string;
   SHADOW_GITHUB_WEBHOOK_SECRET?: string;
+  /** Optional conversion/error telemetry; no repository, installer, or payload fields are sent. */
+  POSTHOG_API_KEY?: string;
+  POSTHOG_HOST?: string;
+  POSTHOG_IDENTITY_SALT?: string;
+  SENTRY_DSN?: string;
   /** Queue producer binding (wrangler.research-sandbox.jsonc "queues") for push-triggered polls -
    * consumed by this same Worker's queue() handler below. Optional in the type only so a deploy
    * without the binding fails loudly at the webhook (logged, cron safety net still observes) rather
@@ -819,7 +826,7 @@ function makeIdentificationDeps(env: ValidationEnv): IdentificationJobDeps {
   };
 }
 
-async function shadowReport(request: Request, env: ValidationEnv): Promise<Response> {
+async function shadowReport(request: Request, env: ValidationEnv, ctx: ExecutionCtx): Promise<Response> {
   const url = new URL(request.url);
   const repository = url.searchParams.get("repository") ?? "";
   if (!REPORT_REPOSITORY_PATTERN.test(repository)) {
@@ -842,6 +849,7 @@ async function shadowReport(request: Request, env: ValidationEnv): Promise<Respo
 
   const report = await buildLiveShadowReport(env.RESEARCH_DB as unknown as ShadowReportD1, repository, days);
   const text = renderShadowReport(report);
+  if (env.POSTHOG_API_KEY) ctx.waitUntil(recordReportServed(env, repository, days).catch(e => console.error('shadow-analytics: report capture failed', String(e))));
   return new Response(`${text}\n`, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" } });
 }
 
@@ -1574,6 +1582,17 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
       log: (message) => console.log(message),
     },
   );
+  if (outcome.body.ok !== true) {
+    ctx.waitUntil(reportInstallationFailure(env, String(outcome.body.error ?? "unknown")));
+  } else {
+    try {
+      await recordInstallationWebhook(env, request.headers.get("X-GitHub-Event"), rawBody, request.headers.get("X-GitHub-Delivery"));
+      if (env.POSTHOG_API_KEY) ctx.waitUntil(flushAnalytics(env));
+    } catch (error) {
+      console.error('shadow-analytics: durable webhook capture failed', String(error));
+      return json({ ok: false, error: 'analytics-persistence-failed-retry' }, 503);
+    }
+  }
   return json(outcome.body, outcome.status);
 }
 
@@ -2544,6 +2563,21 @@ export default {
       }
       return shadowStatus(request, env);
     }
+    if (request.method === "POST" && (url.pathname === "/v1/shadow/analytics/sync" || url.pathname === "/v1/shadow/analytics/verify")) {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) return json({ ok: false, error: "unauthorized" }, 401);
+      if (url.pathname.endsWith('/verify')) {
+        await enqueueAnalytics(env, 'integration-verification-v1', 'diffci_analytics_verified', 'integration-test', {
+          is_test: true, is_internal: true, source: 'operator_verification',
+        });
+        return json({ ok: true, ...await flushAnalytics(env) });
+      }
+      return json({ ok: true, result: await syncAnalytics(env) });
+    }
+    if (request.method === "GET" && url.pathname === "/v1/shadow/analytics/status") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) return json({ ok: false, error: "unauthorized" }, 401);
+      const counts = await env.RESEARCH_DB.prepare('SELECT COUNT(*) AS total, SUM(CASE WHEN sent_at IS NULL THEN 1 ELSE 0 END) AS pending FROM shadow_analytics_outbox').bind().first();
+      return json({ ok: true, configured: !!env.POSTHOG_API_KEY && !!env.POSTHOG_IDENTITY_SALT, counts });
+    }
     if (request.method === "GET" && url.pathname === "/v1/shadow/day7-status") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
         return json({ ok: false, error: "unauthorized" }, 401);
@@ -2556,7 +2590,7 @@ export default {
     }
     if (request.method === "GET" && url.pathname === "/v1/shadow/report") {
       // Deliberately PUBLIC - see shadowReport()'s own doc comment for why.
-      return shadowReport(request, env);
+      return shadowReport(request, env, ctx);
     }
     if (request.method === "POST" && url.pathname === "/v1/shadow/source") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) {
@@ -2644,6 +2678,14 @@ export default {
    * SHADOW_CRON_ENABLED guards just this handler so autonomous polling can be switched off without
    * taking down the manually-driven research API. */
   async scheduled(_controller: { scheduledTime: number; cron: string }, env: ValidationEnv): Promise<void> {
+    // Independent of analysis availability: keep retrying analytics during source-integrity pauses.
+    if (env.POSTHOG_API_KEY) {
+      try { await syncAnalytics(env); }
+      catch (e) {
+        console.error('shadow-analytics: inventory sync failed', String(e));
+        await flushAnalytics(env).catch(error => console.error('shadow-analytics: retry failed', String(error)));
+      }
+    }
     if (env.DIFFCI_RESEARCH_ENABLED !== "true" || env.SHADOW_CRON_ENABLED !== "true") {
       console.log("shadow-cron: disabled (DIFFCI_RESEARCH_ENABLED/SHADOW_CRON_ENABLED) - skipping scheduled run");
       return;

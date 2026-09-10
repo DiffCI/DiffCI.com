@@ -107,8 +107,21 @@
     </table>
   </div>
   <p>
-    Storage is Cloudflare D1 and R2, on infrastructure operated solely for DiffCI. Nothing is sold, shared
-    with third parties, or used to train anything.
+    Analysis records and evidence are stored in Cloudflare D1 and R2, on infrastructure operated for
+    DiffCI. They are not sold or used to train models.
+  </p>
+
+  <h2>Product analytics</h2>
+  <p>
+    DiffCI uses PostHog's US Cloud to measure installations, repository access changes, suspensions,
+    uninstalls, first predictions, and report delivery. These events contain pseudonymous installation
+    and repository identifiers, counts, timestamps, and an internal/test account flag. They do not
+    contain repository names, source code, file paths, report contents, credentials, or installer email
+    addresses. A delivered report does not establish that a person read it.
+  </p>
+  <p>
+    Product analytics are separate from the analysis records and evidence covered by the deletion
+    rules below. Contact us to request deletion of analytics associated with your installation.
   </p>
 
   <h2>How long</h2>
