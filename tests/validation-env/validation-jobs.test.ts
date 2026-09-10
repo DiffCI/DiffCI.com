@@ -64,6 +64,17 @@ describe("the validation job allowlist", () => {
   it("pins every job to an unambiguous commit and repository", () => {
     for (const id of listValidationJobs()) {
       const job = getValidationJob(id)!;
+      if (id.startsWith("language-benchmark-")) {
+        const cohort = JSON.parse(readFileSync(join(repoRoot, "scripts", "language-benchmark-cohort.json"), "utf8"));
+        const member = cohort.repositories.find((r: { id: string }) => r.id === id.slice("language-benchmark-".length));
+        assert.ok(member);
+        assert.ok(isPinnedSha(member.sha));
+        assert.ok(isRepositorySlug(member.repository));
+        assert.equal(cohort.commitsPerRepository, 8);
+        assert.equal(job.maxRunMs, 45 * 60_000);
+        assert.equal(job.expectedAgentIntegrity, "sha512-FiVDAHdmzEZKE1Gh0EzfyTv0LNxfzy6JsrcEGR52G41ErixoS7DOha9qr1m+D1fRwVk6o3j+UbXcRk+jupuQUg==");
+        continue;
+      }
       // The language job clones two fixed repositories from its source-pinned harness.
       if (job.mode === "language-qualification") {
         const harness = readFileSync(join(repoRoot, "scripts", "qualify-language-adapters.mjs"), "utf8");

@@ -1460,7 +1460,9 @@ async function stepValidationInner(record: ValidationRecord, deps: ValidationSte
     case "ciReproducing":
       return ciReproduceStep(record, deps);
     case "languageQualifying":
-      return runHarnessPass(record, deps, ["exec", "--", "tsx", "scripts/qualify-language-adapters.mjs"], "language-qualification", (r) => {
+      return runHarnessPass(record, deps, deps.job.id.startsWith("language-benchmark-")
+        ? ["exec", "--", "tsx", "scripts/benchmark-languages.mjs", deps.job.id.slice("language-benchmark-".length)]
+        : ["exec", "--", "tsx", "scripts/qualify-language-adapters.mjs"], "language-qualification", (r) => {
         r.step = "collecting";
         return { record: r, nextAlarmDelayMs: 0 };
       });
