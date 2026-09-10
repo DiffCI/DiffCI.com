@@ -64,6 +64,15 @@ describe("the validation job allowlist", () => {
   it("pins every job to an unambiguous commit and repository", () => {
     for (const id of listValidationJobs()) {
       const job = getValidationJob(id)!;
+      // The language job clones two fixed repositories from its source-pinned harness.
+      if (job.mode === "language-qualification") {
+        const harness = readFileSync(join(repoRoot, "scripts", "qualify-language-adapters.mjs"), "utf8");
+        assert.match(harness, /93321272b33fe931da71d636654b41f45058ed0c/);
+        assert.match(harness, /b1c9ab47626cc46b34393ad4d35779c4363c4e1e/);
+        assert.equal(job.maxRunMs, 30 * 60_000);
+        assert.ok(job.expectedAgentIntegrity?.startsWith("sha512-"));
+        continue;
+      }
       // Calibration measures the laboratory itself: it clones nothing, so it pins nothing.
       if (job.mode === "calibrate") { assert.equal(job.repository, undefined); assert.equal(job.pinnedHeadSha, undefined); continue; }
       // The survey names no repository either - its subject is a frozen frame of 40, and it clones each
