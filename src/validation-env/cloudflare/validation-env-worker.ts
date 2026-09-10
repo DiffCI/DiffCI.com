@@ -73,6 +73,8 @@ function shardName(runId: string, index: number, shardCount: number): string {
 
 /** Only the artefacts the shard itself writes are readable back. */
 const COLLECTED_FILES: ReadonlySet<string> = new Set([
+  "language-qualification.json",
+  "language-qualification.log",
   // Reproduction runs.
   "manifest.json",
   "results.jsonl",

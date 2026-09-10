@@ -71,7 +71,7 @@ export interface ValidationJob {
    * qualify before mutating it means anything, because a mutation pass against a suite that was never
    * green attributes failures to the mutation that were already there.
    */
-  mode: "reproduce" | "qualify" | "calibrate" | "survey" | "density" | "observe-pairs" | "ci-reproduce";
+  mode: "reproduce" | "qualify" | "calibrate" | "survey" | "density" | "observe-pairs" | "ci-reproduce" | "language-qualification";
   /**
    * Universe-sanity expectations, checked in the canonical environment BEFORE the suite qualification.
    * Present only on apparatus-qualification jobs. See docs/apparatus-qualification-gen-c.md.
@@ -133,6 +133,13 @@ export interface ValidationJob {
 }
 
 const JOBS: Record<string, ValidationJob> = {
+  "vue-go-qualification-v1": {
+    id: "vue-go-qualification-v1",
+    description: "Cloudflare-only qualification of Vue test-utils and Go chi with observer 0.1.1, full/subset timings and controlled faults.",
+    mode: "language-qualification",
+    expectedAgentIntegrity: "sha512-hVSGB09NQww115gTpqOB2lCVjETCxQXErsyvDEJ2lKXbt5BZ/VRMCzZ+R/IZE9P40HtPQ7ADWrKpUrUF+iwsNg==",
+    maxRunMs: 30 * 60_000,
+  },
   /**
    * The reproduction experiment (2026-08-28). Same corpus, same agent bytes, same commands, canonical
    * environment - the only deliberate change is the environment itself.

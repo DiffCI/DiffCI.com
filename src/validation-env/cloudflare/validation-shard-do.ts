@@ -91,6 +91,7 @@ export type ValidationStep =
   | "verifyingUniverse"
   | "registering"
   | "ciReproducing"
+  | "languageQualifying"
   | "locating"
   | "mutating"
   | "collecting"
@@ -147,7 +148,7 @@ export interface ValidationRecord {
   error?: string;
   /** Live progress of the running harness pass, refreshed on every poll. Diagnostic, never load-bearing. */
   progress?: { label: string; elapsedMs: number; at: number; tail: string };
-  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string; register?: string; "ci-reproduce"?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string; register?: string; "ci-reproduce"?: string; "language-qualification"?: string };
   /** Set once evidence preservation has run, so a failure inside it cannot loop. */
   evidencePreserved?: boolean;
   /** The step that actually failed, kept because `step` becomes "preserving" then "failed". */
@@ -415,6 +416,11 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, job } = deps;
   const t0 = deps.now();
   try {
+    if (job.mode === "language-qualification") {
+      record.timings.prepareMs = deps.now() - t0;
+      record.step = "languageQualifying";
+      return { record, nextAlarmDelayMs: 0 };
+    }
     // Calibration measures the laboratory, not a repository: nothing is cloned and nothing is pinned.
     if (job.mode === "calibrate") {
       record.timings.prepareMs = deps.now() - t0;
@@ -504,7 +510,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe" | "register" | "ci-reproduce",
+  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe" | "register" | "ci-reproduce" | "language-qualification",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -828,6 +834,18 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, bucket } = deps;
   const t0 = deps.now();
   try {
+    if (deps.job.mode === "language-qualification") {
+      const content = (await deps.sandbox.readFile("/workspace/language-qualification.json")).content;
+      JSON.parse(content);
+      const key = `${resultPrefix(record)}/language-qualification.json`;
+      const logKey = `${resultPrefix(record)}/language-qualification.log`;
+      await deps.bucket.put(key, content);
+      await deps.bucket.put(logKey, record.logs?.["language-qualification"] ?? "");
+      record.resultKeys = [key, logKey];
+      record.timings.collectMs = deps.now() - t0;
+      record.step = "done";
+      return { record, nextAlarmDelayMs: null };
+    }
     // A pair job that mutates produces results.jsonl, a manifest and run directories like any other
     // mutation run, so it takes the FULL collect path. Only the observation-only pair job collects just
     // the corpus.
@@ -1439,6 +1457,11 @@ async function stepValidationInner(record: ValidationRecord, deps: ValidationSte
       return registerStep(record, deps);
     case "ciReproducing":
       return ciReproduceStep(record, deps);
+    case "languageQualifying":
+      return runHarnessPass(record, deps, ["exec", "--", "tsx", "scripts/qualify-language-adapters.mjs"], "language-qualification", (r) => {
+        r.step = "collecting";
+        return { record: r, nextAlarmDelayMs: 0 };
+      });
     case "locating":
       return locate(record, deps);
     case "mutating":
