@@ -38,7 +38,7 @@ export const AGENT_ENTRY = "src/client/cli.ts";
  * registry with the integrity hashes in the consumer's lockfile - and means DiffCI never redistributes
  * third-party code, so no third-party licence notice obligation is created by this build.
  */
-const EXTERNAL_DEPENDENCIES = { typescript: "5.8.3", yaml: "2.9.0" } as const;
+const EXTERNAL_DEPENDENCIES = { typescript: "5.8.3", yaml: "2.9.0", "@vue/compiler-sfc": "3.5.42" } as const;
 
 /** Everything that may appear in the published tarball. Anything else is a build failure. */
 const PERMITTED_FILES = ["package.json", "index.mjs", "LICENSE", "README.md"];

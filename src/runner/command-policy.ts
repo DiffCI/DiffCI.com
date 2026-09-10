@@ -27,18 +27,22 @@ export interface ExecutionCommand {
   executable: string;
   args: string[];
   cwd?: string;
+  env?: Record<string, string>;
 }
+
+export const COMMAND_ENV_KEYS: ReadonlySet<string> = new Set(["GOOS", "GOARCH", "CGO_ENABLED", "GOFLAGS", "GOTOOLCHAIN", "GOPROXY", "GOSUMDB", "GOWORK", "GOENV"]);
 
 // R2 Part 4: deliberately restrictive. Only what the ONE controlled experiment needs - `npx` added
 // alongside node/npm/git specifically to invoke this repo's own local `tsx` test runner without a
-// global install; nothing else is permitted.
-export const ALLOWED_EXECUTABLES: ReadonlySet<string> = new Set(["node", "npm", "npx", "git"]);
+// global install. Go is also permitted for the package-test adapter; the host must supply Go.
+export const ALLOWED_EXECUTABLES: ReadonlySet<string> = new Set(["node", "npm", "npx", "git", "go"]);
 
 export type CommandPolicyViolation =
   | "executable_not_allowed"
   | "null_byte_in_argument"
   | "null_byte_in_executable"
   | "empty_executable"
+  | "environment_not_allowed"
   | "path_traversal_in_cwd";
 
 export interface CommandValidationResult {
@@ -53,6 +57,9 @@ export interface CommandValidationResult {
  * C-string command lines cannot represent them at all) - everything else is a valid, safe argument
  * VALUE once quoted, no matter how shell-metacharacter-heavy it looks. */
 export function validateCommand(command: ExecutionCommand): CommandValidationResult {
+  if (command.env !== undefined && (command.env === null || typeof command.env !== "object" || Array.isArray(command.env) || Object.entries(command.env).some(([key, value]) => !COMMAND_ENV_KEYS.has(key) || typeof value !== "string" || value.includes("\0")))) {
+    return { ok: false, violation: "environment_not_allowed" };
+  }
   if (!command.executable) return { ok: false, violation: "empty_executable" };
   if (command.executable.includes("\0")) return { ok: false, violation: "null_byte_in_executable" };
   if (!ALLOWED_EXECUTABLES.has(command.executable)) {
@@ -83,6 +90,7 @@ export function shellQuoteArg(value: string): string {
 export function buildSafeShellCommand(command: ExecutionCommand): string {
   const validation = validateCommand(command);
   if (!validation.ok) throw new Error(`refusing to build a shell command for a policy-violating ExecutionCommand: ${validation.violation}${validation.detail ? ` (${validation.detail})` : ""}`);
-  const invocation = [shellQuoteArg(command.executable), ...command.args.map(shellQuoteArg)].join(" ");
+  const environment = Object.entries(command.env ?? {}).map(([key, value]) => `${key}=${shellQuoteArg(value)}`);
+  const invocation = [...environment, shellQuoteArg(command.executable), ...command.args.map(shellQuoteArg)].join(" ");
   return command.cwd ? `cd ${shellQuoteArg(command.cwd)} && ${invocation}` : invocation;
 }

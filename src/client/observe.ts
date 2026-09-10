@@ -8,7 +8,8 @@
  *
  * Two properties are load-bearing, and both are enforced here rather than promised:
  *
- * READ-ONLY. The engine modules called below only read (verified: no write in src/repo, src/git). This
+ * READ-ONLY CHECKOUT. Analysis does not modify source; Go metadata can populate tool caches outside
+ * the checkout, with module edits and downloads disabled. This
  * function additionally records HEAD and `git status --porcelain` before and after itself, so a run that
  * DID dirty the tree says so in its own report instead of being discovered weeks later.
  *
@@ -23,7 +24,7 @@ import { createHash } from "node:crypto";
 import { relative, resolve } from "node:path";
 
 import { analyzeGitDelta } from "../git/git-diff.js";
-import { classifyTypeScriptProject, buildDependencyGraph } from "../repo/graph.js";
+import { classifyRepositoryProject, buildDependencyGraph } from "../repo/graph.js";
 import { ImpactAnalyzer } from "../repo/impact.js";
 import { runPathBaseline } from "../planner/path-baseline.js";
 import { commandSpecToString, planSelectiveTestCommands } from "../planner/test-command.js";
@@ -193,12 +194,12 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     if (!resolved.ok) return finish("REFUSED", "context", { reason: resolved.reason });
     range = resolved.range;
 
-    // The eligibility gate is asked of the graph builder itself (classifyTypeScriptProject), not of a
+    // The eligibility gate is asked of the graph builder itself (classifyRepositoryProject), not of a
     // separate list of conditions that can drift away from it. Phase 01 F3 is what that drift costs.
-    const capability = classifyTypeScriptProject(repoPath);
+    const capability = classifyRepositoryProject(repoPath);
     if (!capability.capable) {
       return finish("REFUSED", "eligibility", {
-        reason: `DiffCI can only analyse TypeScript/JavaScript projects today: ${capability.reason}`,
+        reason: `DiffCI supports TypeScript/JavaScript projects, Vue components, and root Go modules: ${capability.reason}`,
       });
     }
 

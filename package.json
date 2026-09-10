@@ -79,6 +79,7 @@
   },
   "dependencies": {
     "@types/node": "^22.15.12",
+    "@vue/compiler-sfc": "3.5.42",
     "typescript": "^5.8.3",
     "yaml": "^2.9.0"
   },

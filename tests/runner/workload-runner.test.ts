@@ -17,6 +17,14 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const WORKLOAD_RUNNER = join(REPO_ROOT, "ops", "runner-agent", "workload-runner.cjs");
 
+it("forwards validated Go context without allowing general environment injection", () => {
+  const command = { executable: "node", args: ["-e", "console.log(process.env.GOOS)"], env: { GOOS: "fixture-os" } };
+  const result = runWorkloadRunner(baseSpec([command]));
+  assert.equal(result.steps[0].stdout.trim(), "fixture-os");
+  const rejected = runWorkloadRunner(baseSpec([{ ...command, env: { NODE_OPTIONS: "--inspect" } }]));
+  assert.match(rejected.fatalError ?? "", /environment is not allowed/);
+});
+
 function runWorkloadRunner(spec: unknown): { steps: Array<{ executable: string; exitCode: number | null; signal: string | null; timedOut: boolean; outputTruncated: boolean; durationMs: number; stdout: string; stderr: string; expectedStdoutMismatch?: boolean }>; failedAtStep: number | null; fatalError?: string } {
   const dir = mkdtempSync(join(tmpdir(), "diffci-workload-runner-test-"));
   const specPath = join(dir, "spec.json");
@@ -37,7 +45,7 @@ function runWorkloadRunner(spec: unknown): { steps: Array<{ executable: string; 
   }
 }
 
-function baseSpec(steps: Array<{ executable: string; args: string[]; cwd?: string; expectedStdout?: string }>, overrides: Record<string, unknown> = {}) {
+function baseSpec(steps: Array<{ executable: string; args: string[]; cwd?: string; env?: Record<string, string>; expectedStdout?: string }>, overrides: Record<string, unknown> = {}) {
   return { steps, env: { PATH: process.env.PATH }, uid: null, gid: null, timeoutMsPerStep: 5000, maxOutputBytes: 65_536, ...overrides };
 }
 

@@ -15,6 +15,10 @@ real third-party repositories.
 
 ## Current state
 
+Language expansion: initial Vue SFC and Go package-level analysis is implemented through repository
+adapters. See [the support matrix and setup requirements](docs/language-support.md) for exact scope,
+fallback behavior, and validation boundaries.
+
 Three completed research stages plus an in-progress prospective-validation stage, in order:
 
 - **Stage 0** - a 2,000-delta historical benchmark across 20 real repositories, run through a real

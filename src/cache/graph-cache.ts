@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { DependencyGraphResult } from "../repo/types.js";
 
-export const GRAPH_CACHE_SCHEMA_VERSION = "1";
+export const GRAPH_CACHE_SCHEMA_VERSION = "2-adapters-1";
 
 export interface GraphCacheKeyInputs {
   commitSha: string;
@@ -64,11 +64,15 @@ export class GraphCache {
     }
 
     if (!parsed || parsed.cacheSchemaVersion !== GRAPH_CACHE_SCHEMA_VERSION) return undefined;
+    // Go metadata depends on the installed toolchain and current build environment.
+    // Until that context is part of every caller's key, rebuild instead of reusing stale metadata.
+    if (parsed.profile?.adapters?.some((adapter) => adapter.id === "go")) return undefined;
     if (typeof parsed.cacheKey === "string" && parsed.cacheKey !== key) return undefined;
     return parsed;
   }
 
   save(key: string, result: DependencyGraphResult): void {
+    if (result.profile.adapters?.some((adapter) => adapter.id === "go")) return;
     this.ensureDir();
     const payload = JSON.stringify({ ...result, cacheSchemaVersion: GRAPH_CACHE_SCHEMA_VERSION }, null, 2);
     writeFileSync(this.cachePath(key), payload);
