@@ -69,8 +69,15 @@ try {
       entry.phase = 'observe'; save();
       entry.observerExecution = measured('node', [`${host}/node_modules/@diffci/observer/index.mjs`, 'observe', '--repo', cwd, '--base', spec.sha, '--head', head, '--out', out, '--no-send'], cwd);
       entry.observation = JSON.parse(readFileSync(out, 'utf8')); save();
-      if (entry.observation.status !== 'OBSERVED' || entry.observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observer did not produce an unchanged-worktree observation');
-      const result = entry.observation.result;
+      if (entry.observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observer changed the worktree');
+      if (!['OBSERVED', 'REFUSED'].includes(entry.observation.status)) throw new Error('Observer failed');
+      if (entry.observation.status === 'REFUSED') {
+        const { buildDependencyGraph } = await import('../src/repo/graph.ts');
+        const diagnostic = await buildDependencyGraph({ repoPath: cwd });
+        entry.refusalDiagnostic = { nodes: diagnostic.graph.nodes.length, adapterBlockers: diagnostic.adapterBlockers, adapters: diagnostic.profile.adapters };
+      }
+      // Refusal leaves the user's full suite intact. Preserve the refusal distinctly.
+      const result = entry.observation.result ?? { mode: 'FULL', fallbackReasons: [entry.observation.reason] };
       let policy = full;
       if (result.mode === 'SELECTIVE') {
         if (result.commandRefusalReason || result.unroutedTestPaths?.length || !result.selectedTests.length) throw new Error('Subset execution unavailable');
@@ -78,7 +85,7 @@ try {
         if (paths.some(p => p.startsWith('-') || p.includes('..') || p.startsWith('/'))) throw new Error('Invalid selected path');
         policy = spec.name === 'vue' ? ['node', [...full[1], ...paths]] : ['go', ['test', '-mod=readonly', '-json', '-count=1', ...new Set(paths.map(p => './' + (p.includes('/') ? p.slice(0, p.lastIndexOf('/')) : '')))]];
       }
-      entry.policy = result.mode; entry.phase = 'timings'; entry.pairs = []; save();
+      entry.policy = entry.observation.status === 'REFUSED' ? 'REFUSED_FULL_RUN' : result.mode; entry.phase = 'timings'; entry.pairs = []; save();
       for (let i = 0; i < 3; i++) {
         const pair = i % 2 === 0 ? { full: measured(...full, cwd), policy: measured(...policy, cwd) } : { policy: measured(...policy, cwd), full: measured(...full, cwd) };
         pair.netElapsedSavedMs = pair.full.elapsedMs - pair.policy.elapsedMs - entry.observerExecution.elapsedMs;
