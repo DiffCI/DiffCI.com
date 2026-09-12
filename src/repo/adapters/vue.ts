@@ -104,8 +104,9 @@ export const vueAdapter: RepositoryAdapter = {
         let source = script?.content ?? "";
         if (/\bimport\.meta\.glob(?:Eager)?\s*\(/.test(source)) block("glob imports require bundler dependency expansion");
         if (descriptor.template && !descriptor.template.src && !descriptor.template.lang) {
+          const templateBlock = descriptor.template;
           const template = measure("templateCompile", () => compileTemplate({
-            source: descriptor.template.content, filename: path, id: path,
+            source: templateBlock.content, filename: path, id: path,
             compilerOptions: { bindingMetadata: script?.bindings },
           }));
           if (template.errors.length) block("template compilation failed");
