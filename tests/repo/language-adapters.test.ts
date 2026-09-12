@@ -134,6 +134,7 @@ test("Go inactive files select their owning package and dependents without addin
     "lib/value_test.go": "package lib", "lib/value_windows_test.go": "package lib",
     "app/app.go": "package app", "app/app_test.go": "package app",
     "other/other.go": "package other", "other/other_test.go": "package other",
+    "_examples/main.go": "package main", "lib/testdata/fixture.go": "package fixture",
   });
   const output = [
     { Dir: join(root, "lib"), ImportPath: "example/lib", GoFiles: ["value.go"], TestGoFiles: ["value_test.go"], IgnoredGoFiles: ["value_windows.go", "value_windows_test.go"] },
@@ -145,6 +146,11 @@ test("Go inactive files select their owning package and dependents without addin
     const graph = await buildDependencyGraph({ repoPath: root });
     assert.deepEqual(graph.adapterBlockers, []);
     assert.ok(!graph.profile.goTestPackages?.["lib/value_windows_test.go"]);
+    for (const path of ["_examples/main.go", "lib/testdata/fixture.go", "lib/testdata/new.txt", ".hidden.go"]) {
+      assert.equal(new ImpactAnalyzer().analyze(delta(path), graph, graph.profile).fallbackRequired, true);
+      const renamed = delta("README.md"); renamed.files[0].oldPath = path; renamed.files[0].changeType = "renamed";
+      assert.equal(new ImpactAnalyzer().analyze(renamed, graph, graph.profile).fallbackRequired, true);
+    }
     for (const path of ["lib/value.go", "lib/value_windows.go"]) {
       const impact = new ImpactAnalyzer().analyze(delta(path), graph, graph.profile);
       assert.equal(impact.fallbackRequired, false);

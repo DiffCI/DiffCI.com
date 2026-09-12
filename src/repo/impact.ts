@@ -1,4 +1,5 @@
 import { extname, posix } from "node:path";
+import { isGoDiscoveryIgnoredPath } from "./adapters/go.js";
 import type { ChangedFile, GitDelta } from "../git/types.js";
 import type { DependencyGraph, DependencyGraphNode, DependencyGraphResult, EntryPoint, RepositoryProfile } from "./types.js";
 import type { ChangedImpact, EntryPointImpact, ImpactEvidence, ImpactEvidencePath, ImpactReason, ImpactResult, ImpactRiskSignal, TestImpact } from "./impact-types.js";
@@ -242,6 +243,9 @@ export class ImpactAnalyzer {
     const evidence: ImpactEvidence[] = [];
     const riskSignals: ImpactRiskSignal[] = [];
     const fallbackReasons: string[] = [...(graphResult.adapterBlockers ?? [])];
+    if (profile.adapters?.some(adapter => adapter.id === "go") && delta.files.some(file => allChangePaths(file).some(isGoDiscoveryIgnoredPath))) {
+      fallbackReasons.push("Changes in Go discovery-excluded paths require full validation, including runtime test data");
+    }
     const excludedGoRoots = profile.goExcludedModuleRoots ?? [];
     if (delta.files.some(file => allChangePaths(file).some(path => excludedGoRoots.some(root => path.startsWith(root))))) {
       fallbackReasons.push("Changes in a Go module outside the declared root-module scope require full validation");

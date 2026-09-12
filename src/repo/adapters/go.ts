@@ -60,6 +60,11 @@ function internalPath(root: string, path: string): string | undefined {
   return rel === ".." || rel.startsWith("../") || isAbsolute(rel) ? undefined : rel;
 }
 
+/** go ./... excludes these names; edits still require full CI (for example testdata reads). */
+export function isGoDiscoveryIgnoredPath(path: string): boolean {
+  return path.split("/").some(part => part === "testdata" || part.startsWith("_") || part.startsWith("."));
+}
+
 export function analyzeGoMetadata(context: AdapterContext, output: string): AdapterContribution {
   const result = contribution(goAdapter);
   const all = parseGoList(output);
@@ -114,7 +119,8 @@ export function analyzeGoMetadata(context: AdapterContext, output: string): Adap
   if (!result.sourcePaths.length) result.blockers.push("Go analysis found no local packages");
   // Ignored files/build tags, generation and testdata can change the runnable universe.
   const modeled = new Set([...result.sourcePaths, ...result.assetPaths]);
-  if (context.files.some((file) => file.endsWith(".go") && !modeled.has(file))) result.blockers.push("Go files outside the active build context require full validation");
+  const unmodeled = context.files.filter(file => file.endsWith(".go") && !modeled.has(file) && !isGoDiscoveryIgnoredPath(file));
+  if (unmodeled.length) result.blockers.push(`Go files outside the active build context require full validation: ${unmodeled.slice(0, 20).join(", ")}`);
   return result;
 }
 
