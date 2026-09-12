@@ -58,3 +58,6 @@ The candidate also loads compiler-sfc on first Vue use rather than at process
 startup, avoiding that dependency initialization in Go/TS-only observations. Go
 selection semantics are unchanged; separate Cloudflare runs measure the overhead.
 No production skipping or promotion is part of this candidate qualification.
+
+See the [48-commit Cloudflare qualification results](research/2026-09-12-vue-scope-qualification.md)
+for measured selection coverage, timing, failures and remaining limitations.
