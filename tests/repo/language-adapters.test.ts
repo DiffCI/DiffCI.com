@@ -8,6 +8,7 @@ import { buildDependencyGraph, classifyRepositoryProject, refineConfidenceForDel
 import { ImpactAnalyzer } from "../../src/repo/impact.js";
 import { planSelectiveTestCommands } from "../../src/planner/test-command.js";
 import { parseGoList, analyzeGoMetadata, goAdapter } from "../../src/repo/adapters/go.js";
+import { vueAdapter } from "../../src/repo/adapters/vue.js";
 import { parseGoTestOutput } from "../../src/repo/adapters/go-test.js";
 import { analyzeRepository } from "../../src/repo/analyzer.js";
 import { observe } from "../../src/client/observe.js";
@@ -125,6 +126,24 @@ test("Vue imported macro types retain runtime dependency edges", async () => {
     const impact = new ImpactAnalyzer().analyze(delta("src/props.ts"), result, result.profile);
     assert.equal(impact.fallbackRequired, false);
     assert.deepEqual(impact.affectedTests.map(t => t.path), ["tests/component.test.ts"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue shared macro types remain tracked and refresh across repeated analyses", () => {
+  const component = '<script setup lang="ts">import type { Props } from "./props"; defineProps<Props>();</script>';
+  const files = { "package.json": "{}", "props.ts": "export interface Props { value: string }", "One.vue": component, "Two.vue": component };
+  const root = fixture(files);
+  try {
+    const context = { repoPath: root, files: Object.keys(files), profile: analyzeRepository({ repoPath: root }) };
+    for (const [type, runtime] of [["string", "String"], ["number", "Number"]]) {
+      writeFileSync(join(root, "props.ts"), `export interface Props { value: ${type} }`);
+      const result = vueAdapter.analyze(context);
+      assert.deepEqual(result.blockers, []);
+      for (const path of ["One.vue", "Two.vue"]) {
+        assert.ok(result.edges.some(edge => edge.from === path && edge.to === "props.ts"));
+        assert.ok(result.virtualSources.find(source => source.path === path)?.source.includes(`type: ${runtime}`));
+      }
+    }
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 

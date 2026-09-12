@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { compileScript, compileTemplate, parse } from "@vue/compiler-sfc";
+import { compileScript, compileTemplate, invalidateTypeCache, parse } from "@vue/compiler-sfc";
 import ts from "typescript";
 
 /** Only direct imports registered in a literal component options object are provable. */
@@ -50,6 +50,12 @@ export const vueAdapter: RepositoryAdapter = {
     for (const path of context.files.filter((file) => file.endsWith(".vue"))) {
       result.sourcePaths.push(path);
       const block = (reason: string) => result.blockers.push(`Vue ${path}: ${reason}`);
+      const typeDependencies = new Set<string>();
+      const recordTypeDependency = (file: string) => {
+        const dependency = relative(context.repoPath, resolve(file)).replace(/\\/g, "/");
+        if (dependency === ".." || dependency.startsWith("../") || isAbsolute(dependency)) throw new Error("Vue type dependency escapes repository");
+        typeDependencies.add(dependency);
+      };
       try {
         const raw = readFileSync(join(context.repoPath, path), "utf8");
         // compiler-sfc discards an empty script block then reports a missing block.
@@ -66,17 +72,15 @@ export const vueAdapter: RepositoryAdapter = {
           if (b.src) block("external SFC blocks are not yet modeled");
           if (b.lang && !["js", "ts", "jsx", "tsx", "html", "css"].includes(b.lang)) block(`unsupported preprocessor ${b.lang}`);
         }
-        const typeDependencies = new Set<string>();
         const script = descriptor.script || descriptor.scriptSetup
           ? compileScript(descriptor, { id: path, fs: {
             fileExists: existsSync,
             readFile(file) {
-              const dependency = relative(context.repoPath, resolve(file)).replace(/\\/g, "/");
-              if (dependency === ".." || dependency.startsWith("../") || isAbsolute(dependency)) throw new Error("Vue type dependency escapes repository");
-              typeDependencies.add(dependency);
+              recordTypeDependency(file);
               return readFileSync(file, "utf8");
             },
           } }) : undefined;
+        for (const dependency of script?.deps ?? []) recordTypeDependency(dependency);
         // Imported macro types affect generated runtime props. Retain the files read
         // by the compiler even when the generated script erases their imports.
         for (const dependency of typeDependencies) {
@@ -105,6 +109,10 @@ export const vueAdapter: RepositoryAdapter = {
         result.virtualSources.push({ path, source });
       } catch {
         block("component could not be analyzed");
+      } finally {
+        // compiler-sfc caches parsed imported types globally. Do not let a later
+        // component or a second analysis reuse stale types or bypass filesystem reads.
+        for (const dependency of typeDependencies) invalidateTypeCache(join(context.repoPath, dependency));
       }
     }
     return result;
