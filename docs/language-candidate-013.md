@@ -22,6 +22,12 @@ component registries, unsupported preprocessors, Nuxt conventions and unresolved
 dependencies still require full validation. There is no blanket removal of those
 guards and no unsupported claim that a missing edge is harmless.
 
+Candidate.2 additionally includes compiler-reported dependencies and invalidates
+imported-type cache entries after each component. Its regression case changes a
+shared macro type between analyses and checks both consumers' generated runtime
+types. Candidate.1 performance measurements remain identified separately; the Go
+adapter implementation is unchanged between these two candidates.
+
 Adapter versions and the graph cache schema advance to invalidate old graphs.
 Regression tests exercise inactive-file ownership, transitive consumers, excluded
 path edits and renames, deleted files and imported Vue macro types.
@@ -38,3 +44,10 @@ Timing pairs, stable baselines and preregistered fault sites follow the original
 benchmark protocol. Diagnostic versions 1 and 2 were cancelled with evidence saved
 while the graph identity and Go discovery guards were refined. They do not count
 as final candidate measurements. Production remains unchanged.
+
+The complete regression suite exposed a live GitHub API check failing under HTTP
+403 with zero anonymous requests remaining. Those failures are retained. A retry
+is allowed after the reported rate-limit reset, with the same assertion intact.
+The benchmark records the API response metadata to distinguish this condition
+from adapter regressions. During this development cycle, an additional isolated
+regression/benchmark container can overlap the original three-job batch.
