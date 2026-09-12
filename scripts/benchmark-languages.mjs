@@ -1,8 +1,9 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
 import { resolve, join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
+import { freezeTimingHistory, heldOutEconomics } from './bypass-benchmark-protocol.js';
 
 if (process.platform !== 'linux' || !process.env.DIFFCI_VALIDATION_IMAGE) throw new Error('Cloudflare validation container required');
 const cohort = JSON.parse(readFileSync(new URL('./language-benchmark-cohort.json', import.meta.url), 'utf8'));
@@ -120,6 +121,7 @@ try {
   report.candidateVersion = experiment.candidateVersion;
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
   report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts', 'tests/client/economics.test.ts'], '/opt/diffci', false).record);
+  if (experiment.mode === 'bypass') report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/validation-env/bypass-protocol.test.ts'], '/opt/diffci', false).record);
   if (spec.id === 'vue-test-utils') {
     // Record the environment of the suite's existing live GitHub assertion without
     // weakening it or treating an HTTP failure as a passed regression check.
@@ -159,6 +161,7 @@ try {
   }
   const agent = `/opt/diffci/dist-agent/diffci-observer-${report.candidateVersion}.tgz`;
   report.agentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync(agent)).digest('base64');
+  if (experiment.candidateIntegrity && report.agentIntegrity !== experiment.candidateIntegrity) throw new Error('Candidate differs from qualified observer artifact');
   const host = join(root, 'observer'); mkdirSync(host); writeFileSync(join(host, 'package.json'), '{"private":true}');
   run('npm', ['install', '--no-audit', '--no-fund', agent], host);
   const baselineHost = join(root, 'observer-baseline');
@@ -202,14 +205,33 @@ try {
     const sources = files.filter(p => pattern.test(p) && !/(?:^|\/)(?:__tests__|__test__|docs|testdata|_examples|examples|playground)\//.test(p) && !/(?:_test\.go|\.(?:test|spec)\.ts|\.d\.ts|\.story\.vue)$/.test(p));
     if (!sources.length) continue;
     candidates.push({ head, base, subject: git(['show', '-s', '--format=%s', head]), files, sourceFiles: sources });
-    if (candidates.length === cohort.commitsPerRepository) break;
+    if (candidates.length === (experiment.commitsPerRepository ?? cohort.commitsPerRepository)) break;
   }
+  if (experiment.mode === 'bypass') {
+    if (candidates.length !== 16 || experiment.trainingCount !== 8) throw new Error('Bypass experiment requires frozen 8 training + 8 held-out commits');
+    candidates.reverse();
+    report.bypassProtocol = { order: 'first-parent ancestry, oldest first', trainingCount: 8, heldOutCount: 8, history: 'frozen after training; latest observed training configuration only', targetFaults: 'not repeated; observer artifact unchanged' };
+  }
+  const trainingRecords = [];
+  let latestTrainingContext = '';
+  const timingHistoryPath = join(root, 'frozen-timing-history.json');
+  let frozenHistoryHash;
   report.frozenCandidates = candidates;
   report.historyExaminedLimit = cohort.historyLimit;
   announce('cohort-frozen', { commits: candidates.map(c => c.head) });
   for (const [index, candidate] of candidates.entries()) {
     if (experiment.mode === 'profile' && index > 0) break;
     const c = { ...candidate, index, status: 'PREPARING', pairs: [] }; report.cases.push(c); announce('commit-start', { index, head: candidate.head });
+    if (experiment.mode === 'bypass') {
+      c.phase = index < experiment.trainingCount ? 'training' : 'held-out';
+      if (index === experiment.trainingCount) {
+        report.frozenTimingHistory = freezeTimingHistory(trainingRecords, { trainingCount: experiment.trainingCount, repository: spec.repository, jobKey: `${spec.id}-linux-${spec.language}-fixed-suite`, observerVersion: report.candidateVersion, contextKey: latestTrainingContext, recordedAt: new Date().toISOString() });
+        writeFileSync(timingHistoryPath, JSON.stringify(report.frozenTimingHistory));
+        frozenHistoryHash = createHash('sha256').update(readFileSync(timingHistoryPath)).digest('hex');
+        report.frozenTimingHistorySha256 = frozenHistoryHash;
+        announce('timing-history-frozen', { samples: report.frozenTimingHistory.samples.length, distinctCommits: new Set(report.frozenTimingHistory.samples.map(sample => sample.headSha)).size });
+      }
+    }
     try {
       git(['checkout', '--force', '--detach', candidate.head]);
       if (spec.language === 'go') {
@@ -231,12 +253,43 @@ try {
       }
       const out = join(root, `observation-${index}.json`);
       const observeWith = (agentHost, extra = []) => {
+        if (existsSync(out)) unlinkSync(out);
         const analysis = run('node', [join(agentHost, 'node_modules/@diffci/observer/index.mjs'), 'observe', '--repo', checkout, '--base', candidate.base, '--head', candidate.head, '--out', out, '--no-send', '--economics-job', `${spec.id}-linux-${spec.language}-fixed-suite`, ...extra], checkout, false, 180000).record;
         const observation = JSON.parse(readFileSync(out, 'utf8'));
         if (observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observation changed worktree');
+        if (observation.commitRange?.headSha !== candidate.head || observation.commitRange?.baseSha !== candidate.base) throw new Error('Observation range mismatch');
         return { analysis, observation };
       };
-      if (experiment.baselineVersion) {
+      if (experiment.mode === 'bypass') {
+        c.bypassObservations = [];
+        const heldOut = c.phase === 'held-out';
+        const firstOrder = heldOut ? (index % 2 === 0 ? ['gated', 'oracle'] : ['oracle', 'gated']) : ['oracle'];
+        const historyArgs = heldOut ? ['--economics-history', timingHistoryPath] : [];
+        for (const order of [firstOrder, [...firstOrder].reverse()]) {
+          const pair = { order };
+          for (const arm of order) {
+            pair[arm] = observeWith(host, [...historyArgs, ...(arm === 'oracle' ? ['--force-analysis'] : [])]);
+            if (!['OBSERVED', 'REFUSED'].includes(pair[arm].observation.status)) throw new Error(`${arm} observation failed`);
+          }
+          c.bypassObservations.push(pair);
+          if (heldOut) {
+            const gated = pair.gated.observation;
+            if (gated.economics?.decision === 'BYPASS_FULL') {
+              if (gated.status !== 'REFUSED' || gated.result || gated.timings.phasesMs?.engineLoad !== undefined) throw new Error('Bypass did not retain full CI before engine loading');
+            } else {
+              const decision = o => { const { graph, ...result } = o.result ?? {}; return JSON.stringify({ status: o.status, stage: o.stage, reason: o.reason, result, confidence: graph?.effectiveConfidence }); };
+              if (decision(gated) !== decision(pair.oracle.observation)) throw new Error('Analyzed gated/oracle decisions differ');
+            }
+          }
+        }
+        c.analysis = c.bypassObservations[0].oracle.analysis;
+        c.observation = c.bypassObservations[0].oracle.observation;
+        if (heldOut) {
+          c.historySha256 = createHash('sha256').update(readFileSync(timingHistoryPath)).digest('hex');
+          if (c.historySha256 !== frozenHistoryHash) throw new Error('Frozen timing history changed');
+          if (c.bypassObservations[0].gated.observation.economics?.decision !== c.bypassObservations[1].gated.observation.economics?.decision) throw new Error('Gating decision changed across repetitions');
+        } else latestTrainingContext = c.observation.economics?.contextKey ?? '';
+      } else if (experiment.baselineVersion) {
         c.observerComparison = [];
         const firstOrder = index % 2 === 0 ? ['baseline', 'candidate'] : ['candidate', 'baseline'];
         for (const order of [firstOrder, [...firstOrder].reverse()]) {
@@ -315,11 +368,21 @@ try {
       const universe = s => JSON.stringify({ files: s.files, packages: Object.keys(s.packages ?? {}).sort(), total: s.total });
       if (universe(firstFull.summary) !== universe(secondFull.summary)) { c.status = 'FULL_UNIVERSE_CHANGED'; continue; }
       c.status = selected === undefined ? 'FULL_POLICY_MEASURED' : selected.length === 0 ? 'EMPTY_SELECTION_MEASURED' : 'SELECTIVE_POLICY_MEASURED';
+      if (experiment.mode === 'bypass') {
+        const testPairs = c.pairs.length ? c.pairs : c.baselines.map(full => ({ full, policy: full, policyIdenticalToFull: true }));
+        if (c.phase === 'training') {
+          const record = { index, headSha: c.head, contextKey: c.observation.economics?.contextKey ?? '', stable: true, pairs: testPairs.map((pair, i) => ({ fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, observerMs: c.bypassObservations[i].oracle.analysis.elapsedMs })) };
+          trainingRecords.push(record);
+          c.trainingRecord = record;
+        } else {
+          c.bypassEvaluation = testPairs.map((pair, i) => heldOutEconomics({ decision: c.bypassObservations[i].gated.observation.economics.decision, fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, gatedObserverMs: c.bypassObservations[i].gated.analysis.elapsedMs, forcedObserverMs: c.bypassObservations[i].oracle.analysis.elapsedMs }));
+        }
+      }
       if (c.observerComparison) {
         c.matchedEconomics = c.pairs.map(pair => ({ fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, baselineObserverMs: c.observerComparison[0].baseline.analysis.elapsedMs, candidateObserverMs: c.analysis.elapsedMs, baselineNetSavedMs: pair.full.elapsedMs - pair.policy.elapsedMs - c.observerComparison[0].baseline.analysis.elapsedMs, candidateNetSavedMs: pair.netSavedMs }));
       }
       announce('commit-measured', { index, policy: c.policy, status: c.status, netSavedMs: c.pairs.map(p => p.netSavedMs) });
-      if (cohort.faultIndexes.includes(index)) {
+      if (experiment.mode !== 'bypass' && cohort.faultIndexes.includes(index)) {
         const path = candidate.sourceFiles.find(p => existsSync(join(checkout, p)));
         if (!path) c.fault = { outcome: 'NO_SURVIVING_SOURCE_FILE' };
         else {
