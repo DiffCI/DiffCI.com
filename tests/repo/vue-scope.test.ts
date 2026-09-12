@@ -1,0 +1,73 @@
+import { strict as assert } from "node:assert";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { test } from "node:test";
+import { buildDependencyGraph } from "../../src/repo/graph.js";
+import { ImpactAnalyzer } from "../../src/repo/impact.js";
+import { planSelectiveTestCommands } from "../../src/planner/test-command.js";
+import type { GitDelta } from "../../src/git/types.js";
+
+const base = {
+  "package.json": '{"private":true,"devDependencies":{"nuxt":"1"}}',
+  "pnpm-lock.yaml": "lockfileVersion: 9",
+  "diffci.json": JSON.stringify({ vue: { packageRoot: "packages/ui", testConfig: "vitest.config.ts" } }),
+  "docs/Broken.vue": "<template><Unregistered /></template>",
+  "nuxt.config.ts": "export default {}",
+  "packages/ui/package.json": '{"devDependencies":{"vitest":"1","vue":"3"}}',
+  "packages/ui/vitest.config.ts": 'import {defineConfig} from "vitest/config"; export default defineConfig({test:{include:["tests/**/*.test.ts"],setupFiles:"./setup.ts"}});',
+  "packages/ui/setup.ts": 'import { shared } from "./shared"; export const setup = shared;',
+  "packages/ui/shared.ts": "export const shared = 1;",
+  "packages/ui/src/value.ts": "export const value = 1;",
+  "packages/ui/src/Child.vue": '<script setup lang="ts">import {value} from "./value"</script><template>{{value}}</template>',
+  "packages/ui/tests/child.test.ts": 'import Child from "../src/Child.vue"; export const child = Child;',
+  "packages/ui/tests/other.test.ts": "export const other = 1;",
+};
+function fixture(extra: Record<string, string> = {}) {
+  const root = mkdtempSync(join(tmpdir(), "diffci-vue-scope-"));
+  for (const [path, text] of Object.entries({ ...base, ...extra })) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), text); }
+  return root;
+}
+function delta(path: string): GitDelta {
+  return { baseSha: "base", headSha: "head", files: [{ path, changeType: "modified" }], directories: [], summary: { total: 1, added: 0, modified: 1, deleted: 0, renamed: 0, copied: 0, unmerged: 0, unknown: 0 }, analysis: { empty: false, configChanged: false, dependencyManifestChanged: false, lockfileChanged: false, workflowChanged: false, infrastructureChanged: false, databaseChanged: false } };
+}
+test("Vue scope isolates unrelated docs, pins the runner cwd/config, and guards setup and outside changes", async () => {
+  const root = fixture();
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(result.adapterBlockers, []);
+    assert.deepEqual(result.profile.testFilePaths, ["packages/ui/tests/child.test.ts", "packages/ui/tests/other.test.ts"]);
+    assert.ok(!result.graph.nodes.some(node => node.path.startsWith("docs/")));
+    const impact = new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile);
+    assert.equal(impact.fallbackRequired, false, impact.fallbackReasons.join("; "));
+    assert.deepEqual(impact.affectedTests.map(test => test.path), ["packages/ui/tests/child.test.ts"]);
+    const plan = planSelectiveTestCommands(result.profile, impact.affectedTests.map(test => test.path));
+    assert.deepEqual(plan.commands, [{ executable: "pnpm", args: ["--dir", "packages/ui", "exec", "vitest", "run", "--config", "vitest.config.ts", "tests/child.test.ts"] }]);
+    assert.ok(planSelectiveTestCommands(result.profile, ["docs/unknown.test.ts"]).refusalReason);
+    for (const path of ["docs/Broken.vue", "packages/ui/setup.ts", "packages/ui/shared.ts", "packages/ui/vitest.config.ts", "diffci.json"]) {
+      assert.equal(new ImpactAnalyzer().analyze(delta(path), result, result.profile).fallbackRequired, true, path);
+    }
+    const renamed = delta("packages/ui/src/moved.ts"); renamed.files[0].oldPath = "outside.ts"; renamed.files[0].changeType = "renamed";
+    assert.equal(new ImpactAnalyzer().analyze(renamed, result, result.profile).fallbackRequired, true);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+test("Vue scope refuses crossing imports, missing/dynamic suites and invalid declarations", async () => {
+  for (const extra of [
+    { "packages/ui/src/value.ts": 'export { value } from "../../../shared";', "shared.ts": "export const value = 1;" },
+    { "packages/ui/src/Child.vue": '<script setup>import Other from "../../../other.vue"</script><template><Other/></template>', "other.vue": "<template>other</template>" },
+    { "packages/ui/vitest.config.ts": 'export default {test:{setupFiles:"../../outside.ts"}}', "outside.ts": "export {};" },
+    { "packages/ui/vitest.config.ts": 'import auto from "unplugin-auto-import"; export default {plugins:[auto()]};' },
+    { "packages/ui/vitest.config.ts": 'export default {root:"../other"};' },
+    { "packages/ui/vitest.config.ts": 'export default {test:{include:["../../outside/*.test.ts"]}};' },
+    { "packages/ui/vitest.config.ts": 'const shared={}; export default {...shared};' },
+    { "diffci.json": JSON.stringify({ vue: { packageRoot: "../escape", testConfig: "vitest.config.ts" } }) },
+    { "diffci.json": JSON.stringify({ vue: { packageRoot: "missing", testConfig: "vitest.config.ts" } }) },
+  ] as Record<string, string>[]) {
+    const root = fixture(extra);
+    try {
+      const result = await buildDependencyGraph({ repoPath: root });
+      assert.ok(result.adapterBlockers?.length, JSON.stringify(extra));
+      assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile).fallbackRequired, true);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  }
+});

@@ -56,16 +56,14 @@ function execute(selected) {
   if (Array.isArray(selected) && selected.length === 0) return { exitCode: 0, elapsedMs: 0, noTestsSelected: true, summary: { readable: true, files: [], failures: [], total: 0 } };
   const id = sequence++;
   const usage = join(root, `usage-${id}.txt`); const json = join(root, `tests-${id}.json`);
-  const cwd = resolve(checkout, spec.cwd);
-  const cmd = spec.language === 'go' ? 'go' : 'node';
+  const cwd = checkout;
+  const cmd = spec.language === 'go' ? 'go' : 'corepack';
   let args;
   if (spec.language === 'go') {
     const targets = selected ? [...new Set(selected.map(p => p.includes('/') ? './' + p.slice(0, p.lastIndexOf('/')) : '.'))].sort() : ['./...'];
     args = ['test', '-mod=readonly', '-json', '-count=1', ...targets];
   } else {
-    const local = join(cwd, 'node_modules/vitest/vitest.mjs');
-    const binary = existsSync(local) ? local : join(checkout, 'node_modules/vitest/vitest.mjs');
-    args = [binary, 'run', '--maxWorkers=2', '--minWorkers=2', '--sequence.seed=42', '--reporter=json', `--outputFile=${json}`, ...(selected ?? []).map(p => resolve(checkout, p))];
+    args = ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', 'run', '--config', 'vitest.config.ts', '--maxWorkers=2', '--minWorkers=2', '--sequence.seed=42', '--reporter=json', `--outputFile=${json}`, ...(selected ?? []).map(p => relative(resolve(checkout, spec.cwd), resolve(checkout, p)))];
   }
   const result = run('/usr/bin/time', ['-f', '%U %S %e %M', '-o', usage, cmd, ...args], cwd, false, 180000);
   const record = result.record;
@@ -117,9 +115,9 @@ try {
   }
   report.bootstrapAgentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync('/opt/diffci/dist-agent/agent.tgz')).digest('base64');
   if (report.bootstrapAgentIntegrity !== expected) throw new Error('Unexpected bootstrap agent');
-  report.candidateVersion = '0.1.3-candidate.2';
+  report.candidateVersion = '0.1.4-candidate.1';
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
-  report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts'], '/opt/diffci', false).record);
+  report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts'], '/opt/diffci', false).record);
   if (spec.id === 'vue-test-utils') {
     // Record the environment of the suite's existing live GitHub assertion without
     // weakening it or treating an HTTP failure as a passed regression check.
@@ -181,6 +179,9 @@ try {
         writeFileSync(join(checkout, 'diffci.json'), JSON.stringify(c.configurationOverlay));
         c.setup = run('go', ['mod', 'download'], checkout).record;
       } else {
+        if (existsSync(join(checkout, 'diffci.json'))) throw new Error('Existing DiffCI config requires a separate cohort; no overwrite');
+        c.configurationOverlay = { vue: { packageRoot: spec.cwd, testConfig: 'vitest.config.ts' } };
+        writeFileSync(join(checkout, 'diffci.json'), JSON.stringify(c.configurationOverlay));
         c.setup = run('corepack', ['pnpm', 'install', '--frozen-lockfile'], checkout, true, 480000).record;
         if (spec.id === 'vue-router') {
           // Its Vitest type tests consume the outputs of the documented preceding builds.

@@ -46,6 +46,8 @@ export interface RepositoryProfile {
   goTestEnvironment?: Record<string, string>;
   /** Nested modules excluded by an explicit root-module execution scope. Changes here force full CI. */
   goExcludedModuleRoots?: string[];
+  vueScope?: { packageRoot: string; testConfig: string };
+  vueSetupPaths?: string[];
   packageManager: PackageManager;
   packageJson: {
     name?: string;

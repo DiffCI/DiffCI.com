@@ -119,6 +119,7 @@ function summarise(report: ObservationReport): string {
   if (result) {
     lines.push(`  verdict: ${result.mode}`);
     if (result.goScope) lines.push("  Go scope: root module only; nested-module CI remains separate");
+    if (result.vueScope) lines.push(`  Vue suite: ${result.vueScope.packageRoot} (${result.vueScope.testConfig})`);
     lines.push(
       `  selection: ${result.selectedTests.length}/${result.totalTestCount} test files, from ${result.changedFileCount} changed file(s)`,
     );

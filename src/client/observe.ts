@@ -244,6 +244,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         fallbackReasons: impact.fallbackReasons,
         proposedCommands: (commandPlan?.commands ?? []).map(commandSpecToString),
         goScope: profile.diffciConfig?.go?.scope,
+        vueScope: profile.vueScope ? { packageRoot: hashPath(profile.vueScope.packageRoot), testConfig: hashPath(profile.vueScope.testConfig) } : undefined,
         commandRefusalReason: commandPlan?.refusalReason,
         unroutedTestPaths: (commandPlan?.unroutedPaths ?? []).map(hashPath),
         blindSpot: profile.testUniverse?.blindSpot === true,

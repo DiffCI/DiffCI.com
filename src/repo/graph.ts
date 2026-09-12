@@ -5,6 +5,7 @@ import { dirname, extname, join, normalize, relative, resolve, sep } from "node:
 import ts from "typescript";
 import { adapterFiles, REPOSITORY_ADAPTERS } from "./adapters/index.js";
 import { analyzeRepository, type AnalyzeRepositoryOptions } from "./analyzer.js";
+import { applyVueScope, inVuePackage } from "./vue-scope.js";
 import type {
   DependencyEdge,
   DependencyEdgeKind,
@@ -609,10 +610,13 @@ export async function buildDependencyGraph(
   const repoPath = options.repoPath ? resolve(options.repoPath) : process.cwd();
 
   const profile = analyzeRepository(options);
-  const files = adapterFiles(repoPath, options.excludeDirs);
+  const scopeBlockers = applyVueScope(repoPath, profile);
+  const scope = profile.vueScope;
+  const outsideScope = (path: string) => !!scope && !inVuePackage(path, scope.packageRoot) && !path.split("/").includes("node_modules");
+  const files = adapterFiles(repoPath, options.excludeDirs).filter(path => !scope || inVuePackage(path, scope.packageRoot));
   const context = { repoPath, files, profile };
   const contributions = REPOSITORY_ADAPTERS.filter((adapter) => adapter.detect(context)).map((adapter) => adapter.analyze(context));
-  const adapterBlockers = contributions.flatMap((item) => item.blockers);
+  const adapterBlockers = [...scopeBlockers, ...contributions.flatMap((item) => item.blockers)];
   if (contributions.some((item) => item.id === "go") && files.some((file) => /\.(?:[cm]?[jt]sx?|vue)$/.test(file))) {
     adapterBlockers.push("Mixed Go/JavaScript repositories require explicit cross-language dependencies; full validation required");
   }
@@ -630,9 +634,9 @@ export async function buildDependencyGraph(
   }
   const entryPointPaths = new Set(profile.entryPoints.map((e) => e.path));
 
-  const vueSources = contributions.some((item) => item.id === "vue")
+  const vueSources = scope || contributions.some((item) => item.id === "vue")
     ? files.filter((file) => /\.[cm]?[jt]sx?$/.test(file)).map((file) => join(repoPath, file)) : [];
-  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(repoPath, profile.sourceRoots, vueSources);
+  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(scope ? join(repoPath, scope.packageRoot) : repoPath, scope ? [] : profile.sourceRoots, vueSources);
   let moduleResolutionCache = ts.createModuleResolutionCache(
     repoPath,
     (x) => x,
@@ -641,7 +645,7 @@ export async function buildDependencyGraph(
 
   const sourceFiles = program
     .getSourceFiles()
-    .filter((sf) => sf.fileName && !sf.fileName.endsWith(".d.ts"));
+    .filter((sf) => sf.fileName && !sf.fileName.endsWith(".d.ts") && (!scope || inVuePackage(toRelativeInternal(repoPath, sf.fileName) ?? "", scope.packageRoot)));
   for (const item of contributions) {
     for (const virtual of item.virtualSources) {
       sourceFiles.push(ts.createSourceFile(join(repoPath, virtual.path), virtual.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX));
@@ -775,6 +779,14 @@ export async function buildDependencyGraph(
 
       const resolved = resolution.resolvedModule.resolvedFileName;
       const targetRel = toRelativeInternal(repoPath, resolved);
+      if (scope && resolution.resolvedModule.isExternalLibraryImport && (!targetRel || targetRel.split("/").includes("node_modules"))) {
+        recordReference("external-package", importerRel, ref);
+        continue;
+      }
+      if (targetRel && outsideScope(targetRel)) {
+        adapterBlockers.push(`Vue dependency crosses the declared package boundary: ${importerRel} -> ${targetRel}`);
+        continue;
+      }
 
       if (targetRel && isSourceFileName(resolved)) {
         internalSourcePaths.add(targetRel);
@@ -805,6 +817,8 @@ export async function buildDependencyGraph(
   if (unresolved.some((ref) => ref.importer.endsWith(".vue") || stripImportQuery(ref.specifier).endsWith(".vue"))) {
     adapterBlockers.push("Unresolved Vue dependencies require full validation");
   }
+  if (scope && unresolved.length) adapterBlockers.push("Unresolved dependencies in the declared Vue suite require full validation");
+  if (scope && edges.some(edge => outsideScope(edge.from) || outsideScope(edge.to))) adapterBlockers.push("Vue asset or macro dependency crosses the declared package boundary");
   profile.adapterBlockers = [...adapterBlockers];
 
   // Nested-package test visibility (2026-08-24, biomejs/biome finding): `internalSourcePaths` above is

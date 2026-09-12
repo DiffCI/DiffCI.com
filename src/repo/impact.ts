@@ -1,5 +1,6 @@
 import { extname, posix } from "node:path";
 import { isGoDiscoveryIgnoredPath } from "./adapters/go.js";
+import { inVuePackage } from "./vue-scope.js";
 import type { ChangedFile, GitDelta } from "../git/types.js";
 import type { DependencyGraph, DependencyGraphNode, DependencyGraphResult, EntryPoint, RepositoryProfile } from "./types.js";
 import type { ChangedImpact, EntryPointImpact, ImpactEvidence, ImpactEvidencePath, ImpactReason, ImpactResult, ImpactRiskSignal, TestImpact } from "./impact-types.js";
@@ -243,6 +244,12 @@ export class ImpactAnalyzer {
     const evidence: ImpactEvidence[] = [];
     const riskSignals: ImpactRiskSignal[] = [];
     const fallbackReasons: string[] = [...(graphResult.adapterBlockers ?? [])];
+    if (profile.vueScope) {
+      const scope = profile.vueScope;
+      if (delta.files.some(file => allChangePaths(file).some(path => !inVuePackage(path, scope.packageRoot)))) fallbackReasons.push("Changes outside the declared Vue package require full validation");
+      const setupDependencies = new Set((profile.vueSetupPaths ?? []).flatMap(path => [path, ...graph.transitiveDependenciesOf(path)]));
+      if (delta.files.some(file => allChangePaths(file).some(path => setupDependencies.has(path)))) fallbackReasons.push("Vue suite configuration or shared setup dependency changed; full validation required");
+    }
     if (profile.adapters?.some(adapter => adapter.id === "go") && delta.files.some(file => allChangePaths(file).some(isGoDiscoveryIgnoredPath))) {
       fallbackReasons.push("Changes in Go discovery-excluded paths require full validation, including runtime test data");
     }
