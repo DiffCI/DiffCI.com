@@ -60,6 +60,8 @@ test("Vue scope refuses crossing imports, missing/dynamic suites and invalid dec
     { "packages/ui/vitest.config.ts": 'export default {root:"../other"};' },
     { "packages/ui/vitest.config.ts": 'export default {test:{include:["../../outside/*.test.ts"]}};' },
     { "packages/ui/vitest.config.ts": 'const shared={}; export default {...shared};' },
+    { "packages/ui/src/value.ts": 'export { value } from "../build/generated";', "packages/ui/build/generated.ts": "export const value = 1;" },
+    { "packages/ui/src/value.ts": '/// <reference path="./global.ts" />\nexport const value = 1;', "packages/ui/src/global.ts": "declare const globalValue: number;" },
     { "packages/ui/vitest.config.ts": 'export default {test:{typecheck:{enabled:true,include:["types/*.ts"]}}};' },
     { "diffci.json": JSON.stringify({ vue: { packageRoot: "../escape", testConfig: "vitest.config.ts" } }) },
     { "diffci.json": JSON.stringify({ vue: { packageRoot: "missing", testConfig: "vitest.config.ts" } }) },

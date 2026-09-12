@@ -23,11 +23,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { relative, resolve } from "node:path";
 
-import { analyzeGitDelta } from "../git/git-diff.js";
-import { classifyRepositoryProject, buildDependencyGraph } from "../repo/graph.js";
-import { ImpactAnalyzer } from "../repo/impact.js";
-import { runPathBaseline } from "../planner/path-baseline.js";
-import { commandSpecToString, planSelectiveTestCommands } from "../planner/test-command.js";
+import { economicsContext, evaluateEconomics, type EconomicsDecision } from "./economics.js";
 import {
   readCiEnvironment,
   resolveCommitRange,
@@ -64,6 +60,10 @@ export interface ObserveOptions {
   reportPath?: string;
   /** Injected for tests. Defaults to a real git in `repoPath`. */
   git?: GitRunner;
+  /** Optional external CI timing history. It can only bypass to full validation. */
+  economicsHistory?: unknown;
+  economicsJobKey?: string;
+  forceAnalysis?: boolean;
 }
 
 function makeGitRunner(repoPath: string): GitRunner {
@@ -125,6 +125,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
   // Declared before `finish` closes over it: the range is part of every report, including the reports
   // produced by failures that happen after it was resolved.
   let range: ResolvedCommitRange | undefined;
+  let economics: EconomicsDecision | undefined;
 
   const finish = (
     status: ObservationStatus,
@@ -177,6 +178,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
       stage,
       reason: extra.reason,
       result: extra.result,
+      economics,
       payload: {
         includesFilePaths: options.redactPaths !== true,
         includesFileContents: false,
@@ -199,6 +201,23 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     if (!resolved.ok) return finish("REFUSED", "context", { reason: resolved.reason });
     range = resolved.range;
     markPhase("context");
+
+    if (options.economicsJobKey || options.economicsHistory) {
+      const remote = git(["remote", "get-url", "origin"]);
+      const repository = remote.ok ? /^(?:https:\/\/github\.com\/|git@github\.com:)([^/\s]+\/[^/\s]+?)(?:\.git)?$/.exec(remote.stdout.trim())?.[1] : undefined;
+      economics = evaluateEconomics(options.economicsHistory, { repository, jobKey: options.economicsJobKey, contextKey: economicsContext(repoPath), observerVersion: options.version });
+      if (economics.decision === "BYPASS_FULL") {
+        const samples = (options.economicsHistory as { samples: { headSha: string }[] }).samples;
+        if (options.forceAnalysis || samples.some(sample => !git(["merge-base", "--is-ancestor", sample.headSha, range!.baseSha]).ok)) economics = { ...economics, decision: "ANALYZE", reason: "Forced resampling or history is not ancestral to this change" };
+      }
+      markPhase("economics");
+      if (economics.decision === "BYPASS_FULL") return finish("REFUSED", "eligibility", { reason: `ECONOMICS_FULL_BYPASS: ${economics.reason}. No selective command is authorized.` });
+    }
+
+    const [{ analyzeGitDelta }, { classifyRepositoryProject, buildDependencyGraph }, { ImpactAnalyzer }, { runPathBaseline }, { commandSpecToString, planSelectiveTestCommands }] = await Promise.all([
+      import("../git/git-diff.js"), import("../repo/graph.js"), import("../repo/impact.js"), import("../planner/path-baseline.js"), import("../planner/test-command.js"),
+    ]);
+    markPhase("engineLoad");
 
     // The eligibility gate is asked of the graph builder itself (classifyRepositoryProject), not of a
     // separate list of conditions that can drift away from it. Phase 01 F3 is what that drift costs.

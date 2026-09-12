@@ -162,6 +162,11 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
   }
 
   const identity = observerIdentity();
+  let economicsHistory: unknown;
+  if (typeof flags["economics-history"] === "string") {
+    try { economicsHistory = JSON.parse(readFileSync(resolve(flags["economics-history"]), "utf8")); }
+    catch { console.warn("DiffCI timing history is unreadable; performing normal analysis."); }
+  }
   const report = await observe({
     repoPath,
     env: env as Record<string, string | undefined>,
@@ -171,6 +176,9 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
     headOverride: typeof flags.head === "string" ? flags.head : undefined,
     redactPaths: flags["redact-paths"] === true,
     reportPath,
+    economicsHistory,
+    economicsJobKey: typeof flags["economics-job"] === "string" ? flags["economics-job"] : undefined,
+    forceAnalysis: flags["force-analysis"] === true,
   });
 
   mkdirSync(dirname(reportPath), { recursive: true });

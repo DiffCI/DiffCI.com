@@ -383,6 +383,7 @@ function createProgram(
   repoPath: string,
   fallbackSourceRoots: SourceRoot[] = [],
   additionalSources: string[] = [],
+  syntaxOnly = false,
 ): {
   program: ts.Program;
   options: ts.CompilerOptions;
@@ -522,7 +523,10 @@ function createProgram(
   }
   const program = ts.createProgram({
     rootNames: fileNames,
-    options,
+    // Scoped analysis already inventories every implementation file. It extracts
+    // syntax/import edges, never asks TypeScript for semantic diagnostics. Keep
+    // the original options below for explicit module resolution.
+    options: syntaxOnly ? { ...options, noResolve: true, noLib: true, types: [] } : options,
     configFileParsingDiagnostics,
   });
 
@@ -665,7 +669,7 @@ export async function buildDependencyGraph(
 
   const vueSources = scope || contributions.some((item) => item.id === "vue")
     ? files.filter((file) => /\.[cm]?[jt]sx?$/.test(file)).map((file) => join(repoPath, file)) : [];
-  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(scope ? join(repoPath, scope.packageRoot) : repoPath, scope ? [] : profile.sourceRoots, vueSources);
+  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(scope ? join(repoPath, scope.packageRoot) : repoPath, scope ? [] : profile.sourceRoots, vueSources, Boolean(scope));
   markPhase("typescriptProgram");
   let moduleResolutionCache = ts.createModuleResolutionCache(
     repoPath,
@@ -746,6 +750,7 @@ export async function buildDependencyGraph(
     if (isExcludedPath(importerRel, options.excludeDirs ?? [])) continue;
 
     const refs = extractImportRefs(sf);
+    if (scope && sf.referencedFiles.length) adapterBlockers.push(`Triple-slash file references in the scoped suite require full validation: ${importerRel}`);
     for (const ref of refs) {
       if (!ref.specifier) {
         recordUnresolved(importerRel, ref, "empty specifier");
@@ -822,6 +827,10 @@ export async function buildDependencyGraph(
       }
 
       if (targetRel && isSourceFileName(resolved)) {
+        if (scope && !resolved.endsWith(".d.ts") && !internalSourcePaths.has(targetRel)) {
+          adapterBlockers.push(`Resolved implementation is absent from the scoped source inventory: ${targetRel}`);
+          continue;
+        }
         internalSourcePaths.add(targetRel);
         addEdge(importerRel, targetRel, ref.kind);
         recordReference("internal-source", importerRel, ref);

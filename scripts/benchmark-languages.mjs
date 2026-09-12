@@ -119,7 +119,7 @@ try {
   if (report.bootstrapAgentIntegrity !== expected) throw new Error('Unexpected bootstrap agent');
   report.candidateVersion = experiment.candidateVersion;
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
-  report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts'], '/opt/diffci', false).record);
+  report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts', 'tests/client/economics.test.ts'], '/opt/diffci', false).record);
   if (spec.id === 'vue-test-utils') {
     // Record the environment of the suite's existing live GitHub assertion without
     // weakening it or treating an HTTP failure as a passed regression check.
@@ -132,6 +132,15 @@ try {
   }
   if (report.checks.some(r => r.exitCode !== 0)) throw new Error('Candidate checks failed');
   report.candidateBuild = run('npm', ['exec', '--', 'tsx', 'scripts/build-agent.ts', `--version=${report.candidateVersion}`], '/opt/diffci').record;
+  const baselineRoot = '/opt/diffci-baseline';
+  if (experiment.baselineVersion) {
+    const source = '/opt/diffci/scripts/performance-baseline.tgz';
+    if (createHash('sha256').update(readFileSync(source)).digest('hex') !== experiment.baselineSourceSha256) throw new Error('Baseline source checksum mismatch');
+    mkdirSync(baselineRoot);
+    run('tar', ['-xzf', source, '-C', baselineRoot]);
+    run('ln', ['-s', '/opt/diffci/node_modules', join(baselineRoot, 'node_modules')]);
+    report.baselineBuild = run('npm', ['exec', '--', 'tsx', 'scripts/build-agent.ts', `--version=${experiment.baselineVersion}`], baselineRoot).record;
+  }
   // Standard CI users cannot bypass chmod-based permission tests (Cobra exposed this).
   run('useradd', ['--create-home', '--home-dir', join(root, 'home'), 'diffci-benchmark']);
   const uid = Number(run('id', ['-u', 'diffci-benchmark']).stdout.trim());
@@ -152,6 +161,34 @@ try {
   report.agentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync(agent)).digest('base64');
   const host = join(root, 'observer'); mkdirSync(host); writeFileSync(join(host, 'package.json'), '{"private":true}');
   run('npm', ['install', '--no-audit', '--no-fund', agent], host);
+  const baselineHost = join(root, 'observer-baseline');
+  if (experiment.baselineVersion) {
+    const baselineAgent = join(baselineRoot, `dist-agent/diffci-observer-${experiment.baselineVersion}.tgz`);
+    report.baselineIntegrity = 'sha512-' + createHash('sha512').update(readFileSync(baselineAgent)).digest('base64');
+    if (report.baselineIntegrity !== experiment.baselineIntegrity) throw new Error('Baseline artifact differs from previously qualified artifact');
+    mkdirSync(baselineHost); writeFileSync(join(baselineHost, 'package.json'), '{"private":true}');
+    run('npm', ['install', '--no-audit', '--no-fund', baselineAgent], baselineHost);
+  }
+  if (spec.id === 'vue-test-utils' && experiment.mode === 'qualification') {
+    const smoke = join(root, 'economics-smoke'); mkdirSync(smoke);
+    const smokeGit = args => run('git', args, smoke).stdout.trim();
+    smokeGit(['init', '--quiet']); smokeGit(['config', 'user.name', 'Cloud fixture']); smokeGit(['config', 'user.email', 'fixture@example.test']); smokeGit(['remote', 'add', 'origin', 'https://github.com/diffci-fixture/economics.git']);
+    writeFileSync(join(smoke, 'package.json'), '{"devDependencies":{"vitest":"1"}}');
+    writeFileSync(join(smoke, 'tsconfig.json'), 'INVALID_CONFIG_PROVES_BYPASS');
+    const heads = [];
+    for (let i = 0; i < 6; i++) { writeFileSync(join(smoke, 'value.ts'), `export const value = ${i};`); smokeGit(['add', '.']); smokeGit(['commit', '--quiet', '-m', `change ${i}`]); heads.push(smokeGit(['rev-parse', 'HEAD'])); }
+    const output = join(root, 'economics-smoke.json');
+    const args = [join(host, 'node_modules/@diffci/observer/index.mjs'), 'observe', '--repo', smoke, '--base', heads[4], '--head', heads[5], '--out', output, '--no-send', '--economics-job', 'synthetic-unit'];
+    run('node', args, smoke);
+    const contextKey = JSON.parse(readFileSync(output, 'utf8')).economics?.contextKey;
+    if (!contextKey) throw new Error('Packaged observer did not expose economics context');
+    const historyPath = join(root, 'economics-history.json');
+    writeFileSync(historyPath, JSON.stringify({ schema: 'diffci.economics.v1', repository: 'diffci-fixture/economics', jobKey: 'synthetic-unit', contextKey, observerVersion: report.candidateVersion, recordedAt: new Date().toISOString(), samples: heads.slice(0, 5).map(headSha => ({ headSha, stable: true, fullMs: 20000, policyMs: 19800, observerMs: 2000 })) }));
+    const process = run('node', [...args, '--economics-history', historyPath], smoke).record;
+    const observation = JSON.parse(readFileSync(output, 'utf8'));
+    if (observation.status !== 'REFUSED' || observation.economics?.decision !== 'BYPASS_FULL' || observation.result || observation.timings.phasesMs?.engineLoad !== undefined || observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Packaged economics bypass failed');
+    report.economicsSmoke = { synthetic: true, process, observation };
+  }
   run('git', ['clone', '--filter=blob:none', '--no-checkout', `https://github.com/${spec.repository}.git`, checkout]);
   git(['checkout', '--detach', spec.sha]);
   const history = git(['rev-list', '--first-parent', `--max-count=${cohort.historyLimit}`, spec.sha]).split('\n');
@@ -193,8 +230,26 @@ try {
         }
       }
       const out = join(root, `observation-${index}.json`);
-      c.analysis = run('node', [join(host, 'node_modules/@diffci/observer/index.mjs'), 'observe', '--repo', checkout, '--base', candidate.base, '--head', candidate.head, '--out', out, '--no-send'], checkout, false, 180000).record;
-      c.observation = JSON.parse(readFileSync(out, 'utf8'));
+      const observeWith = (agentHost, extra = []) => {
+        const analysis = run('node', [join(agentHost, 'node_modules/@diffci/observer/index.mjs'), 'observe', '--repo', checkout, '--base', candidate.base, '--head', candidate.head, '--out', out, '--no-send', '--economics-job', `${spec.id}-linux-${spec.language}-fixed-suite`, ...extra], checkout, false, 180000).record;
+        const observation = JSON.parse(readFileSync(out, 'utf8'));
+        if (observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observation changed worktree');
+        return { analysis, observation };
+      };
+      if (experiment.baselineVersion) {
+        c.observerComparison = [];
+        const firstOrder = index % 2 === 0 ? ['baseline', 'candidate'] : ['candidate', 'baseline'];
+        for (const order of [firstOrder, [...firstOrder].reverse()]) {
+          const pair = { order };
+          for (const label of order) pair[label] = observeWith(label === 'baseline' ? baselineHost : host);
+          c.observerComparison.push(pair);
+        }
+        c.analysis = c.observerComparison[0].candidate.analysis;
+        c.observation = c.observerComparison[0].candidate.observation;
+        const policyIdentity = observation => JSON.stringify(observation.result?.mode === 'SELECTIVE' ? { mode: 'SELECTIVE', tests: [...observation.result.selectedTests].sort(), commands: observation.result.proposedCommands, refusal: observation.result.commandRefusalReason } : { mode: 'FULL' });
+        c.comparatorPolicyEquivalent = c.observerComparison.every(pair => policyIdentity(pair.baseline.observation) === policyIdentity(pair.candidate.observation));
+        if (!c.comparatorPolicyEquivalent) throw new Error('Baseline/candidate policy differs; matched timing cannot reuse test work');
+      } else { const observed = observeWith(host); c.analysis = observed.analysis; c.observation = observed.observation; }
       if (c.observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observer violated non-interference');
       if (!['OBSERVED', 'REFUSED'].includes(c.observation.status)) throw new Error(`Observer ${c.observation.status}: ${c.observation.reason}`);
       const result = c.observation.result;
@@ -245,6 +300,9 @@ try {
       const universe = s => JSON.stringify({ files: s.files, packages: Object.keys(s.packages ?? {}).sort(), total: s.total });
       if (universe(firstFull.summary) !== universe(secondFull.summary)) { c.status = 'FULL_UNIVERSE_CHANGED'; continue; }
       c.status = selected === undefined ? 'FULL_POLICY_MEASURED' : selected.length === 0 ? 'EMPTY_SELECTION_MEASURED' : 'SELECTIVE_POLICY_MEASURED';
+      if (c.observerComparison) {
+        c.matchedEconomics = c.pairs.map(pair => ({ fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, baselineObserverMs: c.observerComparison[0].baseline.analysis.elapsedMs, candidateObserverMs: c.analysis.elapsedMs, baselineNetSavedMs: pair.full.elapsedMs - pair.policy.elapsedMs - c.observerComparison[0].baseline.analysis.elapsedMs, candidateNetSavedMs: pair.netSavedMs }));
+      }
       announce('commit-measured', { index, policy: c.policy, status: c.status, netSavedMs: c.pairs.map(p => p.netSavedMs) });
       if (cohort.faultIndexes.includes(index)) {
         const path = candidate.sourceFiles.find(p => existsSync(join(checkout, p)));

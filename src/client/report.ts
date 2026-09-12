@@ -214,6 +214,7 @@ export interface ObservationReport {
   /** Present for REFUSED and ERROR. Written for a reader who has to decide whether to act. */
   reason?: string;
   result?: ObservationResult;
+  economics?: import("./economics.js").EconomicsDecision;
   payload: ObservationPayloadDescription;
   nonInterference: NonInterferenceEvidence;
   timings: { totalMs: number; preObserveMs?: number; phasesMs?: Record<string, number> };
