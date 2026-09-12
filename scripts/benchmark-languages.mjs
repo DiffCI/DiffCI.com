@@ -23,6 +23,10 @@ function run(cmd, args, cwd = root, required = true, timeout = 300000) {
   const result = spawnSync(cmd, args, { cwd, env: process.env, encoding: 'utf8', timeout: Math.min(timeout, Math.max(1000, deadline - Date.now())), maxBuffer: 48 * 1024 * 1024 });
   const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
   const record = { command: [cmd, ...args], cwd, exitCode: result.status, signal: result.signal, error: result.error?.message, elapsedMs: Math.round(performance.now() - start), mutationMarkerSeen: output.includes('DIFFCI_BENCHMARK_FAULT'), outputSha256: createHash('sha256').update(output).digest('hex'), tail: output.slice(-4000) };
+  if (result.status !== 0) {
+    const lines = output.split('\n');
+    record.failureDetails = lines.flatMap((line, i) => /^\s*not ok\b/.test(line) ? lines.slice(Math.max(0, i - 1), i + 45) : []).join('\n').slice(0, 40000);
+  }
   if (required && (result.status !== 0 || result.error)) throw new Error(JSON.stringify(record));
   return { record, stdout: result.stdout ?? '', output };
 }
