@@ -72,6 +72,10 @@ Observation timings include phases for engine loading, eligibility, delta work,
 graph building, impact/command planning and finalization. Graph timings separate
 repository/scope discovery, adapter inventory, adapter execution, TypeScript
 program creation, import extraction/resolution and graph finalization.
+`result.graph.adapterMetrics.vue` further records compiler loading, SFC reads and
+parsing, script/template compilation, registration scanning and type-cache
+invalidation, plus component/read/scan counts. These are nested adapter timings,
+not additional phases to add to the graph total.
 `preObserveMs` is process uptime before the observation starts, not exclusively
 module-loading time. The benchmark also measures the complete observer process.
 
@@ -93,7 +97,14 @@ Both observation repetitions are retained to expose order/cache variability.
 No automatic production activation is part of this qualification.
 
 The benchmark source upload includes an ignored `scripts/performance-baseline.tgz`
-created with `git archive` from commit `7f4a272`. Its SHA256 is pinned in
+created with `git archive` from the comparator source commit listed in the
+corresponding qualification report. Its SHA256 is pinned in
 `scripts/language-benchmark-experiment.json`; ordinary source archives must add
 that file explicitly for comparison jobs. The archive is only source material:
 both agents are built inside Cloudflare.
+
+The separate `overhead` experiment mode compares 16 fresh-process observations
+per engine per repository and all decision details without rerunning target test
+suites. It reports medians and nearest-rank p95, which is the maximum with only
+16 samples. First and repeated pairs share OS/tool caches; they are not a controlled
+cold/warm graph-cache or daemon experiment.
