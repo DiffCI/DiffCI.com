@@ -13,6 +13,7 @@ import { parseGoTestOutput } from "../../src/repo/adapters/go-test.js";
 import { analyzeRepository } from "../../src/repo/analyzer.js";
 import { observe } from "../../src/client/observe.js";
 import type { GitDelta } from "../../src/git/types.js";
+import { compileScript, compileTemplate, parse } from "@vue/compiler-sfc";
 
 function fixture(files: Record<string, string>): string {
   const root = mkdtempSync(join(tmpdir(), "diffci-adapters-"));
@@ -143,6 +144,33 @@ test("Vue shared macro types remain tracked and refresh across repeated analyses
         assert.ok(result.edges.some(edge => edge.from === path && edge.to === "props.ts"));
         assert.ok(result.virtualSources.find(source => source.path === path)?.source.includes(`type: ${runtime}`));
       }
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue analysis preserves default compiler output without using source maps", () => {
+  const components = {
+    "Setup.vue": '<script setup lang="ts">import Child from "./Child.vue"; const props = defineProps<{ title: string }>();</script><template><Child>{{ props.title }}</Child></template>',
+    "Options.vue": '<script>import Child from "./Child.vue"; export default { components: { Child } };</script><template><Child /></template>',
+    "Asset.vue": '<template><img src="./logo.png" /></template>',
+    "Runtime.vue": '<script setup>const name = "unknown";</script><template><component :is="name" /></template>',
+    "Directive.vue": '<template><div v-custom /></template>',
+  };
+  const root = fixture({ "package.json": "{}", ...components });
+  try {
+    const context = { repoPath: root, files: Object.keys(components), profile: analyzeRepository({ repoPath: root }) };
+    for (let repeat = 0; repeat < 2; repeat++) {
+      const actual = vueAdapter.analyze(context);
+      for (const [path, raw] of Object.entries(components)) {
+        const { descriptor } = parse(raw, { filename: join(root, path) });
+        const script = descriptor.script || descriptor.scriptSetup ? compileScript(descriptor, { id: path }) : undefined;
+        const template = compileTemplate({ source: descriptor.template!.content, filename: path, id: path, compilerOptions: { bindingMetadata: script?.bindings } });
+        assert.equal(actual.virtualSources.find(source => source.path === path)?.source, `${script?.content ?? ""}\n${template.code}`);
+      }
+      assert.deepEqual(actual.blockers, [
+        "Vue Runtime.vue: runtime component/directive resolution requires full validation",
+        "Vue Directive.vue: runtime component/directive resolution requires full validation",
+      ]);
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

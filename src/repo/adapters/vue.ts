@@ -40,7 +40,7 @@ import { contribution, type RepositoryAdapter } from "./types.js";
 
 /** Explicit Vue SFC imports. Runtime component registries and preprocessors require full CI. */
 export const vueAdapter: RepositoryAdapter = {
-  id: "vue", version: "4", kind: "framework",
+  id: "vue", version: "5", kind: "framework",
   detect: ({ files }) => files.some((file) => file.endsWith(".vue")),
   analyze(context) {
     const phasesMs: Record<string, number> = {};
@@ -76,7 +76,8 @@ export const vueAdapter: RepositoryAdapter = {
           result.virtualSources.push({ path, source: "export default {};" });
           continue;
         }
-        const { descriptor, errors } = measure("sfcParse", () => parse(raw, { filename: join(context.repoPath, path) }));
+        // Dependency extraction uses code, bindings and errors, never source maps.
+        const { descriptor, errors } = measure("sfcParse", () => parse(raw, { filename: join(context.repoPath, path), sourceMap: false }));
         if (errors.length) block("component parse failed");
         if (descriptor.customBlocks.length) block("custom blocks require a framework plugin");
         const blocks = [descriptor.script, descriptor.scriptSetup, descriptor.template, ...descriptor.styles].filter((b) => b !== null);
@@ -85,7 +86,7 @@ export const vueAdapter: RepositoryAdapter = {
           if (b.lang && !["js", "ts", "jsx", "tsx", "html", "css"].includes(b.lang)) block(`unsupported preprocessor ${b.lang}`);
         }
         const script = descriptor.script || descriptor.scriptSetup
-          ? measure("scriptCompile", () => compileScript(descriptor, { id: path, fs: {
+          ? measure("scriptCompile", () => compileScript(descriptor, { id: path, sourceMap: false, fs: {
             fileExists: existsSync,
             readFile(file) {
               recordTypeDependency(file);
@@ -107,13 +108,15 @@ export const vueAdapter: RepositoryAdapter = {
           const templateBlock = descriptor.template;
           const template = measure("templateCompile", () => compileTemplate({
             source: templateBlock.content, filename: path, id: path,
-            compilerOptions: { bindingMetadata: script?.bindings },
+            compilerOptions: { bindingMetadata: script?.bindings, sourceMap: false },
           }));
           if (template.errors.length) block("template compilation failed");
           // These calls represent dependencies supplied at runtime, outside the import graph.
-          counts.registrationScans++;
-          const registrations = measure("registrationScan", () => registeredComponents(source));
-          const unresolved = [...template.code.matchAll(/\b_resolveComponent\s*\(\s*(["'])(.*?)\1/g)].some(match => !registrations.has(match[2]));
+          const componentCalls = [...template.code.matchAll(/\b_resolveComponent\s*\(\s*(["'])(.*?)\1/g)];
+          // Script-setup bindings and native-only templates have no runtime
+          // component calls, so an Options API registration scan cannot help.
+          const registrations = componentCalls.length ? measure("registrationScan", () => { counts.registrationScans++; return registeredComponents(source); }) : new Set<string>();
+          const unresolved = componentCalls.some(match => !registrations.has(match[2]));
           if (unresolved || /\b_resolve(?:DynamicComponent|Directive)\s*\(/.test(template.code)) block("runtime component/directive resolution requires full validation");
           source += `\n${template.code}`;
         } else if (descriptor.template) block("external or preprocessed template requires full validation");

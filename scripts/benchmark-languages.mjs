@@ -249,10 +249,25 @@ try {
         const policyIdentity = observation => JSON.stringify(observation.result?.mode === 'SELECTIVE' ? { mode: 'SELECTIVE', tests: [...observation.result.selectedTests].sort(), commands: observation.result.proposedCommands, refusal: observation.result.commandRefusalReason } : { mode: 'FULL' });
         c.comparatorPolicyEquivalent = c.observerComparison.every(pair => policyIdentity(pair.baseline.observation) === policyIdentity(pair.candidate.observation));
         if (!c.comparatorPolicyEquivalent) throw new Error('Baseline/candidate policy differs; matched timing cannot reuse test work');
+        if (experiment.mode === 'overhead') {
+          const decisionIdentity = observation => {
+            const { graph, ...result } = observation.result ?? {};
+            return JSON.stringify({ status: observation.status, stage: observation.stage, reason: observation.reason, result, graph: graph && { nodes: graph.nodes, edges: graph.edges, confidence: graph.confidence, effectiveConfidence: graph.effectiveConfidence } });
+          };
+          c.comparatorDecisionEquivalent = c.observerComparison.every(pair => decisionIdentity(pair.baseline.observation) === decisionIdentity(pair.candidate.observation));
+          if (!c.comparatorDecisionEquivalent) throw new Error('Baseline/candidate decision details differ');
+        }
       } else { const observed = observeWith(host); c.analysis = observed.analysis; c.observation = observed.observation; }
       if (c.observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observer violated non-interference');
       if (!['OBSERVED', 'REFUSED'].includes(c.observation.status)) throw new Error(`Observer ${c.observation.status}: ${c.observation.reason}`);
       const result = c.observation.result;
+      if (experiment.mode === 'overhead') {
+        if (!c.observerComparison || !c.comparatorDecisionEquivalent) throw new Error('Overhead mode requires a matched baseline');
+        c.status = 'OBSERVER_OVERHEAD_MEASURED';
+        c.cacheConditions = { process: 'fresh process for every observation', repository: 'same installed checkout per commit', order: 'alternating first pair, reversed second pair', caches: 'OS/tool caches not flushed; no persistent DiffCI graph cache or daemon enabled' };
+        announce('observer-overhead-measured', { index, timings: c.observerComparison.map(pair => ({ order: pair.order, baselineMs: pair.baseline.analysis.elapsedMs, candidateMs: pair.candidate.analysis.elapsedMs })) });
+        continue;
+      }
       if (experiment.mode === 'profile') {
         c.profiles = [{ processMs: c.analysis.elapsedMs, timings: c.observation.timings, graph: result?.graph }];
         for (let repeat = 0; repeat < 2; repeat++) {
