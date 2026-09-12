@@ -80,7 +80,8 @@ export const vueAdapter: RepositoryAdapter = {
         // Imported macro types affect generated runtime props. Retain the files read
         // by the compiler even when the generated script erases their imports.
         for (const dependency of typeDependencies) {
-          result.assetPaths.push(dependency);
+          if (/\.[cm]?[jt]sx?$/.test(dependency)) result.sourcePaths.push(dependency);
+          else result.assetPaths.push(dependency);
           result.edges.push({ from: path, to: dependency, kind: "asset" });
         }
         let source = script?.content ?? "";
