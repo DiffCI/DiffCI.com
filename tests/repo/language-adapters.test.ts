@@ -113,6 +113,48 @@ test("Vue without tsconfig still parses transitive JavaScript dependencies and t
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+test("Vue imported macro types retain runtime dependency edges", async () => {
+  const root = fixture({ ...jsBase,
+    "src/props.ts": "export interface Props { title: string }",
+    "src/Child.vue": '<script setup lang="ts">import type { Props } from "./props"; defineProps<Props>();</script><template><span>{{ title }}</span></template>',
+  });
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(result.adapterBlockers, []);
+    assert.ok(result.graph.dependenciesOf("src/Child.vue").includes("src/props.ts"));
+    const impact = new ImpactAnalyzer().analyze(delta("src/props.ts"), result, result.profile);
+    assert.equal(impact.fallbackRequired, false);
+    assert.deepEqual(impact.affectedTests.map(t => t.path), ["tests/component.test.ts"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Go inactive files select their owning package and dependents without adding inactive tests", async (t) => {
+  const root = fixture({ "go.mod": "module example\n",
+    "lib/value.go": "package lib", "lib/value_windows.go": "package lib",
+    "lib/value_test.go": "package lib", "lib/value_windows_test.go": "package lib",
+    "app/app.go": "package app", "app/app_test.go": "package app",
+    "other/other.go": "package other", "other/other_test.go": "package other",
+  });
+  const output = [
+    { Dir: join(root, "lib"), ImportPath: "example/lib", GoFiles: ["value.go"], TestGoFiles: ["value_test.go"], IgnoredGoFiles: ["value_windows.go", "value_windows_test.go"] },
+    { Dir: join(root, "app"), ImportPath: "example/app", GoFiles: ["app.go"], TestGoFiles: ["app_test.go"], Imports: ["example/lib"] },
+    { Dir: join(root, "other"), ImportPath: "example/other", GoFiles: ["other.go"], TestGoFiles: ["other_test.go"] },
+  ].map(x => JSON.stringify(x)).join("\n");
+  t.mock.method(goAdapter, "analyze", (context: Parameters<typeof analyzeGoMetadata>[0]) => analyzeGoMetadata(context, output));
+  try {
+    const graph = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(graph.adapterBlockers, []);
+    assert.ok(!graph.profile.goTestPackages?.["lib/value_windows_test.go"]);
+    for (const path of ["lib/value.go", "lib/value_windows.go"]) {
+      const impact = new ImpactAnalyzer().analyze(delta(path), graph, graph.profile);
+      assert.equal(impact.fallbackRequired, false);
+      assert.deepEqual(impact.affectedTests.map(t => t.path), ["app/app_test.go", "lib/value_test.go"]);
+    }
+    const removed = delta("lib/removed.go"); removed.files[0].changeType = "deleted";
+    assert.equal(new ImpactAnalyzer().analyze(removed, graph, graph.profile).fallbackRequired, true);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 test("Go JSON parser rejects partial output and metadata errors", () => {
   assert.throws(() => parseGoList('{"Dir":"/repo","ImportPath":"example"'));
   assert.throws(() => parseGoList("garbage"));

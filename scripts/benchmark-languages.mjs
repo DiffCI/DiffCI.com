@@ -111,6 +111,14 @@ try {
     writeFileSync(join(root, 'offset.go'), 'package main\nimport("go/parser";"go/token";"go/ast";"fmt";"os")\nfunc main(){fset:=token.NewFileSet(); f,e:=parser.ParseFile(fset,os.Args[1],nil,0);if e!=nil{panic(e)};for _,d:=range f.Decls{if fn,ok:=d.(*ast.FuncDecl);ok&&fn.Body!=nil&&fn.Name.Name!="init"{fmt.Println(fset.Position(fn.Body.Lbrace).Offset+1);return}};fmt.Println(-1)}\n');
     run('go', ['build', '-o', join(root, 'go-function-offset'), join(root, 'offset.go')]);
   }
+  report.bootstrapAgentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync('/opt/diffci/dist-agent/agent.tgz')).digest('base64');
+  if (report.bootstrapAgentIntegrity !== expected) throw new Error('Unexpected bootstrap agent');
+  report.candidateVersion = '0.1.3-candidate.1';
+  report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
+  report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts'], '/opt/diffci', false).record);
+  if (spec.id === 'vue-test-utils') report.checks.push(run('npm', ['test'], '/opt/diffci', false, 600000).record);
+  if (report.checks.some(r => r.exitCode !== 0)) throw new Error('Candidate checks failed');
+  report.candidateBuild = run('npm', ['exec', '--', 'tsx', 'scripts/build-agent.ts', `--version=${report.candidateVersion}`], '/opt/diffci').record;
   // Standard CI users cannot bypass chmod-based permission tests (Cobra exposed this).
   run('useradd', ['--create-home', '--home-dir', join(root, 'home'), 'diffci-benchmark']);
   const uid = Number(run('id', ['-u', 'diffci-benchmark']).stdout.trim());
@@ -127,9 +135,8 @@ try {
     report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/validation-env/*.test.ts'], '/opt/diffci', false).record);
     if (report.checks.some(r => r.exitCode !== 0)) throw new Error('Benchmark control-plane checks failed');
   }
-  const agent = '/opt/diffci/dist-agent/agent.tgz';
+  const agent = `/opt/diffci/dist-agent/diffci-observer-${report.candidateVersion}.tgz`;
   report.agentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync(agent)).digest('base64');
-  if (report.agentIntegrity !== expected) throw new Error('Benchmark must use promoted observer bytes');
   const host = join(root, 'observer'); mkdirSync(host); writeFileSync(join(host, 'package.json'), '{"private":true}');
   run('npm', ['install', '--no-audit', '--no-fund', agent], host);
   run('git', ['clone', '--filter=blob:none', '--no-checkout', `https://github.com/${spec.repository}.git`, checkout]);

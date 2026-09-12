@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { compileScript, compileTemplate, parse } from "@vue/compiler-sfc";
 import ts from "typescript";
 
@@ -39,7 +39,7 @@ import { contribution, type RepositoryAdapter } from "./types.js";
 
 /** Explicit Vue SFC imports. Runtime component registries and preprocessors require full CI. */
 export const vueAdapter: RepositoryAdapter = {
-  id: "vue", version: "2", kind: "framework",
+  id: "vue", version: "3", kind: "framework",
   detect: ({ files }) => files.some((file) => file.endsWith(".vue")),
   analyze(context) {
     const result = contribution(this);
@@ -58,7 +58,7 @@ export const vueAdapter: RepositoryAdapter = {
           result.virtualSources.push({ path, source: "export default {};" });
           continue;
         }
-        const { descriptor, errors } = parse(raw, { filename: path });
+        const { descriptor, errors } = parse(raw, { filename: join(context.repoPath, path) });
         if (errors.length) block("component parse failed");
         if (descriptor.customBlocks.length) block("custom blocks require a framework plugin");
         const blocks = [descriptor.script, descriptor.scriptSetup, descriptor.template, ...descriptor.styles].filter((b) => b !== null);
@@ -66,8 +66,23 @@ export const vueAdapter: RepositoryAdapter = {
           if (b.src) block("external SFC blocks are not yet modeled");
           if (b.lang && !["js", "ts", "jsx", "tsx", "html", "css"].includes(b.lang)) block(`unsupported preprocessor ${b.lang}`);
         }
+        const typeDependencies = new Set<string>();
         const script = descriptor.script || descriptor.scriptSetup
-          ? compileScript(descriptor, { id: path }) : undefined;
+          ? compileScript(descriptor, { id: path, fs: {
+            fileExists: existsSync,
+            readFile(file) {
+              const dependency = relative(context.repoPath, resolve(file)).replace(/\\/g, "/");
+              if (dependency === ".." || dependency.startsWith("../") || isAbsolute(dependency)) throw new Error("Vue type dependency escapes repository");
+              typeDependencies.add(dependency);
+              return readFileSync(file, "utf8");
+            },
+          } }) : undefined;
+        // Imported macro types affect generated runtime props. Retain the files read
+        // by the compiler even when the generated script erases their imports.
+        for (const dependency of typeDependencies) {
+          result.assetPaths.push(dependency);
+          result.edges.push({ from: path, to: dependency, kind: "asset" });
+        }
         let source = script?.content ?? "";
         if (/\bimport\.meta\.glob(?:Eager)?\s*\(/.test(source)) block("glob imports require bundler dependency expansion");
         if (descriptor.template && !descriptor.template.src && !descriptor.template.lang) {

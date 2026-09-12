@@ -14,6 +14,7 @@ interface GoPackage {
   DepsErrors?: unknown[];
   Incomplete?: boolean;
   GoFiles?: string[];
+  IgnoredGoFiles?: string[];
   CgoFiles?: string[];
   TestGoFiles?: string[];
   XTestGoFiles?: string[];
@@ -68,7 +69,10 @@ export function analyzeGoMetadata(context: AdapterContext, output: string): Adap
   const anchors = new Map<string, string>();
   const members = new Map<string, string[]>();
   for (const pkg of packages) {
-    const files = [...(pkg.GoFiles ?? []), ...(pkg.CgoFiles ?? []), ...(pkg.TestGoFiles ?? []), ...(pkg.XTestGoFiles ?? [])];
+    // Associate inactive files with their package conservatively. They are not runnable
+    // tests, but edits (including build constraints) must still select that package and
+    // its dependents. Unaccounted files remain a global blocker below.
+    const files = [...(pkg.GoFiles ?? []), ...(pkg.CgoFiles ?? []), ...(pkg.TestGoFiles ?? []), ...(pkg.XTestGoFiles ?? []), ...(pkg.IgnoredGoFiles ?? [])];
     const paths = files.map((file) => internalPath(context.repoPath, resolve(pkg.Dir, file)));
     if (paths.some((p) => p === undefined)) { result.blockers.push("Go package contains files outside the repository"); continue; }
     const sources = paths as string[];
@@ -115,7 +119,7 @@ export function analyzeGoMetadata(context: AdapterContext, output: string): Adap
 }
 
 export const goAdapter: RepositoryAdapter = {
-  id: "go", version: "2", kind: "language",
+  id: "go", version: "3", kind: "language",
   detect: ({ files }) => files.some((file) => file === "go.mod" || file.endsWith(".go")),
   analyze(context) {
     const failure = contribution(this);
