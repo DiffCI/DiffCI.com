@@ -60,7 +60,8 @@ test("Vue scope refuses crossing imports, missing/dynamic suites and invalid dec
     { "packages/ui/vitest.config.ts": 'export default {root:"../other"};' },
     { "packages/ui/vitest.config.ts": 'export default {test:{include:["../../outside/*.test.ts"]}};' },
     { "packages/ui/vitest.config.ts": 'const shared={}; export default {...shared};' },
-    { "packages/ui/src/value.ts": 'export { value } from "../build/generated";', "packages/ui/build/generated.ts": "export const value = 1;" },
+    { "packages/ui/src/value.ts": 'export { value } from "../build/generated";', "packages/ui/build/generated.ts": "export const value = (;" },
+    { "packages/ui/src/value.ts": 'export { value } from "../build/generated";', "packages/ui/build/generated.ts": 'export {value} from "../../../shared";', "shared.ts": "export const value = 1;" },
     { "packages/ui/src/value.ts": '/// <reference path="./global.ts" />\nexport const value = 1;', "packages/ui/src/global.ts": "declare const globalValue: number;" },
     { "packages/ui/vitest.config.ts": 'export default {test:{typecheck:{enabled:true,include:["types/*.ts"]}}};' },
     { "diffci.json": JSON.stringify({ vue: { packageRoot: "../escape", testConfig: "vitest.config.ts" } }) },
@@ -94,6 +95,21 @@ test("Vue scoped selections retain every configured default type-test file", asy
       assert.equal(plan.refusalReason, undefined);
       assert.ok(types.every(path => plan.commands[0].args.includes(path.replace("packages/ui/", ""))));
     }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+test("Vue scoped syntax analysis follows generated implementations and their transitive imports", async () => {
+  const root = fixture({
+    "packages/ui/src/value.ts": 'export { value } from "../build/generated";',
+    "packages/ui/build/generated.ts": 'export { value } from "../src/leaf";',
+    "packages/ui/src/leaf.ts": "export const value = 1;",
+  });
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(result.adapterBlockers, []);
+    assert.ok(result.graph.edges.some(edge => edge.from === "packages/ui/build/generated.ts" && edge.to === "packages/ui/src/leaf.ts"));
+    const impact = new ImpactAnalyzer().analyze(delta("packages/ui/src/leaf.ts"), result, result.profile);
+    assert.equal(impact.fallbackRequired, false, impact.fallbackReasons.join("; "));
+    assert.deepEqual(impact.affectedTests.map(test => test.path), ["packages/ui/tests/child.test.ts"]);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 test("Vue scope follows workspace symlinks before accepting a dependency as external", async () => {

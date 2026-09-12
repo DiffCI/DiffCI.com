@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER, testFileMatcherForProfile, type TestFileMatcher } from "./test-discovery.js";
 import { isBuiltin } from "node:module";
 import { dirname, extname, join, normalize, relative, resolve, sep } from "node:path";
@@ -742,7 +742,8 @@ export async function buildDependencyGraph(
     addEdge(importerRel, assetRel, "asset");
   }
 
-  const filesParsed = sourceFiles.length;
+  let filesParsed = sourceFiles.length;
+  let followedImplementationFiles = 0;
 
   for (const sf of sourceFiles) {
     const importerRel = toRelativeInternal(repoPath, sf.fileName);
@@ -828,8 +829,19 @@ export async function buildDependencyGraph(
 
       if (targetRel && isSourceFileName(resolved)) {
         if (scope && !resolved.endsWith(".d.ts") && !internalSourcePaths.has(targetRel)) {
-          adapterBlockers.push(`Resolved implementation is absent from the scoped source inventory: ${targetRel}`);
-          continue;
+          // A real import can reach generated implementation excluded from the
+          // initial walk. Parse it (and its imports) rather than silently dropping
+          // the edge or loading every TypeScript declaration library again.
+          try {
+            if (isExcludedPath(targetRel, options.excludeDirs ?? []) || followedImplementationFiles >= 500 || statSync(resolved).size > 5 * 1024 * 1024) throw new Error("excluded or exceeds parse budget");
+            const followed = ts.createSourceFile(resolved, readFileSync(resolved, "utf8"), ts.ScriptTarget.Latest, true);
+            if ((followed as unknown as { parseDiagnostics?: unknown[] }).parseDiagnostics?.length) throw new Error("invalid implementation syntax");
+            sourceFiles.push(followed);
+            followedImplementationFiles++;
+          } catch {
+            adapterBlockers.push(`Resolved implementation cannot be included in the scoped source inventory: ${targetRel}`);
+            continue;
+          }
         }
         internalSourcePaths.add(targetRel);
         addEdge(importerRel, targetRel, ref.kind);
@@ -859,6 +871,7 @@ export async function buildDependencyGraph(
   if (unresolved.some((ref) => ref.importer.endsWith(".vue") || stripImportQuery(ref.specifier).endsWith(".vue"))) {
     adapterBlockers.push("Unresolved Vue dependencies require full validation");
   }
+  filesParsed = sourceFiles.length;
   if (scope && unresolved.length) adapterBlockers.push("Unresolved dependencies in the declared Vue suite require full validation");
   if (scope && edges.some(edge => outsideScope(edge.from) || outsideScope(edge.to))) adapterBlockers.push("Vue asset or macro dependency crosses the declared package boundary");
   profile.adapterBlockers = [...adapterBlockers];
