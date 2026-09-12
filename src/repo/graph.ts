@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, realpathSync } from "node:fs";
 import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER, testFileMatcherForProfile, type TestFileMatcher } from "./test-discovery.js";
 import { isBuiltin } from "node:module";
 import { dirname, extname, join, normalize, relative, resolve, sep } from "node:path";
@@ -612,7 +612,25 @@ export async function buildDependencyGraph(
   const profile = analyzeRepository(options);
   const scopeBlockers = applyVueScope(repoPath, profile);
   const scope = profile.vueScope;
-  const outsideScope = (path: string) => !!scope && !inVuePackage(path, scope.packageRoot) && !path.split("/").includes("node_modules");
+  const physicalRepoRoot = scope ? realpathSync(repoPath) : "";
+  const physicalPackageRoot = scope ? realpathSync(join(repoPath, scope.packageRoot)) : "";
+  const scopePathChecks = new Map<string, boolean>();
+  const outsideScope = (path: string): boolean => {
+    if (!scope) return false;
+    const cached = scopePathChecks.get(path);
+    if (cached !== undefined) return cached;
+    const lexicalOutside = !inVuePackage(path, scope.packageRoot) && !path.split("/").includes("node_modules");
+    let outside = lexicalOutside;
+    if (!outside && existsSync(join(repoPath, path))) {
+      const physical = realpathSync(join(repoPath, path));
+      const packageRelative = relative(physicalPackageRoot, physical).replace(/\\/g, "/");
+      const repositoryRelative = relative(physicalRepoRoot, physical).replace(/\\/g, "/");
+      outside = (packageRelative === ".." || packageRelative.startsWith("../") || /^[A-Za-z]:|^\//.test(packageRelative)) &&
+        !(!repositoryRelative.startsWith("../") && !/^[A-Za-z]:|^\//.test(repositoryRelative) && (repositoryRelative.startsWith("node_modules/") || repositoryRelative.includes("/node_modules/")));
+    }
+    scopePathChecks.set(path, outside);
+    return outside;
+  };
   const files = adapterFiles(repoPath, options.excludeDirs).filter(path => !scope || inVuePackage(path, scope.packageRoot));
   const context = { repoPath, files, profile };
   const contributions = REPOSITORY_ADAPTERS.filter((adapter) => adapter.detect(context)).map((adapter) => adapter.analyze(context));
@@ -779,12 +797,13 @@ export async function buildDependencyGraph(
 
       const resolved = resolution.resolvedModule.resolvedFileName;
       const targetRel = toRelativeInternal(repoPath, resolved);
-      if (scope && resolution.resolvedModule.isExternalLibraryImport && (!targetRel || targetRel.split("/").includes("node_modules"))) {
-        recordReference("external-package", importerRel, ref);
-        continue;
-      }
       if (targetRel && outsideScope(targetRel)) {
         adapterBlockers.push(`Vue dependency crosses the declared package boundary: ${importerRel} -> ${targetRel}`);
+        continue;
+      }
+      if (scope && resolution.resolvedModule.isExternalLibraryImport && (!targetRel || targetRel.split("/").includes("node_modules"))) {
+        if (!targetRel) adapterBlockers.push("Vue dependency location outside the repository cannot be verified");
+        recordReference("external-package", importerRel, ref);
         continue;
       }
 

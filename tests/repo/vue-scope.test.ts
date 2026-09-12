@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
@@ -70,4 +70,19 @@ test("Vue scope refuses crossing imports, missing/dynamic suites and invalid dec
       assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile).fallbackRequired, true);
     } finally { rmSync(root, { recursive: true, force: true }); }
   }
+});
+test("Vue scope follows workspace symlinks before accepting a dependency as external", async () => {
+  const root = fixture({
+    "packages/ui/tsconfig.json": '{"compilerOptions":{"moduleResolution":"Bundler","preserveSymlinks":true},"include":["src","tests"]}',
+    "packages/ui/src/value.ts": 'export {value} from "shared";',
+    "packages/shared/package.json": '{"name":"shared","main":"index.ts"}',
+    "packages/shared/index.ts": "export const value = 1;",
+  });
+  try {
+    mkdirSync(join(root, "node_modules"), { recursive: true });
+    symlinkSync(join(root, "packages/shared"), join(root, "node_modules/shared"), "junction");
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.ok(result.adapterBlockers?.some(reason => reason.includes("boundary")));
+    assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile).fallbackRequired, true);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });

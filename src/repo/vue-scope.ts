@@ -17,6 +17,11 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
   if (!existsSync(join(packagePath, "package.json")) || !existsSync(join(packagePath, scope.testConfig))) return ["Vue scope requires an existing package.json and default Vitest config"];
   const actual = relative(realpathSync(repoPath), realpathSync(packagePath));
   if (actual === ".." || actual.startsWith(`..${process.platform === "win32" ? "\\" : "/"}`) || isAbsolute(actual)) return ["Vue package scope escapes the repository"];
+  const physicallyLocal = (path: string) => {
+    const physical = relative(realpathSync(packagePath), realpathSync(join(packagePath, path))).replace(/\\/g, "/");
+    return physical !== ".." && !physical.startsWith("../") && !isAbsolute(physical);
+  };
+  if (!["package.json", scope.testConfig].every(physicallyLocal)) return ["Vue package manifest or config crosses the physical package boundary"];
   const scoped = analyzeRepository({ repoPath: packagePath });
   const configs = scoped.testRunnerConfigs ?? [];
   if (configs.length !== 1 || configs[0].file !== scope.testConfig || configs[0].runner !== "vitest") return ["Vue scope requires exactly one verified default Vitest suite"];
@@ -51,7 +56,7 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
         for (const value of values) {
           if (!ts.isStringLiteral(value)) { blockers.push("Vue scoped setup paths must be literal package-local files"); continue; }
           const path = relative(packagePath, resolve(packagePath, value.text)).replace(/\\/g, "/");
-          if (path.startsWith("../") || isAbsolute(path) || !existsSync(join(packagePath, path))) blockers.push("Vue scoped setup path escapes or is missing from the package");
+          if (path.startsWith("../") || isAbsolute(path) || !existsSync(join(packagePath, path)) || !physicallyLocal(path)) blockers.push("Vue scoped setup path escapes or is missing from the package");
           else setup.push(prefix(path));
         }
       }
