@@ -120,7 +120,16 @@ try {
   report.candidateVersion = '0.1.3-candidate.1';
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
   report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts'], '/opt/diffci', false).record);
-  if (spec.id === 'vue-test-utils') report.checks.push(run('npm', ['test'], '/opt/diffci', false, 600000).record);
+  if (spec.id === 'vue-test-utils') {
+    // Record the environment of the suite's existing live GitHub assertion without
+    // weakening it or treating an HTTP failure as a passed regression check.
+    try {
+      const response = await fetch('https://api.github.com/repos/deepseek-ai/deepseek-harness/commits/b150a551b8d465e31e418e1b2eaf5e79bbb7d28e', { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'diffci-r2-verification' } });
+      const data = await response.json();
+      report.githubProofEnvironment = { status: response.status, remaining: response.headers.get('x-ratelimit-remaining'), reset: response.headers.get('x-ratelimit-reset'), sha: data.sha, message: data.message };
+    } catch (error) { report.githubProofEnvironment = { error: String(error) }; }
+    report.checks.push(run('npm', ['test'], '/opt/diffci', false, 600000).record);
+  }
   if (report.checks.some(r => r.exitCode !== 0)) throw new Error('Candidate checks failed');
   report.candidateBuild = run('npm', ['exec', '--', 'tsx', 'scripts/build-agent.ts', `--version=${report.candidateVersion}`], '/opt/diffci').record;
   // Standard CI users cannot bypass chmod-based permission tests (Cobra exposed this).
