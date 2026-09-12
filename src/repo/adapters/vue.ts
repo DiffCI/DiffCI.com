@@ -43,15 +43,23 @@ export const vueAdapter: RepositoryAdapter = {
   id: "vue", version: "4", kind: "framework",
   detect: ({ files }) => files.some((file) => file.endsWith(".vue")),
   analyze(context) {
+    const phasesMs: Record<string, number> = {};
+    const counts: Record<string, number> = { components: 0, typeReads: 0, registrationScans: 0 };
+    const measure = <T>(name: string, work: () => T): T => {
+      const start = performance.now();
+      try { return work(); } finally { phasesMs[name] = (phasesMs[name] ?? 0) + performance.now() - start; }
+    };
     // Go and scoped TS-only packages do not need to initialize Vue's compiler/Babel
     // dependency tree. Keep the same synchronous adapter contract, loading it on use.
-    const { compileScript, compileTemplate, invalidateTypeCache, parse } = loadCompiler("@vue/compiler-sfc") as typeof import("@vue/compiler-sfc");
+    const { compileScript, compileTemplate, invalidateTypeCache, parse } = measure("compilerLoad", () => loadCompiler("@vue/compiler-sfc")) as typeof import("@vue/compiler-sfc");
     const result = contribution(this);
+    result.performance = { phasesMs, counts };
     const dependencies = [...context.profile.packageJson.dependencies, ...context.profile.packageJson.devDependencies];
     if (dependencies.includes("nuxt") || context.files.some((file) => /(?:^|\/)nuxt\.config\./.test(file))) {
       result.blockers.push("Nuxt implicit routes and auto-imports require a dedicated framework adapter");
     }
     for (const path of context.files.filter((file) => file.endsWith(".vue"))) {
+      counts.components++;
       result.sourcePaths.push(path);
       const block = (reason: string) => result.blockers.push(`Vue ${path}: ${reason}`);
       const typeDependencies = new Set<string>();
@@ -61,14 +69,14 @@ export const vueAdapter: RepositoryAdapter = {
         typeDependencies.add(dependency);
       };
       try {
-        const raw = readFileSync(join(context.repoPath, path), "utf8");
+        const raw = measure("sourceRead", () => readFileSync(join(context.repoPath, path), "utf8"));
         // compiler-sfc discards an empty script block then reports a missing block.
         // Recognize only this exact dependency-free SFC shape, not arbitrary parse errors.
         if (/^\s*<script(?:\s+setup)?(?:\s+lang=["'](?:ts|js)["'])?\s*>\s*<\/script>\s*$/.test(raw)) {
           result.virtualSources.push({ path, source: "export default {};" });
           continue;
         }
-        const { descriptor, errors } = parse(raw, { filename: join(context.repoPath, path) });
+        const { descriptor, errors } = measure("sfcParse", () => parse(raw, { filename: join(context.repoPath, path) }));
         if (errors.length) block("component parse failed");
         if (descriptor.customBlocks.length) block("custom blocks require a framework plugin");
         const blocks = [descriptor.script, descriptor.scriptSetup, descriptor.template, ...descriptor.styles].filter((b) => b !== null);
@@ -77,13 +85,14 @@ export const vueAdapter: RepositoryAdapter = {
           if (b.lang && !["js", "ts", "jsx", "tsx", "html", "css"].includes(b.lang)) block(`unsupported preprocessor ${b.lang}`);
         }
         const script = descriptor.script || descriptor.scriptSetup
-          ? compileScript(descriptor, { id: path, fs: {
+          ? measure("scriptCompile", () => compileScript(descriptor, { id: path, fs: {
             fileExists: existsSync,
             readFile(file) {
               recordTypeDependency(file);
+              counts.typeReads++;
               return readFileSync(file, "utf8");
             },
-          } }) : undefined;
+          } })) : undefined;
         for (const dependency of script?.deps ?? []) recordTypeDependency(dependency);
         // Imported macro types affect generated runtime props. Retain the files read
         // by the compiler even when the generated script erases their imports.
@@ -95,13 +104,14 @@ export const vueAdapter: RepositoryAdapter = {
         let source = script?.content ?? "";
         if (/\bimport\.meta\.glob(?:Eager)?\s*\(/.test(source)) block("glob imports require bundler dependency expansion");
         if (descriptor.template && !descriptor.template.src && !descriptor.template.lang) {
-          const template = compileTemplate({
+          const template = measure("templateCompile", () => compileTemplate({
             source: descriptor.template.content, filename: path, id: path,
             compilerOptions: { bindingMetadata: script?.bindings },
-          });
+          }));
           if (template.errors.length) block("template compilation failed");
           // These calls represent dependencies supplied at runtime, outside the import graph.
-          const registrations = registeredComponents(source);
+          counts.registrationScans++;
+          const registrations = measure("registrationScan", () => registeredComponents(source));
           const unresolved = [...template.code.matchAll(/\b_resolveComponent\s*\(\s*(["'])(.*?)\1/g)].some(match => !registrations.has(match[2]));
           if (unresolved || /\b_resolve(?:DynamicComponent|Directive)\s*\(/.test(template.code)) block("runtime component/directive resolution requires full validation");
           source += `\n${template.code}`;
@@ -116,7 +126,7 @@ export const vueAdapter: RepositoryAdapter = {
       } finally {
         // compiler-sfc caches parsed imported types globally. Do not let a later
         // component or a second analysis reuse stale types or bypass filesystem reads.
-        for (const dependency of typeDependencies) invalidateTypeCache(join(context.repoPath, dependency));
+        measure("typeCacheInvalidation", () => { for (const dependency of typeDependencies) invalidateTypeCache(join(context.repoPath, dependency)); });
       }
     }
     return result;

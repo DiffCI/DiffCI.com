@@ -286,6 +286,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
           effectiveConfidence: impact.effectiveGraphConfidence,
           durationMs: Math.round(graphResult.performance.durationMs),
           phasesMs: graphResult.performance.phasesMs,
+          adapterMetrics: graphResult.performance.adapterMetrics,
         },
         pathBaseline: {
           mode: baseline.fallbackRequired ? "FULL" : "SELECTIVE",

@@ -129,6 +129,7 @@ export interface ObservationGraph {
   effectiveConfidence?: string;
   durationMs: number;
   phasesMs?: Record<string, number>;
+  adapterMetrics?: Record<string, { phasesMs: Record<string, number>; counts: Record<string, number> }>;
 }
 
 /**

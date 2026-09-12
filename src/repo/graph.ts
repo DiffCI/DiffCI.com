@@ -949,6 +949,7 @@ export async function buildDependencyGraph(
   const performance: GraphPerformanceMetrics = {
     durationMs,
     phasesMs,
+    adapterMetrics: Object.fromEntries(contributions.filter(item => item.performance).map(item => [item.id, item.performance!])),
     heapUsedMb: heapDuringBuildMb,
     heapAfterExtractionMb,
     filesDiscovered: filesParsed,

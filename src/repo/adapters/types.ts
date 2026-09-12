@@ -20,6 +20,7 @@ export interface AdapterContribution {
   executionEnv?: Record<string, string>;
   /** Global blockers: missing edges cannot be dismissed using graph reachability. */
   blockers: string[];
+  performance?: { phasesMs: Record<string, number>; counts: Record<string, number> };
 }
 
 export interface RepositoryAdapter {

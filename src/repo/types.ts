@@ -211,6 +211,7 @@ export interface GraphIntegrityReport {
 export interface GraphPerformanceMetrics {
   durationMs: number;
   phasesMs?: Record<string, number>;
+  adapterMetrics?: Record<string, { phasesMs: Record<string, number>; counts: Record<string, number> }>;
   heapUsedMb?: number;
   heapAfterExtractionMb?: number;
   filesDiscovered: number;
