@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { compileScript, compileTemplate, invalidateTypeCache, parse } from "@vue/compiler-sfc";
+import { createRequire } from "node:module";
 import ts from "typescript";
+const loadCompiler = createRequire(import.meta.url);
 
 /** Only direct imports registered in a literal component options object are provable. */
 function registeredComponents(source: string): Set<string> {
@@ -42,6 +43,9 @@ export const vueAdapter: RepositoryAdapter = {
   id: "vue", version: "4", kind: "framework",
   detect: ({ files }) => files.some((file) => file.endsWith(".vue")),
   analyze(context) {
+    // Go and scoped TS-only packages do not need to initialize Vue's compiler/Babel
+    // dependency tree. Keep the same synchronous adapter contract, loading it on use.
+    const { compileScript, compileTemplate, invalidateTypeCache, parse } = loadCompiler("@vue/compiler-sfc") as typeof import("@vue/compiler-sfc");
     const result = contribution(this);
     const dependencies = [...context.profile.packageJson.dependencies, ...context.profile.packageJson.devDependencies];
     if (dependencies.includes("nuxt") || context.files.some((file) => /(?:^|\/)nuxt\.config\./.test(file))) {

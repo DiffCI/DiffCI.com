@@ -115,7 +115,7 @@ try {
   }
   report.bootstrapAgentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync('/opt/diffci/dist-agent/agent.tgz')).digest('base64');
   if (report.bootstrapAgentIntegrity !== expected) throw new Error('Unexpected bootstrap agent');
-  report.candidateVersion = '0.1.4-candidate.1';
+  report.candidateVersion = '0.1.4-candidate.2';
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
   report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts'], '/opt/diffci', false).record);
   if (spec.id === 'vue-test-utils') {
