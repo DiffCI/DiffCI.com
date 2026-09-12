@@ -797,12 +797,14 @@ export async function buildDependencyGraph(
 
       const resolved = resolution.resolvedModule.resolvedFileName;
       const targetRel = toRelativeInternal(repoPath, resolved);
-      if (targetRel && outsideScope(targetRel)) {
-        adapterBlockers.push(`Vue dependency crosses the declared package boundary: ${importerRel} -> ${targetRel}`);
+      // The generic internal-path helper intentionally hides root node_modules.
+      // Scope validation must still follow those paths to catch workspace symlinks.
+      const scopeTarget = scope ? relative(repoPath, resolved).replace(/\\/g, "/") : targetRel;
+      if (scopeTarget && outsideScope(scopeTarget)) {
+        adapterBlockers.push(`Vue dependency crosses the declared package boundary: ${importerRel} -> ${scopeTarget}`);
         continue;
       }
       if (scope && resolution.resolvedModule.isExternalLibraryImport && (!targetRel || targetRel.split("/").includes("node_modules"))) {
-        if (!targetRel) adapterBlockers.push("Vue dependency location outside the repository cannot be verified");
         recordReference("external-package", importerRel, ref);
         continue;
       }

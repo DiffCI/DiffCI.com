@@ -178,6 +178,7 @@ export interface ObservationResult {
   /** Explicit Go CI universe, when configured by the repository. */
   goScope?: "root-module";
   vueScope?: { packageRoot: string; testConfig: string };
+  scopedTestFiles?: string[];
   /** Set when a selection was made but no runnable command could be built for it. */
   commandRefusalReason?: string;
   /** Selected paths no runner claimed. Non-empty means the command does not cover the selection. */

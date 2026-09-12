@@ -60,6 +60,7 @@ test("Vue scope refuses crossing imports, missing/dynamic suites and invalid dec
     { "packages/ui/vitest.config.ts": 'export default {root:"../other"};' },
     { "packages/ui/vitest.config.ts": 'export default {test:{include:["../../outside/*.test.ts"]}};' },
     { "packages/ui/vitest.config.ts": 'const shared={}; export default {...shared};' },
+    { "packages/ui/vitest.config.ts": 'export default {test:{typecheck:{enabled:true,include:["types/*.ts"]}}};' },
     { "diffci.json": JSON.stringify({ vue: { packageRoot: "../escape", testConfig: "vitest.config.ts" } }) },
     { "diffci.json": JSON.stringify({ vue: { packageRoot: "missing", testConfig: "vitest.config.ts" } }) },
   ] as Record<string, string>[]) {
@@ -70,6 +71,28 @@ test("Vue scope refuses crossing imports, missing/dynamic suites and invalid dec
       assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile).fallbackRequired, true);
     } finally { rmSync(root, { recursive: true, force: true }); }
   }
+});
+test("Vue scoped selections retain every configured default type-test file", async () => {
+  const root = fixture({
+    "packages/ui/vitest.config.ts": 'export default {test:{include:["tests/**/*.test.ts"],typecheck:{enabled:true}}};',
+    "packages/ui/types/public.test-d.ts": 'import { value } from "../src/value"; export type Value = typeof value;',
+    "packages/ui/types/other.spec-d.ts": 'export type Other = string;',
+  });
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(result.adapterBlockers, []);
+    const types = ["packages/ui/types/other.spec-d.ts", "packages/ui/types/public.test-d.ts"];
+    assert.deepEqual(result.profile.vueTypeTestPaths, types);
+    assert.ok(types.every(path => result.profile.testFilePaths.includes(path)));
+    for (const path of ["packages/ui/src/value.ts", "packages/ui/tests/other.test.ts"]) {
+      const impact = new ImpactAnalyzer().analyze(delta(path), result, result.profile);
+      assert.equal(impact.fallbackRequired, false, impact.fallbackReasons.join("; "));
+      assert.ok(types.every(path => impact.affectedTests.some(test => test.path === path && test.reasons.includes("ALWAYS_RUN_POLICY"))));
+      const plan = planSelectiveTestCommands(result.profile, impact.affectedTests.map(test => test.path));
+      assert.equal(plan.refusalReason, undefined);
+      assert.ok(types.every(path => plan.commands[0].args.includes(path.replace("packages/ui/", ""))));
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
 test("Vue scope follows workspace symlinks before accepting a dependency as external", async () => {
   const root = fixture({
@@ -84,5 +107,18 @@ test("Vue scope follows workspace symlinks before accepting a dependency as exte
     const result = await buildDependencyGraph({ repoPath: root });
     assert.ok(result.adapterBlockers?.some(reason => reason.includes("boundary")));
     assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile).fallbackRequired, true);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+test("Vue scope accepts physical third-party dependencies in root node_modules", async () => {
+  const root = fixture({
+    "packages/ui/tsconfig.json": '{"compilerOptions":{"moduleResolution":"Bundler"},"include":["src","tests"]}',
+    "packages/ui/src/value.ts": 'export {value} from "third-party";',
+    "node_modules/third-party/package.json": '{"name":"third-party","main":"index.ts"}',
+    "node_modules/third-party/index.ts": "export const value = 1;",
+  });
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(result.adapterBlockers, []);
+    assert.ok(result.references.some(ref => ref.specifier === "third-party" && ref.resolution === "external-package"));
   } finally { rmSync(root, { recursive: true, force: true }); }
 });

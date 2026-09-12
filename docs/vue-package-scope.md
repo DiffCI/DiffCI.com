@@ -48,6 +48,12 @@ invocation. Therefore these timings are a new paired experiment, not a subtracti
 against the earlier direct-node runs. The baseline still independently reports its
 actual test universe, including Vue Router type tests.
 
+Enabled default Vitest type-test files are included in the inventory and always
+run with every selection. Custom type-test discovery retains full fallback.
+Qualification compares the declared inventory to the full runner's actual files;
+any mismatch switches the benchmark case to full validation. Preliminary Router
+timings that omitted type tests are diagnostic only and do not count as evidence.
+
 The candidate also loads compiler-sfc on first Vue use rather than at process
 startup, avoiding that dependency initialization in Go/TS-only observations. Go
 selection semantics are unchanged; separate Cloudflare runs measure the overhead.

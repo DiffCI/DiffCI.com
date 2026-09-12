@@ -3,6 +3,7 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import ts from "typescript";
 import { analyzeRepository } from "./analyzer.js";
 import type { RepositoryProfile } from "./types.js";
+import { adapterFiles } from "./adapters/index.js";
 
 export function inVuePackage(path: string, root: string): boolean {
   return root === "." || path === root || path.startsWith(`${root}/`);
@@ -30,6 +31,7 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
   const config = ts.createSourceFile(scope.testConfig, readFileSync(join(packagePath, scope.testConfig), "utf8"), ts.ScriptTarget.Latest, true);
   const blockers: string[] = [];
   const setup: string[] = [prefix(scope.testConfig)];
+  let typecheckEnabled = false;
   const allowedImports = new Set(["vitest/config", "@vitejs/plugin-vue", "node:path", "node:url", "path", "url"]);
   const factories = new Set<string>();
   const vuePlugins = new Set<string>();
@@ -49,6 +51,17 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && !allowedImports.has(node.moduleSpecifier.text)) blockers.push("Vue scoped Vitest config has an unsupported plugin or config helper");
     if (ts.isPropertyAssignment(node) && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name))) {
       const name = node.name.text;
+      if (name === "typecheck") {
+        if (!ts.isObjectLiteralExpression(node.initializer)) blockers.push("Vue typecheck configuration must be literal");
+        else for (const property of node.initializer.properties) {
+          if (!ts.isPropertyAssignment(property) || !(ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))) { blockers.push("Vue typecheck configuration is not fully modeled"); continue; }
+          if (property.name.text === "enabled") {
+            if (property.initializer.kind === ts.SyntaxKind.TrueKeyword) typecheckEnabled = true;
+            else if (property.initializer.kind !== ts.SyntaxKind.FalseKeyword) blockers.push("Vue typecheck enabled flag must be literal");
+          }
+          if (["include", "exclude", "only"].includes(property.name.text)) blockers.push("Custom Vue type-test discovery requires full validation");
+        }
+      }
       if (name === "plugins" && (!ts.isArrayLiteralExpression(node.initializer) || node.initializer.elements.some(element => !ts.isCallExpression(element) || !ts.isIdentifier(element.expression) || !vuePlugins.has(element.expression.text) || element.arguments.length !== 0))) blockers.push("Vue scope supports only the default Vue compiler plugin");
       if (["root", "projects", "workspace", "extends"].includes(name)) blockers.push("Vue scoped Vitest config overrides its package boundary");
       if (["setupFiles", "globalSetup"].includes(name)) {
@@ -74,6 +87,15 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
   profile.testPatterns = scoped.testPatterns?.map(prefix);
   profile.testExcludePatterns = scoped.testExcludePatterns?.map(prefix);
   profile.testAuthoritativePatterns = scoped.testAuthoritativePatterns?.map(prefix);
+  if (typecheckEnabled) {
+    // Vitest's typecheck.include default is independent from its runtime test include.
+    // Keep every type suite, rather than applying runtime reachability to type checking.
+    profile.vueTypeTestPaths = adapterFiles(packagePath).filter(path => /\.(?:test|spec)-d\.[cm]?[jt]sx?$/.test(path)).map(prefix);
+    profile.testFilePaths = [...new Set([...profile.testFilePaths, ...profile.vueTypeTestPaths])].sort();
+    profile.testPatterns = [...(profile.testPatterns ?? []), ...profile.vueTypeTestPaths];
+    profile.testAuthoritativePatterns = [...(profile.testAuthoritativePatterns ?? []), ...profile.vueTypeTestPaths];
+    if (!profile.vueTypeTestPaths.length) blockers.push("Enabled Vue type checking has no discovered type suites");
+  }
   profile.testIgnoreRegexSources = scoped.testIgnoreRegexSources;
   profile.testRoots = scope.packageRoot === "." ? undefined : [scope.packageRoot];
   profile.tests = scoped.tests.map(test => ({ ...test, glob: prefix(test.glob) }));

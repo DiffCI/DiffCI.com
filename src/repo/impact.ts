@@ -648,7 +648,7 @@ export class ImpactAnalyzer {
     affectedTests: Map<string, TestImpact>,
     evidence: ImpactEvidence[],
   ): void {
-    const alwaysRunPaths = new Set<string>();
+    const alwaysRunPaths = new Set<string>(profile.vueTypeTestPaths ?? []);
     const knownTestPaths = new Set<string>();
     for (const testLocation of profile.tests) {
       for (const node of graph.nodes) {

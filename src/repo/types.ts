@@ -48,6 +48,7 @@ export interface RepositoryProfile {
   goExcludedModuleRoots?: string[];
   vueScope?: { packageRoot: string; testConfig: string };
   vueSetupPaths?: string[];
+  vueTypeTestPaths?: string[];
   packageManager: PackageManager;
   packageJson: {
     name?: string;

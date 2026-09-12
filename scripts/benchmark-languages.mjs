@@ -115,7 +115,7 @@ try {
   }
   report.bootstrapAgentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync('/opt/diffci/dist-agent/agent.tgz')).digest('base64');
   if (report.bootstrapAgentIntegrity !== expected) throw new Error('Unexpected bootstrap agent');
-  report.candidateVersion = '0.1.4-candidate.3';
+  report.candidateVersion = '0.1.4-candidate.4';
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
   report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts'], '/opt/diffci', false).record);
   if (spec.id === 'vue-test-utils') {
@@ -206,6 +206,11 @@ try {
       }
       const firstFull = execute(); c.firstFull = firstFull; save();
       if (!green(firstFull)) { c.status = 'BASELINE_RED_OR_UNREADABLE'; continue; }
+      if (selected && spec.language === 'vue' && JSON.stringify([...(result.scopedTestFiles ?? [])].sort()) !== JSON.stringify([...firstFull.summary.files].sort())) {
+        c.policy = 'SUITE_UNIVERSE_MISMATCH_FULL';
+        c.suiteUniverseMismatch = { declared: result.scopedTestFiles ?? [], actual: firstFull.summary.files };
+        selected = undefined;
+      }
       if (selected && spec.language === 'vue' && selected.some(p => !firstFull.summary.files.includes(p))) { c.policy = 'OUTSIDE_MEASURED_SUITE_FULL'; selected = undefined; }
       c.executedSelection = selected ?? null;
       let secondFull;
