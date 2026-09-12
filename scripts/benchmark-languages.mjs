@@ -186,8 +186,8 @@ try {
     writeFileSync(historyPath, JSON.stringify({ schema: 'diffci.economics.v1', repository: 'diffci-fixture/economics', jobKey: 'synthetic-unit', contextKey, observerVersion: report.candidateVersion, recordedAt: new Date().toISOString(), samples: heads.slice(0, 5).map(headSha => ({ headSha, stable: true, fullMs: 20000, policyMs: 19800, observerMs: 2000 })) }));
     const process = run('node', [...args, '--economics-history', historyPath], smoke).record;
     const observation = JSON.parse(readFileSync(output, 'utf8'));
-    if (observation.status !== 'REFUSED' || observation.economics?.decision !== 'BYPASS_FULL' || observation.result || observation.timings.phasesMs?.engineLoad !== undefined || observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Packaged economics bypass failed');
     report.economicsSmoke = { synthetic: true, process, observation };
+    if (observation.observer.version !== report.candidateVersion || observation.observer.engineSha || observation.status !== 'REFUSED' || observation.economics?.decision !== 'BYPASS_FULL' || observation.result || observation.timings.phasesMs?.engineLoad !== undefined || observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Packaged economics bypass failed');
   }
   run('git', ['clone', '--filter=blob:none', '--no-checkout', `https://github.com/${spec.repository}.git`, checkout]);
   git(['checkout', '--detach', spec.sha]);

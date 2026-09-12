@@ -72,6 +72,9 @@ function observerIdentity(): { version: string; root?: string; sha?: string } {
     if (existsSync(candidate)) {
       try {
         const parsed = JSON.parse(readFileSync(candidate, "utf8")) as { name?: string; version?: string };
+        // Installed agents have their own name. Never attribute the customer's
+        // surrounding git checkout to the engine when reading this manifest.
+        if (parsed.name === "@diffci/observer") return { version: parsed.version ?? "0.0.0", root: current };
         if (parsed.name === "diffci") {
           let sha: string | undefined;
           try {
