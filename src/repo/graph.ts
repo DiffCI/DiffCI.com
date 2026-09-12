@@ -607,10 +607,19 @@ export async function buildDependencyGraph(
   options: BuildDependencyGraphOptions = {},
 ): Promise<DependencyGraphResult> {
   const start = process.hrtime.bigint();
+  const phasesMs: Record<string, number> = {};
+  let phaseStart = start;
+  const markPhase = (name: string) => {
+    const now = process.hrtime.bigint();
+    phasesMs[name] = Number(now - phaseStart) / 1_000_000;
+    phaseStart = now;
+  };
   const repoPath = options.repoPath ? resolve(options.repoPath) : process.cwd();
 
   const profile = analyzeRepository(options);
+  markPhase("repositoryDiscovery");
   const scopeBlockers = applyVueScope(repoPath, profile);
+  markPhase("scopeDiscovery");
   const scope = profile.vueScope;
   const physicalRepoRoot = scope ? realpathSync(repoPath) : "";
   const physicalPackageRoot = scope ? realpathSync(join(repoPath, scope.packageRoot)) : "";
@@ -632,8 +641,10 @@ export async function buildDependencyGraph(
     return outside;
   };
   const files = adapterFiles(repoPath, options.excludeDirs).filter(path => !scope || inVuePackage(path, scope.packageRoot));
+  markPhase("adapterInventory");
   const context = { repoPath, files, profile };
   const contributions = REPOSITORY_ADAPTERS.filter((adapter) => adapter.detect(context)).map((adapter) => adapter.analyze(context));
+  markPhase("adapters");
   const adapterBlockers = [...scopeBlockers, ...contributions.flatMap((item) => item.blockers)];
   if (contributions.some((item) => item.id === "go") && files.some((file) => /\.(?:[cm]?[jt]sx?|vue)$/.test(file))) {
     adapterBlockers.push("Mixed Go/JavaScript repositories require explicit cross-language dependencies; full validation required");
@@ -655,6 +666,7 @@ export async function buildDependencyGraph(
   const vueSources = scope || contributions.some((item) => item.id === "vue")
     ? files.filter((file) => /\.[cm]?[jt]sx?$/.test(file)).map((file) => join(repoPath, file)) : [];
   let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(scope ? join(repoPath, scope.packageRoot) : repoPath, scope ? [] : profile.sourceRoots, vueSources);
+  markPhase("typescriptProgram");
   let moduleResolutionCache = ts.createModuleResolutionCache(
     repoPath,
     (x) => x,
@@ -841,6 +853,7 @@ export async function buildDependencyGraph(
   if (scope && unresolved.length) adapterBlockers.push("Unresolved dependencies in the declared Vue suite require full validation");
   if (scope && edges.some(edge => outsideScope(edge.from) || outsideScope(edge.to))) adapterBlockers.push("Vue asset or macro dependency crosses the declared package boundary");
   profile.adapterBlockers = [...adapterBlockers];
+  markPhase("importExtractionAndResolution");
 
   // Nested-package test visibility (2026-08-24, biomejs/biome finding): `internalSourcePaths` above is
   // strictly the TS PROGRAM's own file list (createProgram()'s `include`/nested-tsconfig-merged
@@ -909,9 +922,11 @@ export async function buildDependencyGraph(
   };
 
   const durationMs = Number(process.hrtime.bigint() - start) / 1_000_000;
+  markPhase("graphFinalization");
 
   const performance: GraphPerformanceMetrics = {
     durationMs,
+    phasesMs,
     heapUsedMb: heapDuringBuildMb,
     heapAfterExtractionMb,
     filesDiscovered: filesParsed,

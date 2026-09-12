@@ -210,6 +210,7 @@ export interface GraphIntegrityReport {
 
 export interface GraphPerformanceMetrics {
   durationMs: number;
+  phasesMs?: Record<string, number>;
   heapUsedMb?: number;
   heapAfterExtractionMb?: number;
   filesDiscovered: number;

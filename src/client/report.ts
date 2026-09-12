@@ -128,6 +128,7 @@ export interface ObservationGraph {
   /** Confidence after reachability narrowing for this delta - the value that drove the verdict. */
   effectiveConfidence?: string;
   durationMs: number;
+  phasesMs?: Record<string, number>;
 }
 
 /**
@@ -215,7 +216,7 @@ export interface ObservationReport {
   result?: ObservationResult;
   payload: ObservationPayloadDescription;
   nonInterference: NonInterferenceEvidence;
-  timings: { totalMs: number };
+  timings: { totalMs: number; preObserveMs?: number; phasesMs?: Record<string, number> };
 }
 
 /**

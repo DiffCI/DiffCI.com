@@ -6,6 +6,7 @@ import ts from 'typescript';
 
 if (process.platform !== 'linux' || !process.env.DIFFCI_VALIDATION_IMAGE) throw new Error('Cloudflare validation container required');
 const cohort = JSON.parse(readFileSync(new URL('./language-benchmark-cohort.json', import.meta.url), 'utf8'));
+const experiment = JSON.parse(readFileSync(new URL('./language-benchmark-experiment.json', import.meta.url), 'utf8'));
 const spec = cohort.repositories.find(s => s.id === process.argv[2]);
 if (!spec) throw new Error('Unknown fixed cohort repository');
 const root = '/workspace/broad-benchmark';
@@ -14,6 +15,7 @@ mkdirSync(root, { recursive: true });
 const expected = 'sha512-FiVDAHdmzEZKE1Gh0EzfyTv0LNxfzy6JsrcEGR52G41ErixoS7DOha9qr1m+D1fRwVk6o3j+UbXcRk+jupuQUg==';
 const report = { schemaVersion: 2, cohortVersion: cohort.version, spec, startedAt: new Date().toISOString(), image: process.env.DIFFCI_VALIDATION_IMAGE, node: process.version, scope: spec.language === 'go' ? 'root module go test ./...' : `Vitest unit suite in ${spec.cwd}; excludes browser/type/build CI`, cases: [], checks: [] };
 const save = () => writeFileSync('/workspace/language-qualification.json', JSON.stringify(report, null, 2));
+report.experiment = experiment;
 const announce = (event, detail) => { console.log(JSON.stringify({ event, repository: spec.id, ...detail })); save(); };
 let sequence = 0;
 const deadline = Date.now() + 40 * 60_000;
@@ -115,7 +117,7 @@ try {
   }
   report.bootstrapAgentIntegrity = 'sha512-' + createHash('sha512').update(readFileSync('/opt/diffci/dist-agent/agent.tgz')).digest('base64');
   if (report.bootstrapAgentIntegrity !== expected) throw new Error('Unexpected bootstrap agent');
-  report.candidateVersion = '0.1.4-candidate.4';
+  report.candidateVersion = experiment.candidateVersion;
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
   report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts'], '/opt/diffci', false).record);
   if (spec.id === 'vue-test-utils') {
@@ -169,6 +171,7 @@ try {
   report.historyExaminedLimit = cohort.historyLimit;
   announce('cohort-frozen', { commits: candidates.map(c => c.head) });
   for (const [index, candidate] of candidates.entries()) {
+    if (experiment.mode === 'profile' && index > 0) break;
     const c = { ...candidate, index, status: 'PREPARING', pairs: [] }; report.cases.push(c); announce('commit-start', { index, head: candidate.head });
     try {
       git(['checkout', '--force', '--detach', candidate.head]);
@@ -195,6 +198,18 @@ try {
       if (c.observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observer violated non-interference');
       if (!['OBSERVED', 'REFUSED'].includes(c.observation.status)) throw new Error(`Observer ${c.observation.status}: ${c.observation.reason}`);
       const result = c.observation.result;
+      if (experiment.mode === 'profile') {
+        c.profiles = [{ processMs: c.analysis.elapsedMs, timings: c.observation.timings, graph: result?.graph }];
+        for (let repeat = 0; repeat < 2; repeat++) {
+          const measured = run('node', [join(host, 'node_modules/@diffci/observer/index.mjs'), 'observe', '--repo', checkout, '--base', candidate.base, '--head', candidate.head, '--out', out, '--no-send'], checkout).record;
+          const observed = JSON.parse(readFileSync(out, 'utf8'));
+          if (observed.nonInterference?.worktreeUnchanged !== true) throw new Error('Profile observation changed worktree');
+          c.profiles.push({ processMs: measured.elapsedMs, timings: observed.timings, graph: observed.result?.graph });
+        }
+        c.status = 'OBSERVER_PROFILED';
+        announce('observer-profiled', { profiles: c.profiles });
+        continue;
+      }
       let selected;
       c.policy = c.observation.status === 'REFUSED' ? 'REFUSED_FULL' : result.mode;
       if (result?.mode === 'SELECTIVE') {

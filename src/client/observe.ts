@@ -110,6 +110,10 @@ export function isInsideRepository(repoPath: string, candidate: string): boolean
 
 export async function observe(options: ObserveOptions): Promise<ObservationReport> {
   const startedAt = Date.now();
+  const preObserveMs = Math.round(process.uptime() * 1000);
+  const phasesMs: Record<string, number> = {};
+  let phaseStart = performance.now();
+  const markPhase = (name: string) => { const now = performance.now(); phasesMs[name] = Math.round(now - phaseStart); phaseStart = now; };
   const repoPath = resolve(options.repoPath);
   const git = options.git ?? makeGitRunner(repoPath);
   const ci = readCiEnvironment(options.env);
@@ -142,6 +146,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         options.reportPath === undefined ? true : !isInsideRepository(repoPath, options.reportPath),
       workflowFindings: safeAuditWorkflows(repoPath),
     };
+    markPhase("finalization");
     return {
       schema: OBSERVATION_SCHEMA,
       producedAt: new Date().toISOString(),
@@ -180,7 +185,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         pathRedaction: options.redactPaths ? "sha256-12" : undefined,
       },
       nonInterference,
-      timings: { totalMs: Date.now() - startedAt },
+      timings: { totalMs: Date.now() - startedAt, preObserveMs, phasesMs },
     };
   };
 
@@ -193,10 +198,12 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     });
     if (!resolved.ok) return finish("REFUSED", "context", { reason: resolved.reason });
     range = resolved.range;
+    markPhase("context");
 
     // The eligibility gate is asked of the graph builder itself (classifyRepositoryProject), not of a
     // separate list of conditions that can drift away from it. Phase 01 F3 is what that drift costs.
     const capability = classifyRepositoryProject(repoPath);
+    markPhase("eligibility");
     if (!capability.capable) {
       return finish("REFUSED", "eligibility", {
         reason: `DiffCI supports TypeScript/JavaScript projects, Vue components, and root Go modules: ${capability.reason}`,
@@ -208,8 +215,10 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
       return finish("REFUSED", "delta", { reason: deltaResult.error });
     }
     const delta = deltaResult.delta;
+    markPhase("delta");
 
     const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
+    markPhase("graph");
     if (graphResult.graph.nodes.length === 0) {
       return finish("REFUSED", "graph", {
         reason:
@@ -233,6 +242,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
       ? undefined
       : planSelectiveTestCommands(profile, selectedTests);
 
+    markPhase("impactAndCommands");
     return finish("OBSERVED", "complete", {
       result: {
         mode: impact.fallbackRequired ? "FULL" : "SELECTIVE",
@@ -256,6 +266,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
           confidence: graphResult.confidence,
           effectiveConfidence: impact.effectiveGraphConfidence,
           durationMs: Math.round(graphResult.performance.durationMs),
+          phasesMs: graphResult.performance.phasesMs,
         },
         pathBaseline: {
           mode: baseline.fallbackRequired ? "FULL" : "SELECTIVE",
