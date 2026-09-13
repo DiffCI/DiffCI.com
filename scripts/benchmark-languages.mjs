@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
 import { resolve, join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
@@ -85,7 +85,7 @@ function runtimePartitionSmoke(host) {
   const directory = join(root, 'runtime-partition-contract');
   mkdirSync(directory);
   const files = {
-    'package.json': JSON.stringify({ type: 'module', private: true, devDependencies: { vitest: '3', vue: '3', '@vitejs/plugin-vue': '5' } }),
+    'package.json': JSON.stringify({ type: 'module', private: true, devDependencies: { vitest: '2.1.9', vue: '3.5.13', '@vitejs/plugin-vue': '5.1.4', vite: '5.4.16', jsdom: '25.0.1' } }),
     'diffci.json': JSON.stringify({ vue: { packageRoot: '.', testConfig: 'vitest.config.ts' } }),
     'tsconfig.json': JSON.stringify({ compilerOptions: { module: 'ESNext', moduleResolution: 'Bundler', target: 'ES2022' }, include: ['src', 'tests'] }),
     'vitest.config.ts': 'import {defineConfig} from "vitest/config"; import vue from "@vitejs/plugin-vue"; export default defineConfig({plugins:[vue()],test:{include:["tests/**/*.test.ts"],environment:"jsdom",isolate:true}});',
@@ -97,7 +97,7 @@ function runtimePartitionSmoke(host) {
     '.gitignore': 'node_modules/\n',
   };
   for (const [path, contents] of Object.entries(files)) { mkdirSync(resolve(directory, path, '..'), { recursive: true }); writeFileSync(join(directory, path), contents); }
-  symlinkSync(join(checkout, spec.cwd, 'node_modules'), join(directory, 'node_modules'), 'dir');
+  report.runtimeContractInstall = run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], directory).record;
   const fixtureGit = args => run('git', args, directory).stdout.trim();
   fixtureGit(['init']); fixtureGit(['remote', 'add', 'origin', 'https://github.com/diffci-fixture/runtime-contract.git']); fixtureGit(['add', '.']); fixtureGit(['-c', 'user.name=DiffCI', '-c', 'user.email=validation@diffci.com', 'commit', '-m', 'base']);
   const base = fixtureGit(['rev-parse', 'HEAD']);
@@ -315,7 +315,10 @@ try {
           c.testWorkerArguments = vueWorkerArguments;
           c.testRunnerHelp = help.record;
         }
-        if (experiment.runtimePartitionSmoke && index === 0) runtimePartitionSmoke(host);
+        if (experiment.runtimePartitionSmoke && index === 0) {
+          try { runtimePartitionSmoke(host); }
+          catch (error) { report.runtimeContractFailed = true; throw error; }
+        }
         if (spec.id === 'vue-router') {
           // Its Vitest type tests consume the outputs of the documented preceding builds.
           c.build = run('corepack', ['pnpm', '--filter', 'vue-router', 'run', 'build'], checkout).record;
@@ -531,6 +534,7 @@ try {
       if (c.configurationOverlay && existsSync(join(checkout, 'diffci.json'))) { const { unlinkSync } = await import('node:fs'); unlinkSync(join(checkout, 'diffci.json')); }
       announce('commit-complete', { index, status: c.status });
     }
+    if (report.runtimeContractFailed) throw new Error('Runtime protection contract failed; cohort qualification stopped');
   }
 } catch (e) { report.error = String(e); }
 report.finishedAt = new Date().toISOString(); save();
