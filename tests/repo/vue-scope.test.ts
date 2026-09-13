@@ -43,6 +43,21 @@ test("Vue root-relative include and exclude globs establish the actual scoped te
     assert.deepEqual(impact.affectedTests.map(test => test.path), ["packages/ui/tests/child.test.ts"]);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test("Vue scoped blockers exclude unreachable examples but retain imported and setup-loaded components", async () => {
+  const root = fixture({ "packages/ui/src/Unused.story.vue": "<template><Unregistered /></template>" });
+  try {
+    const isolated = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(isolated.adapterBlockers, []);
+    assert.equal(isolated.performance.adapterMetrics?.vue.counts.outOfSuiteBlockers, 1);
+    assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), isolated, isolated.profile).fallbackRequired, false);
+    writeFileSync(join(root, "packages/ui/tests/other.test.ts"), 'import "../src/Unused.story.vue";');
+    assert.ok((await buildDependencyGraph({ repoPath: root })).adapterBlockers?.some(reason => reason.includes("Unused.story.vue")));
+    writeFileSync(join(root, "packages/ui/tests/other.test.ts"), 'export const other = 1;');
+    writeFileSync(join(root, "packages/ui/setup.ts"), 'import "./src/Unused.story.vue";');
+    assert.ok((await buildDependencyGraph({ repoPath: root })).adapterBlockers?.some(reason => reason.includes("Unused.story.vue")));
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
 test("Vue scope isolates unrelated docs, pins the runner cwd/config, and guards setup and outside changes", async () => {
   const root = fixture();
   try {

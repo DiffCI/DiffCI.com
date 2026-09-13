@@ -872,6 +872,23 @@ export async function buildDependencyGraph(
     }
   }
 
+  // Only a verified scoped suite can establish that a component is not executed.
+  // Every test and setup/config root must actually have been parsed, not merely
+  // added as a leaf test node. Unknown reachable components still block the suite.
+  if (scope && scopeBlockers.length === 0 && profile.testFilePaths.length) {
+    const roots = [...profile.testFilePaths, ...(profile.vueSetupPaths ?? [])];
+    const parsedPaths = new Set(sourceFiles.map(file => toRelativeInternal(repoPath, file.fileName)).filter(Boolean));
+    if (roots.every(path => parsedPaths.has(path))) {
+      const outgoing = new Map<string, string[]>();
+      for (const edge of edges) outgoing.set(edge.from, [...(outgoing.get(edge.from) ?? []), edge.to]);
+      const reachable = new Set(roots); const pending = [...roots];
+      while (pending.length) for (const target of outgoing.get(pending.pop()!) ?? []) if (!reachable.has(target)) { reachable.add(target); pending.push(target); }
+      const vue = contributions.find(item => item.id === "vue");
+      const irrelevant = new Set((vue?.fileBlockers ?? []).filter(item => !reachable.has(item.path)).map(item => item.reason));
+      for (let i = adapterBlockers.length - 1; i >= 0; i--) if (irrelevant.has(adapterBlockers[i])) adapterBlockers.splice(i, 1);
+      if (vue?.performance) Object.assign(vue.performance.counts, { verifiedSuiteRoots: roots.length, reachablePaths: reachable.size, outOfSuiteBlockers: irrelevant.size });
+    }
+  }
   if (unresolved.some((ref) => ref.importer.endsWith(".vue") || stripImportQuery(ref.specifier).endsWith(".vue"))) {
     adapterBlockers.push("Unresolved Vue dependencies require full validation");
   }

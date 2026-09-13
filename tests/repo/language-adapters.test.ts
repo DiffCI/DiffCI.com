@@ -60,6 +60,16 @@ test("Vue resolves aliased macro types through extended tsconfig and refreshes c
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
+test("Vue macro imports resolve directory index files rather than reading a directory as source", () => {
+  const root = fixture({ "package.json": "{}", "props/index.ts": "export interface Props { value: string }", "App.vue": '<script setup lang="ts">import type { Props } from "./props"; defineProps<Props>();</script>' });
+  try {
+    const result = vueAdapter.analyze({ repoPath: root, files: ["App.vue"], profile: analyzeRepository({ repoPath: root }) });
+    assert.deepEqual(result.blockers, []);
+    assert.ok(result.edges.some(edge => edge.to === "props/index.ts"));
+    assert.ok(result.virtualSources[0].source.includes("type: String"));
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 test("Vue transitive source and component changes select only importing tests", async () => {
   const root = fixture(jsBase);
   try {

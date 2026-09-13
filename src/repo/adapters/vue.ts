@@ -42,7 +42,7 @@ import { contribution, type RepositoryAdapter } from "./types.js";
 
 /** Explicit Vue SFC imports. Runtime component registries and preprocessors require full CI. */
 export const vueAdapter: RepositoryAdapter = {
-  id: "vue", version: "6", kind: "framework",
+  id: "vue", version: "7", kind: "framework",
   detect: ({ files }) => files.some((file) => file.endsWith(".vue")),
   analyze(context) {
     const phasesMs: Record<string, number> = {};
@@ -74,7 +74,11 @@ export const vueAdapter: RepositoryAdapter = {
     for (const path of context.vueComponentPaths ?? context.files.filter((file) => file.endsWith(".vue"))) {
       counts.components++;
       result.sourcePaths.push(path);
-      const block = (reason: string) => result.blockers.push(`Vue ${path}: ${reason}`);
+      const block = (reason: string) => {
+        const message = `Vue ${path}: ${reason}`;
+        result.blockers.push(message);
+        (result.fileBlockers ??= []).push({ path, reason: message });
+      };
       const typeDependencies = new Set<string>();
       const recordTypeDependency = (file: string) => {
         recordRead(file);
@@ -101,7 +105,7 @@ export const vueAdapter: RepositoryAdapter = {
         }
         const script = descriptor.script || descriptor.scriptSetup
           ? measure("scriptCompile", () => compileScript(descriptor, { id: path, sourceMap: false, fs: {
-            fileExists(file) { recordRead(file); return existsSync(file); },
+            fileExists(file) { recordRead(file); return ts.sys.fileExists(file); },
             readFile(file) {
               recordRead(file);
               recordTypeDependency(file);
