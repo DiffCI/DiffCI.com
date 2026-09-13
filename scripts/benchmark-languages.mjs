@@ -277,6 +277,7 @@ try {
   report.historyExaminedLimit = cohort.historyLimit;
   announce('cohort-frozen', { commits: candidates.map(c => c.head) });
   for (const [index, candidate] of candidates.entries()) {
+    if (index < (experiment.caseStart ?? 0)) continue;
     if (experiment.caseLimit && index >= experiment.caseLimit) break;
     if (experiment.mode === 'profile' && index > 0) break;
     const c = { ...candidate, index, status: 'PREPARING', pairs: [] }; report.cases.push(c); announce('commit-start', { index, head: candidate.head });
