@@ -83,7 +83,8 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
   }
   visit(config);
   // Only a literal test object can establish the default isolated Vitest contract.
-  const testDefinition = definition && ts.isObjectLiteralExpression(definition) ? definition.properties.find(p => p.name && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && p.name.text === "test") : undefined;
+  const testDefinitions = definition && ts.isObjectLiteralExpression(definition) ? definition.properties.filter(p => p.name && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && p.name.text === "test") : [];
+  const testDefinition = testDefinitions.length === 1 ? testDefinitions[0] : undefined;
   const literalProperties = (node: ts.Node): boolean => {
     if (ts.isObjectLiteralExpression(node) && node.properties.some(p => !ts.isPropertyAssignment(p) || ts.isComputedPropertyName(p.name))) return false;
     let valid = true;

@@ -2,7 +2,7 @@
   "compatibleVitestWorkers": true,
   "mode": "reka-selection",
   "commitsPerRepository": 8,
-  "candidateVersion": "0.1.9-candidate.2",
+  "candidateVersion": "0.1.9-candidate.3",
   "selectionArms": ["uncached"],
   "runtimePartitionSmoke": true
 }

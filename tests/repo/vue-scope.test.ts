@@ -91,6 +91,15 @@ test("Vue runtime partition refuses disabled or unverified isolation and shared 
       assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile).fallbackRequired, true);
     } finally { rmSync(root, { recursive: true, force: true }); }
   }
+  const root = fixture({
+    "packages/ui/vitest.config.ts": 'const shared={isolate:false}; export default {test:{include:["tests/**/*.test.ts"]},test:shared};',
+    "packages/ui/src/Child.vue": '<template><Unknown /></template>',
+  });
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.ok(result.adapterBlockers?.length, "duplicate test keys cannot establish isolation from an overridden object");
+    assert.notEqual(result.profile.vueRuntimeIsolationVerified, true);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
 test("Vue scope isolates unrelated docs, pins the runner cwd/config, and guards setup and outside changes", async () => {
   const root = fixture();
