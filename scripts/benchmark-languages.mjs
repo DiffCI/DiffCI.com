@@ -297,6 +297,20 @@ try {
         c.analysis = c.cacheObservations[0].warm.analysis;
         c.observation = c.cacheObservations[0].warm.observation;
         c.cacheDecisionEquivalent = true;
+      } else if (experiment.mode === 'reka-selection') {
+        c.selectionObservations = [];
+        const identity = o => { const { graph, ...result } = o.result ?? {}; return JSON.stringify({ status: o.status, stage: o.stage, reason: o.reason, result, graph: graph && { nodes: graph.nodes, edges: graph.edges, confidence: graph.confidence, effectiveConfidence: graph.effectiveConfidence } }); };
+        for (let repeat = 0; repeat < 2; repeat++) {
+          const order = (index + repeat) % 2 === 0 ? ['uncached', 'incremental'] : ['incremental', 'uncached'];
+          const pair = { order };
+          for (const arm of order) pair[arm] = observeWith(host, arm === 'uncached' ? [] : ['--vue-analysis-cache', join(root, `selection-cache-${repeat}`)]);
+          if (pair.uncached.observation.status !== 'OBSERVED' || identity(pair.incremental.observation) !== identity(pair.uncached.observation)) throw new Error('Selection cached/uncached decisions differ');
+          if (repeat && identity(pair.uncached.observation) !== identity(c.selectionObservations[0].uncached.observation)) throw new Error('Selection decisions changed between repetitions');
+          c.selectionObservations.push(pair);
+        }
+        c.analysis = c.selectionObservations[0].incremental.analysis;
+        c.observation = c.selectionObservations[0].incremental.observation;
+        c.cacheDecisionEquivalent = true;
       } else if (experiment.mode === 'bypass') {
         c.bypassObservations = [];
         const heldOut = c.phase === 'held-out';
@@ -410,12 +424,16 @@ try {
         const firstPolicy = execute(selected);
         c.pairs.push({ full: firstFull, policy: firstPolicy, netSavedMs: firstFull.elapsedMs - firstPolicy.elapsedMs - c.analysis.elapsedMs }); save();
         const secondPolicy = execute(selected); secondFull = execute();
-        c.pairs.push({ full: secondFull, policy: secondPolicy, netSavedMs: secondFull.elapsedMs - secondPolicy.elapsedMs - c.analysis.elapsedMs });
+        c.pairs.push({ full: secondFull, policy: secondPolicy, netSavedMs: secondFull.elapsedMs - secondPolicy.elapsedMs - (c.selectionObservations?.[1].incremental.analysis.elapsedMs ?? c.analysis.elapsedMs) });
         if (!c.pairs.every(p => green(p.full) && green(p.policy))) { c.status = 'UNSTABLE_OR_POLICY_FAILED'; continue; }
       }
       const universe = s => JSON.stringify({ files: s.files, packages: Object.keys(s.packages ?? {}).sort(), total: s.total });
       if (universe(firstFull.summary) !== universe(secondFull.summary)) { c.status = 'FULL_UNIVERSE_CHANGED'; continue; }
       c.status = selected === undefined ? 'FULL_POLICY_MEASURED' : selected.length === 0 ? 'EMPTY_SELECTION_MEASURED' : 'SELECTIVE_POLICY_MEASURED';
+      if (experiment.mode === 'reka-selection') {
+        const pairs = c.pairs.length ? c.pairs : c.baselines.map(full => ({ full, policy: full }));
+        c.selectionEconomics = pairs.map((pair, i) => Object.fromEntries(['uncached', 'incremental'].map(arm => [arm, { fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, observerMs: c.selectionObservations[i][arm].analysis.elapsedMs, netSavedMs: pair.full.elapsedMs - pair.policy.elapsedMs - c.selectionObservations[i][arm].analysis.elapsedMs }])));
+      }
       if (experiment.mode === 'cache') {
         const pairs = c.pairs.length ? c.pairs : c.baselines.map(full => ({ full, policy: full }));
         c.cacheEconomics = pairs.map((pair, i) => Object.fromEntries(['uncached', 'cold', 'warm', 'incremental'].map(arm => [arm, { fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, observerMs: c.cacheObservations[i][arm].analysis.elapsedMs, netSavedMs: pair.full.elapsedMs - pair.policy.elapsedMs - c.cacheObservations[i][arm].analysis.elapsedMs }])));
