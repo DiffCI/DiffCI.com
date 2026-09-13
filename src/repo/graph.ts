@@ -885,8 +885,26 @@ export async function buildDependencyGraph(
       while (pending.length) for (const target of outgoing.get(pending.pop()!) ?? []) if (!reachable.has(target)) { reachable.add(target); pending.push(target); }
       const vue = contributions.find(item => item.id === "vue");
       const irrelevant = new Set((vue?.fileBlockers ?? []).filter(item => !reachable.has(item.path)).map(item => item.reason));
+      const outOfSuiteBlockers = irrelevant.size;
+      if (profile.vueRuntimeIsolationVerified) {
+        const closure = (starts: string[]) => {
+          const visited = new Set(starts); const queue = [...starts];
+          while (queue.length) for (const target of outgoing.get(queue.pop()!) ?? []) if (!visited.has(target)) { visited.add(target); queue.push(target); }
+          return visited;
+        };
+        const shared = closure(profile.vueSetupPaths ?? []);
+        const runtime = (vue?.fileBlockers ?? []).filter(item => item.reason === `Vue ${item.path}: runtime component/directive resolution requires full validation` && reachable.has(item.path));
+        // Unknown outgoing runtime edges affect every test reaching this component.
+        // Run all such isolated test files for EVERY delta, regardless of static impact.
+        // Shared setup/configuration uncertainty cannot be confined to those files.
+        if (runtime.length && runtime.every(item => !shared.has(item.path))) {
+          const targets = new Set(runtime.map(item => item.path));
+          profile.vueRuntimeAlwaysRunPaths = profile.testFilePaths.filter(path => [...closure([path])].some(dependency => targets.has(dependency)));
+          for (const item of runtime) irrelevant.add(item.reason);
+        }
+      }
       for (let i = adapterBlockers.length - 1; i >= 0; i--) if (irrelevant.has(adapterBlockers[i])) adapterBlockers.splice(i, 1);
-      if (vue?.performance) Object.assign(vue.performance.counts, { verifiedSuiteRoots: roots.length, reachablePaths: reachable.size, outOfSuiteBlockers: irrelevant.size });
+      if (vue?.performance) Object.assign(vue.performance.counts, { verifiedSuiteRoots: roots.length, reachablePaths: reachable.size, outOfSuiteBlockers, runtimeAlwaysRunTests: profile.vueRuntimeAlwaysRunPaths?.length ?? 0 });
     }
   }
   if (unresolved.some((ref) => ref.importer.endsWith(".vue") || stripImportQuery(ref.specifier).endsWith(".vue"))) {

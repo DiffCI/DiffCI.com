@@ -2,5 +2,6 @@
   "compatibleVitestWorkers": true,
   "mode": "reka-selection",
   "commitsPerRepository": 8,
-  "candidateVersion": "0.1.8-candidate.2"
+  "candidateVersion": "0.1.9-candidate.1",
+  "caseLimit": 1
 }

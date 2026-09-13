@@ -32,6 +32,7 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
   const blockers: string[] = [];
   const setup: string[] = [prefix(scope.testConfig)];
   let typecheckEnabled = false;
+  let runtimeIsolation = true;
   const allowedImports = new Set(["vitest/config", "@vitejs/plugin-vue", "node:path", "node:url", "path", "url"]);
   const factories = new Set<string>();
   const vuePlugins = new Set<string>();
@@ -51,6 +52,10 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
     if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier) && !allowedImports.has(node.moduleSpecifier.text)) blockers.push("Vue scoped Vitest config has an unsupported plugin or config helper");
     if (ts.isPropertyAssignment(node) && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name))) {
       const name = node.name.text;
+      if (name === "isolate" && node.initializer.kind !== ts.SyntaxKind.TrueKeyword) runtimeIsolation = false;
+      if (["runner", "browser", "poolOptions", "poolMatchGlobs", "environmentMatchGlobs"].includes(name)) runtimeIsolation = false;
+      if (name === "pool" && (!ts.isStringLiteral(node.initializer) || !["threads", "forks"].includes(node.initializer.text))) runtimeIsolation = false;
+      if (name === "environment" && (!ts.isStringLiteral(node.initializer) || !["node", "jsdom", "happy-dom"].includes(node.initializer.text))) runtimeIsolation = false;
       if (name === "typecheck") {
         if (!ts.isObjectLiteralExpression(node.initializer)) blockers.push("Vue typecheck configuration must be literal");
         else for (const property of node.initializer.properties) {
@@ -77,6 +82,15 @@ export function applyVueScope(repoPath: string, profile: RepositoryProfile): str
     ts.forEachChild(node, visit);
   }
   visit(config);
+  // Only a literal test object can establish the default isolated Vitest contract.
+  const testDefinition = definition && ts.isObjectLiteralExpression(definition) ? definition.properties.find(p => p.name && (ts.isIdentifier(p.name) || ts.isStringLiteral(p.name)) && p.name.text === "test") : undefined;
+  const literalProperties = (node: ts.Node): boolean => {
+    if (ts.isObjectLiteralExpression(node) && node.properties.some(p => !ts.isPropertyAssignment(p) || ts.isComputedPropertyName(p.name))) return false;
+    let valid = true;
+    ts.forEachChild(node, child => { if (!literalProperties(child)) valid = false; });
+    return valid;
+  };
+  profile.vueRuntimeIsolationVerified = runtimeIsolation && blockers.length === 0 && !!testDefinition && ts.isPropertyAssignment(testDefinition) && ts.isObjectLiteralExpression(testDefinition.initializer) && literalProperties(testDefinition.initializer);
   // Package discovery supplies the runner universe. Do not let repository-wide docs,
   // playground configs or other frameworks expand or replace this declared suite.
   profile.vueScope = scope;

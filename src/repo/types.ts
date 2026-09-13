@@ -49,6 +49,8 @@ export interface RepositoryProfile {
   vueScope?: { packageRoot: string; testConfig: string };
   vueSetupPaths?: string[];
   vueTypeTestPaths?: string[];
+  vueRuntimeIsolationVerified?: boolean;
+  vueRuntimeAlwaysRunPaths?: string[];
   packageManager: PackageManager;
   packageJson: {
     name?: string;

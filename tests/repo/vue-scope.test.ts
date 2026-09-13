@@ -52,11 +52,42 @@ test("Vue scoped blockers exclude unreachable examples but retain imported and s
     assert.equal(isolated.performance.adapterMetrics?.vue.counts.outOfSuiteBlockers, 1);
     assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), isolated, isolated.profile).fallbackRequired, false);
     writeFileSync(join(root, "packages/ui/tests/other.test.ts"), 'import "../src/Unused.story.vue";');
-    assert.ok((await buildDependencyGraph({ repoPath: root })).adapterBlockers?.some(reason => reason.includes("Unused.story.vue")));
+    const imported = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(imported.adapterBlockers, []);
+    assert.deepEqual(imported.profile.vueRuntimeAlwaysRunPaths, ["packages/ui/tests/other.test.ts"]);
     writeFileSync(join(root, "packages/ui/tests/other.test.ts"), 'export const other = 1;');
     writeFileSync(join(root, "packages/ui/setup.ts"), 'import "./src/Unused.story.vue";');
     assert.ok((await buildDependencyGraph({ repoPath: root })).adapterBlockers?.some(reason => reason.includes("Unused.story.vue")));
   } finally { rmSync(root, { recursive: true, force: true }); }
+});
+test("Vue runtime uncertainty always runs importing tests for unrelated changes", async () => {
+  const root = fixture({
+    "packages/ui/src/Runtime.vue": '<script setup>defineProps(["component"])</script><template><component :is="component" /></template>',
+    "packages/ui/tests/runtime.test.ts": 'import Runtime from "../src/Runtime.vue"; export const component = Runtime;',
+  });
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(result.adapterBlockers, []);
+    assert.deepEqual(result.profile.vueRuntimeAlwaysRunPaths, ["packages/ui/tests/runtime.test.ts"]);
+    const impact = new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile);
+    assert.equal(impact.fallbackRequired, false, impact.fallbackReasons.join("; "));
+    assert.deepEqual(impact.affectedTests.map(t => t.path).sort(), ["packages/ui/tests/child.test.ts", "packages/ui/tests/runtime.test.ts"]);
+    assert.ok(impact.affectedTests.find(t => t.path.endsWith("runtime.test.ts"))?.reasons.includes("ALWAYS_RUN_POLICY"));
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue runtime partition refuses disabled or unverified isolation and shared runtime roots", async () => {
+  for (const options of ['isolate:false', 'isolate:enabled', 'poolOptions:{threads:{isolate:false}}', 'pool:"custom"', 'environment:"custom"', 'browser:{enabled:true}', 'runner:"./runner"']) {
+    const root = fixture({
+      "packages/ui/vitest.config.ts": `export default {test:{include:["tests/**/*.test.ts"],${options}}};`,
+      "packages/ui/src/Child.vue": '<template><Unknown /></template>',
+    });
+    try {
+      const result = await buildDependencyGraph({ repoPath: root });
+      assert.ok(result.adapterBlockers?.some(reason => reason.includes("runtime component")), options);
+      assert.equal(new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile).fallbackRequired, true);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  }
 });
 test("Vue scope isolates unrelated docs, pins the runner cwd/config, and guards setup and outside changes", async () => {
   const root = fixture();
