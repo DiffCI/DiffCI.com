@@ -1,6 +1,12 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { freezeTimingHistory, heldOutEconomics, type TrainingRecord } from "../../scripts/bypass-benchmark-protocol.js";
+import { freezeTimingHistory, heldOutEconomics, vitestWorkerArguments, type TrainingRecord } from "../../scripts/bypass-benchmark-protocol.js";
+
+test("historical Vitest CLI versions retain explicit two-worker limits", () => {
+  assert.deepEqual(vitestWorkerArguments("--maxWorkers <n> --minWorkers <n>"), ["--maxWorkers=2", "--minWorkers=2"]);
+  assert.deepEqual(vitestWorkerArguments("--maxThreads <n> --minThreads <n>"), ["--maxThreads=2", "--minThreads=2"]);
+  assert.throws(() => vitestWorkerArguments("--maxWorkers <n>"), /Cannot establish/);
+});
 
 test("bypass history excludes failures, other configurations and held-out measurements", () => {
   const base: TrainingRecord = { index: 0, headSha: "a".repeat(40), contextKey: "same", stable: true, pairs: [{ fullMs: 1000, policyMs: 1000, observerMs: 700 }] };

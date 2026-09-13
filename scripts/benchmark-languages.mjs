@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync, unlinkSync } from '
 import { resolve, join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
-import { freezeTimingHistory, heldOutEconomics } from './bypass-benchmark-protocol.js';
+import { freezeTimingHistory, heldOutEconomics, vitestWorkerArguments } from './bypass-benchmark-protocol.js';
 
 if (process.platform !== 'linux' || !process.env.DIFFCI_VALIDATION_IMAGE) throw new Error('Cloudflare validation container required');
 const cohort = JSON.parse(readFileSync(new URL('./language-benchmark-cohort.json', import.meta.url), 'utf8'));
@@ -19,6 +19,7 @@ const save = () => writeFileSync('/workspace/language-qualification.json', JSON.
 report.experiment = experiment;
 const announce = (event, detail) => { console.log(JSON.stringify({ event, repository: spec.id, ...detail })); save(); };
 let sequence = 0;
+let vueWorkerArguments = ['--maxWorkers=2', '--minWorkers=2'];
 const deadline = Date.now() + 40 * 60_000;
 function run(cmd, args, cwd = root, required = true, timeout = 300000) {
   if (Date.now() > deadline) throw new Error('Repository budget exhausted');
@@ -66,7 +67,7 @@ function execute(selected) {
     const targets = selected ? [...new Set(selected.map(p => p.includes('/') ? './' + p.slice(0, p.lastIndexOf('/')) : '.'))].sort() : ['./...'];
     args = ['test', '-mod=readonly', '-json', '-count=1', ...targets];
   } else {
-    args = ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', 'run', '--config', 'vitest.config.ts', '--maxWorkers=2', '--minWorkers=2', '--sequence.seed=42', '--reporter=json', `--outputFile=${json}`, ...(selected ?? []).map(p => relative(resolve(checkout, spec.cwd), resolve(checkout, p)))];
+    args = ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', 'run', '--config', 'vitest.config.ts', ...vueWorkerArguments, '--sequence.seed=42', '--reporter=json', `--outputFile=${json}`, ...(selected ?? []).map(p => relative(resolve(checkout, spec.cwd), resolve(checkout, p)))];
   }
   const result = run('/usr/bin/time', ['-f', '%U %S %e %M', '-o', usage, cmd, ...args], cwd, false, 180000);
   const record = result.record;
@@ -245,6 +246,12 @@ try {
         c.configurationOverlay = { vue: { packageRoot: spec.cwd, testConfig: 'vitest.config.ts' } };
         writeFileSync(join(checkout, 'diffci.json'), JSON.stringify(c.configurationOverlay));
         c.setup = run('corepack', ['pnpm', 'install', '--frozen-lockfile'], checkout, true, 480000).record;
+        if (experiment.compatibleVitestWorkers) {
+          const help = run('corepack', ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', '--help'], checkout);
+          vueWorkerArguments = vitestWorkerArguments(help.stdout);
+          c.testWorkerArguments = vueWorkerArguments;
+          c.testRunnerHelp = help.record;
+        }
         if (spec.id === 'vue-router') {
           // Its Vitest type tests consume the outputs of the documented preceding builds.
           c.build = run('corepack', ['pnpm', '--filter', 'vue-router', 'run', 'build'], checkout).record;
