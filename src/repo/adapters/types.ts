@@ -5,6 +5,8 @@ export interface AdapterContext {
   repoPath: string;
   files: readonly string[];
   profile: RepositoryProfile;
+  vueComponentPaths?: readonly string[];
+  recordVueRead?: (path: string) => void;
 }
 
 export interface AdapterContribution {

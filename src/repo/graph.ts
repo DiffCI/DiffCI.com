@@ -605,7 +605,9 @@ function findAssetCandidate(
   return undefined;
 }
 
-export interface BuildDependencyGraphOptions extends AnalyzeRepositoryOptions {}
+export interface BuildDependencyGraphOptions extends AnalyzeRepositoryOptions {
+  vueAnalysisCache?: { directory: string; version: string };
+}
 
 export async function buildDependencyGraph(
   options: BuildDependencyGraphOptions = {},
@@ -647,7 +649,9 @@ export async function buildDependencyGraph(
   const files = adapterFiles(repoPath, options.excludeDirs).filter(path => !scope || inVuePackage(path, scope.packageRoot));
   markPhase("adapterInventory");
   const context = { repoPath, files, profile };
-  const contributions = REPOSITORY_ADAPTERS.filter((adapter) => adapter.detect(context)).map((adapter) => adapter.analyze(context));
+  const cachedVue = options.vueAnalysisCache ? (await import("../cache/vue-analysis-cache.js")).analyzeVueCached : undefined;
+  const contributions = REPOSITORY_ADAPTERS.filter((adapter) => adapter.detect(context)).map((adapter) => adapter.id === "vue" && cachedVue && options.vueAnalysisCache
+    ? cachedVue(context, options.vueAnalysisCache.directory, options.vueAnalysisCache.version) : adapter.analyze(context));
   markPhase("adapters");
   const adapterBlockers = [...scopeBlockers, ...contributions.flatMap((item) => item.blockers)];
   if (contributions.some((item) => item.id === "go") && files.some((file) => /\.(?:[cm]?[jt]sx?|vue)$/.test(file))) {

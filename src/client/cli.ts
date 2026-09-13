@@ -182,6 +182,7 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
     economicsHistory,
     economicsJobKey: typeof flags["economics-job"] === "string" ? flags["economics-job"] : undefined,
     forceAnalysis: flags["force-analysis"] === true,
+    vueAnalysisCacheDir: typeof flags["vue-analysis-cache"] === "string" ? flags["vue-analysis-cache"] : undefined,
   });
 
   mkdirSync(dirname(reportPath), { recursive: true });

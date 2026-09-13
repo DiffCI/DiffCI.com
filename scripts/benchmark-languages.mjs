@@ -123,8 +123,9 @@ try {
   report.candidateVersion = experiment.candidateVersion;
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
   report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts', 'tests/client/economics.test.ts'], '/opt/diffci', false).record);
+  if (experiment.mode === 'cache') report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/cache/vue-analysis-cache.test.ts'], '/opt/diffci', false).record);
   if (experiment.mode === 'bypass') report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/validation-env/bypass-protocol.test.ts'], '/opt/diffci', false).record);
-  if (spec.id === 'vue-test-utils') {
+  if (spec.id === 'vue-test-utils' || (experiment.mode === 'cache' && spec.id === 'reka-ui')) {
     // Record the environment of the suite's existing live GitHub assertion without
     // weakening it or treating an HTTP failure as a passed regression check.
     try {
@@ -214,6 +215,11 @@ try {
     candidates.reverse();
     report.bypassProtocol = { order: 'first-parent ancestry, oldest first', trainingCount: 8, heldOutCount: 8, history: 'frozen after training; latest observed training configuration only', targetFaults: 'not repeated; observer artifact unchanged' };
   }
+  if (experiment.mode === 'cache') {
+    if (candidates.length !== 8) throw new Error('Cache experiment requires the same eight held-out source commits');
+    candidates.reverse();
+    report.cacheProtocol = { order: 'oldest first', arms: ['uncached', 'cold', 'warm', 'incremental'], repetitions: 2, cacheTransport: 'runner-local filesystem on Cloudflare; reads/validation/writes included, cross-job R2 transfer not measured', priorCommit: 'independent persistent cache per repetition; first commit starts empty' };
+  }
   const trainingRecords = [];
   let latestTrainingContext = '';
   const timingHistoryPath = join(root, 'frozen-timing-history.json');
@@ -274,7 +280,22 @@ try {
         if (observation.commitRange?.headSha !== candidate.head || observation.commitRange?.baseSha !== candidate.base) throw new Error('Observation range mismatch');
         return { analysis, observation };
       };
-      if (experiment.mode === 'bypass') {
+      if (experiment.mode === 'cache') {
+        c.cacheObservations = [];
+        const identity = o => { const { graph, ...result } = o.result ?? {}; return JSON.stringify({ status: o.status, stage: o.stage, reason: o.reason, result, graph: graph && { nodes: graph.nodes, edges: graph.edges, confidence: graph.confidence, effectiveConfidence: graph.effectiveConfidence } }); };
+        for (let repeat = 0; repeat < 2; repeat++) {
+          const coldDir = join(root, `vue-cache-cold-${index}-${repeat}`);
+          const incrementalDir = join(root, `vue-cache-incremental-${repeat}`);
+          const order = (index + repeat) % 2 === 0 ? ['uncached', 'cold', 'warm', 'incremental'] : ['incremental', 'cold', 'warm', 'uncached'];
+          const pair = { order };
+          for (const arm of order) pair[arm] = observeWith(host, arm === 'uncached' ? [] : ['--vue-analysis-cache', arm === 'incremental' ? incrementalDir : coldDir]);
+          if (pair.uncached.observation.status !== 'OBSERVED' || !order.every(arm => identity(pair[arm].observation) === identity(pair.uncached.observation))) throw new Error('Cached/uncached decision details differ');
+          c.cacheObservations.push(pair);
+        }
+        c.analysis = c.cacheObservations[0].warm.analysis;
+        c.observation = c.cacheObservations[0].warm.observation;
+        c.cacheDecisionEquivalent = true;
+      } else if (experiment.mode === 'bypass') {
         c.bypassObservations = [];
         const heldOut = c.phase === 'held-out';
         const firstOrder = heldOut ? (index % 2 === 0 ? ['gated', 'oracle'] : ['oracle', 'gated']) : ['oracle'];
@@ -382,6 +403,10 @@ try {
       const universe = s => JSON.stringify({ files: s.files, packages: Object.keys(s.packages ?? {}).sort(), total: s.total });
       if (universe(firstFull.summary) !== universe(secondFull.summary)) { c.status = 'FULL_UNIVERSE_CHANGED'; continue; }
       c.status = selected === undefined ? 'FULL_POLICY_MEASURED' : selected.length === 0 ? 'EMPTY_SELECTION_MEASURED' : 'SELECTIVE_POLICY_MEASURED';
+      if (experiment.mode === 'cache') {
+        const pairs = c.pairs.length ? c.pairs : c.baselines.map(full => ({ full, policy: full }));
+        c.cacheEconomics = pairs.map((pair, i) => Object.fromEntries(['uncached', 'cold', 'warm', 'incremental'].map(arm => [arm, { fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, observerMs: c.cacheObservations[i][arm].analysis.elapsedMs, netSavedMs: pair.full.elapsedMs - pair.policy.elapsedMs - c.cacheObservations[i][arm].analysis.elapsedMs }])));
+      }
       if (experiment.mode === 'bypass') {
         const testPairs = c.pairs.length ? c.pairs : c.baselines.map(full => ({ full, policy: full, policyIdenticalToFull: true }));
         if (c.phase === 'training') {

@@ -58,12 +58,13 @@ export const vueAdapter: RepositoryAdapter = {
     if (dependencies.includes("nuxt") || context.files.some((file) => /(?:^|\/)nuxt\.config\./.test(file))) {
       result.blockers.push("Nuxt implicit routes and auto-imports require a dedicated framework adapter");
     }
-    for (const path of context.files.filter((file) => file.endsWith(".vue"))) {
+    for (const path of context.vueComponentPaths ?? context.files.filter((file) => file.endsWith(".vue"))) {
       counts.components++;
       result.sourcePaths.push(path);
       const block = (reason: string) => result.blockers.push(`Vue ${path}: ${reason}`);
       const typeDependencies = new Set<string>();
       const recordTypeDependency = (file: string) => {
+        context.recordVueRead?.(file);
         const dependency = relative(context.repoPath, resolve(file)).replace(/\\/g, "/");
         if (dependency === ".." || dependency.startsWith("../") || isAbsolute(dependency)) throw new Error("Vue type dependency escapes repository");
         typeDependencies.add(dependency);
@@ -87,8 +88,9 @@ export const vueAdapter: RepositoryAdapter = {
         }
         const script = descriptor.script || descriptor.scriptSetup
           ? measure("scriptCompile", () => compileScript(descriptor, { id: path, sourceMap: false, fs: {
-            fileExists: existsSync,
+            fileExists(file) { context.recordVueRead?.(file); return existsSync(file); },
             readFile(file) {
+              context.recordVueRead?.(file);
               recordTypeDependency(file);
               counts.typeReads++;
               return readFileSync(file, "utf8");

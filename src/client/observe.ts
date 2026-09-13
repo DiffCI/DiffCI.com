@@ -64,6 +64,8 @@ export interface ObserveOptions {
   economicsHistory?: unknown;
   economicsJobKey?: string;
   forceAnalysis?: boolean;
+  /** Optional cache outside the checkout; graph resolution and selection remain fresh. */
+  vueAnalysisCacheDir?: string;
 }
 
 function makeGitRunner(repoPath: string): GitRunner {
@@ -236,7 +238,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     const delta = deltaResult.delta;
     markPhase("delta");
 
-    const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
+    const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS, vueAnalysisCache: options.vueAnalysisCacheDir ? { directory: options.vueAnalysisCacheDir, version: `${options.version}:${options.engineSha ?? ""}` } : undefined });
     markPhase("graph");
     if (graphResult.graph.nodes.length === 0) {
       return finish("REFUSED", "graph", {
