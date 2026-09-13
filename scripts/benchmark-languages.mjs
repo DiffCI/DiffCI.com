@@ -3,7 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync, unlinkSync } from '
 import { resolve, join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
-import { freezeTimingHistory, heldOutEconomics, vitestWorkerArguments } from './bypass-benchmark-protocol.js';
+import { freezeTimingHistory, heldOutEconomics, vitestWorkerConfiguration } from './bypass-benchmark-protocol.js';
 
 if (process.platform !== 'linux' || !process.env.DIFFCI_VALIDATION_IMAGE) throw new Error('Cloudflare validation container required');
 const cohort = JSON.parse(readFileSync(new URL('./language-benchmark-cohort.json', import.meta.url), 'utf8'));
@@ -20,11 +20,12 @@ report.experiment = experiment;
 const announce = (event, detail) => { console.log(JSON.stringify({ event, repository: spec.id, ...detail })); save(); };
 let sequence = 0;
 let vueWorkerArguments = ['--maxWorkers=2', '--minWorkers=2'];
+let vueWorkerEnvironment = {};
 const deadline = Date.now() + 40 * 60_000;
-function run(cmd, args, cwd = root, required = true, timeout = 300000) {
+function run(cmd, args, cwd = root, required = true, timeout = 300000, envOverrides = {}) {
   if (Date.now() > deadline) throw new Error('Repository budget exhausted');
   const start = performance.now();
-  const result = spawnSync(cmd, args, { cwd, env: process.env, encoding: 'utf8', timeout: Math.min(timeout, Math.max(1000, deadline - Date.now())), maxBuffer: 48 * 1024 * 1024 });
+  const result = spawnSync(cmd, args, { cwd, env: { ...process.env, ...envOverrides }, encoding: 'utf8', timeout: Math.min(timeout, Math.max(1000, deadline - Date.now())), maxBuffer: 48 * 1024 * 1024 });
   const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
   const record = { command: [cmd, ...args], cwd, exitCode: result.status, signal: result.signal, error: result.error?.message, elapsedMs: Math.round(performance.now() - start), mutationMarkerSeen: output.includes('DIFFCI_BENCHMARK_FAULT'), outputSha256: createHash('sha256').update(output).digest('hex'), tail: output.slice(-4000) };
   if (result.status !== 0) {
@@ -69,7 +70,7 @@ function execute(selected) {
   } else {
     args = ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', 'run', '--config', 'vitest.config.ts', ...vueWorkerArguments, '--sequence.seed=42', '--reporter=json', `--outputFile=${json}`, ...(selected ?? []).map(p => relative(resolve(checkout, spec.cwd), resolve(checkout, p)))];
   }
-  const result = run('/usr/bin/time', ['-f', '%U %S %e %M', '-o', usage, cmd, ...args], cwd, false, 180000);
+  const result = run('/usr/bin/time', ['-f', '%U %S %e %M', '-o', usage, cmd, ...args], cwd, false, 180000, vueWorkerEnvironment);
   const record = result.record;
   record.summary = summaries(result, json);
   try {
@@ -248,7 +249,13 @@ try {
         c.setup = run('corepack', ['pnpm', 'install', '--frozen-lockfile'], checkout, true, 480000).record;
         if (experiment.compatibleVitestWorkers) {
           const help = run('corepack', ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', '--help'], checkout);
-          vueWorkerArguments = vitestWorkerArguments(help.stdout);
+          c.testRunnerHelp = help.record;
+          const version = run('corepack', ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', '--version'], checkout);
+          c.testRunnerVersion = version.record;
+          const workers = vitestWorkerConfiguration(help.stdout, version.stdout);
+          vueWorkerArguments = workers.args;
+          vueWorkerEnvironment = workers.env;
+          c.testWorkerEnvironment = workers.env;
           c.testWorkerArguments = vueWorkerArguments;
           c.testRunnerHelp = help.record;
         }

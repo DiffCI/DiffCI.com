@@ -6,13 +6,13 @@ export interface TrainingRecord {
   pairs: Array<{ fullMs: number; policyMs: number; observerMs: number }>;
 }
 
-/** Preserve two-worker limits across Vitest's historical CLI rename. */
-export function vitestWorkerArguments(help: string): string[] {
-  if (/--maxWorkers\b/.test(help) && /--minWorkers\b/.test(help)) return ["--maxWorkers=2", "--minWorkers=2"];
-  if (/--maxThreads\b/.test(help) && /--minThreads\b/.test(help)) return ["--maxThreads=2", "--minThreads=2"];
+/** Preserve two-worker limits using each verified Vitest interface. */
+export function vitestWorkerConfiguration(help: string, version: string): { args: string[]; env: Record<string, string> } {
+  if (/--maxWorkers\b/.test(help) && /--minWorkers\b/.test(help)) return { args: ["--maxWorkers=2", "--minWorkers=2"], env: {} };
+  // Vitest 0.34.6 reads these in node/config.ts; it has no maxThreads CLI flag.
+  if (/\bvitest\/0\.34\.6\b/.test(version) && /--threads\b/.test(help)) return { args: ["--threads"], env: { VITEST_MAX_THREADS: "2", VITEST_MIN_THREADS: "2" } };
   throw new Error("Cannot establish compatible two-worker Vitest options");
 }
-
 /** Freeze only earlier training measurements; never learn from held-out outcomes. */
 export function freezeTimingHistory(records: TrainingRecord[], options: {
   trainingCount: number; repository: string; jobKey: string;

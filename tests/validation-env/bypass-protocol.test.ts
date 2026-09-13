@@ -1,13 +1,14 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { freezeTimingHistory, heldOutEconomics, vitestWorkerArguments, type TrainingRecord } from "../../scripts/bypass-benchmark-protocol.js";
+import { freezeTimingHistory, heldOutEconomics, vitestWorkerConfiguration, type TrainingRecord } from "../../scripts/bypass-benchmark-protocol.js";
 
-test("historical Vitest CLI versions retain explicit two-worker limits", () => {
-  assert.deepEqual(vitestWorkerArguments("--maxWorkers <n> --minWorkers <n>"), ["--maxWorkers=2", "--minWorkers=2"]);
-  assert.deepEqual(vitestWorkerArguments("--maxThreads <n> --minThreads <n>"), ["--maxThreads=2", "--minThreads=2"]);
-  assert.throws(() => vitestWorkerArguments("--maxWorkers <n>"), /Cannot establish/);
+test("historical Vitest versions retain explicit two-worker limits", () => {
+  assert.deepEqual(vitestWorkerConfiguration("--maxWorkers <n> --minWorkers <n>", "vitest/2.1.9"), { args: ["--maxWorkers=2", "--minWorkers=2"], env: {} });
+  assert.deepEqual(vitestWorkerConfiguration("--threads", "vitest/0.34.6 linux-x64 node-v22"), { args: ["--threads"], env: { VITEST_MAX_THREADS: "2", VITEST_MIN_THREADS: "2" } });
+  assert.throws(() => vitestWorkerConfiguration("--maxWorkers <n>", "vitest/2.1.9"), /Cannot establish/);
+  assert.throws(() => vitestWorkerConfiguration("--threads", "vitest/0.34.5"), /Cannot establish/);
+  assert.throws(() => vitestWorkerConfiguration("--maxThreads <n> --minThreads <n>", "unknown"), /Cannot establish/);
 });
-
 test("bypass history excludes failures, other configurations and held-out measurements", () => {
   const base: TrainingRecord = { index: 0, headSha: "a".repeat(40), contextKey: "same", stable: true, pairs: [{ fullMs: 1000, policyMs: 1000, observerMs: 700 }] };
   const options = { trainingCount: 8, repository: "owner/repo", jobKey: "unit", observerVersion: "candidate", contextKey: "same", recordedAt: new Date().toISOString() };
