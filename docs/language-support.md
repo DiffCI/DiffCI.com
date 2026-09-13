@@ -44,6 +44,15 @@ Empty-graph refusals now include the adapter's reason. Vue recognizes only direc
 component identifiers in literal `components` registrations; spreads, computed registrations,
 dynamic components and unresolved directives remain conservative.
 
+The Reka selection candidate also resolves imported Vue macro types through TypeScript aliases,
+extended configurations and directory index files, and recognizes leading `./` in test globs.
+For an explicitly scoped Vue suite, a component-specific blocker can be excluded only when every
+test/setup/configuration root has been parsed and none can reach that component. This is not a
+directory-name exclusion: imported story fixtures retain their blockers. Unresolved dependencies
+and global configuration blockers still force full validation. Compiler-assisted components that
+probe JSON configuration are rebuilt instead of persistently cached until every compiler input can
+be tracked. See the [Reka experiment](research/2026-09-13-reka-selection.md) for qualification evidence.
+
 A selection such as `lib/value_test.go` becomes:
 
 ```sh
@@ -70,8 +79,8 @@ qualification may still report an unsupported denominator for Go.
 - `src/planner/test-command.ts`: runner command routing, including verified Go package targets.
 
 Adapters contribute source and asset nodes, dependency edges, virtual JS/TS source, runnable test
-identities and explicit blockers. Blockers persist into the profile and graph result and cannot be
-removed by delta-specific reachability refinement. Go graphs bypass the disk cache until every cache
+identities and explicit blockers. Effective suite blockers persist into the profile and graph result
+and cannot be removed by delta-specific reachability refinement. Go graphs bypass the disk cache until every cache
 caller provides a complete toolchain/build-context identity. The cache schema was bumped to prevent
 reuse of graphs created before adapter support.
 
