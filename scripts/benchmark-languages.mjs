@@ -123,9 +123,9 @@ try {
   report.candidateVersion = experiment.candidateVersion;
   report.checks.push(run('npm', ['run', 'typecheck'], '/opt/diffci', false).record);
   report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/repo/language-adapters.test.ts', 'tests/repo/vue-scope.test.ts', 'tests/client/economics.test.ts'], '/opt/diffci', false).record);
-  if (experiment.mode === 'cache') report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/cache/vue-analysis-cache.test.ts'], '/opt/diffci', false).record);
+  if (['cache', 'reka-selection'].includes(experiment.mode)) report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/cache/vue-analysis-cache.test.ts'], '/opt/diffci', false).record);
   if (experiment.mode === 'bypass') report.checks.push(run('npm', ['exec', '--', 'tsx', '--test', 'tests/validation-env/bypass-protocol.test.ts'], '/opt/diffci', false).record);
-  if (spec.id === 'vue-test-utils' || (experiment.mode === 'cache' && spec.id === 'reka-ui')) {
+  if (spec.id === 'vue-test-utils' || (['cache', 'reka-selection'].includes(experiment.mode) && spec.id === 'reka-ui')) {
     // Record the environment of the suite's existing live GitHub assertion without
     // weakening it or treating an HTTP failure as a passed regression check.
     try {
@@ -220,6 +220,7 @@ try {
     candidates.reverse();
     report.cacheProtocol = { order: 'oldest first', arms: ['uncached', 'cold', 'warm', 'incremental'], repetitions: 2, cacheTransport: 'runner-local filesystem on Cloudflare; reads/validation/writes included, cross-job R2 transfer not measured', priorCommit: 'independent persistent cache per repetition; first commit starts empty' };
   }
+  if (experiment.mode === 'reka-selection') candidates.reverse();
   const trainingRecords = [];
   let latestTrainingContext = '';
   const timingHistoryPath = join(root, 'frozen-timing-history.json');
@@ -228,6 +229,7 @@ try {
   report.historyExaminedLimit = cohort.historyLimit;
   announce('cohort-frozen', { commits: candidates.map(c => c.head) });
   for (const [index, candidate] of candidates.entries()) {
+    if (experiment.caseLimit && index >= experiment.caseLimit) break;
     if (experiment.mode === 'profile' && index > 0) break;
     const c = { ...candidate, index, status: 'PREPARING', pairs: [] }; report.cases.push(c); announce('commit-start', { index, head: candidate.head });
     if (experiment.mode === 'bypass') {
@@ -349,6 +351,12 @@ try {
       if (c.observation.nonInterference?.worktreeUnchanged !== true) throw new Error('Observer violated non-interference');
       if (!['OBSERVED', 'REFUSED'].includes(c.observation.status)) throw new Error(`Observer ${c.observation.status}: ${c.observation.reason}`);
       const result = c.observation.result;
+      if (experiment.mode === 'reka-selection') {
+        const counts = {};
+        for (const reason of result?.fallbackReasons ?? []) { const category = reason.replace(/^Vue .+?: /, 'Vue: '); counts[category] = (counts[category] ?? 0) + 1; }
+        c.selectionDiagnostics = { policy: result?.mode, declaredTests: result?.totalTestCount, selectedTests: result?.selectedTests.length, processMs: c.analysis.elapsedMs, reasons: counts };
+        announce('selection-diagnostics', { index, ...c.selectionDiagnostics });
+      }
       if (experiment.mode === 'overhead') {
         if (!c.observerComparison || !c.comparatorDecisionEquivalent) throw new Error('Overhead mode requires a matched baseline');
         c.status = 'OBSERVER_OVERHEAD_MEASURED';
@@ -378,6 +386,11 @@ try {
         }
       }
       const firstFull = execute(); c.firstFull = firstFull; save();
+      if (experiment.mode === 'reka-selection') {
+        const declared = [...(result?.scopedTestFiles ?? [])].sort(); const actual = [...firstFull.summary.files].sort();
+        c.inventoryAudit = { matches: JSON.stringify(declared) === JSON.stringify(actual), declaredCount: declared.length, actualCount: actual.length, missing: actual.filter(path => !declared.includes(path)), extra: declared.filter(path => !actual.includes(path)) };
+        announce('inventory-audit', { index, ...c.inventoryAudit });
+      }
       if (!green(firstFull)) { c.status = 'BASELINE_RED_OR_UNREADABLE'; continue; }
       if (selected && spec.language === 'vue' && JSON.stringify([...(result.scopedTestFiles ?? [])].sort()) !== JSON.stringify([...firstFull.summary.files].sort())) {
         c.policy = 'SUITE_UNIVERSE_MISMATCH_FULL';

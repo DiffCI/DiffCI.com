@@ -1,6 +1,7 @@
 {
-  "mode": "cache",
+  "caseLimit": 1,
+  "mode": "reka-selection",
   "compatibleVitestWorkers": true,
-  "candidateVersion": "0.1.7-candidate.1",
+  "candidateVersion": "0.1.8-candidate.1",
   "commitsPerRepository": 8
 }

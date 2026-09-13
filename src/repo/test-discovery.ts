@@ -314,6 +314,8 @@ function translateExtglobBody(body: string): string {
 }
 
 function globToRegex(pattern: string): RegExp {
+  // Runner globs are relative to their configured root; a leading ./ is not a directory.
+  pattern = pattern.replace(/^(?:\.\/)+/, "");
   // Extglob bodies contain `*`, `?` and `|` that must not be rewritten by the wildcard rules below,
   // so they are lifted out behind placeholders first and restored last.
   const groups: string[] = [];

@@ -51,6 +51,9 @@ export function analyzeVueCached(context: AdapterContext, directory: string, ver
       const probes = new Map<string, string>();
       let cacheable = true;
       item = vueAdapter.analyze({ ...context, vueComponentPaths: [path], recordVueRead(file) {
+        // TS config expansion can read extended configs through its own system host.
+        // Until every such input is recorded, rebuild compiler-assisted components.
+        if (file.endsWith(".json")) cacheable = false;
         try { probes.set(resolve(file), fingerprint(file)); } catch { cacheable = false; }
       } });
       if (key && cacheable) {

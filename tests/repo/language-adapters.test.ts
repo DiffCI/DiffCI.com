@@ -40,6 +40,26 @@ const jsBase = {
   "tests/unrelated.test.ts": "export const unrelated = 1;",
 };
 
+test("Vue resolves aliased macro types through extended tsconfig and refreshes compiler configuration", () => {
+  const root = fixture({
+    "package.json": "{}",
+    "tsconfig.json": '{"extends":["./tsconfig.app.json"],"files":[]}',
+    "tsconfig.app.json": '{"compilerOptions":{"baseUrl":".","paths":{"@/*":["src/*"]}}}',
+    "src/props.ts": "export interface Props { value: string }",
+    "alt/props.ts": "export interface Props { value: number }",
+    "App.vue": '<script setup lang="ts">import type { Props } from "@/props"; defineProps<Props>();</script>',
+  });
+  try {
+    for (const [directory, runtime] of [["src", "String"], ["alt", "Number"]]) {
+      writeFileSync(join(root, "tsconfig.app.json"), JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": [`${directory}/*`] } } }));
+      const result = vueAdapter.analyze({ repoPath: root, files: ["App.vue"], profile: analyzeRepository({ repoPath: root }) });
+      assert.deepEqual(result.blockers, []);
+      assert.ok(result.edges.some(edge => edge.to === `${directory}/props.ts`));
+      assert.ok(result.virtualSources[0].source.includes(`type: ${runtime}`));
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
 test("Vue transitive source and component changes select only importing tests", async () => {
   const root = fixture(jsBase);
   try {

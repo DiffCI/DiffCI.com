@@ -3,6 +3,8 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import ts from "typescript";
 const loadCompiler = createRequire(import.meta.url);
+let previousSession: object | undefined;
+const compilerConfigs = new Set<string>();
 
 /** Only direct imports registered in a literal component options object are provable. */
 function registeredComponents(source: string): Set<string> {
@@ -40,7 +42,7 @@ import { contribution, type RepositoryAdapter } from "./types.js";
 
 /** Explicit Vue SFC imports. Runtime component registries and preprocessors require full CI. */
 export const vueAdapter: RepositoryAdapter = {
-  id: "vue", version: "5", kind: "framework",
+  id: "vue", version: "6", kind: "framework",
   detect: ({ files }) => files.some((file) => file.endsWith(".vue")),
   analyze(context) {
     const phasesMs: Record<string, number> = {};
@@ -51,7 +53,18 @@ export const vueAdapter: RepositoryAdapter = {
     };
     // Go and scoped TS-only packages do not need to initialize Vue's compiler/Babel
     // dependency tree. Keep the same synchronous adapter contract, loading it on use.
-    const { compileScript, compileTemplate, invalidateTypeCache, parse } = measure("compilerLoad", () => loadCompiler("@vue/compiler-sfc")) as typeof import("@vue/compiler-sfc");
+    const { compileScript, compileTemplate, invalidateTypeCache, parse, registerTS } = measure("compilerLoad", () => loadCompiler("@vue/compiler-sfc")) as typeof import("@vue/compiler-sfc");
+    registerTS(() => ts);
+    const session = context.vueAnalysisSession ?? {};
+    if (session !== previousSession) {
+      for (const file of compilerConfigs) invalidateTypeCache(file);
+      compilerConfigs.clear();
+      previousSession = session;
+    }
+    const recordRead = (file: string) => {
+      if (file.endsWith(".json")) compilerConfigs.add(file);
+      context.recordVueRead?.(file);
+    };
     const result = contribution(this);
     result.performance = { phasesMs, counts };
     const dependencies = [...context.profile.packageJson.dependencies, ...context.profile.packageJson.devDependencies];
@@ -64,7 +77,7 @@ export const vueAdapter: RepositoryAdapter = {
       const block = (reason: string) => result.blockers.push(`Vue ${path}: ${reason}`);
       const typeDependencies = new Set<string>();
       const recordTypeDependency = (file: string) => {
-        context.recordVueRead?.(file);
+        recordRead(file);
         const dependency = relative(context.repoPath, resolve(file)).replace(/\\/g, "/");
         if (dependency === ".." || dependency.startsWith("../") || isAbsolute(dependency)) throw new Error("Vue type dependency escapes repository");
         typeDependencies.add(dependency);
@@ -88,9 +101,9 @@ export const vueAdapter: RepositoryAdapter = {
         }
         const script = descriptor.script || descriptor.scriptSetup
           ? measure("scriptCompile", () => compileScript(descriptor, { id: path, sourceMap: false, fs: {
-            fileExists(file) { context.recordVueRead?.(file); return existsSync(file); },
+            fileExists(file) { recordRead(file); return existsSync(file); },
             readFile(file) {
-              context.recordVueRead?.(file);
+              recordRead(file);
               recordTypeDependency(file);
               counts.typeReads++;
               return readFileSync(file, "utf8");
@@ -127,8 +140,9 @@ export const vueAdapter: RepositoryAdapter = {
           if (/@import\b|url\s*\(/i.test(style.content)) block("style imports or URLs require full validation");
         }
         result.virtualSources.push({ path, source });
-      } catch {
-        block("component could not be analyzed");
+      } catch (error) {
+        const detail = String(error instanceof Error ? error.message : error).replaceAll(context.repoPath, "<repo>").split("\n")[0].slice(0, 240);
+        block(`component could not be analyzed: ${detail}`);
       } finally {
         // compiler-sfc caches parsed imported types globally. Do not let a later
         // component or a second analysis reuse stale types or bypass filesystem reads.

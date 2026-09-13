@@ -31,6 +31,18 @@ function fixture(extra: Record<string, string> = {}) {
 function delta(path: string): GitDelta {
   return { baseSha: "base", headSha: "head", files: [{ path, changeType: "modified" }], directories: [], summary: { total: 1, added: 0, modified: 1, deleted: 0, renamed: 0, copied: 0, unmerged: 0, unknown: 0 }, analysis: { empty: false, configChanged: false, dependencyManifestChanged: false, lockfileChanged: false, workflowChanged: false, infrastructureChanged: false, databaseChanged: false } };
 }
+
+test("Vue root-relative include and exclude globs establish the actual scoped test inventory", async () => {
+  const root = fixture({ "packages/ui/vitest.config.ts": 'import {defineConfig} from "vitest/config"; export default defineConfig({test:{include:["./**/*.test.{ts,js}"],exclude:["./tests/other.test.ts"]}});' });
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(result.adapterBlockers, []);
+    assert.deepEqual(result.profile.testFilePaths, ["packages/ui/tests/child.test.ts"]);
+    const impact = new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, result.profile);
+    assert.equal(impact.fallbackRequired, false);
+    assert.deepEqual(impact.affectedTests.map(test => test.path), ["packages/ui/tests/child.test.ts"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
 test("Vue scope isolates unrelated docs, pins the runner cwd/config, and guards setup and outside changes", async () => {
   const root = fixture();
   try {

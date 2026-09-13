@@ -7,6 +7,7 @@ export interface AdapterContext {
   profile: RepositoryProfile;
   vueComponentPaths?: readonly string[];
   recordVueRead?: (path: string) => void;
+  vueAnalysisSession?: object;
 }
 
 export interface AdapterContribution {

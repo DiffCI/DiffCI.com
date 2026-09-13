@@ -648,7 +648,7 @@ export async function buildDependencyGraph(
   };
   const files = adapterFiles(repoPath, options.excludeDirs).filter(path => !scope || inVuePackage(path, scope.packageRoot));
   markPhase("adapterInventory");
-  const context = { repoPath, files, profile };
+  const context = { repoPath, files, profile, vueAnalysisSession: {} };
   const cachedVue = options.vueAnalysisCache ? (await import("../cache/vue-analysis-cache.js")).analyzeVueCached : undefined;
   const contributions = REPOSITORY_ADAPTERS.filter((adapter) => adapter.detect(context)).map((adapter) => adapter.id === "vue" && cachedVue && options.vueAnalysisCache
     ? cachedVue(context, options.vueAnalysisCache.directory, options.vueAnalysisCache.version) : adapter.analyze(context));
