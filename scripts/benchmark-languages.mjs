@@ -470,6 +470,24 @@ try {
       }
       if (selected && spec.language === 'vue' && selected.some(p => !firstFull.summary.files.includes(p))) { c.policy = 'OUTSIDE_MEASURED_SUITE_FULL'; selected = undefined; }
       c.executedSelection = selected ?? null;
+      if (experiment.runtimeFaultOnly) {
+        if (!selected?.length || c.policy !== 'SELECTIVE') throw new Error('Fault supplement requires the qualified selective policy');
+        const path = candidate.sourceFiles.find(p => existsSync(join(checkout, p)));
+        const m = path && mutation(path);
+        if (!m) throw new Error('Fault supplement has no supported mutation');
+        c.fault = { path, kind: m.kind, selectionFrozenBeforeMutation: true };
+        writeFileSync(join(checkout, path), m.changed);
+        try {
+          c.fault.full = execute(); c.fault.policy = execute(selected);
+          // The normal Cloudflare collector also reads the Vitest JSON failure markers.
+          const detects = r => r.exitCode !== null && r.exitCode !== 0 && !r.error && r.mutationMarkerSeen && r.summary.readable && (r.summary.failed > 0 || r.summary.failedSuites > 0);
+          c.fault.fullDetected = detects(c.fault.full); c.fault.policyDetected = detects(c.fault.policy);
+          c.fault.outcome = !c.fault.fullDetected ? 'INCONCLUSIVE_FULL_DID_NOT_DETECT' : c.fault.policyDetected ? 'DETECTED' : 'MISSED_OR_UNREADABLE_POLICY';
+          c.status = 'FAULT_SUPPLEMENT_COMPLETED';
+        } finally { writeFileSync(join(checkout, path), m.original); }
+        announce('fault-complete', { index, outcome: c.fault.outcome });
+        continue;
+      }
       let secondFull;
       if (selected === undefined) {
         secondFull = execute();

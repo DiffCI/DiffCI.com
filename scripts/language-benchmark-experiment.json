@@ -2,9 +2,11 @@
   "compatibleVitestWorkers": true,
   "mode": "reka-selection",
   "commitsPerRepository": 8,
-  "caseStart": 4,
+  "caseStart": 0,
+  "caseLimit": 1,
+  "runtimeFaultOnly": true,
   "candidateVersion": "0.1.9-candidate.3",
   "candidateIntegrity": "sha512-VJbqnOqITLIiewyg7LfR7hdTt4NuJURoINWEtoYiSGGQgSawoVUVUP9oDupCEz9w6/2J5bdiuSyQF+7pS3WCSw==",
   "selectionArms": ["uncached"],
-  "runtimePartitionSmoke": true
+  "runtimePartitionSmoke": false
 }
