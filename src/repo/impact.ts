@@ -308,7 +308,7 @@ export class ImpactAnalyzer {
 
     this.handleStructuralNextLayout(changedImpacts, profile, affectedEntryPoints, affectedSources, evidence);
     this.handleAddedEntryPoints(delta, affectedEntryPoints, affectedSources, affectedTests, evidence, fallbackReasons);
-    this.collectAlwaysRunTests(profile, graph, affectedTests, evidence);
+    this.collectAlwaysRunTests(profile, graph, affectedTests, evidence, graphResult.profile.vueRuntimeAlwaysRunPaths ?? []);
 
     // Changed-test self-selection invariant (2026-08-24): every executable directly-changed test
     // (added / modified / renamed-destination / copied-destination) MUST be present in the final
@@ -647,8 +647,9 @@ export class ImpactAnalyzer {
     graph: DependencyGraph,
     affectedTests: Map<string, TestImpact>,
     evidence: ImpactEvidence[],
+    graphRuntimeTests: readonly string[],
   ): void {
-    const alwaysRunPaths = new Set<string>([...(profile.vueTypeTestPaths ?? []), ...(profile.vueRuntimeAlwaysRunPaths ?? [])]);
+    const alwaysRunPaths = new Set<string>([...(profile.vueTypeTestPaths ?? []), ...(profile.vueRuntimeAlwaysRunPaths ?? []), ...graphRuntimeTests]);
     const knownTestPaths = new Set<string>();
     for (const testLocation of profile.tests) {
       for (const node of graph.nodes) {

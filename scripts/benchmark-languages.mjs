@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 import { resolve, join, relative } from 'node:path';
 import { createHash } from 'node:crypto';
 import ts from 'typescript';
@@ -80,6 +80,54 @@ function execute(selected) {
   return record;
 }
 function green(r) { return r.exitCode === 0 && !r.error && r.summary.readable; }
+
+function runtimePartitionSmoke(host) {
+  const directory = join(root, 'runtime-partition-contract');
+  mkdirSync(directory);
+  const files = {
+    'package.json': JSON.stringify({ type: 'module', private: true, devDependencies: { vitest: '3', vue: '3', '@vitejs/plugin-vue': '5' } }),
+    'diffci.json': JSON.stringify({ vue: { packageRoot: '.', testConfig: 'vitest.config.ts' } }),
+    'tsconfig.json': JSON.stringify({ compilerOptions: { module: 'ESNext', moduleResolution: 'Bundler', target: 'ES2022' }, include: ['src', 'tests'] }),
+    'vitest.config.ts': 'import {defineConfig} from "vitest/config"; import vue from "@vitejs/plugin-vue"; export default defineConfig({plugins:[vue()],test:{include:["tests/**/*.test.ts"],environment:"jsdom",isolate:true}});',
+    'src/value.ts': 'export const value = 1;',
+    'src/Runtime.vue': '<script setup>defineProps(["component"])</script><template><component :is="component" /></template>',
+    'tests/runtime.test.ts': 'import {it,expect} from "vitest"; import {createApp,h} from "vue"; import Runtime from "../src/Runtime.vue"; it("runtime component",()=>{const root=document.createElement("div");const app=createApp(Runtime,{component:h("span","ok")});app.mount(root);expect(root.textContent).toBe("ok");app.unmount()});',
+    'tests/value.test.ts': 'import {it,expect} from "vitest"; import {value} from "../src/value"; it("value",()=>expect(value).toBeGreaterThan(0));',
+    'tests/unrelated.test.ts': 'import {it,expect} from "vitest"; it("unrelated",()=>expect(true).toBe(true));',
+    '.gitignore': 'node_modules/\n',
+  };
+  for (const [path, contents] of Object.entries(files)) { mkdirSync(resolve(directory, path, '..'), { recursive: true }); writeFileSync(join(directory, path), contents); }
+  symlinkSync(join(checkout, spec.cwd, 'node_modules'), join(directory, 'node_modules'), 'dir');
+  const fixtureGit = args => run('git', args, directory).stdout.trim();
+  fixtureGit(['init']); fixtureGit(['remote', 'add', 'origin', 'https://github.com/diffci-fixture/runtime-contract.git']); fixtureGit(['add', '.']); fixtureGit(['-c', 'user.name=DiffCI', '-c', 'user.email=validation@diffci.com', 'commit', '-m', 'base']);
+  const base = fixtureGit(['rev-parse', 'HEAD']);
+  writeFileSync(join(directory, 'src/value.ts'), 'export const value = 2;');
+  fixtureGit(['add', '.']); fixtureGit(['-c', 'user.name=DiffCI', '-c', 'user.email=validation@diffci.com', 'commit', '-m', 'unrelated source change']);
+  const head = fixtureGit(['rev-parse', 'HEAD']);
+  const output = join(root, 'runtime-contract-observation.json');
+  const process = run('node', [join(host, 'node_modules/@diffci/observer/index.mjs'), 'observe', '--repo', directory, '--base', base, '--head', head, '--out', output, '--no-send'], directory).record;
+  const observation = JSON.parse(readFileSync(output, 'utf8'));
+  const selected = observation.result?.selectedTests;
+  const smoke = report.runtimePartitionSmoke = { synthetic: true, process, observation, selectionFrozenBeforeMutation: true };
+  save();
+  if (observation.nonInterference?.worktreeUnchanged !== true || observation.result?.mode !== 'SELECTIVE' || JSON.stringify([...selected].sort()) !== '["tests/runtime.test.ts","tests/value.test.ts"]') throw new Error('Runtime contract did not keep the unrelated runtime test selected');
+  const executeFixture = paths => {
+    const json = join(root, `runtime-contract-${sequence++}.json`);
+    const result = run('node', [join(directory, 'node_modules/vitest/vitest.mjs'), 'run', '--config', 'vitest.config.ts', ...vueWorkerArguments, '--reporter=json', `--outputFile=${json}`, ...(paths ?? [])], directory, false, 180000, vueWorkerEnvironment).record;
+    const raw = readFileSync(json, 'utf8'); const data = JSON.parse(raw);
+    return { ...result, files: data.testResults.map(t => relative(directory, t.name)).sort(), failed: data.numFailedTests, failedSuites: data.numFailedTestSuites, markerSeen: raw.includes('DIFFCI_BENCHMARK_FAULT') };
+  };
+  smoke.full = executeFixture(); smoke.selected = executeFixture(selected); save();
+  if (smoke.full.exitCode !== 0 || smoke.full.files.length !== 3 || smoke.selected.exitCode !== 0 || JSON.stringify(smoke.selected.files) !== JSON.stringify([...selected].sort())) throw new Error('Runtime contract full/subset execution failed');
+  writeFileSync(join(directory, 'src/Runtime.vue'), files['src/Runtime.vue'].replace('<script setup>', '<script setup>throw new Error("DIFFCI_BENCHMARK_FAULT");'));
+  try {
+    smoke.faultFull = executeFixture(); smoke.faultSelected = executeFixture(selected); save();
+    const detected = result => result.exitCode !== null && result.exitCode !== 0 && !result.error && result.markerSeen && (result.failed > 0 || result.failedSuites > 0);
+    if (!detected(smoke.faultFull) || !detected(smoke.faultSelected)) throw new Error('Runtime contract missed a fault outside the static source-change closure');
+    smoke.outcome = 'DETECTED';
+  } finally { writeFileSync(join(directory, 'src/Runtime.vue'), files['src/Runtime.vue']); save(); }
+  announce('runtime-contract-complete', { outcome: smoke.outcome });
+}
 function mutation(path) {
   const text = readFileSync(join(checkout, path), 'utf8');
   if (spec.language === 'go') {
@@ -267,6 +315,7 @@ try {
           c.testWorkerArguments = vueWorkerArguments;
           c.testRunnerHelp = help.record;
         }
+        if (experiment.runtimePartitionSmoke && index === 0) runtimePartitionSmoke(host);
         if (spec.id === 'vue-router') {
           // Its Vitest type tests consume the outputs of the documented preceding builds.
           c.build = run('corepack', ['pnpm', '--filter', 'vue-router', 'run', 'build'], checkout).record;
@@ -299,18 +348,22 @@ try {
         c.cacheDecisionEquivalent = true;
       } else if (experiment.mode === 'reka-selection') {
         c.selectionObservations = [];
+        const arms = experiment.selectionArms ?? ['uncached', 'incremental'];
+        if (JSON.stringify(arms) !== '["uncached"]' && JSON.stringify(arms) !== '["uncached","incremental"]') throw new Error('Unsupported selection observer arms');
+        c.primarySelectionArm = arms.at(-1);
         const identity = o => { const { graph, ...result } = o.result ?? {}; return JSON.stringify({ status: o.status, stage: o.stage, reason: o.reason, result, graph: graph && { nodes: graph.nodes, edges: graph.edges, confidence: graph.confidence, effectiveConfidence: graph.effectiveConfidence } }); };
         for (let repeat = 0; repeat < 2; repeat++) {
-          const order = (index + repeat) % 2 === 0 ? ['uncached', 'incremental'] : ['incremental', 'uncached'];
+          const order = (index + repeat) % 2 === 0 ? [...arms] : [...arms].reverse();
           const pair = { order };
           for (const arm of order) pair[arm] = observeWith(host, arm === 'uncached' ? [] : ['--vue-analysis-cache', join(root, `selection-cache-${repeat}`)]);
-          if (pair.uncached.observation.status !== 'OBSERVED' || identity(pair.incremental.observation) !== identity(pair.uncached.observation)) throw new Error('Selection cached/uncached decisions differ');
+          if (pair.uncached.observation.status !== 'OBSERVED' || !arms.every(arm => identity(pair[arm].observation) === identity(pair.uncached.observation))) throw new Error('Selection cached/uncached decisions differ');
           if (repeat && identity(pair.uncached.observation) !== identity(c.selectionObservations[0].uncached.observation)) throw new Error('Selection decisions changed between repetitions');
           c.selectionObservations.push(pair);
         }
-        c.analysis = c.selectionObservations[0].incremental.analysis;
-        c.observation = c.selectionObservations[0].incremental.observation;
-        c.cacheDecisionEquivalent = true;
+        c.analysis = c.selectionObservations[0][c.primarySelectionArm].analysis;
+        c.observation = c.selectionObservations[0][c.primarySelectionArm].observation;
+        c.cacheDecisionEquivalent = arms.length === 2 ? true : undefined;
+        c.repeatedDecisionEquivalent = true;
       } else if (experiment.mode === 'bypass') {
         c.bypassObservations = [];
         const heldOut = c.phase === 'held-out';
@@ -424,7 +477,7 @@ try {
         const firstPolicy = execute(selected);
         c.pairs.push({ full: firstFull, policy: firstPolicy, netSavedMs: firstFull.elapsedMs - firstPolicy.elapsedMs - c.analysis.elapsedMs }); save();
         const secondPolicy = execute(selected); secondFull = execute();
-        c.pairs.push({ full: secondFull, policy: secondPolicy, netSavedMs: secondFull.elapsedMs - secondPolicy.elapsedMs - (c.selectionObservations?.[1].incremental.analysis.elapsedMs ?? c.analysis.elapsedMs) });
+        c.pairs.push({ full: secondFull, policy: secondPolicy, netSavedMs: secondFull.elapsedMs - secondPolicy.elapsedMs - (c.selectionObservations?.[1][c.primarySelectionArm].analysis.elapsedMs ?? c.analysis.elapsedMs) });
         if (!c.pairs.every(p => green(p.full) && green(p.policy))) { c.status = 'UNSTABLE_OR_POLICY_FAILED'; continue; }
       }
       const universe = s => JSON.stringify({ files: s.files, packages: Object.keys(s.packages ?? {}).sort(), total: s.total });
@@ -432,7 +485,7 @@ try {
       c.status = selected === undefined ? 'FULL_POLICY_MEASURED' : selected.length === 0 ? 'EMPTY_SELECTION_MEASURED' : 'SELECTIVE_POLICY_MEASURED';
       if (experiment.mode === 'reka-selection') {
         const pairs = c.pairs.length ? c.pairs : c.baselines.map(full => ({ full, policy: full }));
-        c.selectionEconomics = pairs.map((pair, i) => Object.fromEntries(['uncached', 'incremental'].map(arm => [arm, { fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, observerMs: c.selectionObservations[i][arm].analysis.elapsedMs, netSavedMs: pair.full.elapsedMs - pair.policy.elapsedMs - c.selectionObservations[i][arm].analysis.elapsedMs }])));
+        c.selectionEconomics = pairs.map((pair, i) => Object.fromEntries((experiment.selectionArms ?? ['uncached', 'incremental']).map(arm => [arm, { fullMs: pair.full.elapsedMs, policyMs: pair.policy.elapsedMs, observerMs: c.selectionObservations[i][arm].analysis.elapsedMs, netSavedMs: pair.full.elapsedMs - pair.policy.elapsedMs - c.selectionObservations[i][arm].analysis.elapsedMs }])));
       }
       if (experiment.mode === 'cache') {
         const pairs = c.pairs.length ? c.pairs : c.baselines.map(full => ({ full, policy: full }));

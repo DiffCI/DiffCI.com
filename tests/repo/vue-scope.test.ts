@@ -73,6 +73,9 @@ test("Vue runtime uncertainty always runs importing tests for unrelated changes"
     assert.equal(impact.fallbackRequired, false, impact.fallbackReasons.join("; "));
     assert.deepEqual(impact.affectedTests.map(t => t.path).sort(), ["packages/ui/tests/child.test.ts", "packages/ui/tests/runtime.test.ts"]);
     assert.ok(impact.affectedTests.find(t => t.path.endsWith("runtime.test.ts"))?.reasons.includes("ALWAYS_RUN_POLICY"));
+    const rediscovered = { ...result.profile, vueRuntimeAlwaysRunPaths: undefined };
+    const retained = new ImpactAnalyzer().analyze(delta("packages/ui/src/value.ts"), result, rediscovered);
+    assert.ok(retained.affectedTests.some(t => t.path.endsWith("runtime.test.ts")), "graph protections survive a separately discovered caller profile");
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
