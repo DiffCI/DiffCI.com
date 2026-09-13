@@ -216,36 +216,18 @@ try {
   let latestTrainingContext = '';
   const timingHistoryPath = join(root, 'frozen-timing-history.json');
   let frozenHistoryHash;
-  let trainingCheckpoint;
-  const resume = experiment.resumeTraining?.[spec.id];
-  if (resume) {
-    if (experiment.mode !== 'bypass') throw new Error('Training resume requires bypass mode');
-    const bytes = readFileSync(join('/opt/diffci', resume.path));
-    if (createHash('sha256').update(bytes).digest('hex') !== resume.sha256) throw new Error('Training checkpoint checksum mismatch');
-    trainingCheckpoint = JSON.parse(bytes.toString('utf8'));
-    if (trainingCheckpoint.agentIntegrity !== report.agentIntegrity || trainingCheckpoint.trainingCases.length !== experiment.trainingCount) throw new Error('Training checkpoint observer or count mismatch');
-    for (const [i, c] of trainingCheckpoint.trainingCases.entries()) {
-      if (c.phase !== 'training' || c.index !== i || c.head !== candidates[i].head || c.base !== candidates[i].base) throw new Error('Checkpoint training cohort differs');
-      if (c.trainingRecord) trainingRecords.push(c.trainingRecord);
-      if (c.observation) latestTrainingContext = c.observation.economics?.contextKey ?? '';
-    }
-    report.cases.push(...trainingCheckpoint.trainingCases);
-    report.resumedTraining = { runId: trainingCheckpoint.runId, sha256: resume.sha256, separateCloudflareContainer: true };
-  }
   report.frozenCandidates = candidates;
   report.historyExaminedLimit = cohort.historyLimit;
   announce('cohort-frozen', { commits: candidates.map(c => c.head) });
   for (const [index, candidate] of candidates.entries()) {
-    if (trainingCheckpoint && index < experiment.trainingCount) continue;
     if (experiment.mode === 'profile' && index > 0) break;
     const c = { ...candidate, index, status: 'PREPARING', pairs: [] }; report.cases.push(c); announce('commit-start', { index, head: candidate.head });
     if (experiment.mode === 'bypass') {
       c.phase = index < experiment.trainingCount ? 'training' : 'held-out';
       if (index === experiment.trainingCount) {
-        report.frozenTimingHistory = freezeTimingHistory(trainingRecords, { trainingCount: experiment.trainingCount, repository: spec.repository, jobKey: `${spec.id}-linux-${spec.language}-fixed-suite`, observerVersion: report.candidateVersion, contextKey: latestTrainingContext, recordedAt: trainingCheckpoint?.frozenTimingHistory.recordedAt ?? new Date().toISOString() });
+        report.frozenTimingHistory = freezeTimingHistory(trainingRecords, { trainingCount: experiment.trainingCount, repository: spec.repository, jobKey: `${spec.id}-linux-${spec.language}-fixed-suite`, observerVersion: report.candidateVersion, contextKey: latestTrainingContext, recordedAt: new Date().toISOString() });
         writeFileSync(timingHistoryPath, JSON.stringify(report.frozenTimingHistory));
         frozenHistoryHash = createHash('sha256').update(readFileSync(timingHistoryPath)).digest('hex');
-        if (trainingCheckpoint && frozenHistoryHash !== trainingCheckpoint.frozenTimingHistorySha256) throw new Error('Resumed history differs from frozen training history');
         report.frozenTimingHistorySha256 = frozenHistoryHash;
         announce('timing-history-frozen', { samples: report.frozenTimingHistory.samples.length, distinctCommits: new Set(report.frozenTimingHistory.samples.map(sample => sample.headSha)).size });
       }
