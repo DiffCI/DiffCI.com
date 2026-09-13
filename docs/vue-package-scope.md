@@ -28,7 +28,14 @@ Only the default Vue compiler plugin is supported. Unknown plugins/config helper
 spreads, computed properties, alternate roots, projects/workspaces and unverifiable
 test patterns keep full fallback. Setup files must be literal package-local files.
 Changes to setup files or their transitive dependencies force the full suite.
-Dynamic Vue component/directive resolution and Nuxt conventions remain blockers.
+Nuxt conventions remain blockers. Runtime component/directive uncertainty can be
+confined to importing test files only when all suite roots are parsed and Vitest
+isolation is verified. Every test file reaching such a component then runs for
+every selection, including unrelated source changes. Runtime uncertainty reached
+from shared setup/configuration still requires the full suite. Disabled or
+ambiguous isolation, custom runners/environments and unsupported pool settings
+also retain full fallback. This does not reconstruct the missing runtime edges.
+See the [runtime protection qualification](research/2026-09-13-vue-runtime-partition.md).
 
 Proposed commands pin both the package working directory and the exact config:
 

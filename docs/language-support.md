@@ -6,7 +6,7 @@ These additions propose selections in the existing observer; they do not enable 
 | Surface | Implemented scope | Boundaries |
 | --- | --- | --- |
 | JavaScript / TypeScript | Existing dependency analysis and ten existing test-runner command mappings | Runner recognition is not a guarantee of complete framework semantics |
-| Vue | SFC parsing with `@vue/compiler-sfc`; script imports, literal Options API component registrations, empty script fixtures, compiled template asset imports; propagation into importing JS/TS tests | Unresolved runtime component/directive resolution, preprocessors, external/custom SFC blocks, style URLs/imports, Nuxt conventions and glob imports require full validation |
+| Vue | SFC parsing with `@vue/compiler-sfc`; script imports, literal Options API component registrations, empty script fixtures, compiled template asset imports; propagation into importing JS/TS tests; protected runtime-dependent tests in verified isolated scopes | Runtime uncertainty requires full validation unless protected by the isolated-suite policy below; preprocessors, external/custom SFC blocks, style URLs/imports, Nuxt conventions and glob imports require full validation |
 | Go | One root module; optional explicit root-module scope in a repository containing nested modules; native metadata, package-level transitive selection, embeds and Go test commands | Workspaces, changes inside excluded modules, inactive Go files, cgo/native objects, plugins, generation/linkname and incomplete metadata require full validation; root scoping rejects local replacements |
 | Mixed Go and JS/TS | Detected | Full validation until cross-language relationships are declared and modeled |
 | Python, Svelte, Astro, Java/Kotlin, C#, Rust | No new semantic support in this release | Require additional adapters and qualification |
@@ -41,8 +41,8 @@ Go workspaces and local replacements still block scoped selection. Reports ident
 declared `goScope`; the structured commands continue to run root-relative packages.
 
 Empty-graph refusals now include the adapter's reason. Vue recognizes only direct imported
-component identifiers in literal `components` registrations; spreads, computed registrations,
-dynamic components and unresolved directives remain conservative.
+component identifiers in literal `components` registrations. Unresolved runtime dependencies
+retain full execution unless the isolated-suite protection described below applies.
 
 The Reka selection candidate also resolves imported Vue macro types through TypeScript aliases,
 extended configurations and directory index files, and recognizes leading `./` in test globs.
@@ -52,6 +52,13 @@ directory-name exclusion: imported story fixtures retain their blockers. Unresol
 and global configuration blockers still force full validation. Compiler-assisted components that
 probe JSON configuration are rebuilt instead of persistently cached until every compiler input can
 be tracked. See the [Reka experiment](research/2026-09-13-reka-selection.md) for qualification evidence.
+
+The runtime-protection candidate can always run every test file reaching an unresolved runtime
+component or directive, while selecting other tests normally. This requires a verified scoped
+Vitest suite and isolated execution. Shared setup reaching a runtime blocker, disabled or ambiguous
+isolation, custom runners/environments and unmodeled configuration keep full-suite fallback.
+This policy protects tests despite unknown runtime edges; it does not resolve those edges or claim
+support for non-isolated or order-dependent jobs. See the [runtime protection experiment](research/2026-09-13-vue-runtime-partition.md).
 
 A selection such as `lib/value_test.go` becomes:
 
