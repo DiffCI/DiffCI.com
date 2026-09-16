@@ -1,21 +1,22 @@
 # DiffCI
 
-## Core, Cloud, and the planned GitHub organization
+## Public Core and private Cloud
 
-DiffCI is preparing a separation between its public-good analysis engine and its commercial hosted
-product. The project now lives in the [DiffCI GitHub organization](https://github.com/DiffCI).
+DiffCI's public-good analysis engine is released separately from its commercial hosted product.
+The project lives in the [DiffCI GitHub organization](https://github.com/DiffCI).
 This mixed repository was transferred to `DiffCI/DiffCI.com` on 2026-09-16 and remains private.
 
-| Component | Intended scope | Intended licensing |
+| Component | Scope | Licensing |
 | --- | --- | --- |
-| DiffCI Core | Dependency/change analysis, CI graph analysis, safety engine, selective-execution planning, benchmarking, and compute/environmental measurement | AGPLv3 |
+| [DiffCI Core](https://github.com/DiffCI/core) | Standalone dependency/change analysis, CI graph inference, safety/fallback, advisory test selection, synthetic benchmarking and local compute measurement | AGPL-3.0-only; public |
 | DiffCI Cloud | Hosted infrastructure, billing, enterprise dashboard, organization management, proprietary data/services, and managed acceleration | Proprietary |
 | Optional enterprise code | Separately scoped, visible and auditable enterprise capabilities | Source available, with commercial production rights controlled by DiffCI |
 
-**This is a migration direction, not a license grant for this repository.** The current private
-repository contains both engine and hosted-product code. Core extraction and the licensing audit
-must precede an AGPL release; selective execution and environmental measurement here describe the
-intended scope, not a claim that every capability is production-ready.
+**This mixed repository remains private.** Only the reviewed Core extraction was published, with
+fresh Git history. This repository retains its existing engine snapshot while package integration is
+migrated separately. No blanket AGPL license applies to this repository. Public Core is advisory-only;
+energy/carbon/cost are modeled estimates, not verified environmental savings. The exact extraction is
+recorded in [the Core release audit](docs/core-release-audit.md).
 
 The funded Core should run independently of DiffCI Cloud. AGPL permits commercial use and competing
 hosting; it adds source-sharing obligations for covered modifications, including qualifying remote

@@ -40,9 +40,9 @@ Current plan: GitHub Free. Owner: `adityankale190895`. The owner completed signu
 | --- | --- | --- |
 | `.github` | Public, created | Published organization profile at `profile/README.md`; source copy in `docs/github-org/profile/README.md` |
 | `DiffCI.com` | Private, transferred | Existing mixed repository with its history and pull requests |
-| `core` | Public only after release audit | Extracted, independently buildable AGPLv3 engine, tests, benchmarks, and measurement tools |
-| `cloud` | Private | Extracted hosted product and operational infrastructure |
-| `enterprise` | Private initially, optional | Enterprise code; decide terms and publication scope before exposing it |
+| [`core`](https://github.com/DiffCI/core) | Public, created | Independent AGPL-3.0-only engine, tests, synthetic benchmark and measurement tools |
+| `cloud` | Not created; possible future private rename/extraction | Hosted product currently remains in private `DiffCI.com` |
+| `enterprise` | Not created, optional | Decide terms and scope before exposing any enterprise source |
 
 Retain the existing repository name during the ownership move. Treat code extraction and any later
 rename as separate operations so that deployment changes can be diagnosed independently.
@@ -64,11 +64,11 @@ rename as separate operations so that deployment changes can be diagnosed indepe
   Do not blindly rewrite historical evidence or source attribution.
 - [ ] Verify GitHub App access and webhook deliveries, runner access, deployment credentials, and an
   ordinary CI run. Git redirects do not validate those integrations.
-- [ ] Audit and extract Core according to [the licensing boundaries](licensing.md), with its own package,
+- [x] Audit and extract Core according to [the licensing boundaries](licensing.md), with its own package,
   build, tests, CLI example, reproducible benchmark, full license, and third-party notices.
-- [ ] Check the complete proposed public content and history for credentials, customer/private data,
+- [x] Check the complete proposed public content and history for credentials, customer/private data,
   proprietary code, fixture redistribution rights, and inherited third-party obligations.
-- [ ] Publish the audited Core and update profile links to the actual repositories.
+- [x] Publish the audited Core and update profile links to the actual repositories.
 
 Do not make the existing mixed repository public or add a blanket AGPL license as a shortcut to extraction.
 Do not create a replacement repository at the old URL after transfer: that can break GitHub redirects.

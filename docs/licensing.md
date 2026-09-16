@@ -1,18 +1,21 @@
 # Licensing direction and release boundaries
 
-Status: proposed architecture; no repository-wide relicensing in this change.
+Status: initial standalone Core published at https://github.com/DiffCI/core under AGPL-3.0-only.
+The mixed `DiffCI/DiffCI.com` repository remains private; no repository-wide relicensing applies.
+See [the release audit](core-release-audit.md) for the actual file boundary and verification.
 
 ## DiffCI Core
 
-Release the independently usable engine under GNU AGPL version 3. Core's intended scope is dependency
+The independently usable engine is released under GNU AGPL version 3 only. Core's scope is dependency
 and change analysis, CI graph analysis, conservative safety/fallback decisions, selective-execution
 planning, reproducible benchmarks, and compute/environmental measurement with disclosed methodology.
 Funded functionality must be usable without proprietary services or credentials for DiffCI Cloud.
 
-Initial extraction candidates are `src/git/`, `src/repo/`, `src/planner/`, `src/ci-inference/`, and
-portable graph-cache, measurement, benchmark, and safety utilities. These are candidates, not a
-file-level license declaration. Trace imports, runtime dependencies, fixtures, and build inputs
-before choosing the release boundary.
+The initial extraction includes `src/git/`, `src/repo/`, `src/planner/`, `src/ci-inference/`,
+`src/cache/` and `src/research/baseline/`, plus standalone CLI, measurement and benchmark tooling.
+The public repository's `release-files.json` enumerates its complete release boundary. Only published
+Core content is covered by that license; this does not automatically license unpublished changes or
+other private files. The private product retains its existing engine snapshot pending package integration.
 
 AGPL allows commercial use, redistribution, and competing hosting. Section 13 requires a modified
 version supporting remote network interaction to prominently offer its Corresponding Source to
@@ -43,9 +46,11 @@ under restrictive enterprise terms without the necessary rights and a compatible
   Preserve its scope and third-party attribution.
 - Audit authorship and provenance, including inherited monorepo history, third-party source, generated
   code, fixtures, and dependency notices. GitHub contributor counts do not establish copyright ownership.
-- Include the full AGPLv3 text, accurate copyright/third-party notices, package license metadata,
-  build instructions, and a usable source-offer mechanism in the released Core.
-- Decide explicitly whether the release is `AGPL-3.0-only` or `AGPL-3.0-or-later` before setting SPDX metadata.
+- Core includes the full AGPLv3 text, copyright/dependency notices, SPDX/package metadata and build
+  instructions. It is a local library/CLI, not a hosted network service. A future network deployment
+  must provide any source offer required by its actual licensing obligations.
+- The initial release explicitly uses `AGPL-3.0-only`. Future outside contributions are AGPL-only
+  unless additional rights are separately agreed; proprietary relicensing rights are not assumed.
 - Check each grant's license, ownership, publication, deliverable, and commercial-use terms. This
   architecture does not itself establish eligibility, funding, or grant compliance.
 
