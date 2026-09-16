@@ -78,5 +78,6 @@ Jobs queued before installation may not receive a fresh `workflow_job.queued` de
 workflow or redeliver its queued event to seed the new lifecycle store; the reconciler only knows
 repositories it has observed. Do not bulk replay unrelated historical jobs.
 
-The read-only Shadow App is a separate integration. Registering the Runner app does not restore shadow
-observation or grant the Runner permission to read repository contents through its installation token.
+The read-only Shadow App is a separate integration, now restored under installation `162093948`;
+see [Shadow restoration](github-app-registration.md#organization-restoration-2026-09-16). The Runner
+does not gain permission to read repository contents through its installation token.

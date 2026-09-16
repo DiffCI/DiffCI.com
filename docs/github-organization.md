@@ -1,7 +1,7 @@
 # GitHub organization setup and migration
 
-Updated 2026-09-16. Organization and repository transfer are complete; integration restoration and
-Core extraction remain unfinished. Unchecked steps are not completed.
+Updated 2026-09-16. Organization, repository transfer, isolated Runner setup and read-only Shadow
+installation are complete. Core extraction remains unfinished. Unchecked steps are not completed.
 
 ## Verified starting point
 
@@ -19,7 +19,11 @@ Core extraction remain unfinished. Unchecked steps are not completed.
   (installation `162092319`), with a separate Worker, queue, database and secrets. See
   [organization runner setup](github-app-registration-org-runner.md). The personal-account Runner app
   was neither transferred nor made public, preserving its DentalPresence installation.
-  The read-only Shadow integration still needs restoration. CI uses ephemeral runners dispatched by
+  The read-only Shadow app is restored as installation `162093948`, only on `DiffCI/DiffCI.com`;
+  its signed installation event auto-enrolled the private repository and identified its CI workflow.
+  The obsolete personal-owner enrollment is paused with historical evidence retained. See
+  [Shadow restoration](github-app-registration.md#organization-restoration-2026-09-16).
+  CI uses ephemeral runners dispatched by
   the Runner app; zero registered runners at rest does not imply that no runner integration exists.
 - Before transfer, PR #2's CI run `35053164610` failed at the Test step, while observation run
   `35053164643` succeeded. After restoring the runner, observation run `35054804932` succeeded;
