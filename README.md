@@ -1,5 +1,28 @@
 # DiffCI
 
+## Core, Cloud, and the planned GitHub organization
+
+DiffCI is preparing a separation between its public-good analysis engine and its commercial hosted
+product. The intended organization name is **DiffCI**, subject to GitHub availability and creation.
+
+| Component | Intended scope | Intended licensing |
+| --- | --- | --- |
+| DiffCI Core | Dependency/change analysis, CI graph analysis, safety engine, selective-execution planning, benchmarking, and compute/environmental measurement | AGPLv3 |
+| DiffCI Cloud | Hosted infrastructure, billing, enterprise dashboard, organization management, proprietary data/services, and managed acceleration | Proprietary |
+| Optional enterprise code | Separately scoped, visible and auditable enterprise capabilities | Source available, with commercial production rights controlled by DiffCI |
+
+**This is a migration direction, not a license grant for this repository.** The current private
+repository contains both engine and hosted-product code. Core extraction and the licensing audit
+must precede an AGPL release; selective execution and environmental measurement here describe the
+intended scope, not a claim that every capability is production-ready.
+
+The funded Core should run independently of DiffCI Cloud. AGPL permits commercial use and competing
+hosting; it adds source-sharing obligations for covered modifications, including qualifying remote
+network use. Grant eligibility depends on each grant's agreement and funded deliverables.
+
+See the [licensing boundaries](docs/licensing.md), [organization and migration plan](docs/github-organization.md),
+and [prepared organization profile](docs/github-org/profile/README.md).
+
 DiffCI is a deterministic, change-aware CI planner: given a commit or PR, it builds a real TypeScript
 dependency graph, computes what's actually reachable from the changed files, and proposes which CI
 tasks/tests could safely be skipped - without ever modifying production CI behavior itself. Every mode
