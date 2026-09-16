@@ -1,29 +1,36 @@
 # GitHub organization setup and migration
 
-Prepared 2026-09-16. This document records intended setup; unchecked steps are not completed.
+Updated 2026-09-16. Organization and repository transfer are complete; integration restoration and
+Core extraction remain unfinished. Unchecked steps are not completed.
 
 ## Verified starting point
 
-- Source repository: `adityankale190895/DiffCI.com`, private, default branch `main`.
+- Repository: [`DiffCI/DiffCI.com`](https://github.com/DiffCI/DiffCI.com), private, default branch `main`.
+  Transferred from `adityankale190895/DiffCI.com` on 2026-09-16.
 - Authenticated CLI account: `adityankale190895`, with repository admin rights.
-- No organizations were returned by the authenticated account's organization listing.
-- The public account lookup for `DiffCI` returned 404. Availability remains unconfirmed until the
-  organization signup form accepts the name; a 404 does not reserve a handle.
+- Organization `DiffCI` exists on GitHub Free; `adityankale190895` is an active owner.
+- Default repository permission is `none`. The public `.github` repository contains the profile README.
 - Engine, hosted services, website, research, and deployment configuration currently share a repository.
-- Browser organization setup currently requires GitHub sign-in.
+- Transfer checks confirmed no protected branches, Pages site, repository environments, Actions
+  variables, repository webhooks, deploy keys, or registered runners. Rulesets were unavailable on
+  the source private repository's plan. The `CLOUDFLARE_API_TOKEN` secret name remains present after transfer.
+- PR #2 and its branch are preserved. The shared local `origin` now points to the organization URL.
+- The new organization has no installed GitHub Apps yet. Restoring DiffCI GitHub Runner and DiffCI
+  Shadow requires the owner's browser reauthentication. CI uses ephemeral runners dispatched by
+  the Runner app; zero registered runners at rest does not imply that no runner integration exists.
+- Before transfer, PR #2's CI run `35053164610` failed at the Test step, while observation run
+  `35053164643` succeeded. No post-transfer CI success has been established.
 
-## Intended organization
+## Organization and repository layout
 
-Name/handle: **DiffCI**, if available. Website: `https://diffci.com`.
+Name/handle: **DiffCI**. Website: `https://diffci.com`.
 Description: **Change-aware CI: an open analysis engine and a managed cloud platform.**
-Start with GitHub Free unless an identified repository feature requires another plan.
-Use the authenticated account as initial owner. The owner must supply the appropriate contact/billing
-email and whether the organization belongs to an individual or a legal entity during signup.
+Current plan: GitHub Free. Owner: `adityankale190895`. The owner completed signup in Chrome.
 
 | Repository | Visibility | Purpose |
 | --- | --- | --- |
-| `.github` | Public | Organization profile at `profile/README.md`; copy the prepared profile from `docs/github-org/profile/README.md` |
-| `DiffCI.com` | Private initially | Transfer the existing mixed repository with its history, issues, and deployment context |
+| `.github` | Public, created | Published organization profile at `profile/README.md`; source copy in `docs/github-org/profile/README.md` |
+| `DiffCI.com` | Private, transferred | Existing mixed repository with its history and pull requests |
 | `core` | Public only after release audit | Extracted, independently buildable AGPLv3 engine, tests, benchmarks, and measurement tools |
 | `cloud` | Private | Extracted hosted product and operational infrastructure |
 | `enterprise` | Private initially, optional | Enterprise code; decide terms and publication scope before exposing it |
@@ -33,15 +40,15 @@ rename as separate operations so that deployment changes can be diagnosed indepe
 
 ## Execution checklist
 
-- [ ] Sign in at [organization setup](https://github.com/organizations/plan), select the free plan,
+- [x] Sign in at [organization setup](https://github.com/organizations/plan), select the free plan,
   validate the handle, and complete owner/contact details and any required verification/terms.
-- [ ] Verify organization ownership and least-privilege default membership permissions.
-- [ ] Create public `.github` with only the prepared organization profile; no private project history.
+- [x] Verify organization ownership and least-privilege default membership permissions.
+- [x] Create public `.github` with only the prepared organization profile; no private project history.
 - [ ] Inventory branch protections/rulesets, Actions configuration, environments, secrets by name,
   variables, deploy keys, webhooks, GitHub App installations, runner registrations, and deployment integrations.
-- [ ] Check feature availability before transfer: moving a private repository to GitHub Free can remove
+- [x] Check feature availability before transfer: moving a private repository to GitHub Free can remove
   features such as protected branches and GitHub Pages. Resolve any affected dependency first.
-- [ ] Transfer `adityankale190895/DiffCI.com` to the verified organization, preserving private visibility.
+- [x] Transfer `adityankale190895/DiffCI.com` to the verified organization, preserving private visibility.
   Verify destination ownership, access, default branch, issues, and pull requests.
 - [ ] Update local remotes and owner-qualified URLs in CI, action consumers, badges, documentation,
   app enrollment/allowlists, deployment systems, and external integrations using the actual destination.

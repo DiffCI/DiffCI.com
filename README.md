@@ -3,7 +3,8 @@
 ## Core, Cloud, and the planned GitHub organization
 
 DiffCI is preparing a separation between its public-good analysis engine and its commercial hosted
-product. The intended organization name is **DiffCI**, subject to GitHub availability and creation.
+product. The project now lives in the [DiffCI GitHub organization](https://github.com/DiffCI).
+This mixed repository was transferred to `DiffCI/DiffCI.com` on 2026-09-16 and remains private.
 
 | Component | Intended scope | Intended licensing |
 | --- | --- | --- |
