@@ -15,8 +15,14 @@ Core extraction remain unfinished. Unchecked steps are not completed.
   variables, repository webhooks, deploy keys, or registered runners. Rulesets were unavailable on
   the source private repository's plan. The `CLOUDFLARE_API_TOKEN` secret name remains present after transfer.
 - PR #2 and its branch are preserved. The shared local `origin` now points to the organization URL.
-- The new organization has no installed GitHub Apps yet. Restoring DiffCI GitHub Runner and DiffCI
-  Shadow requires the owner's browser reauthentication. CI uses ephemeral runners dispatched by
+- The new organization has no installed GitHub Apps yet. Browser reauthentication is complete, but
+  the existing Runner app is private and GitHub only offers installation on its personal owner account.
+  The transfer dialog explicitly warns that transferring it to DiffCI automatically uninstalls it
+  from the personal account; its documented scope also includes DentalPresence. Do not transfer it
+  blindly or make it publicly installable: the runner webhook path has no verified repository allowlist.
+  Decide between a separate private organization app/deployment and a reviewed public-app configuration
+  with explicit workload admission controls before restoring integrations.
+  CI uses ephemeral runners dispatched by
   the Runner app; zero registered runners at rest does not imply that no runner integration exists.
 - Before transfer, PR #2's CI run `35053164610` failed at the Test step, while observation run
   `35053164643` succeeded. No post-transfer CI success has been established.
