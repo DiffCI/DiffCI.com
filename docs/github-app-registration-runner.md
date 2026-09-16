@@ -1,5 +1,10 @@
 # Registering the DiffCI Runner Dispatcher GitHub App
 
+> **Organization migration (2026-09-16):** `DiffCI.com` now belongs to the `DiffCI` organization.
+> Keep this existing personal-account app for DentalPresence; the new organization fleet is documented
+> in [DiffCI organization runner](github-app-registration-org-runner.md). The historical status below
+> describes the setup before the repository transfer.
+
 > **Status: DONE (2026-08-21).** The App is registered and installed on both `DiffCI.com` and
 > `DentalPresence.in` (installation id `155363973`), its three secrets are on the `diffci-github-runner`
 > Worker, and the webhook is active - end to end verified: pushes to `main` dispatch a fresh Cloudflare

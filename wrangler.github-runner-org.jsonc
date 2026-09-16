@@ -1,0 +1,33 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Separate app credentials, queue, database and container namespace for the DiffCI organization.
+  // The personal-account/DentalPresence fleet stays on wrangler.github-runner.jsonc.
+  "name": "diffci-org-github-runner",
+  "main": "./src/research/cloudflare/github-runner-worker.ts",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "account_id": "571ba9bf90457be28a492d139c055e54",
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "queues": {
+    "producers": [{ "binding": "RUNNER_DISPATCH_QUEUE", "queue": "diffci-org-runner-dispatch" }],
+    "consumers": [{ "queue": "diffci-org-runner-dispatch", "max_batch_size": 5, "max_batch_timeout": 3, "max_retries": 2, "max_concurrency": 3 }]
+  },
+  "d1_databases": [{
+    "binding": "RUNNER_DB",
+    "database_name": "diffci-org-runner",
+    "database_id": "15306f7b-39a2-462a-af2e-f92c27ced276"
+  }],
+  "triggers": { "crons": ["*/5 * * * *"] },
+  // GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY (PKCS#8), GITHUB_WEBHOOK_SECRET and
+  // RUNNER_DISPATCH_TOKEN are Worker secrets, never committed configuration.
+  "containers": [{
+    "class_name": "GithubRunner",
+    "image": "docker.io/cloudflare/sandbox:0.12.5",
+    "instance_type": "standard-2",
+    "max_instances": 5,
+    "rollout_step_percentage": [100]
+  }],
+  "durable_objects": { "bindings": [{ "name": "GITHUB_RUNNER", "class_name": "GithubRunner" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GithubRunner"] }]
+}
