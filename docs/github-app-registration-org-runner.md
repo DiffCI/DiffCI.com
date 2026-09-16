@@ -22,7 +22,10 @@ The private app is registered under DiffCI, all four Worker secrets are stored, 
 `162092319` grants access only to `DiffCI/DiffCI.com`. GitHub's signed installation event received
 HTTP 202. The authenticated Worker app diagnostic confirms the new app identity and intended
 permissions. Unauthenticated diagnostics, token requests, and unsigned webhooks each return HTTP 401.
-End-to-end CI verification is in progress.
+End-to-end execution is verified at commit `e5ff6c7`: [observation run 35054804932](https://github.com/DiffCI/DiffCI.com/actions/runs/35054804932)
+passed on `cf-job-104662610822`. [CI run 35054804933](https://github.com/DiffCI/DiffCI.com/actions/runs/35054804933)
+completed on `cf-job-104662610924`, passed checkout, dependency installation and type-checking, and
+failed at the application Test step. Runner provisioning and application-test outcomes are separate.
 
 Both Workers run the same dispatcher implementation, but have separate queues, lifecycle records,
 container namespaces and credentials. The new reconciler cannot enumerate the old fleet's database.
@@ -66,9 +69,10 @@ inaccessible without that token. Unsigned webhook calls must be rejected.
 
 ## Verification
 
-The existing 13 runner dispatch, batching and lifecycle-store tests pass. End-to-end verification must
-also demonstrate a signed delivery, a job assigned to the new fleet, execution completion and ephemeral
-runner cleanup. A test-suite failure after assignment is distinct from a runner provisioning failure.
+The existing 13 runner dispatch, batching and lifecycle-store tests pass. The runs above demonstrate
+signed deliveries, assignment to the new fleet and execution completion; lifecycle records also show
+the observation runner's `exec-succeeded` disposal. The personal installation `155363973` was inspected
+after setup and remains active with only `adityankale190895/DentalPresence.in` selected.
 
 Jobs queued before installation may not receive a fresh `workflow_job.queued` delivery. Re-run a chosen
 workflow or redeliver its queued event to seed the new lifecycle store; the reconciler only knows

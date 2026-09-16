@@ -22,7 +22,9 @@ Core extraction remain unfinished. Unchecked steps are not completed.
   The read-only Shadow integration still needs restoration. CI uses ephemeral runners dispatched by
   the Runner app; zero registered runners at rest does not imply that no runner integration exists.
 - Before transfer, PR #2's CI run `35053164610` failed at the Test step, while observation run
-  `35053164643` succeeded. No post-transfer CI success has been established.
+  `35053164643` succeeded. After restoring the runner, observation run `35054804932` succeeded;
+  full CI run `35054804933` completed checkout, install and type-checking, then failed at Test.
+  See [runner verification](github-app-registration-org-runner.md) for the execution evidence.
 
 ## Organization and repository layout
 
