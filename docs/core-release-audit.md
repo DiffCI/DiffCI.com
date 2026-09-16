@@ -2,6 +2,8 @@
 
 Public destination: https://github.com/DiffCI/core
 
+Initial public commit: `61efdc88843ad6414210b057805edcb6bbdac999` (one fresh root commit).
+
 The initial release was extracted from committed `origin/main` (`42d43c0`) into a new repository.
 No private Git history or uncommitted working-tree changes were copied. `DiffCI/DiffCI.com` remains
 private; `.github` contains only the public organization profile.
@@ -28,6 +30,8 @@ dirty or mismatched checkouts. The repository-agnostic test was adjusted to omit
 
 - Build and TypeScript checking passed on Windows/Node 24.16.0.
 - All 303 portable tests passed, with no skips.
+- [Public CI](https://github.com/DiffCI/core/actions/runs/35056388629) passed on Ubuntu and Windows,
+  each on Node 22 and Node 24; every job ran all 303 tests, build, typecheck, boundary audit and benchmark.
 - Synthetic benchmark built 200 graph nodes and 199 edges with COMPLETE confidence.
 - Import/file boundary audit passed for all 82 files.
 - Gitleaks 8.30.1 scanned the release directory and initial Git history: no findings. Binary checksum
@@ -37,6 +41,8 @@ dirty or mismatched checkouts. The repository-agnostic test was adjusted to omit
   GitHub visibility.
 - Full license text retrieved from https://www.gnu.org/licenses/agpl-3.0.txt. Runtime dependency
   notices identify TypeScript (Apache-2.0) and yaml (ISC).
+- Unauthenticated GitHub API access returned 200 for public `DiffCI/core` and 404 for private
+  `DiffCI/DiffCI.com`; authenticated metadata independently confirmed PRIVATE for the latter.
 
 ## Remaining migration boundary
 
