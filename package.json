@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DiffCI - deterministic change-aware CI planning",
   "private": false,
   "type": "module",
@@ -114,5 +114,9 @@
       "**/validate-*.test.*",
       "scripts/**/*.test.mjs"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DiffCI/DiffCI.com"
   }
 }
