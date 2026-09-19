@@ -1,10 +1,31 @@
 # DiffCI
 
+[![npm version](https://img.shields.io/npm/v/@diffci.com/diffci.svg)](https://www.npmjs.com/package/@diffci.com/diffci)
+[![npm provenance](https://img.shields.io/badge/npm-provenance-blue)](https://docs.npmjs.com/generating-provenance-statements)
+[![GitHub Action](https://img.shields.io/badge/action-DiffCI%2FDiffCI.com%40v1-blue)](https://github.com/DiffCI/DiffCI.com)
+
 DiffCI is a deterministic, change-aware CI planner: given a commit or PR, it builds a real TypeScript
 dependency graph, computes what's actually reachable from the changed files, and proposes which CI
 tasks/tests could safely be skipped - without ever modifying production CI behavior itself. Every mode
 this repository currently implements is observe-and-compare only; nothing here can cancel, skip, or block
 a real CI run.
+
+Try it in shadow mode:
+
+```bash
+npx @diffci.com/diffci@latest observe
+npx @diffci.com/diffci@latest verify-workflow
+```
+
+Or install it as a non-blocking GitHub Action:
+
+```yaml
+- uses: DiffCI/DiffCI.com@v1
+```
+
+The promise is deliberately narrow: DiffCI observes your CI and reports what it would have selected.
+It does not skip tests, cancel jobs, change required checks, or send reports anywhere unless you
+explicitly configure an endpoint and token.
 
 **This repository moved out of the [DentalPresence.in](https://github.com/adityankale190895/DentalPresence.in)
 monorepo** (previously `diffci/` there) into its own repo on 2026-08-21, once the project outgrew being a
@@ -88,11 +109,11 @@ DiffCI is intended to be installable as infrastructure, not only as a hosted sha
 ```
 
 ```bash
-npx @diffci.com/diffci observe
-npx @diffci.com/diffci verify-workflow
+npx @diffci.com/diffci@latest observe
+npx @diffci.com/diffci@latest verify-workflow
 ```
 
 The GitHub App remains the easiest shadow-mode entry point. The GitHub Action and npm CLI establish
 the OSS/package distribution path: DiffCI can become an explicit CI dependency while preserving the
 same observe-only contract. See [`docs/distribution.md`](docs/distribution.md) for the package and
-Action positioning.
+Action positioning, or [`docs/npm-adoption.md`](docs/npm-adoption.md) for copy-paste pilot material.

@@ -1,0 +1,48 @@
+name: Run DiffCI in shadow mode
+description: Ask for help installing DiffCI as a non-blocking observer.
+title: "Shadow-mode pilot for <owner/repo>"
+labels:
+  - pilot
+  - adoption
+body:
+  - type: markdown
+    attributes:
+      value: |
+        DiffCI observes CI and reports what it would have selected. It should not skip tests, cancel jobs, change required checks, or send reports anywhere unless an endpoint and token are explicitly configured.
+  - type: input
+    id: repository
+    attributes:
+      label: Repository
+      description: Which repository should run the pilot?
+      placeholder: owner/repo
+    validations:
+      required: true
+  - type: dropdown
+    id: install_surface
+    attributes:
+      label: Preferred install surface
+      options:
+        - GitHub Action
+        - npm CLI
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: ci_shape
+    attributes:
+      label: CI shape
+      description: What test framework/package manager/workflow should DiffCI observe?
+      placeholder: npm + vitest, pnpm workspace, GitHub Actions check workflow, etc.
+    validations:
+      required: false
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Pilot constraints
+      options:
+        - label: The DiffCI job must be non-blocking.
+          required: true
+        - label: Existing CI jobs and required checks must remain unchanged.
+          required: true
+        - label: Reports should stay local unless we explicitly configure an endpoint/token.
+          required: true

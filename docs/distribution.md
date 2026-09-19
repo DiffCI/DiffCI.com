@@ -28,7 +28,7 @@ jobs:
       - uses: DiffCI/DiffCI.com@v1
 ```
 
-For the strongest supply-chain posture, pin the Action to a full commit SHA. `npx @diffci.com/diffci verify-workflow`
+For the strongest supply-chain posture, pin the Action to a full commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
@@ -37,8 +37,8 @@ of CI.
 The CLI is the standalone npm package surface. The package name is `@diffci.com/diffci`:
 
 ```bash
-npx @diffci.com/diffci observe
-npx @diffci.com/diffci verify-workflow
+npx @diffci.com/diffci@latest observe
+npx @diffci.com/diffci@latest verify-workflow
 ```
 
 `observe` writes a JSON report outside the checkout by default. It never runs, skips, cancels, or

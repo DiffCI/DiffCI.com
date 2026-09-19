@@ -1,0 +1,38 @@
+name: Offer an OSS pilot repo
+description: Maintainers can offer a repository for a seven-day DiffCI shadow-mode run.
+title: "OSS pilot offer: <owner/repo>"
+labels:
+  - pilot
+  - oss
+body:
+  - type: input
+    id: repository
+    attributes:
+      label: Repository
+      placeholder: owner/repo
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this repo?
+      description: Tell us about CI runtime, test volume, or monorepo/workspace complexity.
+    validations:
+      required: false
+  - type: dropdown
+    id: access
+    attributes:
+      label: Maintainer access
+      options:
+        - I can open/merge a workflow PR
+        - I can review a workflow PR
+        - I can only discuss the setup
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Constraints
+      description: Any privacy, runtime, branch protection, or artifact-retention constraints?
+    validations:
+      required: false
