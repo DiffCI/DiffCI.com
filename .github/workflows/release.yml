@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   npm:
@@ -28,7 +29,7 @@ jobs:
       - run: npm run package:smoke
       - name: Publish prerelease
         if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-')
-        run: npm publish --access public --tag alpha
+        run: npm publish --provenance --access public --tag alpha
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Keep prerelease off latest
@@ -38,6 +39,6 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Publish stable
         if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')
-        run: npm publish --access public
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
