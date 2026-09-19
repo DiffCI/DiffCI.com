@@ -25,7 +25,7 @@ jobs:
           registry-url: https://registry.npmjs.org
 
       - run: npm ci
-      - run: npm run typecheck
+      - run: npm run check
       - run: npm run build:client
       - run: npm run check:oss-boundary
       - run: npm run package:smoke

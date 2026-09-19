@@ -68,24 +68,51 @@ Every dated report behind these stages lives in [`docs/research/`](docs/research
 `2026-08-21-stage2-architecture.md` for the fullest current picture of what's built vs not, or the
 Stage 0/1A/1B reports for the historical-validation story.
 
+For the next product milestone, see [`docs/alpha-readiness.md`](docs/alpha-readiness.md). It tracks the
+private-alpha bar: install DiffCI, keep CI unchanged, collect real shadow observations, and render a
+trustworthy potential-savings report.
+
 ## Architecture
 
-- `src/git/` - Git delta analysis (`analyzeGitDelta`): parses a commit range into a structured,
-  serializable `GitDelta`. Project invariant: **failure to analyze must never be interpreted as
-  permission to skip CI** - a failed analysis returns `{ success: false, error }` explicitly, never a
-  silently-empty affected set.
-- `src/repo/` - the dependency graph engine (`buildDependencyGraph`, TypeScript-compiler-backed) and the
-  impact analyzer (`ImpactAnalyzer`) that turns a graph + delta into a confidence-scored, fallback-aware
-  impact result.
-- `src/planner/` - turns an impact result into an `ExecutionPlan` (`DefaultCIPlanner`): which tasks/tests
-  run, which are skip-candidates, and why.
-- `src/research/` - the Stage 0/1 historical benchmark pipeline: repository sampling, the generic
-  (non-DentalPresence-specific) PATH baseline, the opportunity classifier, historical GitHub CI evidence
-  collection with flakiness detection, and the Cloudflare orchestrator (`src/research/cloudflare/`) that
-  runs all of it at scale.
-- `src/shadow/` - the Stage 2 prospective pipeline: event identity (`event-identity.ts`), failure
-  classification, ground-truth reconciliation (`reconcile.ts`) against real CI outcomes, and (written,
-  not yet registered) GitHub App JWT/webhook code (`github-app.ts`).
+DiffCI is now framed as an open-core product:
+
+```text
+DiffCI
+|
+├── Open-source core
+|   ├── DiffCI engine
+|   ├── CLI / npm package
+|   ├── Local analysis
+|   └── Basic GitHub Action
+|       |
+|       └── Tidelift package support
+|
+└── Commercial DiffCI
+    ├── Hosted service / DiffCI Cloud
+    ├── Organization dashboard
+    ├── Historical analytics
+    ├── Advanced CI/CD optimization
+    ├── Enterprise policies
+    ├── Managed runners
+    ├── Team features
+    └── Support / enterprise services
+```
+
+The open-source core is the trust and adoption surface. It runs locally or in the host repository's own
+CI, writes a report, and changes nothing about CI execution. Commercial DiffCI adds hosted history,
+organization views, policy, managed operations, runners, and support. Tidelift belongs to the supported
+open-source package path, not the hosted product feature boundary. See
+[`docs/open-core-packaging.md`](docs/open-core-packaging.md) and
+[`docs/tidelift-package-support.md`](docs/tidelift-package-support.md).
+
+The source tree follows that split:
+
+- `src/git/`, `src/repo/`, `src/planner/`, and `src/client/` are the installable OSS observer path.
+- `action.yml` wraps the observer as a basic non-blocking GitHub Action.
+- `src/research/` and `src/shadow/` run validation, GitHub App shadow observation, and reconciliation.
+- `src/product/`, `src/auth/`, `src/billing/`, `src/ingest/`, `src/ledger/`, `src/runner/`, and
+  `src/usage/` are the commercial/control-plane layer.
+- `docs/oss-boundary.md` records what is allowed into the npm package.
 
 ## Commands
 
@@ -117,7 +144,8 @@ npx @diffci.com/diffci@latest observe
 npx @diffci.com/diffci@latest verify-workflow
 ```
 
-The GitHub App remains the easiest shadow-mode entry point. The GitHub Action and npm CLI establish
-the OSS/package distribution path: DiffCI can become an explicit CI dependency while preserving the
-same observe-only contract. See [`docs/distribution.md`](docs/distribution.md) for the package and
-Action positioning, or [`docs/npm-adoption.md`](docs/npm-adoption.md) for copy-paste pilot material.
+The GitHub Action and npm CLI establish the OSS/package distribution path. The hosted GitHub App and
+DiffCI Cloud build on that trust boundary for teams that want shared reports and history. See
+[`docs/distribution.md`](docs/distribution.md) for the package and Action positioning,
+[`docs/open-core-packaging.md`](docs/open-core-packaging.md) for the commercial split, and
+[`docs/npm-adoption.md`](docs/npm-adoption.md) for copy-paste pilot material.

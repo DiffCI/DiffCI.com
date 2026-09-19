@@ -2,6 +2,7 @@
   "name": "@diffci.com/diffci",
   "version": "0.1.2",
   "description": "DiffCI - deterministic change-aware CI planning",
+  "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
     "url": "https://github.com/DiffCI/DiffCI.com"
@@ -22,7 +23,10 @@
     "dist-client/src/repo",
     "README.md",
     "docs/distribution.md",
-    "docs/language-support.md"
+    "docs/language-support.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+    "COMMERCIAL.md"
   ],
   "exports": {
     "./*": {

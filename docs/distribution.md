@@ -3,6 +3,10 @@
 DiffCI has three install surfaces with the same initial contract: observe CI, write a report, and do
 not change what the host repository runs.
 
+The product model is open core. The npm CLI and basic GitHub Action are the open-source adoption path;
+DiffCI Cloud adds hosted history, organization dashboards, policies, managed operations, and support.
+See [`open-core-packaging.md`](open-core-packaging.md).
+
 ## GitHub App
 
 The DiffCI Shadow GitHub App is the lowest-friction research and design-partner path. It receives
@@ -79,3 +83,10 @@ brew install diffci
 
 Those should ship only after the npm CLI and Action have signed releases, provenance, pinned build
 workflows, and repeatable package verification.
+
+## Supported OSS Channel
+
+Tidelift belongs to the open-source package channel. It can provide maintenance, security, license, and
+supply-chain assurance for the npm package without requiring a hosted DiffCI account. It should support
+the OSS core rather than define a separate feature tier. The readiness checklist lives in
+[`tidelift-package-support.md`](tidelift-package-support.md).

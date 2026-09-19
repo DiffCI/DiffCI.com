@@ -34,6 +34,9 @@ describe("npm package contract", () => {
       "README.md",
       "docs/distribution.md",
       "docs/language-support.md",
+      "SECURITY.md",
+      "SUPPORT.md",
+      "COMMERCIAL.md",
     ]);
     assert.deepEqual(new Set(pkg.files), allowed);
   });

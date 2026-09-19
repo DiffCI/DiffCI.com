@@ -3,7 +3,8 @@
 DiffCI has two source boundaries:
 
 - **OSS core**: the installable observation-only GitHub Action and npm CLI, published as
-  `@diffci.com/diffci`. This is the public dependency surface for third-party repositories.
+  `@diffci.com/diffci`. This is the public dependency surface for third-party repositories and is
+  licensed AGPL-3.0-only.
 - **Proprietary/control-plane source**: hosted product, research, shadow orchestration, runner,
   billing/ledger/usage, installation, auth, site, and operational deployment code.
 
@@ -14,6 +15,10 @@ The npm package must contain only the OSS core:
 - `dist-client/src/git/`
 - `dist-client/src/planner/`
 - `dist-client/src/repo/`
+- `LICENSE`
+- `SECURITY.md`
+- `SUPPORT.md`
+- `COMMERCIAL.md`
 - public README/distribution docs
 
 It must not contain source or build output from `src/product`, `src/research`, `src/shadow`,

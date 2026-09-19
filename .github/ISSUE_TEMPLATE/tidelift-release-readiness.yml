@@ -1,0 +1,68 @@
+name: Tidelift/package release readiness
+description: Track a supported-package release candidate before Tidelift outreach.
+title: "Tidelift release readiness: v<version>"
+labels:
+  - release
+  - tidelift
+  - oss
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this checklist before publishing a DiffCI Core release intended for Tidelift recognition or supported-package outreach.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: v0.1.3
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: OSS/commercial boundary
+      options:
+        - label: `package.json` declares `AGPL-3.0-only`.
+          required: true
+        - label: `LICENSE`, `SECURITY.md`, `SUPPORT.md`, and `COMMERCIAL.md` are current.
+          required: true
+        - label: Commercial DiffCI remains documented as proprietary and outside the OSS package boundary.
+          required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Required local checks
+      options:
+        - label: `npm run check`
+          required: true
+        - label: `npm run check:oss-boundary`
+          required: true
+        - label: `npm run package:smoke`
+          required: true
+  - type: checkboxes
+    id: release
+    attributes:
+      label: Release steps
+      options:
+        - label: Release commit is clean and pushed to `main`.
+          required: true
+        - label: Git tag is created from the release commit.
+          required: true
+        - label: GitHub Release workflow published to npm with provenance.
+          required: true
+        - label: npm package page shows the expected license and version.
+          required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Adoption evidence
+      description: Link public installs, pilot repos, action runs, or docs/evidence entries.
+    validations:
+      required: false
+  - type: textarea
+    id: outreach
+    attributes:
+      label: Tidelift outreach
+      description: Record contact channel, sent date, and response.
+    validations:
+      required: false

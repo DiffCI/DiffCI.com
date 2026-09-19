@@ -16,8 +16,12 @@ const ALLOWED_PACKAGE_PREFIXES = [
   "dist-client/src/planner/",
   "dist-client/src/repo/",
   "README.md",
+  "SECURITY.md",
+  "SUPPORT.md",
+  "COMMERCIAL.md",
   "docs/distribution.md",
   "docs/language-support.md",
+  "LICENSE",
   "package.json",
 ];
 
