@@ -16,9 +16,9 @@ describe("npm package contract", () => {
   };
 
   it("publishes a diffci binary backed by the client build", () => {
-    assert.equal(pkg.name, "diffci");
+    assert.equal(pkg.name, "@diffci.com/diffci");
     assert.equal(pkg.private, false);
-    assert.equal(pkg.bin?.diffci, "./dist-client/src/client/cli.js");
+    assert.equal(pkg.bin?.diffci, "dist-client/src/client/cli.js");
     assert.equal(pkg.scripts?.prepack, "npm run build:client");
     assert.ok(pkg.files?.includes("dist-client/src/client"));
   });

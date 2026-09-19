@@ -1,6 +1,6 @@
 {
-  "name": "diffci",
-  "version": "0.1.0-alpha.1",
+  "name": "@diffci.com/diffci",
+  "version": "0.1.0-alpha.2",
   "description": "DiffCI - deterministic change-aware CI planning",
   "private": false,
   "type": "module",
@@ -8,7 +8,7 @@
     "node": ">=22.5.0"
   },
   "bin": {
-    "diffci": "./dist-client/src/client/cli.js"
+    "diffci": "dist-client/src/client/cli.js"
   },
   "files": [
     "action.yml",

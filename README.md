@@ -88,8 +88,8 @@ DiffCI is intended to be installable as infrastructure, not only as a hosted sha
 ```
 
 ```bash
-npx diffci observe
-npx diffci verify-workflow
+npx @diffci.com/diffci observe
+npx @diffci.com/diffci verify-workflow
 ```
 
 The GitHub App remains the easiest shadow-mode entry point. The GitHub Action and npm CLI establish
