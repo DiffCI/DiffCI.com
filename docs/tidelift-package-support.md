@@ -35,13 +35,15 @@ Before applying for or announcing Tidelift support:
 9. Document the support policy for security fixes and compatibility.
 10. Keep hosted-service features out of Tidelift package claims.
 
-## Current blockers
+## Current status
 
-- The package needs a tagged release process that always runs `check:oss-boundary` and `package:smoke`
-  before publish.
-- Tidelift/Sonar has not yet accepted or recognized the package.
-- The first public install-to-report smoke test still needs to be recorded under
+- `@diffci.com/diffci@0.1.3` is published on npm under the `latest` dist-tag.
+- Publishing is handled by `.github/workflows/release.yml` from a Git tag with npm provenance.
+- Release CI runs `npm run check`, `npm run build:client`, `npm run check:oss-boundary`, and
+  `npm run package:smoke` before publish.
+- Public install evidence is recorded under
   [`evidence/alpha-install-smoke-01/`](evidence/alpha-install-smoke-01/).
+- Tidelift/Sonar has not yet accepted or recognized the package.
 
 ## License
 
