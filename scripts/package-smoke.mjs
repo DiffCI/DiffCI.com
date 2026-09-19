@@ -90,6 +90,8 @@ try {
   const reportPath = join(temp, "report.json");
   const bin = join(consumer, "node_modules", ".bin", process.platform === "win32" ? "diffci.cmd" : "diffci");
   assert(existsSync(bin), `installed package did not create ${bin}`);
+  const installedVersion = runNpm(["exec", "--", "diffci", "version"], { cwd: consumer }).trim();
+  assert(installedVersion === pack.version, `expected diffci version ${pack.version}, got ${installedVersion}`);
   runNpm(["exec", "--", "diffci", "observe", "--repo", repoPath, "--base", base, "--head", head, "--out", reportPath, "--json"], {
     cwd: consumer,
   });

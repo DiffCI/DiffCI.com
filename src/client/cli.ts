@@ -73,7 +73,7 @@ function observerIdentity(): { version: string; root?: string; sha?: string } {
     if (existsSync(candidate)) {
       try {
         const parsed = JSON.parse(readFileSync(candidate, "utf8")) as { name?: string; version?: string };
-        if (parsed.name === "diffci") {
+        if (parsed.name === "@diffci.com/diffci" || parsed.name === "diffci") {
           let sha: string | undefined;
           try {
             sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: current, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
