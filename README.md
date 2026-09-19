@@ -84,7 +84,7 @@ npm run research:sandbox:deploy
 DiffCI is intended to be installable as infrastructure, not only as a hosted shadow experiment:
 
 ```yaml
-- uses: diffci/diffci-action@v1
+- uses: DiffCI/DiffCI.com@v1
 ```
 
 ```bash

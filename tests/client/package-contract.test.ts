@@ -8,6 +8,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 describe("npm package contract", () => {
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
+    name?: string;
     private?: boolean;
     bin?: Record<string, string>;
     files?: string[];
@@ -15,6 +16,7 @@ describe("npm package contract", () => {
   };
 
   it("publishes a diffci binary backed by the client build", () => {
+    assert.equal(pkg.name, "diffci");
     assert.equal(pkg.private, false);
     assert.equal(pkg.bin?.diffci, "./dist-client/src/client/cli.js");
     assert.equal(pkg.scripts?.prepack, "npm run build:client");

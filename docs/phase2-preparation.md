@@ -1,16 +1,15 @@
 # Phase 2 preparation — routes, distribution, and the product App
 
-> **SUPERSEDED IN PART, 2026-08-27.** Section 2 below planned a PUBLIC action repository. That decision
-> was reversed: DiffCI is proprietary and source-private, is not distributed as a third-party `uses:`
-> Action, and no public repository will be created. See [agent-distribution.md](agent-distribution.md)
-> for what replaced it. Sections 1, 3 and 4 (routes, the product App, secrets) still stand, except that
-> `DIFFCI_ACTION_REF` is now `DIFFCI_AGENT_ARTIFACT`.
+> **UPDATED, 2026-09-19.** The public install names are now explicit: the GitHub Action surface is
+> `DiffCI/DiffCI.com@v1`, and the npm CLI package is `diffci`. Section 2 is retained for the dependency
+> closure reasoning, but the repository convention has changed from a separate `diffci-action` repo to
+> this repository as the public Action surface.
 >
 > **"Creating a public GitHub repository" is no longer a blocker to external onboarding.** It was never
 > a requirement - it was one way of satisfying a requirement, and we chose a different one.
 
-**Date:** 2026-08-27 · **Status:** prepared, **nothing applied**. No DNS change, no route, no App
-registration, no published repository, no secret, no commit.
+**Date:** 2026-08-27 · **Status:** partially superseded by the OSS distribution path. No DNS change,
+no route, no App registration, no secret.
 
 This document is the input to three external actions that only the account owner can perform. Each
 section states exactly what to create, why each value is what it is, and what must be true before it is
@@ -84,10 +83,10 @@ switch will still be pointed at it.
 
 ---
 
-## 2. The public action repository — SUPERSEDED, kept for the reasoning
+## 2. The public action surface — UPDATED, kept for the reasoning
 
-> Not being done. Retained because the dependency-closure analysis below is still accurate and is what
-> the private agent build now bundles.
+The Action is published from this repository and installed as `DiffCI/DiffCI.com@v1`. The dependency
+closure analysis below is still the relevant package boundary for the client-side observer.
 
 ### What it must contain
 
@@ -149,8 +148,8 @@ Rewrite each to state the rule without naming the project it was learned from.
 
 ### Repository conventions
 
-- **Name:** `diffci/diffci-action` (or `<owner>/diffci-action`). Not `DiffCI.com` — the public repo is
-  the action, and its name is what customers read in their own workflow file forever.
+- **Name:** `DiffCI/DiffCI.com`. The public workflow install line is `uses: DiffCI/DiffCI.com@v1`.
+  `diffci` is reserved for the npm CLI package.
 - **Branch protection and required review on `main`.** This repository is executable code in every
   customer's CI; a push to it is a push into their pipeline.
 - **Tag releases, but pin by SHA.** Tags are for humans reading a changelog. `DIFFCI_ACTION_REF` takes

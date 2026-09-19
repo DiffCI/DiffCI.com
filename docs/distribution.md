@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: diffci/diffci-action@v1
+      - uses: DiffCI/DiffCI.com@v1
 ```
 
 For the strongest supply-chain posture, pin the Action to a full commit SHA. `diffci verify-workflow`
@@ -34,7 +34,7 @@ of CI.
 
 ## npm CLI
 
-The CLI is the standalone package surface:
+The CLI is the standalone npm package surface. The package name is `diffci`:
 
 ```bash
 npx diffci observe

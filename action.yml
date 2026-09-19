@@ -22,7 +22,7 @@
 #         - uses: actions/checkout@v4
 #           with:
 #             fetch-depth: 0            # the base commit must exist locally, or DiffCI refuses
-#         - uses: <owner>/DiffCI.com@<40-character commit sha>
+#         - uses: DiffCI/DiffCI.com@<40-character commit sha>
 #
 # `diffci verify-workflow` checks those properties against your own workflow files and exits non-zero
 # if any of them does not hold. Run it before the observation window starts.

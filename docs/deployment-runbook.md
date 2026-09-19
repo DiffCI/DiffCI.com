@@ -29,7 +29,7 @@ needs another human. Stages 6 and 7 are mostly waiting.
 ## Stage 0 — commit, push, and decide on visibility
 
 Everything from phases 02–05 is currently uncommitted. Nothing else in this runbook works until it is
-pushed, because `uses: owner/DiffCI.com@<sha>` resolves against what GitHub has.
+pushed, because `uses: DiffCI/DiffCI.com@v1` and SHA-pinned installs resolve against what GitHub has.
 
 ```bash
 npm run check
@@ -37,10 +37,9 @@ npm run check
 
 Expect **1,555 passing, typecheck clean**. Then commit and push to `main`.
 
-**Decide now: is `adityankale190895/DiffCI.com` public?** A third-party repository's runner must be able
-to check out the action. If the repository is private, stage 3 has to change: vendor `action.yml` plus
-`src/client/` into the pilot repository, or publish the action separately. This decision changes what a
-pilot participant is asked to trust, so make it before asking anyone.
+**Decision:** the public Action surface is `DiffCI/DiffCI.com@v1`. A third-party repository's runner
+must be able to check out this repository. For security-sensitive pilots, replace `v1` with a full
+commit SHA from this repository.
 
 ---
 
@@ -169,7 +168,7 @@ Take the commit SHA of `main` after stage 0 and set it:
 
 ```jsonc
 // wrangler.product.jsonc, vars
-"DIFFCI_ACTION_REF": "adityankale190895/DiffCI.com@<40-hex sha>"
+"DIFFCI_ACTION_REF": "DiffCI/DiffCI.com@<40-hex sha>"
 ```
 
 ```bash

@@ -105,11 +105,12 @@ None of the above satisfies "seven days in a third-party repository". That needs
 1. **A repository that is not ours, with its owner's agreement.** Not a fork, not a public repo we
    observe from the outside — an installation someone consented to. This is the Gate B blocker recorded
    in [`CURRENT_STATE.md`](CURRENT_STATE.md) §7, unchanged by Phase 02.
-2. **This repository reachable as an action.** `uses: owner/DiffCI.com@<sha>` requires the repository to
-   be visible to their runner. If it is private, the action has to be vendored into their repo or
-   published elsewhere first.
-3. **A pinned commit SHA in their workflow**, not a branch or tag — the guard warns about this, and it
-   is what makes "the code did not change under them" checkable.
+2. **This repository reachable as an action.** The canonical install line is
+   `uses: DiffCI/DiffCI.com@v1`. For high-trust pilots, use the same repository pinned to a full commit
+   SHA.
+3. **A pinned commit SHA in their workflow for security-sensitive pilots**, not a branch or tag — the
+   guard warns about mutable refs, and a SHA is what makes "the code did not change under them"
+   checkable. The `v1` tag is the ergonomic OSS install path.
 4. **`verify-workflow` run against their file, exiting 0**, before the window starts.
 5. **Seven days of runs, and the artifacts collected.** Reports are workflow artifacts today; there is
    no ingest endpoint until Phase 03, so nothing is transmitted anywhere and collection is manual.
@@ -119,8 +120,9 @@ None of the above satisfies "seven days in a third-party repository". That needs
 
 ## Not done, stated so it is not discovered later
 
-- **Not published.** No npm package, no Marketplace listing. `npx diffci` does not work; the CLI runs
-  from a checkout, and the action from a commit SHA of this repository.
+- **Now package-shaped.** The npm package name is `diffci`, with `npx diffci observe` and
+  `npx diffci verify-workflow` as the standalone CLI surface. Publishing still requires an npm token
+  and a tagged release.
 - **No ingest.** Reports stay on the runner as artifacts. Sending them anywhere — and the tenancy that
   has to exist before that is safe — is Phase 03.
 - **TypeScript/JavaScript only**, ten test frameworks. Unchanged from Phase 01, and the eligibility

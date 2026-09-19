@@ -5,11 +5,9 @@
 # `continue-on-error: true` is what keeps a DiffCI failure out of the workflow's own conclusion - the
 # thing a required status check and a merge queue actually read.
 #
-# Verify those properties against your own file rather than taking them on trust. DiffCI is not on npm
-# yet, so this runs from a checkout of DiffCI itself:
+# Verify those properties against your own file rather than taking them on trust:
 #
-#     git clone https://github.com/adityankale190895/DiffCI.com && cd DiffCI.com && npm ci
-#     npm run verify-workflow -- --repo /path/to/your/repository
+#     npx diffci verify-workflow --repo /path/to/your/repository
 #
 # It exits non-zero, with the specific job named, if anything here could affect the rest of your CI.
 name: DiffCI (observation only)
@@ -42,7 +40,7 @@ jobs:
           # This affects only this job's own checkout.
           fetch-depth: 0
 
-      - uses: adityankale190895/DiffCI.com@REPLACE_WITH_40_CHARACTER_COMMIT_SHA
+      - uses: DiffCI/DiffCI.com@v1
         with:
           # Replace every file path in the report with a stable 12-character digest. Selection ratios
           # and per-file trends still work; the paths themselves never leave your runner.
