@@ -26,6 +26,8 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run build:client
+      - run: npm run check:oss-boundary
       - run: npm run package:smoke
       - name: Publish prerelease
         if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-')

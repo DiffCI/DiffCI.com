@@ -6,6 +6,7 @@ import { dirname, join } from "node:path";
 
 const root = process.cwd();
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+const node = process.execPath;
 
 function run(command, args, options = {}) {
   return execFileSync(command, args, {
@@ -76,6 +77,7 @@ function assert(condition, message) {
 const temp = mkdtempSync(join(tmpdir(), "diffci-package-smoke-"));
 try {
   runNpm(["run", "build:client"], { stdio: "inherit" });
+  run(node, ["scripts/check-oss-boundary.mjs"], { stdio: "inherit" });
   const packJson = runNpm(["pack", "--ignore-scripts", "--json", "--pack-destination", temp]);
   const pack = JSON.parse(packJson)[0];
   const tarball = join(temp, pack.filename);
