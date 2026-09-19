@@ -39,6 +39,11 @@ export interface EntryPoint {
 }
 
 export interface RepositoryProfile {
+  /** Adapter coverage and concrete Go test-file to package routing. */
+  adapters?: { id: string; version: string; blockers: string[] }[];
+  adapterBlockers?: string[];
+  goTestPackages?: Record<string, string>;
+  goTestEnvironment?: Record<string, string>;
   packageManager: PackageManager;
   packageJson: {
     name?: string;
@@ -207,6 +212,8 @@ export interface GraphPerformanceMetrics {
 }
 
 export interface DependencyGraphResult {
+  /** Missing framework/language relationships are global, not reachability-narrowable. */
+  adapterBlockers?: string[];
   graph: DependencyGraph;
   profile: RepositoryProfile;
   unresolved: UnresolvedDependency[];

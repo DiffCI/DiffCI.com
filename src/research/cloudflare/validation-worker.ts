@@ -2573,6 +2573,18 @@ export default {
       }
       return json({ ok: true, result: await syncAnalytics(env) });
     }
+    if (request.method === "POST" && url.pathname === "/v1/shadow/analytics/github-delivery") {
+      if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) return json({ ok: false, error: "unauthorized" }, 401);
+      const body = (await request.json().catch(() => null)) as { rawBody?: unknown; event?: unknown; deliveryId?: unknown } | null;
+      if (typeof body?.rawBody !== "string") return json({ ok: false, error: "rawBody is required" }, 400);
+      await recordInstallationWebhook(
+        env,
+        typeof body.event === "string" ? body.event : null,
+        body.rawBody,
+        typeof body.deliveryId === "string" ? body.deliveryId : null,
+      );
+      return json({ ok: true, ...await flushAnalytics(env) });
+    }
     if (request.method === "GET" && url.pathname === "/v1/shadow/analytics/status") {
       if (!(await authorized(request, env.RESEARCH_DISPATCH_TOKEN))) return json({ ok: false, error: "unauthorized" }, 401);
       const counts = await env.RESEARCH_DB.prepare('SELECT COUNT(*) AS total, SUM(CASE WHEN sent_at IS NULL THEN 1 ELSE 0 END) AS pending FROM shadow_analytics_outbox').bind().first();

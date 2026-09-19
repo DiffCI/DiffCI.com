@@ -3,6 +3,7 @@ import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER, testFileMatcherForPro
 import { isBuiltin } from "node:module";
 import { dirname, extname, join, normalize, relative, resolve, sep } from "node:path";
 import ts from "typescript";
+import { adapterFiles, REPOSITORY_ADAPTERS } from "./adapters/index.js";
 import { analyzeRepository, type AnalyzeRepositoryOptions } from "./analyzer.js";
 import type {
   DependencyEdge,
@@ -34,6 +35,7 @@ const SOURCE_EXTENSIONS = new Set([
   ".cjs",
   ".mts",
   ".cts",
+  ".vue",
 ]);
 
 const ASSET_EXTENSIONS = new Set([
@@ -379,6 +381,7 @@ export function discoverNestedTsconfigPaths(repoPath: string): string[] {
 function createProgram(
   repoPath: string,
   fallbackSourceRoots: SourceRoot[] = [],
+  additionalSources: string[] = [],
 ): {
   program: ts.Program;
   options: ts.CompilerOptions;
@@ -512,6 +515,10 @@ function createProgram(
     }
   }
 
+  if (additionalSources.length) {
+    fileNames = [...new Set([...fileNames, ...additionalSources])];
+    options = { module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, target: ts.ScriptTarget.ES2022, ...options, allowJs: true };
+  }
   const program = ts.createProgram({
     rootNames: fileNames,
     options,
@@ -602,9 +609,30 @@ export async function buildDependencyGraph(
   const repoPath = options.repoPath ? resolve(options.repoPath) : process.cwd();
 
   const profile = analyzeRepository(options);
+  const files = adapterFiles(repoPath, options.excludeDirs);
+  const context = { repoPath, files, profile };
+  const contributions = REPOSITORY_ADAPTERS.filter((adapter) => adapter.detect(context)).map((adapter) => adapter.analyze(context));
+  const adapterBlockers = contributions.flatMap((item) => item.blockers);
+  if (contributions.some((item) => item.id === "go") && files.some((file) => /\.(?:[cm]?[jt]sx?|vue)$/.test(file))) {
+    adapterBlockers.push("Mixed Go/JavaScript repositories require explicit cross-language dependencies; full validation required");
+  }
+  if (contributions.length && files.some((file) => /\.(?:py|rs|java|kt|cs|svelte|astro)$/.test(file))) {
+    adapterBlockers.push("Unmodeled languages alongside an adapter require full validation");
+  }
+  profile.adapters = contributions.map(({ id, version, blockers }) => ({ id, version, blockers }));
+  profile.goTestPackages = Object.assign({}, ...contributions.map((item) => item.testPackages));
+  profile.goTestEnvironment = contributions.find((item) => item.id === "go")?.executionEnv;
+  const adapterTests = contributions.flatMap((item) => item.testFiles);
+  profile.testFilePaths = [...new Set([...profile.testFilePaths, ...adapterTests])].sort();
+  if (profile.testUniverse) {
+    profile.testUniverse.discoveredTestFiles = profile.testFilePaths.length;
+    profile.testUniverse.blindSpot = (profile.testUniverse.declaredFrameworks.length > 0 || contributions.some((item) => item.id === "go")) && profile.testFilePaths.length === 0;
+  }
   const entryPointPaths = new Set(profile.entryPoints.map((e) => e.path));
 
-  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(repoPath, profile.sourceRoots);
+  const vueSources = contributions.some((item) => item.id === "vue")
+    ? files.filter((file) => /\.[cm]?[jt]sx?$/.test(file)).map((file) => join(repoPath, file)) : [];
+  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(repoPath, profile.sourceRoots, vueSources);
   let moduleResolutionCache = ts.createModuleResolutionCache(
     repoPath,
     (x) => x,
@@ -614,6 +642,11 @@ export async function buildDependencyGraph(
   const sourceFiles = program
     .getSourceFiles()
     .filter((sf) => sf.fileName && !sf.fileName.endsWith(".d.ts"));
+  for (const item of contributions) {
+    for (const virtual of item.virtualSources) {
+      sourceFiles.push(ts.createSourceFile(join(repoPath, virtual.path), virtual.source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX));
+    }
+  }
 
   const internalSourcePaths = new Set<string>();
 
@@ -624,11 +657,12 @@ export async function buildDependencyGraph(
     }
   }
 
-  const edges: DependencyEdge[] = [];
+  const edges: DependencyEdge[] = contributions.flatMap((item) => item.edges);
   const unresolved: UnresolvedDependency[] = [];
   const references: ResolutionReference[] = [];
-  const assetPaths = new Set<string>();
-  const edgeKeys = new Set<string>();
+  const assetPaths = new Set<string>(contributions.flatMap((item) => item.assetPaths));
+  for (const item of contributions) for (const path of item.sourcePaths) internalSourcePaths.add(path);
+  const edgeKeys = new Set<string>(edges.map((edge) => `${edge.from}|${edge.to}|${edge.kind}`));
 
   function addEdge(from: string, to: string, kind: DependencyEdgeKind): void {
     const key = `${from}|${to}|${kind}`;
@@ -692,6 +726,20 @@ export async function buildDependencyGraph(
 
       const specifierCategory = classifySpecifier(ref.specifier);
       const resolvableSpecifier = specifierCategory === "relative" || specifierCategory === "absolute" || specifierCategory === "alias" ? stripImportQuery(ref.specifier) : ref.specifier;
+      // TypeScript may resolve a Vue import to a declaration shim. Preserve the actual SFC edge.
+      if (resolvableSpecifier.endsWith(".vue")) {
+        const compilerAliases = Object.entries(compilerOptions.paths ?? {}).map(([pattern, substitutions]) => ({ pattern, substitutions }));
+        const candidate = findAssetCandidate(sf.fileName, resolvableSpecifier, compilerAliases.length ? compilerAliases : profile.pathAliases, compilerOptions.baseUrl ?? repoPath);
+        const target = candidate && toRelativeInternal(repoPath, candidate);
+        if (target && internalSourcePaths.has(target)) {
+          addEdge(importerRel, target, ref.kind);
+          recordReference("internal-source", importerRel, ref);
+          continue;
+        }
+        recordUnresolved(importerRel, ref, "Vue component not found in analyzed source inventory");
+        recordReference("unresolved", importerRel, ref);
+        continue;
+      }
       const resolution = ts.resolveModuleName(
         resolvableSpecifier,
         sf.fileName,
@@ -754,6 +802,11 @@ export async function buildDependencyGraph(
     }
   }
 
+  if (unresolved.some((ref) => ref.importer.endsWith(".vue") || stripImportQuery(ref.specifier).endsWith(".vue"))) {
+    adapterBlockers.push("Unresolved Vue dependencies require full validation");
+  }
+  profile.adapterBlockers = [...adapterBlockers];
+
   // Nested-package test visibility (2026-08-24, biomejs/biome finding): `internalSourcePaths` above is
   // strictly the TS PROGRAM's own file list (createProgram()'s `include`/nested-tsconfig-merged
   // fileNames) - so a package whose own tsconfig deliberately excludes its test directory (a real,
@@ -799,7 +852,7 @@ export async function buildDependencyGraph(
 
   const integrity = validateDependencyGraph(graph);
   const dynamicUnresolvedCount = unresolved.filter((u) => u.dynamic).length;
-  const confidence = computeConfidence(
+  const confidence = adapterBlockers.length ? "UNSAFE" : computeConfidence(
     unresolved.length,
     dynamicUnresolvedCount,
     integrity.criticalCount,
@@ -832,6 +885,7 @@ export async function buildDependencyGraph(
 
   return {
     graph,
+    adapterBlockers,
     profile,
     unresolved,
     references,
@@ -847,6 +901,16 @@ export async function buildDependencyGraph(
 }
 
 export type TypeScriptProjectKind = "root" | "nested" | "none";
+
+/** Product eligibility includes native adapters; legacy TS corpus classification stays separate. */
+export function classifyRepositoryProject(repoPath: string): { capable: boolean; reason: string } {
+  const typescript = classifyTypeScriptProject(repoPath);
+  if (typescript.capable) return typescript;
+  const files = adapterFiles(repoPath);
+  if (files.includes("go.mod")) return { capable: true, reason: "Go module (package-level analysis)" };
+  if (files.some((file) => file.endsWith(".vue"))) return { capable: true, reason: "Vue single-file components" };
+  return { capable: false, reason: "No TypeScript project, Vue components, or root Go module found" };
+}
 
 export interface TypeScriptProjectCapability {
   /** Whether createProgram() has any tsconfig at all to build a Program from. */
@@ -1051,6 +1115,7 @@ function computeConfidence(
  * narrowing only applies when unresolved/dynamic-unresolved imports are the actual reason, never when
  * sourceFileCount or integrity triggered it. */
 export function refineConfidenceForDelta(result: DependencyGraphResult, changedFiles: string[]): GraphConfidence {
+  if (result.adapterBlockers?.length) return "UNSAFE";
   // Anything that was never UNSAFE in the first place passes through untouched - there is nothing to
   // narrow, and re-deriving sourceFileCount/integrity from raw fields here (rather than trusting the
   // already-computed confidence) would be both redundant and a real correctness risk: a caller's

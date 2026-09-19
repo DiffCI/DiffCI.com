@@ -14,6 +14,8 @@ import { makeReport } from "../ingest/report-fixture.js";
 import { ingestObservation } from "../../src/ingest/ingest.js";
 import { makeD1ObservationStore } from "../../src/ingest/store.js";
 import { makeD1IngestTokenStore } from "../../src/ingest/token.js";
+import type { WebhookDeliveryStore } from "../../src/install/delivery-log.js";
+import type { PendingInstallationStore } from "../../src/install/pending.js";
 import { handleInstallationWebhook } from "../../src/install/webhook.js";
 import { makeD1ProductStore } from "../../src/product/store.js";
 
@@ -26,6 +28,10 @@ function sign(body: string): string {
 function delivery(event: string, payload: unknown): { rawBody: string; signature: string; event: string } {
   const rawBody = JSON.stringify(payload);
   return { rawBody, signature: sign(rawBody), event };
+}
+
+function githubDelivery(event: string, payload: unknown, deliveryId = "delivery-1"): { rawBody: string; signature: string; event: string; deliveryId: string } {
+  return { ...delivery(event, payload), deliveryId };
 }
 
 /**
@@ -170,5 +176,78 @@ describe("installation webhooks", () => {
     const disconnected = events.find((event) => event.action === "repository.disconnected");
     assert.ok(disconnected);
     assert.equal((disconnected.metadata as { observationsDeleted: number }).observationsDeleted, 1);
+  });
+
+  it("records verified deliveries before marking them complete", async () => {
+    const { deps } = await fixture();
+    const calls: Array<{ event: string | null; deliveryId: string | null | undefined }> = [];
+    const deliveryStore: WebhookDeliveryStore = {
+      claim: async () => ({ ok: true, claimed: true }),
+      complete: async () => {
+        assert.equal(calls.length, 1);
+      },
+      fail: async () => assert.fail("a successful analytics receipt must not fail the delivery"),
+      get: async () => null,
+      listStale: async () => [],
+    };
+    const pendingStore: PendingInstallationStore = {
+      record: async () => undefined,
+      get: async () => null,
+      listUnclaimedForSender: async () => [],
+      markClaimed: async () => undefined,
+      remove: async () => undefined,
+    };
+
+    const result = await handleInstallationWebhook(
+      githubDelivery("installation", { action: "created", installation: { id: 9000 }, repositories: [{ id: 111 }] }),
+      {
+        ...deps,
+        deliveryStore,
+        pendingStore,
+        recordVerifiedDelivery: async (request) => {
+          calls.push({ event: request.event, deliveryId: request.deliveryId });
+        },
+      },
+    );
+
+    assert.equal(result.ok === true && result.action, "parked");
+    assert.deepEqual(calls, [{ event: "installation", deliveryId: "delivery-1" }]);
+  });
+
+  it("does not complete a delivery when the verified-delivery recorder fails", async () => {
+    const { deps } = await fixture();
+    let failedReason = "";
+    const deliveryStore: WebhookDeliveryStore = {
+      claim: async () => ({ ok: true, claimed: true }),
+      complete: async () => assert.fail("a failed analytics receipt must keep the delivery retryable"),
+      fail: async (_deliveryId: string, reason: string) => {
+        failedReason = reason;
+      },
+      get: async () => null,
+      listStale: async () => [],
+    };
+    const pendingStore: PendingInstallationStore = {
+      record: async () => undefined,
+      get: async () => null,
+      listUnclaimedForSender: async () => [],
+      markClaimed: async () => undefined,
+      remove: async () => undefined,
+    };
+
+    await assert.rejects(
+      handleInstallationWebhook(
+        githubDelivery("installation", { action: "created", installation: { id: 9000 }, repositories: [{ id: 111 }] }),
+        {
+          ...deps,
+          deliveryStore,
+          pendingStore,
+          recordVerifiedDelivery: async () => {
+            throw new Error("analytics_outbox_unavailable");
+          },
+        },
+      ),
+      /analytics_outbox_unavailable/,
+    );
+    assert.equal(failedReason, "Error");
   });
 });

@@ -1,0 +1,1158 @@
+{
+  "checkedAt": "2026-09-10T03:05:58.964Z",
+  "pages": [
+    {
+      "url": "http://diffci.com/",
+      "finalUrl": "https://diffci.com/",
+      "status": 200,
+      "evidenceFile": "page-diffci.com-_-http.txt"
+    },
+    {
+      "url": "https://diffci.com/",
+      "finalUrl": "https://diffci.com/",
+      "status": 200,
+      "evidenceFile": "page-diffci.com-_-https.txt"
+    },
+    {
+      "url": "https://www.diffci.com/",
+      "finalUrl": "https://diffci.com/",
+      "status": 200,
+      "evidenceFile": "page-www.diffci.com-_-https.txt"
+    },
+    {
+      "url": "https://diffci.com/welcome",
+      "finalUrl": "https://diffci.com/welcome",
+      "status": 200,
+      "evidenceFile": "page-diffci.com-_welcome-https.txt"
+    },
+    {
+      "url": "https://diffci.com/contact",
+      "finalUrl": "https://diffci.com/contact",
+      "status": 200,
+      "evidenceFile": "page-diffci.com-_contact-https.txt"
+    },
+    {
+      "url": "https://diffci.com/data-handling",
+      "finalUrl": "https://diffci.com/data-handling",
+      "status": 200,
+      "evidenceFile": "page-diffci.com-_data-handling-https.txt"
+    },
+    {
+      "url": "https://github.com/apps/diffci-shadow",
+      "finalUrl": "https://github.com/apps/diffci-shadow",
+      "status": 200,
+      "evidenceFile": "page-github.com-_apps_diffci-shadow-https.txt"
+    },
+    {
+      "url": "https://app.diffci.com/report?repository=adityankale190895%2FDiffCI.com&days=7",
+      "finalUrl": "https://app.diffci.com/report?repository=adityankale190895%2FDiffCI.com&days=7",
+      "status": 404,
+      "evidenceFile": "page-app.diffci.com-_report-own.txt"
+    },
+    {
+      "url": "https://app.diffci.com/report?repository=adityankale190895%2FDentalPresence.in&days=7",
+      "finalUrl": "https://app.diffci.com/report?repository=adityankale190895%2FDentalPresence.in&days=7",
+      "status": 404,
+      "evidenceFile": "page-app.diffci.com-_report-dental.txt"
+    }
+  ],
+  "prospects": [
+    {
+      "repository": "statelyai/xstate",
+      "url": "https://github.com/statelyai/xstate",
+      "archived": false,
+      "pushedAt": "2026-09-10T00:59:37Z",
+      "defaultBranch": "main",
+      "tsconfigKind": "root",
+      "tsconfigs": 60,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/nodejs.yml",
+        ".github/workflows/publish.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34423631759",
+          "createdAt": "2026-09-10T00:59:43Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34248467460",
+          "createdAt": "2026-09-08T16:01:15Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34243048116",
+          "createdAt": "2026-09-08T15:10:32Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Publish",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34242826370",
+          "createdAt": "2026-09-08T15:08:28Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34236969579",
+          "createdAt": "2026-09-08T14:14:17Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34234515808",
+          "createdAt": "2026-09-08T13:50:57Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34177478061",
+          "createdAt": "2026-09-08T01:41:13Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34130790580",
+          "createdAt": "2026-09-07T14:03:00Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34130437334",
+          "createdAt": "2026-09-07T13:59:15Z",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Node CI",
+          "url": "https://github.com/statelyai/xstate/actions/runs/34130126096",
+          "createdAt": "2026-09-07T13:55:44Z",
+          "status": "completed",
+          "conclusion": "failure"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "inngest/inngest-js",
+      "url": "https://github.com/inngest/inngest-js",
+      "archived": false,
+      "pushedAt": "2026-09-07T06:40:14Z",
+      "defaultBranch": "main",
+      "tsconfigKind": "nested",
+      "tsconfigs": 48,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/backport.yml",
+        ".github/workflows/flake.yml",
+        ".github/workflows/label-prs.yml",
+        ".github/workflows/pr-task-list-checker.yml",
+        ".github/workflows/pr.yml",
+        ".github/workflows/release.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "PR checks",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/34091877596",
+          "createdAt": "2026-09-07T06:40:19Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Label PR based on changed package",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/34091877573",
+          "createdAt": "2026-09-07T06:40:19Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Release",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/34091877504",
+          "createdAt": "2026-09-07T06:40:19Z",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "GitHub PR Task List Checker",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/34091877500",
+          "createdAt": "2026-09-07T06:40:19Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Update flake",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/34091825042",
+          "createdAt": "2026-09-07T06:39:37Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Backport",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/33897521240",
+          "createdAt": "2026-09-04T16:52:19Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Release",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/33897521175",
+          "createdAt": "2026-09-04T16:52:19Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Release",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/33895241726",
+          "createdAt": "2026-09-04T16:27:28Z",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Backport",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/33895241565",
+          "createdAt": "2026-09-04T16:27:28Z",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Label PR based on changed package",
+          "url": "https://github.com/inngest/inngest-js/actions/runs/33895186013",
+          "createdAt": "2026-09-04T16:26:53Z",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "triggerdotdev/trigger.dev",
+      "url": "https://github.com/triggerdotdev/trigger.dev",
+      "archived": false,
+      "pushedAt": "2026-09-09T15:56:59Z",
+      "defaultBranch": "main",
+      "tsconfigKind": "nested",
+      "tsconfigs": 45,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/base-images.yml",
+        ".github/workflows/changesets-pr.yml",
+        ".github/workflows/check-review-md.yml",
+        ".github/workflows/claude-md-audit.yml",
+        ".github/workflows/claude.yml",
+        ".github/workflows/code-quality.yml",
+        ".github/workflows/codeql.yml",
+        ".github/workflows/dispatch-repo-ops-sync.yml",
+        ".github/workflows/docs.yml",
+        ".github/workflows/e2e-webapp-auth-full.yml",
+        ".github/workflows/e2e-webapp.yml",
+        ".github/workflows/e2e.yml",
+        ".github/workflows/fk-cascade-guard.yml",
+        ".github/workflows/helm-prerelease.yml",
+        ".github/workflows/observability-map.yml",
+        ".github/workflows/pr_checks.yml",
+        ".github/workflows/preview-dispatch.yml",
+        ".github/workflows/preview-packages.yml",
+        ".github/workflows/publish-docs.yml",
+        ".github/workflows/publish-webapp.yml",
+        ".github/workflows/publish-worker-v4.yml",
+        ".github/workflows/publish.yml",
+        ".github/workflows/release-helm.yml",
+        ".github/workflows/release.yml",
+        ".github/workflows/repo-ops-sync-gate.yml",
+        ".github/workflows/runops-guard.yml",
+        ".github/workflows/sdk-compat.yml",
+        ".github/workflows/trivy-image.yml",
+        ".github/workflows/typecheck.yml",
+        ".github/workflows/unit-tests-internal.yml",
+        ".github/workflows/unit-tests-observability-map.yml",
+        ".github/workflows/unit-tests-packages.yml",
+        ".github/workflows/unit-tests-webapp.yml",
+        ".github/workflows/unit-tests.yml",
+        ".github/workflows/vouch-check-pr.yml",
+        ".github/workflows/vouch-manage-by-issue.yml",
+        ".github/workflows/workflow-checks.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Claude Code",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34395847317",
+          "createdAt": "2026-09-09T19:34:19Z",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Claude Code",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34395374347",
+          "createdAt": "2026-09-09T19:29:35Z",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Claude Code",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34381660425",
+          "createdAt": "2026-09-09T17:14:12Z",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Vouch - Manage by Issue",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34381660366",
+          "createdAt": "2026-09-09T17:14:12Z",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "🤖 PR Checks",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34373604506",
+          "createdAt": "2026-09-09T15:57:07Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "🌱 Preview environment dispatch",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34373604272",
+          "createdAt": "2026-09-09T15:57:07Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "🧭 Helm Chart Prerelease",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34373604235",
+          "createdAt": "2026-09-09T15:57:07Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "🗺️ Observability Map",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34373604234",
+          "createdAt": "2026-09-09T15:57:07Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "🔎 REVIEW.md Drift Audit",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34373604219",
+          "createdAt": "2026-09-09T15:57:07Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "📝 Agent Instructions Audit",
+          "url": "https://github.com/triggerdotdev/trigger.dev/actions/runs/34373604215",
+          "createdAt": "2026-09-09T15:57:07Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "resend/react-email",
+      "url": "https://github.com/resend/react-email",
+      "archived": false,
+      "pushedAt": "2026-09-09T16:05:36Z",
+      "defaultBranch": "canary",
+      "tsconfigKind": "root",
+      "tsconfigs": 37,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/bump.yml",
+        ".github/workflows/e2e.yml",
+        ".github/workflows/lint.yml",
+        ".github/workflows/pin-dependencies-check.yml",
+        ".github/workflows/preview-release.yml",
+        ".github/workflows/pull-request-title-check.yml",
+        ".github/workflows/release.yml",
+        ".github/workflows/sync-prs-to-linear.yml",
+        ".github/workflows/sync-skills.yml",
+        ".github/workflows/tests.yml",
+        ".github/workflows/typecheck.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Pull Request Title Check",
+          "url": "https://github.com/resend/react-email/actions/runs/34415880084",
+          "createdAt": "2026-09-09T23:12:34Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Lint",
+          "url": "https://github.com/resend/react-email/actions/runs/34415851070",
+          "createdAt": "2026-09-09T23:12:10Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Typecheck",
+          "url": "https://github.com/resend/react-email/actions/runs/34415851019",
+          "createdAt": "2026-09-09T23:12:10Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Pin Dependencies Check",
+          "url": "https://github.com/resend/react-email/actions/runs/34415850998",
+          "createdAt": "2026-09-09T23:12:10Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "E2E Tests",
+          "url": "https://github.com/resend/react-email/actions/runs/34415850993",
+          "createdAt": "2026-09-09T23:12:10Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Tests",
+          "url": "https://github.com/resend/react-email/actions/runs/34415850982",
+          "createdAt": "2026-09-09T23:12:10Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Preview Release",
+          "url": "https://github.com/resend/react-email/actions/runs/34415850981",
+          "createdAt": "2026-09-09T23:12:10Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Pull Request Title Check",
+          "url": "https://github.com/resend/react-email/actions/runs/34415850971",
+          "createdAt": "2026-09-09T23:12:10Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Pull Request Title Check",
+          "url": "https://github.com/resend/react-email/actions/runs/34374586921",
+          "createdAt": "2026-09-09T16:06:10Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pull Request Title Check",
+          "url": "https://github.com/resend/react-email/actions/runs/34374581473",
+          "createdAt": "2026-09-09T16:06:08Z",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "novuhq/novu",
+      "url": "https://github.com/novuhq/novu",
+      "archived": false,
+      "pushedAt": "2026-09-09T20:23:42Z",
+      "defaultBranch": "next",
+      "tsconfigKind": "root",
+      "tsconfigs": 51,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/agent-evals.yml",
+        ".github/workflows/agent-onboarding-webhook.yml",
+        ".github/workflows/check-only.yml",
+        ".github/workflows/check-submodule-sync-merge.yaml",
+        ".github/workflows/check-submodule-sync-pr.yaml",
+        ".github/workflows/codeql-analysis.yml",
+        ".github/workflows/community-label.yml",
+        ".github/workflows/contributor-checks.yml",
+        ".github/workflows/conventional-commit.yml",
+        ".github/workflows/deploy.yml",
+        ".github/workflows/deployment-summary.yml",
+        ".github/workflows/dev-deploy-dashboard.yml",
+        ".github/workflows/dev-deploy-web.yml",
+        ".github/workflows/issue-label.yml",
+        ".github/workflows/jarvis.yml",
+        ".github/workflows/linear-release-community.yml",
+        ".github/workflows/linear-release-enterprise.yml",
+        ".github/workflows/on-pr-change.yml",
+        ".github/workflows/on-pr.yml",
+        ".github/workflows/on-push-trigger.yml",
+        ".github/workflows/pr-labeler.yml",
+        ".github/workflows/pr-manager.yml",
+        ".github/workflows/prepare-cloud-release.yaml",
+        ".github/workflows/prepare-enterprise-self-hosted-release.yml",
+        ".github/workflows/prepare-self-hosted-release.yml",
+        ".github/workflows/preview-packages.yml",
+        ".github/workflows/prod-deploy-web.yml",
+        ".github/workflows/release-packages.yml",
+        ".github/workflows/reusable-api-e2e.yml",
+        ".github/workflows/reusable-dashboard-deploy.yml",
+        ".github/workflows/reusable-dashboard-e2e.yml",
+        ".github/workflows/reusable-inbound-mail-e2e.yml",
+        ".github/workflows/reusable-web-deploy.yml",
+        ".github/workflows/reusable-web-e2e.yml",
+        ".github/workflows/reusable-webhook-e2e.yml",
+        ".github/workflows/reusable-worker-e2e.yml",
+        ".github/workflows/reusable-ws-e2e.yml",
+        ".github/workflows/rollback.yml",
+        ".github/workflows/sync-skills.yml",
+        ".github/workflows/workflow-security-lint.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Pull Request Manager",
+          "url": "https://github.com/novuhq/novu/actions/runs/34431834666",
+          "createdAt": "2026-09-10T03:03:20Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "CodeQL",
+          "url": "https://github.com/novuhq/novu/actions/runs/34430155308",
+          "createdAt": "2026-09-10T02:37:11Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pull Request Manager",
+          "url": "https://github.com/novuhq/novu/actions/runs/34427978197",
+          "createdAt": "2026-09-10T02:04:15Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pull Request Manager",
+          "url": "https://github.com/novuhq/novu/actions/runs/34424607202",
+          "createdAt": "2026-09-10T01:13:35Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pull Request Manager",
+          "url": "https://github.com/novuhq/novu/actions/runs/34419940777",
+          "createdAt": "2026-09-10T00:07:49Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pull Request Manager",
+          "url": "https://github.com/novuhq/novu/actions/runs/34415098938",
+          "createdAt": "2026-09-09T23:02:31Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pull Request Manager",
+          "url": "https://github.com/novuhq/novu/actions/runs/34410120437",
+          "createdAt": "2026-09-09T22:02:14Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pull Request Manager",
+          "url": "https://github.com/novuhq/novu/actions/runs/34404615739",
+          "createdAt": "2026-09-09T21:02:26Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check pull request source branch",
+          "url": "https://github.com/novuhq/novu/actions/runs/34401234279",
+          "createdAt": "2026-09-09T20:28:21Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Lint PR title",
+          "url": "https://github.com/novuhq/novu/actions/runs/34401234167",
+          "createdAt": "2026-09-09T20:28:21Z",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "formbricks/formbricks",
+      "url": "https://github.com/formbricks/formbricks",
+      "archived": false,
+      "pushedAt": "2026-09-09T19:03:39Z",
+      "defaultBranch": "main",
+      "tsconfigKind": "nested",
+      "tsconfigs": 16,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/api-v3-contract-tests.yml",
+        ".github/workflows/api-v3-spec.yml",
+        ".github/workflows/build-and-push-ecr.yml",
+        ".github/workflows/chromatic.yml",
+        ".github/workflows/codeowners-validation.yml",
+        ".github/workflows/coderabbit-config-validation.yml",
+        ".github/workflows/dependabot-to-linear.yml",
+        ".github/workflows/deploy-formbricks-cloud.yml",
+        ".github/workflows/docker-build-validation.yml",
+        ".github/workflows/docker-security-scan.yml",
+        ".github/workflows/e2e.yml",
+        ".github/workflows/formbricks-release.yml",
+        ".github/workflows/helm-chart-validation.yml",
+        ".github/workflows/integration-tests.yml",
+        ".github/workflows/labeler.yml",
+        ".github/workflows/linear-release-smoke.yml",
+        ".github/workflows/linear-release.yml",
+        ".github/workflows/lint.yml",
+        ".github/workflows/move-stable-tag.yml",
+        ".github/workflows/pr-label-sync.yml",
+        ".github/workflows/pr-size-check.yml",
+        ".github/workflows/pr.yml",
+        ".github/workflows/release-docker-github-experimental.yml",
+        ".github/workflows/release-docker-github.yml",
+        ".github/workflows/release-helm-chart.yml",
+        ".github/workflows/semantic-pull-requests.yml",
+        ".github/workflows/sonarqube.yml",
+        ".github/workflows/test.yml",
+        ".github/workflows/translation-check.yml",
+        ".github/workflows/typecheck.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Docker Security Scan",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34428078583",
+          "createdAt": "2026-09-10T02:05:41Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "PR Label Sync",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397958076",
+          "createdAt": "2026-09-09T19:55:36Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check PR",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397958065",
+          "createdAt": "2026-09-09T19:55:36Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "PR Label Sync",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397956578",
+          "createdAt": "2026-09-09T19:55:35Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check PR",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397956374",
+          "createdAt": "2026-09-09T19:55:35Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check PR",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397953738",
+          "createdAt": "2026-09-09T19:55:33Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "PR Label Sync",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397953720",
+          "createdAt": "2026-09-09T19:55:33Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check PR",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397951027",
+          "createdAt": "2026-09-09T19:55:31Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "PR Label Sync",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397951007",
+          "createdAt": "2026-09-09T19:55:31Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Check PR",
+          "url": "https://github.com/formbricks/formbricks/actions/runs/34397948125",
+          "createdAt": "2026-09-09T19:55:29Z",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "heyform/heyform",
+      "url": "https://github.com/heyform/heyform",
+      "archived": false,
+      "pushedAt": "2026-09-09T07:29:46Z",
+      "defaultBranch": "next",
+      "tsconfigKind": "root",
+      "tsconfigs": 8,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/publish-docker-image.yml",
+        ".github/workflows/server-e2e.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Publish Docker Image",
+          "url": "https://github.com/heyform/heyform/actions/runs/34324134831",
+          "createdAt": "2026-09-09T07:29:49Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Server E2E",
+          "url": "https://github.com/heyform/heyform/actions/runs/34324012244",
+          "createdAt": "2026-09-09T07:28:24Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Push on next",
+          "url": "https://github.com/heyform/heyform/actions/runs/34324011643",
+          "createdAt": "2026-09-09T07:28:24Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Server E2E",
+          "url": "https://github.com/heyform/heyform/actions/runs/34323693402",
+          "createdAt": "2026-09-09T07:24:38Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Push on next",
+          "url": "https://github.com/heyform/heyform/actions/runs/34323692392",
+          "createdAt": "2026-09-09T07:24:37Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Server E2E",
+          "url": "https://github.com/heyform/heyform/actions/runs/34320262755",
+          "createdAt": "2026-09-09T06:42:06Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Push on next",
+          "url": "https://github.com/heyform/heyform/actions/runs/34320262550",
+          "createdAt": "2026-09-09T06:42:06Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Server E2E",
+          "url": "https://github.com/heyform/heyform/actions/runs/34320258172",
+          "createdAt": "2026-09-09T06:42:03Z",
+          "status": "completed",
+          "conclusion": "cancelled"
+        },
+        {
+          "name": "Push on next",
+          "url": "https://github.com/heyform/heyform/actions/runs/34320257265",
+          "createdAt": "2026-09-09T06:42:02Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Scheduled",
+          "url": "https://github.com/heyform/heyform/actions/runs/33849147875",
+          "createdAt": "2026-09-04T07:31:49Z",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "screen": "REVIEW_REQUIRED",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "twentyhq/twenty",
+      "url": "https://github.com/twentyhq/twenty",
+      "archived": false,
+      "pushedAt": "2026-09-10T02:09:22Z",
+      "defaultBranch": "main",
+      "tsconfigKind": "nested",
+      "tsconfigs": 34,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/app-prod-parity-e2e-dispatch.yaml",
+        ".github/workflows/cd-deploy-main.yaml",
+        ".github/workflows/cd-deploy-tag.yaml",
+        ".github/workflows/changed-files.yaml",
+        ".github/workflows/ci-ai-catalog-sync.yaml",
+        ".github/workflows/ci-app-docs-drift.yaml",
+        ".github/workflows/ci-blocked-contributors.yaml",
+        ".github/workflows/ci-breaking-changes.yaml",
+        ".github/workflows/ci-client-sdk.yaml",
+        ".github/workflows/ci-codex-plugin.yaml",
+        ".github/workflows/ci-create-app-e2e-minimal.yaml",
+        ".github/workflows/ci-create-app.yaml",
+        ".github/workflows/ci-cross-version-upgrade.yaml",
+        ".github/workflows/ci-docs.yaml",
+        ".github/workflows/ci-dpa-subprocessors-sync.yaml",
+        ".github/workflows/ci-e2e-main.yaml",
+        ".github/workflows/ci-emails.yaml",
+        ".github/workflows/ci-example-app-hello-world.yaml",
+        ".github/workflows/ci-example-app-postcard.yaml",
+        ".github/workflows/ci-front-component-renderer.yaml",
+        ".github/workflows/ci-front.yaml",
+        ".github/workflows/ci-merge-queue.yaml",
+        ".github/workflows/ci-release-create.yaml",
+        ".github/workflows/ci-sdk.yaml",
+        ".github/workflows/ci-server.yaml",
+        ".github/workflows/ci-shared.yaml",
+        ".github/workflows/ci-test-docker-compose.yaml",
+        ".github/workflows/ci-twenty-apps.yaml",
+        ".github/workflows/ci-ui.yaml",
+        ".github/workflows/ci-utils-test.yaml",
+        ".github/workflows/ci-utils.yaml",
+        ".github/workflows/ci-website.yaml",
+        ".github/workflows/ci-zapier.yaml",
+        ".github/workflows/claude.yml",
+        ".github/workflows/discover-apps.yaml",
+        ".github/workflows/docs-i18n-pull.yaml",
+        ".github/workflows/docs-i18n-push.yaml",
+        ".github/workflows/external-contributor-pr-auto-draft.yaml",
+        ".github/workflows/i18n-pull.yaml",
+        ".github/workflows/i18n-push.yaml",
+        ".github/workflows/post-ci-comments.yaml",
+        ".github/workflows/pr-review-dispatch.yaml",
+        ".github/workflows/preview-env-dispatch.yaml",
+        ".github/workflows/visual-regression-dispatch.yaml",
+        ".github/workflows/website-i18n-pull.yaml",
+        ".github/workflows/website-i18n-push.yaml",
+        ".github/workflows/website-preview-dispatch.yaml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Visual Regression Dispatch",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34430393092",
+          "createdAt": "2026-09-10T02:40:54Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Blocked Contributors Check",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34429407742",
+          "createdAt": "2026-09-10T02:25:47Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Claude Code",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34429407699",
+          "createdAt": "2026-09-10T02:25:47Z",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Pull docs translations from Crowdin",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34429343603",
+          "createdAt": "2026-09-10T02:24:49Z",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Visual Regression Dispatch",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34429273582",
+          "createdAt": "2026-09-10T02:23:43Z",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Pull website translations from Crowdin",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34429204869",
+          "createdAt": "2026-09-10T02:22:42Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Visual Regression Dispatch",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34429030519",
+          "createdAt": "2026-09-10T02:20:02Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post CI Comments",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34429027191",
+          "createdAt": "2026-09-10T02:19:59Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Blocked Contributors Check",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34428644153",
+          "createdAt": "2026-09-10T02:14:15Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Blocked Contributors Check",
+          "url": "https://github.com/twentyhq/twenty/actions/runs/34428641529",
+          "createdAt": "2026-09-10T02:14:13Z",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "activepieces/activepieces",
+      "url": "https://github.com/activepieces/activepieces",
+      "archived": false,
+      "pushedAt": "2026-09-10T01:08:25Z",
+      "defaultBranch": "main",
+      "tsconfigKind": "nested",
+      "tsconfigs": 777,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/agent-evals.yml",
+        ".github/workflows/benchmark.yml",
+        ".github/workflows/breaking-change-check.yml",
+        ".github/workflows/build-cloud-image.yml",
+        ".github/workflows/build-isolate.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/close-external-prs.yml",
+        ".github/workflows/closed-issue-reply.yaml",
+        ".github/workflows/continuous-delivery-canary.yml",
+        ".github/workflows/continuous-delivery-cloud.yml",
+        ".github/workflows/continuous-delivery-release.yml",
+        ".github/workflows/continuous-delivery-rollback-canary.yml",
+        ".github/workflows/continuous-delivery-rollback.yml",
+        ".github/workflows/continuous-delivery-stg.yml",
+        ".github/workflows/crowdin-pr-merger.yml",
+        ".github/workflows/dast.yml",
+        ".github/workflows/delete-workflow-runs.yml",
+        ".github/workflows/e2e-tests-checkly.yml",
+        ".github/workflows/e2e.yml",
+        ".github/workflows/emergency-cloud-deploy.yml",
+        ".github/workflows/generate-translations.yml",
+        ".github/workflows/pr-size.yml",
+        ".github/workflows/publish-embed-sdk.yml",
+        ".github/workflows/release-cli.yml",
+        ".github/workflows/release-pieces.yml",
+        ".github/workflows/release-self-hosted.yml",
+        ".github/workflows/remove-environment.yml",
+        ".github/workflows/reusable-finalize-translations-pr.yml",
+        ".github/workflows/reusable-generate-translations-shard.yml",
+        ".github/workflows/setup-environment.yml",
+        ".github/workflows/smoke-test.yml",
+        ".github/workflows/sync-betterstack-playwright.yml",
+        ".github/workflows/sync-model-catalog.yml",
+        ".github/workflows/tag-release-candidate.yml",
+        ".github/workflows/tests-e2e-ce.yml",
+        ".github/workflows/tests-e2e-ee.yml",
+        ".github/workflows/validate-pr-title.yml",
+        ".github/workflows/validate-publishable-packages.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Lint PR",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34431198824",
+          "createdAt": "2026-09-10T02:53:27Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Breaking change check",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34431198576",
+          "createdAt": "2026-09-10T02:53:26Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Setup Environment",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34431198524",
+          "createdAt": "2026-09-10T02:53:26Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Lint PR",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34431143215",
+          "createdAt": "2026-09-10T02:52:35Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Environment",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34431142982",
+          "createdAt": "2026-09-10T02:52:35Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Breaking change check",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34431142977",
+          "createdAt": "2026-09-10T02:52:35Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Lint PR",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34430702639",
+          "createdAt": "2026-09-10T02:45:43Z",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Setup Environment",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34430702585",
+          "createdAt": "2026-09-10T02:45:42Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Breaking change check",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34430702563",
+          "createdAt": "2026-09-10T02:45:42Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Continuous Delivery — Staging",
+          "url": "https://github.com/activepieces/activepieces/actions/runs/34424261550",
+          "createdAt": "2026-09-10T01:08:33Z",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    },
+    {
+      "repository": "documenso/documenso",
+      "url": "https://github.com/documenso/documenso",
+      "archived": false,
+      "pushedAt": "2026-09-10T02:11:43Z",
+      "defaultBranch": "main",
+      "tsconfigKind": "nested",
+      "tsconfigs": 16,
+      "treeTruncated": false,
+      "workflows": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/codeql-analysis.yml",
+        ".github/workflows/deploy.yml",
+        ".github/workflows/e2e-tests.yml",
+        ".github/workflows/first-interaction.yml",
+        ".github/workflows/issue-labeler.yml",
+        ".github/workflows/issue-opened.yml",
+        ".github/workflows/pr-labeler.yml",
+        ".github/workflows/publish.yml",
+        ".github/workflows/semantic-pull-requests.yml",
+        ".github/workflows/stale.yml",
+        ".github/workflows/translations-force-pull.yml",
+        ".github/workflows/translations-pull.yml",
+        ".github/workflows/translations-upload.yml"
+      ],
+      "recentRuns": [
+        {
+          "name": "Validate PR Name",
+          "url": "https://github.com/documenso/documenso/actions/runs/34428476044",
+          "createdAt": "2026-09-10T02:11:47Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Continuous Integration",
+          "url": "https://github.com/documenso/documenso/actions/runs/34428476039",
+          "createdAt": "2026-09-10T02:11:47Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "CodeQL",
+          "url": "https://github.com/documenso/documenso/actions/runs/34428476009",
+          "createdAt": "2026-09-10T02:11:47Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "PR Labeler",
+          "url": "https://github.com/documenso/documenso/actions/runs/34428475987",
+          "createdAt": "2026-09-10T02:11:47Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Playwright Tests",
+          "url": "https://github.com/documenso/documenso/actions/runs/34428475963",
+          "createdAt": "2026-09-10T02:11:47Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Pull translations",
+          "url": "https://github.com/documenso/documenso/actions/runs/34428367517",
+          "createdAt": "2026-09-10T02:10:11Z",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "CodeQL",
+          "url": "https://github.com/documenso/documenso/actions/runs/34420794380",
+          "createdAt": "2026-09-10T00:19:22Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Playwright Tests",
+          "url": "https://github.com/documenso/documenso/actions/runs/34420794370",
+          "createdAt": "2026-09-10T00:19:22Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Continuous Integration",
+          "url": "https://github.com/documenso/documenso/actions/runs/34420794337",
+          "createdAt": "2026-09-10T00:19:22Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        },
+        {
+          "name": "Validate PR Name",
+          "url": "https://github.com/documenso/documenso/actions/runs/34420794311",
+          "createdAt": "2026-09-10T00:19:22Z",
+          "status": "completed",
+          "conclusion": "action_required"
+        }
+      ],
+      "screen": "STRUCTURAL_MATCH; runtime and test-stage cost unverified",
+      "outreachStatus": "NOT_SENT",
+      "contactStatus": "NEEDS_VERIFIED_CONTACT"
+    }
+  ]
+}

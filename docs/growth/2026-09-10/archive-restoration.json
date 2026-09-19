@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-09-10T03:05:31.947Z",
+  "before": {
+    "expectedSha": "42d43c086c3f44a79c2cc5e0e41e48e8bda1b2e2",
+    "archiveSha": "5c3c40ee9a63207c5bf9723e8c5a776d668f4c34",
+    "archiveHash": "39c56860f3953093ead839eac9512e46e9ab04e22665a94a93e4b48672a77e3f",
+    "uploadedAt": "2026-09-06T13:18:52.986Z",
+    "status": "STALE",
+    "detail": "deployed Worker expects source 42d43c086c3f44a79c2cc5e0e41e48e8bda1b2e2 but the uploaded archive is 5c3c40ee9a63207c5bf9723e8c5a776d668f4c34 - run npm run shadow:deploy to bring them back in sync"
+  },
+  "upload": {
+    "ok": true,
+    "sourceSha": "42d43c086c3f44a79c2cc5e0e41e48e8bda1b2e2",
+    "archiveHash": "ae0aa99db9d92f043d771465e1742b8b43a5b81ff3018f9f21ba8aa5e0f47b01",
+    "archiveKey": "shadow/source/by-sha/42d43c086c3f44a79c2cc5e0e41e48e8bda1b2e2.tgz",
+    "uploadedAt": "2026-09-10T03:05:29.409Z",
+    "sizeBytes": 3879621,
+    "label": "Restore exact deployed commit 42d43c0"
+  },
+  "after": {
+    "expectedSha": "42d43c086c3f44a79c2cc5e0e41e48e8bda1b2e2",
+    "archiveSha": "42d43c086c3f44a79c2cc5e0e41e48e8bda1b2e2",
+    "archiveHash": "ae0aa99db9d92f043d771465e1742b8b43a5b81ff3018f9f21ba8aa5e0f47b01",
+    "uploadedAt": "2026-09-10T03:05:29.409Z",
+    "status": "CURRENT",
+    "detail": "source archive matches the deployed Worker's expected SHA (42d43c086c3f44a79c2cc5e0e41e48e8bda1b2e2)"
+  }
+}

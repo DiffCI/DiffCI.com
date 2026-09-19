@@ -14,6 +14,8 @@
  * summary lines are stable across versions and marker glyphs are not.
  */
 
+import { parseGoTestOutput } from "../src/repo/adapters/go-test.js";
+
 export interface ParsedTestOutput {
   /** Undefined means the output could not be understood - never assume zero. */
   failures: number | undefined;
@@ -121,6 +123,10 @@ const ADAPTERS: Adapter[] = [
  */
 export function parseTestOutput(output: string): ParsedTestOutput {
   const plain = stripAnsi(output);
+  const go = parseGoTestOutput(plain);
+  if (go) return { ...go, framework: "go:test" };
+  // Do not reinterpret an incomplete Go JSON stream as another runner's textual output.
+  if (/^\s*\{.*"Action"\s*:/m.test(plain)) return { failures: undefined, failedNames: [], framework: "go:test" };
   for (const adapter of ADAPTERS) {
     const failures = adapter.failures(plain);
     if (failures === undefined) continue;
@@ -167,4 +173,4 @@ export function parseTestFileCount(output: string): number | undefined {
 }
 
 /** The runners this module can classify. Useful for reporting coverage of a corpus. */
-export const SUPPORTED_RUNNERS = ADAPTERS.map((adapter) => adapter.name);
+export const SUPPORTED_RUNNERS = [...ADAPTERS.map((adapter) => adapter.name), "go:test"];

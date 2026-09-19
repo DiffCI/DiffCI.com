@@ -2,6 +2,10 @@
   "name": "@diffci.com/diffci",
   "version": "0.1.2",
   "description": "DiffCI - deterministic change-aware CI planning",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DiffCI/DiffCI.com"
+  },
   "private": false,
   "type": "module",
   "engines": {
@@ -95,6 +99,7 @@
   },
   "dependencies": {
     "@types/node": "^22.15.12",
+    "@vue/compiler-sfc": "3.5.42",
     "typescript": "^5.8.3",
     "yaml": "^2.9.0"
   },
@@ -115,9 +120,5 @@
       "**/validate-*.test.*",
       "scripts/**/*.test.mjs"
     ]
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/DiffCI/DiffCI.com"
   }
 }

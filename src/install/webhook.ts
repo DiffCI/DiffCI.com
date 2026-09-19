@@ -40,6 +40,12 @@ export interface InstallationWebhookDeps {
    * redelivered `installation.deleted` WILL erase again. Production must configure it.
    */
   deliveryStore?: WebhookDeliveryStore;
+  /**
+   * Called after a signed delivery has been handled successfully, but before the delivery is marked
+   * complete. If this throws, the delivery is marked failed so GitHub can retry and the analytics
+   * receipt is not silently lost.
+   */
+  recordVerifiedDelivery?: (request: InstallationWebhookRequest) => Promise<void>;
 }
 
 export interface InstallationWebhookRequest {
@@ -133,6 +139,7 @@ export async function handleInstallationWebhook(
     }
     try {
       const result = await dispatch(request, deps, payload, installationId, event);
+      if (result.ok) await deps.recordVerifiedDelivery?.(request);
       await deps.deliveryStore.complete(request.deliveryId, summarizeForLog(result));
       return result;
     } catch (error) {
@@ -143,7 +150,9 @@ export async function handleInstallationWebhook(
     }
   }
 
-  return dispatch(request, deps, payload, installationId, event);
+  const result = await dispatch(request, deps, payload, installationId, event);
+  if (result.ok) await deps.recordVerifiedDelivery?.(request);
+  return result;
 }
 
 /** Short, non-sensitive outcome line for the delivery log. Never includes payload content. */

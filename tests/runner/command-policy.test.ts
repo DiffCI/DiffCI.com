@@ -20,6 +20,12 @@ function runViaRealShell(shellLine: string): string {
 }
 
 describe("validateCommand - Part 4 command policy", () => {
+  it("preserves approved Go build context and rejects arbitrary environment overrides", () => {
+    const command = { executable: "go", args: ["test", "./lib"], env: { GOOS: "linux", GOFLAGS: "" } };
+    assert.equal(validateCommand(command).ok, true);
+    assert.match(buildSafeShellCommand(command), /GOOS='linux' GOFLAGS='' 'go'/);
+    assert.equal(validateCommand({ ...command, env: { PATH: "/tmp/untrusted" } }).violation, "environment_not_allowed");
+  });
   it("allows every R2-permitted executable", () => {
     for (const executable of ALLOWED_EXECUTABLES) {
       assert.equal(validateCommand({ executable, args: [] }).ok, true);

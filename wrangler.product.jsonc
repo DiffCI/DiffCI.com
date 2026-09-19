@@ -74,10 +74,10 @@
   "d1_databases": [
     // Writable - this Worker owns diffci-product (accounts/billing/sessions/usage/runners/queue/audit).
     { "binding": "PRODUCT_DB", "database_name": "diffci-product", "database_id": "b3951dbd-e253-46bf-907e-ae07d0998aa5" },
-    // READ-ONLY BY CODE DISCIPLINE, not by D1 permission (D1 bindings have no read-only mode). Every
-    // query against this binding must go through src/product/shadow-read-boundary.ts, which issues only
-    // SELECT statements - see that file's header comment (Part 20). This Worker must NEVER write to
-    // diffci-research; that database belongs to Stage 2F's frozen shadow/research pipeline.
+    // Product evidence reads are READ-ONLY BY CODE DISCIPLINE, not by D1 permission (D1 bindings have no
+    // read-only mode), and must go through src/product/shadow-read-boundary.ts. Verified GitHub App
+    // webhook telemetry goes through the RESEARCH_WORKER service binding so the research Worker owns
+    // all writes to shadow_analytics_outbox.
     { "binding": "RESEARCH_DB", "database_name": "diffci-research", "database_id": "84ddc2e5-0f1d-424f-8bfc-81f4e39dc534" }
   ]
   // Secrets (NOT committed here - set via `wrangler secret put <NAME> --config wrangler.product.jsonc`):

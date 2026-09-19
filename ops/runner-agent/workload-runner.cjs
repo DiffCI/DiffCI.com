@@ -44,11 +44,12 @@ const { readFileSync } = require("node:fs");
 // kept here by hand. A real, disclosed maintenance cost (change one, must remember to change the
 // other) in exchange for this file remaining a genuine standalone backstop, not merely trusting the
 // server already validated everything upstream.
-const ALLOWED_EXECUTABLES = new Set(["node", "npm", "npx", "git"]);
+const ALLOWED_EXECUTABLES = new Set(["node", "npm", "npx", "git", "go"]);
 const FORBIDDEN_ENV_KEY_SUBSTRINGS = ["TOKEN", "SECRET", "PASSWORD", "CREDENTIAL", "API_KEY", "APIKEY", "PRIVATE_KEY", "AUTH"];
 // Deliberately duplicated from src/runner/env-policy.ts's SAFE_ENV_ALLOWLIST - same no-build-step
 // reasoning as ALLOWED_EXECUTABLES above.
 const SAFE_ENV_ALLOWLIST = ["PATH", "HOME", "LANG", "LC_ALL", "TZ", "NODE_ENV", "NPM_CONFIG_CACHE"];
+const COMMAND_ENV_KEYS = new Set(["GOOS", "GOARCH", "CGO_ENABLED", "GOFLAGS", "GOTOOLCHAIN", "GOPROXY", "GOSUMDB", "GOWORK", "GOENV"]);
 
 function validateStep(step) {
   if (!step || typeof step.executable !== "string" || !ALLOWED_EXECUTABLES.has(step.executable)) {
@@ -56,6 +57,9 @@ function validateStep(step) {
   }
   if (!Array.isArray(step.args) || step.args.some((a) => typeof a !== "string" || a.includes("\0"))) {
     throw new Error("workload-runner: step args must be an array of null-byte-free strings");
+  }
+  if (step.env !== undefined && (step.env === null || typeof step.env !== "object" || Array.isArray(step.env) || Object.entries(step.env).some(([key, value]) => !COMMAND_ENV_KEYS.has(key) || typeof value !== "string" || value.includes("\0")))) {
+    throw new Error("workload-runner: step environment is not allowed");
   }
   if (step.cwd !== undefined && (typeof step.cwd !== "string" || /(^|\/)\.\.(\/|$)/.test(step.cwd))) {
     throw new Error(`workload-runner: step cwd "${step.cwd}" is invalid or contains a path-traversal segment`);
@@ -95,7 +99,7 @@ function runStep(step, sharedEnv, uid, gid, timeoutMs, maxOutputBytes) {
 
     const child = spawn(step.executable, step.args, {
       cwd: step.cwd,
-      env: sharedEnv,
+      env: { ...sharedEnv, ...step.env },
       uid,
       gid,
       detached: process.platform !== "win32", // POSIX: own process group, killable as a unit - see killTree()

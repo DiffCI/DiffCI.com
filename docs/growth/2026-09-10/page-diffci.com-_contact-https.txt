@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact — DiffCI</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/favicon.ico">
+</head>
+<body>
+<main class="page">
+  <h1>Contact</h1>
+  <p>
+    Questions about an installation, a report, or DiffCI's data handling go here. Messages are stored and
+    read by the founder; nothing is emailed automatically, and an email address is optional — leave it if
+    you want a reply.
+  </p>
+  <form id="contact-form" class="report-lookup" style="flex-direction:column;align-items:stretch;gap:.75rem">
+    <input id="contact-email" type="email" placeholder="email (optional, for a reply)" maxlength="200">
+    <input id="contact-repo" type="text" placeholder="owner/repository (optional)" pattern="[A-Za-z0-9._-]+/[A-Za-z0-9._-]+" maxlength="200">
+    <textarea id="contact-message" required maxlength="4000" rows="8" placeholder="What happened, or what you want to know"></textarea>
+    <button type="submit" class="button">Send →</button>
+  </form>
+  <p id="contact-status" class="fine" aria-live="polite"></p>
+  <p class="fine"><a href="/">Back to diffci.com</a> · <a href="/data-handling">Data handling</a></p>
+</main>
+<script>
+  (function () {
+    var form = document.getElementById('contact-form');
+    var status = document.getElementById('contact-status');
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      status.textContent = 'Sending…';
+      var body = {
+        email: document.getElementById('contact-email').value.trim() || undefined,
+        repository: document.getElementById('contact-repo').value.trim() || undefined,
+        message: document.getElementById('contact-message').value.trim()
+      };
+      fetch('https://diffci-research-sandbox.damp-waterfall-0cd8.workers.dev/v1/contact', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body)
+      }).then(function (r) { return r.json(); }).then(function (j) {
+        status.textContent = j && j.ok ? 'Received. Thank you — the founder reads every message.' : ('Not sent: ' + ((j && j.error) || 'unknown error'));
+        if (j && j.ok) form.reset();
+      }).catch(function () { status.textContent = 'Not sent: network error. Please try again.'; });
+    });
+  })();
+</script>
+</body>
+</html>
