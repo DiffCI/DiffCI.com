@@ -577,6 +577,70 @@ section + section { border-top: 1px solid var(--rule); }
 
 .steps p { margin: 0; color: var(--ink-2); font-size: 0.96rem; }
 
+/* ---------------- install ---------------- */
+
+.install-grid {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 1.75rem;
+}
+
+@media (min-width: 48rem) {
+  .install-grid { grid-template-columns: 1fr 1fr; }
+  .install-panel-wide { grid-column: 1 / -1; }
+}
+
+.install-panel {
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 1.35rem 1.45rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.install-panel .kicker {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.install-panel p {
+  color: var(--ink-2);
+  font-size: 0.96rem;
+}
+
+.install-panel pre {
+  margin: 1rem 0;
+  font-size: 0.78rem;
+}
+
+.install-panel pre code {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  white-space: pre;
+}
+
+.install-panel .fine {
+  color: var(--ink-3);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.4rem;
+  margin-top: 1.1rem;
+}
+
 /* ---------------- report card ---------------- */
 
 .report {

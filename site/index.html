@@ -24,6 +24,7 @@
     <a class="wordmark" href="/">DiffCI</a>
     <nav>
       <a href="#how">How it works</a>
+      <a href="#install">Install</a>
       <a href="#evidence">Evidence</a>
       <a href="#limits">Limits</a>
       <a href="#pilot">Pilot</a>
@@ -104,6 +105,73 @@
       for.
     </p>
     <p><strong>DiffCI is the measurement, delivered before the risk.</strong></p>
+  </div>
+</section>
+
+<section class="numbered" id="install">
+  <div class="wrap wrap-wide">
+    <h2>Install DiffCI</h2>
+    <p>
+      DiffCI has three entry points with the same contract: observe CI, write a report, and leave the
+      repository's real jobs alone.
+    </p>
+
+    <div class="install-grid">
+      <article class="install-panel">
+        <p class="kicker">npm CLI</p>
+        <h3>Run it locally or inside CI</h3>
+        <p>
+          The npm package is <code>@diffci.com/diffci</code>. Use <code>npx</code> for a one-off
+          observation, or install it as a dev dependency if you want a pinned local tool.
+        </p>
+        <pre><code>npx @diffci.com/diffci@latest observe
+npx @diffci.com/diffci@latest verify-workflow
+
+npm install --save-dev @diffci.com/diffci</code></pre>
+        <p class="fine">
+          <code>observe</code> writes a JSON report outside the checkout by default. Nothing is sent to
+          DiffCI unless an endpoint and token are explicitly configured.
+        </p>
+      </article>
+
+      <article class="install-panel">
+        <p class="kicker">GitHub Action runner</p>
+        <h3>Add one non-blocking observer job</h3>
+        <p>
+          Put DiffCI in its own job so a DiffCI failure cannot become your workflow's conclusion. For
+          the strongest supply-chain posture, pin <code>DiffCI/DiffCI.com@v1</code> to a full commit SHA.
+        </p>
+        <pre><code>jobs:
+  diffci:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: DiffCI/DiffCI.com@v1</code></pre>
+        <p class="fine">
+          The Action writes a report artifact, prints a summary, and cannot skip tests, cancel jobs,
+          comment on pull requests, or change required checks.
+        </p>
+      </article>
+
+      <article class="install-panel install-panel-wide">
+        <p class="kicker">Read-only GitHub App</p>
+        <h3>Use shadow mode without editing a workflow</h3>
+        <p>
+          The App is the lowest-friction pilot path: it observes pushes and completed workflow runs from
+          outside your CI, then reconciles what DiffCI would have selected against what your CI actually
+          did.
+        </p>
+        <div class="inline-actions">
+          <a class="button" href="https://github.com/apps/diffci-shadow">Install the read-only App</a>
+          <a class="button-secondary" href="/data-handling">Data handling</a>
+        </div>
+      </article>
+    </div>
   </div>
 </section>
 
