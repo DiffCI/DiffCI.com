@@ -78,3 +78,21 @@ npm run research:stage0
 # Deploy the Cloudflare research/shadow Worker (D1 + R2 + Sandbox Containers)
 npm run research:sandbox:deploy
 ```
+
+## Install Surfaces
+
+DiffCI is intended to be installable as infrastructure, not only as a hosted shadow experiment:
+
+```yaml
+- uses: diffci/diffci-action@v1
+```
+
+```bash
+npx diffci observe
+npx diffci verify-workflow
+```
+
+The GitHub App remains the easiest shadow-mode entry point. The GitHub Action and npm CLI establish
+the OSS/package distribution path: DiffCI can become an explicit CI dependency while preserving the
+same observe-only contract. See [`docs/distribution.md`](docs/distribution.md) for the package and
+Action positioning.

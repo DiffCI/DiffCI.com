@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * `diffci` - the client-side command (Phase 02, 2026-08-26).
  *

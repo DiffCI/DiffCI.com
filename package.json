@@ -2,11 +2,24 @@
   "name": "diffci",
   "version": "0.1.0",
   "description": "DiffCI - deterministic change-aware CI planning",
-  "private": true,
+  "private": false,
   "type": "module",
   "engines": {
     "node": ">=22.5.0"
   },
+  "bin": {
+    "diffci": "./dist-client/src/client/cli.js"
+  },
+  "files": [
+    "action.yml",
+    "dist-client/src/client",
+    "dist-client/src/git",
+    "dist-client/src/planner",
+    "dist-client/src/repo",
+    "README.md",
+    "docs/distribution.md",
+    "docs/language-support.md"
+  ],
   "exports": {
     "./*": {
       "types": "./dist/src/*.d.ts",
@@ -18,6 +31,8 @@
     "build": "tsc",
     "test": "tsx --test \"tests/**/*.test.ts\"",
     "check": "npm run typecheck && npm run test",
+    "prepack": "npm run build:client",
+    "package:smoke": "node scripts/package-smoke.mjs",
     "diffci": "tsx scripts/diffci.ts",
     "impact": "tsx scripts/diffci.ts impact",
     "observe": "tsx src/client/cli.ts observe",
