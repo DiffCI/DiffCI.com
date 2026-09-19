@@ -25,6 +25,6 @@ describe("npm package contract", () => {
 
   it("keeps the CLI executable when TypeScript emits it", () => {
     const cli = readFileSync(join(ROOT, "src", "client", "cli.ts"), "utf8");
-    assert.ok(cli.startsWith("#!/usr/bin/env node\n"), "the npm bin entry needs a shebang");
+    assert.match(cli, /^#!\/usr\/bin\/env node\r?\n/, "the npm bin entry needs a shebang");
   });
 });
