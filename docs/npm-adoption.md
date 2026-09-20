@@ -54,6 +54,63 @@ Ask maintainers for a small, reversible experiment:
 - Share the report artifacts or a summary of whether DiffCI found avoidable test work.
 - Remove the job at any time if it is noisy, slow, or unhelpful.
 
+## Self-Serve Runtime Pilot
+
+Use this when a maintainer asks whether selecting fewer tests would actually make their CI faster.
+This is a paired local measurement, not a production-savings claim.
+
+Step 1: create an observation report without sending it anywhere.
+
+```bash
+npx @diffci.com/diffci@latest observe --no-send --out ./diffci-observation.json
+```
+
+Step 2: run the paired pilot.
+
+```bash
+npx @diffci.com/diffci@latest verify-savings \
+  --label owner/repo \
+  --repo /path/to/their/repo \
+  --full "npm test" \
+  --selected-from-report /path/to/their/repo/diffci-observation.json \
+  --out ./diffci-verify-savings.json \
+  --markdown ./diffci-verify-savings.md
+```
+
+What the report means:
+
+- Full runtime is measured from `--full`.
+- Selected runtime is measured from DiffCI's proposed command in the observation report.
+- DiffCI analysis overhead is imported from `timings.totalMs` in the observation report unless
+  `--analysis-overhead-ms` is provided.
+- Net selected runtime is selected runtime plus analysis overhead.
+- If the full command fails while the selected command passes, the report is a safety warning, not a
+  savings result.
+
+If the proposed command needs adjustment for the repository's runner, pass the selected command
+manually:
+
+```bash
+npx @diffci.com/diffci@latest verify-savings \
+  --label owner/repo \
+  --repo /path/to/their/repo \
+  --full "pnpm test" \
+  --selected "pnpm test packages/a/src/a.test.ts packages/b/src/b.test.ts" \
+  --analysis-overhead-ms 1200 \
+  --out ./diffci-verify-savings.json \
+  --markdown ./diffci-verify-savings.md
+```
+
+Common command shapes:
+
+```bash
+--full "npm test"
+--full "pnpm test"
+--full "yarn test"
+--selected "npx vitest run path/to/file.test.ts"
+--selected "npx jest path/to/file.test.ts"
+--selected "node --test path/to/file.test.mjs"
+```
 ## Trust Points
 
 - Published as `@diffci.com/diffci` on npm.

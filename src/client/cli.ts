@@ -14,6 +14,7 @@
  *
  * Commands:
  *   observe            analyse the checkout and write an observation report
+ *   verify-savings     run a paired full-versus-selected timing check
  *   verify-workflow    check that a DiffCI job in this repository's workflows cannot affect other jobs
  *   version            print the observer version
  *
@@ -32,6 +33,7 @@ import { dirname, join, resolve } from "node:path";
 import { observe, isInsideRepository } from "./observe.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
+import { formatVerifySavingsSummary, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
 import { auditWorkflows, isNonInterfering } from "./workflow-guard.js";
 
 interface ParsedArgs {
@@ -257,16 +259,67 @@ function runVerifyWorkflow(flags: Record<string, string | boolean>, env: NodeJS.
   return 1;
 }
 
+function stringFlag(flags: Record<string, string | boolean>, name: string): string | undefined {
+  const value = flags[name];
+  return typeof value === "string" ? value : undefined;
+}
+
+function numberFlag(flags: Record<string, string | boolean>, name: string): number | undefined {
+  const value = stringFlag(flags, name);
+  if (value === undefined) return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) throw new Error(`--${name} must be a non-negative number`);
+  return parsed;
+}
+
+function parseVerifySavingsOptions(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): VerifySavingsOptions {
+  const full = stringFlag(flags, "full");
+  const selected = stringFlag(flags, "selected");
+  const selectedFromReport = stringFlag(flags, "selected-from-report");
+  const out = stringFlag(flags, "out");
+  if (!full) throw new Error("--full <command> is required");
+  if (!selected && !selectedFromReport) throw new Error("--selected <command> or --selected-from-report <path> is required");
+  if (selected && selectedFromReport) throw new Error("pass only one of --selected or --selected-from-report");
+  if (!out) throw new Error("--out <path> is required");
+  const markdown = stringFlag(flags, "markdown");
+  return {
+    full,
+    selected,
+    selectedFromReport: selectedFromReport ? resolve(selectedFromReport) : undefined,
+    out: resolve(out),
+    markdown: markdown ? resolve(markdown) : undefined,
+    label: stringFlag(flags, "label"),
+    cwd: resolve(stringFlag(flags, "repo") ?? env.GITHUB_WORKSPACE ?? process.cwd()),
+    timeoutMs: numberFlag(flags, "timeout-ms") ?? 30 * 60 * 1000,
+    analysisOverheadMs: numberFlag(flags, "analysis-overhead-ms"),
+    tailBytes: numberFlag(flags, "tail-bytes") ?? 12_000,
+  };
+}
+
+function runVerifySavingsCommand(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): number {
+  const options = parseVerifySavingsOptions(flags, env);
+  const report = runVerifySavings(options);
+  writeVerifySavingsReport(report, { out: options.out, markdown: options.markdown });
+  console.log(formatVerifySavingsSummary(report));
+  console.log(`  report: ${options.out}`);
+  if (options.markdown) console.log(`  markdown: ${options.markdown}`);
+  return report.comparison.fullCommandSucceeded && report.comparison.selectedCommandSucceeded ? 0 : 1;
+}
+
 const USAGE = `diffci - observation-only change-aware CI analysis
 
 Usage:
   diffci observe [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                  [--redact-paths] [--json] [--quiet] [--fail-on-error]
                  [--api-url <url> --api-token <token>] [--no-send]
+  diffci verify-savings --repo <path> --full <command>
+                         (--selected <command> | --selected-from-report <file>)
+                         --out <file> [--markdown <file>] [--label <name>]
   diffci verify-workflow [--repo <path>]
   diffci version
 
 observe analyses the checkout and writes one JSON report. It runs nothing and changes nothing.
+verify-savings runs both commands and reports measured paired runtime; it is an opt-in pilot command.
 verify-workflow checks that the job running DiffCI cannot affect any other job, and exits 1 if it can.
 
 The report is sent only when both --api-url and --api-token are given (or DIFFCI_API_URL and
@@ -287,6 +340,9 @@ async function main(): Promise<void> {
   switch (command) {
     case "observe":
       process.exitCode = await runObserve(flags, env);
+      return;
+    case "verify-savings":
+      process.exitCode = runVerifySavingsCommand(flags, env);
       return;
     case "verify-workflow":
       process.exitCode = runVerifyWorkflow(flags, env);

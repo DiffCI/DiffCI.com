@@ -20,6 +20,7 @@ const ALLOWED_PACKAGE_PREFIXES = [
   "SUPPORT.md",
   "COMMERCIAL.md",
   "docs/distribution.md",
+  "docs/npm-adoption.md",
   "docs/language-support.md",
   "LICENSE",
   "package.json",
