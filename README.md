@@ -14,6 +14,21 @@ From an existing repository checkout, with Node.js 22.5+ and Git installed:
 npx @diffci.com/diffci@latest observe --no-send
 ```
 
+For the fastest self-serve runtime pilot, run one paired check from the repository root:
+
+```bash
+npx @diffci.com/diffci@latest pilot --full "npm test"
+```
+
+On Windows PowerShell, quote the package name:
+
+```powershell
+npx '@diffci.com/diffci@latest' pilot --full "npm test"
+```
+
+This writes `diffci-observe.json`, `diffci-savings.json`, and `diffci-savings.md` to a sibling
+`diffci-output` folder outside the checkout, so it does not dirty the repository.
+
 **Upgrade from 0.1.3:** tests excluded by a source-only `tsconfig.json` could be discovered without
 their dependency edges, producing an incomplete selection. This is fixed in **0.1.4**. Revalidate
 affected observations before using them as opportunity evidence; see the
@@ -34,8 +49,8 @@ not Cal.com's production savings or a prediction for your repository.
 Selection counts alone do not establish runtime savings. Observation mode measures neither the
 selected test execution nor realized savings.
 
-For a self-serve paired runtime check, run `observe` first and then run `verify-savings` against the
-observation report. It compares your normal full command with
+For an advanced paired runtime check, you can still run `observe` first and then run `verify-savings`
+against the observation report. It compares your normal full command with
 DiffCI's proposed selected command and writes JSON plus Markdown evidence; see
 [`docs/npm-adoption.md`](docs/npm-adoption.md#self-serve-runtime-pilot).
 

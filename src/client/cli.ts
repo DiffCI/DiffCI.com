@@ -28,7 +28,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 
 import { observe, isInsideRepository } from "./observe.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
@@ -306,9 +306,74 @@ function runVerifySavingsCommand(flags: Record<string, string | boolean>, env: N
   return report.comparison.fullCommandSucceeded && report.comparison.selectedCommandSucceeded ? 0 : 1;
 }
 
+function defaultPilotOutputDir(repoPath: string): string {
+  return join(dirname(repoPath), "diffci-output");
+}
+
+async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): Promise<number> {
+  const full = stringFlag(flags, "full");
+  if (!full) {
+    console.error('--full <command> is required, for example: diffci pilot --full "npm test"');
+    return 1;
+  }
+
+  const repoPath = resolve(stringFlag(flags, "repo") ?? env.GITHUB_WORKSPACE ?? process.cwd());
+  const outDir = resolve(stringFlag(flags, "out-dir") ?? defaultPilotOutputDir(repoPath));
+  if (isInsideRepository(repoPath, outDir) || outDir === repoPath) {
+    console.error(`Refusing to write pilot reports inside the repository: ${outDir}. Pass --out-dir with a path outside the checkout.`);
+    return 2;
+  }
+
+  const label = stringFlag(flags, "label") ?? basename(repoPath);
+  const observationPath = join(outDir, "diffci-observe.json");
+  const savingsPath = join(outDir, "diffci-savings.json");
+  const markdownPath = join(outDir, "diffci-savings.md");
+
+  const identity = observerIdentity();
+  const observation = await observe({
+    repoPath,
+    env: env as Record<string, string | undefined>,
+    version: identity.version,
+    engineSha: identity.sha,
+    baseOverride: stringFlag(flags, "base"),
+    headOverride: stringFlag(flags, "head"),
+    redactPaths: flags["redact-paths"] === true,
+    reportPath: observationPath,
+  });
+
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(observationPath, `${JSON.stringify(observation, null, 2)}\n`, "utf8");
+
+  console.log(summarise(observation));
+  console.log(`  observation report: ${observationPath}`);
+  if (observation.status !== "OBSERVED") {
+    console.log("DiffCI pilot stopped before timing because observation did not produce a selectable report.");
+    return 1;
+  }
+
+  const savings = runVerifySavings({
+    full,
+    selectedFromReport: observationPath,
+    out: savingsPath,
+    markdown: markdownPath,
+    label,
+    cwd: repoPath,
+    timeoutMs: numberFlag(flags, "timeout-ms") ?? 30 * 60 * 1000,
+    analysisOverheadMs: numberFlag(flags, "analysis-overhead-ms"),
+    tailBytes: numberFlag(flags, "tail-bytes") ?? 12_000,
+  });
+  writeVerifySavingsReport(savings, { out: savingsPath, markdown: markdownPath });
+
+  console.log(formatVerifySavingsSummary(savings));
+  console.log(`  savings report: ${savingsPath}`);
+  console.log(`  markdown: ${markdownPath}`);
+  return savings.comparison.fullCommandSucceeded && savings.comparison.selectedCommandSucceeded ? 0 : 1;
+}
+
 const USAGE = `diffci - observation-only change-aware CI analysis
 
 Usage:
+  diffci pilot --full <command> [--repo <path>] [--out-dir <dir>] [--label <name>]
   diffci observe [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                  [--redact-paths] [--json] [--quiet] [--fail-on-error]
                  [--api-url <url> --api-token <token>] [--no-send]
@@ -318,6 +383,7 @@ Usage:
   diffci verify-workflow [--repo <path>]
   diffci version
 
+pilot runs observe and verify-savings together, writing reports to ../diffci-output by default.
 observe analyses the checkout and writes one JSON report. It runs nothing and changes nothing.
 verify-savings runs both commands and reports measured paired runtime; it is an opt-in pilot command.
 verify-workflow checks that the job running DiffCI cannot affect any other job, and exits 1 if it can.
@@ -338,6 +404,9 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
+    case "pilot":
+      process.exitCode = await runPilot(flags, env);
+      return;
     case "observe":
       process.exitCode = await runObserve(flags, env);
       return;
