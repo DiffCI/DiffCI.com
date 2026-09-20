@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { getAllowedRepository, isValidFullCommitSha, verifyCommitBelongsToAllowedRepository, R2_REPOSITORY_ALLOWLIST } from "../../src/runner/repository-policy.js";
 
 const R2_REPO = "deepseek-ai/deepseek-harness";
+const RUN_LIVE_GITHUB_TESTS = process.env.DIFFCI_RUN_LIVE_GITHUB_TESTS === "1";
 
 describe("R2 repository allowlist - Part 12", () => {
   it("deepseek-ai/deepseek-harness is the only allowed repository", () => {
@@ -90,7 +91,7 @@ describe("verifyCommitBelongsToAllowedRepository - Part 13", () => {
     assert.equal(result.ok, true);
   });
 
-  it("REAL live proof: a real, known commit SHA of deepseek-ai/deepseek-harness verifies successfully against the real GitHub API", async () => {
+  it("REAL live proof: a real, known commit SHA of deepseek-ai/deepseek-harness verifies successfully against the real GitHub API", { skip: !RUN_LIVE_GITHUB_TESTS }, async () => {
     // No mock - genuinely calls api.github.com. This SHA was fetched live via `gh api
     // repos/deepseek-ai/deepseek-harness/commits/HEAD` at the time R2's repository allowlist was set
     // (2026-08-22) - a real, permanent commit in a real repository's history, not a moving target.
@@ -99,10 +100,11 @@ describe("verifyCommitBelongsToAllowedRepository - Part 13", () => {
     assert.equal(result.ok, true, `expected the real, known commit ${realKnownSha} to verify against the real GitHub API`);
   });
 
-  it("REAL live proof: a SHA that has never existed in this repository is genuinely rejected by the real GitHub API", async () => {
+  it("REAL live proof: a SHA that has never existed in this repository is genuinely rejected by the real GitHub API", { skip: !RUN_LIVE_GITHUB_TESTS }, async () => {
     const fakeSha = "0".repeat(40);
     const result = await verifyCommitBelongsToAllowedRepository(R2_REPO, fakeSha);
     assert.equal(result.ok, false);
     assert.equal(result.reason, "commit_not_found");
   });
 });
+
