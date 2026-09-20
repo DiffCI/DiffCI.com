@@ -34,11 +34,7 @@ jobs:
         run: npm publish --provenance --access public --tag alpha
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Keep prerelease off latest
-        if: startsWith(github.ref, 'refs/tags/v') && contains(github.ref_name, '-')
-        run: npm dist-tag rm @diffci.com/diffci latest || true
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # --tag alpha already keeps prereleases off latest. Do not remove the stable dist-tag.
       - name: Publish stable
         if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')
         run: npm publish --provenance --access public

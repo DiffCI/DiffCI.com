@@ -632,7 +632,13 @@ export async function buildDependencyGraph(
 
   const vueSources = contributions.some((item) => item.id === "vue")
     ? files.filter((file) => /\.[cm]?[jt]sx?$/.test(file)).map((file) => join(repoPath, file)) : [];
-  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(repoPath, profile.sourceRoots, vueSources);
+  // Compiler include/exclude controls typechecking, not the runner's test universe. Parse every
+  // discovered JS/TS test so source changes can reach tests outside the compiler's root files.
+  // Adding those tests only as leaf nodes silently loses their dependency edges (ky, 2026-09-19).
+  const testSources = profile.testFilePaths
+    .filter((file) => /\.[cm]?[jt]sx?$/.test(file))
+    .map((file) => join(repoPath, file));
+  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(repoPath, profile.sourceRoots, [...vueSources, ...testSources]);
   let moduleResolutionCache = ts.createModuleResolutionCache(
     repoPath,
     (x) => x,
@@ -807,21 +813,8 @@ export async function buildDependencyGraph(
   }
   profile.adapterBlockers = [...adapterBlockers];
 
-  // Nested-package test visibility (2026-08-24, biomejs/biome finding): `internalSourcePaths` above is
-  // strictly the TS PROGRAM's own file list (createProgram()'s `include`/nested-tsconfig-merged
-  // fileNames) - so a package whose own tsconfig deliberately excludes its test directory (a real,
-  // common pattern; confirmed verbatim on biome: `packages/@biomejs/js-api/tsconfig.json` has
-  // `"exclude": ["./tests", "./dist"], "include": ["./src"]`) NEVER contributes those files to the
-  // program, so they never became graph nodes and `totalTestsInGraph` stayed 0 even though
-  // `profile.testFilePaths` (the separate, tsconfig-agnostic glob walk in analyzer.ts's discoverTests())
-  // already found them correctly. Source-ROOT discovery itself was already correct (the 2026-08-21
-  // zod/trpc fallback already lists `packages`/`crates` as roots for exactly this monorepo shape) - the
-  // gap was narrower: the graph never incorporated what that walk found. Fix: union in any test file
-  // discoverTests() found that the TS program's own file list missed, as an ADDITIONAL leaf node
-  // (isTest true; no import edges - we have no real resolution info for a file the type-checker was
-  // never asked to see, so dependency-graph traversal through it is honestly absent, not guessed at).
-  // This does NOT add Rust visibility of any kind - testFilePaths only ever contains files already
-  // matched by the JS/TS test-file patterns; a `.rs` test is never in it and stays "unknown" as before.
+  // Keep adapter-provided test identities visible as well. JS/TS tests are parsed above; their
+  // imports must not be replaced by disconnected leaf nodes merely because tsconfig excludes them.
   for (const testPath of profile.testFilePaths) {
     if (!internalSourcePaths.has(testPath) && !assetPaths.has(testPath)) internalSourcePaths.add(testPath);
   }

@@ -116,6 +116,27 @@ describe("client-side observation", () => {
     }
   });
 
+  it("selects unchanged tests outside tsconfig include when their source changes", async () => {
+    const repoPath = createFixtureRepo();
+    try {
+      write(repoPath, "tsconfig.json", JSON.stringify({ compilerOptions: { module: "ESNext", moduleResolution: "bundler" }, include: ["src"] }));
+      git(repoPath, "add -A");
+      git(repoPath, 'commit --quiet -m "scope typechecking to source"');
+      const base = git(repoPath, "rev-parse HEAD").trim();
+      write(repoPath, "src/alpha.ts", "export const alpha = () => 42;\n");
+      git(repoPath, "add -A");
+      git(repoPath, 'commit --quiet -m "change source without touching tests"');
+      const report = await observe({ repoPath, env: {}, version: "test", baseOverride: base, headOverride: git(repoPath, "rev-parse HEAD").trim() });
+      assert.equal(report.status, "OBSERVED", report.reason);
+      assert.equal(report.result?.mode, "SELECTIVE");
+      assert.deepEqual(report.result?.selectedTests, ["test/alpha.test.ts"]);
+      assert.equal(report.result?.totalTestCount, 2);
+      assert.equal(report.nonInterference.worktreeUnchanged, true);
+    } finally {
+      rmSync(repoPath, { recursive: true, force: true });
+    }
+  });
+
   it("redacts every path when asked, and says so in the report", async () => {
     const repoPath = createFixtureRepo();
     try {

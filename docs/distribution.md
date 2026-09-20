@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@v1
+      - uses: DiffCI/DiffCI.com@v0.1.4
 ```
 
 For the strongest supply-chain posture, pin the Action to a full commit SHA. `npx @diffci.com/diffci@latest verify-workflow`

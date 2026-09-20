@@ -48,6 +48,32 @@ jobs:
 `;
 
 describe("workflow non-interference guard", () => {
+  it("does not treat registry tag removal as an observation job", () => {
+    const dir = repoWithWorkflow(`${CLEAN}\n  release:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm dist-tag rm @diffci.com/diffci latest || true\n`);
+    try {
+      const result = auditWorkflows(dir);
+      assert.deepEqual(result.observerJobs, [`${join(".github", "workflows", "ci.yml")}#diffci`]);
+      assert.deepEqual(result.findings, []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  for (const script of [
+    "npm dist-tag rm @diffci.com/diffci latest || true\n          npx @diffci.com/diffci observe",
+    "npm dist-tag rm @diffci.com/diffci latest; npx @diffci.com/diffci observe",
+    "npm dist-tag rm @diffci.com/diffci latest || npx @diffci.com/diffci observe",
+  ]) {
+    it(`still audits an observer alongside registry operations: ${script}`, () => {
+      const dir = repoWithWorkflow(`jobs:\n  unsafe:\n    runs-on: ubuntu-latest\n    steps:\n      - run: |\n          ${script}\n`);
+      try {
+        assert.ok(codes(dir).includes("JOB_NOT_CONTINUE_ON_ERROR"));
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  }
+
   it("passes a dedicated, pinned, continue-on-error, read-only job", () => {
     const dir = repoWithWorkflow(CLEAN);
     try {

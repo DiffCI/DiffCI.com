@@ -139,7 +139,7 @@ npm install --save-dev @diffci.com/diffci</code></pre>
         <h3>Add one non-blocking observer job</h3>
         <p>
           Put DiffCI in its own job so a DiffCI failure cannot become your workflow's conclusion. For
-          the strongest supply-chain posture, pin <code>DiffCI/DiffCI.com@v1</code> to a full commit SHA.
+          the strongest supply-chain posture, pin <code>DiffCI/DiffCI.com@v0.1.4</code> to a full commit SHA.
         </p>
         <pre><code>jobs:
   diffci:
@@ -151,7 +151,7 @@ npm install --save-dev @diffci.com/diffci</code></pre>
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@v1</code></pre>
+      - uses: DiffCI/DiffCI.com@v0.1.4</code></pre>
         <p class="fine">
           The Action writes a report artifact, prints a summary, and cannot skip tests, cancel jobs,
           comment on pull requests, or change required checks.

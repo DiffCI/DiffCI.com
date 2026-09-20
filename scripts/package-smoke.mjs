@@ -52,7 +52,9 @@ function createFixtureRepo(parent) {
   );
   write(
     join(repoPath, "tsconfig.json"),
-    `${JSON.stringify({ compilerOptions: { target: "ES2022", module: "ESNext", moduleResolution: "bundler", strict: true }, include: ["src", "test"] }, null, 2)}\n`,
+    // The runner still discovers tests when the compiler only includes implementation files.
+    // This fixture must exercise their dependency edges in the actual installed tarball.
+    `${JSON.stringify({ compilerOptions: { target: "ES2022", module: "ESNext", moduleResolution: "bundler", strict: true }, include: ["src"] }, null, 2)}\n`,
   );
   write(join(repoPath, "src", "alpha.ts"), "export const alpha = () => 1;\n");
   write(join(repoPath, "src", "beta.ts"), "export const beta = () => 2;\n");
@@ -94,7 +96,7 @@ try {
   assert(existsSync(bin), `installed package did not create ${bin}`);
   const installedVersion = runNpm(["exec", "--", "diffci", "version"], { cwd: consumer }).trim();
   assert(installedVersion === pack.version, `expected diffci version ${pack.version}, got ${installedVersion}`);
-  runNpm(["exec", "--", "diffci", "observe", "--repo", repoPath, "--base", base, "--head", head, "--out", reportPath, "--json"], {
+  runNpm(["exec", "--", "diffci", "observe", "--repo", repoPath, "--base", base, "--head", head, "--out", reportPath, "--json", "--no-send"], {
     cwd: consumer,
   });
 

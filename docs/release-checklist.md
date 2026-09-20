@@ -25,12 +25,13 @@ Publishing is handled by `.github/workflows/release.yml` on a pushed Git tag.
 
 ```bash
 git status --short
-git tag v0.1.3
-git push origin v0.1.3
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 The release workflow publishes with npm provenance. A stable tag publishes to `latest`; a prerelease tag
-such as `v0.1.3-alpha.1` publishes under the `alpha` dist tag.
+such as `v0.1.4-alpha.1` publishes under the `alpha` dist tag without deleting the stable `latest` tag.
+Use the version actually qualified for the release; do not reuse an existing tag.
 
 ## Post-release verification
 

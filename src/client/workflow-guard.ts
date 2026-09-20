@@ -123,6 +123,10 @@ function commandText(run: string): string {
   return run
     .split("\n")
     .map((line) => line.replace(/(^|\s)#.*$/, "$1").replace(/[a-z][a-z0-9+.-]*:\/\/\S+/gi, " "))
+    // A literal npm registry tag removal neither installs nor invokes the observer. Match the
+    // entire line, with only a literal `|| true` allowed, so appended observer commands and shell
+    // substitutions still take the conservative inspection path. Other script lines remain intact.
+    .filter((line) => !/^\s*npm(?:\.cmd)?\s+dist-tag\s+(?:rm|remove)\s+@?[\w./-]+\s+[\w.-]+(?:\s*\|\|\s*true)?\s*$/.test(line))
     .join("\n");
 }
 

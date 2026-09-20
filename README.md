@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@diffci.com/diffci.svg)](https://www.npmjs.com/package/@diffci.com/diffci)
 [![npm provenance](https://img.shields.io/badge/npm-provenance-blue)](https://docs.npmjs.com/generating-provenance-statements)
-[![GitHub Action](https://img.shields.io/badge/action-DiffCI%2FDiffCI.com%40v1-blue)](https://github.com/DiffCI/DiffCI.com)
+[![GitHub Action](https://img.shields.io/badge/action-DiffCI%2FDiffCI.com%40v0.1.4-blue)](https://github.com/DiffCI/DiffCI.com)
 
 DiffCI is a deterministic, change-aware CI planner: given a commit or PR, it builds a real TypeScript
 dependency graph, computes what's actually reachable from the changed files, and proposes which CI
@@ -20,7 +20,7 @@ npx @diffci.com/diffci@latest verify-workflow
 Or install it as a non-blocking GitHub Action:
 
 ```yaml
-- uses: DiffCI/DiffCI.com@v1
+- uses: DiffCI/DiffCI.com@v0.1.4
 ```
 
 The promise is deliberately narrow: DiffCI observes your CI and reports what it would have selected.
@@ -136,7 +136,7 @@ npm run research:sandbox:deploy
 DiffCI is intended to be installable as infrastructure, not only as a hosted shadow experiment:
 
 ```yaml
-- uses: DiffCI/DiffCI.com@v1
+- uses: DiffCI/DiffCI.com@v0.1.4
 ```
 
 ```bash

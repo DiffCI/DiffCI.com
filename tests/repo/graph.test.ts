@@ -590,19 +590,37 @@ describe("nested-package test visibility (2026-08-24, biomejs/biome finding)", (
     assert.strictEqual(result.graph.nodes.find((n) => n.path === "packages/js-api/tests/index.test.ts")?.isTest, true);
   });
 
-  it("a test-only leaf node has no dependency edges (no fabricated resolution info) - genuinely program-excluded", async () => {
+  it("parses imports of tests excluded from their package's compiler scope", async () => {
     const result = await buildNoRootTsconfigFixture({
       "packages/js-api/package.json": JSON.stringify({ name: "js-api", version: "1.0.0" }),
       "packages/js-api/tsconfig.json": JSON.stringify({ compilerOptions: { target: "es2020" }, exclude: ["./tests"], include: ["./src"] }),
       "packages/js-api/src/index.ts": "export const x = 1;\n",
       "packages/js-api/tests/index.test.ts": "import { x } from '../src/index.js';\nexport const t = x;\n",
     });
-    // Sanity: prove this file really did take the exclusion path, not a coincidental normal-resolution
-    // path - it must be absent from the pre-union program-derived node it would otherwise share a name
-    // with, i.e. it is the ONLY node at this path and it was added by the union step, not by parsing.
     const deps = result.graph.dependenciesOf("packages/js-api/tests/index.test.ts");
-    assert.deepStrictEqual(deps, [], "no import edges are fabricated for a program-excluded test file");
+    assert.deepStrictEqual(deps, ["packages/js-api/src/index.ts"]);
+    assert.deepStrictEqual(result.graph.transitiveDependentsOf("packages/js-api/src/index.ts"), ["packages/js-api/tests/index.test.ts"]);
     assert.strictEqual(result.graph.nodes.find((n) => n.path === "packages/js-api/tests/index.test.ts")?.isTest, true);
+  });
+
+  it("follows JavaScript tests and their helpers outside a TypeScript-only include", async () => {
+    const result = await buildFixture({
+      "tsconfig.json": JSON.stringify({ compilerOptions: { module: "ESNext", moduleResolution: "bundler", allowJs: false }, include: ["src"] }),
+      "src/value.ts": "export const value = 1;\n",
+      "test/helper.js": "export { value } from '../src/value.js';\n",
+      "test/value.test.js": "import { value } from './helper.js';\nexport const checked = value;\n",
+    });
+    assert.deepStrictEqual(result.graph.transitiveDependentsOf("src/value.ts"), ["test/helper.js", "test/value.test.js"]);
+  });
+
+  it("retains unresolved imports from excluded tests as confidence blockers", async () => {
+    const result = await buildFixture({
+      "tsconfig.json": JSON.stringify({ compilerOptions: { module: "ESNext", moduleResolution: "bundler" }, include: ["src"] }),
+      "src/value.ts": "export const value = 1;\n",
+      "test/value.test.ts": "import { value } from '../src/value.js';\nimport './missing-helper.js';\nexport const checked = value;\n",
+    });
+    assert.ok(result.unresolved.some(ref => ref.importer === "test/value.test.ts" && ref.specifier === "./missing-helper.js"));
+    assert.equal(refineConfidenceForDelta(result, ["src/value.ts"]), "UNSAFE");
   });
 });
 
