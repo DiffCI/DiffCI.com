@@ -1,10 +1,15 @@
 import { strict as assert } from "node:assert";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
 
 import { buildReport, parseArgs, renderMarkdown, runPilot, type CommandMeasurement } from "../../scripts/verify-savings-pilot.js";
+import { formatVerifySavingsSummary } from "../../src/client/verify-savings.js";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
 const measurement = (command: string, exitCode: number, wallMs: number): CommandMeasurement => ({
   command,
@@ -19,6 +24,60 @@ const measurement = (command: string, exitCode: number, wallMs: number): Command
 });
 
 describe("verify-savings pilot report", () => {
+  it("rejects incomplete or ambiguous plans before executing either arm", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-plan-"));
+    const observation = join(dir, "observation.json");
+    const marker = join(dir, "executed.txt");
+    writeFileSync(join(dir, "marker.cjs"), "require('node:fs').writeFileSync('executed.txt', 'ran')");
+    for (const proposedCommands of [[], [""], ["   "], [12], ["node --version", "node --version"]]) {
+      writeFileSync(observation, JSON.stringify({ status: "OBSERVED", result: { proposedCommands } }));
+      assert.throws(() => runPilot(parseArgs([
+        "--full", "node marker.cjs", "--cwd", dir,
+        "--selected-from-report", observation, "--out", join(dir, "report.json"),
+      ])), /exactly one non-empty proposed command/);
+      assert.equal(existsSync(marker), false);
+    }
+  });
+
+  it("exits non-zero when the CLI rejects an ambiguous report", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-cli-plan-"));
+    const observation = join(dir, "observation.json");
+    const marker = join(dir, "executed.txt");
+    writeFileSync(join(dir, "marker.cjs"), "require('node:fs').writeFileSync('executed.txt', 'ran')");
+    writeFileSync(observation, JSON.stringify({ status: "OBSERVED", result: { proposedCommands: ["node marker.cjs", "node marker.cjs"] } }));
+
+    const result = spawnSync(process.execPath, [
+      "--import",
+      "tsx",
+      join(ROOT, "src", "client", "cli.ts"),
+      "verify-savings",
+      "--full",
+      "node marker.cjs",
+      "--repo",
+      dir,
+      "--selected-from-report",
+      observation,
+      "--out",
+      join(dir, "report.json"),
+    ], { encoding: "utf8" });
+
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /DiffCI verify-savings failed: .*exactly one non-empty proposed command/);
+    assert.equal(existsSync(marker), false);
+  });
+
+  it("does not advertise faster execution when either command failed", () => {
+    for (const [fullExit, selectedExit] of [[0, 1], [1, 0], [1, 1]]) {
+      const report = buildReport({ cwd: "/repo", timeoutMs: 1000,
+        selection: { source: "manual" },
+        full: measurement("full", fullExit!, 1000),
+        selected: measurement("selected", selectedExit!, 10),
+      });
+      assert.match(formatVerifySavingsSummary(report), /comparison invalid/);
+      assert.doesNotMatch(formatVerifySavingsSummary(report), /faster/);
+      assert.match(renderMarkdown(report), /Comparison invalid: command failure/);
+    }
+  });
   it("charges analysis overhead to the selected arm", () => {
     const report = buildReport({
       producedAt: "2026-09-20T00:00:00.000Z",

@@ -62,7 +62,7 @@ This is a paired local measurement, not a production-savings claim.
 Step 1: create an observation report without sending it anywhere.
 
 ```bash
-npx @diffci.com/diffci@latest observe --no-send --out ./diffci-observation.json
+npx @diffci.com/diffci@latest observe --no-send --out ../diffci-output/diffci-observation.json
 ```
 
 Step 2: run the paired pilot.
@@ -72,12 +72,16 @@ npx @diffci.com/diffci@latest verify-savings \
   --label owner/repo \
   --repo /path/to/their/repo \
   --full "npm test" \
-  --selected-from-report /path/to/their/repo/diffci-observation.json \
-  --out ./diffci-verify-savings.json \
-  --markdown ./diffci-verify-savings.md
+  --selected-from-report ../diffci-output/diffci-observation.json \
+  --out ../diffci-output/diffci-verify-savings.json \
+  --markdown ../diffci-output/diffci-verify-savings.md
 ```
 
 What the report means:
+
+Run both steps from the same repository root with the same checked-out revision. These commands
+execute repository code. The full run can warm caches for the selected run, so repeat comparisons
+with controlled cache state before drawing conclusions. A passing pair does not establish selection safety.
 
 - Full runtime is measured from `--full`.
 - Selected runtime is measured from DiffCI's proposed command in the observation report.

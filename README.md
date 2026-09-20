@@ -6,7 +6,8 @@
 
 **Find test-selection opportunities in your CI before changing what it runs.** DiffCI analyzes a
 commit's changes and dependency graph, then reports which test files it would select, why it falls
-back to a full run, and whether it can propose a test command. The CLI and Action are observation-only.
+back to a full run, and whether it can propose a test command. The `observe` command and Action are observation-only;
+the opt-in `pilot` and `verify-savings` commands execute tests.
 
 From an existing repository checkout, with Node.js 22.5+ and Git installed:
 
@@ -26,8 +27,10 @@ On Windows PowerShell, quote the package name:
 npx '@diffci.com/diffci@latest' pilot --full "npm test"
 ```
 
-This writes `diffci-observe.json`, `diffci-savings.json`, and `diffci-savings.md` to a sibling
-`diffci-output` folder outside the checkout, so it does not dirty the repository.
+This executes the full and selected commands sequentially, and writes `diffci-observe.json`,
+`diffci-savings.json`, and `diffci-savings.md` to a sibling `diffci-output` folder outside the checkout.
+The commands you supply may create files or otherwise change the checkout. One paired run is preliminary
+timing evidence; repeat comparisons and account for cache effects before claiming savings.
 
 **Upgrade from 0.1.3:** tests excluded by a source-only `tsconfig.json` could be discovered without
 their dependency edges, producing an incomplete selection. This is fixed in **0.1.4**. Revalidate

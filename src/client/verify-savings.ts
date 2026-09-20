@@ -79,11 +79,11 @@ function readSelectionFromObservation(path: string): ResolvedSelection {
     timings?: { totalMs?: unknown };
   };
   if (parsed.status !== "OBSERVED") throw new Error(`--selected-from-report requires an OBSERVED report; got ${String(parsed.status)}`);
-  const command =
-    Array.isArray(parsed.result?.proposedCommands) && typeof parsed.result.proposedCommands[0] === "string"
-      ? parsed.result.proposedCommands[0]
-      : undefined;
-  if (!command) throw new Error("--selected-from-report did not contain result.proposedCommands[0]");
+  const commands = parsed.result?.proposedCommands;
+  if (!Array.isArray(commands) || commands.length !== 1 || typeof commands[0] !== "string" || !commands[0].trim()) {
+    throw new Error("--selected-from-report requires exactly one non-empty proposed command; use --selected with an explicit command covering the complete selection for multi-command plans");
+  }
+  const command = commands[0];
   const selectedTests = Array.isArray(parsed.result?.selectedTests) ? parsed.result.selectedTests : undefined;
   return {
     command,
@@ -203,7 +203,9 @@ export function renderVerifySavingsMarkdown(report: VerifySavingsReport): string
   const title = report.label ? `# DiffCI Verify Savings: ${report.label}` : "# DiffCI Verify Savings";
   const warning = report.comparison.missedFailureSignal
     ? "\n> WARNING: Full failed while selected passed. Do not treat this selected command as safe until the full-run failure is understood.\n"
-    : "";
+    : !report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded
+      ? "\n> WARNING: One or both commands failed. This comparison is invalid as savings evidence; timings below are diagnostic only.\n"
+      : "";
   const selectionCounts =
     report.selectedTestCount !== undefined && report.totalTestCount !== undefined
       ? `\nSelected tests: ${report.selectedTestCount} of ${report.totalTestCount}\n`
@@ -220,6 +222,7 @@ This report compares a full command with a selected command on the same checkout
 
 ## Result
 
+${!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded ? "Comparison invalid: command failure. Do not interpret the timing difference as savings.\n" : ""}
 | Measure | Value |
 | --- | ---: |
 | Full runtime | ${formatMs(report.comparison.fullWallMs)} |
@@ -269,6 +272,10 @@ export function writeVerifySavingsReport(report: VerifySavingsReport, paths: { o
 }
 
 export function formatVerifySavingsSummary(report: VerifySavingsReport): string {
+  if (!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded) {
+    return "DiffCI verify-savings: comparison invalid because one or both commands failed" +
+      (report.comparison.missedFailureSignal ? "\n  warning: full failed while selected passed; inspect outputs before claiming safety" : "");
+  }
   const lines = [
     `DiffCI verify-savings: ${report.comparison.deltaMs >= 0 ? "faster" : "slower"} by ${formatMs(Math.abs(report.comparison.deltaMs))}`,
   ];

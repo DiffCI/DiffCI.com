@@ -426,8 +426,15 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  // Reaching here means a defect outside observe()'s own guard. It still must not take a build down:
-  // the failure is printed, and the exit code stays 0 unless the caller asked otherwise.
-  console.error(`DiffCI observer failed: ${error instanceof Error ? error.message : String(error)}`);
-  process.exitCode = process.argv.includes("--fail-on-error") ? 1 : 0;
+  const command = process.argv[2];
+  const message = error instanceof Error ? error.message : String(error);
+  if (command === "observe") {
+    // Reaching here means a defect outside observe()'s own guard. It still must not take a build down:
+    // the failure is printed, and the exit code stays 0 unless the caller asked otherwise.
+    console.error(`DiffCI observer failed: ${message}`);
+    process.exitCode = process.argv.includes("--fail-on-error") ? 1 : 0;
+    return;
+  }
+  console.error(`DiffCI ${command ?? "command"} failed: ${message}`);
+  process.exitCode = 1;
 });

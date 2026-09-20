@@ -15,7 +15,7 @@ not ten validated opportunities, historical PR studies, or completed pilots. No 
 ## Initial findings and next decisions
 
 - The documented `DiffCI/DiffCI.com@v1` reference did not resolve on GitHub. Current installation examples
-  now pin the verified `v0.1.3` commit. Do not advertise a Marketplace listing until its actual page is verified.
+  now pin the verified `v0.1.4` commit. Do not advertise a Marketplace listing until its actual page is verified.
 - The [20-change studies of h3 and ky](../evidence/growth-history-01/README.md) are now available, with
   published-package results preserved separately from the then-unreleased correction. Both have recent CI
   activity. Ky's initial smaller selection was affected by missing test-import edges and is withdrawn
@@ -31,6 +31,21 @@ not ten validated opportunities, historical PR studies, or completed pilots. No 
   keep their screening outcomes in the denominator.
 
 ## Next historical study
+
+### September 20 coordination update
+
+The onboarding and growth evidence are committed. npm now publishes 0.1.6, adding the one-command
+`pilot` flow after 0.1.5 introduced `verify-savings`. Both execute repository commands; observation
+mode remains separate. The next milestone is qualified external runtime evidence, not another CLI wrapper.
+
+Review of the timing path found that 0.1.6 accepted only the first proposed command, omitting remaining
+commands in multi-command plans. The 0.1.7 release candidate refuses such reports before executing either
+arm; an explicit complete selected command is required for these plans. Failed runs are labelled invalid
+in the summary and Markdown.
+
+Before preparing maintainer reports, qualify command coverage on frozen source-changing revisions,
+execute in isolation, and collect repeated full/selected timings with cache conditions documented.
+Do not count a one-pair self-serve result as production savings or as an independent maintainer pilot.
 
 Freeze the latest 20 first-parent default-branch changes available at the start of each study, including
 documentation and configuration changes. Record all outcomes and the number of source-changing deltas.
