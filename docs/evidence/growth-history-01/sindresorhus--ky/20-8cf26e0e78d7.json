@@ -1,0 +1,94 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:57:05.492Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "854608078545442344a29a0714a50b978e6d77e9",
+    "headSha": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 2,
+    "changedFiles": [
+      "source/utils/merge.ts",
+      "test/main.ts"
+    ],
+    "affectedSourceFileCount": 15,
+    "selectedTests": [
+      "test/main.ts"
+    ],
+    "totalTestCount": 17,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "npx --no-install ava test/main.ts"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 47,
+      "edges": 84,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 547
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 17,
+      "selectedTests": [
+        "test/base-url.ts",
+        "test/body-size.ts",
+        "test/browser.ts",
+        "test/bytes.ts",
+        "test/context.ts",
+        "test/fetch.ts",
+        "test/formdata-searchparams.ts",
+        "test/headers.ts",
+        "test/hooks.ts",
+        "test/http-error.ts",
+        "test/main.ts",
+        "test/memory-leak.ts",
+        "test/methods.ts",
+        "test/prefix.ts",
+        "test/retry.ts",
+        "test/stream.ts",
+        "test/with-page.ts"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under test"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+    "headShaAfter": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1544
+  }
+}

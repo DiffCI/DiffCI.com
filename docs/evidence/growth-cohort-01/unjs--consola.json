@@ -1,0 +1,85 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:49:39.872Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "512d570b3f99a27b6766a885cae2730aa3dc0ed4",
+    "headSha": "c47faac1738b7383971c6c20b5a34ffa15e7cc3b",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "FULL",
+    "changedFileCount": 1,
+    "changedFiles": [
+      ".github/workflows/autofix.yml"
+    ],
+    "affectedSourceFileCount": 0,
+    "selectedTests": [],
+    "totalTestCount": 1,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "GitHub workflow definition(s) changed; full validation required"
+    ],
+    "proposedCommands": [],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [
+      {
+        "level": "critical",
+        "reason": "CONFIG_GLOBAL"
+      },
+      {
+        "level": "critical",
+        "reason": "WORKFLOW_GLOBAL"
+      }
+    ],
+    "graph": {
+      "nodes": 22,
+      "edges": 48,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 762
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 1,
+      "selectedTests": [
+        "test/consola.test.ts"
+      ],
+      "matchedRules": [
+        "workflow change -> full fallback"
+      ]
+    },
+    "analysisStatus": "FALLBACK"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "c47faac1738b7383971c6c20b5a34ffa15e7cc3b",
+    "headShaAfter": "c47faac1738b7383971c6c20b5a34ffa15e7cc3b",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1569
+  }
+}

@@ -7,6 +7,45 @@ The product model is open core. The npm CLI and basic GitHub Action are the open
 DiffCI Cloud adds hosted history, organization dashboards, policies, managed operations, and support.
 See [`open-core-packaging.md`](open-core-packaging.md).
 
+## Channel strategy
+
+Reviewed 2026-09-19. These channels have different jobs in the same adoption path:
+
+| Channel | Role for DiffCI | Next step |
+| --- | --- | --- |
+| npm | Developer discovery and local evaluation of `@diffci.com/diffci` | Lead with `observe`, a sample report, and the observation-only contract. |
+| GitHub Action | Repeatable CI adoption | Use the dedicated, non-blocking job below and verify the workflow before a pilot. |
+| GitHub Marketplace | CI-specific discovery of the same Action | Confirm listing status and release requirements, then publish or improve its installation instructions. |
+| Tidelift | Potential package maintenance assurance and maintainer income | Pursue package acceptance using the existing submission packet; do not present support as active. |
+| Commercial DiffCI | Paid hosted history, analytics, team workflows, and managed operations | Validate demand with design partners and distinguish available services from future acceleration capabilities. |
+
+The Action is the integration; Marketplace is a discovery channel for that integration. GitHub documents
+Marketplace publication as a release-based process, so having `action.yml` alone does not establish
+that a listing is live. See [GitHub's publishing requirements](https://docs.github.com/en/actions/how-tos/create-and-publish-actions/publish-in-github-marketplace).
+
+Prioritize npm and Action activation, then Marketplace discovery. Keep Tidelift outreach in parallel
+without making adoption dependent on acceptance or expected payments. Defer PyPI, Cargo, and Homebrew
+until user demand and a maintained installation experience justify each additional surface.
+
+Measure successful first reports, repositories with repeat observations, completed pilot reviews,
+and qualified commercial interest. Downloads and listing views alone do not demonstrate adoption.
+Use voluntary pilot feedback or explicitly configured hosted reporting for these measurements;
+local observation does not imply permission to collect telemetry.
+
+Suggested positioning:
+
+> Install DiffCI through npm or GitHub Actions to inspect what your CI could avoid running while
+> leaving CI execution unchanged. Explore hosted reports and shared history with the DiffCI team.
+
+Acceleration and managed infrastructure remain product directions unless a specific capability is
+available and validated. Potential savings in shadow reports are not realized customer savings.
+
+Tidelift's published payment policy allows individuals, for-profit organizations, and nonprofits to
+receive payments with a signed agreement. A nonprofit recipient is therefore not inherently required.
+Payment depends on factors including subscriber usage and package importance; this does not establish
+DiffCI's eligibility, acceptance, or income. See [Tidelift's payment policy](https://support.tidelift.com/hc/en-us/articles/4406294816916-How-we-pay-lifters)
+and the [DiffCI submission packet](tidelift-submission.md).
+
 ## GitHub App
 
 The DiffCI Shadow GitHub App is the lowest-friction research and design-partner path. It receives
@@ -29,10 +68,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@v0.1.4
+      - uses: DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6
 ```
 
-For the strongest supply-chain posture, pin the Action to a full commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
+The example pins release `v0.1.4` to its full commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 

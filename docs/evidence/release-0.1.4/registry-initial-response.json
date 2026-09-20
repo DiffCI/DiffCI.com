@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "E404",
+    "summary": "No match found for version 0.1.4",
+    "detail": "The requested resource '@diffci.com/diffci@0.1.4' could not be found or you do not have permission to access it.\n\nNote that you can also install from a\ntarball, folder, http url, or git url."
+  }
+}

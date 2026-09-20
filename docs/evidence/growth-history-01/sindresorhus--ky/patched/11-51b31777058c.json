@@ -1,0 +1,149 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T15:01:02.469Z",
+  "observer": {
+    "version": "0.1.3",
+    "engineSha": "d72cc549c5eaa5b29945881c6bbba13df94ead12",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "481f6f731b0c311bc2f677604aca3595558b22d1",
+    "headSha": "51b31777058c13f24b640a0ef1a47565f011e080",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 33,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "source/core/constants.ts",
+      "source/errors/NetworkError.ts",
+      "source/types/ResponsePromise.ts",
+      "source/types/hooks.ts",
+      "source/types/options.ts",
+      "source/types/retry.ts",
+      "source/utils/normalize.ts",
+      "test-d/fetch-options.ts",
+      "test-d/forced-retry.ts",
+      "test-d/headers.ts",
+      "test-d/hooks.ts",
+      "test-d/init-search-params.ts",
+      "test-d/json-undefined-schema.ts",
+      "test-d/method-options.ts",
+      "test-d/network-error-cause.ts",
+      "test-d/normalized-options.ts",
+      "test-d/request-options.ts",
+      "test-d/retry.ts",
+      "test-d/search-params.ts",
+      "test-d/timeout-options.ts",
+      "test-d/url-options.ts",
+      "test/base-url.ts",
+      "test/fetch.ts",
+      "test/headers.ts",
+      "test/hooks.ts",
+      "test/main.ts",
+      "test/methods.ts",
+      "test/network-error.ts",
+      "test/prefix.ts",
+      "test/request-options.ts",
+      "test/retry.ts",
+      "test/stream.ts"
+    ],
+    "affectedSourceFileCount": 17,
+    "selectedTests": [
+      "test/base-url.ts",
+      "test/body-size.ts",
+      "test/browser.ts",
+      "test/bytes.ts",
+      "test/context.ts",
+      "test/fetch.ts",
+      "test/formdata-searchparams.ts",
+      "test/headers.ts",
+      "test/hooks.ts",
+      "test/http-error.ts",
+      "test/main.ts",
+      "test/memory-leak.ts",
+      "test/methods.ts",
+      "test/network-error.ts",
+      "test/prefix.ts",
+      "test/request-options.ts",
+      "test/request-stream-support.ts",
+      "test/retry.ts",
+      "test/stream.ts",
+      "test/type-guards.ts"
+    ],
+    "totalTestCount": 21,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/prefix.ts test/request-options.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 56,
+      "edges": 132,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 937
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 21,
+      "selectedTests": [
+        "test/base-url.ts",
+        "test/body-size.ts",
+        "test/browser.ts",
+        "test/bytes.ts",
+        "test/context.ts",
+        "test/fetch.ts",
+        "test/formdata-searchparams.ts",
+        "test/headers.ts",
+        "test/hooks.ts",
+        "test/http-error.ts",
+        "test/main.ts",
+        "test/memory-leak.ts",
+        "test/methods.ts",
+        "test/network-error.ts",
+        "test/prefix.ts",
+        "test/request-options.ts",
+        "test/request-stream-support.ts",
+        "test/retry.ts",
+        "test/stream.ts",
+        "test/type-guards.ts",
+        "test/with-page.ts"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under test"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "51b31777058c13f24b640a0ef1a47565f011e080",
+    "headShaAfter": "51b31777058c13f24b640a0ef1a47565f011e080",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 2244
+  }
+}

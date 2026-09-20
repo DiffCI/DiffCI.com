@@ -1,0 +1,122 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:49:56.189Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+    "headSha": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 15,
+    "changedFiles": [
+      "readme.md",
+      "source/core/Ky.ts",
+      "source/core/constants.ts",
+      "source/errors/HTTPError.ts",
+      "source/errors/KyError.ts",
+      "source/errors/ResponseSizeError.ts",
+      "source/index.ts",
+      "source/types/hooks.ts",
+      "source/types/options.ts",
+      "source/utils/body.ts",
+      "source/utils/type-guards.ts",
+      "test-d/response-size.ts",
+      "test/browser.ts",
+      "test/response-size.ts",
+      "test/stream.ts"
+    ],
+    "affectedSourceFileCount": 20,
+    "selectedTests": [
+      "test/browser.ts",
+      "test/response-size.ts",
+      "test/stream.ts"
+    ],
+    "totalTestCount": 30,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "npx --no-install ava test/browser.ts test/response-size.ts test/stream.ts"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 61,
+      "edges": 90,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 571
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 30,
+      "selectedTests": [
+        "test/base-url.ts",
+        "test/body-size.ts",
+        "test/browser.ts",
+        "test/bytes.ts",
+        "test/context.ts",
+        "test/fetch.ts",
+        "test/formdata-searchparams.ts",
+        "test/headers.ts",
+        "test/hooks.ts",
+        "test/http-error.ts",
+        "test/http-metadata.ts",
+        "test/http-redirects.ts",
+        "test/http-response-bodies.ts",
+        "test/http-semantics.ts",
+        "test/main.ts",
+        "test/memory-leak.ts",
+        "test/methods.ts",
+        "test/network-error.ts",
+        "test/normalize.ts",
+        "test/prefix.ts",
+        "test/request-body-serialization.ts",
+        "test/request-options.ts",
+        "test/request-stream-support.ts",
+        "test/response-consumption.ts",
+        "test/response-size.ts",
+        "test/retry-timing.ts",
+        "test/retry.ts",
+        "test/stream.ts",
+        "test/type-guards.ts",
+        "test/with-page.ts"
+      ],
+      "matchedRules": [
+        "no directory scoping applies -> run all tests"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+    "headShaAfter": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1398
+  }
+}

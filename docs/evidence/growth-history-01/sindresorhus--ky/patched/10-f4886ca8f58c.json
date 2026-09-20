@@ -1,0 +1,122 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T15:00:59.017Z",
+  "observer": {
+    "version": "0.1.3",
+    "engineSha": "d72cc549c5eaa5b29945881c6bbba13df94ead12",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "51b31777058c13f24b640a0ef1a47565f011e080",
+    "headSha": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 6,
+    "changedFiles": [
+      "source/types/request.ts",
+      "source/types/response.ts",
+      "test-d/request-clone.ts",
+      "test-d/response-clone.ts",
+      "test/hooks.ts",
+      "test/main.ts"
+    ],
+    "affectedSourceFileCount": 21,
+    "selectedTests": [
+      "test/base-url.ts",
+      "test/body-size.ts",
+      "test/browser.ts",
+      "test/bytes.ts",
+      "test/context.ts",
+      "test/fetch.ts",
+      "test/formdata-searchparams.ts",
+      "test/headers.ts",
+      "test/hooks.ts",
+      "test/http-error.ts",
+      "test/main.ts",
+      "test/memory-leak.ts",
+      "test/methods.ts",
+      "test/network-error.ts",
+      "test/prefix.ts",
+      "test/request-options.ts",
+      "test/request-stream-support.ts",
+      "test/retry.ts",
+      "test/stream.ts",
+      "test/type-guards.ts"
+    ],
+    "totalTestCount": 21,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/prefix.ts test/request-options.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 56,
+      "edges": 132,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 1075
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 21,
+      "selectedTests": [
+        "test/base-url.ts",
+        "test/body-size.ts",
+        "test/browser.ts",
+        "test/bytes.ts",
+        "test/context.ts",
+        "test/fetch.ts",
+        "test/formdata-searchparams.ts",
+        "test/headers.ts",
+        "test/hooks.ts",
+        "test/http-error.ts",
+        "test/main.ts",
+        "test/memory-leak.ts",
+        "test/methods.ts",
+        "test/network-error.ts",
+        "test/prefix.ts",
+        "test/request-options.ts",
+        "test/request-stream-support.ts",
+        "test/retry.ts",
+        "test/stream.ts",
+        "test/type-guards.ts",
+        "test/with-page.ts"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under test"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+    "headShaAfter": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 2335
+  }
+}

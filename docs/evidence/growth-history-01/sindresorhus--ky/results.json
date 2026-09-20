@@ -1,0 +1,534 @@
+[
+  {
+    "index": 1,
+    "head": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+    "base": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+    "date": "2026-09-14T15:16:48+02:00",
+    "subject": "Add `maxResponseSize` option",
+    "elapsedMs": 2205,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 3,
+    "total": 30,
+    "changedFiles": [
+      "readme.md",
+      "source/core/Ky.ts",
+      "source/core/constants.ts",
+      "source/errors/HTTPError.ts",
+      "source/errors/KyError.ts",
+      "source/errors/ResponseSizeError.ts",
+      "source/index.ts",
+      "source/types/hooks.ts",
+      "source/types/options.ts",
+      "source/utils/body.ts",
+      "source/utils/type-guards.ts",
+      "test-d/response-size.ts",
+      "test/browser.ts",
+      "test/response-size.ts",
+      "test/stream.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/browser.ts test/response-size.ts test/stream.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "01-0d59458a0a58.json"
+  },
+  {
+    "index": 2,
+    "head": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+    "base": "d6e049a690c7562a72e22d0b1eb57a2d4d19745e",
+    "date": "2026-09-14T02:20:54+02:00",
+    "subject": "Preserve Request input abort signals",
+    "elapsedMs": 2572,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 0,
+    "total": 29,
+    "changedFiles": [
+      "source/core/Ky.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [],
+    "worktreeUnchanged": true,
+    "report": "02-071a9b97d3d1.json"
+  },
+  {
+    "index": 3,
+    "head": "d6e049a690c7562a72e22d0b1eb57a2d4d19745e",
+    "base": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+    "date": "2026-09-14T01:55:49+02:00",
+    "subject": "Resolve retry replacements without parent retry options",
+    "elapsedMs": 2637,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 29,
+    "changedFiles": [
+      "source/utils/merge.ts",
+      "test/retry.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/retry.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "03-d6e049a690c7.json"
+  },
+  {
+    "index": 4,
+    "head": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+    "base": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+    "date": "2026-09-14T01:55:49+02:00",
+    "subject": "Run beforeError hooks for body reader failures",
+    "elapsedMs": 2497,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 29,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "test/response-consumption.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/response-consumption.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "04-323b98f0a326.json"
+  },
+  {
+    "index": 5,
+    "head": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+    "base": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
+    "date": "2026-09-14T01:55:49+02:00",
+    "subject": "Preserve symbol-keyed context in init hooks",
+    "elapsedMs": 2533,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 2,
+    "total": 29,
+    "changedFiles": [
+      "source/utils/merge.ts",
+      "test/context.ts",
+      "test/headers.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/context.ts test/headers.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "05-a8753dcc9a4e.json"
+  },
+  {
+    "index": 6,
+    "head": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
+    "base": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+    "date": "2026-09-14T01:55:49+02:00",
+    "subject": "Simplify request state and retry normalization",
+    "elapsedMs": 2784,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 0,
+    "total": 29,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "source/types/common.ts",
+      "source/types/options.ts",
+      "source/utils/normalize.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [],
+    "worktreeUnchanged": true,
+    "report": "06-b28ba903c322.json"
+  },
+  {
+    "index": 7,
+    "head": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+    "base": "e58817d490cba99c97820a39f239272ffdb92881",
+    "date": "2026-09-14T01:55:48+02:00",
+    "subject": "More tests",
+    "elapsedMs": 2460,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 8,
+    "total": 29,
+    "changedFiles": [
+      "AGENTS.md",
+      "test/http-metadata.ts",
+      "test/http-redirects.ts",
+      "test/http-response-bodies.ts",
+      "test/http-semantics.ts",
+      "test/normalize.ts",
+      "test/request-body-serialization.ts",
+      "test/response-consumption.ts",
+      "test/retry-timing.ts"
+    ],
+    "sourceChanged": false,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/normalize.ts test/request-body-serialization.ts test/response-consumption.ts test/retry-timing.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "07-cd1dba0e4502.json"
+  },
+  {
+    "index": 8,
+    "head": "e58817d490cba99c97820a39f239272ffdb92881",
+    "base": "52b8f93e076e1614a3f62162052a8723b10ca5ac",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Type custom fetch callbacks with Request inputs",
+    "elapsedMs": 2146,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 21,
+    "changedFiles": [
+      "source/types/options.ts",
+      "source/utils/timeout.ts",
+      "test-d/fetch-request.ts",
+      "test/fetch.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/fetch.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "08-e58817d490cb.json"
+  },
+  {
+    "index": 9,
+    "head": "52b8f93e076e1614a3f62162052a8723b10ca5ac",
+    "base": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Allow customizing error names in TypeScript",
+    "elapsedMs": 2019,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 21,
+    "changedFiles": [
+      "source/errors/ForceRetryError.ts",
+      "source/errors/HTTPError.ts",
+      "source/errors/NetworkError.ts",
+      "source/errors/SchemaValidationError.ts",
+      "source/errors/TimeoutError.ts",
+      "test-d/error-names.ts",
+      "test/type-guards.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/type-guards.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "09-52b8f93e076e.json"
+  },
+  {
+    "index": 10,
+    "head": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+    "base": "51b31777058c13f24b640a0ef1a47565f011e080",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Preserve JSON types when cloning requests and responses",
+    "elapsedMs": 2909,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 2,
+    "total": 21,
+    "changedFiles": [
+      "source/types/request.ts",
+      "source/types/response.ts",
+      "test-d/request-clone.ts",
+      "test-d/response-clone.ts",
+      "test/hooks.ts",
+      "test/main.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/hooks.ts test/main.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "10-f4886ca8f58c.json"
+  },
+  {
+    "index": 11,
+    "head": "51b31777058c13f24b640a0ef1a47565f011e080",
+    "base": "481f6f731b0c311bc2f677604aca3595558b22d1",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Support readonly inputs and explicit undefined in TypeScript options",
+    "elapsedMs": 2238,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 11,
+    "total": 21,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "source/core/constants.ts",
+      "source/errors/NetworkError.ts",
+      "source/types/ResponsePromise.ts",
+      "source/types/hooks.ts",
+      "source/types/options.ts",
+      "source/types/retry.ts",
+      "source/utils/normalize.ts",
+      "test-d/fetch-options.ts",
+      "test-d/forced-retry.ts",
+      "test-d/headers.ts",
+      "test-d/hooks.ts",
+      "test-d/init-search-params.ts",
+      "test-d/json-undefined-schema.ts",
+      "test-d/method-options.ts",
+      "test-d/network-error-cause.ts",
+      "test-d/normalized-options.ts",
+      "test-d/request-options.ts",
+      "test-d/retry.ts",
+      "test-d/search-params.ts",
+      "test-d/timeout-options.ts",
+      "test-d/url-options.ts",
+      "test/base-url.ts",
+      "test/fetch.ts",
+      "test/headers.ts",
+      "test/hooks.ts",
+      "test/main.ts",
+      "test/methods.ts",
+      "test/network-error.ts",
+      "test/prefix.ts",
+      "test/request-options.ts",
+      "test/retry.ts",
+      "test/stream.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/fetch.ts test/headers.ts test/hooks.ts test/main.ts test/methods.ts test/network-error.ts test/prefix.ts test/request-options.ts test/retry.ts test/stream.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "11-51b31777058c.json"
+  },
+  {
+    "index": 12,
+    "head": "481f6f731b0c311bc2f677604aca3595558b22d1",
+    "base": "96a25cce552a0128653ca8833e95291ae5082509",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Fix bytes shortcut return type for Blob and Response compatibility",
+    "elapsedMs": 2019,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 19,
+    "changedFiles": [
+      "source/types/ResponsePromise.ts",
+      "test-d/response-promise.ts",
+      "test/bytes.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/bytes.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "12-481f6f731b0c.json"
+  },
+  {
+    "index": 13,
+    "head": "96a25cce552a0128653ca8833e95291ae5082509",
+    "base": "e4269f070384e60e1c3fd3be4de9e199c07814c9",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Preserve abort reasons while reading HTTP error bodies",
+    "elapsedMs": 2136,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 19,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "test/http-error.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/http-error.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "13-96a25cce552a.json"
+  },
+  {
+    "index": 14,
+    "head": "e4269f070384e60e1c3fd3be4de9e199c07814c9",
+    "base": "82fa84c7d114f7987ed019be61417288ccc0876e",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Respect custom HTTP method case when matching retries",
+    "elapsedMs": 2553,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 19,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "source/utils/normalize.ts",
+      "test/retry.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/retry.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "14-e4269f070384.json"
+  },
+  {
+    "index": 15,
+    "head": "82fa84c7d114f7987ed019be61417288ccc0876e",
+    "base": "d636438b2dde678f153af2c21f37116f4d064271",
+    "date": "2026-09-12T11:24:38+02:00",
+    "subject": "Enforce total timeout after fetch and body processing",
+    "elapsedMs": 2378,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 3,
+    "total": 19,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "test/http-error.ts",
+      "test/main.ts",
+      "test/retry.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/http-error.ts test/main.ts test/retry.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "15-82fa84c7d114.json"
+  },
+  {
+    "index": 16,
+    "head": "d636438b2dde678f153af2c21f37116f4d064271",
+    "base": "87a96db81480f1cb71e2cd51bce8c454d32b29ee",
+    "date": "2026-09-12T11:24:37+02:00",
+    "subject": "Avoid misidentifying unrelated errors as Ky errors",
+    "elapsedMs": 2373,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 19,
+    "changedFiles": [
+      "source/utils/type-guards.ts",
+      "test/type-guards.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/type-guards.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "16-d636438b2dde.json"
+  },
+  {
+    "index": 17,
+    "head": "87a96db81480f1cb71e2cd51bce8c454d32b29ee",
+    "base": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
+    "date": "2026-09-12T11:24:35+02:00",
+    "subject": "Preserve non-Error values in retry errors and hooks",
+    "elapsedMs": 2432,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 2,
+    "total": 18,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "source/errors/ForceRetryError.ts",
+      "test/hooks.ts",
+      "test/retry.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/hooks.ts test/retry.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "17-87a96db81480.json"
+  },
+  {
+    "index": 18,
+    "head": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
+    "base": "f87efe6f5d8d6067756a80c5120e7782f4ed847e",
+    "date": "2026-09-12T11:24:33+02:00",
+    "subject": "Handle unsupported streaming uploads gracefully",
+    "elapsedMs": 2700,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 2,
+    "total": 18,
+    "changedFiles": [
+      "readme.md",
+      "source/core/constants.ts",
+      "source/types/options.ts",
+      "source/utils/body.ts",
+      "test/request-stream-support.ts",
+      "test/stream.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/request-stream-support.ts test/stream.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "18-06ebf18e1927.json"
+  },
+  {
+    "index": 19,
+    "head": "f87efe6f5d8d6067756a80c5120e7782f4ed847e",
+    "base": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+    "date": "2026-09-12T11:24:32+02:00",
+    "subject": "Preserve request referrer options",
+    "elapsedMs": 1982,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 2,
+    "total": 17,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "source/utils/body.ts",
+      "test/fetch.ts",
+      "test/stream.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/fetch.ts test/stream.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "19-f87efe6f5d8d.json"
+  },
+  {
+    "index": 20,
+    "head": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+    "base": "854608078545442344a29a0714a50b978e6d77e9",
+    "date": "2026-09-12T02:51:40+02:00",
+    "subject": "Fix stale array entries when merging JSON objects",
+    "elapsedMs": 2209,
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 1,
+    "total": 17,
+    "changedFiles": [
+      "source/utils/merge.ts",
+      "test/main.ts"
+    ],
+    "sourceChanged": true,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/main.ts"
+    ],
+    "worktreeUnchanged": true,
+    "report": "20-8cf26e0e78d7.json"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "note": "Unreleased working tree. The paired historical reports predate only the guard classification correction; graph source is unchanged.",
+  "validatedAt": "2026-09-19T15:06:01.4778027Z",
+  "sourceHashes": {
+    "src/cache/graph-cache.ts": "d7895bebdac9e47d706c405ca26195f8cfd7a817d089b12745863e2a61fb8f13",
+    "src/client/workflow-guard.ts": "da02fee938feb779bea5473f8965b9fe0f676fde9b182851bdbe1593a524366e",
+    "src/repo/graph.ts": "7e15d3371f86f34fe6cb82080e8d644cf008f57a810e2e40f9263e6a63baa3ad"
+  },
+  "sourceHead": "d72cc549c5eaa5b29945881c6bbba13df94ead12"
+}

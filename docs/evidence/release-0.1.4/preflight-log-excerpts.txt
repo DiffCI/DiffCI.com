@@ -1,0 +1,7 @@
+Publish diffci to npm	Run npm run check	2026-09-20T04:01:32.1349698Z # tests 2154
+Publish diffci to npm	Run npm run check	2026-09-20T04:01:32.1350042Z # pass 2151
+Publish diffci to npm	Run npm run check	2026-09-20T04:01:32.1350207Z # fail 0
+Publish diffci to npm	Run npm run check	2026-09-20T04:01:32.1350747Z # skipped 3
+Publish diffci to npm	Run npm run check:oss-boundary	2026-09-20T04:01:34.7566500Z OSS boundary passed: @diffci.com/diffci@0.1.4 contains 35 allowed file(s).
+Publish diffci to npm	Run npm run package:smoke	2026-09-20T04:01:37.3744692Z OSS boundary passed: @diffci.com/diffci@0.1.4 contains 35 allowed file(s).
+Publish diffci to npm	Run npm run package:smoke	2026-09-20T04:01:41.8433129Z Package smoke passed: diffci.com-diffci-0.1.4.tgz installed and ran diffci observe.

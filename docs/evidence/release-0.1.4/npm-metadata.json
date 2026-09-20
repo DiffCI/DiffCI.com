@@ -1,0 +1,10 @@
+{
+  "version": "0.1.4",
+  "dist.integrity": "sha512-Z4xrJsm3Y/K3P12DoRRFxyNOBXZ9wphoRuHGHt5kuN2692gzkaKTACQ+U/VjGgHjfh4ggV/1kEsPHFLpkLVK+A==",
+  "dist.attestations": {
+    "url": "https://registry.npmjs.org/-/npm/v1/attestations/@diffci.com%2fdiffci@0.1.4",
+    "provenance": {
+      "predicateType": "https://slsa.dev/provenance/v1"
+    }
+  }
+}

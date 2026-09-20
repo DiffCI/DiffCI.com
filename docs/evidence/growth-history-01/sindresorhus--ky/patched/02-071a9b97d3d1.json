@@ -1,0 +1,132 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T15:00:30.383Z",
+  "observer": {
+    "version": "0.1.3",
+    "engineSha": "d72cc549c5eaa5b29945881c6bbba13df94ead12",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "d6e049a690c7562a72e22d0b1eb57a2d4d19745e",
+    "headSha": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 1,
+    "changedFiles": [
+      "source/core/Ky.ts"
+    ],
+    "affectedSourceFileCount": 16,
+    "selectedTests": [
+      "test/base-url.ts",
+      "test/body-size.ts",
+      "test/browser.ts",
+      "test/bytes.ts",
+      "test/context.ts",
+      "test/fetch.ts",
+      "test/formdata-searchparams.ts",
+      "test/headers.ts",
+      "test/hooks.ts",
+      "test/http-error.ts",
+      "test/http-metadata.ts",
+      "test/http-redirects.ts",
+      "test/http-response-bodies.ts",
+      "test/http-semantics.ts",
+      "test/main.ts",
+      "test/memory-leak.ts",
+      "test/methods.ts",
+      "test/network-error.ts",
+      "test/normalize.ts",
+      "test/prefix.ts",
+      "test/request-body-serialization.ts",
+      "test/request-options.ts",
+      "test/request-stream-support.ts",
+      "test/response-consumption.ts",
+      "test/retry.ts",
+      "test/stream.ts",
+      "test/type-guards.ts"
+    ],
+    "totalTestCount": 29,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/normalize.ts test/prefix.ts test/request-body-serialization.ts test/request-options.ts test/request-stream-support.ts test/response-consumption.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 64,
+      "edges": 148,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 970
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 29,
+      "selectedTests": [
+        "test/base-url.ts",
+        "test/body-size.ts",
+        "test/browser.ts",
+        "test/bytes.ts",
+        "test/context.ts",
+        "test/fetch.ts",
+        "test/formdata-searchparams.ts",
+        "test/headers.ts",
+        "test/hooks.ts",
+        "test/http-error.ts",
+        "test/http-metadata.ts",
+        "test/http-redirects.ts",
+        "test/http-response-bodies.ts",
+        "test/http-semantics.ts",
+        "test/main.ts",
+        "test/memory-leak.ts",
+        "test/methods.ts",
+        "test/network-error.ts",
+        "test/normalize.ts",
+        "test/prefix.ts",
+        "test/request-body-serialization.ts",
+        "test/request-options.ts",
+        "test/request-stream-support.ts",
+        "test/response-consumption.ts",
+        "test/retry-timing.ts",
+        "test/retry.ts",
+        "test/stream.ts",
+        "test/type-guards.ts",
+        "test/with-page.ts"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under test"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+    "headShaAfter": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1932
+  }
+}

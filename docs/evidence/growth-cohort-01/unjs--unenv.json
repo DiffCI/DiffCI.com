@@ -1,0 +1,91 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:49:32.078Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "ab9951988c2028b16d52770fbeb9d43c16f4df3b",
+    "headSha": "f89b7ccb5c05da70b946319783acf1fa1f113e22",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "FULL",
+    "changedFileCount": 2,
+    "changedFiles": [
+      ".github/workflows/autofix.yml",
+      ".github/workflows/ci.yml"
+    ],
+    "affectedSourceFileCount": 0,
+    "selectedTests": [],
+    "totalTestCount": 6,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "GitHub workflow definition(s) changed; full validation required"
+    ],
+    "proposedCommands": [],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [
+      {
+        "level": "critical",
+        "reason": "CONFIG_GLOBAL"
+      },
+      {
+        "level": "critical",
+        "reason": "WORKFLOW_GLOBAL"
+      }
+    ],
+    "graph": {
+      "nodes": 171,
+      "edges": 260,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 1376
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 6,
+      "selectedTests": [
+        "test/env.test.ts",
+        "test/mock.test.ts",
+        "test/node-coverage.test.ts",
+        "test/node-env.test.ts",
+        "test/node.test.ts",
+        "test/workerd.test.ts"
+      ],
+      "matchedRules": [
+        "workflow change -> full fallback"
+      ]
+    },
+    "analysisStatus": "FALLBACK"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "f89b7ccb5c05da70b946319783acf1fa1f113e22",
+    "headShaAfter": "f89b7ccb5c05da70b946319783acf1fa1f113e22",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 2247
+  }
+}

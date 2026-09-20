@@ -1,0 +1,375 @@
+[
+  {
+    "index": 1,
+    "head": "b31898362a111c526271989682aef54b2a15077f",
+    "base": "2d3605a0af7e01fc09d89b4bed4f4d07e85f88a6",
+    "date": "2026-09-17T21:44:41+02:00",
+    "subject": "fix(cookie): include partitioned in the distinct-cookie key (#1553)",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 59,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/app.test.ts test/auth.test.ts test/bench/bench.test.ts test/body-limit.test.ts test/body.test.ts test/cookies.test.ts test/dispose.test.ts test/errors.test.ts test/event.test.ts test/handler.test.ts test/happydom.test.ts test/hooks.test.ts test/integrations.test.ts test/iterable.test.ts test/json-rpc-ws.test.ts test/json-rpc.test.ts test/lazy.test.ts test/middleware.test.ts test/mount.test.ts test/proxy.test.ts test/query.test.ts test/route.test.ts test/router.test.ts test/rules/cache.test.ts test/rules/compiler.test.ts test/rules/encoding.test.ts test/rules/match.test.ts test/rules/memoize.test.ts test/rules/merge.test.ts test/rules/middleware.test.ts test/rules/normalize.test.ts test/rules/premerge.test.ts test/rules/rules.test.ts test/rules/scope.test.ts test/rules/treeshake.test.ts test/security.test.ts test/session.test.ts test/sse.test.ts test/static.test.ts test/status.test.ts test/stream.test.ts test/tracing.test.ts test/unit/body-limit.test.ts test/unit/cookie-perf.test.ts test/unit/cookie-validation.test.ts test/unit/cors.test.ts test/unit/event.test.ts test/unit/h3.test.ts test/unit/meta.test.ts test/unit/middleware.test.ts test/unit/package.test.ts test/unit/proxy.test.ts test/unit/request.test.ts test/unit/route-normalize.test.ts test/unit/sse.test.ts test/unit/timing.test.ts test/utils.test.ts test/validate.test.ts test/ws.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "01-b31898362a11.json"
+  },
+  {
+    "index": 2,
+    "head": "2d3605a0af7e01fc09d89b4bed4f4d07e85f88a6",
+    "base": "a8a803beb98613677317a2bc5fe0a3017fd98db8",
+    "date": "2026-09-17T21:43:18+02:00",
+    "subject": "types(auth): basicAuth context fields are always set (#1550)",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 59,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/app.test.ts test/auth.test.ts test/bench/bench.test.ts test/body-limit.test.ts test/body.test.ts test/cookies.test.ts test/dispose.test.ts test/errors.test.ts test/event.test.ts test/handler.test.ts test/happydom.test.ts test/hooks.test.ts test/integrations.test.ts test/iterable.test.ts test/json-rpc-ws.test.ts test/json-rpc.test.ts test/lazy.test.ts test/middleware.test.ts test/mount.test.ts test/proxy.test.ts test/query.test.ts test/route.test.ts test/router.test.ts test/rules/cache.test.ts test/rules/compiler.test.ts test/rules/encoding.test.ts test/rules/match.test.ts test/rules/memoize.test.ts test/rules/merge.test.ts test/rules/middleware.test.ts test/rules/normalize.test.ts test/rules/premerge.test.ts test/rules/rules.test.ts test/rules/scope.test.ts test/rules/treeshake.test.ts test/security.test.ts test/session.test.ts test/sse.test.ts test/static.test.ts test/status.test.ts test/stream.test.ts test/tracing.test.ts test/unit/body-limit.test.ts test/unit/cookie-perf.test.ts test/unit/cookie-validation.test.ts test/unit/cors.test.ts test/unit/event.test.ts test/unit/h3.test.ts test/unit/meta.test.ts test/unit/middleware.test.ts test/unit/package.test.ts test/unit/proxy.test.ts test/unit/request.test.ts test/unit/route-normalize.test.ts test/unit/sse.test.ts test/unit/timing.test.ts test/utils.test.ts test/validate.test.ts test/ws.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "02-2d3605a0af7e.json"
+  },
+  {
+    "index": 3,
+    "head": "a8a803beb98613677317a2bc5fe0a3017fd98db8",
+    "base": "bce4ae8dbe41dfae14e96aeed4255c060f19f46b",
+    "date": "2026-09-15T13:02:58+02:00",
+    "subject": "docs: document raw query access via event.url.search (#1551)",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 59,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/app.test.ts test/auth.test.ts test/bench/bench.test.ts test/body-limit.test.ts test/body.test.ts test/cookies.test.ts test/dispose.test.ts test/errors.test.ts test/event.test.ts test/handler.test.ts test/happydom.test.ts test/hooks.test.ts test/integrations.test.ts test/iterable.test.ts test/json-rpc-ws.test.ts test/json-rpc.test.ts test/lazy.test.ts test/middleware.test.ts test/mount.test.ts test/proxy.test.ts test/query.test.ts test/route.test.ts test/router.test.ts test/rules/cache.test.ts test/rules/compiler.test.ts test/rules/encoding.test.ts test/rules/match.test.ts test/rules/memoize.test.ts test/rules/merge.test.ts test/rules/middleware.test.ts test/rules/normalize.test.ts test/rules/premerge.test.ts test/rules/rules.test.ts test/rules/scope.test.ts test/rules/treeshake.test.ts test/security.test.ts test/session.test.ts test/sse.test.ts test/static.test.ts test/status.test.ts test/stream.test.ts test/tracing.test.ts test/unit/body-limit.test.ts test/unit/cookie-perf.test.ts test/unit/cookie-validation.test.ts test/unit/cors.test.ts test/unit/event.test.ts test/unit/h3.test.ts test/unit/meta.test.ts test/unit/middleware.test.ts test/unit/package.test.ts test/unit/proxy.test.ts test/unit/request.test.ts test/unit/route-normalize.test.ts test/unit/sse.test.ts test/unit/timing.test.ts test/utils.test.ts test/validate.test.ts test/ws.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "03-a8a803beb986.json"
+  },
+  {
+    "index": 4,
+    "head": "bce4ae8dbe41dfae14e96aeed4255c060f19f46b",
+    "base": "60d883f4388c4bcf050ad9ddf97bc9477c754e2d",
+    "date": "2026-09-14T18:44:15Z",
+    "subject": "chore(release): v2.0.1-rc.32",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "04-bce4ae8dbe41.json"
+  },
+  {
+    "index": 5,
+    "head": "60d883f4388c4bcf050ad9ddf97bc9477c754e2d",
+    "base": "ae529f1416a11a5d7453212ee1a0c48701a8cca7",
+    "date": "2026-09-14T18:33:40Z",
+    "subject": "chore: update deps",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Dependency manifest changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "05-60d883f4388c.json"
+  },
+  {
+    "index": 6,
+    "head": "ae529f1416a11a5d7453212ee1a0c48701a8cca7",
+    "base": "516c2a0ad0e4917ec71ba54fc3b2954d3078c9b4",
+    "date": "2026-09-14T18:32:38Z",
+    "subject": "types(handler): use request header names for `req.headers`",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 59,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/app.test.ts test/auth.test.ts test/bench/bench.test.ts test/body-limit.test.ts test/body.test.ts test/cookies.test.ts test/dispose.test.ts test/errors.test.ts test/event.test.ts test/handler.test.ts test/happydom.test.ts test/hooks.test.ts test/integrations.test.ts test/iterable.test.ts test/json-rpc-ws.test.ts test/json-rpc.test.ts test/lazy.test.ts test/middleware.test.ts test/mount.test.ts test/proxy.test.ts test/query.test.ts test/route.test.ts test/router.test.ts test/rules/cache.test.ts test/rules/compiler.test.ts test/rules/encoding.test.ts test/rules/match.test.ts test/rules/memoize.test.ts test/rules/merge.test.ts test/rules/middleware.test.ts test/rules/normalize.test.ts test/rules/premerge.test.ts test/rules/rules.test.ts test/rules/scope.test.ts test/rules/treeshake.test.ts test/security.test.ts test/session.test.ts test/sse.test.ts test/static.test.ts test/status.test.ts test/stream.test.ts test/tracing.test.ts test/unit/body-limit.test.ts test/unit/cookie-perf.test.ts test/unit/cookie-validation.test.ts test/unit/cors.test.ts test/unit/event.test.ts test/unit/h3.test.ts test/unit/meta.test.ts test/unit/middleware.test.ts test/unit/package.test.ts test/unit/proxy.test.ts test/unit/request.test.ts test/unit/route-normalize.test.ts test/unit/sse.test.ts test/unit/timing.test.ts test/utils.test.ts test/validate.test.ts test/ws.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "06-ae529f1416a1.json"
+  },
+  {
+    "index": 7,
+    "head": "516c2a0ad0e4917ec71ba54fc3b2954d3078c9b4",
+    "base": "5e6603cd7507bb94511de720a6dc2d584abbc494",
+    "date": "2026-09-14T20:23:55+02:00",
+    "subject": "feat: export `normalizeRoute` as a public path utility (#1549)",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 54,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/app.test.ts test/auth.test.ts test/bench/bench.test.ts test/body-limit.test.ts test/body.test.ts test/cookies.test.ts test/dispose.test.ts test/errors.test.ts test/event.test.ts test/handler.test.ts test/happydom.test.ts test/hooks.test.ts test/integrations.test.ts test/iterable.test.ts test/json-rpc-ws.test.ts test/json-rpc.test.ts test/lazy.test.ts test/middleware.test.ts test/mount.test.ts test/proxy.test.ts test/query.test.ts test/router.test.ts test/rules/cache.test.ts test/rules/compiler.test.ts test/rules/encoding.test.ts test/rules/match.test.ts test/rules/memoize.test.ts test/rules/merge.test.ts test/rules/middleware.test.ts test/rules/normalize.test.ts test/rules/premerge.test.ts test/rules/rules.test.ts test/rules/scope.test.ts test/rules/treeshake.test.ts test/security.test.ts test/session.test.ts test/sse.test.ts test/static.test.ts test/status.test.ts test/stream.test.ts test/tracing.test.ts test/unit/body-limit.test.ts test/unit/cookie-validation.test.ts test/unit/cors.test.ts test/unit/middleware.test.ts test/unit/package.test.ts test/unit/path.test.ts test/unit/request.test.ts test/unit/route-normalize.test.ts test/unit/sse.test.ts test/unit/timing.test.ts test/utils.test.ts test/validate.test.ts test/ws.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "07-516c2a0ad0e4.json"
+  },
+  {
+    "index": 8,
+    "head": "5e6603cd7507bb94511de720a6dc2d584abbc494",
+    "base": "e6b726bb35523693167d6c0deea059c8d14a4851",
+    "date": "2026-09-14T20:23:06+02:00",
+    "subject": "build: export `TypedHeaders` type (#1547)",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 46,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/app.test.ts test/auth.test.ts test/bench/bench.test.ts test/body-limit.test.ts test/body.test.ts test/cookies.test.ts test/dispose.test.ts test/errors.test.ts test/event.test.ts test/handler.test.ts test/happydom.test.ts test/hooks.test.ts test/integrations.test.ts test/iterable.test.ts test/json-rpc-ws.test.ts test/json-rpc.test.ts test/lazy.test.ts test/middleware.test.ts test/mount.test.ts test/proxy.test.ts test/query.test.ts test/router.test.ts test/rules/cache.test.ts test/rules/encoding.test.ts test/rules/match.test.ts test/rules/memoize.test.ts test/rules/middleware.test.ts test/rules/rules.test.ts test/security.test.ts test/session.test.ts test/sse.test.ts test/static.test.ts test/status.test.ts test/stream.test.ts test/tracing.test.ts test/unit/body-limit.test.ts test/unit/cookie-validation.test.ts test/unit/cors.test.ts test/unit/middleware.test.ts test/unit/package.test.ts test/unit/request.test.ts test/unit/sse.test.ts test/unit/timing.test.ts test/utils.test.ts test/validate.test.ts test/ws.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "08-5e6603cd7507.json"
+  },
+  {
+    "index": 9,
+    "head": "e6b726bb35523693167d6c0deea059c8d14a4851",
+    "base": "b5d20d528d05926c26fee414eecaa1d04abaaadb",
+    "date": "2026-09-14T18:13:22Z",
+    "subject": "fix(error): require `status` in `HTTPError.isError`",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 59,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/app.test.ts test/auth.test.ts test/bench/bench.test.ts test/body-limit.test.ts test/body.test.ts test/cookies.test.ts test/dispose.test.ts test/errors.test.ts test/event.test.ts test/handler.test.ts test/happydom.test.ts test/hooks.test.ts test/integrations.test.ts test/iterable.test.ts test/json-rpc-ws.test.ts test/json-rpc.test.ts test/lazy.test.ts test/middleware.test.ts test/mount.test.ts test/proxy.test.ts test/query.test.ts test/route.test.ts test/router.test.ts test/rules/cache.test.ts test/rules/compiler.test.ts test/rules/encoding.test.ts test/rules/match.test.ts test/rules/memoize.test.ts test/rules/merge.test.ts test/rules/middleware.test.ts test/rules/normalize.test.ts test/rules/premerge.test.ts test/rules/rules.test.ts test/rules/scope.test.ts test/rules/treeshake.test.ts test/security.test.ts test/session.test.ts test/sse.test.ts test/static.test.ts test/status.test.ts test/stream.test.ts test/tracing.test.ts test/unit/body-limit.test.ts test/unit/cookie-perf.test.ts test/unit/cookie-validation.test.ts test/unit/cors.test.ts test/unit/event.test.ts test/unit/h3.test.ts test/unit/meta.test.ts test/unit/middleware.test.ts test/unit/package.test.ts test/unit/proxy.test.ts test/unit/request.test.ts test/unit/route-normalize.test.ts test/unit/sse.test.ts test/unit/timing.test.ts test/utils.test.ts test/validate.test.ts test/ws.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "09-e6b726bb3552.json"
+  },
+  {
+    "index": 10,
+    "head": "b5d20d528d05926c26fee414eecaa1d04abaaadb",
+    "base": "aa50e96a4a3da1732aa54542c498b37e0f8e3508",
+    "date": "2026-09-14T18:13:22Z",
+    "subject": "fix: handle srvx body limit errors as 413",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 1,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Dependency manifest changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "10-b5d20d528d05.json"
+  },
+  {
+    "index": 11,
+    "head": "aa50e96a4a3da1732aa54542c498b37e0f8e3508",
+    "base": "a5fdc86a6075506d71510aa5208739aa0b2bec29",
+    "date": "2026-09-08T00:09:19+02:00",
+    "subject": "types(handler): infer route handler request type instead of any (#1546)",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 59,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/app.test.ts test/auth.test.ts test/bench/bench.test.ts test/body-limit.test.ts test/body.test.ts test/cookies.test.ts test/dispose.test.ts test/errors.test.ts test/event.test.ts test/handler.test.ts test/happydom.test.ts test/hooks.test.ts test/integrations.test.ts test/iterable.test.ts test/json-rpc-ws.test.ts test/json-rpc.test.ts test/lazy.test.ts test/middleware.test.ts test/mount.test.ts test/proxy.test.ts test/query.test.ts test/route.test.ts test/router.test.ts test/rules/cache.test.ts test/rules/compiler.test.ts test/rules/encoding.test.ts test/rules/match.test.ts test/rules/memoize.test.ts test/rules/merge.test.ts test/rules/middleware.test.ts test/rules/normalize.test.ts test/rules/premerge.test.ts test/rules/rules.test.ts test/rules/scope.test.ts test/rules/treeshake.test.ts test/security.test.ts test/session.test.ts test/sse.test.ts test/static.test.ts test/status.test.ts test/stream.test.ts test/tracing.test.ts test/unit/body-limit.test.ts test/unit/cookie-perf.test.ts test/unit/cookie-validation.test.ts test/unit/cors.test.ts test/unit/event.test.ts test/unit/h3.test.ts test/unit/meta.test.ts test/unit/middleware.test.ts test/unit/package.test.ts test/unit/proxy.test.ts test/unit/request.test.ts test/unit/route-normalize.test.ts test/unit/sse.test.ts test/unit/timing.test.ts test/utils.test.ts test/validate.test.ts test/ws.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "11-aa50e96a4a3d.json"
+  },
+  {
+    "index": 12,
+    "head": "a5fdc86a6075506d71510aa5208739aa0b2bec29",
+    "base": "b6c7d083d8f4123c77b7a7e35757bd0c63df7b1c",
+    "date": "2026-09-04T16:12:01Z",
+    "subject": "chore: update deps",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Dependency manifest changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "12-a5fdc86a6075.json"
+  },
+  {
+    "index": 13,
+    "head": "b6c7d083d8f4123c77b7a7e35757bd0c63df7b1c",
+    "base": "7f5f106a0b5a96d8f48adcc155ec6676fa35d55c",
+    "date": "2026-09-04T15:59:21Z",
+    "subject": "fix(route-rules): pass uncacheable requests through the cache rule",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 6,
+    "total": 71,
+    "fallbackReasons": [],
+    "commands": [
+      "pnpm exec vitest run test/rules/cache.test.ts test/rules/compiler.test.ts test/rules/merge.test.ts test/rules/middleware.test.ts test/rules/normalize.test.ts test/rules/premerge.test.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "13-b6c7d083d8f4.json"
+  },
+  {
+    "index": 14,
+    "head": "7f5f106a0b5a96d8f48adcc155ec6676fa35d55c",
+    "base": "bae31f320e4b94e1613060a2aa74a590059f1a39",
+    "date": "2026-09-03T22:40:01Z",
+    "subject": "chore: apply automated updates",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "14-7f5f106a0b5a.json"
+  },
+  {
+    "index": 15,
+    "head": "bae31f320e4b94e1613060a2aa74a590059f1a39",
+    "base": "df811cd872015ced1cb21e30d42ec20c9f79cbc3",
+    "date": "2026-09-03T22:39:28Z",
+    "subject": "chore: update lockfile",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "15-bae31f320e4b.json"
+  },
+  {
+    "index": 16,
+    "head": "df811cd872015ced1cb21e30d42ec20c9f79cbc3",
+    "base": "6075f8a2fc8b2dc30b4af5870db582ffcd68c948",
+    "date": "2026-09-03T22:39:10Z",
+    "subject": "chore(release): v2.0.1-rc.31",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "16-df811cd87201.json"
+  },
+  {
+    "index": 17,
+    "head": "6075f8a2fc8b2dc30b4af5870db582ffcd68c948",
+    "base": "00c0d3f3c30f93866822ab5cfb24bbb64bbaeacb",
+    "date": "2026-09-03T22:38:55Z",
+    "subject": "chore: apply automated updates",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "17-6075f8a2fc8b.json"
+  },
+  {
+    "index": 18,
+    "head": "00c0d3f3c30f93866822ab5cfb24bbb64bbaeacb",
+    "base": "21a26d9067c86330a325e872624d771a7a19d42e",
+    "date": "2026-09-03T22:38:23Z",
+    "subject": "chore: update lockfile",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "18-00c0d3f3c30f.json"
+  },
+  {
+    "index": 19,
+    "head": "21a26d9067c86330a325e872624d771a7a19d42e",
+    "base": "1316ffbca77618d5377f526d6e00713b0525ec94",
+    "date": "2026-09-03T22:37:18Z",
+    "subject": "chore: apply automated updates",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "19-21a26d9067c8.json"
+  },
+  {
+    "index": 20,
+    "head": "1316ffbca77618d5377f526d6e00713b0525ec94",
+    "base": "c460ebe6fe296f112a9ee2a008c9e335e7d2dc36",
+    "date": "2026-09-03T22:36:43Z",
+    "subject": "chore: update deps",
+    "status": "OBSERVED",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Dependency manifest changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "commands": [],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "20-1316ffbca776.json"
+  }
+]

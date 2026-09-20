@@ -1,0 +1,10 @@
+DiffCI observation: OBSERVED (complete)
+  range: ab9951988c20..f89b7ccb5c05 (explicit-flags)
+  verdict: FULL
+  selection: 0/6 test files, from 2 changed file(s)
+  comparator: a simple path-rule CI would have run everything
+  graph: 171 nodes, confidence COMPLETE
+  fallback: Configuration file(s) changed; full validation required; GitHub workflow definition(s) changed; full validation required
+  non-interference: worktree unchanged, report written outside the checkout
+  DiffCI changed nothing: no test was run, skipped, cancelled or re-ordered by this step.
+  report: C:\Users\SWATIK~1\AppData\Local\Temp\diffci-growth-20260919\unjs--unenv.json

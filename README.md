@@ -4,28 +4,71 @@
 [![npm provenance](https://img.shields.io/badge/npm-provenance-blue)](https://docs.npmjs.com/generating-provenance-statements)
 [![GitHub Action](https://img.shields.io/badge/action-DiffCI%2FDiffCI.com%40v0.1.4-blue)](https://github.com/DiffCI/DiffCI.com)
 
-DiffCI is a deterministic, change-aware CI planner: given a commit or PR, it builds a real TypeScript
-dependency graph, computes what's actually reachable from the changed files, and proposes which CI
-tasks/tests could safely be skipped - without ever modifying production CI behavior itself. Every mode
-this repository currently implements is observe-and-compare only; nothing here can cancel, skip, or block
-a real CI run.
+**Find test-selection opportunities in your CI before changing what it runs.** DiffCI analyzes a
+commit's changes and dependency graph, then reports which test files it would select, why it falls
+back to a full run, and whether it can propose a test command. The CLI and Action are observation-only.
 
-Try it in shadow mode:
+From an existing repository checkout, with Node.js 22.5+ and Git installed:
 
 ```bash
-npx @diffci.com/diffci@latest observe
-npx @diffci.com/diffci@latest verify-workflow
+npx @diffci.com/diffci@latest observe --no-send
 ```
 
-Or install it as a non-blocking GitHub Action:
+**Upgrade from 0.1.3:** tests excluded by a source-only `tsconfig.json` could be discovered without
+their dependency edges, producing an incomplete selection. This is fixed in **0.1.4**. Revalidate
+affected observations before using them as opportunity evidence; see the
+[historical validation](docs/evidence/growth-history-01/README.md) and
+[release qualification](docs/evidence/release-0.1.4/README.md).
+
+The local default compares `HEAD` with its first parent; both commits must be available. For a specific
+comparison, add `--base <base-sha> --head <head-sha>`. DiffCI prints the selection, fallback reasons,
+and the path to a JSON report outside your checkout. `REFUSED` or `ERROR` is not a successful analysis;
+check the reported status even when the command exits successfully. See the
+[support matrix](docs/language-support.md) for setup requirements and supported workloads.
+
+**Measured example:** a controlled Cal.com replay showed **44.2% net reduction in a job-equivalent
+install + pretest + test workload**, including analysis overhead. This is one sandbox comparison,
+not Cal.com's production savings or a prediction for your repository.
+[Read the timings and method](docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md).
+
+Selection counts alone do not establish runtime savings. Observation mode measures neither the
+selected test execution nor realized savings.
+
+For a self-serve paired runtime check, run `observe` first and then run `verify-savings` against the
+observation report. It compares your normal full command with
+DiffCI's proposed selected command and writes JSON plus Markdown evidence; see
+[`docs/npm-adoption.md`](docs/npm-adoption.md#self-serve-runtime-pilot).
+
+## Observe in GitHub Actions
+
+Save this as `.github/workflows/diffci.yml` to add a dedicated, non-blocking observation job:
 
 ```yaml
-- uses: DiffCI/DiffCI.com@v0.1.4
+name: DiffCI observation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  diffci:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6
 ```
 
-The promise is deliberately narrow: DiffCI observes your CI and reports what it would have selected.
-It does not skip tests, cancel jobs, change required checks, or send reports anywhere unless you
-explicitly configure an endpoint and token.
+Then check the workflow locally with `npx @diffci.com/diffci@latest verify-workflow`. Keep the observer
+out of required checks and other jobs' `needs` lists. The Action adds a job summary and a
+`diffci-observation` artifact to the run; it does not alter which tests your other jobs execute.
+The example pins release `v0.1.4` to its full commit SHA for reproducibility.
+
+The CLI sends no report with `--no-send`. The Action uploads a GitHub artifact by default; sending to
+DiffCI's hosted service requires an explicitly configured endpoint and token.
+[Installation details](docs/distribution.md) · [Seven-day pilot](docs/shadow-pilot-runbook.md)
+
+## Project background
 
 **This repository moved out of the [DentalPresence.in](https://github.com/adityankale190895/DentalPresence.in)
 monorepo** (previously `diffci/` there) into its own repo on 2026-08-21, once the project outgrew being a
@@ -136,7 +179,7 @@ npm run research:sandbox:deploy
 DiffCI is intended to be installable as infrastructure, not only as a hosted shadow experiment:
 
 ```yaml
-- uses: DiffCI/DiffCI.com@v0.1.4
+- uses: DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6
 ```
 
 ```bash

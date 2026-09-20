@@ -1,0 +1,10 @@
+{
+  "builtAt": "2026-09-19T14:57:47.037Z",
+  "kind": "unreleased working-tree build; package version field remains 0.1.3 and must not be confused with the published package",
+  "sourceHead": "d72cc549c5eaa5b29945881c6bbba13df94ead12",
+  "sourceHashes": {
+    "src/repo/graph.ts": "7e15d3371f86f34fe6cb82080e8d644cf008f57a810e2e40f9263e6a63baa3ad",
+    "src/cache/graph-cache.ts": "d7895bebdac9e47d706c405ca26195f8cfd7a817d089b12745863e2a61fb8f13"
+  },
+  "compiledGraphSha256": "d23dcef180c46324d7853d4e7e875071efa1189e16ca37bf5f87fa14d71bb2de"
+}

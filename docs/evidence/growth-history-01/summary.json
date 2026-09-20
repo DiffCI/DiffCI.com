@@ -1,0 +1,22 @@
+[
+  {
+    "repository": "h3js/h3",
+    "deltas": 20,
+    "sourceChangingDeltas": 9,
+    "baselineSelective": 9,
+    "patchedSelective": 9,
+    "full": 11,
+    "changedSelections": 0,
+    "runtimeSavings": "not measured"
+  },
+  {
+    "repository": "sindresorhus/ky",
+    "deltas": 20,
+    "sourceChangingDeltas": 19,
+    "baselineSelective": 20,
+    "patchedSelective": 20,
+    "full": 0,
+    "changedSelections": 19,
+    "runtimeSavings": "not measured"
+  }
+]

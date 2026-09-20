@@ -1,0 +1,93 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:49:49.500Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+    "headSha": "f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "FULL",
+    "changedFileCount": 2,
+    "changedFiles": [
+      "CHANGELOG.md",
+      "package.json"
+    ],
+    "affectedSourceFileCount": 0,
+    "selectedTests": [],
+    "totalTestCount": 13,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required"
+    ],
+    "proposedCommands": [],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [
+      {
+        "level": "critical",
+        "reason": "CONFIG_GLOBAL"
+      }
+    ],
+    "graph": {
+      "nodes": 20,
+      "edges": 17,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 787
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 13,
+      "selectedTests": [
+        "test/base.test.ts",
+        "test/double-slash.test.ts",
+        "test/encoding.test.ts",
+        "test/is-same.test.ts",
+        "test/join.test.ts",
+        "test/normalize.test.ts",
+        "test/parse.test.ts",
+        "test/punycode.test.ts",
+        "test/query.test.ts",
+        "test/resolve.test.ts",
+        "test/trailing-slash.test.ts",
+        "test/url.test.ts",
+        "test/utilities.test.ts"
+      ],
+      "matchedRules": [
+        "config/dependency -> full fallback"
+      ]
+    },
+    "analysisStatus": "FALLBACK"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6",
+    "headShaAfter": "f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1775
+  }
+}

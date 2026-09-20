@@ -1,0 +1,10 @@
+DiffCI observation: OBSERVED (complete)
+  range: 071a9b97d3d1..0d59458a0a58 (explicit-flags)
+  verdict: SELECTIVE
+  selection: 3/30 test files, from 15 changed file(s)
+  comparator: a simple path-rule CI would have run everything
+  graph: 61 nodes, confidence COMPLETE
+  would have run: npx --no-install ava test/browser.ts test/response-size.ts test/stream.ts
+  non-interference: worktree unchanged, report written outside the checkout
+  DiffCI changed nothing: no test was run, skipped, cancelled or re-ordered by this step.
+  report: C:\Users\SWATIK~1\AppData\Local\Temp\diffci-growth-20260919\sindresorhus--ky.json

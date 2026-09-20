@@ -1,0 +1,9 @@
+✔ a failed run preserves its evidence (6.2082ms)
+ℹ tests 2151
+ℹ suites 438
+ℹ pass 2147
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 4
+ℹ todo 0
+ℹ duration_ms 74297.6882

@@ -1,0 +1,100 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:56:34.260Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "52b8f93e076e1614a3f62162052a8723b10ca5ac",
+    "headSha": "e58817d490cba99c97820a39f239272ffdb92881",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 4,
+    "changedFiles": [
+      "source/types/options.ts",
+      "source/utils/timeout.ts",
+      "test-d/fetch-request.ts",
+      "test/fetch.ts"
+    ],
+    "affectedSourceFileCount": 16,
+    "selectedTests": [
+      "test/fetch.ts"
+    ],
+    "totalTestCount": 21,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "npx --no-install ava test/fetch.ts"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 51,
+      "edges": 85,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 521
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 21,
+      "selectedTests": [
+        "test/base-url.ts",
+        "test/body-size.ts",
+        "test/browser.ts",
+        "test/bytes.ts",
+        "test/context.ts",
+        "test/fetch.ts",
+        "test/formdata-searchparams.ts",
+        "test/headers.ts",
+        "test/hooks.ts",
+        "test/http-error.ts",
+        "test/main.ts",
+        "test/memory-leak.ts",
+        "test/methods.ts",
+        "test/network-error.ts",
+        "test/prefix.ts",
+        "test/request-options.ts",
+        "test/request-stream-support.ts",
+        "test/retry.ts",
+        "test/stream.ts",
+        "test/type-guards.ts",
+        "test/with-page.ts"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under test"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "e58817d490cba99c97820a39f239272ffdb92881",
+    "headShaAfter": "e58817d490cba99c97820a39f239272ffdb92881",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1429
+  }
+}

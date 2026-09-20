@@ -1,0 +1,11 @@
+tests	Set up job	2026-09-20T04:00:01.7562452Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+tests	Set up job	2026-09-20T04:00:01.8435839Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+tests	Run npm test	2026-09-20T04:00:03.2323454Z # tests 2
+tests	Run npm test	2026-09-20T04:00:03.2325094Z # pass 2
+diffci	Set up job	2026-09-20T04:00:02.1151512Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+diffci	Set up job	2026-09-20T04:00:02.2780566Z Download action repository 'DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6' (SHA:dee4f7b938a7720d077c1124ef2ea050aa2625d6)
+diffci	Set up job	2026-09-20T04:00:05.9344878Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+diffci	Set up job	2026-09-20T04:00:06.0674333Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+diffci	Run DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6	2026-09-20T04:00:10.8317891Z DiffCI observation: OBSERVED (complete)
+diffci	Run DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6	2026-09-20T04:00:10.8319408Z   selection: 1/2 test files, from 1 changed file(s)
+diffci	Run DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6	2026-09-20T04:00:10.8320825Z   non-interference: worktree unchanged, report written outside the checkout

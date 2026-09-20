@@ -1,0 +1,162 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T15:00:23.498Z",
+  "observer": {
+    "version": "0.1.3",
+    "engineSha": "d72cc549c5eaa5b29945881c6bbba13df94ead12",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "c460ebe6fe296f112a9ee2a008c9e335e7d2dc36",
+    "headSha": "1316ffbca77618d5377f526d6e00713b0525ec94",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "FULL",
+    "changedFileCount": 2,
+    "changedFiles": [
+      "package.json",
+      "pnpm-lock.yaml"
+    ],
+    "affectedSourceFileCount": 0,
+    "selectedTests": [],
+    "totalTestCount": 71,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Dependency manifest changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "proposedCommands": [],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [
+      {
+        "level": "critical",
+        "reason": "CONFIG_GLOBAL"
+      },
+      {
+        "level": "critical",
+        "reason": "DEPENDENCY_MANIFEST"
+      },
+      {
+        "level": "critical",
+        "reason": "LOCKFILE_GLOBAL"
+      }
+    ],
+    "graph": {
+      "nodes": 175,
+      "edges": 591,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 2660
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 71,
+      "selectedTests": [
+        "test/app.test.ts",
+        "test/auth.test.ts",
+        "test/bench/bench.test.ts",
+        "test/bench/bundle.test.ts",
+        "test/body-limit.test.ts",
+        "test/body.test.ts",
+        "test/cookies.test.ts",
+        "test/dispose.test.ts",
+        "test/dist.test.ts",
+        "test/errors.test.ts",
+        "test/event.test.ts",
+        "test/handler.test.ts",
+        "test/happydom.test.ts",
+        "test/hooks.test.ts",
+        "test/integrations.test.ts",
+        "test/iterable.test.ts",
+        "test/json-rpc-ws.test.ts",
+        "test/json-rpc.test.ts",
+        "test/lazy.test.ts",
+        "test/middleware.test.ts",
+        "test/mount.test.ts",
+        "test/proxy.test.ts",
+        "test/query.test.ts",
+        "test/route.test.ts",
+        "test/router.test.ts",
+        "test/rules/cache.test.ts",
+        "test/rules/compiler.test.ts",
+        "test/rules/encoding.test.ts",
+        "test/rules/match.test.ts",
+        "test/rules/memoize.test.ts",
+        "test/rules/merge.test.ts",
+        "test/rules/middleware.test.ts",
+        "test/rules/normalize.test.ts",
+        "test/rules/premerge.test.ts",
+        "test/rules/rules.test.ts",
+        "test/rules/scope.test.ts",
+        "test/rules/treeshake.test.ts",
+        "test/security.test.ts",
+        "test/session.test.ts",
+        "test/sse.test.ts",
+        "test/static.test.ts",
+        "test/status.test.ts",
+        "test/stream.test.ts",
+        "test/tracing.test.ts",
+        "test/unit/auth.test.ts",
+        "test/unit/body-limit.test.ts",
+        "test/unit/cli.test.ts",
+        "test/unit/cookie-perf.test.ts",
+        "test/unit/cookie-validation.test.ts",
+        "test/unit/cors.test.ts",
+        "test/unit/encoding.test.ts",
+        "test/unit/event.test.ts",
+        "test/unit/h3.test.ts",
+        "test/unit/iron-crypto.test.ts",
+        "test/unit/iterable.test.ts",
+        "test/unit/meta.test.ts",
+        "test/unit/middleware.test.ts",
+        "test/unit/mime.test.ts",
+        "test/unit/package.test.ts",
+        "test/unit/path.test.ts",
+        "test/unit/proxy.test.ts",
+        "test/unit/query.test.ts",
+        "test/unit/request.test.ts",
+        "test/unit/route-matcher.test.ts",
+        "test/unit/route-normalize.test.ts",
+        "test/unit/sanitize.test.ts",
+        "test/unit/sse.test.ts",
+        "test/unit/timing.test.ts",
+        "test/utils.test.ts",
+        "test/validate.test.ts",
+        "test/ws.test.ts"
+      ],
+      "matchedRules": [
+        "config/dependency -> full fallback"
+      ]
+    },
+    "analysisStatus": "FALLBACK"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "1316ffbca77618d5377f526d6e00713b0525ec94",
+    "headShaAfter": "1316ffbca77618d5377f526d6e00713b0525ec94",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 4016
+  }
+}

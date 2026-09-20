@@ -1,0 +1,49 @@
+{
+  "published-0.1.3": {
+    "confidence": "COMPLETE",
+    "mainTestDependencies": [],
+    "coreDependentTests": [],
+    "unresolved": [],
+    "edges": 90
+  },
+  "unreleased-patch": {
+    "confidence": "COMPLETE",
+    "mainTestDependencies": [
+      "source/index.ts",
+      "test/helpers/create-http-test-server.ts",
+      "test/helpers/parse-body.ts"
+    ],
+    "coreDependentTests": [
+      "test/base-url.ts",
+      "test/body-size.ts",
+      "test/browser.ts",
+      "test/bytes.ts",
+      "test/context.ts",
+      "test/fetch.ts",
+      "test/formdata-searchparams.ts",
+      "test/headers.ts",
+      "test/hooks.ts",
+      "test/http-error.ts",
+      "test/http-metadata.ts",
+      "test/http-redirects.ts",
+      "test/http-response-bodies.ts",
+      "test/http-semantics.ts",
+      "test/main.ts",
+      "test/memory-leak.ts",
+      "test/methods.ts",
+      "test/network-error.ts",
+      "test/normalize.ts",
+      "test/prefix.ts",
+      "test/request-body-serialization.ts",
+      "test/request-options.ts",
+      "test/request-stream-support.ts",
+      "test/response-consumption.ts",
+      "test/response-size.ts",
+      "test/retry.ts",
+      "test/stream.ts",
+      "test/type-guards.ts"
+    ],
+    "unresolved": [],
+    "edges": 155
+  }
+}

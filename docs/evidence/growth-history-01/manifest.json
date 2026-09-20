@@ -1,0 +1,259 @@
+{
+  "frozenAt": "2026-09-19T14:54:26.265Z",
+  "observer": "0.1.3",
+  "sampleRule": "20 most recent first-parent default-branch deltas, all change types retained; each head checked out before analysis; no target dependencies installed or target code executed",
+  "repositories": [
+    {
+      "repository": "h3js/h3",
+      "slug": "h3js--h3",
+      "revisions": [
+        {
+          "head": "b31898362a111c526271989682aef54b2a15077f",
+          "base": "2d3605a0af7e01fc09d89b4bed4f4d07e85f88a6",
+          "date": "2026-09-17T21:44:41+02:00",
+          "subject": "fix(cookie): include partitioned in the distinct-cookie key (#1553)"
+        },
+        {
+          "head": "2d3605a0af7e01fc09d89b4bed4f4d07e85f88a6",
+          "base": "a8a803beb98613677317a2bc5fe0a3017fd98db8",
+          "date": "2026-09-17T21:43:18+02:00",
+          "subject": "types(auth): basicAuth context fields are always set (#1550)"
+        },
+        {
+          "head": "a8a803beb98613677317a2bc5fe0a3017fd98db8",
+          "base": "bce4ae8dbe41dfae14e96aeed4255c060f19f46b",
+          "date": "2026-09-15T13:02:58+02:00",
+          "subject": "docs: document raw query access via event.url.search (#1551)"
+        },
+        {
+          "head": "bce4ae8dbe41dfae14e96aeed4255c060f19f46b",
+          "base": "60d883f4388c4bcf050ad9ddf97bc9477c754e2d",
+          "date": "2026-09-14T18:44:15Z",
+          "subject": "chore(release): v2.0.1-rc.32"
+        },
+        {
+          "head": "60d883f4388c4bcf050ad9ddf97bc9477c754e2d",
+          "base": "ae529f1416a11a5d7453212ee1a0c48701a8cca7",
+          "date": "2026-09-14T18:33:40Z",
+          "subject": "chore: update deps"
+        },
+        {
+          "head": "ae529f1416a11a5d7453212ee1a0c48701a8cca7",
+          "base": "516c2a0ad0e4917ec71ba54fc3b2954d3078c9b4",
+          "date": "2026-09-14T18:32:38Z",
+          "subject": "types(handler): use request header names for `req.headers`"
+        },
+        {
+          "head": "516c2a0ad0e4917ec71ba54fc3b2954d3078c9b4",
+          "base": "5e6603cd7507bb94511de720a6dc2d584abbc494",
+          "date": "2026-09-14T20:23:55+02:00",
+          "subject": "feat: export `normalizeRoute` as a public path utility (#1549)"
+        },
+        {
+          "head": "5e6603cd7507bb94511de720a6dc2d584abbc494",
+          "base": "e6b726bb35523693167d6c0deea059c8d14a4851",
+          "date": "2026-09-14T20:23:06+02:00",
+          "subject": "build: export `TypedHeaders` type (#1547)"
+        },
+        {
+          "head": "e6b726bb35523693167d6c0deea059c8d14a4851",
+          "base": "b5d20d528d05926c26fee414eecaa1d04abaaadb",
+          "date": "2026-09-14T18:13:22Z",
+          "subject": "fix(error): require `status` in `HTTPError.isError`"
+        },
+        {
+          "head": "b5d20d528d05926c26fee414eecaa1d04abaaadb",
+          "base": "aa50e96a4a3da1732aa54542c498b37e0f8e3508",
+          "date": "2026-09-14T18:13:22Z",
+          "subject": "fix: handle srvx body limit errors as 413"
+        },
+        {
+          "head": "aa50e96a4a3da1732aa54542c498b37e0f8e3508",
+          "base": "a5fdc86a6075506d71510aa5208739aa0b2bec29",
+          "date": "2026-09-08T00:09:19+02:00",
+          "subject": "types(handler): infer route handler request type instead of any (#1546)"
+        },
+        {
+          "head": "a5fdc86a6075506d71510aa5208739aa0b2bec29",
+          "base": "b6c7d083d8f4123c77b7a7e35757bd0c63df7b1c",
+          "date": "2026-09-04T16:12:01Z",
+          "subject": "chore: update deps"
+        },
+        {
+          "head": "b6c7d083d8f4123c77b7a7e35757bd0c63df7b1c",
+          "base": "7f5f106a0b5a96d8f48adcc155ec6676fa35d55c",
+          "date": "2026-09-04T15:59:21Z",
+          "subject": "fix(route-rules): pass uncacheable requests through the cache rule"
+        },
+        {
+          "head": "7f5f106a0b5a96d8f48adcc155ec6676fa35d55c",
+          "base": "bae31f320e4b94e1613060a2aa74a590059f1a39",
+          "date": "2026-09-03T22:40:01Z",
+          "subject": "chore: apply automated updates"
+        },
+        {
+          "head": "bae31f320e4b94e1613060a2aa74a590059f1a39",
+          "base": "df811cd872015ced1cb21e30d42ec20c9f79cbc3",
+          "date": "2026-09-03T22:39:28Z",
+          "subject": "chore: update lockfile"
+        },
+        {
+          "head": "df811cd872015ced1cb21e30d42ec20c9f79cbc3",
+          "base": "6075f8a2fc8b2dc30b4af5870db582ffcd68c948",
+          "date": "2026-09-03T22:39:10Z",
+          "subject": "chore(release): v2.0.1-rc.31"
+        },
+        {
+          "head": "6075f8a2fc8b2dc30b4af5870db582ffcd68c948",
+          "base": "00c0d3f3c30f93866822ab5cfb24bbb64bbaeacb",
+          "date": "2026-09-03T22:38:55Z",
+          "subject": "chore: apply automated updates"
+        },
+        {
+          "head": "00c0d3f3c30f93866822ab5cfb24bbb64bbaeacb",
+          "base": "21a26d9067c86330a325e872624d771a7a19d42e",
+          "date": "2026-09-03T22:38:23Z",
+          "subject": "chore: update lockfile"
+        },
+        {
+          "head": "21a26d9067c86330a325e872624d771a7a19d42e",
+          "base": "1316ffbca77618d5377f526d6e00713b0525ec94",
+          "date": "2026-09-03T22:37:18Z",
+          "subject": "chore: apply automated updates"
+        },
+        {
+          "head": "1316ffbca77618d5377f526d6e00713b0525ec94",
+          "base": "c460ebe6fe296f112a9ee2a008c9e335e7d2dc36",
+          "date": "2026-09-03T22:36:43Z",
+          "subject": "chore: update deps"
+        }
+      ]
+    },
+    {
+      "repository": "sindresorhus/ky",
+      "slug": "sindresorhus--ky",
+      "revisions": [
+        {
+          "head": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+          "base": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+          "date": "2026-09-14T15:16:48+02:00",
+          "subject": "Add `maxResponseSize` option"
+        },
+        {
+          "head": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+          "base": "d6e049a690c7562a72e22d0b1eb57a2d4d19745e",
+          "date": "2026-09-14T02:20:54+02:00",
+          "subject": "Preserve Request input abort signals"
+        },
+        {
+          "head": "d6e049a690c7562a72e22d0b1eb57a2d4d19745e",
+          "base": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+          "date": "2026-09-14T01:55:49+02:00",
+          "subject": "Resolve retry replacements without parent retry options"
+        },
+        {
+          "head": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+          "base": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+          "date": "2026-09-14T01:55:49+02:00",
+          "subject": "Run beforeError hooks for body reader failures"
+        },
+        {
+          "head": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+          "base": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
+          "date": "2026-09-14T01:55:49+02:00",
+          "subject": "Preserve symbol-keyed context in init hooks"
+        },
+        {
+          "head": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
+          "base": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+          "date": "2026-09-14T01:55:49+02:00",
+          "subject": "Simplify request state and retry normalization"
+        },
+        {
+          "head": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+          "base": "e58817d490cba99c97820a39f239272ffdb92881",
+          "date": "2026-09-14T01:55:48+02:00",
+          "subject": "More tests"
+        },
+        {
+          "head": "e58817d490cba99c97820a39f239272ffdb92881",
+          "base": "52b8f93e076e1614a3f62162052a8723b10ca5ac",
+          "date": "2026-09-14T01:55:44+02:00",
+          "subject": "Type custom fetch callbacks with Request inputs"
+        },
+        {
+          "head": "52b8f93e076e1614a3f62162052a8723b10ca5ac",
+          "base": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+          "date": "2026-09-14T01:55:44+02:00",
+          "subject": "Allow customizing error names in TypeScript"
+        },
+        {
+          "head": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+          "base": "51b31777058c13f24b640a0ef1a47565f011e080",
+          "date": "2026-09-14T01:55:44+02:00",
+          "subject": "Preserve JSON types when cloning requests and responses"
+        },
+        {
+          "head": "51b31777058c13f24b640a0ef1a47565f011e080",
+          "base": "481f6f731b0c311bc2f677604aca3595558b22d1",
+          "date": "2026-09-14T01:55:44+02:00",
+          "subject": "Support readonly inputs and explicit undefined in TypeScript options"
+        },
+        {
+          "head": "481f6f731b0c311bc2f677604aca3595558b22d1",
+          "base": "96a25cce552a0128653ca8833e95291ae5082509",
+          "date": "2026-09-14T01:55:44+02:00",
+          "subject": "Fix bytes shortcut return type for Blob and Response compatibility"
+        },
+        {
+          "head": "96a25cce552a0128653ca8833e95291ae5082509",
+          "base": "e4269f070384e60e1c3fd3be4de9e199c07814c9",
+          "date": "2026-09-14T01:55:44+02:00",
+          "subject": "Preserve abort reasons while reading HTTP error bodies"
+        },
+        {
+          "head": "e4269f070384e60e1c3fd3be4de9e199c07814c9",
+          "base": "82fa84c7d114f7987ed019be61417288ccc0876e",
+          "date": "2026-09-14T01:55:44+02:00",
+          "subject": "Respect custom HTTP method case when matching retries"
+        },
+        {
+          "head": "82fa84c7d114f7987ed019be61417288ccc0876e",
+          "base": "d636438b2dde678f153af2c21f37116f4d064271",
+          "date": "2026-09-12T11:24:38+02:00",
+          "subject": "Enforce total timeout after fetch and body processing"
+        },
+        {
+          "head": "d636438b2dde678f153af2c21f37116f4d064271",
+          "base": "87a96db81480f1cb71e2cd51bce8c454d32b29ee",
+          "date": "2026-09-12T11:24:37+02:00",
+          "subject": "Avoid misidentifying unrelated errors as Ky errors"
+        },
+        {
+          "head": "87a96db81480f1cb71e2cd51bce8c454d32b29ee",
+          "base": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
+          "date": "2026-09-12T11:24:35+02:00",
+          "subject": "Preserve non-Error values in retry errors and hooks"
+        },
+        {
+          "head": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
+          "base": "f87efe6f5d8d6067756a80c5120e7782f4ed847e",
+          "date": "2026-09-12T11:24:33+02:00",
+          "subject": "Handle unsupported streaming uploads gracefully"
+        },
+        {
+          "head": "f87efe6f5d8d6067756a80c5120e7782f4ed847e",
+          "base": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+          "date": "2026-09-12T11:24:32+02:00",
+          "subject": "Preserve request referrer options"
+        },
+        {
+          "head": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+          "base": "854608078545442344a29a0714a50b978e6d77e9",
+          "date": "2026-09-12T02:51:40+02:00",
+          "subject": "Fix stale array entries when merging JSON objects"
+        }
+      ]
+    }
+  ]
+}

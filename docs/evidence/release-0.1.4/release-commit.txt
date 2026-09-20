@@ -1,0 +1,18 @@
+dee4f7b Release 0.1.4: preserve imports of compiler-excluded tests
+ .github/workflows/release.yml       |  6 +-----
+ README.md                           |  6 +++---
+ docs/distribution.md                |  2 +-
+ docs/npm-adoption.md                |  2 +-
+ docs/release-checklist.md           |  7 ++++---
+ docs/releases/0.1.4.md              | 17 +++++++++++++++++
+ package-lock.json                   |  4 ++--
+ package.json                        |  2 +-
+ scripts/package-smoke.mjs           |  6 ++++--
+ site/index.html                     |  4 ++--
+ src/cache/graph-cache.ts            |  2 +-
+ src/client/workflow-guard.ts        |  4 ++++
+ src/repo/graph.ts                   | 25 +++++++++----------------
+ tests/client/observe.test.ts        | 21 +++++++++++++++++++++
+ tests/client/workflow-guard.test.ts | 26 ++++++++++++++++++++++++++
+ tests/repo/graph.test.ts            | 28 +++++++++++++++++++++++-----
+ 16 files changed, 120 insertions(+), 42 deletions(-)

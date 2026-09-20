@@ -1,0 +1,12 @@
+
+> @diffci.com/diffci@0.1.3 package:smoke
+> node scripts/package-smoke.mjs
+
+
+> @diffci.com/diffci@0.1.3 build:client
+> tsc -p tsconfig.client.json
+
+OSS boundary passed: @diffci.com/diffci@0.1.3 contains 35 allowed file(s).
+
+added 22 packages in 22s
+Package smoke passed: diffci.com-diffci-0.1.3.tgz installed and ran diffci observe.

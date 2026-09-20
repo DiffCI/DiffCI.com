@@ -1,0 +1,362 @@
+[
+  {
+    "index": 1,
+    "head": "0d59458a0a58e1c3d7c6db0ab17ed5c7cd671e47",
+    "base": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+    "date": "2026-09-14T15:16:48+02:00",
+    "subject": "Add `maxResponseSize` option",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 28,
+    "total": 30,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/normalize.ts test/prefix.ts test/request-body-serialization.ts test/request-options.ts test/request-stream-support.ts test/response-consumption.ts test/response-size.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "01-0d59458a0a58.json"
+  },
+  {
+    "index": 2,
+    "head": "071a9b97d3d149a576c91e0b92532f11aab456c5",
+    "base": "d6e049a690c7562a72e22d0b1eb57a2d4d19745e",
+    "date": "2026-09-14T02:20:54+02:00",
+    "subject": "Preserve Request input abort signals",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 27,
+    "total": 29,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/normalize.ts test/prefix.ts test/request-body-serialization.ts test/request-options.ts test/request-stream-support.ts test/response-consumption.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "02-071a9b97d3d1.json"
+  },
+  {
+    "index": 3,
+    "head": "d6e049a690c7562a72e22d0b1eb57a2d4d19745e",
+    "base": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+    "date": "2026-09-14T01:55:49+02:00",
+    "subject": "Resolve retry replacements without parent retry options",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 27,
+    "total": 29,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/normalize.ts test/prefix.ts test/request-body-serialization.ts test/request-options.ts test/request-stream-support.ts test/response-consumption.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "03-d6e049a690c7.json"
+  },
+  {
+    "index": 4,
+    "head": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+    "base": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+    "date": "2026-09-14T01:55:49+02:00",
+    "subject": "Run beforeError hooks for body reader failures",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 27,
+    "total": 29,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/normalize.ts test/prefix.ts test/request-body-serialization.ts test/request-options.ts test/request-stream-support.ts test/response-consumption.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "04-323b98f0a326.json"
+  },
+  {
+    "index": 5,
+    "head": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+    "base": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
+    "date": "2026-09-14T01:55:49+02:00",
+    "subject": "Preserve symbol-keyed context in init hooks",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 27,
+    "total": 29,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/normalize.ts test/prefix.ts test/request-body-serialization.ts test/request-options.ts test/request-stream-support.ts test/response-consumption.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "05-a8753dcc9a4e.json"
+  },
+  {
+    "index": 6,
+    "head": "b28ba903c322b84b5d9cf47a6fc0af6a61d5954f",
+    "base": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+    "date": "2026-09-14T01:55:49+02:00",
+    "subject": "Simplify request state and retry normalization",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 27,
+    "total": 29,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/normalize.ts test/prefix.ts test/request-body-serialization.ts test/request-options.ts test/request-stream-support.ts test/response-consumption.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "06-b28ba903c322.json"
+  },
+  {
+    "index": 7,
+    "head": "cd1dba0e4502d95be93846e6c77bf0479dc0e385",
+    "base": "e58817d490cba99c97820a39f239272ffdb92881",
+    "date": "2026-09-14T01:55:48+02:00",
+    "subject": "More tests",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 8,
+    "total": 29,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/http-metadata.ts test/http-redirects.ts test/http-response-bodies.ts test/http-semantics.ts test/normalize.ts test/request-body-serialization.ts test/response-consumption.ts test/retry-timing.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "07-cd1dba0e4502.json"
+  },
+  {
+    "index": 8,
+    "head": "e58817d490cba99c97820a39f239272ffdb92881",
+    "base": "52b8f93e076e1614a3f62162052a8723b10ca5ac",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Type custom fetch callbacks with Request inputs",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 20,
+    "total": 21,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/prefix.ts test/request-options.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "08-e58817d490cb.json"
+  },
+  {
+    "index": 9,
+    "head": "52b8f93e076e1614a3f62162052a8723b10ca5ac",
+    "base": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Allow customizing error names in TypeScript",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 20,
+    "total": 21,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/prefix.ts test/request-options.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "09-52b8f93e076e.json"
+  },
+  {
+    "index": 10,
+    "head": "f4886ca8f58c1f9f950124d9edef6bb0f60bb6ef",
+    "base": "51b31777058c13f24b640a0ef1a47565f011e080",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Preserve JSON types when cloning requests and responses",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 20,
+    "total": 21,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/prefix.ts test/request-options.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "10-f4886ca8f58c.json"
+  },
+  {
+    "index": 11,
+    "head": "51b31777058c13f24b640a0ef1a47565f011e080",
+    "base": "481f6f731b0c311bc2f677604aca3595558b22d1",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Support readonly inputs and explicit undefined in TypeScript options",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 20,
+    "total": 21,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/network-error.ts test/prefix.ts test/request-options.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "11-51b31777058c.json"
+  },
+  {
+    "index": 12,
+    "head": "481f6f731b0c311bc2f677604aca3595558b22d1",
+    "base": "96a25cce552a0128653ca8833e95291ae5082509",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Fix bytes shortcut return type for Blob and Response compatibility",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 18,
+    "total": 19,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "12-481f6f731b0c.json"
+  },
+  {
+    "index": 13,
+    "head": "96a25cce552a0128653ca8833e95291ae5082509",
+    "base": "e4269f070384e60e1c3fd3be4de9e199c07814c9",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Preserve abort reasons while reading HTTP error bodies",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 18,
+    "total": 19,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "13-96a25cce552a.json"
+  },
+  {
+    "index": 14,
+    "head": "e4269f070384e60e1c3fd3be4de9e199c07814c9",
+    "base": "82fa84c7d114f7987ed019be61417288ccc0876e",
+    "date": "2026-09-14T01:55:44+02:00",
+    "subject": "Respect custom HTTP method case when matching retries",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 18,
+    "total": 19,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "14-e4269f070384.json"
+  },
+  {
+    "index": 15,
+    "head": "82fa84c7d114f7987ed019be61417288ccc0876e",
+    "base": "d636438b2dde678f153af2c21f37116f4d064271",
+    "date": "2026-09-12T11:24:38+02:00",
+    "subject": "Enforce total timeout after fetch and body processing",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 18,
+    "total": 19,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "15-82fa84c7d114.json"
+  },
+  {
+    "index": 16,
+    "head": "d636438b2dde678f153af2c21f37116f4d064271",
+    "base": "87a96db81480f1cb71e2cd51bce8c454d32b29ee",
+    "date": "2026-09-12T11:24:37+02:00",
+    "subject": "Avoid misidentifying unrelated errors as Ky errors",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 18,
+    "total": 19,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/request-stream-support.ts test/retry.ts test/stream.ts test/type-guards.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "16-d636438b2dde.json"
+  },
+  {
+    "index": 17,
+    "head": "87a96db81480f1cb71e2cd51bce8c454d32b29ee",
+    "base": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
+    "date": "2026-09-12T11:24:35+02:00",
+    "subject": "Preserve non-Error values in retry errors and hooks",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 17,
+    "total": 18,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/request-stream-support.ts test/retry.ts test/stream.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "17-87a96db81480.json"
+  },
+  {
+    "index": 18,
+    "head": "06ebf18e1927b3772726037bda5a78d4b7eb6dba",
+    "base": "f87efe6f5d8d6067756a80c5120e7782f4ed847e",
+    "date": "2026-09-12T11:24:33+02:00",
+    "subject": "Handle unsupported streaming uploads gracefully",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 17,
+    "total": 18,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/request-stream-support.ts test/retry.ts test/stream.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "18-06ebf18e1927.json"
+  },
+  {
+    "index": 19,
+    "head": "f87efe6f5d8d6067756a80c5120e7782f4ed847e",
+    "base": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+    "date": "2026-09-12T11:24:32+02:00",
+    "subject": "Preserve request referrer options",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 16,
+    "total": 17,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/retry.ts test/stream.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "19-f87efe6f5d8d.json"
+  },
+  {
+    "index": 20,
+    "head": "8cf26e0e78d7a734f5e2846bdd65b66a936c13b3",
+    "base": "854608078545442344a29a0714a50b978e6d77e9",
+    "date": "2026-09-12T02:51:40+02:00",
+    "subject": "Fix stale array entries when merging JSON objects",
+    "status": "OBSERVED",
+    "mode": "SELECTIVE",
+    "selected": 16,
+    "total": 17,
+    "fallbackReasons": [],
+    "commands": [
+      "npx --no-install ava test/base-url.ts test/body-size.ts test/browser.ts test/bytes.ts test/context.ts test/fetch.ts test/formdata-searchparams.ts test/headers.ts test/hooks.ts test/http-error.ts test/main.ts test/memory-leak.ts test/methods.ts test/prefix.ts test/retry.ts test/stream.ts"
+    ],
+    "graphConfidence": "COMPLETE",
+    "worktreeUnchanged": true,
+    "report": "20-8cf26e0e78d7.json"
+  }
+]

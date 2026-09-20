@@ -1,0 +1,106 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:56:22.897Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "a8753dcc9a4e8771d4226f9b6d196064325a0fbc",
+    "headSha": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 2,
+    "changedFiles": [
+      "source/core/Ky.ts",
+      "test/response-consumption.ts"
+    ],
+    "affectedSourceFileCount": 16,
+    "selectedTests": [
+      "test/response-consumption.ts"
+    ],
+    "totalTestCount": 29,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "npx --no-install ava test/response-consumption.ts"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 59,
+      "edges": 85,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 631
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 29,
+      "selectedTests": [
+        "test/base-url.ts",
+        "test/body-size.ts",
+        "test/browser.ts",
+        "test/bytes.ts",
+        "test/context.ts",
+        "test/fetch.ts",
+        "test/formdata-searchparams.ts",
+        "test/headers.ts",
+        "test/hooks.ts",
+        "test/http-error.ts",
+        "test/http-metadata.ts",
+        "test/http-redirects.ts",
+        "test/http-response-bodies.ts",
+        "test/http-semantics.ts",
+        "test/main.ts",
+        "test/memory-leak.ts",
+        "test/methods.ts",
+        "test/network-error.ts",
+        "test/normalize.ts",
+        "test/prefix.ts",
+        "test/request-body-serialization.ts",
+        "test/request-options.ts",
+        "test/request-stream-support.ts",
+        "test/response-consumption.ts",
+        "test/retry-timing.ts",
+        "test/retry.ts",
+        "test/stream.ts",
+        "test/type-guards.ts",
+        "test/with-page.ts"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under test"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+    "headShaAfter": "323b98f0a326f3967dc16acd34f2755da3ebd63a",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1639
+  }
+}

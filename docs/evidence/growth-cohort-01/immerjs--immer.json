@@ -1,0 +1,99 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:51:16.091Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "955c5f5f3d5af150aab8b306de132c4411163ca4",
+    "headSha": "061c2425e1c9dff89e4e4189d42af1b7839dfe0a",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 1,
+    "changedFiles": [
+      "__tests__/prototype-inspection.js"
+    ],
+    "affectedSourceFileCount": 0,
+    "selectedTests": [
+      "__tests__/prototype-inspection.js"
+    ],
+    "totalTestCount": 23,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "yarn run vitest run --config vitest.config.ts __tests__/prototype-inspection.js"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 39,
+      "edges": 30,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 663
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 23,
+      "selectedTests": [
+        "__tests__/base.js",
+        "__tests__/current.js",
+        "__tests__/curry.js",
+        "__tests__/draft.ts",
+        "__tests__/empty.ts",
+        "__tests__/frozen.js",
+        "__tests__/immutable.ts",
+        "__tests__/isDraftable.js",
+        "__tests__/manual.js",
+        "__tests__/map-set.js",
+        "__tests__/not-strict-copy.ts",
+        "__tests__/null.js",
+        "__tests__/original.js",
+        "__tests__/patch.js",
+        "__tests__/plugins.js",
+        "__tests__/produce.ts",
+        "__tests__/prototype-inspection.js",
+        "__tests__/readme.js",
+        "__tests__/redux.ts",
+        "__tests__/regressions.js",
+        "__tests__/spec_ts.ts",
+        "__tests__/type-external.ts",
+        "__tests__/updateScenarios.js"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under __tests__"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "061c2425e1c9dff89e4e4189d42af1b7839dfe0a",
+    "headShaAfter": "061c2425e1c9dff89e4e4189d42af1b7839dfe0a",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1582
+  }
+}

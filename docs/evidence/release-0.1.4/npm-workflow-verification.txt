@@ -1,0 +1,3 @@
+Scanned 1 workflow file(s).
+DiffCI runs in: .github\workflows\qualify.yml#diffci
+No findings: nothing in these workflows lets the observation change what the rest of CI does.

@@ -1,0 +1,6 @@
+DiffCI observation: REFUSED (eligibility)
+  reason: DiffCI supports TypeScript/JavaScript projects, Vue components, and root Go modules: No TypeScript project, Vue components, or root Go module found
+  range: 8041d7d183e4..57009b5eb8d7 (explicit-flags)
+  non-interference: worktree unchanged, report written outside the checkout
+  DiffCI changed nothing: no test was run, skipped, cancelled or re-ordered by this step.
+  report: C:\Users\SWATIK~1\AppData\Local\Temp\diffci-growth-20260919\ai--nanoid.json

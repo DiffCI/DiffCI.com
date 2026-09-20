@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@v0.1.4
+      - uses: DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6
 ```
 
 ## Outreach Copy
@@ -111,6 +111,7 @@ Common command shapes:
 --selected "npx jest path/to/file.test.ts"
 --selected "node --test path/to/file.test.mjs"
 ```
+
 ## Trust Points
 
 - Published as `@diffci.com/diffci` on npm.
