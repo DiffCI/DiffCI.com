@@ -23,11 +23,11 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { relative, resolve } from "node:path";
 
-import { analyzeGitDelta } from "../git/git-diff.js";
-import { classifyRepositoryProject, buildDependencyGraph } from "../repo/graph.js";
-import { ImpactAnalyzer } from "../repo/impact.js";
-import { runPathBaseline } from "../planner/path-baseline.js";
-import { commandSpecToString, planSelectiveTestCommands } from "../planner/test-command.js";
+import { analyzeGitDelta } from "@diffci.com/core/git/git-diff";
+import { classifyRepositoryProject, buildDependencyGraph } from "@diffci.com/core/repo/graph";
+import { ImpactAnalyzer } from "@diffci.com/core/repo/impact";
+import { runPathBaseline } from "@diffci.com/core/planner/path-baseline";
+import { commandSpecToString, planSelectiveTestCommands } from "@diffci.com/core/planner/test-command";
 import {
   readCiEnvironment,
   resolveCommitRange,
