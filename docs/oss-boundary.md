@@ -15,11 +15,12 @@ The npm package must contain only the OSS core:
 - `dist-client/src/git/`
 - `dist-client/src/planner/`
 - `dist-client/src/repo/`
+- `llms.txt`
 - `LICENSE`
 - `SECURITY.md`
 - `SUPPORT.md`
 - `COMMERCIAL.md`
-- public README/distribution docs
+- public README/distribution/agent docs
 
 It must not contain source or build output from `src/product`, `src/research`, `src/shadow`,
 `src/usage`, `src/ledger`, `src/install`, `src/runner`, `src/auth`, `src/analysis-fanout`,

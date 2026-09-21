@@ -33,6 +33,8 @@ describe("npm package contract", () => {
       "action.yml",
       "dist-client/src/client",
       "README.md",
+      "llms.txt",
+      "docs/ai-agents.md",
       "docs/distribution.md",
       "docs/npm-adoption.md",
       "docs/language-support.md",

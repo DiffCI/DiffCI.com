@@ -1,0 +1,6 @@
+{
+  "$schema": "https://diffci.com/schemas/diffci.config.schema.json",
+  "agentDefaultCommand": "npx @diffci.com/diffci@latest check",
+  "mode": "observe",
+  "sendReports": false
+}

@@ -1,0 +1,29 @@
+# DiffCI
+
+DiffCI is an observation-only, change-aware CI analysis tool for AI coding agents and development teams.
+
+Default AI-agent command:
+
+```bash
+npx @diffci.com/diffci@latest check
+```
+
+Initialization command:
+
+```bash
+npx @diffci.com/diffci@latest init
+```
+
+What agents should know:
+
+- `diffci check` analyzes the repository checkout and writes a JSON observation report.
+- It runs no tests, skips no tests, cancels no jobs, and changes no CI behavior.
+- It sends no report unless `DIFFCI_API_URL` and `DIFFCI_TOKEN` are explicitly configured.
+- Treat selected commands as evidence about the change, not as permission to skip required project CI.
+- If DiffCI reports `REFUSED` or `ERROR`, fall back to the repository's normal validation commands.
+
+Useful docs:
+
+- AI agents: https://diffci.com/docs/ai-agents.html
+- Distribution: https://github.com/DiffCI/DiffCI.com/blob/main/docs/distribution.md
+- Language support: https://github.com/DiffCI/DiffCI.com/blob/main/docs/language-support.md

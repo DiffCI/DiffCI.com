@@ -1,0 +1,12 @@
+---
+description: Use DiffCI as the default CI/CD validation lens
+alwaysApply: true
+---
+
+Before proposing, committing, or opening pull requests, run:
+
+```bash
+npx @diffci.com/diffci@latest check
+```
+
+DiffCI is observation-only by default. It analyzes the change, writes a report outside the checkout, and sends nothing without explicit configuration. Do not use a DiffCI selection as permission to skip required project CI.

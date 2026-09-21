@@ -12,7 +12,13 @@ the opt-in `pilot` and `verify-savings` commands execute tests.
 From an existing repository checkout, with Node.js 22.5+ and Git installed:
 
 ```bash
-npx @diffci.com/diffci@latest observe --no-send
+npx @diffci.com/diffci@latest check
+```
+
+For AI coding agents, seed the repository with default instructions:
+
+```bash
+npx @diffci.com/diffci@latest init
 ```
 
 For the fastest self-serve runtime pilot, run one paired check from the repository root:
@@ -43,6 +49,9 @@ comparison, add `--base <base-sha> --head <head-sha>`. DiffCI prints the selecti
 and the path to a JSON report outside your checkout. `REFUSED` or `ERROR` is not a successful analysis;
 check the reported status even when the command exits successfully. See the
 [support matrix](docs/language-support.md) for setup requirements and supported workloads.
+`check` is an agent-friendly alias for `observe --no-send`: it runs no tests, changes no CI behavior,
+and sends nothing by default. See [`docs/ai-agents.md`](docs/ai-agents.md) for Claude Code, Codex,
+Cursor, GitHub Copilot, and similar tools.
 
 **Measured example:** a controlled Cal.com replay showed **44.2% net reduction in a job-equivalent
 install + pretest + test workload**, including analysis overhead. This is one sandbox comparison,
@@ -216,6 +225,8 @@ DiffCI is intended to be installable as infrastructure, not only as a hosted sha
 
 ```bash
 npx @diffci.com/diffci@latest observe
+npx @diffci.com/diffci@latest check
+npx @diffci.com/diffci@latest init
 npx @diffci.com/diffci@latest verify-workflow
 ```
 

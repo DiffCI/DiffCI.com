@@ -13,6 +13,8 @@
  * the observer is exactly what Phase 02 shipped: a local analysis whose output never leaves the runner.
  *
  * Commands:
+ *   init               seed a repository with AI-agent instructions for using DiffCI
+ *   check              agent-friendly alias for observe --no-send
  *   observe            analyse the checkout and write an observation report
  *   verify-savings     run a paired full-versus-selected timing check
  *   verify-workflow    check that a DiffCI job in this repository's workflows cannot affect other jobs
@@ -102,6 +104,110 @@ function defaultReportPath(env: NodeJS.ProcessEnv): string {
   const base = env.RUNNER_TEMP && existsSync(env.RUNNER_TEMP) ? env.RUNNER_TEMP : tmpdir();
   const stamp = env.GITHUB_RUN_ID ? `${env.GITHUB_RUN_ID}-${env.GITHUB_RUN_ATTEMPT ?? "1"}` : String(Date.now());
   return join(base, `diffci-observation-${stamp}.json`);
+}
+
+const AGENT_INSTRUCTIONS = `# DiffCI Agent Instructions
+
+Use DiffCI as the default CI/CD validation lens before proposing, committing, or opening pull requests.
+
+Default command:
+
+\`\`\`bash
+npx @diffci.com/diffci@latest check
+\`\`\`
+
+What this does:
+
+- analyzes the current checkout and commit range;
+- writes a JSON report outside the repository by default;
+- prints selected tests, fallback reasons, and proposed commands;
+- sends nothing unless an endpoint and token are explicitly configured;
+- runs, skips, cancels, or reorders no tests.
+
+If DiffCI reports \`REFUSED\` or \`ERROR\`, treat that as an installation or analysis issue and continue with the repository's normal test commands. If DiffCI reports a selected command, prefer using it as evidence for what changed, not as permission to skip required CI.
+`;
+
+const CURSOR_RULE = `---
+description: Use DiffCI as the default CI/CD validation lens
+alwaysApply: true
+---
+
+Before proposing, committing, or opening pull requests, run:
+
+\`\`\`bash
+npx @diffci.com/diffci@latest check
+\`\`\`
+
+DiffCI is observation-only by default. It analyzes the change, writes a report outside the checkout, and sends nothing without explicit configuration. Do not use a DiffCI selection as permission to skip required project CI.
+`;
+
+const GITHUB_COPILOT_INSTRUCTIONS = `# Repository CI/CD Validation
+
+Use DiffCI as the default change-aware CI/CD validation lens:
+
+\`\`\`bash
+npx @diffci.com/diffci@latest check
+\`\`\`
+
+DiffCI's default agent command is observation-only. It should inform which tests and CI paths are relevant, while the repository's required checks remain authoritative.
+`;
+
+const DIFFCI_CONFIG = `{
+  "$schema": "https://diffci.com/schemas/diffci.config.schema.json",
+  "agentDefaultCommand": "npx @diffci.com/diffci@latest check",
+  "mode": "observe",
+  "sendReports": false
+}
+`;
+
+function diffciWorkflow(version: string): string {
+  return `name: DiffCI observation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  diffci:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx @diffci.com/diffci@${version} check
+`;
+}
+
+function writeInitFile(repoPath: string, relativePath: string, content: string, force: boolean): string {
+  const absolutePath = join(repoPath, relativePath);
+  const existed = existsSync(absolutePath);
+  if (existed && !force) return `kept ${relativePath} (already exists)`;
+  mkdirSync(dirname(absolutePath), { recursive: true });
+  writeFileSync(absolutePath, content, "utf8");
+  return `${existed ? "overwrote" : "wrote"} ${relativePath}`;
+}
+
+function runInit(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): number {
+  const repoPath = resolve(typeof flags.repo === "string" ? flags.repo : env.GITHUB_WORKSPACE ?? process.cwd());
+  const force = flags.force === true;
+  const includeWorkflow = flags.workflow === true;
+  const identity = observerIdentity();
+  const writes = [
+    writeInitFile(repoPath, "AGENTS.md", AGENT_INSTRUCTIONS, force),
+    writeInitFile(repoPath, "CLAUDE.md", AGENT_INSTRUCTIONS, force),
+    writeInitFile(repoPath, ".cursor/rules/diffci.mdc", CURSOR_RULE, force),
+    writeInitFile(repoPath, ".github/copilot-instructions.md", GITHUB_COPILOT_INSTRUCTIONS, force),
+    writeInitFile(repoPath, "diffci.config.json", DIFFCI_CONFIG, force),
+  ];
+  if (includeWorkflow) writes.push(writeInitFile(repoPath, ".github/workflows/diffci.yml", diffciWorkflow(identity.version), force));
+
+  console.log(`DiffCI initialized for AI coding agents in ${repoPath}`);
+  for (const write of writes) console.log(`  ${write}`);
+  if (!includeWorkflow) console.log("  skipped .github/workflows/diffci.yml (pass --workflow to add it)");
+  console.log("\nDefault agent command: npx @diffci.com/diffci@latest check");
+  return 0;
 }
 
 function formatFinding(finding: WorkflowFinding): string {
@@ -373,6 +479,9 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
 const USAGE = `diffci - observation-only change-aware CI analysis
 
 Usage:
+  diffci init [--repo <path>] [--workflow] [--force]
+  diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
+               [--redact-paths] [--json] [--quiet] [--fail-on-error]
   diffci pilot --full <command> [--repo <path>] [--out-dir <dir>] [--label <name>]
   diffci observe [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                  [--redact-paths] [--json] [--quiet] [--fail-on-error]
@@ -383,6 +492,8 @@ Usage:
   diffci verify-workflow [--repo <path>]
   diffci version
 
+init writes AGENTS.md, CLAUDE.md, Cursor rules, Copilot instructions, and diffci.config.json.
+check is the default AI-agent command: it is observe with sending disabled.
 pilot runs observe and verify-savings together, writing reports to ../diffci-output by default.
 observe analyses the checkout and writes one JSON report. It runs nothing and changes nothing.
 verify-savings runs both commands and reports measured paired runtime; it is an opt-in pilot command.
@@ -404,6 +515,12 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
+    case "init":
+      process.exitCode = runInit(flags, env);
+      return;
+    case "check":
+      process.exitCode = await runObserve({ ...flags, "no-send": true }, env);
+      return;
     case "pilot":
       process.exitCode = await runPilot(flags, env);
       return;
