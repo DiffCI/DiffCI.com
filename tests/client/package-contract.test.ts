@@ -13,6 +13,8 @@ describe("npm package contract", () => {
     bin?: Record<string, string>;
     files?: string[];
     scripts?: Record<string, string>;
+    bundleDependencies?: string[];
+    dependencies?: Record<string, string>;
   };
 
   it("publishes a diffci binary backed by the client build", () => {
@@ -22,15 +24,14 @@ describe("npm package contract", () => {
     assert.equal(pkg.scripts?.prepack, "npm run build:client");
     assert.equal(pkg.scripts?.["check:oss-boundary"], "node scripts/check-oss-boundary.mjs");
     assert.ok(pkg.files?.includes("dist-client/src/client"));
+    assert.deepEqual(pkg.bundleDependencies, ["@diffci.com/core"]);
+    assert.match(pkg.dependencies?.["@diffci.com/core"] ?? "", /^git\+https:\/\/github\.com\/DiffCI\/core\.git#[0-9a-f]{40}$/);
   });
 
   it("keeps the published package on the OSS core side of the boundary", () => {
     const allowed = new Set([
       "action.yml",
       "dist-client/src/client",
-      "dist-client/src/git",
-      "dist-client/src/planner",
-      "dist-client/src/repo",
       "README.md",
       "docs/distribution.md",
       "docs/npm-adoption.md",
