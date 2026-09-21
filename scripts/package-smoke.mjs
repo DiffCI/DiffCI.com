@@ -82,6 +82,9 @@ try {
   run(node, ["scripts/check-oss-boundary.mjs"], { stdio: "inherit" });
   const packJson = runNpm(["pack", "--ignore-scripts", "--json", "--pack-destination", temp]);
   const pack = JSON.parse(packJson)[0];
+  const packedPaths = new Set(pack.files.map((file) => file.path));
+  assert(packedPaths.has("node_modules/@diffci.com/core/dist/index.js"), "Core engine must be bundled into the CLI tarball");
+  assert(![...packedPaths].some((path) => path.startsWith("dist-client/src/repo/") || path.startsWith("dist-client/src/git/") || path.startsWith("dist-client/src/planner/")), "CLI tarball must not duplicate Core engine modules");
   const tarball = join(temp, pack.filename);
   assert(existsSync(tarball), `npm pack did not create ${tarball}`);
 

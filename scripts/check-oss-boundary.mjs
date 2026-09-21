@@ -12,9 +12,7 @@ const npmPackArgs =
 const ALLOWED_PACKAGE_PREFIXES = [
   "action.yml",
   "dist-client/src/client/",
-  "dist-client/src/git/",
-  "dist-client/src/planner/",
-  "dist-client/src/repo/",
+  "node_modules/",
   "README.md",
   "SECURITY.md",
   "SUPPORT.md",
@@ -45,6 +43,7 @@ function isAllowed(path) {
 }
 
 function isForbidden(path) {
+  if (path.startsWith("node_modules/")) return false;
   return FORBIDDEN_PACKAGE_PATTERNS.some((pattern) => pattern.test(path));
 }
 

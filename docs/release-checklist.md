@@ -1,13 +1,14 @@
 # Release checklist
 
-Use this checklist for releases of the DiffCI Core npm package, especially any release used for
-Tidelift recognition.
+Use this checklist for releases of the `@diffci.com/diffci` npm package. The Core engine is
+maintained in [DiffCI/core](https://github.com/DiffCI/core) and bundled from a pinned Git commit;
+there is no separate Core npm release.
 
 ## Preconditions
 
 - Working tree is clean except for the intended release changes.
 - `package.json` version matches the intended tag.
-- DiffCI Core remains `AGPL-3.0-only`.
+- DiffCI Core remains `AGPL-3.0-only` and the pinned commit has passed its CI checks.
 - Commercial DiffCI remains proprietary and outside the OSS package boundary.
 - `LICENSE`, `SECURITY.md`, `SUPPORT.md`, and `COMMERCIAL.md` are current.
 
@@ -29,7 +30,7 @@ git tag v0.1.4
 git push origin v0.1.4
 ```
 
-The release workflow publishes with npm provenance. A stable tag publishes to `latest`; a prerelease tag
+The release workflow bundles Core and publishes the CLI with npm provenance. A stable tag publishes to `latest`; a prerelease tag
 such as `v0.1.4-alpha.1` publishes under the `alpha` dist tag without deleting the stable `latest` tag.
 Use the version actually qualified for the release; do not reuse an existing tag.
 

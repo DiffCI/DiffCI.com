@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "DiffCI - deterministic change-aware CI planning",
   "license": "AGPL-3.0-only",
   "repository": {
@@ -18,9 +18,6 @@
   "files": [
     "action.yml",
     "dist-client/src/client",
-    "dist-client/src/git",
-    "dist-client/src/planner",
-    "dist-client/src/repo",
     "README.md",
     "docs/distribution.md",
     "docs/npm-adoption.md",
@@ -104,11 +101,11 @@
     "check:oss-boundary": "node scripts/check-oss-boundary.mjs"
   },
   "dependencies": {
-    "@diffci.com/core": "0.1.1",
     "@types/node": "^22.15.12",
     "@vue/compiler-sfc": "3.5.42",
     "typescript": "^5.8.3",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.0",
+    "@diffci.com/core": "git+https://github.com/DiffCI/core.git#27afb990e76f764c8bd2087df5bb60ba5913042f"
   },
   "devDependencies": {
     "@cloudflare/containers": "^0.3.7",
@@ -127,5 +124,8 @@
       "**/validate-*.test.*",
       "scripts/**/*.test.mjs"
     ]
-  }
+  },
+  "bundleDependencies": [
+    "@diffci.com/core"
+  ]
 }

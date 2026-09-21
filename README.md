@@ -86,18 +86,19 @@ The CLI sends no report with `--no-send`. The Action uploads a GitHub artifact b
 DiffCI's hosted service requires an explicitly configured endpoint and token.
 [Installation details](docs/distribution.md) · [Seven-day pilot](docs/shadow-pilot-runbook.md)
 
-## Which DiffCI package should I use?
+## Use DiffCI
 
 | Surface | Use it for | Current distribution |
 | --- | --- | --- |
 | [`@diffci.com/diffci`](https://www.npmjs.com/package/@diffci.com/diffci) | Try `observe` locally, run an opt-in runtime pilot, or install the GitHub Action from this repository | Published npm CLI and Action |
-| [`DiffCI/core`](https://github.com/DiffCI/core) | Study or build on the standalone dependency-analysis and conservative-planning engine | Public AGPL source and [`@diffci.com/core`](https://www.npmjs.com/package/@diffci.com/core) npm package |
+| [`DiffCI/core`](https://github.com/DiffCI/core) | Study or build on the dependency-analysis and conservative-planning engine | Public AGPL source; included in the CLI package |
 
-The CLI's observer uses the published Core package for Git analysis, dependency graphs, impact,
-path baseline and selected-command planning. The report format and non-interfering GitHub Action
-remain in this repository. See
-[`docs/package-relationship.md`](docs/package-relationship.md) for the current boundary and integration
-path. For evaluation results and their limits, start with
+The CLI bundles a pinned revision of the Core engine from GitHub. Users install only
+`@diffci.com/diffci`; the `pilot` command above stays the same. Core performs Git analysis,
+dependency graphs, impact, path baseline, and selected-command planning. The report format and
+non-interfering GitHub Action remain in this repository. See
+[`docs/package-relationship.md`](docs/package-relationship.md) for the source relationship.
+For evaluation results and their limits, start with
 [`docs/adoption-evidence.md`](docs/adoption-evidence.md).
 
 ## Project background
