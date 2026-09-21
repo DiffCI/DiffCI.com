@@ -104,6 +104,7 @@
     "check:oss-boundary": "node scripts/check-oss-boundary.mjs"
   },
   "dependencies": {
+    "@diffci.com/core": "github:DiffCI/core#63e7552ce1d6b815779b689f24f64c4b982deb4f",
     "@types/node": "^22.15.12",
     "@vue/compiler-sfc": "3.5.42",
     "typescript": "^5.8.3",

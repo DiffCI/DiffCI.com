@@ -86,6 +86,20 @@ The CLI sends no report with `--no-send`. The Action uploads a GitHub artifact b
 DiffCI's hosted service requires an explicitly configured endpoint and token.
 [Installation details](docs/distribution.md) · [Seven-day pilot](docs/shadow-pilot-runbook.md)
 
+## Which DiffCI package should I use?
+
+| Surface | Use it for | Current distribution |
+| --- | --- | --- |
+| [`@diffci.com/diffci`](https://www.npmjs.com/package/@diffci.com/diffci) | Try `observe` locally, run an opt-in runtime pilot, or install the GitHub Action from this repository | Published npm CLI and Action |
+| [`DiffCI/core`](https://github.com/DiffCI/core) | Study or build on the standalone dependency-analysis and conservative-planning engine | Public AGPL source; clone and build locally; `@diffci.com/core` is being prepared for npm publication |
+
+The published npm CLI still uses the engine bundled in this repository. This migration branch switches
+the observer to the standalone Core engine; that change will reach npm after the Core package is
+published and the CLI package is released. See
+[`docs/package-relationship.md`](docs/package-relationship.md) for the current boundary and integration
+path. For evaluation results and their limits, start with
+[`docs/adoption-evidence.md`](docs/adoption-evidence.md).
+
 ## Project background
 
 **This repository moved out of the [DentalPresence.in](https://github.com/adityankale190895/DentalPresence.in)
