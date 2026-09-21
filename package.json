@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "DiffCI - deterministic change-aware CI planning",
   "license": "AGPL-3.0-only",
   "repository": {
