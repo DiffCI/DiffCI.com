@@ -26,7 +26,8 @@
     "node": ">=22.5.0"
   },
   "bin": {
-    "diffci": "dist-client/src/client/cli.js"
+    "diffci": "dist-client/src/client/cli.js",
+    "diffci-mcp": "dist-client/src/client/mcp.js"
   },
   "files": [
     "action.yml",
@@ -36,6 +37,7 @@
     "docs/ai-agents.md",
     "docs/agent-adoption-kit.md",
     "docs/agent-adoption-targets.md",
+    "docs/mcp.md",
     "docs/codex.md",
     "docs/claude-code.md",
     "docs/cursor.md",

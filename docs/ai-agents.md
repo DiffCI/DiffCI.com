@@ -55,6 +55,16 @@ Examples:
 - [`examples/agent-python`](../examples/agent-python)
 - [`examples/agent-monorepo`](../examples/agent-monorepo)
 
+## MCP
+
+Agents that support MCP can run DiffCI as a native stdio tool server:
+
+```bash
+npx -p @diffci.com/diffci@latest diffci-mcp
+```
+
+See [`mcp.md`](mcp.md).
+
 ## Agent Policy
 
 Agents should:

@@ -137,6 +137,14 @@ Live discovery files:
 [`llms.txt`](https://diffci.com/llms.txt) ·
 [`AI agents`](https://diffci.com/docs/ai-agents.html).
 
+For native agent integrations, DiffCI also ships a stdio MCP server:
+
+```bash
+npx -p @diffci.com/diffci@latest diffci-mcp
+```
+
+See [`docs/mcp.md`](docs/mcp.md).
+
 ## Project background
 
 **This repository moved out of the [DentalPresence.in](https://github.com/adityankale190895/DentalPresence.in)

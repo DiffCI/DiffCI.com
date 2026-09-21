@@ -16,6 +16,6 @@
     "declarationMap": false,
     "sourceMap": false
   },
-  "files": ["src/client/cli.ts"],
+  "files": ["src/client/cli.ts", "src/client/mcp.ts"],
   "include": []
 }

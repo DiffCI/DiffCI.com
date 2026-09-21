@@ -21,6 +21,7 @@ const ALLOWED_PACKAGE_PREFIXES = [
   "docs/ai-agents.md",
   "docs/agent-adoption-kit.md",
   "docs/agent-adoption-targets.md",
+  "docs/mcp.md",
   "docs/codex.md",
   "docs/claude-code.md",
   "docs/cursor.md",

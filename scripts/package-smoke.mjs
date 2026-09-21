@@ -96,7 +96,9 @@ try {
   const { repoPath, base, head } = createFixtureRepo(temp);
   const reportPath = join(temp, "report.json");
   const bin = join(consumer, "node_modules", ".bin", process.platform === "win32" ? "diffci.cmd" : "diffci");
+  const mcpBin = join(consumer, "node_modules", ".bin", process.platform === "win32" ? "diffci-mcp.cmd" : "diffci-mcp");
   assert(existsSync(bin), `installed package did not create ${bin}`);
+  assert(existsSync(mcpBin), `installed package did not create ${mcpBin}`);
   const installedVersion = runNpm(["exec", "--", "diffci", "version"], { cwd: consumer }).trim();
   assert(installedVersion === pack.version, `expected diffci version ${pack.version}, got ${installedVersion}`);
   runNpm(["exec", "--", "diffci", "observe", "--repo", repoPath, "--base", base, "--head", head, "--out", reportPath, "--json", "--no-send"], {

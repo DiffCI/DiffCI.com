@@ -21,6 +21,7 @@ describe("npm package contract", () => {
     assert.equal(pkg.name, "@diffci.com/diffci");
     assert.equal(pkg.private, false);
     assert.equal(pkg.bin?.diffci, "dist-client/src/client/cli.js");
+    assert.equal(pkg.bin?.["diffci-mcp"], "dist-client/src/client/mcp.js");
     assert.equal(pkg.scripts?.prepack, "npm run build:client");
     assert.equal(pkg.scripts?.["check:oss-boundary"], "node scripts/check-oss-boundary.mjs");
     assert.ok(pkg.files?.includes("dist-client/src/client"));
@@ -37,6 +38,7 @@ describe("npm package contract", () => {
       "docs/ai-agents.md",
       "docs/agent-adoption-kit.md",
       "docs/agent-adoption-targets.md",
+      "docs/mcp.md",
       "docs/codex.md",
       "docs/claude-code.md",
       "docs/cursor.md",
@@ -55,5 +57,7 @@ describe("npm package contract", () => {
   it("keeps the CLI executable when TypeScript emits it", () => {
     const cli = readFileSync(join(ROOT, "src", "client", "cli.ts"), "utf8");
     assert.match(cli, /^#!\/usr\/bin\/env node\r?\n/, "the npm bin entry needs a shebang");
+    const mcp = readFileSync(join(ROOT, "src", "client", "mcp.ts"), "utf8");
+    assert.match(mcp, /^#!\/usr\/bin\/env node\r?\n/, "the MCP bin entry needs a shebang");
   });
 });
