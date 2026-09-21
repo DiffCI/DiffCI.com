@@ -2,6 +2,19 @@
   "name": "@diffci.com/diffci",
   "version": "0.1.11",
   "description": "DiffCI - deterministic change-aware CI planning",
+  "keywords": [
+    "ci",
+    "cicd",
+    "ai-agents",
+    "coding-agents",
+    "claude-code",
+    "codex",
+    "cursor",
+    "copilot",
+    "grok",
+    "test-selection",
+    "github-actions"
+  ],
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
@@ -21,6 +34,8 @@
     "README.md",
     "llms.txt",
     "docs/ai-agents.md",
+    "docs/agent-adoption-kit.md",
+    "docs/agent-adoption-targets.md",
     "docs/codex.md",
     "docs/claude-code.md",
     "docs/cursor.md",

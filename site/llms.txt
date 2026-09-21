@@ -30,5 +30,7 @@ Useful docs:
 - Cursor: https://diffci.com/docs/cursor.html
 - GitHub Copilot: https://diffci.com/docs/copilot.html
 - Grok: https://diffci.com/docs/grok.html
+- Adoption kit: https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-kit.md
+- Adoption targets: https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-targets.md
 - Distribution: https://github.com/DiffCI/DiffCI.com/blob/main/docs/distribution.md
 - Language support: https://github.com/DiffCI/DiffCI.com/blob/main/docs/language-support.md

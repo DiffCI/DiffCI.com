@@ -55,8 +55,8 @@
         </p>
 
         <div class="hero-actions">
-          <a class="button" href="https://github.com/apps/diffci-shadow">Install the read-only App</a>
-          <a class="button-secondary" href="#evidence">Read the evidence</a>
+          <a class="button" href="/docs/ai-agents.html">Add to an AI coding agent</a>
+          <a class="button-secondary" href="#install">Install options</a>
         </div>
       </div>
       <figure class="hero-route" aria-label="A selected, evidence-backed route through CI jobs">
@@ -117,6 +117,22 @@
     </p>
 
     <div class="install-grid">
+      <article class="install-panel install-panel-wide">
+        <p class="kicker">AI coding agents</p>
+        <h3>Give agents a default validation command</h3>
+        <p>
+          Seed <code>AGENTS.md</code>, <code>CLAUDE.md</code>, Cursor rules, Copilot instructions, and
+          <code>diffci.config.json</code>. Agents then have one safe command to run before calling a
+          change PR-ready.
+        </p>
+        <pre><code>npx @diffci.com/diffci@latest init
+npx @diffci.com/diffci@latest check</code></pre>
+        <p class="fine">
+          <code>check</code> is observation-only: no test is run, skipped, cancelled, or reordered.
+          <a href="/docs/ai-agents.html">Agent docs →</a>
+        </p>
+      </article>
+
       <article class="install-panel">
         <p class="kicker">npm CLI</p>
         <h3>Run it locally or inside CI</h3>
@@ -124,7 +140,8 @@
           The npm package is <code>@diffci.com/diffci</code>. Use <code>npx</code> for a one-off
           observation, or install it as a dev dependency if you want a pinned local tool.
         </p>
-        <pre><code>npx @diffci.com/diffci@latest observe
+        <pre><code>npx @diffci.com/diffci@latest check
+npx @diffci.com/diffci@latest observe
 npx @diffci.com/diffci@latest verify-workflow
 
 npm install --save-dev @diffci.com/diffci</code></pre>

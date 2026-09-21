@@ -35,6 +35,8 @@ describe("npm package contract", () => {
       "README.md",
       "llms.txt",
       "docs/ai-agents.md",
+      "docs/agent-adoption-kit.md",
+      "docs/agent-adoption-targets.md",
       "docs/codex.md",
       "docs/claude-code.md",
       "docs/cursor.md",

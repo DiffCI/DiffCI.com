@@ -9,6 +9,9 @@ commit's changes and dependency graph, then reports which test files it would se
 back to a full run, and whether it can propose a test command. The `observe` command and Action are observation-only;
 the opt-in `pilot` and `verify-savings` commands execute tests.
 
+**For AI coding agents:** DiffCI gives Codex, Claude Code, Cursor, GitHub Copilot, Grok, and similar
+tools a safe default CI/CD validation command.
+
 From an existing repository checkout, with Node.js 22.5+ and Git installed:
 
 ```bash
@@ -108,6 +111,31 @@ non-interfering GitHub Action remain in this repository. See
 [`docs/package-relationship.md`](docs/package-relationship.md) for the source relationship.
 For evaluation results and their limits, start with
 [`docs/adoption-evidence.md`](docs/adoption-evidence.md).
+
+## Agent Adoption
+
+Add DiffCI instructions to a repository:
+
+```bash
+npx @diffci.com/diffci@latest init
+```
+
+Then ask your coding agent to run:
+
+```bash
+npx @diffci.com/diffci@latest check
+```
+
+Agent-specific docs:
+[`Codex`](docs/codex.md) ·
+[`Claude Code`](docs/claude-code.md) ·
+[`Cursor`](docs/cursor.md) ·
+[`GitHub Copilot`](docs/copilot.md) ·
+[`Grok`](docs/grok.md).
+
+Live discovery files:
+[`llms.txt`](https://diffci.com/llms.txt) ·
+[`AI agents`](https://diffci.com/docs/ai-agents.html).
 
 ## Project background
 

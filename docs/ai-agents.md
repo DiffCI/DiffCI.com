@@ -42,6 +42,19 @@ Then verify the workflow:
 npx @diffci.com/diffci@latest verify-workflow
 ```
 
+## Copy-Paste Adoption
+
+For a maintainer-facing snippet, PR template, and GitHub search queries for repositories that already
+use agent instruction files, see [`agent-adoption-kit.md`](agent-adoption-kit.md).
+For a first-pass list of repositories to review before opening PRs, see
+[`agent-adoption-targets.md`](agent-adoption-targets.md).
+
+Examples:
+
+- [`examples/agent-node`](../examples/agent-node)
+- [`examples/agent-python`](../examples/agent-python)
+- [`examples/agent-monorepo`](../examples/agent-monorepo)
+
 ## Agent Policy
 
 Agents should:

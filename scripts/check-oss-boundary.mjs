@@ -19,6 +19,8 @@ const ALLOWED_PACKAGE_PREFIXES = [
   "SUPPORT.md",
   "COMMERCIAL.md",
   "docs/ai-agents.md",
+  "docs/agent-adoption-kit.md",
+  "docs/agent-adoption-targets.md",
   "docs/codex.md",
   "docs/claude-code.md",
   "docs/cursor.md",

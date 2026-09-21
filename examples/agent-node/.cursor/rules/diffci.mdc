@@ -1,0 +1,12 @@
+---
+description: Use DiffCI as the default CI/CD validation lens
+alwaysApply: true
+---
+
+Before marking changes PR-ready, run:
+
+```bash
+npx @diffci.com/diffci@latest check
+```
+
+DiffCI is observation-only by default. Do not use a DiffCI selection as permission to skip required CI.
