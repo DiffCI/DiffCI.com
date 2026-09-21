@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { spawnSync } from "node:child_process";
+import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -8,8 +8,9 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const CLI = join(ROOT, "src", "client", "cli.ts");
+const PACKAGE_VERSION = (JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as { version: string }).version;
 
-function runCli(args: string[], cwd: string): ReturnType<typeof spawnSync> {
+function runCli(args: string[], cwd: string): SpawnSyncReturns<string> {
   return spawnSync(process.execPath, ["--import", "tsx", CLI, ...args], { cwd, encoding: "utf8" });
 }
 
@@ -37,7 +38,7 @@ describe("agent-facing CLI commands", () => {
       assert.match(readFileSync(join(dir, ".cursor", "rules", "diffci.mdc"), "utf8"), /alwaysApply: true/);
       assert.match(readFileSync(join(dir, ".github", "copilot-instructions.md"), "utf8"), /Repository CI\/CD Validation/);
       assert.match(readFileSync(join(dir, "diffci.config.json"), "utf8"), /"sendReports": false/);
-      assert.match(readFileSync(join(dir, ".github", "workflows", "diffci.yml"), "utf8"), /npx @diffci\.com\/diffci@0\.1\.10 check/);
+      assert.match(readFileSync(join(dir, ".github", "workflows", "diffci.yml"), "utf8"), new RegExp(`npx @diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")} check`));
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

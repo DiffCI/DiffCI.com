@@ -25,5 +25,10 @@ What agents should know:
 Useful docs:
 
 - AI agents: https://diffci.com/docs/ai-agents.html
+- Codex: https://diffci.com/docs/codex.html
+- Claude Code: https://diffci.com/docs/claude-code.html
+- Cursor: https://diffci.com/docs/cursor.html
+- GitHub Copilot: https://diffci.com/docs/copilot.html
+- Grok: https://diffci.com/docs/grok.html
 - Distribution: https://github.com/DiffCI/DiffCI.com/blob/main/docs/distribution.md
 - Language support: https://github.com/DiffCI/DiffCI.com/blob/main/docs/language-support.md

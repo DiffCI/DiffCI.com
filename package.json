@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "DiffCI - deterministic change-aware CI planning",
   "license": "AGPL-3.0-only",
   "repository": {
@@ -21,6 +21,11 @@
     "README.md",
     "llms.txt",
     "docs/ai-agents.md",
+    "docs/codex.md",
+    "docs/claude-code.md",
+    "docs/cursor.md",
+    "docs/copilot.md",
+    "docs/grok.md",
     "docs/distribution.md",
     "docs/npm-adoption.md",
     "docs/language-support.md",

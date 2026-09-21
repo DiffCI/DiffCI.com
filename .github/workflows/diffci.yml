@@ -13,4 +13,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npx @diffci.com/diffci@0.1.10 check
+      - run: npx @diffci.com/diffci@0.1.11 check
