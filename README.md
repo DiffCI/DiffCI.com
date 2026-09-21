@@ -91,9 +91,8 @@ DiffCI's hosted service requires an explicitly configured endpoint and token.
 | Surface | Use it for | Current distribution |
 | --- | --- | --- |
 | [`@diffci.com/diffci`](https://www.npmjs.com/package/@diffci.com/diffci) | Try `observe` locally, run an opt-in runtime pilot, or install the GitHub Action from this repository | Published npm CLI and Action |
-| [`DiffCI/core`](https://github.com/DiffCI/core) | Study or build on the dependency-analysis and conservative-planning engine | Public AGPL source; included in the CLI package |
 
-The CLI bundles a pinned revision of the Core engine from GitHub. Users install only
+The CLI bundles a pinned revision of the [Core engine](https://github.com/DiffCI/core) from GitHub. Users install only
 `@diffci.com/diffci`; the `pilot` command above stays the same. Core performs Git analysis,
 dependency graphs, impact, path baseline, and selected-command planning. The report format and
 non-interfering GitHub Action remain in this repository. See
