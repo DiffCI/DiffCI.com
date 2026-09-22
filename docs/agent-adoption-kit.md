@@ -1,96 +1,72 @@
-# DiffCI Agent Adoption Kit
+# DiffCI adoption kit
 
-Use this when adding DiffCI to a repository or opening a small adoption PR.
+Copy only the integration your repository needs. DiffCI does not replace required CI.
 
-## One-Sentence Positioning
+## Agent instruction
 
-DiffCI gives AI coding agents a safe default CI/CD validation command.
+Add this to `AGENTS.md` or the equivalent agent instruction file:
 
-## Maintainer Install Snippet
+> Before calling a change PR-ready, run `npx @diffci.com/diffci@latest check` from the repository
+> root. Use its output to understand affected tests and fallback reasons. Keep the repository's
+> required CI authoritative. If DiffCI reports `REFUSED` or `ERROR`, run the normal tests.
 
-```md
-## Add DiffCI for AI coding agents
+`check` may execute the repository's full and selected test commands, which may write generated
+files. For analysis without executing tests, run `npx @diffci.com/diffci@latest observe --no-send`.
 
-Run:
+## GitHub Action
 
-```bash
-npx @diffci.com/diffci@latest init
+Save this as `.github/workflows/diffci.yml` to observe changes in a separate, non-blocking job:
+
+```yaml
+name: DiffCI observation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  diffci:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: DiffCI/DiffCI.com@3aa76a84919691cf7e8f9d1f1f6a80399325d1ae # v0.2.2
 ```
 
-Then ask your coding agent to run:
+Run `npx @diffci.com/diffci@latest verify-workflow` before starting a pilot. The Action uploads a
+GitHub artifact by default; it sends nothing to DiffCI Cloud without an explicit endpoint and token.
 
-```bash
-npx @diffci.com/diffci@latest check
+## MCP client
+
+For a client that accepts stdio MCP JSON, set `cwd` to the repository checkout:
+
+```json
+{
+  "mcpServers": {
+    "diffci": {
+      "command": "npx",
+      "args": ["-p", "@diffci.com/diffci@latest", "diffci-mcp"],
+      "cwd": "/path/to/repository"
+    }
+  }
+}
 ```
 
-DiffCI check analyzes the change and runs inferred full and selected test commands to measure time.
-It writes reports outside the checkout and sends nothing. Test commands may write generated files.
-Use `observe --no-send` for analysis only.
-```
+See [MCP setup](mcp.md) for Windows paths and the available tools.
 
-## Agent Instruction Snippet
+## Small adoption PR
 
-```md
-Before marking changes PR-ready, run:
+Suggested title: **Add optional DiffCI validation for coding agents**
 
-```bash
-npx @diffci.com/diffci@latest check
-```
+Suggested description:
 
-Use DiffCI output to understand which tests and CI paths are relevant. Do not treat a DiffCI selection
-as permission to skip required project CI.
-```
+> This adds an optional DiffCI instruction or observation job. DiffCI analyzes the change and
+> reports affected tests. Its `check` command compares full and selected test commands when it can
+> infer them; the GitHub Action only observes. Required CI continues to run as before.
 
-## GitHub Search Queries
+## Where to point maintainers
 
-Find repositories already prepared for coding agents:
-
-```text
-filename:AGENTS.md
-filename:CLAUDE.md
-path:.cursor/rules
-filename:copilot-instructions.md
-```
-
-Prioritize repositories that:
-
-- use JavaScript, TypeScript, Vue, or Go in a normal GitHub Actions workflow;
-- already accept small docs/config PRs;
-- have active maintainers and recent CI runs;
-- already document agent behavior.
-
-Avoid repositories where:
-
-- CI is security-sensitive and maintainers ask not to add tools;
-- there is no clear test command or GitHub Actions setup;
-- the project is inactive.
-
-## Small PR Template
-
-```md
-Title: Add optional DiffCI instructions for AI coding agents
-
-This adds an optional instruction for coding agents to run DiffCI before marking changes PR-ready.
-
-DiffCI check runs a paired test comparison when commands can be inferred:
-
-- it analyzes the change and writes a local report;
-- it sends nothing without explicit configuration;
-- it runs full and selected test commands but does not skip required CI;
-- the repository's existing required CI remains authoritative.
-
-Default command:
-
-```bash
-npx @diffci.com/diffci@latest check
-```
-
-This PR does not make DiffCI a required check.
-```
-
-## Links
-
-- Agent docs: https://diffci.com/docs/ai-agents.html
-- llms.txt: https://diffci.com/llms.txt
-- npm: https://www.npmjs.com/package/@diffci.com/diffci
-- GitHub release: https://github.com/DiffCI/DiffCI.com/releases/latest
+- [npm package](https://www.npmjs.com/package/@diffci.com/diffci)
+- [GitHub Marketplace Action](https://github.com/marketplace/actions/diffci-observer)
+- [Agent guide](https://diffci.com/docs/ai-agents.html)
+- [Context7 CLI documentation](https://context7.com/diffci/diffci.com)

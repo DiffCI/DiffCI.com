@@ -9,19 +9,19 @@ See [`open-core-packaging.md`](open-core-packaging.md).
 
 ## Channel strategy
 
-Reviewed 2026-09-19. These channels have different jobs in the same adoption path:
+Reviewed 2026-09-22. These channels have different jobs in the same adoption path:
 
 | Channel | Role for DiffCI | Next step |
 | --- | --- | --- |
 | npm | Developer discovery and local evaluation of `@diffci.com/diffci` | Lead with `observe`, a sample report, and the observation-only contract. |
 | GitHub Action | Repeatable CI adoption | Use the dedicated, non-blocking job below and verify the workflow before a pilot. |
-| GitHub Marketplace | CI-specific discovery of the same Action | Confirm listing status and release requirements, then publish or improve its installation instructions. |
+| GitHub Marketplace | CI-specific discovery of the same Action | [DiffCI observer is live](https://github.com/marketplace/actions/diffci-observer); keep the installation example and release pin current. |
+| MCP directories | Discovery for agents that install stdio tools | Publish matching npm and registry metadata, then submit to the official MCP Registry and Glama. |
 | Tidelift | Potential package maintenance assurance and maintainer income | Pursue package acceptance using the existing submission packet; do not present support as active. |
 | Commercial DiffCI | Paid hosted history, analytics, team workflows, and managed operations | Validate demand with design partners and distinguish available services from future acceleration capabilities. |
 
-The Action is the integration; Marketplace is a discovery channel for that integration. GitHub documents
-Marketplace publication as a release-based process, so having `action.yml` alone does not establish
-that a listing is live. See [GitHub's publishing requirements](https://docs.github.com/en/actions/how-tos/create-and-publish-actions/publish-in-github-marketplace).
+The Action is the integration; Marketplace is a discovery channel for that integration. See
+[GitHub's publishing requirements](https://docs.github.com/en/actions/how-tos/create-and-publish-actions/publish-in-github-marketplace).
 
 Prioritize npm and Action activation, then Marketplace discovery. Keep Tidelift outreach in parallel
 without making adoption dependent on acceptance or expected payments. Defer PyPI, Cargo, and Homebrew
@@ -68,10 +68,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6
+      - uses: DiffCI/DiffCI.com@3aa76a84919691cf7e8f9d1f1f6a80399325d1ae
 ```
 
-The example pins release `v0.1.4` to its full commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
+The example pins release `v0.2.2` to its full commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
