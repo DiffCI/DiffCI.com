@@ -1,5 +1,6 @@
 # DiffCI
 
+
 [![npm version](https://img.shields.io/npm/v/@diffci.com/diffci.svg)](https://www.npmjs.com/package/@diffci.com/diffci)
 [![npm provenance](https://img.shields.io/badge/npm-provenance-blue)](https://docs.npmjs.com/generating-provenance-statements)
 [![GitHub Action](https://img.shields.io/badge/action-DiffCI%2FDiffCI.com%40v0.1.4-blue)](https://github.com/DiffCI/DiffCI.com)
@@ -146,6 +147,33 @@ npx -p @diffci.com/diffci@latest diffci-mcp
 See [`docs/mcp.md`](docs/mcp.md).
 
 ## Project background
+
+## Public Core and private Cloud
+
+DiffCI's public-good analysis engine is released separately from its commercial hosted product.
+The project lives in the [DiffCI GitHub organization](https://github.com/DiffCI).
+This repository was transferred to `DiffCI/DiffCI.com` on 2026-09-16.
+
+| Component | Scope | Licensing |
+| --- | --- | --- |
+| [DiffCI Core](https://github.com/DiffCI/core) | Standalone dependency/change analysis, CI graph inference, safety/fallback, advisory test selection, synthetic benchmarking and local compute measurement | AGPL-3.0-only; public |
+| DiffCI Cloud | Hosted infrastructure, billing, enterprise dashboard, organization management, proprietary data/services, and managed acceleration | Proprietary |
+| Optional enterprise code | Separately scoped, visible and auditable enterprise capabilities | Source available, with commercial production rights controlled by DiffCI |
+
+**This mixed repository remains private.** Only the reviewed Core extraction was published, with
+fresh Git history. This repository retains its existing engine snapshot while package integration is
+migrated separately. No blanket AGPL license applies to this repository. Public Core is advisory-only;
+energy/carbon/cost are modeled estimates, not verified environmental savings. The exact extraction is
+recorded in [the Core release audit](docs/core-release-audit.md).
+
+The funded Core should run independently of DiffCI Cloud. AGPL permits commercial use and competing
+hosting; it adds source-sharing obligations for covered modifications, including qualifying remote
+network use. Grant eligibility depends on each grant's agreement and funded deliverables.
+
+See the [licensing boundaries](docs/licensing.md), [organization and migration plan](docs/github-organization.md),
+and [prepared organization profile](docs/github-org/profile/README.md).
+
+
 
 **This repository moved out of the [DentalPresence.in](https://github.com/adityankale190895/DentalPresence.in)
 monorepo** (previously `diffci/` there) into its own repo on 2026-08-21, once the project outgrew being a

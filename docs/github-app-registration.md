@@ -1,5 +1,30 @@
 # Registering the DiffCI Shadow GitHub App
 
+## Organization restoration (2026-09-16)
+
+The existing **DiffCI Shadow** app is installed on the DiffCI organization as installation
+`162093948`, scoped only to `DiffCI/DiffCI.com`. Its permissions remain read-only: Actions, Checks,
+Contents and Metadata; its subscriptions remain `push` and `workflow_run`. The existing app credentials,
+Worker and webhook are reused. No Runner permissions or credentials are involved.
+
+The signed `installation.created` delivery `3842992105785974784` received HTTP 200 at
+2026-09-16T04:24:11Z. The existing research Worker automatically enrolled the new repository identity
+as private, recorded the new installation ID, and identified `.github/workflows/ci.yml` as the evidence
+workflow. Initial state is `VALIDATING`; enrollment does not mean a new prediction has completed.
+
+The old `adityankale190895/DiffCI.com` enrollment is `PAUSED`, with a migration note. Its historical
+predictions and evidence remain under their original repository identity; they have not been relabeled
+as observations of the new installation. DentalPresence retains installation `155368612` and its
+`SHADOW_ACTIVE` state.
+
+The status API confirms cron enabled, the push-poll queue bound, and matching deployed/archive source
+SHA `b3249b37eb3ce0076636fce40acf662fcd99ecc0` (`CURRENT` integrity). This is an integrity check, not a
+claim that the analyzer is deployed from the latest repository commit.
+
+The registration instructions below describe the original setup. The webhook route is already live;
+restoring access to the same app requires installation on the new owner, not new credentials or a
+Worker redeployment. Private reports remain access-controlled.
+
 > **Status: DONE (2026-08-21).** The App is registered, its three `SHADOW_GITHUB_*` secrets are on the
 > research Worker, the webhook is active against `/v1/shadow/webhook`, and the first installation
 > (id 155368612) auto-enrolled `adityankale190895/DiffCI.com` and `adityankale190895/DentalPresence.in`
@@ -43,8 +68,8 @@ manifest shape is noted in `wrangler.github-runner.jsonc`'s comments.
      Metadata, Contents, Actions, Checks. (Pull requests was requested until 2026-09-03 and dropped
      because nothing used it; re-add it only when PR-delta analysis actually ships.)
    - Subscribe to events: `push`, `workflow_run`.
-   - "Where can this App be installed?" → **Any account** (design partners must be able to install it;
-     the App being non-public just means it's not listed in the marketplace).
+   - "Where can this App be installed?" → **Any account** (design partners and the DiffCI organization
+     must be able to install it; public installation availability does not require a Marketplace listing).
 2. **Generate a private key** (App settings page → "Generate a private key"). GitHub downloads a
    **PKCS#1** PEM; Web Crypto (which `github-app.ts` uses, identically in Node and Workers) only
    imports **PKCS#8**. Convert immediately:

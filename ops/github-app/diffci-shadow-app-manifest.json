@@ -2,7 +2,7 @@
   "name": "DiffCI Shadow",
   "url": "https://diffci.com",
   "description": "Observe-only CI shadow validation: predicts which tests a change needs before the real CI outcome is known, then reconciles against what actually happened. Never modifies repository state, never comments, never blocks or cancels a run.",
-  "public": false,
+  "public": true,
   "default_permissions": {
     "metadata": "read",
     "contents": "read",

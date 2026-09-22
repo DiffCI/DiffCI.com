@@ -44,7 +44,7 @@ interface Job {
 
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
-  const repo = args.repo ?? "adityankale190895/DiffCI.com";
+  const repo = args.repo ?? "DiffCI/DiffCI.com";
   const count = Number.parseInt(args.count ?? "10", 10);
 
   const runsResp = ghApi(`repos/${repo}/actions/workflows/ci.yml/runs?per_page=${count}&status=completed&branch=main`) as { workflow_runs: WorkflowRun[] };

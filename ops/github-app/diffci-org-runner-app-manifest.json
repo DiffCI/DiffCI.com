@@ -1,0 +1,12 @@
+{
+  "name": "DiffCI Organization Runner",
+  "url": "https://diffci.com",
+  "description": "Private ephemeral GitHub Actions runner for DiffCI organization repositories. Separate credentials and infrastructure from the personal-account DentalPresence runner.",
+  "public": false,
+  "default_permissions": { "metadata": "read", "administration": "write", "actions": "write" },
+  "default_events": ["workflow_job"],
+  "hook_attributes": {
+    "url": "https://diffci-org-github-runner.damp-waterfall-0cd8.workers.dev/webhook",
+    "active": true
+  }
+}
