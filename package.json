@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "DiffCI - deterministic change-aware CI planning",
   "keywords": [
     "ci",

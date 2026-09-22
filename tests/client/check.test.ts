@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { inferFullCommand } from "../../src/client/full-command.js";
+import { inferFullCommand, inferSelectedCommand } from "../../src/client/full-command.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const CLI = join(ROOT, "src", "client", "cli.ts");
@@ -22,6 +22,18 @@ function write(root: string, path: string, contents: string): void {
 }
 
 describe("automatic check timing", () => {
+  it("uses the declared tsx loader for selected TypeScript tests", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-check-tsx-"));
+    try {
+      write(dir, "package.json", JSON.stringify({ scripts: { test: 'node --test tests/a.test.mjs && tsx --conditions react-server --test "src/**/*.test.ts"' } }));
+      assert.deepEqual(inferSelectedCommand(dir, "node --test src/a.test.ts", ["src/a.test.ts"]), {
+        command: "npx --no-install tsx --conditions react-server --test src/a.test.ts",
+        reason: "TypeScript node:test runner from package.json test script",
+      });
+      assert.equal(inferSelectedCommand(dir, "node --test tests/a.test.mjs", ["tests/a.test.mjs"]).command, "node --test tests/a.test.mjs");
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
   it("infers a Maven command with the same configured goal and profiles as selection", () => {
     const dir = mkdtempSync(join(tmpdir(), "diffci-full-maven-"));
     try {

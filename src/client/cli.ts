@@ -29,7 +29,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 
 import { observe, isInsideRepository } from "./observe.js";
-import { inferFullCommand } from "./full-command.js";
+import { inferFullCommand, inferSelectedCommand } from "./full-command.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
 import { formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
@@ -324,10 +324,19 @@ async function runCheck(flags: Record<string, string | boolean>, env: NodeJS.Pro
     return 0;
   }
 
+  const selected = inferSelectedCommand(repoPath, observation.result.proposedCommands[0], observation.result.selectedTests);
+  if (!selected.command) {
+    print(`  timing: unavailable (${selected.reason})`);
+    if (flags.json === true) console.log(JSON.stringify({ observation, timing: null, reason: selected.reason }, null, 2));
+    return 0;
+  }
+  if (selected.command !== observation.result.proposedCommands[0]) print(`  selected command: ${selected.command} (${selected.reason})`);
+
   print("  running full and selected validation...");
   const savings = runVerifySavings({
     full: inferred.command,
     selectedFromReport: reportPath,
+    selectedCommandOverride: selected.command,
     out: savingsPath,
     markdown: markdownPath,
     label: stringFlag(flags, "label") ?? basename(repoPath),

@@ -45,6 +45,7 @@ export interface VerifySavingsOptions {
   full: string;
   selected?: string;
   selectedFromReport?: string;
+  selectedCommandOverride?: string;
   out: string;
   markdown?: string;
   label?: string;
@@ -97,7 +98,10 @@ function readSelectionFromObservation(path: string): ResolvedSelection {
 }
 
 function resolveSelection(options: VerifySavingsOptions): ResolvedSelection {
-  if (options.selectedFromReport) return readSelectionFromObservation(options.selectedFromReport);
+  if (options.selectedFromReport) {
+    const selection = readSelectionFromObservation(options.selectedFromReport);
+    return options.selectedCommandOverride ? { ...selection, command: options.selectedCommandOverride } : selection;
+  }
   if (!options.selected) throw new Error("--selected <command> or --selected-from-report <path> is required");
   return { command: options.selected, source: "manual" };
 }

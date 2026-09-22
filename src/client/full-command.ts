@@ -7,6 +7,25 @@ export interface FullCommandDecision {
   reason: string;
 }
 
+/** Preserve the repository's TypeScript test loader for selected node:test files. */
+export function inferSelectedCommand(repoPath: string, proposed: string, selectedTests: readonly string[]): FullCommandDecision {
+  if (!/^node --test(?:\s|$)/.test(proposed) || !selectedTests.some(path => /\.(?:ts|tsx|mts|cts)$/.test(path))) {
+    return { command: proposed, reason: "DiffCI proposed command" };
+  }
+  const packagePath = join(repoPath, "package.json");
+  if (!existsSync(packagePath)) return { reason: "TypeScript tests require a declared test loader" };
+  let script: unknown;
+  try { script = JSON.parse(readFileSync(packagePath, "utf8")).scripts?.test; }
+  catch { return { reason: "package.json could not be read" }; }
+  if (typeof script !== "string") return { reason: "TypeScript tests require a declared test script" };
+  const runners = [...script.matchAll(/\btsx(?:\s+--conditions\s+[\w,-]+)?\s+--test\b/g)];
+  if (runners.length !== 1) return { reason: "Cannot identify one TypeScript node:test runner in the test script" };
+  return {
+    command: proposed.replace(/^node --test/, `npx --no-install ${runners[0][0]}`),
+    reason: "TypeScript node:test runner from package.json test script",
+  };
+}
+
 /** Choose the repository's conventional full test command without executing anything. */
 export function inferFullCommand(repoPath: string): FullCommandDecision {
   if (existsSync(join(repoPath, "pom.xml"))) {
