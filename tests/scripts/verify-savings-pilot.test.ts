@@ -92,8 +92,14 @@ describe("verify-savings pilot report", () => {
     assert.equal(report.comparison.netSelectedMs, 650);
     assert.equal(report.comparison.deltaMs, 350);
     assert.equal(report.comparison.percentChange, 35);
+    assert.equal(report.comparison.grossPercentChange, 60);
     assert.equal(report.comparison.fullCommandSucceeded, true);
     assert.equal(report.comparison.selectedCommandSucceeded, true);
+    const summary = formatVerifySavingsSummary(report);
+    assert.match(summary, /test execution 60\.0% faster/);
+    assert.match(summary, /net including analysis: 35\.0% faster/);
+    assert.match(summary, /full: 1\.00s/);
+    assert.match(summary, /selected: 400ms \+ analysis 250ms = 650ms/);
   });
 
   it("flags the safety case that needs manual inspection", () => {

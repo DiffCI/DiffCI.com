@@ -1,20 +1,16 @@
 #!/usr/bin/env node
 /**
- * `diffci` - the client-side command (Phase 02, 2026-08-26).
+ * `diffci` - the client-side command.
  *
- * This is the binary a third-party repository runs in its own CI. Everything it does is observation:
- * it reads a checkout, writes one JSON report to a path outside that checkout, prints a summary,
- * optionally sends that report to DiffCI, and exits 0. There is no mode in this file that runs, skips,
- * cancels or re-orders anything, and the absence is deliberate - the seven-day Phase 02 criterion is
- * "CI byte-identical", and a flag that could change what CI runs is a flag that will eventually be set
- * by accident.
+ * `observe` and the GitHub Action remain observation-only. `check` measures a full command and a
+ * selected command when both can be inferred; it never changes what required CI executes.
  *
  * Sending is opt-in and off unless both an API URL and a token are supplied (Phase 03). Without them
  * the observer is exactly what Phase 02 shipped: a local analysis whose output never leaves the runner.
  *
  * Commands:
  *   init               seed a repository with AI-agent instructions for using DiffCI
- *   check              agent-friendly alias for observe --no-send
+ *   check              analysis plus automatic paired runtime measurement
  *   observe            analyse the checkout and write an observation report
  *   verify-savings     run a paired full-versus-selected timing check
  *   verify-workflow    check that a DiffCI job in this repository's workflows cannot affect other jobs
@@ -33,9 +29,10 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 
 import { observe, isInsideRepository } from "./observe.js";
+import { inferFullCommand } from "./full-command.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
-import { formatVerifySavingsSummary, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
+import { formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
 import { auditWorkflows, isNonInterfering } from "./workflow-guard.js";
 
 interface ParsedArgs {
@@ -120,10 +117,13 @@ npx @diffci.com/diffci@latest check
 What this does:
 
 - analyzes the current checkout and commit range;
-- writes a JSON report outside the repository by default;
-- prints selected tests, fallback reasons, and proposed commands;
-- sends nothing unless an endpoint and token are explicitly configured;
-- runs, skips, cancels, or reorders no tests.
+- runs the repository's inferred full test command and DiffCI's selected command when safe to compare;
+- prints measured paired runtime when both commands pass;
+- writes reports outside the repository and sends nothing;
+- does not skip, cancel, or reorder required CI tests.
+
+Test commands may write generated files to the checkout. Use \`observe --no-send\` when analysis
+without test execution is needed.
 
 If DiffCI reports \`REFUSED\` or \`ERROR\`, treat that as an installation or analysis issue and continue with the repository's normal test commands. If DiffCI reports a selected command, prefer using it as evidence for what changed, not as permission to skip required CI.
 `;
@@ -139,7 +139,7 @@ Before proposing, committing, or opening pull requests, run:
 npx @diffci.com/diffci@latest check
 \`\`\`
 
-DiffCI is observation-only by default. It analyzes the change, writes a report outside the checkout, and sends nothing without explicit configuration. Do not use a DiffCI selection as permission to skip required project CI.
+DiffCI check analyzes the change and runs full and selected test commands when it can infer them. It sends nothing. Test commands may write generated files. Use observe --no-send for analysis without execution. Required project CI remains authoritative.
 `;
 
 const GITHUB_COPILOT_INSTRUCTIONS = `# Repository CI/CD Validation
@@ -150,13 +150,13 @@ Use DiffCI as the default change-aware CI/CD validation lens:
 npx @diffci.com/diffci@latest check
 \`\`\`
 
-DiffCI's default agent command is observation-only. It should inform which tests and CI paths are relevant, while the repository's required checks remain authoritative.
+DiffCI check analyzes the change and runs inferred full and selected test commands to measure a paired runtime. It sends nothing; required repository checks remain authoritative.
 `;
 
 const DIFFCI_CONFIG = `{
   "$schema": "https://diffci.com/schemas/diffci.config.schema.json",
   "agentDefaultCommand": "npx @diffci.com/diffci@latest check",
-  "mode": "observe",
+  "mode": "check",
   "sendReports": false
 }
 `;
@@ -177,7 +177,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npx @diffci.com/diffci@${version} check
+      - run: npx @diffci.com/diffci@${version} observe --no-send
 `;
 }
 
@@ -216,7 +216,7 @@ function formatFinding(finding: WorkflowFinding): string {
   return `  [${finding.severity}] ${finding.code} (${where})\n      ${finding.message}`;
 }
 
-function summarise(report: ObservationReport): string {
+function summarise(report: ObservationReport, executionFollows = false): string {
   const lines: string[] = [];
   lines.push(`DiffCI observation: ${report.status} (${report.stage})`);
   if (report.reason) lines.push(`  reason: ${report.reason}`);
@@ -236,6 +236,17 @@ function summarise(report: ObservationReport): string {
     lines.push(
       `  comparator: a simple path-rule CI would have run ${result.pathBaseline.mode === "FULL" ? "everything" : `${result.pathBaseline.selectedTestCount} test file(s)`}`,
     );
+    if (result.mode === "FULL") {
+      lines.push("  planned reduction: 0% test files (full validation required); runtime savings unmeasured");
+    } else if (result.commandRefusalReason || result.proposedCommands.length === 0) {
+      lines.push("  planned reduction: unavailable (no runnable selected command); runtime savings unmeasured");
+    } else if (result.totalTestCount > 0) {
+      const avoided = Math.max(0, result.totalTestCount - result.selectedTests.length);
+      const percent = (avoided / result.totalTestCount) * 100;
+      lines.push(`  planned reduction: ${avoided}/${result.totalTestCount} test files (${percent.toFixed(1)}%) vs full; runtime savings unmeasured`);
+    } else {
+      lines.push("  planned reduction: unavailable (no discovered tests); runtime savings unmeasured");
+    }
     lines.push(`  graph: ${result.graph.nodes} nodes, confidence ${result.graph.effectiveConfidence ?? result.graph.confidence}`);
     if (result.fallbackReasons.length > 0) {
       lines.push(`  fallback: ${result.fallbackReasons.join("; ")}`);
@@ -247,15 +258,89 @@ function summarise(report: ObservationReport): string {
     }
   }
   lines.push(
-    `  non-interference: worktree ${report.nonInterference.worktreeUnchanged ? "unchanged" : "CHANGED - report this"}, report written ${report.nonInterference.reportWrittenOutsideRepository ? "outside" : "INSIDE"} the checkout`,
+    `  non-interference${executionFollows ? " (analysis phase)" : ""}: worktree ${report.nonInterference.worktreeUnchanged ? "unchanged" : "CHANGED - report this"}, report written ${report.nonInterference.reportWrittenOutsideRepository ? "outside" : "INSIDE"} the checkout`,
   );
   const blocking = report.nonInterference.workflowFindings.filter((f) => f.severity === "BLOCKING");
   if (blocking.length > 0) {
     lines.push(`  workflow: ${blocking.length} blocking finding(s) - this installation CAN affect other jobs:`);
     for (const finding of blocking) lines.push(formatFinding(finding));
   }
-  lines.push("  DiffCI changed nothing: no test was run, skipped, cancelled or re-ordered by this step.");
+  lines.push(executionFollows
+    ? "  Analysis phase complete; check runs test commands only when a valid comparison is available."
+    : "  DiffCI changed nothing: no test was run, skipped, cancelled or re-ordered by this step.");
   return lines.join("\n");
+}
+
+async function runCheck(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): Promise<number> {
+  const repoPath = resolve(stringFlag(flags, "repo") ?? env.GITHUB_WORKSPACE ?? process.cwd());
+  const reportPath = resolve(stringFlag(flags, "out") ?? defaultReportPath(env));
+  const observationCode = await runObserve({ ...flags, out: reportPath, quiet: true, "no-send": true }, env);
+  if (observationCode !== 0) return observationCode;
+  const observation = JSON.parse(readFileSync(reportPath, "utf8")) as ObservationReport;
+  const print = (message: string): void => { if (flags.quiet !== true && flags.json !== true) console.log(message); };
+  print(summarise(observation, true));
+  print(`  observation report: ${reportPath}`);
+  if (observation.status !== "OBSERVED" || !observation.result) {
+    print("  timing: unavailable because analysis did not complete");
+    if (flags.json === true) console.log(JSON.stringify({ observation, timing: null }, null, 2));
+    return flags["fail-on-error"] === true ? 1 : 0;
+  }
+  const checkedOutHead = execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoPath, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  if (observation.commitRange?.headSha !== checkedOutHead) {
+    const reason = "the analyzed head is not checked out; timing would execute a different revision";
+    print(`  timing: unavailable (${reason})`);
+    if (flags.json === true) console.log(JSON.stringify({ observation, timing: null, reason }, null, 2));
+    return 1;
+  }
+
+  const inferred = inferFullCommand(repoPath);
+  if (!inferred.command) {
+    print(`  timing: unavailable (${inferred.reason})`);
+    if (flags.json === true) console.log(JSON.stringify({ observation, timing: null, reason: inferred.reason }, null, 2));
+    return 0;
+  }
+  print(`  full command: ${inferred.command} (${inferred.reason})`);
+  const timeoutMs = numberFlag(flags, "timeout-ms") ?? 30 * 60 * 1000;
+  const tailBytes = numberFlag(flags, "tail-bytes") ?? 12_000;
+  const savingsPath = reportPath.endsWith(".json") ? reportPath.slice(0, -5) + "-savings.json" : reportPath + ".savings.json";
+  const markdownPath = savingsPath.replace(/\.json$/, ".md");
+
+  if (observation.result.mode === "FULL") {
+    print("  running full validation...");
+    const full = measureCommand(inferred.command, { cwd: repoPath, timeoutMs, tailBytes });
+    writeFileSync(savingsPath, `${JSON.stringify({ schema: "diffci.fullValidation.v1", observationReportPath: reportPath, full }, null, 2)}\n`, "utf8");
+    print(full.exitCode === 0 && !full.timedOut
+      ? `DiffCI check: full validation passed in ${(full.wallMs / 1000).toFixed(2)}s; 0% measured reduction for this commit`
+      : `DiffCI check: full validation failed (exit ${String(full.exitCode)}); savings unavailable`);
+    print(`  execution report: ${savingsPath}`);
+    if (flags.json === true) console.log(JSON.stringify({ observation, full }, null, 2));
+    return full.exitCode === 0 && !full.timedOut ? 0 : 1;
+  }
+
+  if (observation.result.commandRefusalReason || observation.result.proposedCommands.length !== 1) {
+    const reason = observation.result.commandRefusalReason ?? "the selection has no single runnable command";
+    print(`  timing: unavailable (${reason})`);
+    if (flags.json === true) console.log(JSON.stringify({ observation, timing: null, reason }, null, 2));
+    return 0;
+  }
+
+  print("  running full and selected validation...");
+  const savings = runVerifySavings({
+    full: inferred.command,
+    selectedFromReport: reportPath,
+    out: savingsPath,
+    markdown: markdownPath,
+    label: stringFlag(flags, "label") ?? basename(repoPath),
+    cwd: repoPath,
+    timeoutMs,
+    tailBytes,
+  });
+  writeVerifySavingsReport(savings, { out: savingsPath, markdown: markdownPath });
+  print(formatVerifySavingsSummary(savings));
+  print(`  savings report: ${savingsPath}`);
+  print(`  markdown: ${markdownPath}`);
+  if (flags.json === true) console.log(JSON.stringify({ observation, savings }, null, 2));
+  return savings.comparison.fullCommandSucceeded && savings.comparison.selectedCommandSucceeded ? 0 : 1;
 }
 
 async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): Promise<number> {
@@ -468,6 +553,14 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
     console.log("DiffCI pilot stopped before timing because observation did not produce a selectable report.");
     return 1;
   }
+  if (observation.result?.mode === "FULL") {
+    console.log("DiffCI pilot: 0% planned test-file reduction on this commit (full validation required). No paired timing was run.");
+    return 0;
+  }
+  if (!observation.result?.proposedCommands.length || observation.result.commandRefusalReason) {
+    console.log("DiffCI pilot: no runnable selected command. No paired timing was run.");
+    return 1;
+  }
 
   const savings = runVerifySavings({
     full,
@@ -488,12 +581,12 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
   return savings.comparison.fullCommandSucceeded && savings.comparison.selectedCommandSucceeded ? 0 : 1;
 }
 
-const USAGE = `diffci - observation-only change-aware CI analysis
+const USAGE = `diffci - change-aware CI analysis and paired timing
 
 Usage:
   diffci init [--repo <path>] [--workflow] [--force]
   diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
-               [--redact-paths] [--json] [--quiet] [--fail-on-error]
+               [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>]
   diffci pilot --full <command> [--repo <path>] [--out-dir <dir>] [--label <name>]
   diffci observe [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                  [--redact-paths] [--json] [--quiet] [--fail-on-error]
@@ -505,7 +598,7 @@ Usage:
   diffci version
 
 init writes AGENTS.md, CLAUDE.md, Cursor rules, Copilot instructions, and diffci.config.json.
-check is the default AI-agent command: it is observe with sending disabled.
+check analyzes the change, runs inferred full and selected commands, and shows measured savings.
 pilot runs observe and verify-savings together, writing reports to ../diffci-output by default.
 observe analyses the checkout and writes one JSON report. It runs nothing and changes nothing.
 verify-savings runs both commands and reports measured paired runtime; it is an opt-in pilot command.
@@ -531,7 +624,7 @@ async function main(): Promise<void> {
       process.exitCode = runInit(flags, env);
       return;
     case "check":
-      process.exitCode = await runObserve({ ...flags, "no-send": true }, env);
+      process.exitCode = await runCheck(flags, env);
       return;
     case "pilot":
       process.exitCode = await runPilot(flags, env);

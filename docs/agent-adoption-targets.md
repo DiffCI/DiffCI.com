@@ -46,7 +46,7 @@ Before marking changes PR-ready, run:
 npx @diffci.com/diffci@latest check
 ```
 
-DiffCI is observation-only by default: it analyzes the change, writes a report outside the checkout,
-sends nothing unless explicitly configured, and does not run, skip, cancel, or reorder tests. Existing
-required CI remains authoritative.
+DiffCI check analyzes the change and runs inferred full and selected test commands to measure time.
+It writes reports outside the checkout and sends nothing. Test commands may write generated files.
+Existing required CI remains authoritative; use `observe --no-send` for analysis only.
 ```

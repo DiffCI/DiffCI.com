@@ -7,8 +7,8 @@
 
 **Find test-selection opportunities in your CI before changing what it runs.** DiffCI analyzes a
 commit's changes and dependency graph, then reports which test files it would select, why it falls
-back to a full run, and whether it can propose a test command. The `observe` command and Action are observation-only;
-the opt-in `pilot` and `verify-savings` commands execute tests.
+back to a full run, and whether it can propose a test command. `check` also runs paired full and
+selected commands when it can infer them. The `observe` command and Action remain observation-only.
 
 **For AI coding agents:** DiffCI gives Codex, Claude Code, Cursor, GitHub Copilot, Grok, and similar
 tools a safe default CI/CD validation command.
@@ -25,22 +25,23 @@ For AI coding agents, seed the repository with default instructions:
 npx @diffci.com/diffci@latest init
 ```
 
-For the fastest self-serve runtime pilot, run one paired check from the repository root:
+For a self-serve runtime comparison, run one command from the repository root:
 
 ```bash
-npx @diffci.com/diffci@latest pilot --full "npm test"
+npx @diffci.com/diffci@latest check
 ```
 
 On Windows PowerShell, quote the package name:
 
 ```powershell
-npx '@diffci.com/diffci@latest' pilot --full "npm test"
+npx '@diffci.com/diffci@latest' check
 ```
 
-This executes the full and selected commands sequentially, and writes `diffci-observe.json`,
-`diffci-savings.json`, and `diffci-savings.md` to a sibling `diffci-output` folder outside the checkout.
-The commands you supply may create files or otherwise change the checkout. One paired run is preliminary
-timing evidence; repeat comparisons and account for cache effects before claiming savings.
+`check` infers a full test command, runs it and DiffCI's selected command, and prints gross test-time
+and net runtime changes when both pass. It writes observation and savings reports outside the checkout.
+Test commands may create files or change the checkout. One paired run is preliminary evidence; repeat
+comparisons and account for cache effects before claiming CI savings. On a full-validation fallback,
+`check` runs the full command once and reports 0% reduction.
 
 **Upgrade from 0.1.3:** tests excluded by a source-only `tsconfig.json` could be discovered without
 their dependency edges, producing an incomplete selection. This is fixed in **0.1.4**. Revalidate
@@ -53,8 +54,9 @@ comparison, add `--base <base-sha> --head <head-sha>`. DiffCI prints the selecti
 and the path to a JSON report outside your checkout. `REFUSED` or `ERROR` is not a successful analysis;
 check the reported status even when the command exits successfully. See the
 [support matrix](docs/language-support.md) for setup requirements and supported workloads.
-`check` is an agent-friendly alias for `observe --no-send`: it runs no tests, changes no CI behavior,
-and sends nothing by default. See [`docs/ai-agents.md`](docs/ai-agents.md) for Claude Code, Codex,
+`check` runs inferred full and selected commands in the checkout and sends nothing by default.
+The commands may write generated files. Use `observe --no-send` for analysis without execution.
+See [`docs/ai-agents.md`](docs/ai-agents.md) for Claude Code, Codex,
 Cursor, GitHub Copilot, and similar tools.
 
 **Measured example:** a controlled Cal.com replay showed **44.2% net reduction in a job-equivalent
@@ -62,8 +64,8 @@ install + pretest + test workload**, including analysis overhead. This is one sa
 not Cal.com's production savings or a prediction for your repository.
 [Read the timings and method](docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md).
 
-Selection counts alone do not establish runtime savings. Observation mode measures neither the
-selected test execution nor realized savings.
+Selection counts alone do not establish runtime savings. `check` reports a measured percentage only
+when both commands pass; `observe` does not execute tests.
 
 For an advanced paired runtime check, you can still run `observe` first and then run `verify-savings`
 against the observation report. It compares your normal full command with
@@ -106,7 +108,7 @@ DiffCI's hosted service requires an explicitly configured endpoint and token.
 | [`@diffci.com/diffci`](https://www.npmjs.com/package/@diffci.com/diffci) | Try `observe` locally, run an opt-in runtime pilot, or install the GitHub Action from this repository | Published npm CLI and Action |
 
 The CLI bundles a pinned revision of the [Core engine](https://github.com/DiffCI/core) from GitHub. Users install only
-`@diffci.com/diffci`; the `pilot` command above stays the same. Core performs Git analysis,
+`@diffci.com/diffci`; the `check` command above uses it directly. Core performs Git analysis,
 dependency graphs, impact, path baseline, and selected-command planning. The report format and
 non-interfering GitHub Action remain in this repository. See
 [`docs/package-relationship.md`](docs/package-relationship.md) for the source relationship.

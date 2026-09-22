@@ -23,8 +23,9 @@ Then ask your coding agent to run:
 npx @diffci.com/diffci@latest check
 ```
 
-DiffCI is observation-only by default: it analyzes the change, writes a report outside the checkout,
-sends nothing unless explicitly configured, and does not run, skip, cancel, or reorder tests.
+DiffCI check analyzes the change and runs inferred full and selected test commands to measure time.
+It writes reports outside the checkout and sends nothing. Test commands may write generated files.
+Use `observe --no-send` for analysis only.
 ```
 
 ## Agent Instruction Snippet
@@ -71,11 +72,11 @@ Title: Add optional DiffCI instructions for AI coding agents
 
 This adds an optional instruction for coding agents to run DiffCI before marking changes PR-ready.
 
-DiffCI is observation-only by default:
+DiffCI check runs a paired test comparison when commands can be inferred:
 
 - it analyzes the change and writes a local report;
 - it sends nothing without explicit configuration;
-- it does not run, skip, cancel, or reorder tests;
+- it runs full and selected test commands but does not skip required CI;
 - the repository's existing required CI remains authoritative.
 
 Default command:

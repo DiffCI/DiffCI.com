@@ -32,6 +32,7 @@ export interface VerifySavingsReport {
     selectedWallMs: number;
     netSelectedMs: number;
     deltaMs: number;
+    grossPercentChange: number;
     percentChange: number;
     selectedCommandSucceeded: boolean;
     fullCommandSucceeded: boolean;
@@ -101,7 +102,7 @@ function resolveSelection(options: VerifySavingsOptions): ResolvedSelection {
   return { command: options.selected, source: "manual" };
 }
 
-function measureCommand(command: string, options: Pick<VerifySavingsOptions, "cwd" | "timeoutMs" | "tailBytes">): CommandMeasurement {
+export function measureCommand(command: string, options: Pick<VerifySavingsOptions, "cwd" | "timeoutMs" | "tailBytes">): CommandMeasurement {
   const startedAt = new Date().toISOString();
   const started = Date.now();
   const shellCommand = process.platform === "win32" ? "powershell.exe" : "sh";
@@ -147,6 +148,7 @@ export function buildVerifySavingsReport(input: {
   const overhead = input.analysisOverheadMs ?? 0;
   const netSelectedMs = input.selected.wallMs + overhead;
   const deltaMs = input.full.wallMs - netSelectedMs;
+  const grossPercentChange = input.full.wallMs > 0 ? ((input.full.wallMs - input.selected.wallMs) / input.full.wallMs) * 100 : 0;
   const percentChange = input.full.wallMs > 0 ? (deltaMs / input.full.wallMs) * 100 : 0;
   const fullCommandSucceeded = input.full.exitCode === 0 && !input.full.timedOut;
   const selectedCommandSucceeded = input.selected.exitCode === 0 && !input.selected.timedOut;
@@ -179,6 +181,7 @@ export function buildVerifySavingsReport(input: {
       selectedWallMs: input.selected.wallMs,
       netSelectedMs,
       deltaMs,
+      grossPercentChange,
       percentChange,
       selectedCommandSucceeded,
       fullCommandSucceeded,
@@ -227,6 +230,7 @@ ${!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandS
 | --- | ---: |
 | Full runtime | ${formatMs(report.comparison.fullWallMs)} |
 | Selected runtime | ${formatMs(report.comparison.selectedWallMs)} |
+| Test execution change vs full | ${formatPercent(report.comparison.grossPercentChange)} |
 | DiffCI analysis overhead | ${overhead} |
 | Net selected runtime | ${formatMs(report.comparison.netSelectedMs)} |
 | Delta vs full | ${formatMs(report.comparison.deltaMs)} ${deltaLabel} |
@@ -277,7 +281,10 @@ export function formatVerifySavingsSummary(report: VerifySavingsReport): string 
       (report.comparison.missedFailureSignal ? "\n  warning: full failed while selected passed; inspect outputs before claiming safety" : "");
   }
   const lines = [
-    `DiffCI verify-savings: ${report.comparison.deltaMs >= 0 ? "faster" : "slower"} by ${formatMs(Math.abs(report.comparison.deltaMs))}`,
+    `DiffCI verify-savings: test execution ${Math.abs(report.comparison.grossPercentChange).toFixed(1)}% ${report.comparison.grossPercentChange >= 0 ? "faster" : "slower"} in this paired run`,
+    `  full: ${formatMs(report.comparison.fullWallMs)}`,
+    `  selected: ${formatMs(report.comparison.selectedWallMs)} + analysis ${formatMs(report.analysisOverheadMs ?? 0)} = ${formatMs(report.comparison.netSelectedMs)}`,
+    `  net including analysis: ${Math.abs(report.comparison.percentChange).toFixed(1)}% ${report.comparison.deltaMs >= 0 ? "faster" : "slower"} (${formatMs(Math.abs(report.comparison.deltaMs))} ${report.comparison.deltaMs >= 0 ? "saved" : "added"})`,
   ];
   if (report.comparison.missedFailureSignal) {
     lines.push("  warning: full failed while selected passed; inspect outputs before claiming safety");

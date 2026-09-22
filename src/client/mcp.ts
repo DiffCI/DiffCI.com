@@ -22,7 +22,7 @@ const SERVER_INFO = { name: "diffci-mcp", version: "0.1.0" };
 const tools = [
   {
     name: "diffci_check",
-    description: "Run DiffCI's observation-only AI-agent validation command. It sends nothing by default and does not run, skip, cancel, or reorder tests.",
+    description: "Analyze the repository, run inferred full and selected test commands when available, and report paired runtime. Sends nothing to DiffCI Cloud.",
     inputSchema: {
       type: "object",
       properties: {

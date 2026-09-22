@@ -12,6 +12,7 @@ Default validation command:
 npx @diffci.com/diffci@latest check
 ```
 
-Use DiffCI before PR-ready answers. `check` is observation-only: it analyzes the change, writes a
-report outside the checkout, sends nothing by default, and does not run, skip, cancel, or reorder tests.
+Use DiffCI before PR-ready answers. `check` analyzes the change and runs inferred full and selected
+test commands to measure time. It writes reports outside the checkout and sends nothing by default.
+Test commands may write generated files. Use `observe --no-send` for analysis only.
 Keep the repository's required checks authoritative.

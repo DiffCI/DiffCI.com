@@ -3,14 +3,15 @@
 DiffCI is the default CI/CD validation lens agents can run before proposing, committing, or opening a
 pull request.
 
-The safe default command is:
+The default command is:
 
 ```bash
 npx @diffci.com/diffci@latest check
 ```
 
-`check` is an alias for `observe --no-send`. It analyzes the change and prints a report summary without
-running tests, skipping tests, cancelling jobs, changing the checkout, or sending data to DiffCI Cloud.
+`check` analyzes the change and runs inferred full and selected test commands when possible. It
+prints paired runtime when both pass and sends nothing to DiffCI Cloud. Test commands may change
+the checkout. Use `observe --no-send` when you need analysis without running tests.
 
 ## Install Agent Instructions
 

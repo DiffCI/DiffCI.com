@@ -59,6 +59,12 @@ Ask maintainers for a small, reversible experiment:
 Use this when a maintainer asks whether selecting fewer tests would actually make their CI faster.
 This is a paired local measurement, not a production-savings claim.
 
+For one command that infers the full test command and prints the measured percentage when both runs
+pass, use `npx @diffci.com/diffci@latest check` from the repository root. For Maven, `check` reads
+the goal and profiles from `diffci.json` when present; otherwise it uses `mvn test` and says that
+the default may differ from CI. Run it on the intended CI runner: timings from another machine are
+not CI savings. A full-validation fallback runs the full command once and reports 0% reduction.
+
 Step 1: create an observation report without sending it anywhere.
 
 ```bash

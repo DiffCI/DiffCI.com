@@ -20,7 +20,7 @@ describe("agent-facing CLI commands", () => {
     assert.equal(result.status, 0);
     assert.match(result.stdout, /diffci init \[--repo <path>\] \[--workflow\] \[--force\]/);
     assert.match(result.stdout, /diffci check \[--repo <path>\]/);
-    assert.match(result.stdout, /check is the default AI-agent command: it is observe with sending disabled/);
+    assert.match(result.stdout, /check analyzes the change, runs inferred full and selected commands/);
   });
 
   it("initializes AI-agent instruction files without overwriting existing files by default", () => {
@@ -38,7 +38,7 @@ describe("agent-facing CLI commands", () => {
       assert.match(readFileSync(join(dir, ".cursor", "rules", "diffci.mdc"), "utf8"), /alwaysApply: true/);
       assert.match(readFileSync(join(dir, ".github", "copilot-instructions.md"), "utf8"), /Repository CI\/CD Validation/);
       assert.match(readFileSync(join(dir, "diffci.config.json"), "utf8"), /"sendReports": false/);
-      assert.match(readFileSync(join(dir, ".github", "workflows", "diffci.yml"), "utf8"), new RegExp(`npx @diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")} check`));
+      assert.match(readFileSync(join(dir, ".github", "workflows", "diffci.yml"), "utf8"), new RegExp(`npx @diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")} observe --no-send`));
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
