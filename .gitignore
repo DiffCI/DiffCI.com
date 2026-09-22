@@ -6,6 +6,7 @@ dist/
 # Logs and coverage
 *.log
 coverage/
+outputs/
 
 # Generated audit artifacts - regenerate them, never commit them. A committed audit is a
 # snapshot of one machine's run masquerading as a fact about the repository.
