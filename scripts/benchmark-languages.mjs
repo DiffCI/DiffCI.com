@@ -6,9 +6,9 @@ import ts from 'typescript';
 import { freezeTimingHistory, heldOutEconomics, vitestWorkerConfiguration } from './bypass-benchmark-protocol.js';
 
 if (process.platform !== 'linux' || !process.env.DIFFCI_VALIDATION_IMAGE) throw new Error('Cloudflare validation container required');
-const cohort = JSON.parse(readFileSync(new URL('./language-benchmark-cohort.json', import.meta.url), 'utf8'));
 const experiment = JSON.parse(readFileSync(new URL('./language-benchmark-experiment.json', import.meta.url), 'utf8'));
-const spec = cohort.repositories.find(s => s.id === process.argv[2]);
+const cohort = JSON.parse(readFileSync(new URL(experiment.independentCohort ? './independent-benchmark-cohort.json' : './language-benchmark-cohort.json', import.meta.url), 'utf8'));
+const spec = cohort.repositories.find(s => s.id === (experiment.repositoryId ?? process.argv[2]));
 if (!spec) throw new Error('Unknown fixed cohort repository');
 const root = '/workspace/broad-benchmark';
 const checkout = join(root, 'repo');
@@ -68,7 +68,7 @@ function execute(selected) {
     const targets = selected ? [...new Set(selected.map(p => p.includes('/') ? './' + p.slice(0, p.lastIndexOf('/')) : '.'))].sort() : ['./...'];
     args = ['test', '-mod=readonly', '-json', '-count=1', ...targets];
   } else {
-    args = ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', 'run', '--config', 'vitest.config.ts', ...vueWorkerArguments, '--sequence.seed=42', '--reporter=json', `--outputFile=${json}`, ...(selected ?? []).map(p => relative(resolve(checkout, spec.cwd), resolve(checkout, p)))];
+    args = ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', 'run', '--config', spec.testConfig ?? 'vitest.config.ts', ...(spec.testArgs ?? []), ...vueWorkerArguments, '--sequence.seed=42', '--reporter=json', `--outputFile=${json}`, ...(selected ?? []).map(p => relative(resolve(checkout, spec.cwd), resolve(checkout, p)))];
   }
   const result = run('/usr/bin/time', ['-f', '%U %S %e %M', '-o', usage, cmd, ...args], cwd, false, 180000, vueWorkerEnvironment);
   const record = result.record;
@@ -201,6 +201,7 @@ try {
   run('chown', ['-R', `${uid}:${gid}`, root]);
   run('chown', [`${uid}:${gid}`, '/workspace/language-qualification.json']);
   Object.assign(process.env, { HOME: join(root, 'home'), GOPATH: join(root, 'gopath'), GOCACHE: join(root, 'gocache'), COREPACK_HOME: join(root, 'corepack'), npm_config_cache: join(root, 'npm-cache'), TMPDIR: root });
+  if (experiment.independentCohort) Object.assign(process.env, { CI: 'true', PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1', CYPRESS_INSTALL_BINARY: '0' });
   process.setgroups([]); process.setgid(gid); process.setuid(uid);
   report.identity = { uid: process.getuid(), gid: process.getgid(), root: false };
   // The report lives outside the target checkout, in our writable benchmark directory.
@@ -269,6 +270,7 @@ try {
     report.cacheProtocol = { order: 'oldest first', arms: ['uncached', 'cold', 'warm', 'incremental'], repetitions: 2, cacheTransport: 'runner-local filesystem on Cloudflare; reads/validation/writes included, cross-job R2 transfer not measured', priorCommit: 'independent persistent cache per repetition; first commit starts empty' };
   }
   if (experiment.mode === 'reka-selection') candidates.reverse();
+  if (experiment.independentCohort && candidates.length !== 8) throw new Error('Independent cohort requires exactly eight frozen source commits');
   const trainingRecords = [];
   let latestTrainingContext = '';
   const timingHistoryPath = join(root, 'frozen-timing-history.json');
@@ -301,9 +303,10 @@ try {
         c.setup = run('go', ['mod', 'download'], checkout).record;
       } else {
         if (existsSync(join(checkout, 'diffci.json'))) throw new Error('Existing DiffCI config requires a separate cohort; no overwrite');
-        c.configurationOverlay = { vue: { packageRoot: spec.cwd, testConfig: 'vitest.config.ts' } };
+        c.configurationOverlay = { vue: { packageRoot: spec.cwd, testConfig: spec.testConfig ?? 'vitest.config.ts' } };
         writeFileSync(join(checkout, 'diffci.json'), JSON.stringify(c.configurationOverlay));
         c.setup = run('corepack', ['pnpm', 'install', '--frozen-lockfile'], checkout, true, 480000).record;
+        if (spec.buildArgs) c.build = run('corepack', ['pnpm', ...spec.buildArgs], checkout, true, 600000).record;
         if (experiment.compatibleVitestWorkers) {
           const help = run('corepack', ['pnpm', '--dir', spec.cwd, 'exec', 'vitest', '--help'], checkout);
           c.testRunnerHelp = help.record;
@@ -360,7 +363,7 @@ try {
           const order = (index + repeat) % 2 === 0 ? [...arms] : [...arms].reverse();
           const pair = { order };
           for (const arm of order) pair[arm] = observeWith(host, arm === 'uncached' ? [] : ['--vue-analysis-cache', join(root, `selection-cache-${repeat}`)]);
-          if (pair.uncached.observation.status !== 'OBSERVED' || !arms.every(arm => identity(pair[arm].observation) === identity(pair.uncached.observation))) throw new Error('Selection cached/uncached decisions differ');
+          if (!['OBSERVED', ...(experiment.independentCohort ? ['REFUSED'] : [])].includes(pair.uncached.observation.status) || !arms.every(arm => identity(pair[arm].observation) === identity(pair.uncached.observation))) throw new Error('Selection cached/uncached decisions differ');
           if (repeat && identity(pair.uncached.observation) !== identity(c.selectionObservations[0].uncached.observation)) throw new Error('Selection decisions changed between repetitions');
           c.selectionObservations.push(pair);
         }

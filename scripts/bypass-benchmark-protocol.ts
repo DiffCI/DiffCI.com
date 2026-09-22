@@ -9,6 +9,7 @@ export interface TrainingRecord {
 /** Preserve two-worker limits using each verified Vitest interface. */
 export function vitestWorkerConfiguration(help: string, version: string): { args: string[]; env: Record<string, string> } {
   if (/--maxWorkers\b/.test(help) && /--minWorkers\b/.test(help)) return { args: ["--maxWorkers=2", "--minWorkers=2"], env: {} };
+  if (/--maxWorkers\b/.test(help) && /\bvitest\/[45]\./.test(version)) return { args: ["--maxWorkers=2"], env: {} };
   // Vitest 0.34.6 reads these in node/config.ts; it has no maxThreads CLI flag.
   if (/\bvitest\/0\.34\.6\b/.test(version) && /--threads\b/.test(help)) return { args: ["--threads"], env: { VITEST_MAX_THREADS: "2", VITEST_MIN_THREADS: "2" } };
   throw new Error("Cannot establish compatible two-worker Vitest options");
