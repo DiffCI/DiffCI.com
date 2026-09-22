@@ -1,11 +1,15 @@
 import { strict as assert } from "node:assert";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { dirname, join } from "node:path";
-import { describe, it } from "node:test";
+import { before, describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const MCP = join(ROOT, "dist-client", "src", "client", "mcp.js");
+
+before(() => {
+  execFileSync(process.execPath, [join(ROOT, "node_modules", "typescript", "bin", "tsc"), "-p", "tsconfig.client.json"], { cwd: ROOT, stdio: "pipe" });
+});
 
 function frame(message: unknown): string {
   const body = JSON.stringify(message);
@@ -45,7 +49,11 @@ describe("DiffCI MCP server", () => {
     child.stdin.write(frame({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }));
 
     await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error(`timed out waiting for MCP response. stderr: ${stderr}`)), 5000);
+      const timeout = setTimeout(() => {
+        clearInterval(poll);
+        child.kill();
+        reject(new Error(`timed out waiting for MCP response. stderr: ${stderr}`));
+      }, 5000);
       const poll = setInterval(() => {
         if (parseFrames(stdout).length >= 2) {
           clearTimeout(timeout);
