@@ -1,0 +1,12 @@
+{
+  "name": "DiffCI",
+  "description": "Observation-only CI/CD validation for AI coding agents.",
+  "category": "developer-tools",
+  "homepage": "https://diffci.com/docs/ai-agents.html",
+  "repository": "https://github.com/DiffCI/DiffCI.com",
+  "license": "AGPL-3.0-only",
+  "install": {
+    "command": "npx",
+    "args": ["-p", "@diffci.com/diffci@latest", "diffci-mcp"]
+  }
+}

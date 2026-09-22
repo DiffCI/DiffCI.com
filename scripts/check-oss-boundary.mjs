@@ -14,6 +14,8 @@ const ALLOWED_PACKAGE_PREFIXES = [
   "dist-client/src/client/",
   "node_modules/",
   "README.md",
+  "server.json",
+  "glama.json",
   "llms.txt",
   "SECURITY.md",
   "SUPPORT.md",

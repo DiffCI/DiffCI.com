@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "DiffCI - deterministic change-aware CI planning",
   "keywords": [
     "ci",
@@ -16,6 +16,7 @@
     "github-actions"
   ],
   "license": "AGPL-3.0-only",
+  "mcpName": "io.github.DiffCI/diffci",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DiffCI/DiffCI.com.git"
@@ -33,6 +34,8 @@
     "action.yml",
     "dist-client/src/client",
     "README.md",
+    "server.json",
+    "glama.json",
     "llms.txt",
     "docs/ai-agents.md",
     "docs/adoption-outreach.md",

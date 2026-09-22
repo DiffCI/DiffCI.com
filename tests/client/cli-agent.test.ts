@@ -19,6 +19,7 @@ describe("agent-facing CLI commands", () => {
     const result = runCli(["help"], ROOT);
     assert.equal(result.status, 0);
     assert.match(result.stdout, /diffci init \[--repo <path>\] \[--workflow\] \[--force\]/);
+    assert.match(result.stdout, /diffci mcp/);
     assert.match(result.stdout, /diffci check \[--repo <path>\]/);
     assert.match(result.stdout, /check analyzes the change, runs inferred full and selected commands/);
   });

@@ -10,6 +10,7 @@
  *
  * Commands:
  *   init               seed a repository with AI-agent instructions for using DiffCI
+ *   mcp                run the stdio MCP server
  *   check              analysis plus automatic paired runtime measurement
  *   observe            analyse the checkout and write an observation report
  *   verify-savings     run a paired full-versus-selected timing check
@@ -23,7 +24,7 @@
  * the observed checkout) - nothing was observed, and the caller has to change the call. `verify-workflow`
  * exits 1 on a BLOCKING finding - it is a pre-install check run by a human, not a step inside a build.
  */
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
@@ -208,6 +209,18 @@ function runInit(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv
   for (const write of writes) console.log(`  ${write}`);
   if (!includeWorkflow) console.log("  skipped .github/workflows/diffci.yml (pass --workflow to add it)");
   console.log("\nDefault agent command: npx @diffci.com/diffci@latest check");
+  return 0;
+}
+
+function runMcp(): number {
+  const result = spawnSync(process.execPath, [join(dirname(import.meta.filename), "mcp.js")], {
+    cwd: process.cwd(),
+    env: process.env,
+    stdio: "inherit",
+    windowsHide: true,
+  });
+  if (typeof result.status === "number") return result.status;
+  if (result.error) throw result.error;
   return 0;
 }
 
@@ -594,6 +607,7 @@ const USAGE = `diffci - change-aware CI analysis and paired timing
 
 Usage:
   diffci init [--repo <path>] [--workflow] [--force]
+  diffci mcp
   diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>]
   diffci pilot --full <command> [--repo <path>] [--out-dir <dir>] [--label <name>]
@@ -607,6 +621,7 @@ Usage:
   diffci version
 
 init writes AGENTS.md, CLAUDE.md, Cursor rules, Copilot instructions, and diffci.config.json.
+mcp runs the stdio MCP server for native agent integrations.
 check analyzes the change, runs inferred full and selected commands, and shows measured savings.
 pilot runs observe and verify-savings together, writing reports to ../diffci-output by default.
 observe analyses the checkout and writes one JSON report. It runs nothing and changes nothing.
@@ -631,6 +646,9 @@ async function main(): Promise<void> {
   switch (command) {
     case "init":
       process.exitCode = runInit(flags, env);
+      return;
+    case "mcp":
+      process.exitCode = runMcp();
       return;
     case "check":
       process.exitCode = await runCheck(flags, env);

@@ -9,17 +9,30 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 describe("npm package contract", () => {
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
     name?: string;
+    version?: string;
     private?: boolean;
     bin?: Record<string, string>;
     files?: string[];
+    mcpName?: string;
     scripts?: Record<string, string>;
     bundleDependencies?: string[];
     dependencies?: Record<string, string>;
+  };
+  const server = JSON.parse(readFileSync(join(ROOT, "server.json"), "utf8")) as {
+    name?: string;
+    version?: string;
+    packages?: Array<{
+      identifier?: string;
+      version?: string;
+      packageArguments?: Array<{ type?: string; value?: string }>;
+      transport?: { type?: string };
+    }>;
   };
 
   it("publishes a diffci binary backed by the client build", () => {
     assert.equal(pkg.name, "@diffci.com/diffci");
     assert.equal(pkg.private, false);
+    assert.equal(pkg.mcpName, "io.github.DiffCI/diffci");
     assert.equal(pkg.bin?.diffci, "dist-client/src/client/cli.js");
     assert.equal(pkg.bin?.["diffci-mcp"], "dist-client/src/client/mcp.js");
     assert.equal(pkg.scripts?.prepack, "npm run build:client");
@@ -34,6 +47,8 @@ describe("npm package contract", () => {
       "action.yml",
       "dist-client/src/client",
       "README.md",
+      "server.json",
+      "glama.json",
       "llms.txt",
       "docs/ai-agents.md",
       "docs/adoption-outreach.md",
@@ -61,5 +76,14 @@ describe("npm package contract", () => {
     assert.match(cli, /^#!\/usr\/bin\/env node\r?\n/, "the npm bin entry needs a shebang");
     const mcp = readFileSync(join(ROOT, "src", "client", "mcp.ts"), "utf8");
     assert.match(mcp, /^#!\/usr\/bin\/env node\r?\n/, "the MCP bin entry needs a shebang");
+  });
+
+  it("keeps official MCP registry metadata aligned with the npm package", () => {
+    assert.equal(server.name, pkg.mcpName);
+    assert.equal(server.version, pkg.version);
+    assert.equal(server.packages?.[0]?.identifier, pkg.name);
+    assert.equal(server.packages?.[0]?.version, pkg.version);
+    assert.equal(server.packages?.[0]?.transport?.type, "stdio");
+    assert.deepEqual(server.packages?.[0]?.packageArguments, [{ type: "positional", value: "mcp" }]);
   });
 });
