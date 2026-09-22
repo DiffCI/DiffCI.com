@@ -22,11 +22,6 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { relative, resolve } from "node:path";
-import { analyzeGitDelta } from "@diffci.com/core/git/git-diff";
-import { classifyRepositoryProject, buildDependencyGraph } from "@diffci.com/core/repo/graph";
-import { ImpactAnalyzer } from "@diffci.com/core/repo/impact";
-import { runPathBaseline } from "@diffci.com/core/planner/path-baseline";
-import { commandSpecToString, planSelectiveTestCommands } from "@diffci.com/core/planner/test-command";
 
 import { economicsContext, evaluateEconomics, type EconomicsDecision } from "./economics.js";
 import {
@@ -222,7 +217,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     }
 
     const [{ analyzeGitDelta }, { classifyRepositoryProject, buildDependencyGraph }, { ImpactAnalyzer }, { runPathBaseline }, { commandSpecToString, planSelectiveTestCommands }] = await Promise.all([
-      import("../git/git-diff.js"), import("../repo/graph.js"), import("../repo/impact.js"), import("../planner/path-baseline.js"), import("../planner/test-command.js"),
+      import("@diffci.com/core/git/git-diff"), import("@diffci.com/core/repo/graph"), import("@diffci.com/core/repo/impact"), import("@diffci.com/core/planner/path-baseline"), import("@diffci.com/core/planner/test-command"),
     ]);
     markPhase("engineLoad");
 
@@ -232,7 +227,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     markPhase("eligibility");
     if (!capability.capable) {
       return finish("REFUSED", "eligibility", {
-        reason: `DiffCI supports TypeScript/JavaScript projects, Vue components, and root Go modules: ${capability.reason}`,
+        reason: `DiffCI supports TypeScript/JavaScript projects, Vue components, root Go modules, and conventional Maven reactors: ${capability.reason}`,
       });
     }
 
