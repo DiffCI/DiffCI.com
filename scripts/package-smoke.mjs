@@ -72,6 +72,27 @@ function createFixtureRepo(parent) {
   return { repoPath, base, head };
 }
 
+function createMavenFixtureRepo(parent) {
+  const repoPath = join(parent, "maven-fixture");
+  mkdirSync(repoPath, { recursive: true });
+  git(repoPath, ["init", "--quiet"]);
+  git(repoPath, ["config", "user.email", "test@diffci.local"]);
+  git(repoPath, ["config", "user.name", "DiffCI Package Smoke"]);
+  git(repoPath, ["config", "core.autocrlf", "false"]);
+  write(join(repoPath, "diffci.json"), JSON.stringify({ maven: { goal: "verify", profiles: ["run-its"] } }));
+  write(join(repoPath, "pom.xml"), "<project><groupId>example</groupId><artifactId>parent</artifactId><version>1</version><modules><module>tools</module></modules></project>\n");
+  write(join(repoPath, "tools", "pom.xml"), "<project><artifactId>tools</artifactId></project>\n");
+  write(join(repoPath, "tools", "src", "main", "java", "example", "Tool.java"), "package example; public class Tool { public int value() { return 1; } }\n");
+  write(join(repoPath, "tools", "src", "test", "java", "example", "ToolTest.java"), "package example; public class ToolTest {}\n");
+  git(repoPath, ["add", "-A"]);
+  git(repoPath, ["commit", "--quiet", "-m", "initial"]);
+  const base = git(repoPath, ["rev-parse", "HEAD"]).trim();
+  write(join(repoPath, "tools", "src", "main", "java", "example", "Tool.java"), "package example; public class Tool { public int value() { return 2; } }\n");
+  git(repoPath, ["add", "-A"]);
+  git(repoPath, ["commit", "--quiet", "-m", "change tool"]);
+  return { repoPath, base, head: git(repoPath, ["rev-parse", "HEAD"]).trim() };
+}
+
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -84,6 +105,7 @@ try {
   const pack = JSON.parse(packJson)[0];
   const packedPaths = new Set(pack.files.map((file) => file.path));
   assert(packedPaths.has("node_modules/@diffci.com/core/dist/index.js"), "Core engine must be bundled into the CLI tarball");
+  assert(packedPaths.has("node_modules/@diffci.com/core/dist/repo/adapters/maven.js"), "Maven adapter must be bundled into the CLI tarball");
   assert(![...packedPaths].some((path) => path.startsWith("dist-client/src/repo/") || path.startsWith("dist-client/src/git/") || path.startsWith("dist-client/src/planner/")), "CLI tarball must not duplicate Core engine modules");
   const tarball = join(temp, pack.filename);
   assert(existsSync(tarball), `npm pack did not create ${tarball}`);
@@ -114,7 +136,15 @@ try {
   );
   assert(report.nonInterference?.worktreeUnchanged === true, "packaged CLI changed the observed checkout");
 
-  console.log(`Package smoke passed: ${pack.filename} installed and ran diffci observe.`);
+  const maven = createMavenFixtureRepo(temp);
+  const mavenReportPath = join(temp, "maven-report.json");
+  runNpm(["exec", "--", "diffci", "observe", "--repo", maven.repoPath, "--base", maven.base, "--head", maven.head, "--out", mavenReportPath, "--json", "--no-send"], { cwd: consumer });
+  const mavenReport = JSON.parse(readFileSync(mavenReportPath, "utf8"));
+  assert(mavenReport.status === "OBSERVED" && mavenReport.result?.mode === "SELECTIVE", `packaged Maven observation failed: ${mavenReport.reason ?? mavenReport.result?.fallbackReasons?.join("; ") ?? mavenReport.status}`);
+  assert(mavenReport.result.proposedCommands?.includes("mvn -pl tools -am verify -P run-its"), `unexpected Maven command: ${JSON.stringify(mavenReport.result.proposedCommands)}`);
+  assert(mavenReport.nonInterference?.worktreeUnchanged === true, "packaged CLI changed the Maven checkout");
+
+  console.log(`Package smoke passed: ${pack.filename} installed and ran JavaScript and Maven observations.`);
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }

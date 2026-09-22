@@ -184,7 +184,7 @@ real third-party repositories.
 
 ## Current state
 
-Language expansion: initial Vue SFC and Go package-level analysis is implemented through repository
+Language expansion: initial Vue SFC, Go package-level, and conventional Maven reactor analysis is implemented through repository
 adapters. See [the support matrix and setup requirements](docs/language-support.md) for exact scope,
 fallback behavior, and validation boundaries.
 

@@ -627,8 +627,8 @@ export async function buildDependencyGraph(
   const scopeBlockers = applyVueScope(repoPath, profile);
   markPhase("scopeDiscovery");
   const scope = profile.vueScope;
-  const physicalRepoRoot = scope ? realpathSync(repoPath) : "";
-  const physicalPackageRoot = scope ? realpathSync(join(repoPath, scope.packageRoot)) : "";
+  const physicalRepoRoot = scope ? realpathSync.native(repoPath) : "";
+  const physicalPackageRoot = scope ? realpathSync.native(join(repoPath, scope.packageRoot)) : "";
   const scopePathChecks = new Map<string, boolean>();
   const outsideScope = (path: string): boolean => {
     if (!scope) return false;
@@ -637,7 +637,7 @@ export async function buildDependencyGraph(
     const lexicalOutside = !inVuePackage(path, scope.packageRoot) && !path.split("/").includes("node_modules");
     let outside = lexicalOutside;
     if (!outside && existsSync(join(repoPath, path))) {
-      const physical = realpathSync(join(repoPath, path));
+      const physical = realpathSync.native(join(repoPath, path));
       const packageRelative = relative(physicalPackageRoot, physical).replace(/\\/g, "/");
       const repositoryRelative = relative(physicalRepoRoot, physical).replace(/\\/g, "/");
       outside = (packageRelative === ".." || packageRelative.startsWith("../") || /^[A-Za-z]:|^\//.test(packageRelative)) &&
@@ -825,7 +825,7 @@ export async function buildDependencyGraph(
       const targetRel = toRelativeInternal(repoPath, resolved);
       // The generic internal-path helper intentionally hides root node_modules.
       // Scope validation must still follow those paths to catch workspace symlinks.
-      const scopeTarget = scope ? relative(repoPath, resolved).replace(/\\/g, "/") : targetRel;
+      const scopeTarget = scope ? relative(physicalRepoRoot, realpathSync.native(resolved)).replace(/\\/g, "/") : targetRel;
       if (scopeTarget && outsideScope(scopeTarget)) {
         adapterBlockers.push(`Vue dependency crosses the declared package boundary: ${importerRel} -> ${scopeTarget}`);
         continue;

@@ -1,6 +1,6 @@
 # Language and framework support
 
-DiffCI now has an extensible repository-adapter boundary and initial Vue and Go support.
+DiffCI now has an extensible repository-adapter boundary and initial Vue, Go, and Maven support.
 These additions propose selections in the existing observer; they do not enable production CI skipping.
 
 | Surface | Implemented scope | Boundaries |
@@ -8,15 +8,29 @@ These additions propose selections in the existing observer; they do not enable 
 | JavaScript / TypeScript | Existing dependency analysis and ten existing test-runner command mappings | Runner recognition is not a guarantee of complete framework semantics |
 | Vue | SFC parsing with `@vue/compiler-sfc`; script imports, literal Options API component registrations, empty script fixtures, compiled template asset imports; propagation into importing JS/TS tests; protected runtime-dependent tests in verified isolated scopes | Runtime uncertainty requires full validation unless protected by the isolated-suite policy below; preprocessors, external/custom SFC blocks, style URLs/imports, Nuxt conventions and glob imports require full validation |
 | Go | One root module; optional explicit root-module scope in a repository containing nested modules; native metadata, package-level transitive selection, embeds and Go test commands | Workspaces, changes inside excluded modules, inactive Go files, cgo/native objects, plugins, generation/linkname and incomplete metadata require full validation; root scoping rejects local replacements |
+| Maven / Java / Kotlin | Conventional multi-module reactors with `src/main/{java,kotlin}` and `src/test/{java,kotlin}`; module dependency propagation; Surefire-style test names; proposed reactor commands | Nonstandard layouts, generated sources, integration-test conventions, and POM changes may require full validation. Maven commands are observations and must match the repository's CI lifecycle and profiles. |
 | Mixed Go and JS/TS | Detected | Full validation until cross-language relationships are declared and modeled |
-| Python, Svelte, Astro, Java/Kotlin, C#, Rust | No new semantic support in this release | Require additional adapters and qualification |
+| Python, Svelte, Astro, C#, Rust | No new semantic support in this release | Require additional adapters and qualification |
 
 ## Using the observer
 
 Use the existing `observe` command and commit range options. The observer now admits a root
-`go.mod` or Vue SFCs as well as a TypeScript project. Vue projects without a tsconfig have their
+`go.mod`, Vue SFCs, or a conventional Maven reactor as well as a TypeScript project. Vue projects without a tsconfig have their
 JS/TS files parsed alongside their components. Existing TS-only corpus eligibility remains separate:
 this release does not silently enroll Go repositories in historical JS/TS research cohorts.
+
+For Maven, DiffCI proposes module-level commands but does not run them or change CI. The default
+goal is `test`. If the repository's CI runs `verify` with profiles, declare that command shape in
+`diffci.json` (or the `diffci` key in `package.json`):
+
+```json
+{ "maven": { "goal": "verify", "profiles": ["run-its"] } }
+```
+
+This produces a command such as `mvn -pl tools -am verify -P run-its`. The `-am` option can also run
+tests in upstream modules. Check the proposed command against the actual CI workflow before using
+it for execution. A single Cloudflare Resolver run showed a candidate saving of 8.6% with a
+CI-aligned `verify -P run-its` command; it does not establish repeatable savings across repositories.
 
 For Go, install a compatible Go toolchain on the **same host and build environment** used for analysis
 and testing, and prepare the repository's dependencies first using its normal setup procedure.

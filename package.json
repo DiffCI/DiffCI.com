@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "DiffCI - deterministic change-aware CI planning",
   "keywords": [
     "ci",
@@ -125,11 +125,11 @@
     "check:oss-boundary": "node scripts/check-oss-boundary.mjs"
   },
   "dependencies": {
+    "@diffci.com/core": "git+https://github.com/DiffCI/core.git#db1d637dfcca8d8f7fa047500dfe0027d0d018a7",
     "@types/node": "^22.15.12",
     "@vue/compiler-sfc": "3.5.42",
     "typescript": "^5.8.3",
-    "yaml": "^2.9.0",
-    "@diffci.com/core": "git+https://github.com/DiffCI/core.git#27afb990e76f764c8bd2087df5bb60ba5913042f"
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@cloudflare/containers": "^0.3.7",
