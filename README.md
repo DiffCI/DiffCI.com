@@ -3,6 +3,8 @@
 
 [![npm version](https://img.shields.io/npm/v/@diffci.com/diffci.svg)](https://www.npmjs.com/package/@diffci.com/diffci)
 [![npm provenance](https://img.shields.io/badge/npm-provenance-blue)](https://docs.npmjs.com/generating-provenance-statements)
+[![MCP server](https://img.shields.io/badge/MCP-server-5f6fff)](docs/mcp.md)
+[![Agent safe](https://img.shields.io/badge/agent--safe-observation--only-0f766e)](docs/ai-agents.md)
 [![GitHub Action](https://img.shields.io/badge/action-DiffCI%2FDiffCI.com%40v0.1.4-blue)](https://github.com/DiffCI/DiffCI.com)
 
 **Find test-selection opportunities in your CI before changing what it runs.** DiffCI analyzes a
@@ -143,13 +145,18 @@ Live discovery files:
 [`llms.txt`](https://diffci.com/llms.txt) ·
 [`AI agents`](https://diffci.com/docs/ai-agents.html).
 
+Adoption materials:
+[`outreach copy`](docs/adoption-outreach.md) ·
+[`metrics`](docs/adoption-metrics.md) ·
+[`targets`](docs/agent-adoption-targets.md).
+
 For native agent integrations, DiffCI also ships a stdio MCP server:
 
 ```bash
 npx -p @diffci.com/diffci@latest diffci-mcp
 ```
 
-See [`docs/mcp.md`](docs/mcp.md).
+See [`docs/mcp.md`](docs/mcp.md) for Claude, Cursor, Codex, and generic MCP config snippets.
 
 ## Project background
 

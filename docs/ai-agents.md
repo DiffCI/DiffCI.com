@@ -66,11 +66,25 @@ npx -p @diffci.com/diffci@latest diffci-mcp
 
 See [`mcp.md`](mcp.md).
 
+Minimal MCP config:
+
+```json
+{
+  "mcpServers": {
+    "diffci": {
+      "command": "npx",
+      "args": ["-p", "@diffci.com/diffci@latest", "diffci-mcp"]
+    }
+  }
+}
+```
+
 ## Agent Policy
 
 Agents should:
 
 - run `diffci check` before PR-ready answers when Git and Node.js are available;
+- call `diffci_check` when connected through MCP;
 - read the printed verdict, selected tests, fallback reasons, and report path;
 - use DiffCI output to choose focused follow-up validation;
 - keep the repository's required CI commands authoritative.

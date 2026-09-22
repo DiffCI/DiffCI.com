@@ -65,6 +65,14 @@ npx @diffci.com/diffci@latest verify-workflow</code></pre>
         For agents that support MCP, configure <code>npx -p @diffci.com/diffci@latest diffci-mcp</code>
         as a stdio server and call <code>diffci_check</code> before PR-ready answers.
       </p>
+      <pre><code>{
+  "mcpServers": {
+    "diffci": {
+      "command": "npx",
+      "args": ["-p", "@diffci.com/diffci@latest", "diffci-mcp"]
+    }
+  }
+}</code></pre>
     </div>
   </section>
 </main>

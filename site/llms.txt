@@ -31,6 +31,8 @@ Useful docs:
 - GitHub Copilot: https://diffci.com/docs/copilot.html
 - Grok: https://diffci.com/docs/grok.html
 - Adoption kit: https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-kit.md
+- Adoption outreach: https://github.com/DiffCI/DiffCI.com/blob/main/docs/adoption-outreach.md
+- Adoption metrics: https://github.com/DiffCI/DiffCI.com/blob/main/docs/adoption-metrics.md
 - Adoption targets: https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-targets.md
 - MCP server: https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md
 - Distribution: https://github.com/DiffCI/DiffCI.com/blob/main/docs/distribution.md

@@ -128,8 +128,22 @@
         <pre><code>npx @diffci.com/diffci@latest init
 npx @diffci.com/diffci@latest check</code></pre>
         <p class="fine">
-          <code>check</code> is observation-only: no test is run, skipped, cancelled, or reordered.
-          <a href="/docs/ai-agents.html">Agent docs →</a>
+          DiffCI changes no CI behavior. <code>check</code> may run inferred local test commands to
+          validate the change. <a href="/docs/ai-agents.html">Agent docs →</a>
+        </p>
+      </article>
+
+      <article class="install-panel">
+        <p class="kicker">MCP server</p>
+        <h3>Connect DiffCI as a native agent tool</h3>
+        <p>
+          MCP-capable agents can call <code>diffci_check</code>, <code>diffci_init</code>, and
+          <code>diffci_verify_workflow</code> without inventing shell commands.
+        </p>
+        <pre><code>npx -p @diffci.com/diffci@latest diffci-mcp</code></pre>
+        <p class="fine">
+          Works as a stdio MCP server for Claude, Cursor, Codex-style clients, and other MCP agents.
+          <a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md">MCP docs →</a>
         </p>
       </article>
 
