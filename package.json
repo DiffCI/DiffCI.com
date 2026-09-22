@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "DiffCI - deterministic change-aware CI planning",
   "keywords": [
     "ci",
@@ -16,7 +16,7 @@
     "github-actions"
   ],
   "license": "AGPL-3.0-only",
-  "mcpName": "io.github.DiffCI/diffci",
+  "mcpName": "io.github.adityankale190895/diffci",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DiffCI/DiffCI.com.git"

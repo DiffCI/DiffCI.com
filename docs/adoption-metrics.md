@@ -31,7 +31,7 @@ Record each submission in `docs/agent-adoption-targets.md` or a dated note:
 | 2026-09-22 | FerroxLabs/agents-md | Issue | https://github.com/FerroxLabs/agents-md/issues/2 | Open | Offer a PR if maintainer wants exact wording. |
 | 2026-09-22 | ciembor/agent-rules-books | Issue | https://github.com/ciembor/agent-rules-books/issues/8 | Open | Offer a PR if maintainer wants exact wording. |
 | 2026-09-22 | jbarbier/CLAUDE.md | Issue | https://github.com/jbarbier/CLAUDE.md/issues/12 | Open | Offer a PR if maintainer wants exact wording. |
-| 2026-09-22 | Official MCP Registry | Directory | TBD | Planned | Prepare publisher metadata. |
+| 2026-09-22 | Official MCP Registry | Directory | `io.github.adityankale190895/diffci` | Published | Consider moving to `io.github.DiffCI/diffci` after GitHub org namespace authorization is available. |
 | 2026-09-22 | Glama | Directory | TBD | Planned | Submit repository URL. |
 | 2026-09-22 | Smithery | Directory | TBD | Blocked | Needs Smithery account/API key. |
 

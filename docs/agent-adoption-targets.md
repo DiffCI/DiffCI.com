@@ -31,7 +31,7 @@ small optional-instruction PR from [`agent-adoption-kit.md`](agent-adoption-kit.
 
 | Directory | Submission path | Status |
 | --- | --- | --- |
-| [Official MCP Registry](https://github.com/modelcontextprotocol/registry) | Use the official `mcp-publisher` flow; do not open a seed-data PR. | Ready after registry package metadata is prepared. |
+| [Official MCP Registry](https://github.com/modelcontextprotocol/registry) | Published with `mcp-publisher` as `io.github.adityankale190895/diffci`. | Published. |
 | [Glama](https://glama.ai/) | Submit the GitHub repository URL and short description; optional `glama.json` metadata can improve indexing. | Ready to submit. |
 | [Smithery](https://smithery.ai/) | Publish through Smithery's server release flow/API. | Needs Smithery account/API key. |
 | [PulseMCP](https://www.pulsemcp.com/) | Submit/list the MCP server if their current listing flow accepts third-party servers. | Review current submission rules first. |
