@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "commitsPerRepository": 8,
+  "historyLimit": 250,
+  "faultIndexes": [0, 3, 7],
+  "repositories": [
+    { "id": "vue-test-utils", "repository": "vuejs/test-utils", "ref": "v2.4.6", "sha": "93321272b33fe931da71d636654b41f45058ed0c", "language": "vue", "cwd": ".", "sourcePattern": "^(src/.*\\.ts|tests/components/.*\\.vue)$" },
+    { "id": "vue-router", "repository": "vuejs/router", "ref": "v4.5.1", "sha": "14b87f603392e230cd333d3f5627f5e95451d4db", "language": "vue", "cwd": "packages/router", "sourcePattern": "^packages/router/src/.*\\.(ts|vue)$" },
+    { "id": "reka-ui", "repository": "unovue/reka-ui", "ref": "v2.2.0", "sha": "7d96922111de9be9781ff6ec73c451672c8e6ef6", "language": "vue", "cwd": "packages/core", "sourcePattern": "^packages/core/src/.*\\.(ts|vue)$" },
+    { "id": "chi", "repository": "go-chi/chi", "ref": "v5.2.1", "sha": "71307f9b7e4e9527638bc951c42b782cd1560331", "language": "go", "cwd": ".", "sourcePattern": "\\.go$" },
+    { "id": "cobra", "repository": "spf13/cobra", "ref": "v1.9.1", "sha": "40b5bc1437a564fc795d388b23835e84f54cd1d1", "language": "go", "cwd": ".", "sourcePattern": "\\.go$" },
+    { "id": "validator", "repository": "go-playground/validator", "ref": "v10.26.0", "sha": "433b08283c14b1def28e8f05e36c2bed2f13b3f4", "language": "go", "cwd": ".", "sourcePattern": "\\.go$" }
+  ]
+}

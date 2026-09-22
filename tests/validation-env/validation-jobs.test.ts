@@ -64,6 +64,26 @@ describe("the validation job allowlist", () => {
   it("pins every job to an unambiguous commit and repository", () => {
     for (const id of listValidationJobs()) {
       const job = getValidationJob(id)!;
+      if (id.startsWith("language-benchmark-")) {
+        const cohort = JSON.parse(readFileSync(join(repoRoot, "scripts", "language-benchmark-cohort.json"), "utf8"));
+        const member = cohort.repositories.find((r: { id: string }) => r.id === id.slice("language-benchmark-".length));
+        assert.ok(member);
+        assert.ok(isPinnedSha(member.sha));
+        assert.ok(isRepositorySlug(member.repository));
+        assert.equal(cohort.commitsPerRepository, 8);
+        assert.equal(job.maxRunMs, 45 * 60_000);
+        assert.equal(job.expectedAgentIntegrity, "sha512-FiVDAHdmzEZKE1Gh0EzfyTv0LNxfzy6JsrcEGR52G41ErixoS7DOha9qr1m+D1fRwVk6o3j+UbXcRk+jupuQUg==");
+        continue;
+      }
+      // The language job clones two fixed repositories from its source-pinned harness.
+      if (job.mode === "language-qualification") {
+        const harness = readFileSync(join(repoRoot, "scripts", "qualify-language-adapters.mjs"), "utf8");
+        assert.match(harness, /93321272b33fe931da71d636654b41f45058ed0c/);
+        assert.match(harness, /b1c9ab47626cc46b34393ad4d35779c4363c4e1e/);
+        assert.equal(job.maxRunMs, 30 * 60_000);
+        assert.ok(job.expectedAgentIntegrity?.startsWith("sha512-"));
+        continue;
+      }
       // Calibration measures the laboratory itself: it clones nothing, so it pins nothing.
       if (job.mode === "calibrate") { assert.equal(job.repository, undefined); assert.equal(job.pinnedHeadSha, undefined); continue; }
       // The survey names no repository either - its subject is a frozen frame of 40, and it clones each

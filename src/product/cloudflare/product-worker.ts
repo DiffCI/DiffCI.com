@@ -3,11 +3,9 @@
  * runner, queue, dashboard routes). New Worker, new `wrangler.product.jsonc` (not yet
  * created/deployed - see the build's final report), deliberately separate from validation-worker.ts and
  * github-runner-worker.ts: this Worker owns the `diffci-product` D1 database (schema files under
- * src/product/, src/billing/, src/auth/, src/usage/, src/runner/, src/execution-queue/), plus a SEPARATE
- * `RESEARCH_DB` binding to `diffci-research`. Product evidence reads still go only through
- * shadow-read-boundary.ts (Part 20); verified GitHub App webhook telemetry is sent through the
- * RESEARCH_WORKER service binding so the research Worker records durable PostHog receipts before
- * GitHub is acked.
+ * src/product/, src/billing/, src/auth/, src/usage/, src/runner/, src/execution-queue/), plus a SEPARATE,
+ * read-only `RESEARCH_DB` binding to `diffci-research` used ONLY by shadow-read-boundary.ts (Part 20) -
+ * this Worker never issues a write against diffci-research.
  *
  * Authentication is real (Part 2/3): every organization-scoped route resolves the requesting user via
  * authenticateRequest() (src/auth/authenticate.ts), which honors a real session (Bearer token or
@@ -81,7 +79,7 @@ import { makeD1IngestTokenStore } from "../../ingest/token.js";
 import { parseAgentArtifact } from "../../ingest/agent-artifact.js";
 import { decideRepositoryAdmission, EARLY_ACCESS_ENABLED } from "../../billing/repository-admission.js";
 import { makeD1ObservationStore } from "../../ingest/store.js";
-import { reportInstallationFailure } from "./conversion-telemetry.js";
+import { reportInstallationCreated, reportInstallationFailure } from "./conversion-telemetry.js";
 import { ingestObservation, MAX_REPORT_BYTES } from "../../ingest/ingest.js";
 import type { IngestRejection } from "../../ingest/types.js";
 import { runRetentionSweep } from "../../ingest/retention.js";
@@ -110,7 +108,7 @@ import {
 
 export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   PRODUCT_DB: ProductD1Binding;
-  RESEARCH_DB: ShadowD1Binding;
+  RESEARCH_DB: ShadowD1Binding; // read-only use only - see the header comment above
   DIFFCI_PRODUCT_ENABLED?: string;
   DIFFCI_APP_ORIGIN?: string; // allowlisted redirect_url prefix for checkout, e.g. "https://app.diffci.com/"
   GITHUB_OAUTH_CLIENT_ID?: string;
@@ -130,6 +128,8 @@ export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
   GITHUB_APP_ID?: string;
   GITHUB_APP_PRIVATE_KEY?: string; // PKCS#8 PEM (secret)
   GITHUB_APP_WEBHOOK_SECRET?: string; // secret
+  POSTHOG_API_KEY?: string; // project capture token; installation telemetry only
+  POSTHOG_HOST?: string;
   SENTRY_DSN?: string; // server-side error/installation telemetry
   // 2026-09-05 private-repository reports: Service Binding to diffci-research-sandbox (a plain fetch to
   // its workers.dev URL is blocked, error 1042) plus the research dispatch token it authenticates with.
@@ -215,21 +215,6 @@ function readCookie(request: Request, name: string): string | undefined {
     if (key === name) return rest.join("=");
   }
   return undefined;
-}
-
-async function recordVerifiedInstallationDelivery(
-  env: Pick<Env, "RESEARCH_WORKER" | "RESEARCH_DISPATCH_TOKEN">,
-  delivery: { rawBody: string; event: string | null; deliveryId?: string | null },
-): Promise<void> {
-  if (!env.RESEARCH_WORKER || !env.RESEARCH_DISPATCH_TOKEN) throw new Error("research analytics recorder is not configured");
-  const response = await env.RESEARCH_WORKER.fetch(
-    new Request("https://diffci-research-sandbox.internal/v1/shadow/analytics/github-delivery", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.RESEARCH_DISPATCH_TOKEN}` },
-      body: JSON.stringify({ rawBody: delivery.rawBody, event: delivery.event, deliveryId: delivery.deliveryId ?? null }),
-    }),
-  );
-  if (!response.ok) throw new Error(`research analytics recorder HTTP ${response.status}`);
 }
 
 function planCatalogFromEnv(env: Env) {
@@ -672,9 +657,6 @@ export default {
           pendingStore: pendingInstallationStore,
           deliveryStore: webhookDeliveryStore,
           webhookSecret: env.GITHUB_APP_WEBHOOK_SECRET,
-          recordVerifiedDelivery: async (delivery) => {
-            await recordVerifiedInstallationDelivery(env, delivery);
-          },
           connectDeps:
             env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY
               ? { credentials: { appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY } }
@@ -687,6 +669,7 @@ export default {
         return json({ ok: false, error: result.error }, result.error === "bad_signature" ? 401 : 400);
       }
       logEvent("installation_webhook.handled", { ...result });
+      if (result.action === "parked") ctx.waitUntil(reportInstallationCreated(env, result.repositories));
       return json(result, 200);
     }
 

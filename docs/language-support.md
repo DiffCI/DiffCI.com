@@ -6,8 +6,8 @@ These additions propose selections in the existing observer; they do not enable 
 | Surface | Implemented scope | Boundaries |
 | --- | --- | --- |
 | JavaScript / TypeScript | Existing dependency analysis and ten existing test-runner command mappings | Runner recognition is not a guarantee of complete framework semantics |
-| Vue | SFC parsing with `@vue/compiler-sfc`; script imports, nested components, compiled template asset imports; propagation into importing JS/TS tests | Runtime component/directive resolution, preprocessors, external/custom SFC blocks, style URLs/imports, Nuxt conventions and glob imports require full validation |
-| Go | One root module; native `go list` metadata; package-level transitive test selection, external test packages, embedded files; `go test -json` commands and result parsing | Workspaces/nested modules, inactive Go files, cgo/native objects, runtime plugins, generation/linkname, external local replacements and incomplete metadata require full validation |
+| Vue | SFC parsing with `@vue/compiler-sfc`; script imports, literal Options API component registrations, empty script fixtures, compiled template asset imports; propagation into importing JS/TS tests; protected runtime-dependent tests in verified isolated scopes | Runtime uncertainty requires full validation unless protected by the isolated-suite policy below; preprocessors, external/custom SFC blocks, style URLs/imports, Nuxt conventions and glob imports require full validation |
+| Go | One root module; optional explicit root-module scope in a repository containing nested modules; native metadata, package-level transitive selection, embeds and Go test commands | Workspaces, changes inside excluded modules, inactive Go files, cgo/native objects, plugins, generation/linkname and incomplete metadata require full validation; root scoping rejects local replacements |
 | Mixed Go and JS/TS | Detected | Full validation until cross-language relationships are declared and modeled |
 | Python, Svelte, Astro, Java/Kotlin, C#, Rust | No new semantic support in this release | Require additional adapters and qualification |
 
@@ -25,6 +25,40 @@ DiffCI invokes `go list -mod=readonly -deps -test -json ./...` with `GOTOOLCHAIN
 Go may populate its own build cache but must not modify the checkout. It does not run `go generate`.
 Custom `GOFLAGS` currently require full validation. Discovered GOOS, GOARCH and CGO_ENABLED settings
 are carried into the structured test command.
+
+For CI that runs only the root module's `go test ./...`, a repository containing nested
+modules can explicitly declare that scope in a committed root `diffci.json`:
+
+```json
+{ "go": { "scope": "root-module" } }
+```
+
+This does not cover nested-module CI jobs. Keep their validation unchanged. Without the
+declaration, nested modules still block selection. With it, nested module trees are
+excluded from the root test universe, but any change there (including a rename out of
+the tree) forces full validation. Scope/configuration changes also force full validation.
+Go workspaces and local replacements still block scoped selection. Reports identify the
+declared `goScope`; the structured commands continue to run root-relative packages.
+
+Empty-graph refusals now include the adapter's reason. Vue recognizes only direct imported
+component identifiers in literal `components` registrations. Unresolved runtime dependencies
+retain full execution unless the isolated-suite protection described below applies.
+
+The Reka selection candidate also resolves imported Vue macro types through TypeScript aliases,
+extended configurations and directory index files, and recognizes leading `./` in test globs.
+For an explicitly scoped Vue suite, a component-specific blocker can be excluded only when every
+test/setup/configuration root has been parsed and none can reach that component. This is not a
+directory-name exclusion: imported story fixtures retain their blockers. Unresolved dependencies
+and global configuration blockers still force full validation. Compiler-assisted components that
+probe JSON configuration are rebuilt instead of persistently cached until every compiler input can
+be tracked. See the [Reka experiment](research/2026-09-13-reka-selection.md) for qualification evidence.
+
+The runtime-protection candidate can always run every test file reaching an unresolved runtime
+component or directive, while selecting other tests normally. This requires a verified scoped
+Vitest suite and isolated execution. Shared setup reaching a runtime blocker, disabled or ambiguous
+isolation, custom runners/environments and unmodeled configuration keep full-suite fallback.
+This policy protects tests despite unknown runtime edges; it does not resolve those edges or claim
+support for non-isolated or order-dependent jobs. See the [runtime protection experiment](research/2026-09-13-vue-runtime-partition.md).
 
 A selection such as `lib/value_test.go` becomes:
 
@@ -52,8 +86,8 @@ qualification may still report an unsupported denominator for Go.
 - `src/planner/test-command.ts`: runner command routing, including verified Go package targets.
 
 Adapters contribute source and asset nodes, dependency edges, virtual JS/TS source, runnable test
-identities and explicit blockers. Blockers persist into the profile and graph result and cannot be
-removed by delta-specific reachability refinement. Go graphs bypass the disk cache until every cache
+identities and explicit blockers. Effective suite blockers persist into the profile and graph result
+and cannot be removed by delta-specific reachability refinement. Go graphs bypass the disk cache until every cache
 caller provides a complete toolchain/build-context identity. The cache schema was bumped to prevent
 reuse of graphs created before adapter support.
 

@@ -29,6 +29,8 @@
  * establishing whether the evidence reproduces, not for improving the thing being measured.
  */
 import type { R2BucketLike, SandboxLike } from "../../analysis-fanout/sandbox-like.js";
+import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 import { apparatusMismatches } from "../apparatus-identity.js";
 import { buildExecutionReceipt, type GuardRecord } from "../execution-receipt.js";
 import {
@@ -91,6 +93,7 @@ export type ValidationStep =
   | "verifyingUniverse"
   | "registering"
   | "ciReproducing"
+  | "languageQualifying"
   | "locating"
   | "mutating"
   | "collecting"
@@ -147,7 +150,7 @@ export interface ValidationRecord {
   error?: string;
   /** Live progress of the running harness pass, refreshed on every poll. Diagnostic, never load-bearing. */
   progress?: { label: string; elapsedMs: number; at: number; tail: string };
-  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string; register?: string; "ci-reproduce"?: string };
+  logs?: { observe?: string; mutate?: string; qualify?: string; calibrate?: string; survey?: string; density?: string; pairs?: string; universe?: string; register?: string; "ci-reproduce"?: string; "language-qualification"?: string };
   /** Set once evidence preservation has run, so a failure inside it cannot loop. */
   evidencePreserved?: boolean;
   /** The step that actually failed, kept because `step` becomes "preserving" then "failed". */
@@ -415,6 +418,11 @@ async function prepare(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, job } = deps;
   const t0 = deps.now();
   try {
+    if (job.mode === "language-qualification") {
+      record.timings.prepareMs = deps.now() - t0;
+      record.step = "languageQualifying";
+      return { record, nextAlarmDelayMs: 0 };
+    }
     // Calibration measures the laboratory, not a repository: nothing is cloned and nothing is pinned.
     if (job.mode === "calibrate") {
       record.timings.prepareMs = deps.now() - t0;
@@ -504,7 +512,7 @@ async function runHarnessPass(
   record: ValidationRecord,
   deps: ValidationStepDeps,
   argv: string[],
-  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe" | "register" | "ci-reproduce",
+  label: "observe" | "mutate" | "qualify" | "calibrate" | "survey" | "density" | "pairs" | "universe" | "register" | "ci-reproduce" | "language-qualification",
   onComplete: (record: ValidationRecord) => ValidationStepResult,
 ): Promise<ValidationStepResult> {
   const { sandbox, job } = deps;
@@ -828,6 +836,54 @@ async function collect(record: ValidationRecord, deps: ValidationStepDeps): Prom
   const { sandbox, bucket } = deps;
   const t0 = deps.now();
   try {
+    if (deps.job.mode === "language-qualification") {
+      let content = (await deps.sandbox.readFile("/workspace/language-qualification.json")).content;
+      if (deps.job.id.startsWith("language-benchmark-")) {
+        const report = JSON.parse(content);
+        if (report.spec?.id === "vue-router") {
+          report.originalScopeLabel = report.scope;
+          report.scope = "Configured Vitest unit and type tests in packages/router; browser CI not measured; prerequisite builds outside timing";
+        }
+        // Vitest's JSON output-file reporter need not print the thrown error to stdout.
+        // Preserve its actual structured failure messages before the container expires.
+        for (const item of report.cases ?? []) {
+          if (!item.fault?.full) continue;
+          for (const execution of [item.fault.full, item.fault.policy].filter(Boolean)) {
+            const argument = execution.command?.find((arg: unknown) => typeof arg === "string" && /^--outputFile=\/workspace\/broad-benchmark\/tests-\d+\.json$/.test(arg));
+            if (!argument) continue;
+            try {
+              const data = JSON.parse((await sandbox.readFile(argument.slice("--outputFile=".length))).content);
+              const messages: string[] = [];
+              for (const suite of data.testResults ?? []) {
+                if (suite.message) messages.push(String(suite.message));
+                for (const assertion of suite.assertionResults ?? []) for (const message of assertion.failureMessages ?? []) messages.push(String(message));
+              }
+              execution.structuredFailureMessages = messages.join("\n").slice(0, 20000);
+              execution.mutationMarkerSeen = execution.mutationMarkerSeen || messages.some(message => message.includes("DIFFCI_BENCHMARK_FAULT"));
+            } catch { /* absent/unreadable JSON remains inconclusive */ }
+          }
+          const detects = (execution?: { exitCode: number | null; error?: string; mutationMarkerSeen?: boolean; summary: { readable?: boolean; failed?: number; failedSuites?: number } }) => !!execution && execution.exitCode !== null && execution.exitCode !== 0 && !execution.error && execution.mutationMarkerSeen === true && execution.summary.readable === true && ((execution.summary.failed ?? 0) > 0 || (execution.summary.failedSuites ?? 0) > 0);
+          item.fault.originalConsoleOutcome = item.fault.outcome;
+          item.fault.fullDetected = detects(item.fault.full);
+          item.fault.policyDetected = item.fault.policyIdenticalToFull ? item.fault.fullDetected : detects(item.fault.policy);
+          item.fault.outcome = !item.fault.fullDetected ? "INCONCLUSIVE_FULL_DID_NOT_DETECT" : item.fault.policyDetected ? "DETECTED" : "MISSED_OR_UNREADABLE_POLICY";
+        }
+        report.structuredFaultEvidenceCollected = true;
+        content = JSON.stringify(report, null, 2);
+      }
+      JSON.parse(content);
+      const key = `${resultPrefix(record)}/language-qualification.json`;
+      const logKey = `${resultPrefix(record)}/language-qualification.log`;
+      await deps.bucket.put(key, content);
+      await deps.bucket.put(logKey, record.logs?.["language-qualification"] ?? "");
+      record.resultKeys = [key, logKey];
+      record.timings.collectMs = deps.now() - t0;
+      record.step = "done";
+      if (deps.job.id.startsWith("language-benchmark-")) {
+        try { await sandbox.destroy(); } catch { /* evidence is durable; release can be retried */ }
+      }
+      return { record, nextAlarmDelayMs: null };
+    }
     // A pair job that mutates produces results.jsonl, a manifest and run directories like any other
     // mutation run, so it takes the FULL collect path. Only the observation-only pair job collects just
     // the corpus.
@@ -1439,6 +1495,13 @@ async function stepValidationInner(record: ValidationRecord, deps: ValidationSte
       return registerStep(record, deps);
     case "ciReproducing":
       return ciReproduceStep(record, deps);
+    case "languageQualifying":
+      return runHarnessPass(record, deps, deps.job.id.startsWith("language-benchmark-")
+        ? ["exec", "--", "tsx", "scripts/benchmark-languages.mjs", deps.job.id.slice("language-benchmark-".length)]
+        : ["exec", "--", "tsx", "scripts/qualify-language-adapters.mjs"], "language-qualification", (r) => {
+        r.step = "collecting";
+        return { record: r, nextAlarmDelayMs: 0 };
+      });
     case "locating":
       return locate(record, deps);
     case "mutating":
@@ -1509,14 +1572,55 @@ export class ValidationShard {
         return Response.json(record);
       }
 
+      // Export the already-qualified bytes, not a fresh build or a caller-supplied path.
+      if (request.method === "POST" && url.pathname === "/export-observer-012") {
+        const record = await this.state.storage.get<ValidationRecord>(STATE_KEY);
+        if (record?.step !== "done" || record.runId !== "adapters-012-20260910-v3") return Response.json({ ok: false, error: "qualified-run-required" }, { status: 409 });
+        const expected = "sha512-FiVDAHdmzEZKE1Gh0EzfyTv0LNxfzy6JsrcEGR52G41ErixoS7DOha9qr1m+D1fRwVk6o3j+UbXcRk+jupuQUg==";
+        const { getSandbox } = await import("@cloudflare/sandbox");
+        const sandbox: SandboxLike = getSandbox(this.env.VALIDATION_CONTAINER as never, `validation-${record.runId}`, SANDBOX_OPTS);
+        const output = await sandbox.exec("base64 -w0 /opt/diffci/dist-agent/diffci-observer-0.1.2.tgz", { timeout: 30_000 });
+        if (output.exitCode !== 0) throw new Error("qualified artifact is no longer present in the container");
+        const bytes = Buffer.from(output.stdout.trim(), "base64");
+        const integrity = "sha512-" + createHash("sha512").update(bytes).digest("base64");
+        if (integrity !== expected) throw new Error("qualified artifact integrity mismatch; export refused");
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        const key = `agents/observer-${sha256.slice(0, 16)}.tgz`;
+        await this.env.VALIDATION_BUCKET.put(key, bytes);
+        const descriptor = { version: "0.1.2", key, sha256, integrity, qualificationRunId: record.runId, sourceTarballSha256: record.sourceTarballSha256, sizeBytes: bytes.length };
+        await this.env.VALIDATION_BUCKET.put("releases/observer/0.1.2.json", JSON.stringify(descriptor));
+        return Response.json({ ok: true, ...descriptor });
+      }
+
       if (request.method === "POST" && url.pathname === "/cancel") {
         await this.state.storage.deleteAlarm();
         const record = await this.state.storage.get<ValidationRecord>(STATE_KEY);
         if (record && !TERMINAL_STEPS.has(record.step)) {
+          if (record.jobId.startsWith("language-benchmark-")) {
+            const { getSandbox } = await import("@cloudflare/sandbox");
+            const sandbox: SandboxLike = getSandbox(this.env.VALIDATION_CONTAINER as never, `validation-${record.runId}`, SANDBOX_OPTS);
+            const key = `${resultPrefix(record)}/language-qualification.json`;
+            try {
+              const partial = await sandbox.readFile("/workspace/language-qualification.json");
+              await this.env.VALIDATION_BUCKET.put(key, partial.content);
+              record.resultKeys = [...(record.resultKeys ?? []), key];
+            } catch { /* bootstrap may not have produced a report yet */ }
+            if (record.processId) await sandbox.killProcess(record.processId);
+            await sandbox.destroy();
+          }
           record.step = "cancelled";
           await this.state.storage.put(STATE_KEY, record);
         }
         return Response.json({ ok: true });
+      }
+
+      if (request.method === "POST" && url.pathname === "/release-benchmark-container") {
+        const record = await this.state.storage.get<ValidationRecord>(STATE_KEY);
+        if (!record?.jobId.startsWith("language-benchmark-") || !TERMINAL_STEPS.has(record.step)) return Response.json({ ok: false, error: "terminal-benchmark-required" }, { status: 409 });
+        const { getSandbox } = await import("@cloudflare/sandbox");
+        const sandbox: SandboxLike = getSandbox(this.env.VALIDATION_CONTAINER as never, `validation-${record.runId}`, SANDBOX_OPTS);
+        await sandbox.destroy();
+        return Response.json({ ok: true, runId: record.runId, released: true });
       }
 
       return Response.json({ ok: false, error: "not-found" }, { status: 404 });

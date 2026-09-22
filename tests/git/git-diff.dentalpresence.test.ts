@@ -1,6 +1,9 @@
 import assert from "node:assert";
-import { execSync } from "node:child_process";
-import { describe, it } from "node:test";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { before, after, describe, it } from "node:test";
 import {
   analyzeGitDelta,
   findRecentNonEmptyCommitPair,
@@ -9,11 +12,21 @@ import {
   ZERO_SHA,
 } from "../../src/git/git-diff.js";
 
-describe("analyzeGitDelta on DentalPresence", () => {
-  const root = process.cwd();
+describe("analyzeGitDelta on a committed repository", () => {
+  let root: string;
+  const git = (...args: string[]) => execFileSync("git", args, { cwd: root, encoding: "utf8", windowsHide: true, stdio: ["ignore", "pipe", "pipe"] }).trim();
+  before(() => {
+    root = mkdtempSync(join(tmpdir(), "diffci-git-history-"));
+    git("init", "-q"); git("config", "user.name", "Test"); git("config", "user.email", "test@example.invalid");
+    writeFileSync(join(root, "value.ts"), "export const value = 1;\n");
+    git("add", "."); git("commit", "-qm", "base");
+    writeFileSync(join(root, "value.ts"), "export const value = 2;\n");
+    git("add", "."); git("commit", "-qm", "change");
+  });
+  after(() => { if (root) rmSync(root, { recursive: true, force: true }); });
 
   it("returns an empty delta for identical base and head", async () => {
-    const head = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
+    const head = git("rev-parse", "HEAD");
     const result = await analyzeGitDelta({ repoPath: root, baseSha: head, headSha: head });
 
     assert.strictEqual(result.success, true);
@@ -24,7 +37,7 @@ describe("analyzeGitDelta on DentalPresence", () => {
   });
 
   it("reports failure for invalid / zero base SHA", async () => {
-    const head = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
+    const head = git("rev-parse", "HEAD");
     const result = await analyzeGitDelta({ repoPath: root, baseSha: ZERO_SHA, headSha: head });
     assert.strictEqual(result.success, false);
   });
@@ -57,7 +70,7 @@ describe("analyzeGitDelta on DentalPresence", () => {
   });
 
   it("does not crash when HEAD is a merge commit", async () => {
-    const head = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
+    const head = git("rev-parse", "HEAD");
     const parents = resolveCommitParents(head, root);
 
     // If the current HEAD is not a merge commit, the test still validates that

@@ -77,6 +77,7 @@ function observerIdentity(): { version: string; root?: string; sha?: string } {
     if (existsSync(candidate)) {
       try {
         const parsed = JSON.parse(readFileSync(candidate, "utf8")) as { name?: string; version?: string };
+        if (parsed.name === "@diffci/observer") return { version: parsed.version ?? "0.0.0", root: current };
         if (parsed.name === "@diffci.com/diffci" || parsed.name === "diffci") {
           let sha: string | undefined;
           try {
@@ -227,6 +228,8 @@ function summarise(report: ObservationReport): string {
   const result = report.result;
   if (result) {
     lines.push(`  verdict: ${result.mode}`);
+    if (result.goScope) lines.push("  Go scope: root module only; nested-module CI remains separate");
+    if (result.vueScope) lines.push(`  Vue suite: ${result.vueScope.packageRoot} (${result.vueScope.testConfig})`);
     lines.push(
       `  selection: ${result.selectedTests.length}/${result.totalTestCount} test files, from ${result.changedFileCount} changed file(s)`,
     );
@@ -269,6 +272,11 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
   }
 
   const identity = observerIdentity();
+  let economicsHistory: unknown;
+  if (typeof flags["economics-history"] === "string") {
+    try { economicsHistory = JSON.parse(readFileSync(resolve(flags["economics-history"]), "utf8")); }
+    catch { console.warn("DiffCI timing history is unreadable; performing normal analysis."); }
+  }
   const report = await observe({
     repoPath,
     env: env as Record<string, string | undefined>,
@@ -278,6 +286,10 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
     headOverride: typeof flags.head === "string" ? flags.head : undefined,
     redactPaths: flags["redact-paths"] === true,
     reportPath,
+    economicsHistory,
+    economicsJobKey: typeof flags["economics-job"] === "string" ? flags["economics-job"] : undefined,
+    forceAnalysis: flags["force-analysis"] === true,
+    vueAnalysisCacheDir: typeof flags["vue-analysis-cache"] === "string" ? flags["vue-analysis-cache"] : undefined,
   });
 
   mkdirSync(dirname(reportPath), { recursive: true });

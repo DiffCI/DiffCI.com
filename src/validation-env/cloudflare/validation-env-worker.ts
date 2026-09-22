@@ -73,6 +73,8 @@ function shardName(runId: string, index: number, shardCount: number): string {
 
 /** Only the artefacts the shard itself writes are readable back. */
 const COLLECTED_FILES: ReadonlySet<string> = new Set([
+  "language-qualification.json",
+  "language-qualification.log",
   // Reproduction runs.
   "manifest.json",
   "results.jsonl",
@@ -210,6 +212,18 @@ export default {
         if (!isRunId(body.runId)) return Response.json({ ok: false, error: "invalid-run-id" }, { status: 400 });
         const stub = env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName(body.runId));
         return stub.fetch(new Request("https://do/cancel", { method: "POST" }));
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/export-observer-012") {
+        const stub = env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName("adapters-012-20260910-v3"));
+        return stub.fetch(new Request("https://do/export-observer-012", { method: "POST" }));
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/release-benchmark-container") {
+        const body = (await request.json()) as { runId?: unknown };
+        if (!isRunId(body.runId)) return Response.json({ ok: false, error: "invalid-run-id" }, { status: 400 });
+        const stub = env.VALIDATION_SHARD.get(env.VALIDATION_SHARD.idFromName(body.runId));
+        return stub.fetch(new Request("https://do/release-benchmark-container", { method: "POST" }));
       }
 
       if (request.method === "GET" && url.pathname === "/v1/result") {

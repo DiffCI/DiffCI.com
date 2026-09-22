@@ -8,10 +8,12 @@ import { buildDependencyGraph, classifyRepositoryProject, refineConfidenceForDel
 import { ImpactAnalyzer } from "../../src/repo/impact.js";
 import { planSelectiveTestCommands } from "../../src/planner/test-command.js";
 import { parseGoList, analyzeGoMetadata, goAdapter } from "../../src/repo/adapters/go.js";
+import { vueAdapter } from "../../src/repo/adapters/vue.js";
 import { parseGoTestOutput } from "../../src/repo/adapters/go-test.js";
 import { analyzeRepository } from "../../src/repo/analyzer.js";
 import { observe } from "../../src/client/observe.js";
 import type { GitDelta } from "../../src/git/types.js";
+import { compileScript, compileTemplate, parse } from "@vue/compiler-sfc";
 
 function fixture(files: Record<string, string>): string {
   const root = mkdtempSync(join(tmpdir(), "diffci-adapters-"));
@@ -37,6 +39,36 @@ const jsBase = {
   "tests/component.test.ts": 'import Parent from "../src/Parent.vue"; export const subject = Parent;',
   "tests/unrelated.test.ts": "export const unrelated = 1;",
 };
+
+test("Vue resolves aliased macro types through extended tsconfig and refreshes compiler configuration", () => {
+  const root = fixture({
+    "package.json": "{}",
+    "tsconfig.json": '{"extends":["./tsconfig.app.json"],"files":[]}',
+    "tsconfig.app.json": '{"compilerOptions":{"baseUrl":".","paths":{"@/*":["src/*"]}}}',
+    "src/props.ts": "export interface Props { value: string }",
+    "alt/props.ts": "export interface Props { value: number }",
+    "App.vue": '<script setup lang="ts">import type { Props } from "@/props"; defineProps<Props>();</script>',
+  });
+  try {
+    for (const [directory, runtime] of [["src", "String"], ["alt", "Number"]]) {
+      writeFileSync(join(root, "tsconfig.app.json"), JSON.stringify({ compilerOptions: { baseUrl: ".", paths: { "@/*": [`${directory}/*`] } } }));
+      const result = vueAdapter.analyze({ repoPath: root, files: ["App.vue"], profile: analyzeRepository({ repoPath: root }) });
+      assert.deepEqual(result.blockers, []);
+      assert.ok(result.edges.some(edge => edge.to === `${directory}/props.ts`));
+      assert.ok(result.virtualSources[0].source.includes(`type: ${runtime}`));
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue macro imports resolve directory index files rather than reading a directory as source", () => {
+  const root = fixture({ "package.json": "{}", "props/index.ts": "export interface Props { value: string }", "App.vue": '<script setup lang="ts">import type { Props } from "./props"; defineProps<Props>();</script>' });
+  try {
+    const result = vueAdapter.analyze({ repoPath: root, files: ["App.vue"], profile: analyzeRepository({ repoPath: root }) });
+    assert.deepEqual(result.blockers, []);
+    assert.ok(result.edges.some(edge => edge.to === "props/index.ts"));
+    assert.ok(result.virtualSources[0].source.includes("type: String"));
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
 
 test("Vue transitive source and component changes select only importing tests", async () => {
   const root = fixture(jsBase);
@@ -73,6 +105,28 @@ test("Vue unsupported templates, styles and malformed SFCs remain globally unsaf
   }
 });
 
+test("Vue literal Options API registrations preserve transitive dependencies", async () => {
+  const root = fixture({ ...jsBase,
+    "src/Empty.vue": '<script setup lang="ts"></script>',
+    "src/Parent.vue": '<script lang="ts">import { defineComponent } from "vue"; import Child from "./Child.vue"; export default defineComponent({components: { Child }})</script><template><Child /></template>',
+  });
+  try {
+    const graph = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(graph.adapterBlockers, []);
+    const impact = new ImpactAnalyzer().analyze(delta("src/value.ts"), graph, graph.profile);
+    assert.equal(impact.fallbackRequired, false);
+    assert.deepEqual(impact.affectedTests.map(t => t.path), ["tests/component.test.ts"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue spread or computed registrations cannot hide runtime dependencies", async () => {
+  for (const options of ['components: { Child, ...registry }', '...options, components: { Child }', 'components: { [name]: Child }']) {
+    const root = fixture({ ...jsBase, "src/Parent.vue": `<script>import Child from './Child.vue'; export default {${options}}</script><template><Child /></template>` });
+    try { assert.ok((await buildDependencyGraph({ repoPath: root })).adapterBlockers?.length); }
+    finally { rmSync(root, { recursive: true, force: true }); }
+  }
+});
+
 test("Vue without tsconfig still parses transitive JavaScript dependencies and test imports", async () => {
   const root = fixture({
     "package.json": JSON.stringify({ devDependencies: { vitest: "1" } }),
@@ -88,6 +142,99 @@ test("Vue without tsconfig still parses transitive JavaScript dependencies and t
     const impact = new ImpactAnalyzer().analyze(delta("src/value.js"), result, result.profile);
     assert.equal(impact.fallbackRequired, false);
     assert.deepEqual(impact.affectedTests.map((test) => test.path), ["tests/app.test.js"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue imported macro types retain runtime dependency edges", async () => {
+  const root = fixture({ ...jsBase,
+    "src/props.ts": "export interface Props { title: string }",
+    "src/Child.vue": '<script setup lang="ts">import type { Props } from "./props"; defineProps<Props>();</script><template><span>{{ title }}</span></template>',
+  });
+  try {
+    const result = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(result.adapterBlockers, []);
+    assert.ok(result.graph.dependenciesOf("src/Child.vue").includes("src/props.ts"));
+    const impact = new ImpactAnalyzer().analyze(delta("src/props.ts"), result, result.profile);
+    assert.equal(impact.fallbackRequired, false);
+    assert.deepEqual(impact.affectedTests.map(t => t.path), ["tests/component.test.ts"]);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue shared macro types remain tracked and refresh across repeated analyses", () => {
+  const component = '<script setup lang="ts">import type { Props } from "./props"; defineProps<Props>();</script>';
+  const files = { "package.json": "{}", "props.ts": "export interface Props { value: string }", "One.vue": component, "Two.vue": component };
+  const root = fixture(files);
+  try {
+    const context = { repoPath: root, files: Object.keys(files), profile: analyzeRepository({ repoPath: root }) };
+    for (const [type, runtime] of [["string", "String"], ["number", "Number"]]) {
+      writeFileSync(join(root, "props.ts"), `export interface Props { value: ${type} }`);
+      const result = vueAdapter.analyze(context);
+      assert.deepEqual(result.blockers, []);
+      for (const path of ["One.vue", "Two.vue"]) {
+        assert.ok(result.edges.some(edge => edge.from === path && edge.to === "props.ts"));
+        assert.ok(result.virtualSources.find(source => source.path === path)?.source.includes(`type: ${runtime}`));
+      }
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Vue analysis preserves default compiler output without using source maps", () => {
+  const components = {
+    "Setup.vue": '<script setup lang="ts">import Child from "./Child.vue"; const props = defineProps<{ title: string }>();</script><template><Child>{{ props.title }}</Child></template>',
+    "Options.vue": '<script>import Child from "./Child.vue"; export default { components: { Child } };</script><template><Child /></template>',
+    "Asset.vue": '<template><img src="./logo.png" /></template>',
+    "Runtime.vue": '<script setup>const name = "unknown";</script><template><component :is="name" /></template>',
+    "Directive.vue": '<template><div v-custom /></template>',
+  };
+  const root = fixture({ "package.json": "{}", ...components });
+  try {
+    const context = { repoPath: root, files: Object.keys(components), profile: analyzeRepository({ repoPath: root }) };
+    for (let repeat = 0; repeat < 2; repeat++) {
+      const actual = vueAdapter.analyze(context);
+      for (const [path, raw] of Object.entries(components)) {
+        const { descriptor } = parse(raw, { filename: join(root, path) });
+        const script = descriptor.script || descriptor.scriptSetup ? compileScript(descriptor, { id: path }) : undefined;
+        const template = compileTemplate({ source: descriptor.template!.content, filename: path, id: path, compilerOptions: { bindingMetadata: script?.bindings } });
+        assert.equal(actual.virtualSources.find(source => source.path === path)?.source, `${script?.content ?? ""}\n${template.code}`);
+      }
+      assert.deepEqual(actual.blockers, [
+        "Vue Runtime.vue: runtime component/directive resolution requires full validation",
+        "Vue Directive.vue: runtime component/directive resolution requires full validation",
+      ]);
+    }
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
+
+test("Go inactive files select their owning package and dependents without adding inactive tests", async (t) => {
+  const root = fixture({ "go.mod": "module example\n",
+    "lib/value.go": "package lib", "lib/value_windows.go": "package lib",
+    "lib/value_test.go": "package lib", "lib/value_windows_test.go": "package lib",
+    "app/app.go": "package app", "app/app_test.go": "package app",
+    "other/other.go": "package other", "other/other_test.go": "package other",
+    "_examples/main.go": "package main", "lib/testdata/fixture.go": "package fixture",
+  });
+  const output = [
+    { Dir: join(root, "lib"), ImportPath: "example/lib", GoFiles: ["value.go"], TestGoFiles: ["value_test.go"], IgnoredGoFiles: ["value_windows.go", "value_windows_test.go"] },
+    { Dir: join(root, "app"), ImportPath: "example/app", GoFiles: ["app.go"], TestGoFiles: ["app_test.go"], Imports: ["example/lib"] },
+    { Dir: join(root, "other"), ImportPath: "example/other", GoFiles: ["other.go"], TestGoFiles: ["other_test.go"] },
+  ].map(x => JSON.stringify(x)).join("\n");
+  t.mock.method(goAdapter, "analyze", (context: Parameters<typeof analyzeGoMetadata>[0]) => analyzeGoMetadata(context, output));
+  try {
+    const graph = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(graph.adapterBlockers, []);
+    assert.ok(!graph.profile.goTestPackages?.["lib/value_windows_test.go"]);
+    for (const path of ["_examples/main.go", "lib/testdata/fixture.go", "lib/testdata/new.txt", ".hidden.go"]) {
+      assert.equal(new ImpactAnalyzer().analyze(delta(path), graph, graph.profile).fallbackRequired, true);
+      const renamed = delta("README.md"); renamed.files[0].oldPath = path; renamed.files[0].changeType = "renamed";
+      assert.equal(new ImpactAnalyzer().analyze(renamed, graph, graph.profile).fallbackRequired, true);
+    }
+    for (const path of ["lib/value.go", "lib/value_windows.go"]) {
+      const impact = new ImpactAnalyzer().analyze(delta(path), graph, graph.profile);
+      assert.equal(impact.fallbackRequired, false);
+      assert.deepEqual(impact.affectedTests.map(t => t.path), ["app/app_test.go", "lib/value_test.go"]);
+    }
+    const removed = delta("lib/removed.go"); removed.files[0].changeType = "deleted";
+    assert.equal(new ImpactAnalyzer().analyze(removed, graph, graph.profile).fallbackRequired, true);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
@@ -153,6 +300,31 @@ test("Go test JSON requires complete package outcomes", () => {
 
 let hasGo = false;
 try { execFileSync("go", ["version"], { stdio: "ignore", windowsHide: true }); hasGo = true; } catch { /* explicit skip on hosts without Go */ }
+test("explicit Go root scope isolates nested modules but never skips changes there", { skip: !hasGo }, async () => {
+  const root = fixture({
+    "diffci.json": JSON.stringify({ go: { scope: "root-module" } }),
+    "go.mod": "module example\n\ngo 1.22\n",
+    "lib.go": "package example\nfunc Value() int { return 1 }\n",
+    "lib_test.go": 'package example\nimport "testing"\nfunc TestValue(t *testing.T) { if Value() != 1 { t.Fatal("value") } }\n',
+    "nested/go.mod": "module nested\n\ngo 1.22\n",
+    "nested/nested.go": "package nested\n",
+    "nested/README.md": "nested module",
+  });
+  try {
+    const graph = await buildDependencyGraph({ repoPath: root });
+    assert.deepEqual(graph.adapterBlockers, []);
+    assert.deepEqual(graph.profile.goExcludedModuleRoots, ["nested/"]);
+    assert.equal(new ImpactAnalyzer().analyze(delta("lib.go"), graph, graph.profile).fallbackRequired, false);
+    for (const path of ["nested/nested.go", "nested/README.md", "diffci.json"]) assert.equal(new ImpactAnalyzer().analyze(delta(path), graph, graph.profile).fallbackRequired, true);
+    const renamed = delta("README.md"); renamed.files[0].oldPath = "nested/README.md"; renamed.files[0].changeType = "renamed";
+    assert.equal(new ImpactAnalyzer().analyze(renamed, graph, graph.profile).fallbackRequired, true);
+    const command = planSelectiveTestCommands(graph.profile, ["lib_test.go"]).commands[0];
+    assert.ok(!command.args.some(arg => arg.includes("nested")));
+    execFileSync(command.executable, command.args, { cwd: root, env: { ...process.env, ...command.env }, stdio: "pipe" });
+    writeFileSync(join(root, "go.work"), "go 1.22\nuse .\n");
+    assert.ok((await buildDependencyGraph({ repoPath: root })).adapterBlockers?.length);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});
 test("native Go graph and emitted subset command execute successfully", { skip: !hasGo }, async () => {
   const root = fixture({
     "go.mod": "module example\n\ngo 1.22\n",

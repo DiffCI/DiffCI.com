@@ -22,12 +22,13 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { relative, resolve } from "node:path";
-
 import { analyzeGitDelta } from "@diffci.com/core/git/git-diff";
 import { classifyRepositoryProject, buildDependencyGraph } from "@diffci.com/core/repo/graph";
 import { ImpactAnalyzer } from "@diffci.com/core/repo/impact";
 import { runPathBaseline } from "@diffci.com/core/planner/path-baseline";
 import { commandSpecToString, planSelectiveTestCommands } from "@diffci.com/core/planner/test-command";
+
+import { economicsContext, evaluateEconomics, type EconomicsDecision } from "./economics.js";
 import {
   readCiEnvironment,
   resolveCommitRange,
@@ -64,6 +65,12 @@ export interface ObserveOptions {
   reportPath?: string;
   /** Injected for tests. Defaults to a real git in `repoPath`. */
   git?: GitRunner;
+  /** Optional external CI timing history. It can only bypass to full validation. */
+  economicsHistory?: unknown;
+  economicsJobKey?: string;
+  forceAnalysis?: boolean;
+  /** Optional cache outside the checkout; graph resolution and selection remain fresh. */
+  vueAnalysisCacheDir?: string;
 }
 
 function makeGitRunner(repoPath: string): GitRunner {
@@ -110,6 +117,10 @@ export function isInsideRepository(repoPath: string, candidate: string): boolean
 
 export async function observe(options: ObserveOptions): Promise<ObservationReport> {
   const startedAt = Date.now();
+  const preObserveMs = Math.round(process.uptime() * 1000);
+  const phasesMs: Record<string, number> = {};
+  let phaseStart = performance.now();
+  const markPhase = (name: string) => { const now = performance.now(); phasesMs[name] = Math.round(now - phaseStart); phaseStart = now; };
   const repoPath = resolve(options.repoPath);
   const git = options.git ?? makeGitRunner(repoPath);
   const ci = readCiEnvironment(options.env);
@@ -121,6 +132,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
   // Declared before `finish` closes over it: the range is part of every report, including the reports
   // produced by failures that happen after it was resolved.
   let range: ResolvedCommitRange | undefined;
+  let economics: EconomicsDecision | undefined;
 
   const finish = (
     status: ObservationStatus,
@@ -142,6 +154,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         options.reportPath === undefined ? true : !isInsideRepository(repoPath, options.reportPath),
       workflowFindings: safeAuditWorkflows(repoPath),
     };
+    markPhase("finalization");
     return {
       schema: OBSERVATION_SCHEMA,
       producedAt: new Date().toISOString(),
@@ -172,6 +185,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
       stage,
       reason: extra.reason,
       result: extra.result,
+      economics,
       payload: {
         includesFilePaths: options.redactPaths !== true,
         includesFileContents: false,
@@ -180,7 +194,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         pathRedaction: options.redactPaths ? "sha256-12" : undefined,
       },
       nonInterference,
-      timings: { totalMs: Date.now() - startedAt },
+      timings: { totalMs: Date.now() - startedAt, preObserveMs, phasesMs },
     };
   };
 
@@ -193,10 +207,29 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
     });
     if (!resolved.ok) return finish("REFUSED", "context", { reason: resolved.reason });
     range = resolved.range;
+    markPhase("context");
+
+    if (options.economicsJobKey || options.economicsHistory) {
+      const remote = git(["remote", "get-url", "origin"]);
+      const repository = remote.ok ? /^(?:https:\/\/github\.com\/|git@github\.com:)([^/\s]+\/[^/\s]+?)(?:\.git)?$/.exec(remote.stdout.trim())?.[1] : undefined;
+      economics = evaluateEconomics(options.economicsHistory, { repository, jobKey: options.economicsJobKey, contextKey: economicsContext(repoPath), observerVersion: options.version });
+      if (economics.decision === "BYPASS_FULL") {
+        const samples = (options.economicsHistory as { samples: { headSha: string }[] }).samples;
+        if (options.forceAnalysis || samples.some(sample => !git(["merge-base", "--is-ancestor", sample.headSha, range!.baseSha]).ok)) economics = { ...economics, decision: "ANALYZE", reason: "Forced resampling or history is not ancestral to this change" };
+      }
+      markPhase("economics");
+      if (economics.decision === "BYPASS_FULL") return finish("REFUSED", "eligibility", { reason: `ECONOMICS_FULL_BYPASS: ${economics.reason}. No selective command is authorized.` });
+    }
+
+    const [{ analyzeGitDelta }, { classifyRepositoryProject, buildDependencyGraph }, { ImpactAnalyzer }, { runPathBaseline }, { commandSpecToString, planSelectiveTestCommands }] = await Promise.all([
+      import("../git/git-diff.js"), import("../repo/graph.js"), import("../repo/impact.js"), import("../planner/path-baseline.js"), import("../planner/test-command.js"),
+    ]);
+    markPhase("engineLoad");
 
     // The eligibility gate is asked of the graph builder itself (classifyRepositoryProject), not of a
     // separate list of conditions that can drift away from it. Phase 01 F3 is what that drift costs.
     const capability = classifyRepositoryProject(repoPath);
+    markPhase("eligibility");
     if (!capability.capable) {
       return finish("REFUSED", "eligibility", {
         reason: `DiffCI supports TypeScript/JavaScript projects, Vue components, and root Go modules: ${capability.reason}`,
@@ -208,12 +241,15 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
       return finish("REFUSED", "delta", { reason: deltaResult.error });
     }
     const delta = deltaResult.delta;
+    markPhase("delta");
 
-    const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS });
+    const graphResult = await buildDependencyGraph({ repoPath, excludeDirs: EXCLUDE_DIRS, vueAnalysisCache: options.vueAnalysisCacheDir ? { directory: options.vueAnalysisCacheDir, version: `${options.version}:${options.engineSha ?? ""}` } : undefined });
+    markPhase("graph");
     if (graphResult.graph.nodes.length === 0) {
       return finish("REFUSED", "graph", {
         reason:
-          "the dependency graph came back empty - DiffCI will not propose a selection from a graph that sees none of this repository",
+          "the dependency graph came back empty - DiffCI will not propose a selection from a graph that sees none of this repository" +
+          (graphResult.adapterBlockers?.length ? `; ${graphResult.adapterBlockers.join("; ")}` : ""),
       });
     }
     const profile = graphResult.profile;
@@ -232,6 +268,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
       ? undefined
       : planSelectiveTestCommands(profile, selectedTests);
 
+    markPhase("impactAndCommands");
     return finish("OBSERVED", "complete", {
       result: {
         mode: impact.fallbackRequired ? "FULL" : "SELECTIVE",
@@ -242,6 +279,9 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         totalTestCount: profile.testFilePaths.length,
         fallbackReasons: impact.fallbackReasons,
         proposedCommands: (commandPlan?.commands ?? []).map(commandSpecToString),
+        goScope: profile.diffciConfig?.go?.scope,
+        vueScope: profile.vueScope ? { packageRoot: hashPath(profile.vueScope.packageRoot), testConfig: hashPath(profile.vueScope.testConfig) } : undefined,
+        scopedTestFiles: profile.vueScope ? profile.testFilePaths.map(hashPath) : undefined,
         commandRefusalReason: commandPlan?.refusalReason,
         unroutedTestPaths: (commandPlan?.unroutedPaths ?? []).map(hashPath),
         blindSpot: profile.testUniverse?.blindSpot === true,
@@ -252,6 +292,8 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
           confidence: graphResult.confidence,
           effectiveConfidence: impact.effectiveGraphConfidence,
           durationMs: Math.round(graphResult.performance.durationMs),
+          phasesMs: graphResult.performance.phasesMs,
+          adapterMetrics: graphResult.performance.adapterMetrics,
         },
         pathBaseline: {
           mode: baseline.fallbackRequired ? "FULL" : "SELECTIVE",
