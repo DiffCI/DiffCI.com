@@ -13,6 +13,9 @@ selected commands when it can infer them. The `observe` command and Action remai
 **For AI coding agents:** DiffCI gives Codex, Claude Code, Cursor, GitHub Copilot, Grok, and similar
 tools a safe default CI/CD validation command.
 
+AI-readable documentation: [DiffCI CLI on Context7](https://context7.com/diffci/diffci.com) and
+[DiffCI Core on Context7](https://context7.com/diffci/core).
+
 From an existing repository checkout, with Node.js 22.5+ and Git installed:
 
 ```bash
@@ -162,7 +165,7 @@ This repository was transferred to `DiffCI/DiffCI.com` on 2026-09-16.
 | DiffCI Cloud | Hosted infrastructure, billing, enterprise dashboard, organization management, proprietary data/services, and managed acceleration | Proprietary |
 | Optional enterprise code | Separately scoped, visible and auditable enterprise capabilities | Source available, with commercial production rights controlled by DiffCI |
 
-**This mixed repository remains private.** Only the reviewed Core extraction was published, with
+**This mixed repository is public.** The reviewed Core extraction was published separately, with
 fresh Git history. This repository retains its existing engine snapshot while package integration is
 migrated separately. No blanket AGPL license applies to this repository. Public Core is advisory-only;
 energy/carbon/cost are modeled estimates, not verified environmental savings. The exact extraction is
