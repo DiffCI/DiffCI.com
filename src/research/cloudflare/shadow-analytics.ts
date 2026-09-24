@@ -12,6 +12,8 @@ export interface AnalyticsEnv {
   POSTHOG_API_KEY?: string;
   POSTHOG_HOST?: string;
   POSTHOG_IDENTITY_SALT?: string;
+  GITHUB_APP_ID?: string;
+  GITHUB_APP_PRIVATE_KEY?: string;
   SHADOW_GITHUB_APP_ID?: string;
   SHADOW_GITHUB_APP_PRIVATE_KEY?: string;
 }
@@ -84,8 +86,10 @@ export async function flushAnalytics(env: AnalyticsEnv): Promise<{ sent: number;
 /** GitHub's installation inventory includes installations with zero selected/enrolled repositories. */
 export async function syncAnalytics(env: AnalyticsEnv): Promise<unknown> {
   if (!env.POSTHOG_API_KEY) return { configured: false };
-  if (!env.SHADOW_GITHUB_APP_ID || !env.SHADOW_GITHUB_APP_PRIVATE_KEY) throw new Error('GitHub App credentials missing');
-  const jwt = await signAppJwt({ appId: env.SHADOW_GITHUB_APP_ID, privateKeyPkcs8Pem: env.SHADOW_GITHUB_APP_PRIVATE_KEY });
+  const appId = env.GITHUB_APP_ID ?? env.SHADOW_GITHUB_APP_ID;
+  const privateKey = env.GITHUB_APP_PRIVATE_KEY ?? env.SHADOW_GITHUB_APP_PRIVATE_KEY;
+  if (!appId || !privateKey) throw new Error('GitHub App credentials missing');
+  const jwt = await signAppJwt({ appId, privateKeyPkcs8Pem: privateKey });
   type Install = { id: number; suspended_at: string | null; account: { login: string }; created_at: string };
   const installations: Install[] = [];
   for (let page = 1; ; page++) {

@@ -59,6 +59,7 @@ import { makeD1ExecutionQueueStore } from "../../execution-queue/store.js";
 import { makeD1ShadowReadBoundary, type D1Binding as ShadowD1Binding } from "../shadow-read-boundary.js";
 import { connectInstallation } from "../../install/github-installation.js";
 import { handleInstallationWebhook } from "../../install/webhook.js";
+import { forwardReadOnlyWebhook } from "../../install/unified-read-webhook.js";
 import { makeD1PendingInstallationStore, claimInstallation } from "../../install/pending.js";
 import { makeD1WebhookDeliveryStore } from "../../install/delivery-log.js";
 import { currentMonth, getMonthlyLedgerForOrganization, type LedgerRouteDeps } from "../../ledger/routes.js";
@@ -79,7 +80,7 @@ import { makeD1IngestTokenStore } from "../../ingest/token.js";
 import { parseAgentArtifact } from "../../ingest/agent-artifact.js";
 import { decideRepositoryAdmission, EARLY_ACCESS_ENABLED } from "../../billing/repository-admission.js";
 import { makeD1ObservationStore } from "../../ingest/store.js";
-import { reportInstallationCreated, reportInstallationFailure } from "./conversion-telemetry.js";
+import { reportInstallationCreated, reportInstallationFailure, reportOptInCliUsage } from "./conversion-telemetry.js";
 import { ingestObservation, MAX_REPORT_BYTES } from "../../ingest/ingest.js";
 import type { IngestRejection } from "../../ingest/types.js";
 import { runRetentionSweep } from "../../ingest/retention.js";
@@ -638,7 +639,12 @@ export default {
       return json({ ok: true, ...outcome.result }, 200);
     }
 
-    if (request.method === "POST" && url.pathname === "/v1/webhooks/github/installation") {
+    if (request.method === "POST" && url.pathname === "/v1/webhooks/github") {
+      const forwarded = await forwardReadOnlyWebhook(request, env.RESEARCH_WORKER);
+      if (forwarded) return forwarded;
+    }
+
+    if (request.method === "POST" && (url.pathname === "/v1/webhooks/github" || url.pathname === "/v1/webhooks/github/installation")) {
       if (!env.GITHUB_APP_WEBHOOK_SECRET) return json({ ok: false, error: "webhooks are not configured in this environment" }, 503);
       const rawBody = await request.text();
       const result = await handleInstallationWebhook(
@@ -827,6 +833,21 @@ export default {
     // by an ingest token, NOT by a session: there is no human, no cookie and no CSRF token in a CI job.
     // Everything about which organization this belongs to comes from the credential; nothing comes from
     // the payload (see src/ingest/ingest.ts).
+    if (request.method === "POST" && url.pathname === "/v1/usage-events") {
+      if (!env.POSTHOG_API_KEY) return json({ ok: false, error: "usage_collection_unavailable" }, 503);
+      if (Number(request.headers.get("content-length") ?? "0") > 512) return json({ ok: false }, 413);
+      const raw = await request.text();
+      if (raw.length > 512) return json({ ok: false }, 413);
+      let body: Record<string, unknown>;
+      try { body = JSON.parse(raw) as Record<string, unknown>; } catch { return json({ ok: false }, 400); }
+      if (body.schema !== "diffci.usage.v1" || !["check", "observe"].includes(String(body.command)) ||
+        !["observed", "refused", "error"].includes(String(body.outcome)) ||
+        typeof body.version !== "string" || !/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(body.version)) {
+        return json({ ok: false }, 400);
+      }
+      ctx.waitUntil(reportOptInCliUsage(env, body.command as string, body.outcome as string, body.version as string).catch(() => undefined));
+      return json({ ok: true }, 202);
+    }
     if (request.method === "POST" && url.pathname === "/v1/ingest/observations") {
       const declaredLength = Number(request.headers.get("content-length") ?? "0");
       if (Number.isFinite(declaredLength) && declaredLength > MAX_REPORT_BYTES) {

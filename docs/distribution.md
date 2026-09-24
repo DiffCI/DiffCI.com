@@ -48,7 +48,7 @@ and the [DiffCI submission packet](tidelift-submission.md).
 
 ## GitHub App
 
-The DiffCI Shadow GitHub App is the lowest-friction research and design-partner path. It receives
+The unified read-only DiffCI GitHub App is the lowest-friction research and design-partner path. It receives
 repository events, runs shadow analysis outside the repository's CI jobs, and reconciles predictions
 against real CI outcomes. Use it when a maintainer wants observation without adding a workflow step.
 
@@ -68,10 +68,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@3aa76a84919691cf7e8f9d1f1f6a80399325d1ae
+      - uses: DiffCI/DiffCI.com@e852523fade14bf5e0457a6331e97c8a76eedc2b
 ```
 
-The example pins release `v0.2.2` to its full commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
+The example pins release `v0.2.7` to its qualified feature commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
@@ -106,7 +106,7 @@ Estimated CO2                   xxx kg
 Estimated water                 xxx L
 ```
 
-That makes the open-source proposition explicit: install DiffCI Shadow, change nothing in CI, and learn
+That makes the open-source proposition explicit: install DiffCI, change nothing in CI, and learn
 how much compute may be wasted.
 
 ## Future Package Managers

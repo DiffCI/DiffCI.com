@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "DiffCI - deterministic change-aware CI planning",
   "keywords": [
     "ci",
@@ -65,7 +65,7 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "test": "tsx --test \"tests/**/*.test.ts\"",
-    "check": "npm run typecheck && npm run test",
+    "check": "npm run check:public-metadata && npm run typecheck && npm run test",
     "prepack": "npm run build:client",
     "package:smoke": "node scripts/package-smoke.mjs",
     "diffci": "tsx scripts/diffci.ts",
@@ -127,7 +127,8 @@
     "corpus:register": "tsx scripts/register-corpus-entry.ts",
     "ci:benchmark": "tsx scripts/ci-inference-benchmark.ts",
     "ci:reproduce": "tsx scripts/ci-reproduction.ts",
-    "check:oss-boundary": "node scripts/check-oss-boundary.mjs"
+    "check:oss-boundary": "node scripts/check-oss-boundary.mjs",
+    "check:public-metadata": "node scripts/check-public-metadata.mjs"
   },
   "dependencies": {
     "@diffci.com/core": "git+https://github.com/DiffCI/core.git#db1d637dfcca8d8f7fa047500dfe0027d0d018a7",

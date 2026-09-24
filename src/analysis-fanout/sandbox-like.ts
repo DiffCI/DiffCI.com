@@ -22,7 +22,7 @@ export interface ProcessLike {
 }
 
 export interface SandboxLike {
-  exec(command: string, options?: { timeout?: number; cwd?: string }): Promise<ExecResultLike>;
+  exec(command: string, options?: { timeout?: number; cwd?: string; env?: Record<string, string> }): Promise<ExecResultLike>;
   writeFile(
     path: string,
     content: string | ReadableStream<Uint8Array>,

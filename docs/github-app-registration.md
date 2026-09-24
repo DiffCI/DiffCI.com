@@ -1,8 +1,10 @@
-# Registering the DiffCI Shadow GitHub App
+# Registering the unified read-only DiffCI GitHub App
 
 ## Organization restoration (2026-09-16)
 
-The existing **DiffCI Shadow** app is installed on the DiffCI organization as installation
+The legacy **DiffCI Shadow** app is being consolidated into the public **DiffCI** app. Follow the
+migration order in [`github-app-consolidation.md`](github-app-consolidation.md); do not uninstall the
+legacy App until unified installation, push, and workflow-run deliveries have all been verified. The App is installed as installation
 `162093948`, scoped only to `DiffCI/DiffCI.com`. Its permissions remain read-only: Actions, Checks,
 Contents and Metadata; its subscriptions remain `push` and `workflow_run`. The existing app credentials,
 Worker and webhook are reused. No Runner permissions or credentials are involved.
@@ -45,7 +47,7 @@ There are two prospective GitHub Apps in this repository, and they must stay **s
 
 | App | Purpose | Permissions | Who installs it |
 |---|---|---|---|
-| **DiffCI Shadow** (this doc) | Observe-only shadow validation | Read-only, exactly 4 scopes (pull_requests dropped 2026-09-03, unused) | Design partners + own repos |
+| **DiffCI** (this doc) | Repository discovery plus observe-only shadow validation | Read-only, exactly 4 scopes | Design partners + own repos |
 | GitHub-runner dispatcher (`src/research/cloudflare/github-runner-worker.ts`) | Ephemeral self-hosted Actions runners | Administration:write, Actions:write | Own repos ONLY |
 
 The entire design-partner pitch for shadow mode is "this App cannot touch anything in your
@@ -57,7 +59,7 @@ manifest shape is noted in `wrangler.github-runner.jsonc`'s comments.
 
 1. **Create the App.** GitHub → Settings → Developer settings → GitHub Apps → *New GitHub App*
    (personal account is fine for now; transferable to an org later).
-   - Name: `DiffCI Shadow` — Homepage URL: `https://diffci.com`
+   - Name: `DiffCI` — Homepage URL: `https://diffci.com`
    - Webhook: enter the URL from the manifest but leave **Active** unchecked for now — the
      `/v1/shadow/webhook` route isn't wired in the Worker yet (deliberate: polling covers observation
      today; the webhook route is a small follow-up once the App exists). Set a **webhook secret**

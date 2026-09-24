@@ -1,0 +1,19 @@
+{
+  "name": "DiffCI Adoption",
+  "url": "https://diffci.com",
+  "description": "Opens draft pull requests that add DiffCI as an exact development dependency and a separate non-blocking observation workflow. It never merges pull requests or changes required checks.",
+  "public": true,
+  "default_permissions": {
+    "metadata": "read",
+    "contents": "write",
+    "pull_requests": "write"
+  },
+  "default_events": [],
+  "hook_attributes": {
+    "url": "https://app.diffci.com/v1/webhooks/github/adoption",
+    "active": false
+  },
+  "setup_url": "https://app.diffci.com/app/adoption/setup",
+  "setup_on_update": false,
+  "request_oauth_on_install": false
+}
