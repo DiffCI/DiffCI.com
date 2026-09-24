@@ -31,6 +31,7 @@ import { basename, dirname, join, resolve } from "node:path";
 
 import { observe, isInsideRepository } from "./observe.js";
 import { inferFullCommand, inferSelectedCommand } from "./full-command.js";
+import { addDiffciPackageScripts, installDiffci } from "./install.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
 import { formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
@@ -205,8 +206,24 @@ function runInit(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv
   ];
   if (includeWorkflow) writes.push(writeInitFile(repoPath, ".github/workflows/diffci.yml", diffciWorkflow(identity.version), force));
 
+  let installed: string | undefined;
+  if (flags.install === true) {
+    const { plan, result } = installDiffci(repoPath, identity.version);
+    if (result.error) throw result.error;
+    if (result.status !== 0) {
+      const detail = result.stderr.trim() || result.stdout.trim() || `${plan.manager} exited with status ${result.status ?? "unknown"}`;
+      throw new Error(`could not install ${plan.packageSpec}: ${detail}`);
+    }
+    const scripts = addDiffciPackageScripts(repoPath);
+    installed = `installed ${plan.packageSpec} as an exact dev dependency with ${plan.manager}`;
+    if (scripts.added.length > 0) installed += `; added package scripts ${scripts.added.join(", ")}`;
+    if (scripts.kept.length > 0) installed += `; kept existing package scripts ${scripts.kept.join(", ")}`;
+  }
+
   console.log(`DiffCI initialized for AI coding agents in ${repoPath}`);
   for (const write of writes) console.log(`  ${write}`);
+  if (installed) console.log(`  ${installed}`);
+  else console.log("  skipped package installation (pass --install to add an exact dev dependency)");
   if (!includeWorkflow) console.log("  skipped .github/workflows/diffci.yml (pass --workflow to add it)");
   console.log("\nDefault agent command: npx @diffci.com/diffci@latest check");
   return 0;
@@ -606,7 +623,7 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
 const USAGE = `diffci - change-aware CI analysis and paired timing
 
 Usage:
-  diffci init [--repo <path>] [--workflow] [--force]
+  diffci init [--repo <path>] [--workflow] [--install] [--force]
   diffci mcp
   diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>]
@@ -621,6 +638,9 @@ Usage:
   diffci version
 
 init writes AGENTS.md, CLAUDE.md, Cursor rules, Copilot instructions, and diffci.config.json.
+--workflow adds a separate non-blocking observation workflow. --install detects npm, pnpm, Yarn,
+or Bun, installs this DiffCI version as an exact dev dependency, updates the manager's lockfile,
+and adds diffci:check and diffci:observe package scripts without replacing existing scripts.
 mcp runs the stdio MCP server for native agent integrations.
 check analyzes the change, runs inferred full and selected commands, and shows measured savings.
 pilot runs observe and verify-savings together, writing reports to ../diffci-output by default.
