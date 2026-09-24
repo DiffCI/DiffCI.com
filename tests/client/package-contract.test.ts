@@ -9,6 +9,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 describe("npm package contract", () => {
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")) as {
     name?: string;
+    version?: string;
     private?: boolean;
     bin?: Record<string, string>;
     files?: string[];
