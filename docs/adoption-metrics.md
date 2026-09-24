@@ -2,6 +2,27 @@
 
 Track adoption weekly after each outreach batch.
 
+## Conversion goal
+
+Every discovery surface should move a maintainer toward one concrete action:
+
+```bash
+npx @diffci.com/diffci@latest check
+```
+
+The desired conversion is not a directory view. It is a first report that a maintainer can understand,
+share, and use to decide whether a seven-day non-blocking observation pilot is worthwhile.
+
+Use the same call to action across npm, GitHub Marketplace, Context7, MCP directories, GitHub, and
+community posts:
+
+> Try DiffCI locally with `npx @diffci.com/diffci@latest check`. It analyzes the current change, runs
+> inferred full and selected commands when safe, writes reports outside the checkout, and sends nothing
+> by default. Existing CI remains authoritative.
+
+Route maintainers who have already run it to the
+[`Share a first DiffCI report`](../.github/ISSUE_TEMPLATE/first-diffci-report.yml) issue template.
+
 ## Opt-in CLI usage
 
 Users can run `diffci check --share-usage` or set `DIFFCI_SHARE_USAGE=1` for `check` and
@@ -38,7 +59,37 @@ connection metadata such as IP address.
 
 ## Outreach
 
-Record each submission in `docs/agent-adoption-targets.md` or a dated note:
+Record each submission in `docs/agent-adoption-targets.md` or a dated note. For directory listings,
+track conversion signals, not only application status:
+
+| Channel | Status | Primary CTA | Signal to watch | Next action |
+| --- | --- | --- | --- | --- |
+| npm | Live | `npx @diffci.com/diffci@latest check` | Weekly downloads, package-page visits, first-report issues | Keep README first-run copy current. |
+| GitHub Marketplace | Live | Install non-blocking Action or run local check first | Action installs, workflow questions, first-report issues | Keep pinned SHA and Marketplace copy current. |
+| GitHub repository | Live | Open a first-report issue | Stars, issues, forks, discussion quality | Reply quickly and convert strong reports into pilot packets. |
+| Context7 | Live | Agent-safe `check` command | Agent docs referrals, copied snippets, MCP questions | Keep agent instructions concise and current. |
+| Official MCP Registry | Published | `diffci-mcp` setup | MCP install questions, tool-call reports | Keep package metadata and MCP examples aligned. |
+| Glama | Applied | MCP server install | Listing visits, MCP questions | Update copy with exact first-run command once accepted. |
+| PulseMCP | Applied | MCP server install | Listing visits, MCP questions | Watch for accepted listing and questions. |
+| Smithery | Applied | MCP server install | Listing visits, install attempts | Watch for accepted listing and questions. |
+| Libraries.io | Applied | npm package page | Dependency watchers, source referrals | Keep package metadata clean. |
+| AlternativeTo | Applied | Local `check` command | Referral visits, comparison comments | Emphasize observation-only CI. |
+| StackShare | Applied | Local `check` command | Stack adds, referral visits | Emphasize developer workflow fit. |
+| Open Hub | Applied | GitHub repo | Project watchers, referral visits | Keep project metadata accurate. |
+| devtools/ | Applied | Local `check` command | Referral visits, first-run issues | Keep one-command CTA visible. |
+
+Weekly loop:
+
+1. Check npm version/downloads, GitHub traffic, Marketplace/listing signals, stars, issues, and opt-in
+   usage events.
+2. Label first-run reports with `first-report` and record whether they are selective, full fallback,
+   refused, or errored.
+3. Reply to every first-report issue with one next step: inspect fallback/refusal, repeat with controlled
+   cache state, open a non-blocking Action PR, or stop because the repo is unsupported.
+4. Move strong candidates into a maintainer review packet and ask for a seven-day pilot.
+5. Stop adding new directories unless an existing channel produces reports or maintainer conversations.
+
+Existing outreach log:
 
 | Date | Target | Type | Link | Status | Follow-up |
 | --- | --- | --- | --- | --- | --- |

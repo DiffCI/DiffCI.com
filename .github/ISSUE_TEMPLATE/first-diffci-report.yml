@@ -1,0 +1,86 @@
+name: Share a first DiffCI report
+description: Share the result from one local DiffCI run and decide whether a pilot is useful.
+title: "First DiffCI report: <owner/repo>"
+labels:
+  - first-report
+  - adoption
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Run DiffCI once from a repository checkout:
+
+        ```bash
+        npx @diffci.com/diffci@latest check
+        ```
+
+        It writes reports outside the checkout and sends nothing by default. Existing CI remains authoritative.
+        Share only the summary or a sanitized report excerpt; do not paste secrets, private source, tokens, or CI logs containing credentials.
+  - type: input
+    id: repository
+    attributes:
+      label: Repository
+      placeholder: owner/repo
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command run
+      value: npx @diffci.com/diffci@latest check
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - OBSERVED - selective
+        - OBSERVED - full fallback
+        - REFUSED
+        - ERROR
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Report summary or sanitized excerpt
+      description: Include selected/total tests, fallback or refusal reasons, and whether a runnable selected command was proposed.
+      placeholder: |
+        DiffCI observation: OBSERVED
+        verdict: SELECTIVE or FULL
+        selection: 3/120 test files
+        fallback/refusal reasons:
+        report path:
+    validations:
+      required: true
+  - type: textarea
+    id: ci_shape
+    attributes:
+      label: CI and test setup
+      description: Package manager, test runner, monorepo/workspace shape, and anything unusual about CI.
+      placeholder: pnpm workspace, Vitest, GitHub Actions, Node 22
+    validations:
+      required: false
+  - type: dropdown
+    id: pilot_interest
+    attributes:
+      label: Would a seven-day non-blocking observation pilot be useful?
+      options:
+        - "Yes"
+        - "Maybe"
+        - "No"
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      options:
+        - label: Required CI must remain authoritative.
+          required: true
+        - label: DiffCI must not send reports anywhere unless we explicitly configure an endpoint/token.
+          required: true
+        - label: I have removed secrets and private source from anything pasted here.
+          required: true

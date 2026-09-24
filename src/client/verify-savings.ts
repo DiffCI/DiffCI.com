@@ -295,6 +295,15 @@ export function renderVerifySavingsMarkdown(report: VerifySavingsReport): string
     report.selectedTestCount !== undefined && report.totalTestCount !== undefined
       ? `\nSelected tests: ${report.selectedTestCount} of ${report.totalTestCount}\n`
       : "";
+  const commandCoverage =
+    report.selectionSource === "diffci-observation"
+      ? "Selected command came from the observation report. If the repository needs a runner-specific command, rerun with an explicit selected command that covers the complete DiffCI selection."
+      : "Selected command was supplied manually. Confirm it covers the complete DiffCI selection before sharing this as maintainer evidence.";
+  const nextStep = !report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded
+    ? "Inspect the failed command output and rerun before treating this as savings evidence."
+    : !report.comparison.evidenceValid
+      ? "Fix the checkout/provenance issue and rerun before treating this as savings evidence."
+      : "Repeat on the intended runner with controlled cache state before making a production-savings claim.";
 
   return `${title}
 
@@ -334,6 +343,15 @@ ${!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandS
 | --- | ---: | --- | --- |
 | Full | ${report.full.exitCode ?? "signal"} | ${report.full.timedOut ? "yes" : "no"} | \`${report.full.command.replaceAll("|", "\\|")}\` |
 | Selected | ${report.selected.exitCode ?? "signal"} | ${report.selected.timedOut ? "yes" : "no"} | \`${report.selected.command.replaceAll("|", "\\|")}\` |
+
+## Maintainer Review
+
+| Question | Answer |
+| --- | --- |
+| Command coverage | ${commandCoverage} |
+| Cache state | Not controlled by this one report; repeat with documented warm/cold cache conditions before claiming savings. |
+| Invalid evidence handling | Failed commands or unstable checkout provenance are labelled diagnostic only above. |
+| Next step | ${nextStep} |
 
 ## Interpretation Notes
 

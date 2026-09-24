@@ -35,6 +35,31 @@ MCP:
 npx -p @diffci.com/diffci@latest diffci-mcp
 ```
 
+## Discovery CTA
+
+Use this in directory descriptions, Marketplace copy, README snippets, and community replies:
+
+~~~md
+Try DiffCI locally:
+
+```bash
+npx @diffci.com/diffci@latest check
+```
+
+DiffCI analyzes the current change, runs inferred full and selected commands when safe, writes reports
+outside the checkout, and sends nothing by default. Existing CI remains authoritative.
+~~~
+
+If someone has already run DiffCI, ask them to open a first-report issue:
+
+~~~md
+If you get a useful or confusing result, share the summary here:
+https://github.com/DiffCI/DiffCI.com/issues/new?template=first-diffci-report.yml
+
+Please paste only the DiffCI summary or a sanitized report excerpt. Do not paste secrets, private
+source, tokens, or credential-bearing CI logs.
+~~~
+
 ## Issue Template
 
 Title:
@@ -62,6 +87,18 @@ Docs:
 
 Would you be open to adding DiffCI as an optional validation command/example for AI coding agents?
 ```
+
+## First-Run Follow-Up
+
+When someone shares a first report, reply with exactly one next step:
+
+| Report result | Reply with |
+| --- | --- |
+| Selective with a runnable command | Ask whether they want a seven-day non-blocking Action pilot. |
+| Full fallback | Explain the fallback reason and ask for a smaller source-changing revision if useful. |
+| Refused | Treat it as unsupported or an install/setup issue; do not sell it as an opportunity. |
+| Error | Ask for the sanitized error and open a bug if it is reproducible. |
+| Paired runtime result | Check command coverage, cache state, exit codes, and checkout provenance before discussing savings. |
 
 ## PR Snippet
 

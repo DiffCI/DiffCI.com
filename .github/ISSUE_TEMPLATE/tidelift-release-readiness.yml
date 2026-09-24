@@ -22,9 +22,9 @@ body:
     attributes:
       label: OSS/commercial boundary
       options:
-        - label: `package.json` declares `AGPL-3.0-only`.
+        - label: "`package.json` declares `AGPL-3.0-only`."
           required: true
-        - label: `LICENSE`, `SECURITY.md`, `SUPPORT.md`, and `COMMERCIAL.md` are current.
+        - label: "`LICENSE`, `SECURITY.md`, `SUPPORT.md`, and `COMMERCIAL.md` are current."
           required: true
         - label: Commercial DiffCI remains documented as proprietary and outside the OSS package boundary.
           required: true
@@ -33,11 +33,11 @@ body:
     attributes:
       label: Required local checks
       options:
-        - label: `npm run check`
+        - label: "`npm run check`"
           required: true
-        - label: `npm run check:oss-boundary`
+        - label: "`npm run check:oss-boundary`"
           required: true
-        - label: `npm run package:smoke`
+        - label: "`npm run package:smoke`"
           required: true
   - type: checkboxes
     id: release

@@ -112,6 +112,19 @@ with controlled cache state before drawing conclusions. A passing pair does not 
   missing identity, SHA mismatch, or worktree change invalidates the comparison even when both commands
   pass.
 
+Before sharing a Markdown report with a maintainer, check that it answers these review questions:
+
+- Which exact repository, base SHA, head SHA, DiffCI version, full command, and selected command were
+  measured?
+- Did the selected command cover the complete DiffCI selection, or was an explicit command override
+  required?
+- Were cache conditions controlled or repeated, and if not, is the report labelled as one preliminary
+  paired run?
+- Did both commands pass, did checkout provenance stay stable, and are invalid runs clearly labelled
+  diagnostic only?
+- What should the maintainer do next: inspect a fallback/refusal, repeat with controlled cache state,
+  run a seven-day observation job, or ignore the result because the repository is unsupported?
+
 If the proposed command needs adjustment for the repository's runner, pass the selected command
 manually:
 

@@ -180,6 +180,10 @@ describe("verify-savings pilot report", () => {
     assert.match(markdown, /friendly\/repo/);
     assert.match(markdown, /Selected tests: 1 of 10/);
     assert.match(markdown, /No analysis overhead was provided/);
+    assert.match(markdown, /## Maintainer Review/);
+    assert.match(markdown, /Command coverage/);
+    assert.match(markdown, /controlled cache state/);
+    assert.match(markdown, /production-savings claim/);
   });
 
   it("puts a loud warning in markdown when selected passes but full fails", () => {

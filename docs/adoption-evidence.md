@@ -30,9 +30,41 @@ denominators can be misleading.
 - The [controlled Cal.com comparison](research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md)
   measures one job-equivalent workload. It is not Cal.com's production savings or a prediction for
   another repository.
+- The [deepseek-harness execution validation](research/2026-08-25-deepseek-execution-validation/07-execution-and-economics.md)
+  records paired full and selected execution on a second repository. Count only the runs where both
+  arms executed and the selection was honored; withheld or broadened cases are diagnostic evidence,
+  not savings evidence.
 - [Current research state](CURRENT_STATE.md) and the
   [Stage 2 report](research/2026-08-21-stage2-final-report.md) describe prospective shadow work and
   its remaining limits.
+
+## Corrected experiment narrative
+
+Use this as the canonical public summary when writing directory copy, maintainer packets, posts, or
+case-study drafts:
+
+DiffCI has measured paired full and selected execution on Cal.com and deepseek-harness in controlled
+sandbox runs. Those results show that DiffCI can identify smaller test workloads for some real changes
+and that the measured runtime effect depends on the whole job, not only the test command. Cal.com's
+reported 44.2% net reduction is job-equivalent install, pretest, and test time for one controlled
+comparison; its test-stage reductions are larger, but they are not production CI savings. Deepseek's
+eligible measured runs are a second controlled execution study, not evidence that the project uses
+DiffCI.
+
+The public story must also carry the corrections. Observations affected by the pre-0.1.4 missing
+test-import-edge defect need revalidation before they are used as opportunity evidence. Ky's earlier
+smaller selection was withdrawn on that basis. Full-validation fallbacks, refused analyses, unrouted
+commands, failed command pairs, checkout-provenance failures, and cache-ambiguous timings remain in the
+denominator. Selection counts by themselves do not prove runtime savings, and shadow observations do
+not prove realized savings while the repository still runs full CI.
+
+For maintainers, publish three facts separately:
+
+| Fact | May say | Do not say |
+| --- | --- | --- |
+| Observation | DiffCI observed a revision, selected tests or fell back, and wrote reasons. | The omitted tests were proven safe. |
+| Paired runtime | A full command and selected command were executed and timed in one environment. | The repository will save that amount in production CI. |
+| Production savings | Existing CI behavior changed and the selected path was actually used and measured. | Anything, unless that production measurement exists. |
 
 For ecosystem adoption, publish pilot summaries only with the participating maintainer's consent.
 Separate observed selections, measured runtime differences, and proven production savings in every
