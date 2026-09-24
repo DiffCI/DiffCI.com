@@ -104,8 +104,15 @@ try {
   const packJson = runNpm(["pack", "--ignore-scripts", "--json", "--pack-destination", temp]);
   const pack = JSON.parse(packJson)[0];
   const packedPaths = new Set(pack.files.map((file) => file.path));
+  const maxPackedBytes = 8 * 1024 * 1024;
+  const maxUnpackedBytes = 40 * 1024 * 1024;
+  assert(pack.size <= maxPackedBytes, `npm tarball is ${pack.size} bytes; reviewed limit is ${maxPackedBytes}`);
+  assert(pack.unpackedSize <= maxUnpackedBytes, `unpacked npm package is ${pack.unpackedSize} bytes; reviewed limit is ${maxUnpackedBytes}`);
   assert(packedPaths.has("node_modules/@diffci.com/core/dist/index.js"), "Core engine must be bundled into the CLI tarball");
   assert(packedPaths.has("node_modules/@diffci.com/core/dist/repo/adapters/maven.js"), "Maven adapter must be bundled into the CLI tarball");
+  for (const devOnlyPackage of ["@cloudflare/sandbox", "@cloudflare/containers", "wrangler", "pdf-lib", "tsx", "esbuild"]) {
+    assert(![...packedPaths].some((path) => path.startsWith(`node_modules/${devOnlyPackage}/`)), `development-only package ${devOnlyPackage} must not ship in the CLI tarball`);
+  }
   assert(![...packedPaths].some((path) => path.startsWith("dist-client/src/repo/") || path.startsWith("dist-client/src/git/") || path.startsWith("dist-client/src/planner/")), "CLI tarball must not duplicate Core engine modules");
   const tarball = join(temp, pack.filename);
   assert(existsSync(tarball), `npm pack did not create ${tarball}`);
@@ -144,7 +151,8 @@ try {
   assert(mavenReport.result.proposedCommands?.includes("mvn -pl tools -am verify -P run-its"), `unexpected Maven command: ${JSON.stringify(mavenReport.result.proposedCommands)}`);
   assert(mavenReport.nonInterference?.worktreeUnchanged === true, "packaged CLI changed the Maven checkout");
 
-  console.log(`Package smoke passed: ${pack.filename} installed and ran JavaScript and Maven observations.`);
+  console.log(`Package smoke passed: ${pack.filename} (${pack.size} bytes packed, ${pack.unpackedSize} unpacked) installed and ran JavaScript and Maven observations.`);
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }
+

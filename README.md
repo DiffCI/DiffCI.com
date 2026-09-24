@@ -30,6 +30,17 @@ To add instructions for coding agents, run:
 npx @diffci.com/diffci@latest init
 ```
 
+To also pin DiffCI as a development dependency and update the detected npm, pnpm, Yarn, or Bun
+lockfile, pass `--install`. Add `--workflow` for a separate non-blocking observation job:
+
+```bash
+npx @diffci.com/diffci@latest init --install --workflow
+```
+
+`--install` also adds `diffci:check` and `diffci:observe` package scripts. It preserves same-named
+scripts that the project already owns. After installation, CI or contributors can run
+`npm run diffci:check` or `npm run diffci:observe` without knowing the package name or version.
+
 On Windows PowerShell, quote the package name:
 
 ```powershell
@@ -93,13 +104,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@3aa76a84919691cf7e8f9d1f1f6a80399325d1ae
+      - uses: DiffCI/DiffCI.com@773d3326ce346296aa71141061b505ebf0590a88
 ```
 
 Then check the workflow locally with `npx @diffci.com/diffci@latest verify-workflow`. Keep the observer
 out of required checks and other jobs' `needs` lists. The Action adds a job summary and a
 `diffci-observation` artifact to the run; it does not alter which tests your other jobs execute.
-The example pins release `v0.2.2` to its full commit SHA for reproducibility.
+The example pins release `v0.2.5` to its full commit SHA for reproducibility.
 
 The CLI sends no report with `--no-send`. The Action uploads a GitHub artifact by default; sending to
 DiffCI's hosted service requires an explicitly configured endpoint and token.
@@ -295,7 +306,7 @@ npm run research:sandbox:deploy
 DiffCI is intended to be installable as infrastructure, not only as a hosted shadow experiment:
 
 ```yaml
-- uses: DiffCI/DiffCI.com@3aa76a84919691cf7e8f9d1f1f6a80399325d1ae
+- uses: DiffCI/DiffCI.com@773d3326ce346296aa71141061b505ebf0590a88
 ```
 
 ```bash
@@ -310,3 +321,4 @@ DiffCI Cloud build on that trust boundary for teams that want shared reports and
 [`docs/distribution.md`](docs/distribution.md) for the package and Action positioning,
 [`docs/open-core-packaging.md`](docs/open-core-packaging.md) for the commercial split, and
 [`docs/npm-adoption.md`](docs/npm-adoption.md) for copy-paste pilot material.
+
