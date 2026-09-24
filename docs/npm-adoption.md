@@ -96,6 +96,10 @@ with controlled cache state before drawing conclusions. A passing pair does not 
 - Net selected runtime is selected runtime plus analysis overhead.
 - If the full command fails while the selected command passes, the report is a safety warning, not a
   savings result.
+- The savings report binds the pair to the observation's base/head SHAs and SHA-256 digest, and records
+  the checked-out HEAD plus a worktree-status digest before, between, and after the two commands. A
+  missing identity, SHA mismatch, or worktree change invalidates the comparison even when both commands
+  pass.
 
 If the proposed command needs adjustment for the repository's runner, pass the selected command
 manually:

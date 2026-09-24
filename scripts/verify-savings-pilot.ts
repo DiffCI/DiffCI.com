@@ -67,7 +67,7 @@ function main(): void {
     console.log(formatVerifySavingsSummary(report));
     console.log(`  report: ${options.out}`);
     if (options.markdown) console.log(`  markdown: ${options.markdown}`);
-    if (!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded) process.exitCode = 1;
+    if (!report.comparison.evidenceValid) process.exitCode = 1;
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

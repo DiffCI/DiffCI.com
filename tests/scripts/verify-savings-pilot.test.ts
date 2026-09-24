@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -7,7 +7,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildReport, parseArgs, renderMarkdown, runPilot, type CommandMeasurement } from "../../scripts/verify-savings-pilot.js";
-import { formatVerifySavingsSummary } from "../../src/client/verify-savings.js";
+import { formatVerifySavingsSummary, type SavingsProvenance } from "../../src/client/verify-savings.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -23,7 +23,50 @@ const measurement = (command: string, exitCode: number, wallMs: number): Command
   stderrTail: "",
 });
 
+const verifiedProvenance = (): SavingsProvenance => ({
+  headSha: "a".repeat(40),
+  beforeFull: { capturedAt: "2026-09-20T00:00:00.000Z", headSha: "a".repeat(40), worktreeDigest: "b".repeat(64) },
+  afterFull: { capturedAt: "2026-09-20T00:00:01.000Z", headSha: "a".repeat(40), worktreeDigest: "b".repeat(64) },
+  afterSelected: { capturedAt: "2026-09-20T00:00:02.000Z", headSha: "a".repeat(40), worktreeDigest: "b".repeat(64) },
+  checkoutStable: true,
+  invalidReasons: [],
+});
+
 describe("verify-savings pilot report", () => {
+  it("invalidates a passing pair when the full command changes the worktree", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-provenance-"));
+    execFileSync("git", ["init", "--quiet"], { cwd: dir });
+    execFileSync("git", ["config", "user.email", "test@diffci.local"], { cwd: dir });
+    execFileSync("git", ["config", "user.name", "Test"], { cwd: dir });
+    writeFileSync(join(dir, "tracked.txt"), "original\n");
+    execFileSync("git", ["add", "tracked.txt"], { cwd: dir });
+    execFileSync("git", ["commit", "--quiet", "-m", "fixture"], { cwd: dir });
+    const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: dir, encoding: "utf8" }).trim();
+    const observation = join(dir, "observation.json");
+    writeFileSync(observation, JSON.stringify({
+      schema: "diffci.observation.v1",
+      observer: { version: "test" },
+      status: "OBSERVED",
+      commitRange: { baseSha: head, headSha: head, source: "explicit-flags" },
+      result: { proposedCommands: ["node --version"] },
+    }));
+
+    const report = runPilot(parseArgs([
+      "--full", "node -e \"require('node:fs').writeFileSync('generated.txt','changed')\"",
+      "--cwd", dir,
+      "--selected-from-report", observation,
+      "--out", join(dir, "report.json"),
+    ]));
+
+    assert.equal(report.full.exitCode, 0);
+    assert.equal(report.selected.exitCode, 0);
+    assert.equal(report.provenance.headSha, head);
+    assert.equal(report.provenance.checkoutStable, false);
+    assert.equal(report.comparison.evidenceValid, false);
+    assert.ok(report.provenance.invalidReasons.some(reason => reason.includes("worktree changed")));
+    assert.match(formatVerifySavingsSummary(report), /checkout provenance failed/);
+  });
+
   it("rejects incomplete or ambiguous plans before executing either arm", () => {
     const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-plan-"));
     const observation = join(dir, "observation.json");
@@ -72,6 +115,7 @@ describe("verify-savings pilot report", () => {
         selection: { source: "manual" },
         full: measurement("full", fullExit!, 1000),
         selected: measurement("selected", selectedExit!, 10),
+        provenance: verifiedProvenance(),
       });
       assert.match(formatVerifySavingsSummary(report), /comparison invalid/);
       assert.doesNotMatch(formatVerifySavingsSummary(report), /faster/);
@@ -87,6 +131,7 @@ describe("verify-savings pilot report", () => {
       selection: { source: "manual" },
       full: measurement("npm test", 0, 1000),
       selected: measurement("npm test a.test.ts", 0, 400),
+      provenance: verifiedProvenance(),
     });
 
     assert.equal(report.comparison.netSelectedMs, 650);
@@ -110,6 +155,7 @@ describe("verify-savings pilot report", () => {
       selection: { source: "manual" },
       full: measurement("npm test", 1, 1000),
       selected: measurement("npm test a.test.ts", 0, 200),
+      provenance: verifiedProvenance(),
     });
 
     assert.equal(report.comparison.missedFailureSignal, true);
@@ -125,6 +171,7 @@ describe("verify-savings pilot report", () => {
       selection: { source: "diffci-observation", observationReportPath: "/tmp/diffci.json", selectedTestCount: 1, totalTestCount: 10 },
       full: measurement("npm test", 0, 1000),
       selected: measurement("npm test a.test.ts", 0, 200),
+      provenance: verifiedProvenance(),
     });
 
     const markdown = renderMarkdown(report);
@@ -143,6 +190,7 @@ describe("verify-savings pilot report", () => {
       selection: { source: "manual" },
       full: measurement("npm test", 1, 1000),
       selected: measurement("npm test a.test.ts", 0, 200),
+      provenance: verifiedProvenance(),
     });
 
     assert.match(renderMarkdown(report), /WARNING: Full failed while selected passed/);

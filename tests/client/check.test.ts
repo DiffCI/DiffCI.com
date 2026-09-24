@@ -80,6 +80,15 @@ describe("automatic check timing", () => {
       assert.equal(savings.selected.exitCode, 0);
       assert.equal(savings.full.command, "npm test");
       assert.match(savings.selected.command, /node --test/);
+      assert.equal(savings.schema, "diffci.verifySavings.v2");
+      assert.equal(savings.provenance.baseSha, base);
+      assert.equal(savings.provenance.headSha, head);
+      assert.match(savings.provenance.observationSha256, /^[a-f0-9]{64}$/);
+      assert.equal(savings.provenance.beforeFull.headSha, head);
+      assert.equal(savings.provenance.afterFull.headSha, head);
+      assert.equal(savings.provenance.afterSelected.headSha, head);
+      assert.equal(savings.provenance.checkoutStable, true);
+      assert.equal(savings.comparison.evidenceValid, true);
     } finally {
       rmSync(dir, { recursive: true, force: true });
       for (const path of [out, out.replace(/\.json$/, "-savings.json"), out.replace(/\.json$/, "-savings.md")]) {

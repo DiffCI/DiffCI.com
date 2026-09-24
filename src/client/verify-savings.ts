@@ -1,4 +1,5 @@
-import { spawnSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
@@ -15,7 +16,7 @@ export interface CommandMeasurement {
 }
 
 export interface VerifySavingsReport {
-  schema: "diffci.verifySavings.v1";
+  schema: "diffci.verifySavings.v2";
   producedAt: string;
   label?: string;
   cwd: string;
@@ -25,6 +26,7 @@ export interface VerifySavingsReport {
   observationReportPath?: string;
   selectedTestCount?: number;
   totalTestCount?: number;
+  provenance: SavingsProvenance;
   full: CommandMeasurement;
   selected: CommandMeasurement;
   comparison: {
@@ -37,8 +39,27 @@ export interface VerifySavingsReport {
     selectedCommandSucceeded: boolean;
     fullCommandSucceeded: boolean;
     missedFailureSignal: boolean;
+    evidenceValid: boolean;
   };
   notes: string[];
+}
+
+export interface CheckoutSnapshot {
+  capturedAt: string;
+  headSha?: string;
+  worktreeDigest?: string;
+}
+
+export interface SavingsProvenance {
+  baseSha?: string;
+  headSha?: string;
+  observationSha256?: string;
+  observerVersion?: string;
+  beforeFull: CheckoutSnapshot;
+  afterFull: CheckoutSnapshot;
+  afterSelected: CheckoutSnapshot;
+  checkoutStable: boolean;
+  invalidReasons: string[];
 }
 
 export interface VerifySavingsOptions {
@@ -62,6 +83,10 @@ interface ResolvedSelection {
   selectedTestCount?: number;
   totalTestCount?: number;
   analysisOverheadMs?: number;
+  baseSha?: string;
+  headSha?: string;
+  observationSha256?: string;
+  observerVersion?: string;
 }
 
 function tail(value: string, bytes: number): string {
@@ -71,8 +96,11 @@ function tail(value: string, bytes: number): string {
 
 function readSelectionFromObservation(path: string): ResolvedSelection {
   const absolutePath = resolve(path);
-  const parsed = JSON.parse(readFileSync(absolutePath, "utf8")) as {
+  const bytes = readFileSync(absolutePath);
+  const parsed = JSON.parse(bytes.toString("utf8")) as {
     status?: unknown;
+    observer?: { version?: unknown };
+    commitRange?: { baseSha?: unknown; headSha?: unknown };
     result?: {
       proposedCommands?: unknown;
       selectedTests?: unknown;
@@ -94,6 +122,43 @@ function readSelectionFromObservation(path: string): ResolvedSelection {
     selectedTestCount: selectedTests?.length,
     totalTestCount: typeof parsed.result?.totalTestCount === "number" ? parsed.result.totalTestCount : undefined,
     analysisOverheadMs: typeof parsed.timings?.totalMs === "number" ? parsed.timings.totalMs : undefined,
+    baseSha: typeof parsed.commitRange?.baseSha === "string" ? parsed.commitRange.baseSha : undefined,
+    headSha: typeof parsed.commitRange?.headSha === "string" ? parsed.commitRange.headSha : undefined,
+    observationSha256: createHash("sha256").update(bytes).digest("hex"),
+    observerVersion: typeof parsed.observer?.version === "string" ? parsed.observer.version : undefined,
+  };
+}
+
+function checkoutSnapshot(cwd: string): CheckoutSnapshot {
+  const capturedAt = new Date().toISOString();
+  try {
+    const headSha = execFileSync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    const status = execFileSync("git", ["status", "--porcelain=v1", "-z", "--untracked-files=all"], { cwd, encoding: "buffer", stdio: ["ignore", "pipe", "ignore"] });
+    return { capturedAt, headSha, worktreeDigest: createHash("sha256").update(status).digest("hex") };
+  } catch {
+    return { capturedAt };
+  }
+}
+
+function buildProvenance(selection: ResolvedSelection, beforeFull: CheckoutSnapshot, afterFull: CheckoutSnapshot, afterSelected: CheckoutSnapshot): SavingsProvenance {
+  const invalidReasons: string[] = [];
+  const snapshots = [beforeFull, afterFull, afterSelected];
+  const expectedHeadSha = selection.headSha ?? (selection.source === "manual" ? beforeFull.headSha : undefined);
+  if (snapshots.some(snapshot => !snapshot.headSha || !snapshot.worktreeDigest)) invalidReasons.push("checkout identity could not be captured for every execution boundary");
+  if (expectedHeadSha && snapshots.some(snapshot => snapshot.headSha !== expectedHeadSha)) invalidReasons.push("executed checkout HEAD did not match the bound head SHA at every boundary");
+  if (!expectedHeadSha) invalidReasons.push("no head SHA was available to bind the execution");
+  if (new Set(snapshots.map(snapshot => snapshot.headSha)).size !== 1) invalidReasons.push("checkout HEAD changed during paired execution");
+  if (new Set(snapshots.map(snapshot => snapshot.worktreeDigest)).size !== 1) invalidReasons.push("worktree changed during paired execution");
+  return {
+    baseSha: selection.baseSha,
+    headSha: expectedHeadSha,
+    observationSha256: selection.observationSha256,
+    observerVersion: selection.observerVersion,
+    beforeFull,
+    afterFull,
+    afterSelected,
+    checkoutStable: invalidReasons.length === 0,
+    invalidReasons,
   };
 }
 
@@ -148,6 +213,7 @@ export function buildVerifySavingsReport(input: {
   selection: Omit<ResolvedSelection, "command" | "analysisOverheadMs">;
   full: CommandMeasurement;
   selected: CommandMeasurement;
+  provenance?: SavingsProvenance;
 }): VerifySavingsReport {
   const overhead = input.analysisOverheadMs ?? 0;
   const netSelectedMs = input.selected.wallMs + overhead;
@@ -157,6 +223,7 @@ export function buildVerifySavingsReport(input: {
   const fullCommandSucceeded = input.full.exitCode === 0 && !input.full.timedOut;
   const selectedCommandSucceeded = input.selected.exitCode === 0 && !input.selected.timedOut;
   const missedFailureSignal = !fullCommandSucceeded && selectedCommandSucceeded;
+  const evidenceValid = fullCommandSucceeded && selectedCommandSucceeded && (input.provenance?.checkoutStable ?? false);
 
   const notes = [
     "This is paired runtime evidence, not a production-savings claim.",
@@ -166,9 +233,10 @@ export function buildVerifySavingsReport(input: {
       : "Net selected runtime includes DiffCI analysis overhead.",
   ];
   if (missedFailureSignal) notes.push("Full failed while selected passed; inspect outputs before treating the selection as safe.");
+  if (input.provenance && !input.provenance.checkoutStable) notes.push(`Checkout provenance invalid: ${input.provenance.invalidReasons.join("; ")}.`);
 
   return {
-    schema: "diffci.verifySavings.v1",
+    schema: "diffci.verifySavings.v2",
     producedAt: input.producedAt ?? new Date().toISOString(),
     label: input.label,
     cwd: input.cwd,
@@ -178,6 +246,13 @@ export function buildVerifySavingsReport(input: {
     observationReportPath: input.selection.observationReportPath,
     selectedTestCount: input.selection.selectedTestCount,
     totalTestCount: input.selection.totalTestCount,
+    provenance: input.provenance ?? {
+      beforeFull: { capturedAt: input.full.startedAt },
+      afterFull: { capturedAt: input.full.finishedAt },
+      afterSelected: { capturedAt: input.selected.finishedAt },
+      checkoutStable: false,
+      invalidReasons: ["checkout provenance was not captured"],
+    },
     full: input.full,
     selected: input.selected,
     comparison: {
@@ -190,6 +265,7 @@ export function buildVerifySavingsReport(input: {
       selectedCommandSucceeded,
       fullCommandSucceeded,
       missedFailureSignal,
+      evidenceValid,
     },
     notes,
   };
@@ -212,6 +288,8 @@ export function renderVerifySavingsMarkdown(report: VerifySavingsReport): string
     ? "\n> WARNING: Full failed while selected passed. Do not treat this selected command as safe until the full-run failure is understood.\n"
     : !report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded
       ? "\n> WARNING: One or both commands failed. This comparison is invalid as savings evidence; timings below are diagnostic only.\n"
+      : !report.comparison.evidenceValid
+        ? `\n> WARNING: Checkout provenance validation failed: ${report.provenance.invalidReasons.join("; ")}. Timings are diagnostic only.\n`
       : "";
   const selectionCounts =
     report.selectedTestCount !== undefined && report.totalTestCount !== undefined
@@ -229,7 +307,7 @@ This report compares a full command with a selected command on the same checkout
 
 ## Result
 
-${!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded ? "Comparison invalid: command failure. Do not interpret the timing difference as savings.\n" : ""}
+${!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded ? "Comparison invalid: command failure. Do not interpret the timing difference as savings.\n" : !report.comparison.evidenceValid ? "Comparison invalid: checkout identity changed or could not be verified. Do not interpret the timing difference as savings.\n" : ""}
 | Measure | Value |
 | --- | ---: |
 | Full runtime | ${formatMs(report.comparison.fullWallMs)} |
@@ -239,6 +317,16 @@ ${!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandS
 | Net selected runtime | ${formatMs(report.comparison.netSelectedMs)} |
 | Delta vs full | ${formatMs(report.comparison.deltaMs)} ${deltaLabel} |
 | Percent change vs full | ${formatPercent(report.comparison.percentChange)} |
+
+## Provenance
+
+| Field | Value |
+| --- | --- |
+| Base SHA | \`${report.provenance.baseSha ?? "unavailable"}\` |
+| Head SHA | \`${report.provenance.headSha ?? "unavailable"}\` |
+| Observation SHA-256 | \`${report.provenance.observationSha256 ?? "unavailable"}\` |
+| DiffCI observer version | ${report.provenance.observerVersion ?? "unavailable"} |
+| Checkout stable across both arms | ${report.provenance.checkoutStable ? "yes" : "no"} |
 
 ## Commands
 
@@ -261,8 +349,12 @@ function writeText(path: string, value: string): void {
 export function runVerifySavings(options: VerifySavingsOptions): VerifySavingsReport {
   const selection = resolveSelection(options);
   const analysisOverheadMs = options.analysisOverheadMs ?? selection.analysisOverheadMs;
+  const beforeFull = checkoutSnapshot(options.cwd);
   const full = measureCommand(options.full, options);
+  const afterFull = checkoutSnapshot(options.cwd);
   const selected = measureCommand(selection.command, options);
+  const afterSelected = checkoutSnapshot(options.cwd);
+  const provenance = buildProvenance(selection, beforeFull, afterFull, afterSelected);
   return buildVerifySavingsReport({
     label: options.label,
     cwd: options.cwd,
@@ -271,6 +363,7 @@ export function runVerifySavings(options: VerifySavingsOptions): VerifySavingsRe
     selection,
     full,
     selected,
+    provenance,
   });
 }
 
@@ -283,6 +376,9 @@ export function formatVerifySavingsSummary(report: VerifySavingsReport): string 
   if (!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandSucceeded) {
     return "DiffCI verify-savings: comparison invalid because one or both commands failed" +
       (report.comparison.missedFailureSignal ? "\n  warning: full failed while selected passed; inspect outputs before claiming safety" : "");
+  }
+  if (!report.comparison.evidenceValid) {
+    return `DiffCI verify-savings: comparison invalid because checkout provenance failed\n  ${report.provenance.invalidReasons.join("; ")}`;
   }
   const lines = [
     `DiffCI verify-savings: test execution ${Math.abs(report.comparison.grossPercentChange).toFixed(1)}% ${report.comparison.grossPercentChange >= 0 ? "faster" : "slower"} in this paired run`,

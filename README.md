@@ -67,7 +67,9 @@ not Cal.com's production savings or a prediction for your repository.
 [Read the timings and method](docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md).
 
 Selection counts alone do not establish runtime savings. `check` reports a measured percentage only
-when both commands pass; `observe` does not execute tests.
+when both commands pass and the checked-out commit and worktree remain identical across both arms.
+The savings artifact embeds the base/head SHAs, observation SHA-256, commands, timings, and checkout
+snapshots; `observe` does not execute tests.
 
 For an advanced paired runtime check, you can still run `observe` first and then run `verify-savings`
 against the observation report. It compares your normal full command with

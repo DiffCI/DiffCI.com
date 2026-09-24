@@ -362,7 +362,7 @@ async function runCheck(flags: Record<string, string | boolean>, env: NodeJS.Pro
   print(`  savings report: ${savingsPath}`);
   print(`  markdown: ${markdownPath}`);
   if (flags.json === true) console.log(JSON.stringify({ observation, savings }, null, 2));
-  return savings.comparison.fullCommandSucceeded && savings.comparison.selectedCommandSucceeded ? 0 : 1;
+  return savings.comparison.evidenceValid ? 0 : 1;
 }
 
 async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): Promise<number> {
@@ -528,7 +528,7 @@ function runVerifySavingsCommand(flags: Record<string, string | boolean>, env: N
   console.log(formatVerifySavingsSummary(report));
   console.log(`  report: ${options.out}`);
   if (options.markdown) console.log(`  markdown: ${options.markdown}`);
-  return report.comparison.fullCommandSucceeded && report.comparison.selectedCommandSucceeded ? 0 : 1;
+  return report.comparison.evidenceValid ? 0 : 1;
 }
 
 function defaultPilotOutputDir(repoPath: string): string {
@@ -600,7 +600,7 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
   console.log(formatVerifySavingsSummary(savings));
   console.log(`  savings report: ${savingsPath}`);
   console.log(`  markdown: ${markdownPath}`);
-  return savings.comparison.fullCommandSucceeded && savings.comparison.selectedCommandSucceeded ? 0 : 1;
+  return savings.comparison.evidenceValid ? 0 : 1;
 }
 
 const USAGE = `diffci - change-aware CI analysis and paired timing
