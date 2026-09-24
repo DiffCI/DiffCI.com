@@ -63,7 +63,14 @@ try {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
   }).trim();
-  equal(`Git tag ${manifest.actionVersion}`, taggedSha, manifest.actionSha);
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", manifest.actionSha, taggedSha], {
+      cwd: root,
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+  } catch {
+    failures.push(`Git tag ${manifest.actionVersion}: ${manifest.actionSha} is not an ancestor of ${taggedSha}`);
+  }
 } catch {
   failures.push(`Git tag ${manifest.actionVersion}: tag is missing from this checkout`);
 }

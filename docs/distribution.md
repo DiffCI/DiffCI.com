@@ -68,10 +68,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@773d3326ce346296aa71141061b505ebf0590a88
+      - uses: DiffCI/DiffCI.com@e852523fade14bf5e0457a6331e97c8a76eedc2b
 ```
 
-The example pins release `v0.2.5` to its full commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
+The example pins release `v0.2.7` to its qualified feature commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
