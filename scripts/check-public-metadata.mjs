@@ -72,7 +72,16 @@ try {
     failures.push(`Git tag ${manifest.actionVersion}: ${manifest.actionSha} is not an ancestor of ${taggedSha}`);
   }
 } catch {
-  failures.push(`Git tag ${manifest.actionVersion}: tag is missing from this checkout`);
+  // Pull-request checkouts intentionally precede the release tag. In that case,
+  // still prove the immutable Action pin is part of the commit being reviewed.
+  try {
+    execFileSync("git", ["merge-base", "--is-ancestor", manifest.actionSha, "HEAD"], {
+      cwd: root,
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+  } catch {
+    failures.push(`Git tag ${manifest.actionVersion}: tag is missing and ${manifest.actionSha} is not an ancestor of HEAD`);
+  }
 }
 
 async function checkRemote() {
