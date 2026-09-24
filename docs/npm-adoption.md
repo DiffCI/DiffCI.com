@@ -7,6 +7,17 @@ DiffCI's npm package should be promoted as a low-risk CI observer:
 
 ## Install
 
+For a pinned project dependency, run the initializer from the repository root. It detects npm, pnpm,
+Yarn, or Bun, adds the current DiffCI version as an exact development dependency, and updates the
+corresponding lockfile:
+
+```bash
+npx @diffci.com/diffci@latest init --install
+```
+
+Add `--workflow` to also create the separate, non-blocking GitHub Actions observation job. Installation
+is explicit: plain `init` never changes `package.json` or a lockfile.
+
 Use the npm CLI when someone wants to try DiffCI locally or inside an existing CI step:
 
 ```bash
@@ -27,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@dee4f7b938a7720d077c1124ef2ea050aa2625d6
+      - uses: DiffCI/DiffCI.com@773d3326ce346296aa71141061b505ebf0590a88
 ```
 
 ## Outreach Copy

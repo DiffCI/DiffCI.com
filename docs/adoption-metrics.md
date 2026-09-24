@@ -2,6 +2,21 @@
 
 Track adoption weekly after each outreach batch.
 
+## Opt-in CLI usage
+
+Users can run `diffci check --share-usage` or set `DIFFCI_SHARE_USAGE=1` for `check` and
+`observe`. `--no-send` overrides the opt-in. The CLI sends one HTTPS event after analysis to
+`https://app.diffci.com/v1/usage-events` with only the command (`check` or `observe`), analysis
+outcome (`observed`, `refused`, or `error`), and package version. It sends no repository identity,
+paths, commits, test names, report, token, or stable installation identifier. Delivery failure is
+best effort and cannot fail validation. The product Worker records `cli_usage_opt_in` in PostHog
+when its existing `POSTHOG_API_KEY` is configured.
+
+Count these events as **opted-in executions**, not unique users or repositories. Report the opt-in
+count separately from npm downloads and external merged integrations. Because there is no stable
+identifier, repeated runs by one user cannot be deduplicated. Network providers may still observe
+connection metadata such as IP address.
+
 ## Package
 
 - npm latest version: `npm view "@diffci.com/diffci" version`

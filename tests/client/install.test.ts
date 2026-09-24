@@ -115,4 +115,3 @@ describe("DiffCI dependency installation", () => {
     }
   });
 });
-

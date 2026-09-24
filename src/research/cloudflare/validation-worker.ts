@@ -85,9 +85,10 @@ interface ValidationEnv {
    * can be switched off (config redeploy) without disabling manually-driven research calls. */
   SHADOW_CRON_ENABLED?: string;
   RESEARCH_DISPATCH_TOKEN?: string;
-  /** The registered DiffCI Shadow GitHub App (docs/github-app-registration.md) - all three optional
-   * Worker secrets. Webhook route returns 503 until the webhook secret exists; installation-token
-   * minting silently falls back to GITHUB_TOKEN until app id + private key exist. */
+  /** Unified read-only DiffCI App credentials. SHADOW_* remain temporary migration aliases. */
+  GITHUB_APP_ID?: string;
+  GITHUB_APP_PRIVATE_KEY?: string;
+  GITHUB_APP_WEBHOOK_SECRET?: string;
   SHADOW_GITHUB_APP_ID?: string;
   SHADOW_GITHUB_APP_PRIVATE_KEY?: string;
   SHADOW_GITHUB_WEBHOOK_SECRET?: string;
@@ -1107,11 +1108,13 @@ async function shadowPoll(request: Request, env: ValidationEnv): Promise<Respons
  * (unauthenticated 50 req/h - how the pipeline ran before any token existed). Never throws: a failed
  * token exchange is logged and degrades to the fallback rather than blocking reconciliation. */
 async function githubTokenForRepo(env: ValidationEnv, repository: string): Promise<string | undefined> {
-  if (env.SHADOW_GITHUB_APP_ID && env.SHADOW_GITHUB_APP_PRIVATE_KEY) {
+  const appId = env.GITHUB_APP_ID ?? env.SHADOW_GITHUB_APP_ID;
+  const privateKey = env.GITHUB_APP_PRIVATE_KEY ?? env.SHADOW_GITHUB_APP_PRIVATE_KEY;
+  if (appId && privateKey) {
     try {
       const installationId = await makeD1ShadowStore(env.RESEARCH_DB).getInstallationId(repository);
       if (installationId) {
-        const jwt = await signAppJwt({ appId: env.SHADOW_GITHUB_APP_ID, privateKeyPkcs8Pem: env.SHADOW_GITHUB_APP_PRIVATE_KEY });
+        const jwt = await signAppJwt({ appId, privateKeyPkcs8Pem: privateKey });
         const { token } = await exchangeInstallationToken(jwt, installationId);
         return token;
       }
@@ -1526,8 +1529,8 @@ interface ExecutionCtx {
 // ============================================================================================
 
 async function shadowWebhook(request: Request, env: ValidationEnv, ctx: ExecutionCtx): Promise<Response> {
-  const secret = env.SHADOW_GITHUB_WEBHOOK_SECRET;
-  if (!secret) return json({ ok: false, error: "webhook-not-configured (SHADOW_GITHUB_WEBHOOK_SECRET unset)" }, 503);
+  const secret = env.GITHUB_APP_WEBHOOK_SECRET ?? env.SHADOW_GITHUB_WEBHOOK_SECRET;
+  if (!secret) return json({ ok: false, error: "webhook-not-configured (GITHUB_APP_WEBHOOK_SECRET unset)" }, 503);
   const rawBody = await request.text();
   const store = makeD1ShadowStore(env.RESEARCH_DB);
 
@@ -1653,11 +1656,13 @@ function makePushPollDeps(env: ValidationEnv): PushPollDeps {
  * (installation events are delivered unconditionally; push/workflow_run require the App's event
  * subscriptions to include them, which only this endpoint can confirm without the App owner's UI). */
 async function shadowAppInfo(env: ValidationEnv, deliveryId?: string, paging?: { limit?: string | null; cursor?: string | null }): Promise<Response> {
-  if (!env.SHADOW_GITHUB_APP_ID || !env.SHADOW_GITHUB_APP_PRIVATE_KEY) {
+  const appId = env.GITHUB_APP_ID ?? env.SHADOW_GITHUB_APP_ID;
+  const privateKey = env.GITHUB_APP_PRIVATE_KEY ?? env.SHADOW_GITHUB_APP_PRIVATE_KEY;
+  if (!appId || !privateKey) {
     return json({ ok: false, error: "app-credentials-not-configured" }, 503);
   }
   try {
-    const jwt = await signAppJwt({ appId: env.SHADOW_GITHUB_APP_ID, privateKeyPkcs8Pem: env.SHADOW_GITHUB_APP_PRIVATE_KEY });
+    const jwt = await signAppJwt({ appId, privateKeyPkcs8Pem: privateKey });
 
     // Ask GitHub to redeliver one webhook delivery - lets us re-trigger a real, correctly-signed
     // delivery on demand while watching logs, without waiting for the next real push.

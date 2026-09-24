@@ -14,8 +14,9 @@ not ten validated opportunities, historical PR studies, or completed pilots. No 
 
 ## Initial findings and next decisions
 
-- The documented `DiffCI/DiffCI.com@v1` reference did not resolve on GitHub. Current installation examples
-  now pin the verified `v0.1.4` commit. Do not advertise a Marketplace listing until its actual page is verified.
+- The documented `DiffCI/DiffCI.com@v1` reference did not resolve on GitHub. Installation examples now
+  pin the full commit recorded in `release-manifest.json`; the verified Marketplace listing is live at
+  <https://github.com/marketplace/actions/diffci-observer>.
 - The [20-change studies of h3 and ky](../evidence/growth-history-01/README.md) are now available, with
   published-package results preserved separately from the then-unreleased correction. Both have recent CI
   activity. Ky's initial smaller selection was affected by missing test-import edges and is withdrawn

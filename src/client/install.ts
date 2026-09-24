@@ -123,4 +123,3 @@ export function addDiffciPackageScripts(repoPath: string): PackageScriptResult {
   }
   return { added, kept };
 }
-

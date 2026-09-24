@@ -34,6 +34,7 @@ import { inferFullCommand, inferSelectedCommand } from "./full-command.js";
 import { addDiffciPackageScripts, installDiffci } from "./install.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
+import { sendUsageSignal } from "./usage-signal.js";
 import { formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
 import { auditWorkflows, isNonInterfering } from "./workflow-guard.js";
 
@@ -307,6 +308,9 @@ async function runCheck(flags: Record<string, string | boolean>, env: NodeJS.Pro
   const observationCode = await runObserve({ ...flags, out: reportPath, quiet: true, "no-send": true }, env);
   if (observationCode !== 0) return observationCode;
   const observation = JSON.parse(readFileSync(reportPath, "utf8")) as ObservationReport;
+  if ((flags["share-usage"] === true || env.DIFFCI_SHARE_USAGE === "1") && flags["no-send"] !== true) {
+    await sendUsageSignal({ command: "check", outcome: observation.status === "OBSERVED" ? "observed" : observation.status === "REFUSED" ? "refused" : "error", version: observerIdentity().version });
+  }
   const print = (message: string): void => { if (flags.quiet !== true && flags.json !== true) console.log(message); };
   print(summarise(observation, true));
   print(`  observation report: ${reportPath}`);
@@ -418,6 +422,9 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
 
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  if ((flags["share-usage"] === true || env.DIFFCI_SHARE_USAGE === "1") && flags["no-send"] !== true) {
+    await sendUsageSignal({ command: "observe", outcome: report.status === "OBSERVED" ? "observed" : report.status === "REFUSED" ? "refused" : "error", version: identity.version });
+  }
 
   const summary = summarise(report);
   if (flags.json === true) {
@@ -626,11 +633,11 @@ Usage:
   diffci init [--repo <path>] [--workflow] [--install] [--force]
   diffci mcp
   diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
-               [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>]
+               [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>] [--share-usage]
   diffci pilot --full <command> [--repo <path>] [--out-dir <dir>] [--label <name>]
   diffci observe [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                  [--redact-paths] [--json] [--quiet] [--fail-on-error]
-                 [--api-url <url> --api-token <token>] [--no-send]
+                 [--api-url <url> --api-token <token>] [--no-send] [--share-usage]
   diffci verify-savings --repo <path> --full <command>
                          (--selected <command> | --selected-from-report <file>)
                          --out <file> [--markdown <file>] [--label <name>]
@@ -651,6 +658,8 @@ verify-workflow checks that the job running DiffCI cannot affect any other job, 
 The report is sent only when both --api-url and --api-token are given (or DIFFCI_API_URL and
 DIFFCI_TOKEN are set). A failed send is reported and never fails the step - the report is on disk
 either way. Plain http is refused; the token is never printed.
+--share-usage (or DIFFCI_SHARE_USAGE=1) sends only command, outcome, and version to DiffCI.
+No repository, commit, test, report, or persistent identifier is sent. --no-send disables it.
 `;
 
 async function main(): Promise<void> {

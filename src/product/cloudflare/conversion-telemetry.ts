@@ -5,6 +5,27 @@ export interface ConversionTelemetryEnv {
   SENTRY_DSN?: string;
 }
 
+export async function reportOptInCliUsage(env: ConversionTelemetryEnv, command: string, outcome: string, version: string): Promise<void> {
+  if (!env.POSTHOG_API_KEY) return;
+  const response = await fetch(`${env.POSTHOG_HOST ?? "https://us.i.posthog.com"}/capture/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: env.POSTHOG_API_KEY,
+      event: "cli_usage_opt_in",
+      properties: {
+        distinct_id: "diffci-cli-opt-in",
+        command,
+        outcome,
+        version,
+        $process_person_profile: false,
+        $geoip_disable: true,
+      },
+    }),
+  });
+  if (!response.ok) throw new Error(`PostHog capture failed with HTTP ${response.status}`);
+}
+
 export function reportInstallationCreated(env: ConversionTelemetryEnv, repositoryCount: number): Promise<void> {
   const jobs: Promise<unknown>[] = [];
   if (env.POSTHOG_API_KEY) {

@@ -1,7 +1,7 @@
 {
   "name": "DiffCI Runner Dispatcher",
   "url": "https://diffci.com",
-  "description": "Mints ephemeral GitHub Actions self-hosted runner registrations on Cloudflare Containers so CI can run without consuming GitHub-hosted Actions minutes. Write-scoped and installed on own repos only - never install alongside or in place of the read-only DiffCI Shadow App.",
+  "description": "Mints ephemeral GitHub Actions self-hosted runner registrations on Cloudflare Containers so CI can run without consuming GitHub-hosted Actions minutes. Write-scoped and installed on own repos only - never install in place of the unified read-only DiffCI App.",
   "public": false,
   "default_permissions": {
     "metadata": "read",

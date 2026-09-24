@@ -1,7 +1,7 @@
 {
-  "name": "DiffCI Shadow",
+  "name": "DiffCI Shadow (legacy migration reference)",
   "url": "https://diffci.com",
-  "description": "Observe-only CI shadow validation: predicts which tests a change needs before the real CI outcome is known, then reconciles against what actually happened. Never modifies repository state, never comments, never blocks or cancels a run.",
+  "description": "Legacy manifest retained only while installations migrate to the unified read-only DiffCI App. Do not register new installations from this manifest.",
   "public": true,
   "default_permissions": {
     "metadata": "read",
