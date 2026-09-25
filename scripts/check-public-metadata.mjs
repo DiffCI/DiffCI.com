@@ -45,8 +45,9 @@ for (const version of workflowPackageVersions) equal("DiffCI workflow npm versio
 contains(
   "DiffCI workflow explicit executable invocation",
   workflow,
-  `npx --yes --package "${manifest.packageName}@${manifest.packageVersion}" diffci observe --no-send`,
+  `npx --yes --package "${manifest.packageName}@${manifest.packageVersion}" diffci observe --repo "$GITHUB_WORKSPACE" --no-send`,
 );
+contains("DiffCI workflow isolated package canary", workflow, 'cd "$RUNNER_TEMP"');
 contains("adoption metrics npm latest", read("docs/adoption-metrics.md"), `| \`${manifest.packageVersion}\` |`);
 contains("homepage software version", read("site/index.html"), `"softwareVersion": "${manifest.packageVersion}"`);
 
