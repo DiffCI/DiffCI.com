@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "Change-aware CI analysis and conservative affected-test selection for GitHub Actions and coding agents",
   "keywords": [
     "ci",
@@ -39,6 +39,7 @@
   "files": [
     "action.yml",
     "dist-client/src/client",
+    "dist-client/src/preflight",
     "README.md",
     "server.json",
     "glama.json",

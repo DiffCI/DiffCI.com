@@ -40,6 +40,7 @@ describe("npm package contract", () => {
     assert.equal(pkg.scripts?.["build:client"], "tsc -p tsconfig.client.json && node scripts/ensure-client-executables.mjs");
     assert.equal(pkg.scripts?.["check:oss-boundary"], "node scripts/check-oss-boundary.mjs");
     assert.ok(pkg.files?.includes("dist-client/src/client"));
+    assert.ok(pkg.files?.includes("dist-client/src/preflight"));
     assert.deepEqual(pkg.bundleDependencies, ["@diffci.com/core"]);
     assert.match(pkg.dependencies?.["@diffci.com/core"] ?? "", /^git\+https:\/\/github\.com\/DiffCI\/core\.git#[0-9a-f]{40}$/);
   });
@@ -48,6 +49,7 @@ describe("npm package contract", () => {
     const allowed = new Set([
       "action.yml",
       "dist-client/src/client",
+      "dist-client/src/preflight",
       "README.md",
       "server.json",
       "glama.json",

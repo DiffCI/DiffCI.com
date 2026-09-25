@@ -3,7 +3,7 @@
   "name": "io.github.adityankale190895/diffci",
   "title": "DiffCI",
   "description": "Change-aware CI validation and affected-test guidance for coding agents.",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "websiteUrl": "https://diffci.com/mcp-server",
   "repository": {
     "url": "https://github.com/DiffCI/DiffCI.com",
@@ -13,14 +13,16 @@
     {
       "src": "https://diffci.com/assets/diffci-mark.svg",
       "mimeType": "image/svg+xml",
-      "sizes": ["any"]
+      "sizes": [
+        "any"
+      ]
     }
   ],
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@diffci.com/diffci",
-      "version": "0.2.9",
+      "version": "0.2.10",
       "transport": {
         "type": "stdio"
       },

@@ -12,6 +12,7 @@ const npmPackArgs =
 const ALLOWED_PACKAGE_PREFIXES = [
   "action.yml",
   "dist-client/src/client/",
+  "dist-client/src/preflight/",
   "node_modules/",
   "README.md",
   "server.json",

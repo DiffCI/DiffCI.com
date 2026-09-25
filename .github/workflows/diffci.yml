@@ -18,4 +18,4 @@ jobs:
       # Run outside the checkout so npm cannot mistake this package for the registry install.
       - run: |
           cd "$RUNNER_TEMP"
-          npx --yes --package "@diffci.com/diffci@0.2.9" diffci observe --repo "$GITHUB_WORKSPACE" --no-send
+          npx --yes --package "@diffci.com/diffci@0.2.10" diffci observe --repo "$GITHUB_WORKSPACE" --no-send
