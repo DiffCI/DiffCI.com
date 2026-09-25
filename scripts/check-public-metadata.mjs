@@ -55,7 +55,7 @@ for (const path of ["README.md", "site/index.html", "docs/context7/github-action
   contains(`${path} Action release label`, read(path), manifest.actionVersion);
 }
 contains("README Marketplace link", read("README.md"), manifest.marketplaceUrl);
-contains("README npm command", read("README.md"), `npx ${manifest.packageName}@latest check`);
+contains("README npm command", read("README.md"), `npx "${manifest.packageName}@latest" check`);
 contains("README Node requirement", read("README.md"), "Node.js 22.5+");
 
 try {
