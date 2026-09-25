@@ -38,6 +38,8 @@ export async function drainDiagnosticQueue(env: DiagnosticEnv, now = Date.now())
   } catch (error) {
     const known = new Set(["repository_unavailable", "repository_too_large", "manifest_unavailable", "manifest_too_large", "upstream_rate_limited", "upstream_unavailable", "invalid_upstream_response"]);
     const reason = error instanceof Error && known.has(error.message) ? error.message : "diagnostic_unavailable";
+    console.warn("public_diagnostic.attempt_failed", { reason, name: error instanceof Error ? error.name : "UnknownError",
+      detail: error instanceof Error ? error.message.slice(0, 250) : "unknown failure" });
     const retry = job.attempts < 2 && ["upstream_unavailable", "diagnostic_unavailable"].includes(reason);
     await env.db.prepare(`UPDATE public_diagnostic_jobs SET state = ?, error = ?, lease_id = NULL, lease_until = NULL
       WHERE id = ? AND lease_id = ? AND state = 'running'`)
