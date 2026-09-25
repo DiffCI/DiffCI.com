@@ -38,9 +38,15 @@ equal("Smithery package version", smithery.version, manifest.packageVersion);
 contains("Action name", action, `name: ${manifest.actionName}`);
 contains("Action description", action, `description: ${manifest.actionDescription}`);
 equal("release sync command", pkg.scripts?.["release:sync"], "node scripts/sync-public-metadata.mjs");
-const workflowPackageVersions = [...read(".github/workflows/diffci.yml").matchAll(/@diffci\.com\/diffci@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)/g)].map((match) => match[1]);
+const workflow = read(".github/workflows/diffci.yml");
+const workflowPackageVersions = [...workflow.matchAll(/@diffci\.com\/diffci@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)/g)].map((match) => match[1]);
 if (workflowPackageVersions.length === 0) failures.push("DiffCI workflow: no exact npm version found");
 for (const version of workflowPackageVersions) equal("DiffCI workflow npm version", version, manifest.packageVersion);
+contains(
+  "DiffCI workflow explicit executable invocation",
+  workflow,
+  `npx --yes --package "${manifest.packageName}@${manifest.packageVersion}" diffci observe --no-send`,
+);
 contains("adoption metrics npm latest", read("docs/adoption-metrics.md"), `| \`${manifest.packageVersion}\` |`);
 contains("homepage software version", read("site/index.html"), `"softwareVersion": "${manifest.packageVersion}"`);
 
