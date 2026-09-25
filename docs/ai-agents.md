@@ -58,7 +58,13 @@ Examples:
 
 ## MCP
 
-Agents that support MCP can run DiffCI as a native stdio tool server:
+Agents that support remote MCP can connect to the stateless, read-only guidance endpoint:
+
+```text
+https://diffci.com/mcp
+```
+
+To inspect the current checkout or run tests, use the native stdio tool server:
 
 ```bash
 npx -p "@diffci.com/diffci@latest" diffci-mcp

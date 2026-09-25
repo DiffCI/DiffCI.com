@@ -191,13 +191,15 @@ npx "@diffci.com/diffci@latest" check</code></pre>
         <p class="kicker">MCP server</p>
         <h3>Connect DiffCI as a native agent tool</h3>
         <p>
-          MCP-capable agents can call <code>diffci_check</code>, <code>diffci_init</code>, and
-          <code>diffci_verify_workflow</code> without inventing shell commands.
+          Remote MCP clients can request a safe local validation plan without sending repository
+          content. The local server also exposes <code>diffci_check</code>, <code>diffci_init</code>, and
+          <code>diffci_verify_workflow</code>.
         </p>
-        <pre><code>npx -p "@diffci.com/diffci@latest" diffci-mcp</code></pre>
+        <pre><code>https://diffci.com/mcp</code></pre>
         <p class="fine">
-          Works as a stdio MCP server for Claude, Cursor, Codex-style clients, and other MCP agents.
-          <a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md">MCP docs →</a>
+          The HTTPS endpoint provides stateless, read-only validation guidance. Use
+          <code>npx -p "@diffci.com/diffci@latest" diffci-mcp</code> when tools must access a local checkout.
+          <a href="/mcp-server">MCP setup and tools →</a>
         </p>
       </article>
 

@@ -56,7 +56,9 @@
 </div></section>
 <section class="numbered"><div class="wrap">
   <h2>Use DiffCI through MCP</h2>
-  <p>MCP-capable agents can expose the same commands as native tools:</p>
+  <p>Remote MCP clients can connect to the stateless, read-only guidance endpoint:</p>
+  <pre><code>https://diffci.com/mcp</code></pre>
+  <p>When tools must inspect the current checkout or run tests, configure the local stdio server:</p>
   <pre><code>{
   "mcpServers": {
     "diffci": {

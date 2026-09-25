@@ -68,3 +68,56 @@ jobs:
             echo "Published metadata has not propagated yet; retrying in 10 seconds ($attempt/18)."
             sleep 10
           done
+
+  mcp-registry:
+    name: Publish MCP Registry metadata
+    needs: npm
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: mcp-registry-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify release identity
+        run: |
+          node --input-type=module -e '
+            import pkg from "./package.json" with { type: "json" };
+            import server from "./server.json" with { type: "json" };
+            const tagVersion = process.env.GITHUB_REF_NAME.replace(/^v/, "");
+            if (pkg.version !== tagVersion || server.version !== tagVersion) throw new Error("tag, package, and MCP versions must match");
+            if (pkg.mcpName !== server.name) throw new Error("package mcpName and server name must match");
+          '
+
+      - name: Install MCP publisher
+        run: |
+          curl -fL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+
+      - name: Validate registry metadata
+        run: ./mcp-publisher validate server.json
+
+      - name: Authenticate with GitHub OIDC
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish and verify registry metadata
+        run: |
+          for attempt in $(seq 1 18); do
+            if npm run registry:verify; then
+              exit 0
+            fi
+            if ./mcp-publisher publish server.json && npm run registry:verify; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 18 ]; then
+              echo "MCP Registry publication did not converge after 18 attempts."
+              exit 1
+            fi
+            echo "npm or registry metadata has not propagated yet; retrying in 10 seconds ($attempt/18)."
+            sleep 10
+          done

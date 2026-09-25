@@ -104,9 +104,33 @@ test("about and data-handling pages publish verifiable trust routes", () => {
   const about = readFileSync(path.join(site, "about.html"), "utf8");
   const dataHandling = readFileSync(path.join(site, "data-handling.html"), "utf8");
   assert.match(about, /<title>About DiffCI/);
+  assert.match(about, /github\.com\/adityankale190895/);
+  assert.match(about, /mailto:aditya@diffci\.com/);
   assert.match(about, /mailto:security@diffci\.com/);
   assert.match(dataHandling, /mailto:security@diffci\.com/);
   assert.doesNotMatch(dataHandling, /no mailbox of its own|address for deletion requests and security reports is not yet published/i);
+});
+
+test("case-study headings describe the measured search intent", () => {
+  const expectations: Array<[string, RegExp]> = [
+    ["calcom.html", /<h1>Change-aware test selection on cal\.com<\/h1>/],
+    ["deepseek-harness.html", /<h1>Affected-test selection on deepseek-harness<\/h1>/],
+    ["diffci-own-ci.html", /<h1>What DiffCI found in its own CI pipeline<\/h1>/],
+  ];
+  for (const [name, heading] of expectations) {
+    assert.match(readFileSync(path.join(site, "case-studies", name), "utf8"), heading);
+  }
+});
+
+test("agent-specific guides cross-link to every other supported setup", () => {
+  const agents = ["claude-code", "codex", "copilot", "cursor", "grok"];
+  for (const agent of agents) {
+    const body = readFileSync(path.join(site, "docs", `${agent}.html`), "utf8");
+    assert.match(body, /<h2>Verify the (?:Claude Code|Codex|Copilot and Actions|Cursor|Grok) setup<\/h2>/);
+    for (const sibling of agents.filter((candidate) => candidate !== agent)) {
+      assert.match(body, new RegExp(`href="/docs/${sibling}"`), `${agent} should link to ${sibling}`);
+    }
+  }
 });
 
 test("sitemap generation is an explicit build step", () => {
@@ -116,6 +140,7 @@ test("sitemap generation is an explicit build step", () => {
 });
 
 test("internal links resolve directly and fragments exist", () => {
+  const workerRoutes = new Set(["/mcp", "/mcp/server-card", "/.well-known/ai-catalog.json"]);
   for (const file of htmlFiles()) {
     const body = readFileSync(file, "utf8");
     const sourceCanonical = body.match(/<link\s+rel="canonical"\s+href="([^"]+)"/i)?.[1] ?? "https://diffci.com/";
@@ -124,6 +149,7 @@ test("internal links resolve directly and fragments exist", () => {
       if (/^(?:mailto:|tel:|data:|javascript:)/i.test(href)) continue;
       const target = new URL(href, sourceCanonical);
       if (target.origin !== "https://diffci.com") continue;
+      if (workerRoutes.has(target.pathname)) continue;
       const targetFile = localFileForPath(target.pathname);
       assert.ok(existsSync(targetFile), `${path.relative(site, file)} links to missing ${target.pathname}`);
       if (target.hash && path.extname(target.pathname) !== ".txt") {

@@ -5,7 +5,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@diffci.com/diffci.svg)](https://www.npmjs.com/package/@diffci.com/diffci)
 [![npm provenance](https://img.shields.io/badge/npm-provenance-blue)](https://docs.npmjs.com/generating-provenance-statements)
-[![MCP server](https://img.shields.io/badge/MCP-server-5f6fff)](docs/mcp.md)
+[![MCP server](https://img.shields.io/badge/MCP-server-5f6fff)](https://diffci.com/mcp-server)
 [![Agent safe](https://img.shields.io/badge/agent--safe-observation--only-0f766e)](docs/ai-agents.md)
 [![GitHub Marketplace](https://img.shields.io/badge/GitHub-Marketplace-blue)](https://github.com/marketplace/actions/diffci-observer)
 
@@ -162,13 +162,20 @@ Adoption materials:
 [`metrics`](docs/adoption-metrics.md) ·
 [`targets`](docs/agent-adoption-targets.md).
 
-For native agent integrations, DiffCI also ships a stdio MCP server:
+For native agent integrations, DiffCI provides a stateless, read-only HTTPS MCP endpoint for validation
+guidance:
+
+```text
+https://diffci.com/mcp
+```
+
+Use the stdio MCP server when tools need to inspect the local checkout or run tests:
 
 ```bash
 npx -p "@diffci.com/diffci@latest" diffci-mcp
 ```
 
-See [`docs/mcp.md`](docs/mcp.md) for Claude, Cursor, Codex, and generic MCP config snippets.
+See the [MCP server page](https://diffci.com/mcp-server) for Codex, Claude Code, Cursor, and VS Code setup, or [`docs/mcp.md`](docs/mcp.md) for repository documentation.
 
 ## Project background
 

@@ -5,6 +5,9 @@
   "keywords": [
     "ci",
     "cicd",
+    "ci-cd",
+    "mcp",
+    "model-context-protocol",
     "ai-agents",
     "coding-agents",
     "claude-code",
@@ -13,6 +16,8 @@
     "copilot",
     "grok",
     "test-selection",
+    "test-impact-analysis",
+    "affected-tests",
     "github-actions"
   ],
   "license": "AGPL-3.0-only",
@@ -132,7 +137,8 @@
     "ci:benchmark": "tsx scripts/ci-inference-benchmark.ts",
     "ci:reproduce": "tsx scripts/ci-reproduction.ts",
     "check:oss-boundary": "node scripts/check-oss-boundary.mjs",
-    "check:public-metadata": "node scripts/check-public-metadata.mjs"
+    "check:public-metadata": "node scripts/check-public-metadata.mjs",
+    "registry:verify": "node scripts/verify-mcp-registry.mjs"
   },
   "dependencies": {
     "@diffci.com/core": "git+https://github.com/DiffCI/core.git#db1d637dfcca8d8f7fa047500dfe0027d0d018a7",

@@ -6,10 +6,60 @@
  *   2. www.diffci.com is answered with a 301 to the apex (the www custom domain used to 522);
  *   3. legacy .html and trailing-slash document URLs are permanently redirected to the clean,
  *      extensionless canonical URL;
- *   4. every other request is served from the ./site assets unchanged.
+ *   4. /mcp serves the stateless Streamable HTTP MCP endpoint;
+ *   5. /mcp/server-card and /.well-known/ai-catalog.json expose machine-readable discovery metadata;
+ *   6. every other request is served from the ./site assets unchanged.
  */
+import { handleMcpRequest, MCP_SERVER_INFO } from "./mcp-endpoint.js";
+
 export interface SiteEnv {
   ASSETS: { fetch(request: Request): Promise<Response> };
+}
+
+const discoveryHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, If-None-Match",
+  "Access-Control-Expose-Headers": "ETag",
+  "Cache-Control": "public, max-age=3600",
+};
+
+const serverCard = {
+  $schema: "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  name: MCP_SERVER_INFO.name,
+  title: "DiffCI",
+  description: "Change-aware CI validation, affected-test selection, and workflow safety guidance for coding agents.",
+  version: MCP_SERVER_INFO.version,
+  websiteUrl: "https://diffci.com/mcp-server",
+  repository: { url: "https://github.com/DiffCI/DiffCI.com", source: "github" },
+  icons: [{ src: "https://diffci.com/assets/diffci-mark.svg", mimeType: "image/svg+xml", sizes: ["any"] }],
+  remotes: [{
+    type: "streamable-http",
+    url: "https://diffci.com/mcp",
+    supportedProtocolVersions: ["2025-03-26", "2025-06-18", "2025-11-25"],
+  }],
+};
+
+const aiCatalog = {
+  specVersion: "1.0",
+  entries: [{
+    identifier: "urn:air:diffci.com:mcp:diffci",
+    type: "application/mcp-server-card+json",
+    url: "https://diffci.com/mcp/server-card",
+  }],
+};
+
+function discoveryResponse(request: Request, body: unknown, contentType: string, etag: string): Response {
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: discoveryHeaders });
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return new Response(null, { status: 405, headers: { ...discoveryHeaders, Allow: "GET, HEAD, OPTIONS" } });
+  }
+  if (request.headers.get("If-None-Match") === etag) {
+    return new Response(null, { status: 304, headers: { ...discoveryHeaders, ETag: etag } });
+  }
+  return new Response(request.method === "HEAD" ? null : JSON.stringify(body), {
+    headers: { ...discoveryHeaders, "Content-Type": `${contentType}; charset=utf-8`, ETag: etag },
+  });
 }
 
 export default {
@@ -46,7 +96,18 @@ export default {
         movedDocument = true;
       }
     }
-    if (movedOrigin || movedDocument) return Response.redirect(url.toString(), movedOrigin ? 301 : 308);
+    if (movedOrigin || movedDocument) {
+      // Preserve POST when a caller accidentally uses http:// for the HTTPS MCP endpoint.
+      const status = url.pathname === "/mcp" && request.method !== "GET" ? 308 : movedOrigin ? 301 : 308;
+      return Response.redirect(url.toString(), status);
+    }
+    if (url.pathname === "/mcp") return handleMcpRequest(request);
+    if (url.pathname === "/mcp/server-card") {
+      return discoveryResponse(request, serverCard, "application/mcp-server-card+json", `"diffci-mcp-${MCP_SERVER_INFO.version}"`);
+    }
+    if (url.pathname === "/.well-known/ai-catalog.json") {
+      return discoveryResponse(request, aiCatalog, "application/ai-catalog+json", `"diffci-ai-catalog-${MCP_SERVER_INFO.version}"`);
+    }
     return env.ASSETS.fetch(request);
   },
 };

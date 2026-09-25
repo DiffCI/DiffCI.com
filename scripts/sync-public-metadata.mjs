@@ -45,6 +45,12 @@ for (const packageEntry of server.packages ?? []) {
   if (packageEntry.identifier === manifest.packageName) packageEntry.version = manifest.packageVersion;
 }
 writeJson("server.json", server);
+replaceRequired(
+  "src/site/mcp-endpoint.ts",
+  /(export const MCP_SERVER_INFO = \{ name: "[^"]+", version: ")\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(" \};)/,
+  `$1${manifest.packageVersion}$2`,
+  "the HTTPS MCP server version",
+);
 
 const smithery = readJson("packaging/smithery/manifest.json");
 smithery.version = manifest.packageVersion;
@@ -67,6 +73,12 @@ replaceRequired(
   /("softwareVersion": ")\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(")/g,
   `$1${manifest.packageVersion}$2`,
   "SoftwareApplication.softwareVersion",
+);
+replaceRequired(
+  "site/mcp-server.html",
+  /("softwareVersion":")\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(")/g,
+  `$1${manifest.packageVersion}$2`,
+  "MCP SoftwareApplication.softwareVersion",
 );
 
 const actionPinFiles = [

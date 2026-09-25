@@ -27,6 +27,7 @@ describe("npm package contract", () => {
       packageArguments?: Array<{ type?: string; value?: string }>;
       transport?: { type?: string };
     }>;
+    remotes?: Array<{ type?: string; url?: string }>;
   };
 
   it("publishes a diffci binary backed by the client build", () => {
@@ -86,5 +87,6 @@ describe("npm package contract", () => {
     assert.equal(server.packages?.[0]?.version, pkg.version);
     assert.equal(server.packages?.[0]?.transport?.type, "stdio");
     assert.deepEqual(server.packages?.[0]?.packageArguments, [{ type: "positional", value: "mcp" }]);
+    assert.deepEqual(server.remotes, [{ type: "streamable-http", url: "https://diffci.com/mcp" }]);
   });
 });

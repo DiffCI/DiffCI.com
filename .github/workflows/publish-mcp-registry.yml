@@ -24,4 +24,17 @@ jobs:
       - name: Authenticate with GitHub OIDC
         run: ./mcp-publisher login github-oidc
       - name: Publish listing
-        run: ./mcp-publisher publish server.json
+        run: |
+          for attempt in $(seq 1 18); do
+            if npm run registry:verify; then
+              exit 0
+            fi
+            if ./mcp-publisher publish server.json && npm run registry:verify; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 18 ]; then
+              exit 1
+            fi
+            echo "Registry metadata has not propagated yet; retrying in 10 seconds ($attempt/18)."
+            sleep 10
+          done

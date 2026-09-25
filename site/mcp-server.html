@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0e11">
+<title>DiffCI MCP Server for CI Validation &amp; Affected Tests</title>
+<meta name="description" content="Connect coding agents to DiffCI's free HTTPS MCP server for change-aware CI validation, affected-test guidance, report interpretation, and workflow safety checks.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DiffCI">
+<meta property="og:title" content="DiffCI MCP Server for CI Validation &amp; Affected Tests">
+<meta property="og:description" content="A stateless HTTPS MCP server for change-aware CI validation, affected-test guidance, and GitHub Actions safety checks.">
+<meta property="og:url" content="https://diffci.com/mcp-server">
+<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://diffci.com/mcp-server">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"DiffCI MCP Server","description":"A stateless HTTPS MCP server for change-aware CI validation, affected-test guidance, report interpretation, and GitHub Actions workflow safety checks.","url":"https://diffci.com/mcp-server","applicationCategory":"DeveloperApplication","operatingSystem":"Any MCP client","isAccessibleForFree":true,"softwareVersion":"0.2.9","codeRepository":"https://github.com/DiffCI/DiffCI.com","publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"MCP server","item":"https://diffci.com/mcp-server"}]}]}
+</script>
+</head>
+<body>
+<header class="masthead"><div class="wrap"><a class="wordmark" href="/">DiffCI</a><nav><a href="#connect">Connect</a><a href="#tools">Tools</a><a href="#boundary">Trust boundary</a><a href="/llms.txt">llms.txt</a></nav></div></header>
+<main>
+<div class="wrap"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><span>MCP server</span></nav></div>
+<section class="hero"><div class="wrap">
+  <p class="hero-claim">Public Streamable HTTP MCP</p>
+  <h1>Give coding agents a safe CI-validation tool.</h1>
+  <p class="lede">DiffCI's public MCP server plans change-aware validation, interprets observation reports, and checks GitHub Actions isolation without credentials or repository access.</p>
+  <pre><code>https://diffci.com/mcp</code></pre>
+  <div class="hero-actions"><a class="button" href="#connect">Connect your client</a><a class="button-secondary" href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md">View source and docs</a></div>
+</div></section>
+
+<section class="numbered" id="connect"><div class="wrap wrap-wide">
+  <h2>Connect in one command</h2>
+  <div class="install-grid">
+    <article class="install-panel"><p class="kicker">Codex</p><h3>Codex CLI and app</h3><pre><code>codex mcp add diffci --url https://diffci.com/mcp
+codex mcp list</code></pre><p class="fine">This uses Codex's supported remote HTTP configuration. <a href="https://developers.openai.com/learn/docs-mcp">Official Codex MCP docs →</a></p></article>
+    <article class="install-panel"><p class="kicker">Claude Code</p><h3>Add an HTTP server</h3><pre><code>claude mcp add --transport http diffci https://diffci.com/mcp</code></pre></article>
+    <article class="install-panel"><p class="kicker">Cursor</p><h3>MCP JSON</h3><pre><code>{
+  "mcpServers": {
+    "diffci": {
+      "url": "https://diffci.com/mcp"
+    }
+  }
+}</code></pre></article>
+    <article class="install-panel"><p class="kicker">VS Code</p><h3>MCP JSON</h3><pre><code>{
+  "servers": {
+    "diffci": {
+      "type": "http",
+      "url": "https://diffci.com/mcp"
+    }
+  }
+}</code></pre></article>
+  </div>
+</div></section>
+
+<section class="numbered" id="tools"><div class="wrap">
+  <h2>Three read-only tools</h2>
+  <ul class="limits">
+    <li><strong><code>diffci_validation_plan</code></strong> returns a safe local command for change-aware checks, observation, initialization, or workflow verification.</li>
+    <li><strong><code>diffci_interpret_report</code></strong> validates and summarizes a <code>diffci.observation.v1</code> report, including affected-test counts, fallbacks, and the conservative next action.</li>
+    <li><strong><code>diffci_verify_workflow_text</code></strong> checks one GitHub Actions YAML document for a dedicated, non-blocking, read-only observer job and immutable references.</li>
+  </ul>
+  <p>The server also exposes the <code>diffci_validate_change</code> prompt and agent-policy/setup resources.</p>
+</div></section>
+
+<section class="numbered" id="boundary"><div class="wrap">
+  <h2>Know the trust boundary</h2>
+  <p>The HTTPS endpoint is stateless. It requires no account, stores no session, receives no repository content unless you explicitly pass a report or workflow to a tool, and never executes a command.</p>
+  <p>For tools that inspect a checkout or run tests, use the local stdio server from the repository directory:</p>
+  <pre><code>npx -p "@diffci.com/diffci@latest" diffci-mcp</code></pre>
+  <p>The local server exposes <code>diffci_check</code>, <code>diffci_init</code>, and <code>diffci_verify_workflow</code>. Required project CI remains authoritative.</p>
+</div></section>
+
+<section class="numbered"><div class="wrap">
+  <h2>Machine-readable discovery</h2>
+  <ul>
+    <li><a href="/mcp/server-card">MCP Server Card</a></li>
+    <li><a href="/.well-known/ai-catalog.json">AI Catalog</a></li>
+    <li><a href="https://registry.modelcontextprotocol.io/">Official MCP Registry</a></li>
+    <li><a href="/llms.txt">LLM discovery file</a></li>
+  </ul>
+  <p>The Server Card and AI Catalog formats are emerging discovery conventions; the official MCP Registry entry remains the canonical directory listing.</p>
+</div></section>
+</main>
+<footer><div class="wrap"><p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p><nav><a href="/docs/ai-agents">AI agents</a><a href="/test-impact-analysis/github-actions">Test impact analysis</a><a href="/data-handling">Data handling</a><a href="/contact">Contact</a></nav></div></footer>
+</body>
+</html>

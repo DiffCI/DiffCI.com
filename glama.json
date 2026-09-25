@@ -1,8 +1,8 @@
 {
   "name": "DiffCI",
-  "description": "Observation-only CI/CD validation for AI coding agents.",
+  "description": "Change-aware CI validation, affected-test selection, and workflow safety for coding agents.",
   "category": "developer-tools",
-  "homepage": "https://diffci.com/docs/ai-agents.html",
+  "homepage": "https://diffci.com/mcp-server",
   "repository": "https://github.com/DiffCI/DiffCI.com",
   "license": "AGPL-3.0-only",
   "install": {

@@ -22,6 +22,7 @@ What agents should know:
 - It sends no report unless `DIFFCI_API_URL` and `DIFFCI_TOKEN` are explicitly configured.
 - Treat selected commands as evidence about the change, not as permission to skip required project CI.
 - If DiffCI reports `REFUSED` or `ERROR`, fall back to the repository's normal validation commands.
+- Remote MCP tools are available at https://diffci.com/mcp; they provide stateless validation planning, report interpretation, and workflow-text checks without executing commands.
 
 Useful docs:
 
@@ -36,4 +37,6 @@ Useful docs:
 - [Open evidence study](https://diffci.com/research/diffci-open-evidence-2026)
 - [Adoption kit](https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-kit.md)
 - [MCP server](https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md)
+- [MCP server setup](https://diffci.com/mcp-server)
+- [MCP Server Card](https://diffci.com/mcp/server-card)
 - [Language support](https://github.com/DiffCI/DiffCI.com/blob/main/docs/language-support.md)
