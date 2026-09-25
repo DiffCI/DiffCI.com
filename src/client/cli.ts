@@ -14,6 +14,7 @@
  *   check              analysis plus automatic paired runtime measurement
  *   observe            analyse the checkout and write an observation report
  *   verify-savings     run a paired full-versus-selected timing check
+ *   validate-specs     block conflicting same-turn change specifications
  *   verify-workflow    check that a DiffCI job in this repository's workflows cannot affect other jobs
  *   version            print the observer version
  *
@@ -35,6 +36,7 @@ import { addDiffciPackageScripts, installDiffci } from "./install.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
 import { sendUsageSignal } from "./usage-signal.js";
+import { detectSpecificationConflicts, readSpecificationFile } from "./spec-conflicts.js";
 import { formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
 import { auditWorkflows, isNonInterfering } from "./workflow-guard.js";
 
@@ -381,6 +383,10 @@ async function runCheck(flags: Record<string, string | boolean>, env: NodeJS.Pro
     cwd: repoPath,
     timeoutMs,
     tailBytes,
+    repetitions: numberFlag(flags, "repetitions"),
+    cacheState: parseCacheState(flags),
+    cachePreparationCommand: stringFlag(flags, "cache-prepare"),
+    alternateOrder: flags["fixed-order"] === true ? false : undefined,
   });
   writeVerifySavingsReport(savings, { out: savingsPath, markdown: markdownPath });
   print(formatVerifySavingsSummary(savings));
@@ -525,6 +531,13 @@ function numberFlag(flags: Record<string, string | boolean>, name: string): numb
   return parsed;
 }
 
+function parseCacheState(flags: Record<string, string | boolean>): "cold" | "warm" | "unknown" | undefined {
+  const value = stringFlag(flags, "cache-state");
+  if (value === undefined) return undefined;
+  if (value !== "cold" && value !== "warm" && value !== "unknown") throw new Error("--cache-state must be cold, warm, or unknown");
+  return value;
+}
+
 function parseVerifySavingsOptions(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): VerifySavingsOptions {
   const full = stringFlag(flags, "full");
   const selected = stringFlag(flags, "selected");
@@ -546,6 +559,10 @@ function parseVerifySavingsOptions(flags: Record<string, string | boolean>, env:
     timeoutMs: numberFlag(flags, "timeout-ms") ?? 30 * 60 * 1000,
     analysisOverheadMs: numberFlag(flags, "analysis-overhead-ms"),
     tailBytes: numberFlag(flags, "tail-bytes") ?? 12_000,
+    repetitions: numberFlag(flags, "repetitions"),
+    cacheState: parseCacheState(flags),
+    cachePreparationCommand: stringFlag(flags, "cache-prepare"),
+    alternateOrder: flags["fixed-order"] === true ? false : undefined,
   };
 }
 
@@ -622,6 +639,10 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
     timeoutMs: numberFlag(flags, "timeout-ms") ?? 30 * 60 * 1000,
     analysisOverheadMs: numberFlag(flags, "analysis-overhead-ms"),
     tailBytes: numberFlag(flags, "tail-bytes") ?? 12_000,
+    repetitions: numberFlag(flags, "repetitions"),
+    cacheState: parseCacheState(flags),
+    cachePreparationCommand: stringFlag(flags, "cache-prepare"),
+    alternateOrder: flags["fixed-order"] === true ? false : undefined,
   });
   writeVerifySavingsReport(savings, { out: savingsPath, markdown: markdownPath });
 
@@ -629,6 +650,19 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
   console.log(`  savings report: ${savingsPath}`);
   console.log(`  markdown: ${markdownPath}`);
   return savings.comparison.evidenceValid ? 0 : 1;
+}
+
+function runValidateSpecs(flags: Record<string, string | boolean>): number {
+  const file = stringFlag(flags, "file");
+  if (!file) throw new Error("validate-specs requires --file <json>");
+  const report = detectSpecificationConflicts(readSpecificationFile(file));
+  if (flags.json === true) console.log(JSON.stringify(report, null, 2));
+  else if (report.valid) console.log(`DiffCI specification validation: no conflicts across ${report.specificationsChecked} specification(s) and ${report.logicalTargetsChecked} logical target(s).`);
+  else {
+    console.log(`DiffCI specification validation: BLOCKED (${report.conflicts.length} logical-target conflict${report.conflicts.length === 1 ? "" : "s"})`);
+    for (const blocker of report.blockers) console.log(`  ${blocker}`);
+  }
+  return report.valid ? 0 : 1;
 }
 
 const USAGE = `diffci - change-aware CI analysis and paired timing
@@ -645,6 +679,9 @@ Usage:
   diffci verify-savings --repo <path> --full <command>
                          (--selected <command> | --selected-from-report <file>)
                          --out <file> [--markdown <file>] [--label <name>]
+                         [--repetitions <1-20>] [--cache-state cold|warm|unknown]
+                         [--cache-prepare <command>] [--fixed-order]
+  diffci validate-specs --file <json> [--json]
   diffci verify-workflow [--repo <path>]
   diffci version
 
@@ -657,6 +694,7 @@ check analyzes the change, runs inferred full and selected commands, and shows m
 pilot runs observe and verify-savings together, writing reports to ../diffci-output by default.
 observe analyses the checkout and writes one JSON report. It runs nothing and changes nothing.
 verify-savings runs both commands and reports measured paired runtime; it is an opt-in pilot command.
+validate-specs checks an explicit list of specification IDs and logical targets and blocks duplicates.
 verify-workflow checks that the job running DiffCI cannot affect any other job, and exits 1 if it can.
 
 The report is sent only when both --api-url and --api-token are given (or DIFFCI_API_URL and
@@ -694,6 +732,9 @@ async function main(): Promise<void> {
       return;
     case "verify-savings":
       process.exitCode = runVerifySavingsCommand(flags, env);
+      return;
+    case "validate-specs":
+      process.exitCode = runValidateSpecs(flags);
       return;
     case "verify-workflow":
       process.exitCode = runVerifyWorkflow(flags, env);

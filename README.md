@@ -54,9 +54,10 @@ maintainer PR text. AI-readable documentation is on [Context7 CLI](https://conte
 and [Context7 Core](https://context7.com/diffci/core). Use the [GitHub Marketplace Action](https://github.com/marketplace/actions/diffci-observer)
 for a separate, non-blocking observation job. Required project CI remains authoritative.
 
-One paired run is preliminary evidence; repeat comparisons and account for cache effects before
-claiming CI savings. On a full-validation fallback, `check` runs the full command once and reports
-0% reduction.
+One paired run is preliminary evidence. `verify-savings` can repeat comparisons, alternate arm order,
+record declared cache state, and run an explicit cache-preparation command before every arm. A result is
+labelled controlled only after at least three alternating, cache-prepared repetitions. On a
+full-validation fallback, `check` runs the full command once and reports 0% reduction.
 
 **Upgrade from 0.1.3:** tests excluded by a source-only `tsconfig.json` could be discovered without
 their dependency edges, producing an incomplete selection. This is fixed in **0.1.4**. Revalidate
@@ -82,12 +83,49 @@ not Cal.com's production savings or a prediction for your repository.
 Selection counts alone do not establish runtime savings. `check` reports a measured percentage only
 when both commands pass and the checked-out commit and worktree remain identical across both arms.
 The savings artifact embeds the base/head SHAs, observation SHA-256, commands, timings, and checkout
-snapshots; `observe` does not execute tests.
+snapshots. Snapshots use byte-level fingerprints for dirty files, manifests, lockfiles, and available
+resolved-dependency markers; the report also records the runner identity. A mismatch invalidates the
+comparison. `observe` does not execute tests.
 
 For an advanced paired runtime check, you can still run `observe` first and then run `verify-savings`
 against the observation report. It compares your normal full command with
 DiffCI's proposed selected command and writes JSON plus Markdown evidence; see
 [`docs/npm-adoption.md`](docs/npm-adoption.md#self-serve-runtime-pilot).
+
+For stronger evidence, run repeated measurements with an explicit cache preparation command:
+
+```bash
+npx "@diffci.com/diffci@latest" verify-savings \
+  --repo . --full "npm test" --selected-from-report ../diffci-observation.json \
+  --out ../diffci-savings.json --repetitions 3 --cache-state warm \
+  --cache-prepare "node scripts/prepare-ci-cache.mjs"
+```
+
+DiffCI alternates full/selected order, reports min/median/max timings, and conservatively classifies
+stable selection misses, likely flakes, shared/pre-existing failures, infrastructure failures, and
+inconclusive results. Cache preparation is user-supplied because DiffCI must not delete repository or
+tool caches on its own.
+
+## Validate same-turn change specifications
+
+When an agent or build tool supplies explicit specification IDs and logical targets, DiffCI can block
+two specifications from silently changing the same target:
+
+```json
+{
+  "specifications": [
+    { "id": "SPEC-API", "logicalTarget": "com.example.Widget#run" },
+    { "id": "SPEC-BEHAVIOR", "logicalTarget": "com.example.Widget#run" }
+  ]
+}
+```
+
+```bash
+npx "@diffci.com/diffci@latest" validate-specs --file change-specifications.json
+```
+
+The command exits non-zero and names every conflicting specification ID. This surface is opt-in and
+does not infer semantic targets from source code; callers must provide stable logical target names.
 
 ## Observe in GitHub Actions
 

@@ -20,6 +20,10 @@ interface ParsedArgs {
   timeoutMs: number;
   analysisOverheadMs?: number;
   tailBytes: number;
+  repetitions?: number;
+  cacheState?: "cold" | "warm" | "unknown";
+  cachePreparationCommand?: string;
+  alternateOrder?: boolean;
 }
 
 function flagValue(args: string[], name: string): string | undefined {
@@ -45,6 +49,8 @@ export function parseArgs(args: string[]): ParsedArgs {
   if (selected && selectedFromReport) throw new Error("pass only one of --selected or --selected-from-report");
   if (!out) throw new Error("--out <path> is required");
 
+  const cacheState = flagValue(args, "cache-state");
+  if (cacheState !== undefined && cacheState !== "cold" && cacheState !== "warm" && cacheState !== "unknown") throw new Error("--cache-state must be cold, warm, or unknown");
   return {
     full,
     selected,
@@ -56,6 +62,10 @@ export function parseArgs(args: string[]): ParsedArgs {
     timeoutMs: numberFlag(args, "timeout-ms") ?? 30 * 60 * 1000,
     analysisOverheadMs: numberFlag(args, "analysis-overhead-ms"),
     tailBytes: numberFlag(args, "tail-bytes") ?? 12_000,
+    repetitions: numberFlag(args, "repetitions"),
+    cacheState,
+    cachePreparationCommand: flagValue(args, "cache-prepare"),
+    alternateOrder: args.includes("--fixed-order") ? false : undefined,
   };
 }
 

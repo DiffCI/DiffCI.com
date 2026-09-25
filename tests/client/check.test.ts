@@ -80,7 +80,10 @@ describe("automatic check timing", () => {
       assert.equal(savings.selected.exitCode, 0);
       assert.equal(savings.full.command, "npm test");
       assert.match(savings.selected.command, /node --test/);
-      assert.equal(savings.schema, "diffci.verifySavings.v2");
+      assert.equal(savings.schema, "diffci.verifySavings.v3");
+      assert.equal(savings.protocol.repetitions, 1);
+      assert.equal(savings.comparison.performanceEvidence, "PRELIMINARY");
+      assert.match(savings.runnerIdentity.fingerprintSha256, /^[a-f0-9]{64}$/);
       assert.equal(savings.provenance.baseSha, base);
       assert.equal(savings.provenance.headSha, head);
       assert.match(savings.provenance.observationSha256, /^[a-f0-9]{64}$/);

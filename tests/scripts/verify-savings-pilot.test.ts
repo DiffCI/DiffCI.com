@@ -67,6 +67,122 @@ describe("verify-savings pilot report", () => {
     assert.match(formatVerifySavingsSummary(report), /checkout provenance failed/);
   });
 
+  it("detects byte changes to an already-dirty tracked file even when git status is unchanged", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-dirty-content-"));
+    execFileSync("git", ["init", "--quiet"], { cwd: dir });
+    execFileSync("git", ["config", "user.email", "test@diffci.local"], { cwd: dir });
+    execFileSync("git", ["config", "user.name", "Test"], { cwd: dir });
+    writeFileSync(join(dir, "package.json"), "{}\n");
+    writeFileSync(join(dir, "tracked.txt"), "committed\n");
+    execFileSync("git", ["add", "."], { cwd: dir });
+    execFileSync("git", ["commit", "--quiet", "-m", "fixture"], { cwd: dir });
+    writeFileSync(join(dir, "tracked.txt"), "dirty-before\n");
+
+    const report = runPilot({
+      full: "node -e \"require('node:fs').writeFileSync('tracked.txt','dirty-after')\"",
+      selected: "node --version",
+      out: join(dir, "report.json"),
+      cwd: dir,
+      timeoutMs: 60_000,
+      tailBytes: 12_000,
+    });
+
+    assert.equal(report.provenance.checkoutStable, false);
+    assert.ok(report.provenance.invalidReasons.some((reason) => reason.includes("worktree changed")));
+  });
+
+  it("invalidates the comparison when a dependency input changes between arms", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-dependency-change-"));
+    execFileSync("git", ["init", "--quiet"], { cwd: dir });
+    execFileSync("git", ["config", "user.email", "test@diffci.local"], { cwd: dir });
+    execFileSync("git", ["config", "user.name", "Test"], { cwd: dir });
+    writeFileSync(join(dir, "package.json"), "{}\n");
+    writeFileSync(join(dir, "mutate.cjs"), "require('node:fs').writeFileSync('package.json', JSON.stringify({changed:true}))\n");
+    execFileSync("git", ["add", "."], { cwd: dir });
+    execFileSync("git", ["commit", "--quiet", "-m", "fixture"], { cwd: dir });
+
+    const report = runPilot({
+      full: "node mutate.cjs",
+      selected: "node --version",
+      out: join(dir, "report.json"),
+      cwd: dir,
+      timeoutMs: 60_000,
+      tailBytes: 12_000,
+    });
+
+    assert.equal(report.provenance.checkoutStable, false);
+    assert.ok(report.provenance.invalidReasons.some((reason) => reason.includes("dependency manifests or lockfiles changed")));
+  });
+
+  it("alternates repeated arms and marks cache-prepared evidence controlled", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-repeated-"));
+    execFileSync("git", ["init", "--quiet"], { cwd: dir });
+    execFileSync("git", ["config", "user.email", "test@diffci.local"], { cwd: dir });
+    execFileSync("git", ["config", "user.name", "Test"], { cwd: dir });
+    writeFileSync(join(dir, "package.json"), "{}\n");
+    execFileSync("git", ["add", "."], { cwd: dir });
+    execFileSync("git", ["commit", "--quiet", "-m", "fixture"], { cwd: dir });
+
+    const report = runPilot({
+      full: "node --version",
+      selected: "node --version",
+      out: join(dir, "report.json"),
+      cwd: dir,
+      timeoutMs: 60_000,
+      tailBytes: 12_000,
+      repetitions: 3,
+      cacheState: "warm",
+      cachePreparationCommand: "node --version",
+    });
+
+    assert.deepEqual(report.trials.map((trial) => trial.order), [["full", "selected"], ["selected", "full"], ["full", "selected"]]);
+    assert.equal(report.protocol.cacheStateControlled, true);
+    assert.equal(report.comparison.performanceEvidence, "CONTROLLED");
+    assert.equal(report.comparison.repetitions, 3);
+    assert.equal(report.failureAssessment.kind, "none");
+  });
+
+  it("classifies a stable repeated full-only failure as a selection miss", () => {
+    const trials = [1, 2, 3].map((index) => ({
+      index,
+      order: ["full", "selected"] as ["full", "selected"],
+      cacheState: { full: "warm" as const, selected: "warm" as const },
+      preparations: [],
+      full: { ...measurement("npm test", 1, 1000), stderrTail: "AssertionError: expected 1 to equal 2" },
+      selected: measurement("npm test a.test.ts", 0, 200),
+      provenance: verifiedProvenance(),
+    }));
+    const report = buildReport({
+      cwd: "/repo",
+      timeoutMs: 60_000,
+      selection: { source: "manual" },
+      full: trials[0]!.full,
+      selected: trials[0]!.selected,
+      provenance: verifiedProvenance(),
+      trials,
+      protocol: { repetitions: 3, alternatingOrder: true, declaredCacheState: "warm", cacheStateControlled: true },
+    });
+    assert.equal(report.failureAssessment.kind, "selection_miss");
+    assert.equal(report.failureAssessment.confidence, "high");
+  });
+
+  it("classifies the same normalized failure in both arms as pre-existing", () => {
+    const sharedFailure = "AssertionError: expected 1 to equal 2";
+    const full = { ...measurement("npm test", 1, 1000), stderrTail: sharedFailure };
+    const selected = { ...measurement("npm test a.test.ts", 1, 200), stderrTail: sharedFailure };
+    const report = buildReport({
+      cwd: "/repo",
+      timeoutMs: 60_000,
+      selection: { source: "manual" },
+      full,
+      selected,
+      provenance: verifiedProvenance(),
+    });
+
+    assert.equal(report.failureAssessment.kind, "pre_existing");
+    assert.equal(report.failureAssessment.confidence, "low");
+  });
+
   it("rejects incomplete or ambiguous plans before executing either arm", () => {
     const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-plan-"));
     const observation = join(dir, "observation.json");

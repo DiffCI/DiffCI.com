@@ -98,7 +98,10 @@ What the report means:
 
 Run both steps from the same repository root with the same checked-out revision. These commands
 execute repository code. The full run can warm caches for the selected run, so repeat comparisons
-with controlled cache state before drawing conclusions. A passing pair does not establish selection safety.
+with controlled cache state before drawing conclusions. Add `--repetitions 3` to alternate arm order.
+Use `--cache-state cold|warm` together with `--cache-prepare <command>` to run a repository-owned cache
+preparation/reset step before every arm. Without all three, runtime evidence remains labelled
+`PRELIMINARY`. DiffCI never deletes caches automatically. A passing pair does not establish selection safety.
 
 - Full runtime is measured from `--full`.
 - Selected runtime is measured from DiffCI's proposed command in the observation report.
@@ -107,10 +110,13 @@ with controlled cache state before drawing conclusions. A passing pair does not 
 - Net selected runtime is selected runtime plus analysis overhead.
 - If the full command fails while the selected command passes, the report is a safety warning, not a
   savings result.
+- Repeated runs classify stable full-only failures, likely flakes, shared/pre-existing failures,
+  infrastructure failures, and inconclusive evidence. Fewer than three repetitions never establish a
+  high-confidence selection miss.
 - The savings report binds the pair to the observation's base/head SHAs and SHA-256 digest, and records
-  the checked-out HEAD plus a worktree-status digest before, between, and after the two commands. A
-  missing identity, SHA mismatch, or worktree change invalidates the comparison even when both commands
-  pass.
+  the checked-out HEAD plus byte-level dirty-worktree, manifest/lockfile, available resolved-dependency,
+  and runner fingerprints at every execution boundary. A missing identity or changed fingerprint
+  invalidates the comparison even when both commands pass.
 
 Before sharing a Markdown report with a maintainer, check that it answers these review questions:
 
