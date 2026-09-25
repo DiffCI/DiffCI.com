@@ -19,6 +19,7 @@ import type { LedgerRow, MonthlyLedger } from "../ledger/ledger.js";
 import type { StoredInvoice } from "../billing/invoice-store.js";
 import { formatUsdCents, type ReconciliationResult } from "../billing/metered.js";
 import { html, layout, type SafeHtml } from "./render.js";
+import { renderFleetPanel, type FleetPanelData } from "./fleet.js";
 
 function shortSha(sha: string | undefined): string {
   return sha ? sha.slice(0, 9) : "—";
@@ -120,6 +121,7 @@ function renderUserReports(reports: UserReports): SafeHtml {
 }
 
 export interface OrganizationPageData {
+  fleet?: FleetPanelData;
   email: string;
   organization: Organization;
   repositories: Repository[];
@@ -179,6 +181,8 @@ export function renderOrganization(data: OrganizationPageData): string {
               )}
             </tbody>
           </table>`}
+
+      ${renderFleetPanel(data.organization.id, data.fleet)}
 
       <h2>Savings</h2>
       <p><a href="/app/orgs/${data.organization.id}/invoices">Invoices</a> ·

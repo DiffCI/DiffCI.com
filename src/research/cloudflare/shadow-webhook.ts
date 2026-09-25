@@ -62,7 +62,8 @@ export interface ShadowWebhookDeps {
    * see the else-branch below: an environment without this configured logs that fact loudly rather
    * than silently pretending the data-handling.html promise was kept.
    */
-  eraseInstallation?(installationId: string): void;
+  eraseInstallation?(installationId: string): void | Promise<void>;
+  eraseRepositories?(installationId: string, repositories: string[]): void | Promise<void>;
   log(message: string): void;
 }
 
@@ -103,10 +104,10 @@ export async function handleShadowWebhook(
       const action = String(payload?.action ?? "");
       if (action === "deleted") {
         if (deps.eraseInstallation) {
-          deps.eraseInstallation(installationId);
+          await deps.eraseInstallation(installationId);
           deps.log(`shadow-webhook: App installation ${installationId} deleted - erasure scheduled for every attributed repository (site/data-handling.html: "Uninstalling deletes it")`);
         } else {
-          deps.log(`shadow-webhook: App installation ${installationId} deleted - erasure NOT performed, this environment has no eraseInstallation dependency configured`);
+          return { status: 503, body: { ok: false, error: "erasure_unavailable" } };
         }
         return ok("installation-deleted-erasure-scheduled");
       }
@@ -118,7 +119,7 @@ export async function handleShadowWebhook(
       const repos: string[] = repoRecords.map((r) => String(r.full_name));
       for (const r of repoRecords) {
         const repository = String(r.full_name);
-        await deps.ensureRepository(repository, "typescript", { isPrivate: r.private === true });
+        await deps.ensureRepository(repository, "typescript", { isPrivate: r.private !== false });
         if (installationId) await deps.setInstallationId(repository, installationId);
         deps.scheduleIdentification?.(repository);
       }
@@ -133,12 +134,13 @@ export async function handleShadowWebhook(
       const removed: string[] = (payload?.repositories_removed ?? []).map((r: any) => String(r?.full_name ?? "")).filter(Boolean);
       for (const r of addedRecords) {
         const repository = String(r.full_name);
-        await deps.ensureRepository(repository, "typescript", { isPrivate: r.private === true });
+        await deps.ensureRepository(repository, "typescript", { isPrivate: r.private !== false });
         if (installationId) await deps.setInstallationId(repository, installationId);
         deps.scheduleIdentification?.(repository);
       }
       if (removed.length > 0) {
-        deps.log(`shadow-webhook: repositories removed from installation ${installationId} (state unchanged, human decision per spec): ${removed.join(", ")}`);
+        if (!deps.eraseRepositories) return { status: 503, body: { ok: false, error: "erasure_unavailable" } };
+        await deps.eraseRepositories(installationId, removed.filter((name) => REPOSITORY_PATTERN.test(name)));
       }
       return ok("installation-repositories-updated", { added, removed });
     }
@@ -151,7 +153,7 @@ export async function handleShadowWebhook(
       if (!defaultBranch || ref !== `refs/heads/${defaultBranch}`) {
         return ok("push-non-default-branch-ignored", { repository, ref });
       }
-      await deps.ensureRepository(repository, "typescript", { isPrivate: payload?.repository?.private === true });
+      await deps.ensureRepository(repository, "typescript", { isPrivate: payload?.repository?.private !== false });
       const installationId = String(payload?.installation?.id ?? "");
       if (installationId) await deps.setInstallationId(repository, installationId);
       const after = String(payload?.after ?? "");

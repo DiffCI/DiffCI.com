@@ -9,6 +9,72 @@ import { freshProductDb, makeD1 } from "../helpers/product-db.js";
 import type { RunnerRequest } from "../../src/runner/types.js";
 
 describe("scheduleNext - Part 17 (simple, deterministic, organization-level concurrency)", () => {
+  it("an organization-scoped scheduling request leaves other tenants queued", async () => {
+    const db = freshProductDb(["runner", "execution-queue"]);
+    const product = makeD1ProductStore(makeD1(db));
+    const user = await product.createUser({ email: "scope@example.com" });
+    const a = await product.createOrganization({ name: "A", slug: "a", ownerUserId: user.id });
+    const b = await product.createOrganization({ name: "B", slug: "b", ownerUserId: user.id });
+    const queueStore = makeD1ExecutionQueueStore(makeD1(db));
+    const foreign = await queueStore.enqueue({ organizationId: b.id, jobReference: "foreign", requestedResourceClass: "standard-2", priority: 1 });
+    await queueStore.enqueue({ organizationId: a.id, jobReference: "own", requestedResourceClass: "standard-2" });
+    const results = await scheduleNext({ organizationId: a.id, queueStore, runnerStore: makeD1RunnerStore(makeD1(db)), runnerProvider: createMockRunnerProvider(), getMaxConcurrency: async (id) => { assert.equal(id, a.id); return 1; } }, 1);
+    assert.equal(results.length, 1);
+    assert.equal(results[0]!.organizationId, a.id);
+    assert.equal((await queueStore.getItem(foreign.id))!.status, "queued");
+    db.close();
+  });
+
+  it("late provider completion cannot revive an expired assignment", async () => {
+    const db = freshProductDb(["runner", "execution-queue"]);
+    const product = makeD1ProductStore(makeD1(db));
+    const user = await product.createUser({ email: "lease@example.com" });
+    const org = await product.createOrganization({ name: "Lease", slug: "lease", ownerUserId: user.id });
+    const queueStore = makeD1ExecutionQueueStore(makeD1(db));
+    const item = await queueStore.enqueue({ organizationId: org.id, jobReference: "late", requestedResourceClass: "standard-2" });
+    let deleted = 0;
+    const provider = { ...createMockRunnerProvider(), provisionRunner: async () => {
+      assert.equal(await queueStore.expireAssignments("2100-01-01T00:00:00Z"), 1);
+      return { providerRunnerId: "late", status: "provisioning" as const };
+    }, terminateRunner: async () => { deleted++; } };
+    await scheduleNext({ queueStore, runnerStore: makeD1RunnerStore(makeD1(db)), runnerProvider: provider, getMaxConcurrency: async () => 1 });
+    assert.equal((await queueStore.getItem(item.id))!.status, "timed_out");
+    assert.equal(deleted, 1);
+    db.close();
+  });
+
+  it("overlapping schedulers cannot provision twice or exceed the shared organization cap", async () => {
+    const db = freshProductDb(["runner", "execution-queue"]);
+    const product = makeD1ProductStore(makeD1(db));
+    const user = await product.createUser({ email: "race@example.com" });
+    const org = await product.createOrganization({ name: "Race", slug: "race", ownerUserId: user.id });
+    const queueStore = makeD1ExecutionQueueStore(makeD1(db));
+    for (let i = 0; i < 4; i++) await queueStore.enqueue({ organizationId: org.id, jobReference: String(i), requestedResourceClass: "standard-2" });
+    const deps = { queueStore, runnerStore: makeD1RunnerStore(makeD1(db)), runnerProvider: createMockRunnerProvider(), getMaxConcurrency: async () => 2 };
+    const results = (await Promise.all([scheduleNext(deps), scheduleNext(deps)])).flat();
+    assert.equal(results.filter((r) => r.outcome === "assigned").length, 2);
+    assert.equal(await queueStore.countInFlightForOrganization(org.id), 2);
+    assert.equal(db.prepare("SELECT COUNT(*) n FROM runners").get()!.n, 2);
+    db.close();
+  });
+
+  it("runner creation failure releases the claim and stops at maxAttempts", async () => {
+    const db = freshProductDb(["runner", "execution-queue"]);
+    const product = makeD1ProductStore(makeD1(db));
+    const user = await product.createUser({ email: "failure@example.com" });
+    const org = await product.createOrganization({ name: "Failure", slug: "failure", ownerUserId: user.id });
+    const queueStore = makeD1ExecutionQueueStore(makeD1(db));
+    const item = await queueStore.enqueue({ organizationId: org.id, jobReference: "fail", requestedResourceClass: "standard-2", maxAttempts: 2 });
+    const deps = { queueStore, runnerStore: { ...makeD1RunnerStore(makeD1(db)), createRunner: async () => { throw new Error("database unavailable"); } }, runnerProvider: createMockRunnerProvider(), getMaxConcurrency: async () => 1 };
+    await scheduleNext(deps);
+    assert.equal((await queueStore.getItem(item.id))!.status, "queued");
+    await scheduleNext(deps);
+    assert.equal((await queueStore.getItem(item.id))!.status, "failed");
+    assert.equal((await queueStore.getItem(item.id))!.attempts, 2);
+    assert.deepEqual(await scheduleNext(deps), []);
+    db.close();
+  });
+
   it("assigns a queued item to a freshly-provisioned runner end to end", async () => {
     const db = freshProductDb(["runner", "execution-queue"]);
     const productStore = makeD1ProductStore(makeD1(db));

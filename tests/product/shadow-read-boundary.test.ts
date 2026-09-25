@@ -10,7 +10,7 @@ import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { makeD1ShadowReadBoundary, type D1Binding } from "../../src/product/shadow-read-boundary.js";
+import { makeD1ShadowReadBoundary, makeD1FleetEvidenceReader, type D1Binding } from "../../src/product/shadow-read-boundary.js";
 
 const SCHEMA_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../src/research/cloudflare");
 
@@ -105,6 +105,27 @@ function seedGroundTruth(db: DatabaseSync, overrides: Record<string, unknown> = 
 }
 
 describe("ShadowReadBoundary - Part 20 (read-only, real Stage 2F schema)", () => {
+  it("fleet windows deduplicate verified predictions, exclude contaminated/nonprospective evidence and respect tenant/time boundaries", async () => {
+    const db = freshDb();
+    seedPrediction(db);
+    seedPrediction(db, { logical_delta_key: "other", repository: "other/private" });
+    seedPrediction(db, { logical_delta_key: "end", created_at: "2026-08-23T00:00:00Z" });
+    seedPrediction(db, { logical_delta_key: "previous", created_at: "2026-08-20T00:00:00Z" });
+    seedGroundTruth(db);
+    seedGroundTruth(db, { logical_event_key: "retry", failures_preserved_by_diffci: 0 });
+    seedGroundTruth(db, { logical_event_key: "contaminated", evidence_validity: "CONTAMINATED", relevant_failures_evaluable: 100 });
+    seedGroundTruth(db, { logical_event_key: "retrospective", prediction_preceded_ground_truth: 0, relevant_failures_evaluable: 100 });
+    seedGroundTruth(db, { logical_event_key: "foreign", repository: "other/private", relevant_failures_evaluable: 100 });
+    const reader = makeD1FleetEvidenceReader(makeD1(db));
+    const summary = await reader.summarize("acme/web", "2026-08-21T00:00:00Z", "2026-08-23T00:00:00Z");
+    assert.deepEqual(summary, { predictions: 1, selective: 1, full: 0, verifiedPredictions: 1,
+      evaluableFailures: 2, failuresPreserved: 1, missedFailures: 1, analysisOverheadMs: 100,
+      latestPredictionAt: "2026-08-22T00:00:00Z" });
+    const empty = await reader.summarize("missing/repo", "2026-08-21T00:00:00Z", "2026-08-23T00:00:00Z");
+    assert.equal(empty.predictions, 0);
+    assert.equal(empty.latestPredictionAt, null);
+    db.close();
+  });
   it("listPredictions returns predictions scoped to the requested repository and time window", async () => {
     const db = freshDb();
     seedPrediction(db);

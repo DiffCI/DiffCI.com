@@ -12,6 +12,8 @@ import type { ExecutionQueueStore } from "./store.js";
 import type { QueueItem } from "./types.js";
 
 export interface SchedulerDeps {
+  /** HTTP-triggered scheduling must stay within the authenticated organization. */
+  organizationId?: string;
   queueStore: ExecutionQueueStore;
   runnerStore: RunnerStore;
   runnerProvider: RunnerProvider;
@@ -37,36 +39,40 @@ export interface ScheduleOutcome {
 }
 
 export async function scheduleNext(deps: SchedulerDeps, batchLimit = 50): Promise<ScheduleOutcome[]> {
-  const queued = await deps.queueStore.listQueuedItems(batchLimit);
+  const queued = await deps.queueStore.listQueuedItems(batchLimit, deps.organizationId);
   const outcomes: ScheduleOutcome[] = [];
-  const inFlightThisPass = new Map<string, number>();
 
   for (const item of queued) {
     const maxConcurrency = await deps.getMaxConcurrency(item.organizationId);
     if (maxConcurrency >= 0) {
-      const alreadyInFlight = (await deps.queueStore.countInFlightForOrganization(item.organizationId)) + (inFlightThisPass.get(item.organizationId) ?? 0);
+      const alreadyInFlight = await deps.queueStore.countInFlightForOrganization(item.organizationId);
       if (alreadyInFlight >= maxConcurrency) {
         outcomes.push({ queueItemId: item.id, organizationId: item.organizationId, outcome: "skipped_concurrency_limit" });
         continue;
       }
     }
 
+    if (item.attempts >= item.maxAttempts) {
+      await deps.queueStore.updateStatus(item.id, "failed");
+      outcomes.push({ queueItemId: item.id, organizationId: item.organizationId, outcome: "provisioning_failed", error: "attempts_exhausted" });
+      continue;
+    }
+    if (!await deps.queueStore.claimForAssignment(item.id, maxConcurrency)) {
+      outcomes.push({ queueItemId: item.id, organizationId: item.organizationId, outcome: "skipped_concurrency_limit" });
+      continue;
+    }
     const result = await assignOne(deps, item);
     outcomes.push(result);
-    if (result.outcome === "assigned") {
-      inFlightThisPass.set(item.organizationId, (inFlightThisPass.get(item.organizationId) ?? 0) + 1);
-    }
   }
 
   return outcomes;
 }
 
 async function assignOne(deps: SchedulerDeps, item: QueueItem): Promise<ScheduleOutcome> {
-  await deps.queueStore.updateStatus(item.id, "assigning");
-
-  const runner = await deps.runnerStore.createRunner({ organizationId: item.organizationId, provider: deps.runnerProvider.name, requestedResourceClass: item.requestedResourceClass, repositoryId: item.repositoryId });
-
+  let runner: Awaited<ReturnType<RunnerStore["createRunner"]>> | undefined;
+  let allocatedId: string | undefined;
   try {
+    runner = await deps.runnerStore.createRunner({ organizationId: item.organizationId, provider: deps.runnerProvider.name, requestedResourceClass: item.requestedResourceClass, repositoryId: item.repositoryId });
     await deps.runnerStore.transitionRunnerStatus(runner.id, "provisioning");
     const credential = await deps.mintRunnerCredential?.({ runnerId: runner.id, jobId: item.id, organizationId: item.organizationId });
     const instance = await deps.runnerProvider.provisionRunner({
@@ -75,15 +81,21 @@ async function assignOne(deps: SchedulerDeps, item: QueueItem): Promise<Schedule
       resourceClass: item.requestedResourceClass,
       ...(credential ? { runnerCredential: { runnerId: runner.id, jobId: item.id, token: credential.token, apiBaseUrl: credential.apiBaseUrl }, jobCommand: credential.jobCommand } : {}),
     });
+    allocatedId = instance.providerRunnerId;
     await deps.runnerStore.setProviderRunnerId(runner.id, instance.providerRunnerId);
     await deps.runnerStore.transitionRunnerStatus(runner.id, "ready");
     await deps.runnerStore.transitionRunnerStatus(runner.id, "assigned");
     await deps.runnerStore.assignJob(runner.id, item.id);
-    await deps.queueStore.updateStatus(item.id, "assigned", { assignedRunnerId: runner.id, incrementAttempts: true });
+    if (!await deps.queueStore.completeAssignment(item.id, item.attempts + 1, runner.id)) throw new Error("assignment_expired_or_repository_inactive");
     return { queueItemId: item.id, organizationId: item.organizationId, outcome: "assigned", runnerId: runner.id };
   } catch (err) {
-    await deps.runnerStore.transitionRunnerStatus(runner.id, "failed").catch(() => {}); // best-effort - do not let a status-transition failure mask the original provisioning error
-    await deps.queueStore.updateStatus(item.id, "queued", { incrementAttempts: true }); // return to the queue for a retry, per Part 16's attempts/maxAttempts fields
-    return { queueItemId: item.id, organizationId: item.organizationId, outcome: "provisioning_failed", runnerId: runner.id, error: err instanceof Error ? err.message : String(err) };
+    // A late allocation must not revive a timed-out claim. Keep failed termination discoverable.
+    let terminated = !allocatedId;
+    if (allocatedId) {
+      try { await deps.runnerProvider.terminateRunner(allocatedId); terminated = true; } catch { /* orphan sweep retries */ }
+    }
+    if (runner && terminated) await deps.runnerStore.transitionRunnerStatus(runner.id, "failed").catch(() => {});
+    await deps.queueStore.failAssignment(item.id, item.attempts + 1, terminated);
+    return { queueItemId: item.id, organizationId: item.organizationId, outcome: "provisioning_failed", runnerId: runner?.id, error: err instanceof Error ? err.message : String(err) };
   }
 }

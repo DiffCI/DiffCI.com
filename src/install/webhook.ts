@@ -84,6 +84,8 @@ async function disconnectRepository(
   deps: InstallationWebhookDeps,
   repository: { id: string; organizationId: string; ownerName: string },
 ): Promise<{ observationsDeleted: number; tokensRevoked: number }> {
+  // Fence in-flight ingestion BEFORE erasure. The observation INSERT rechecks this state atomically.
+  await deps.productStore.setRepositoryStatus(repository.id, "removed");
   const tokens = await deps.tokenStore.listForRepository(repository.organizationId, repository.id);
   let tokensRevoked = 0;
   for (const token of tokens) {
@@ -92,7 +94,6 @@ async function disconnectRepository(
   }
 
   const observationsDeleted = await deps.observationStore.deleteForRepository(repository.organizationId, repository.id);
-  await deps.productStore.setRepositoryStatus(repository.id, "removed");
 
   await deps.productStore.recordAuditEvent({
     organizationId: repository.organizationId,

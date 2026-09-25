@@ -61,6 +61,7 @@ export interface ObservationRecord {
  * the thing to change - the reader is usually a developer looking at a failed step in their own CI.
  */
 export type IngestRejection =
+  | "rate_limited"
   | "missing_token"
   | "invalid_token"
   | "revoked_token"

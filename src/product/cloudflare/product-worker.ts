@@ -106,8 +106,16 @@ import {
   listRepositoriesForOrganization,
   type RouteDeps,
 } from "../routes.js";
+import { makeD1FleetEvidenceReader } from "../shadow-read-boundary.js";
+import { getFleetForOrganization } from "../fleet.js";
+import { makeD1EvidencePolicyStore, readEvidencePolicy, updateEvidencePolicy } from "../evidence-policy.js";
+import { readBoundedText, BodyLimitError, takeRateLimit } from "../../hosted/limits.js";
+import { handleDiagnosticRequest, drainDiagnosticQueue } from "../../diagnostics/service.js";
+import { diagnosticPage } from "../../diagnostics/page.js";
 
 export interface Env extends RawLemonSqueezyEnv, RawAuthEnv {
+  DIFFCI_PUBLIC_ANALYZER_ENABLED?: string;
+  ANALYZER_RATE_SECRET?: string;
   PRODUCT_DB: ProductD1Binding;
   RESEARCH_DB: ShadowD1Binding; // read-only use only - see the header comment above
   DIFFCI_PRODUCT_ENABLED?: string;
@@ -236,12 +244,11 @@ function variantToPlanIdMap(variantIdsByPlan: Partial<Record<PlanId, string>>): 
  * Part 9: applied to every state-changing browser route. Only enforced for authenticationMethod ===
  * "session" (real cookie-backed browser sessions - the actual CSRF threat model; a Bearer-token API
  * client isn't vulnerable to CSRF the same way, since the token must be explicitly attached by calling
- * code rather than auto-sent by the browser) and only when CSRF_SECRET is configured at all (if it
- * isn't, there is no session-cookie flow live yet either, matching this build's own scoping).
+ * code rather than auto-sent by the browser). Missing CSRF configuration fails closed.
  */
 async function requireCsrf(request: Request, env: Env, principal: { sessionId?: string; authenticationMethod: string }): Promise<boolean> {
   if (principal.authenticationMethod !== "session" || !principal.sessionId) return true;
-  if (!env.CSRF_SECRET) return true;
+  if (!env.CSRF_SECRET) return false;
   const cookieValue = readCookie(request, CSRF_COOKIE_NAME);
   const headerValue = request.headers.get(CSRF_HEADER_NAME) ?? undefined;
   // Bound to the resolved session id (not the raw token, not just userId) - the same value the CSRF
@@ -257,6 +264,7 @@ async function requireCsrf(request: Request, env: Env, principal: { sessionId?: 
  * client should not retry - src/client/submit.ts only retries 5xx and network failures.
  */
 function ingestRejectionStatus(rejection: IngestRejection): number {
+  if (rejection === "rate_limited") return 429;
   switch (rejection) {
     case "missing_token":
     case "invalid_token":
@@ -301,6 +309,11 @@ export default {
     }
 
     const url = new URL(request.url);
+    if (request.method === "GET" && url.pathname === "/analyzer") return diagnosticPage();
+    if (url.pathname.startsWith("/v1/public-analyzer/")) {
+      return handleDiagnosticRequest(request, { db: env.PRODUCT_DB,
+        enabled: env.DIFFCI_PUBLIC_ANALYZER_ENABLED === "true", rateSecret: env.ANALYZER_RATE_SECRET }, (promise) => ctx.waitUntil(promise));
+    }
 
     // Customer-facing report address: app.diffci.com/report (one path, no aliases). Intentionally public:
     // the research Worker validates the optional private-report token before it renders any data.
@@ -320,6 +333,8 @@ export default {
     const queueStore = makeD1ExecutionQueueStore(env.PRODUCT_DB);
     const shadowBoundary = makeD1ShadowReadBoundary(env.RESEARCH_DB);
     const routeDeps: RouteDeps = { productStore: store, shadowBoundary, runnerStore, queueStore, usageStore };
+    const policies = makeD1EvidencePolicyStore(env.PRODUCT_DB);
+    const fleetDeps = { productStore: store, policies, evidence: makeD1FleetEvidenceReader(env.RESEARCH_DB), shadow: shadowBoundary };
 
     // Phase 03 ingest. `actionRef` is what generated install instructions tell a customer to pin; it is
     // configuration rather than a constant because the published action's SHA changes with every
@@ -511,7 +526,7 @@ export default {
         );
       }
 
-      const [repositories, tokens, observations, dashboard] = await Promise.all([
+      const [repositories, tokens, observations, dashboard, fleet, policyDetails] = await Promise.all([
         listRepositoriesForOrganization(routeDeps, principal.userId, organizationId),
         listIngestTokensForOrganization(ingestDeps, principal.userId, organizationId),
         listObservationsForOrganization(ingestDeps, principal.userId, organizationId, { limit: 10 }),
@@ -519,6 +534,8 @@ export default {
         // verified member - the only place a private repository's report token is ever shown. A research
         // database problem must never take the console page down: links are simply absent.
         getDashboardForOrganization(routeDeps, principal.userId, organizationId).catch(() => ({ ok: false as const, error: "not_found" as const })),
+        getFleetForOrganization(fleetDeps, principal.userId, organizationId).catch(() => null),
+        readEvidencePolicy(store, policies, principal.userId, organizationId).catch(() => null),
       ]);
       return htmlResponse(
         renderOrganization({
@@ -530,6 +547,7 @@ export default {
           recent: observations.ok ? observations.data.observations : [],
           installUrl: env.GITHUB_APP_SLUG ? `/app/install?organizationId=${encodeURIComponent(organizationId)}` : undefined,
           reports: dashboard.ok ? dashboard.data.reports : [],
+          fleet: fleet?.ok && policyDetails?.ok ? { report: fleet.data, canEditPolicy: policyDetails.data.canEdit, history: policyDetails.data.history } : undefined,
         }),
       );
     }
@@ -646,7 +664,9 @@ export default {
 
     if (request.method === "POST" && (url.pathname === "/v1/webhooks/github" || url.pathname === "/v1/webhooks/github/installation")) {
       if (!env.GITHUB_APP_WEBHOOK_SECRET) return json({ ok: false, error: "webhooks are not configured in this environment" }, 503);
-      const rawBody = await request.text();
+      let rawBody: string;
+      try { rawBody = await readBoundedText(request, 1024 * 1024); }
+      catch (error) { return json({ error: "invalid_webhook_body" }, error instanceof BodyLimitError ? 413 : 400); }
       const result = await handleInstallationWebhook(
         {
           rawBody,
@@ -663,6 +683,17 @@ export default {
           pendingStore: pendingInstallationStore,
           deliveryStore: webhookDeliveryStore,
           webhookSecret: env.GITHUB_APP_WEBHOOK_SECRET,
+          recordVerifiedDelivery: async (delivery) => {
+            const payload = JSON.parse(delivery.rawBody) as { action?: string; repositories_removed?: unknown[] };
+            const removal = (delivery.event === "installation" && payload.action === "deleted") ||
+              (delivery.event === "installation_repositories" && !!payload.repositories_removed?.length);
+            if (!removal || !env.RESEARCH_WORKER) return;
+            const response = await env.RESEARCH_WORKER.fetch(new Request("https://research.internal/v1/shadow/webhook", {
+              method: "POST", headers: { "Content-Type": "application/json", "X-GitHub-Event": delivery.event!,
+                "X-Hub-Signature-256": delivery.signature!, "X-GitHub-Delivery": delivery.deliveryId ?? "" }, body: delivery.rawBody,
+            }));
+            if (!response.ok) throw new Error("shadow_erasure_failed");
+          },
           connectDeps:
             env.GITHUB_APP_ID && env.GITHUB_APP_PRIVATE_KEY
               ? { credentials: { appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY } }
@@ -854,14 +885,18 @@ export default {
         // Refused on the declared length so an oversized body is never read into memory at all.
         return json({ ok: false, rejection: "payload_too_large", error: `Report exceeds the ${MAX_REPORT_BYTES}-byte limit.` }, 413);
       }
-      const body = await request.text();
+      let body: string;
+      try { body = await readBoundedText(request, MAX_REPORT_BYTES); }
+      catch (error) { return json({ ok: false, rejection: error instanceof BodyLimitError ? "payload_too_large" : "malformed_payload" }, error instanceof BodyLimitError ? 413 : 400); }
       const result = await ingestObservation(
         { authorization: request.headers.get("authorization"), body },
-        { tokenStore: ingestTokenStore, observationStore, productStore: store, usageStore },
+        { tokenStore: ingestTokenStore, observationStore, productStore: store, usageStore,
+          allowRequest: (organizationId, repositoryId) => takeRateLimit(env.PRODUCT_DB, `ingest:${organizationId}:${repositoryId}`, 120, 60) },
       );
       if (!result.ok) {
         logEvent("ingest.rejected", { rejection: result.rejection });
-        return json({ ok: false, rejection: result.rejection, error: result.message }, ingestRejectionStatus(result.rejection));
+        return json({ ok: false, rejection: result.rejection, error: result.message }, ingestRejectionStatus(result.rejection),
+          result.rejection === "rate_limited" ? new Headers({ "Retry-After": "60" }) : undefined);
       }
       logEvent("ingest.accepted", { duplicate: result.duplicate, status: result.record.status, organizationId: result.record.organizationId });
       return json(
@@ -892,6 +927,32 @@ export default {
       const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
       if (!principal) return json({ ok: false, error: "unauthorized" }, 401);
       const userId = principal.userId;
+
+      if (request.method === "GET" && subPath === "/fleet") {
+        try {
+          const outcome = await getFleetForOrganization(fleetDeps, userId, organizationId);
+          return outcome.ok ? json({ ok: true, fleet: outcome.data }) : json({ ok: false, error: outcome.error }, 403);
+        } catch { return json({ ok: false, error: "evidence_unavailable" }, 503); }
+      }
+      if (request.method === "GET" && subPath === "/evidence-policy") {
+        try {
+          const outcome = await readEvidencePolicy(store, policies, userId, organizationId);
+          return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, 403);
+        } catch { return json({ ok: false, error: "policy_unavailable" }, 503); }
+      }
+      if (request.method === "PUT" && subPath === "/evidence-policy") {
+        if (principal.authenticationMethod === "session" && !env.CSRF_SECRET) return json({ ok: false, error: "csrf_unconfigured" }, 503);
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const raw = await request.text();
+        if (new TextEncoder().encode(raw).length > 4096) return json({ ok: false, error: "invalid_policy" }, 413);
+        let body: unknown;
+        try { body = JSON.parse(raw); } catch { return json({ ok: false, error: "invalid_policy" }, 400); }
+        try {
+          const outcome = await updateEvidencePolicy(store, policies, userId, organizationId, body);
+          return outcome.ok ? json({ ok: true, current: outcome.data }) : json({ ok: false, error: outcome.error },
+            outcome.error === "revision_conflict" ? 409 : outcome.error === "invalid_policy" ? 400 : 403);
+        } catch { return json({ ok: false, error: "policy_unavailable" }, 503); }
+      }
 
       if (request.method === "GET" && subPath === "") {
         const outcome = await getOrganizationDetails(routeDeps, userId, organizationId);
@@ -966,12 +1027,15 @@ export default {
             queueStore,
             runnerStore,
             runnerProvider: provider,
+            organizationId,
             getMaxConcurrency: async () => detailsOutcome.data.entitlements.maxConcurrency,
             mintRunnerCredential: async ({ runnerId, jobId, organizationId: orgId }) => {
+              const job = await queueStore.getItemForOrganization(jobId, orgId);
+              if (!job || orgId !== organizationId) throw new Error("job_organization_mismatch");
               const { raw } = await tokenStore.issueToken({ runnerId, jobId, organizationId: orgId, ttlMs: 10 * 60_000 });
               const tags = buildRunnerResourceTags({ environment: env.DIFFCI_ENVIRONMENT_LABEL ?? "staging", runnerId, organizationId: orgId, jobId, createdAt: new Date().toISOString() });
               await store.recordAuditEvent({ organizationId: orgId, actorUserId: userId, action: "runner.provisioned", targetType: "runner", targetId: runnerId, metadata: { tags } });
-              return { token: raw, apiBaseUrl: env.DIFFCI_API_ORIGIN!, jobCommand: item.jobReference };
+              return { token: raw, apiBaseUrl: env.DIFFCI_API_ORIGIN!, jobCommand: job.jobReference };
             },
           },
           // batchLimit high enough that THIS request's own newly-enqueued item is never starved by an
@@ -1166,13 +1230,22 @@ export default {
 
   // Part 15/22: orphan-runner cleanup sweep, wired to wrangler.product.jsonc's cron trigger.
   async scheduled(_event: unknown, env: Env): Promise<void> {
+    try {
+      await drainDiagnosticQueue({ db: env.PRODUCT_DB, enabled: env.DIFFCI_PUBLIC_ANALYZER_ENABLED === "true" });
+    } catch { logEvent("public_diagnostic.sweep_failed", {}); }
+    try {
+      const expired = await makeD1ExecutionQueueStore(env.PRODUCT_DB).expireAssignments(new Date(Date.now() - 15 * 60 * 1000).toISOString());
+      if (expired) logEvent("queue.assignments_expired", { count: expired });
+    } catch { logEvent("queue.expiry_failed", {}); }
     const runnerStore = makeD1RunnerStore(env.PRODUCT_DB);
     const provider = runnerProviderFromEnv(env);
+    try {
     const results = await runOrphanCleanup(runnerStore, provider);
     for (const r of results) {
       logEvent("runner.orphan_cleanup", { runnerId: r.runnerId, previousStatus: r.previousStatus, terminated: r.terminated, error: r.error });
     }
     logEvent("orphan_cleanup.sweep_completed", { count: results.length, terminated: results.filter((r) => r.terminated).length, failed: results.filter((r) => !r.terminated).length });
+    } catch { logEvent("orphan_cleanup.sweep_failed", {}); }
 
     // 2026-08-23: real duration-observation capture, same cron trigger, own bounded batch. Reads Stage 2F
     // predictions ONLY through the existing read-only ShadowReadBoundary (Part 20 - no new SQL against

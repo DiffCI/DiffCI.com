@@ -31,6 +31,7 @@ export type ErasureStore = Pick<
   | "collectEvidenceKeys"
   | "eraseAnalysisRecordsForRepository"
   | "markRepositoryRemoved"
+  | "setRepositoryStateWithNote"
   | "listExpiredEvidenceKeys"
   | "eraseExpiredAnalysisRecords"
 >;
@@ -55,14 +56,17 @@ export interface InstallationEraseResult {
  * that GitHub will (correctly) refuse, but the row would misleadingly still look "installed" until
  * that failure surfaced elsewhere.
  */
-export async function eraseInstallation(store: ErasureStore, bucket: ErasureBucket, installationId: string, erasedAtIso: string): Promise<InstallationEraseResult> {
-  const repositories = await store.listRepositoriesByInstallation(installationId);
+export async function eraseInstallation(store: ErasureStore, bucket: ErasureBucket, installationId: string, erasedAtIso: string, onlyRepositories?: readonly string[]): Promise<InstallationEraseResult> {
+  const repositories = (await store.listRepositoriesByInstallation(installationId)).filter((name) => !onlyRepositories || onlyRepositories.includes(name));
   let predictionsDeleted = 0;
   let groundTruthDeleted = 0;
   let economicsDeleted = 0;
   let evidenceObjectsDeleted = 0;
 
   for (const repository of repositories) {
+    // Revoke access immediately but retain installation attribution until deletion completes,
+    // so a failed delivery can retry the same repository instead of losing its cleanup pointer.
+    await store.setRepositoryStateWithNote(repository, "REMOVED", "erasure_pending");
     const keys = await store.collectEvidenceKeys(repository);
     evidenceObjectsDeleted += await bucket.deleteMany(keys);
     const counts = await store.eraseAnalysisRecordsForRepository(repository);

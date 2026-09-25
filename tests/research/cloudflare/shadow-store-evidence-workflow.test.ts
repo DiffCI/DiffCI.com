@@ -73,6 +73,21 @@ function groundTruth(overrides: Partial<RecordGroundTruthInput> & { logicalEvent
 }
 
 describe("shadow-store: evidence workflow identity", () => {
+  it("unknown privacy denies token access and removal fences late writes and state changes", async () => {
+    const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION, AUTO_MIGRATION]);
+    const store = makeD1ShadowStore(makeD1(db));
+    await store.ensureRepository("acme/web", "github-app-webhook");
+    assert.deepEqual(await store.getReportAccess("acme/web"), { isPrivate: true, token: undefined });
+    await store.setRepositoryStateWithNote("acme/web", "REMOVED", "erasure_pending");
+    assert.equal((await store.recordPrediction(prediction({ logicalDeltaKey: "late" }), "late-key")).inserted, false);
+    assert.equal((await store.recordGroundTruth(groundTruth({ logicalEventKey: "late-gt", logicalDeltaKey: "late" }), "late-gt-key")).inserted, false);
+    await store.setRepositoryState("acme/web", "SHADOW_ACTIVE");
+    await store.setRepositoryStateWithNote("acme/web", "VALIDATING", undefined);
+    assert.equal((await store.getRepositoryPollState("acme/web"))!.state, "REMOVED");
+    assert.equal(await store.getReportAccess("acme/web"), undefined);
+    db.close();
+  });
+
   it("evidence workflow paths are unconfigured until explicitly set, then round-trip", async () => {
     const db = dbWith([...MIGRATIONS_BEFORE_IDENTITY, IDENTITY_MIGRATION, AUTO_MIGRATION]);
     const store = makeD1ShadowStore(makeD1(db));
