@@ -44,7 +44,7 @@ describe("product Worker opt-in CLI telemetry", () => {
   });
 
   it("validates the privacy-minimised payload before accepting it", async () => {
-    const response = await post({ schema: "wrong", command: "check", outcome: "observed", version: "0.2.7" }, env("phc_test"));
+    const response = await post({ schema: "wrong", command: "check", outcome: "observed", version: "0.2.8" }, env("phc_test"));
     assert.equal(response.status, 400);
   });
 
@@ -56,7 +56,7 @@ describe("product Worker opt-in CLI telemetry", () => {
     };
     const waits: Promise<unknown>[] = [];
     const response = await post(
-      { schema: "diffci.usage.v1", command: "check", outcome: "observed", version: "0.2.7" },
+      { schema: "diffci.usage.v1", command: "check", outcome: "observed", version: "0.2.8" },
       env("phc_test"),
       waits,
     );
@@ -68,7 +68,7 @@ describe("product Worker opt-in CLI telemetry", () => {
       distinct_id: "diffci-cli-opt-in",
       command: "check",
       outcome: "observed",
-      version: "0.2.7",
+      version: "0.2.8",
       $process_person_profile: false,
       $geoip_disable: true,
     });
@@ -77,7 +77,7 @@ describe("product Worker opt-in CLI telemetry", () => {
   it("surfaces a rejected PostHog capture to the Worker's background task", async () => {
     globalThis.fetch = async () => new Response(null, { status: 401 });
     await assert.rejects(
-      reportOptInCliUsage({ POSTHOG_API_KEY: "wrong" }, "observe", "error", "0.2.7"),
+      reportOptInCliUsage({ POSTHOG_API_KEY: "wrong" }, "observe", "error", "0.2.8"),
       /PostHog capture failed with HTTP 401/,
     );
   });

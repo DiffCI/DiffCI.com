@@ -101,6 +101,7 @@
     "site:deploy": "wrangler deploy --config wrangler.site.jsonc",
     "site:sitemap": "node scripts/generate-site-sitemap.mjs",
     "site:indexnow": "node scripts/submit-indexnow.mjs",
+    "release:sync": "node scripts/sync-public-metadata.mjs",
     "study:render": "tsx scripts/render-open-study.ts",
     "validation:deploy": "wrangler deploy --config wrangler.validation-env.jsonc",
     "validation:pack": "tsx scripts/diffci-validation-cli.ts pack",

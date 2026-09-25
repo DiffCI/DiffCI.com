@@ -68,10 +68,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@e852523fade14bf5e0457a6331e97c8a76eedc2b
+      - uses: DiffCI/DiffCI.com@82c6e024e62d854fb3094949a8009b63eeda31eb
 ```
 
-The example pins release `v0.2.7` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
+The example pins release `v0.2.8` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
@@ -129,3 +129,16 @@ Tidelift belongs to the open-source package channel. It can provide maintenance,
 supply-chain assurance for the npm package without requiring a hosted DiffCI account. It should support
 the OSS core rather than define a separate feature tier. The readiness checklist lives in
 [`tidelift-package-support.md`](tidelift-package-support.md).
+
+## Release metadata invariant
+
+`release-manifest.json` is the source of truth for the npm, MCP, directory, workflow, Action, website,
+and documentation versions. Prepare a future release with:
+
+```bash
+npm run release:sync -- 0.2.9 <qualified-40-character-action-sha>
+npm run check:public-metadata
+```
+
+The sync command updates every managed surface. The metadata check runs inside `npm run check` and the
+tag-release workflow, so version or immutable Action-pin drift blocks both pull requests and releases.

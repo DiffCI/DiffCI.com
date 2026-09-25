@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@e852523fade14bf5e0457a6331e97c8a76eedc2b
+      - uses: DiffCI/DiffCI.com@82c6e024e62d854fb3094949a8009b63eeda31eb
 ```
 
 ## Outreach Copy

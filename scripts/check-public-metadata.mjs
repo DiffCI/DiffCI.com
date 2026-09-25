@@ -10,6 +10,7 @@ const manifest = json("release-manifest.json");
 const pkg = json("package.json");
 const lock = json("package-lock.json");
 const server = json("server.json");
+const smithery = json("packaging/smithery/manifest.json");
 const action = read("action.yml");
 const failures = [];
 
@@ -25,6 +26,7 @@ equal("package name", pkg.name, manifest.packageName);
 equal("package description", pkg.description, manifest.packageDescription);
 equal("package homepage", pkg.homepage, `${manifest.homepage}/`);
 equal("package version", pkg.version, manifest.packageVersion);
+equal("package and Action release versions", manifest.actionVersion, `v${manifest.packageVersion}`);
 equal("package license", pkg.license, manifest.license);
 equal("package Node requirement", pkg.engines?.node, manifest.nodeRequirement);
 equal("lockfile root version", lock.version, manifest.packageVersion);
@@ -32,8 +34,15 @@ equal("lockfile package version", lock.packages?.[""]?.version, manifest.package
 equal("MCP server version", server.version, manifest.packageVersion);
 equal("MCP npm package", server.packages?.[0]?.identifier, manifest.packageName);
 equal("MCP npm version", server.packages?.[0]?.version, manifest.packageVersion);
+equal("Smithery package version", smithery.version, manifest.packageVersion);
 contains("Action name", action, `name: ${manifest.actionName}`);
 contains("Action description", action, `description: ${manifest.actionDescription}`);
+equal("release sync command", pkg.scripts?.["release:sync"], "node scripts/sync-public-metadata.mjs");
+const workflowPackageVersions = [...read(".github/workflows/diffci.yml").matchAll(/@diffci\.com\/diffci@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)/g)].map((match) => match[1]);
+if (workflowPackageVersions.length === 0) failures.push("DiffCI workflow: no exact npm version found");
+for (const version of workflowPackageVersions) equal("DiffCI workflow npm version", version, manifest.packageVersion);
+contains("adoption metrics npm latest", read("docs/adoption-metrics.md"), `| \`${manifest.packageVersion}\` |`);
+contains("homepage software version", read("site/index.html"), `"softwareVersion": "${manifest.packageVersion}"`);
 
 const publicDocs = [
   "README.md",
@@ -52,7 +61,9 @@ for (const path of publicDocs) {
 }
 
 for (const path of ["README.md", "site/index.html", "docs/context7/github-action.md", "docs/distribution.md", "docs/agent-adoption-kit.md"]) {
-  contains(`${path} Action release label`, read(path), manifest.actionVersion);
+  const labels = [...read(path).matchAll(/\bv\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?\b/g)].map((match) => match[0]);
+  if (labels.length === 0) failures.push(`${path}: no Action release label found`);
+  for (const label of labels) equal(`${path} Action release label`, label, manifest.actionVersion);
 }
 contains("README Marketplace link", read("README.md"), manifest.marketplaceUrl);
 contains("README npm command", read("README.md"), `npx "${manifest.packageName}@latest" check`);
