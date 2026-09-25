@@ -1,0 +1,62 @@
+# DiffCI observation. One job that only looks: it runs no tests, skips none, and nothing
+# depends on it. Generated for DiffCI/DiffCI.com.
+name: DiffCI (observation only)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diffci:
+    name: DiffCI observation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Keeps a DiffCI failure out of this workflow's own conclusion, which is what a required status
+    # check and a merge queue read.
+    continue-on-error: true
+    permissions:
+      contents: read
+    env:
+      DIFFCI_API_URL: https://diffci-product.damp-waterfall-0cd8.workers.dev/v1/ingest/observations
+      DIFFCI_TOKEN: ${{ secrets.DIFFCI_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # DiffCI compares two commits; the default shallow checkout does not contain the base one.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Installs the pinned agent OUTSIDE the checkout, so nothing appears inside the repository
+      # being observed. The version is exact: a range would resolve to whatever is newest when this
+      # runs, letting the code executing here change without this file changing.
+      - name: Install DiffCI
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${RUNNER_TEMP}/diffci-package"
+          trap 'rm -f "${RUNNER_TEMP}/.npmrc"' EXIT
+          {
+            echo "@diffci.com:registry=https://registry.npmjs.org/"
+
+          } > "${RUNNER_TEMP}/.npmrc"
+          npm pack --userconfig "${RUNNER_TEMP}/.npmrc" --ignore-scripts \
+            --pack-destination "${RUNNER_TEMP}/diffci-package" @diffci.com/diffci@0.2.11
+          node -e 'const fs = require("node:fs"), crypto = require("node:crypto"); const [file, expected] = process.argv.slice(1); const algorithm = expected.split("-")[0]; const actual = algorithm + "-" + crypto.createHash(algorithm).update(fs.readFileSync(file)).digest("base64"); if (actual !== expected) throw new Error("DiffCI package integrity mismatch");' \
+            "${RUNNER_TEMP}/diffci-package/diffci.com-diffci-0.2.11.tgz" 'sha512-c6mWfEU7P6k+nroa0LO7/NJyR/Ubzoa36mh3XRoWSOzkZwYIcGC+2QfbM+gHzCWsAqWew4sM0KT3XleSrjqosg=='
+          npm install --userconfig "${RUNNER_TEMP}/.npmrc" --prefix "${RUNNER_TEMP}/diffci" \
+            --ignore-scripts --no-audit --no-fund "${RUNNER_TEMP}/diffci-package/diffci.com-diffci-0.2.11.tgz"
+
+
+      # A block scalar, not an inline value. An inline `run:` beginning with a quote is parsed by YAML
+      # as a quoted scalar with trailing content after the closing quote, which makes the whole
+      # workflow file unparseable - and an unparseable workflow is one DiffCI's own guard cannot check.
+      - name: Run DiffCI
+        shell: bash
+        run: |
+          "${RUNNER_TEMP}/diffci/node_modules/.bin/diffci" observe
