@@ -15,10 +15,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@82c6e024e62d854fb3094949a8009b63eeda31eb
+      - uses: DiffCI/DiffCI.com@5458e133a549b24f7224b1364811ef487fa4e153
 ```
 
-This example pins the Action at the verified `v0.2.8` feature commit. Verify the installed workflow locally:
+This example pins the Action at the verified `v0.2.9` feature commit. Verify the installed workflow locally:
 
 ```sh
 npx "@diffci.com/diffci@latest" verify-workflow

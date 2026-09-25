@@ -15,4 +15,4 @@ jobs:
           node-version: 22
       # Package-distribution canary. The local Action is dogfooded separately in
       # diffci-observe.yml; this command stays analysis-only to avoid duplicating CI tests.
-      - run: npx --yes --package "@diffci.com/diffci@0.2.8" diffci observe --no-send
+      - run: npx --yes --package "@diffci.com/diffci@0.2.9" diffci observe --no-send
