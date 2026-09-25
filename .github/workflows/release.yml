@@ -57,4 +57,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - name: Verify published metadata
         if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')
-        run: npm run check:public-metadata -- --remote
+        run: |
+          for attempt in $(seq 1 18); do
+            if npm run check:public-metadata -- --remote; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 18 ]; then
+              exit 1
+            fi
+            echo "Published metadata has not propagated yet; retrying in 10 seconds ($attempt/18)."
+            sleep 10
+          done
