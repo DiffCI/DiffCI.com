@@ -35,11 +35,13 @@ describe("agent-facing CLI commands", () => {
       assert.match(result.stdout, /wrote CLAUDE\.md/);
       assert.match(result.stdout, /wrote \.github\/workflows\/diffci\.yml/);
       assert.equal(readFileSync(join(dir, "AGENTS.md"), "utf8"), "# Existing agent policy\n");
-      assert.match(readFileSync(join(dir, "CLAUDE.md"), "utf8"), /npx @diffci\.com\/diffci@latest check/);
+      assert.match(readFileSync(join(dir, "CLAUDE.md"), "utf8"), /npx "@diffci\.com\/diffci@latest" check/);
       assert.match(readFileSync(join(dir, ".cursor", "rules", "diffci.mdc"), "utf8"), /alwaysApply: true/);
       assert.match(readFileSync(join(dir, ".github", "copilot-instructions.md"), "utf8"), /Repository CI\/CD Validation/);
-      assert.match(readFileSync(join(dir, "diffci.config.json"), "utf8"), /"sendReports": false/);
-      assert.match(readFileSync(join(dir, ".github", "workflows", "diffci.yml"), "utf8"), new RegExp(`npx @diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")} observe --no-send`));
+      const config = JSON.parse(readFileSync(join(dir, "diffci.config.json"), "utf8")) as { agentDefaultCommand?: string; sendReports?: boolean };
+      assert.equal(config.agentDefaultCommand, 'npx "@diffci.com/diffci@latest" check');
+      assert.equal(config.sendReports, false);
+      assert.match(readFileSync(join(dir, ".github", "workflows", "diffci.yml"), "utf8"), new RegExp(`npx "@diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")}" observe --no-send`));
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

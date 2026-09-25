@@ -7,7 +7,7 @@
 #
 # Verify those properties against your own file rather than taking them on trust:
 #
-#     npx @diffci.com/diffci@latest verify-workflow --repo /path/to/your/repository
+#     npx "@diffci.com/diffci@latest" verify-workflow --repo /path/to/your/repository
 #
 # It exits non-zero, with the specific job named, if anything here could affect the rest of your CI.
 name: DiffCI (observation only)

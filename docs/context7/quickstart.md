@@ -5,7 +5,7 @@ DiffCI analyzes a Git commit range and proposes a test selection with explicit f
 ## Analyze and compare test runtime
 
 ```sh
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 On Windows PowerShell:
@@ -19,7 +19,7 @@ npx '@diffci.com/diffci@latest' check
 ## Analyze without executing tests
 
 ```sh
-npx @diffci.com/diffci@latest observe --no-send
+npx "@diffci.com/diffci@latest" observe --no-send
 ```
 
 `observe --no-send` reports the selection, fallback reasons and proposed command without executing tests or sending a report. It cannot establish runtime savings.

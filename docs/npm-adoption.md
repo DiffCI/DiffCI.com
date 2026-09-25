@@ -12,7 +12,7 @@ Yarn, or Bun, adds the current DiffCI version as an exact development dependency
 corresponding lockfile:
 
 ```bash
-npx @diffci.com/diffci@latest init --install
+npx "@diffci.com/diffci@latest" init --install
 ```
 
 Add `--workflow` to also create the separate, non-blocking GitHub Actions observation job. Installation
@@ -21,8 +21,8 @@ is explicit: plain `init` never changes `package.json` or a lockfile.
 Use the npm CLI when someone wants to try DiffCI locally or inside an existing CI step:
 
 ```bash
-npx @diffci.com/diffci@latest observe
-npx @diffci.com/diffci@latest verify-workflow
+npx "@diffci.com/diffci@latest" observe
+npx "@diffci.com/diffci@latest" verify-workflow
 ```
 
 Use the GitHub Action when someone wants the normal non-blocking CI installation:
@@ -47,7 +47,7 @@ Short version:
 
 > I built DiffCI as an observation-only CI dependency. It looks at a PR diff and reports which tests it
 > would have selected, but it never skips, cancels, or changes CI. You can run it with
-> `npx @diffci.com/diffci@latest observe` or as a non-blocking GitHub Action. I am looking for OSS
+> `npx "@diffci.com/diffci@latest" observe` or as a non-blocking GitHub Action. I am looking for OSS
 > repos willing to run it in shadow mode for a week.
 
 Issue/PR version:
@@ -71,7 +71,7 @@ Use this when a maintainer asks whether selecting fewer tests would actually mak
 This is a paired local measurement, not a production-savings claim.
 
 For one command that infers the full test command and prints the measured percentage when both runs
-pass, use `npx @diffci.com/diffci@latest check` from the repository root. For Maven, `check` reads
+pass, use `npx "@diffci.com/diffci@latest" check` from the repository root. For Maven, `check` reads
 the goal and profiles from `diffci.json` when present; otherwise it uses `mvn test` and says that
 the default may differ from CI. Run it on the intended CI runner: timings from another machine are
 not CI savings. A full-validation fallback runs the full command once and reports 0% reduction.
@@ -79,13 +79,13 @@ not CI savings. A full-validation fallback runs the full command once and report
 Step 1: create an observation report without sending it anywhere.
 
 ```bash
-npx @diffci.com/diffci@latest observe --no-send --out ../diffci-output/diffci-observation.json
+npx "@diffci.com/diffci@latest" observe --no-send --out ../diffci-output/diffci-observation.json
 ```
 
 Step 2: run the paired pilot.
 
 ```bash
-npx @diffci.com/diffci@latest verify-savings \
+npx "@diffci.com/diffci@latest" verify-savings \
   --label owner/repo \
   --repo /path/to/their/repo \
   --full "npm test" \
@@ -129,7 +129,7 @@ If the proposed command needs adjustment for the repository's runner, pass the s
 manually:
 
 ```bash
-npx @diffci.com/diffci@latest verify-savings \
+npx "@diffci.com/diffci@latest" verify-savings \
   --label owner/repo \
   --repo /path/to/their/repo \
   --full "pnpm test" \

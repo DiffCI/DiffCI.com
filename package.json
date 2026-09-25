@@ -21,6 +21,7 @@
     "type": "git",
     "url": "git+https://github.com/DiffCI/DiffCI.com.git"
   },
+  "homepage": "https://diffci.com/",
   "private": false,
   "type": "module",
   "engines": {
@@ -98,6 +99,7 @@
     "product:migrate": "tsx scripts/migrate-product-db.ts",
     "site:dev": "wrangler dev --config wrangler.site.jsonc --port 8788",
     "site:deploy": "wrangler deploy --config wrangler.site.jsonc",
+    "site:indexnow": "node scripts/submit-indexnow.mjs",
     "study:render": "tsx scripts/render-open-study.ts",
     "validation:deploy": "wrangler deploy --config wrangler.validation-env.jsonc",
     "validation:pack": "tsx scripts/diffci-validation-cli.ts pack",

@@ -112,7 +112,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npx @diffci.com/diffci@${version} observe --no-send
+      - run: npx "@diffci.com/diffci@${version}" observe --no-send
 `,
   };
 }

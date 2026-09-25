@@ -7,12 +7,14 @@
 <script>(function(){var d=document.documentElement,k='diffci-theme';function set(t){d.setAttribute('data-theme',t);var b=document.querySelectorAll('.theme-toggle');for(var i=0;i<b.length;i++)b[i].setAttribute('aria-label',t==='light'?'Switch to dark theme':'Switch to light theme');}try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')set(s);}catch(e){}document.addEventListener('DOMContentLoaded',function(){set(d.getAttribute('data-theme')==='light'?'light':'dark');});document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var n=d.getAttribute('data-theme')==='light'?'dark':'light';set(n);try{localStorage.setItem(k,n);}catch(e){}});})();</script>
 <title>You're set up — DiffCI</title>
 <meta name="description" content="What happens now that you've installed the read-only DiffCI Shadow App, and exactly where your code goes.">
+<meta name="robots" content="noindex,follow">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DiffCI">
 <meta property="og:title" content="You're set up — DiffCI">
 <meta property="og:description" content="What happens now that you've installed the read-only DiffCI Shadow App, and exactly where your code goes.">
 <meta property="og:url" content="https://diffci.com/welcome">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://diffci.com/welcome">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">

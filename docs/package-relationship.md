@@ -4,7 +4,7 @@
 
 | If you want to... | Start here |
 | --- | --- |
-| See what tests DiffCI would select in an existing checkout | `npx @diffci.com/diffci@latest observe --no-send` |
+| See what tests DiffCI would select in an existing checkout | `npx "@diffci.com/diffci@latest" observe --no-send` |
 | Observe pull requests without changing required CI jobs | The dedicated GitHub Action job in [the README](../README.md#observe-in-github-actions) |
 | Measure a full and selected test command locally | The opt-in [`pilot` or `verify-savings` workflow](npm-adoption.md#self-serve-runtime-pilot) |
 | Study or improve the engine | [DiffCI/core](https://github.com/DiffCI/core) on GitHub |

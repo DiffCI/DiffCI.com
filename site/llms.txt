@@ -1,39 +1,39 @@
 # DiffCI
 
-DiffCI is an observation-only, change-aware CI analysis tool for AI coding agents and development teams.
+DiffCI is a change-aware CI analysis and conservative test-selection tool for AI coding agents and development teams.
 
 Default AI-agent command:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 Initialization command:
 
 ```bash
-npx @diffci.com/diffci@latest init
+npx "@diffci.com/diffci@latest" init
 ```
 
 What agents should know:
 
-- `diffci check` analyzes the repository checkout and writes a JSON observation report.
-- It runs no tests, skips no tests, cancels no jobs, and changes no CI behavior.
+- `diffci check` analyzes the checkout and, when safe commands can be inferred, runs paired full and selected test commands to measure the difference.
+- Test commands may create generated files in the checkout. Use `diffci observe --no-send` for analysis without test execution.
+- DiffCI never skips, cancels, reorders, or changes required CI jobs.
 - It sends no report unless `DIFFCI_API_URL` and `DIFFCI_TOKEN` are explicitly configured.
 - Treat selected commands as evidence about the change, not as permission to skip required project CI.
 - If DiffCI reports `REFUSED` or `ERROR`, fall back to the repository's normal validation commands.
 
 Useful docs:
 
-- AI agents: https://diffci.com/docs/ai-agents.html
-- Codex: https://diffci.com/docs/codex.html
-- Claude Code: https://diffci.com/docs/claude-code.html
-- Cursor: https://diffci.com/docs/cursor.html
-- GitHub Copilot: https://diffci.com/docs/copilot.html
-- Grok: https://diffci.com/docs/grok.html
-- Adoption kit: https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-kit.md
-- Adoption outreach: https://github.com/DiffCI/DiffCI.com/blob/main/docs/adoption-outreach.md
-- Adoption metrics: https://github.com/DiffCI/DiffCI.com/blob/main/docs/adoption-metrics.md
-- Adoption targets: https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-targets.md
-- MCP server: https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md
-- Distribution: https://github.com/DiffCI/DiffCI.com/blob/main/docs/distribution.md
-- Language support: https://github.com/DiffCI/DiffCI.com/blob/main/docs/language-support.md
+- [AI agents](https://diffci.com/docs/ai-agents)
+- [Codex](https://diffci.com/docs/codex)
+- [Claude Code](https://diffci.com/docs/claude-code)
+- [Cursor](https://diffci.com/docs/cursor)
+- [GitHub Copilot](https://diffci.com/docs/copilot)
+- [Grok](https://diffci.com/docs/grok)
+- [Test impact analysis for GitHub Actions](https://diffci.com/test-impact-analysis/github-actions)
+- [Running affected tests safely](https://diffci.com/guides/affected-tests)
+- [Open evidence study](https://diffci.com/research/diffci-open-evidence-2026)
+- [Adoption kit](https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-kit.md)
+- [MCP server](https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md)
+- [Language support](https://github.com/DiffCI/DiffCI.com/blob/main/docs/language-support.md)

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">DiffCI — change-aware CI analysis and test selection</title>
+  <desc id="desc">A dark DiffCI social card with an evidence path through selected CI jobs.</desc>
+  <rect width="1200" height="630" fill="#0c0e11"/>
+  <circle cx="1080" cy="72" r="260" fill="#12382f" opacity=".44"/>
+  <circle cx="1140" cy="570" r="330" fill="#101f28" opacity=".72"/>
+  <g transform="translate(72 68)">
+    <rect x="0" y="0" width="54" height="54" rx="9" fill="none" stroke="#3fd1ad" stroke-width="6"/>
+    <path d="M27 0h27v54H27z" fill="#3fd1ad"/>
+    <text x="74" y="42" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="48" font-weight="700">DiffCI</text>
+  </g>
+  <text x="72" y="238" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="64" font-weight="700">Change-aware CI analysis.</text>
+  <text x="72" y="320" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="64" font-weight="700">Conservative test selection.</text>
+  <text x="74" y="382" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="28">Measure the selected path before changing required CI.</text>
+  <g transform="translate(758 120)">
+    <g stroke="#45635c" stroke-width="7" fill="none"><path d="M35 340L137 222 230 285 342 110"/><path d="M137 222v118M230 285V138M342 110v175"/><path d="M35 340h320"/></g>
+    <path d="M35 340L137 222 342 110" stroke="#3fd1ad" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#151b1d" stroke="#6d817c" stroke-width="5"><rect x="8" y="313" width="54" height="54" rx="10"/><rect x="110" y="195" width="54" height="54" rx="10"/><rect x="203" y="258" width="54" height="54" rx="10"/><rect x="315" y="83" width="54" height="54" rx="10"/><rect x="315" y="258" width="54" height="54" rx="10"/></g>
+    <g fill="#3fd1ad"><rect x="8" y="313" width="54" height="54" rx="10"/><rect x="315" y="83" width="54" height="54" rx="10"/></g>
+    <circle cx="137" cy="222" r="22" fill="#0c0e11" stroke="#3fd1ad" stroke-width="6"/><circle cx="137" cy="222" r="7" fill="#3fd1ad"/>
+  </g>
+  <rect x="72" y="500" width="1056" height="1" fill="#30433f"/>
+  <text x="72" y="555" fill="#3fd1ad" font-family="Consolas,monospace" font-size="24">npx "@diffci.com/diffci@latest" check</text>
+  <text x="1128" y="555" text-anchor="end" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="23">diffci.com</text>
+</svg>

@@ -1,7 +1,7 @@
 # DiffCI — Current State
 
-**As of:** 2026-08-21 (live-verified against the deployed Worker and this repo's own CI at the time of
-writing; updated later the same day after the source-integrity fix below shipped and was live-verified)
+**Original snapshot:** 2026-08-21 (live-verified against the deployed Worker and this repo's own CI at
+the time of writing) · **CI operations updated:** 2026-09-25
 · **Repo:** [github.com/adityankale190895/DiffCI.com](https://github.com/adityankale190895/DiffCI.com)
 · **Branch:** `main` @ `b997c6d`, working tree clean
 
@@ -20,9 +20,10 @@ don't have to read all 31 research reports to know where things stand right now.
 - **Infra:** two Cloudflare Workers (research/shadow pipeline, and a self-hosted GitHub Actions runner
   dispatcher), D1 + R2 for persistence, Cloudflare Sandbox Containers for real git/TypeScript analysis.
   Two separate, least-privilege GitHub Apps.
-- **CI health:** 336/336 tests passing, typecheck clean, this repo's own CI now runs on a
-  Cloudflare-Container-backed self-hosted runner fleet (not GitHub-hosted) and has been green for the
-  last 8 consecutive runs, ~1 minute each once warm, ~$0.004/job, zero GitHub Actions billing consumed.
+- **CI health:** authoritative full CI runs on `ubuntu-latest` as of 2026-09-25. The Cloudflare runner
+  remains in the separate non-blocking observation workflow for continued dogfooding. This split was
+  made after the full suite outgrew the Queue consumer's 15-minute lifetime and GitHub recorded the
+  self-hosted runner losing communication during tests.
 - **Biggest live gap as of the original writing of this doc** (the autonomous cron's diffci source
   snapshot in R2 stamped `e58fdfb` while `main` had moved 4 commits past it) **is now fixed and
   live-verified** — see [`2026-08-21-shadow-source-integrity-fix.md`](research/2026-08-21-shadow-source-integrity-fix.md)
@@ -114,12 +115,18 @@ been re-verified by hand.
 
 ## 5. CI / self-hosted runner infrastructure
 
-This repo's own CI (`.github/workflows/ci.yml`, `npm run check` — typecheck + full test suite) no longer
-runs on GitHub-hosted runners. It dispatches to `[self-hosted, cloudflare]`: a `workflow_job` webhook
+From 2026-08-21 through 2026-09-24, this repo's own authoritative CI (`.github/workflows/ci.yml`,
+`npm run check` — typecheck + full test suite) dispatched to `[self-hosted, cloudflare]`: a `workflow_job` webhook
 (from a **second**, separate, write-scoped GitHub App — "DiffCI Runner Dispatcher") triggers
 `src/research/cloudflare/github-runner-worker.ts`, which spins up a fresh Cloudflare Container
 (`ops/github-runner/Dockerfile`, GitHub Actions runner agent 2.336.0) per queued job. The runner
 registers, runs the job, deregisters, and self-terminates.
+
+**Operational update 2026-09-25:** the authoritative `CI` workflow now runs on `ubuntu-latest` after
+the expanded suite exceeded the Queue consumer's 15-minute lifecycle and the runner lost contact
+during the test step. `.github/workflows/diffci-observe.yml` still runs on the Cloudflare fleet as a
+non-blocking dogfood job, so runner behavior remains observable without making required validation
+depend on it. The measurements below describe the historical self-hosted period.
 
 **Status: REPAIRED and QUALIFIED 2026-09-05 (`293b69c`…`70e3dda`).** Two consecutive fresh commits
 (`70e3dda`, `f63d139`) ran on their own pinned runners from queued to terminal with no further push

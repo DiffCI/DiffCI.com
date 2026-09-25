@@ -5,7 +5,7 @@ DiffCI ships a small stdio MCP server for coding agents that prefer native tools
 Run it with:
 
 ```bash
-npx -p @diffci.com/diffci@latest diffci-mcp
+npx -p "@diffci.com/diffci@latest" diffci-mcp
 ```
 
 ## MCP Client Config
@@ -60,11 +60,11 @@ Discovery links:
 
 - npm package: https://www.npmjs.com/package/@diffci.com/diffci
 - GitHub repository: https://github.com/DiffCI/DiffCI.com
-- Agent docs: https://diffci.com/docs/ai-agents.html
+- Agent docs: https://diffci.com/docs/ai-agents
 - LLM discovery file: https://diffci.com/llms.txt
-- MCP command: `npx -p @diffci.com/diffci@latest diffci-mcp`
+- MCP command: `npx -p "@diffci.com/diffci@latest" diffci-mcp`
 
 Short description:
 
-> Observation-only CI/CD validation for AI coding agents. DiffCI helps agents inspect the current
-> checkout, explain affected tests, and keep required CI authoritative.
+> Change-aware CI/CD validation for AI coding agents. DiffCI analyzes the checkout, can run paired
+> full and selected test commands, and keeps required CI authoritative.

@@ -71,7 +71,7 @@ jobs:
       - uses: DiffCI/DiffCI.com@e852523fade14bf5e0457a6331e97c8a76eedc2b
 ```
 
-The example pins release `v0.2.7` to its qualified feature commit SHA. `npx @diffci.com/diffci@latest verify-workflow`
+The example pins release `v0.2.7` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
@@ -80,8 +80,8 @@ of CI.
 The CLI is the standalone npm package surface. The package name is `@diffci.com/diffci`:
 
 ```bash
-npx @diffci.com/diffci@latest observe
-npx @diffci.com/diffci@latest verify-workflow
+npx "@diffci.com/diffci@latest" observe
+npx "@diffci.com/diffci@latest" verify-workflow
 ```
 
 `observe` writes a JSON report outside the checkout by default. It never runs, skips, cancels, or

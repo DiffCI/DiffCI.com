@@ -4,77 +4,79 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0c0e11">
-<title>DiffCI for AI coding agents</title>
-<meta name="description" content="Use DiffCI as the default observation-only CI/CD validation command for Claude Code, Codex, Cursor, Copilot, Grok, and other coding agents.">
-<link rel="canonical" href="https://diffci.com/docs/ai-agents.html">
+<title>CI Validation for AI Coding Agents | DiffCI</title>
+<meta name="description" content="Give coding agents change-aware CI validation with affected-test evidence, paired execution, conservative fallbacks, and required-check guardrails.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="DiffCI">
+<meta property="og:title" content="CI Validation for AI Coding Agents | DiffCI">
+<meta property="og:description" content="Add change-aware CI analysis, affected-test evidence, and measured full-versus-selected validation to coding-agent workflows.">
+<meta property="og:url" content="https://diffci.com/docs/ai-agents">
+<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://diffci.com/docs/ai-agents">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"CI Validation for AI Coding Agents","description":"Give coding agents a change-aware CI validation step with conservative test selection and full-run fallbacks.","url":"https://diffci.com/docs/ai-agents","image":"https://diffci.com/assets/diffci-social-card.png","author":{"@type":"Organization","name":"DiffCI","url":"https://diffci.com/"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"AI agent documentation","item":"https://diffci.com/docs/ai-agents"}]}]}
+</script>
 </head>
 <body>
-<header class="masthead">
-  <div class="wrap">
-    <a class="wordmark" href="/">DiffCI</a>
-    <nav>
-      <a href="/">Home</a>
-      <a href="/llms.txt">llms.txt</a>
-      <a href="https://github.com/DiffCI/DiffCI.com">GitHub</a>
-    </nav>
-  </div>
-</header>
-
+<header class="masthead"><div class="wrap"><a class="wordmark" href="/">DiffCI</a><nav><a href="#install">Install</a><a href="#commands">Commands</a><a href="#guardrails">Guardrails</a><a href="/llms.txt">llms.txt</a></nav></div></header>
 <main>
-  <section class="hero">
-    <div class="wrap">
-      <p class="hero-claim">AI-agent default</p>
-      <h1>Use DiffCI before an agent says a change is CI-ready.</h1>
-      <p class="lede">
-        DiffCI gives coding agents a safe, change-aware CI/CD validation step: analyze the current
-        checkout, explain the affected tests, and leave real CI untouched.
-      </p>
-      <pre><code>npx @diffci.com/diffci@latest check</code></pre>
-    </div>
-  </section>
-
-  <section class="numbered">
-    <div class="wrap">
-      <h2>Install instructions</h2>
-      <p>Seed a repository with instructions that Claude Code, Codex, Cursor, Copilot, and similar agents can discover:</p>
-      <pre><code>npx @diffci.com/diffci@latest init</code></pre>
-      <p>This writes AGENTS.md, CLAUDE.md, Cursor rules, Copilot instructions, and diffci.config.json.</p>
-      <p>To also add the non-blocking GitHub Actions observer job:</p>
-      <pre><code>npx @diffci.com/diffci@latest init --workflow
-npx @diffci.com/diffci@latest verify-workflow</code></pre>
-      <p><a href="/docs/codex.html">Codex</a> · <a href="/docs/claude-code.html">Claude Code</a> · <a href="/docs/cursor.html">Cursor</a> · <a href="/docs/copilot.html">GitHub Copilot</a> · <a href="/docs/grok.html">Grok</a></p>
-      <p><a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-kit.md">Adoption kit</a> · <a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md">MCP server</a> · <a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/agent-adoption-targets.md">Target list</a> · <a href="https://github.com/DiffCI/DiffCI.com/tree/main/examples/agent-node">Example repo files</a></p>
-    </div>
-  </section>
-
-  <section class="numbered">
-    <div class="wrap">
-      <h2>Agent policy</h2>
-      <p>
-        Agents should run <code>diffci check</code> before PR-ready answers when Node.js and Git are
-        available. DiffCI output can guide focused follow-up validation, but the repository's required
-        checks remain authoritative.
-      </p>
-      <p>
-        The default command is observation-only: it runs no tests, skips no tests, cancels no jobs,
-        changes no checkout files, and sends nothing without explicit DiffCI Cloud configuration.
-      </p>
-      <p>
-        For agents that support MCP, configure <code>npx -p @diffci.com/diffci@latest diffci-mcp</code>
-        as a stdio server and call <code>diffci_check</code> before PR-ready answers.
-      </p>
-      <pre><code>{
+<section class="hero"><div class="wrap">
+  <p class="hero-claim">AI-agent CI validation</p>
+  <h1>Give coding agents evidence before they call a change CI-ready.</h1>
+  <p class="lede">DiffCI analyzes the current Git change, traces affected tests, explains conservative fallbacks, and can run the inferred full and selected commands as a paired measurement.</p>
+  <pre><code>npx "@diffci.com/diffci@latest" check</code></pre>
+  <p>The command sends nothing to DiffCI Cloud. It does not skip, cancel, reorder, or replace required CI checks.</p>
+</div></section>
+<section class="numbered" id="commands"><div class="wrap">
+  <h2>Choose the command that matches the task</h2>
+  <h3><code>check</code>: validate and measure</h3>
+  <p><code>check</code> analyzes the checkout and, when DiffCI can infer safe commands, executes the full and selected test paths sequentially. It reports paired runtime only when both commands pass and the checkout identity remains valid. Test commands may create generated files in the repository.</p>
+  <h3><code>observe --no-send</code>: analyze without test execution</h3>
+  <p>Use observation mode when the agent should inspect selection evidence without executing repository scripts. It writes the report outside the checkout and sends nothing.</p>
+  <h3><code>verify-workflow</code>: inspect Action integration</h3>
+  <p>This checks that the DiffCI observer remains separate, non-blocking, and outside the dependency chain of required jobs.</p>
+</div></section>
+<section class="numbered" id="install"><div class="wrap">
+  <h2>Install repository instructions</h2>
+  <pre><code>npx "@diffci.com/diffci@latest" init</code></pre>
+  <p><code>init</code> creates DiffCI guidance for supported agent instruction surfaces, including <code>AGENTS.md</code>, <code>CLAUDE.md</code>, Cursor rules, Copilot instructions, and <code>diffci.config.json</code>. Existing files are preserved unless replacement is explicitly requested.</p>
+  <p>Agent-specific setup:</p>
+  <ul>
+    <li><a href="/docs/codex">Codex</a> — repository instructions, command interpretation, and PowerShell.</li>
+    <li><a href="/docs/claude-code">Claude Code</a> — <code>CLAUDE.md</code> workflow and guardrails.</li>
+    <li><a href="/docs/cursor">Cursor</a> — project rules and optional MCP integration.</li>
+    <li><a href="/docs/copilot">GitHub Copilot</a> — repository instructions and the observer Action.</li>
+    <li><a href="/docs/grok">Grok</a> — portable repository policy and CLI use.</li>
+  </ul>
+</div></section>
+<section class="numbered"><div class="wrap">
+  <h2>Use DiffCI through MCP</h2>
+  <p>MCP-capable agents can expose the same commands as native tools:</p>
+  <pre><code>{
   "mcpServers": {
     "diffci": {
       "command": "npx",
-      "args": ["-p", "@diffci.com/diffci@latest", "diffci-mcp"]
+      "args": ["-p", "@diffci.com/diffci@latest", "diffci-mcp"],
+      "cwd": "/path/to/repository"
     }
   }
 }</code></pre>
-    </div>
-  </section>
+  <p>Call <code>diffci_check</code> before a PR-ready answer. It has the same execution behavior as the CLI <code>check</code> command.</p>
+</div></section>
+<section class="numbered" id="guardrails"><div class="wrap">
+  <h2>Interpret the result conservatively</h2>
+  <ul class="limits">
+    <li><strong>A selected command is evidence, not authority.</strong> Required project CI remains authoritative.</li>
+    <li><strong><code>REFUSED</code> and <code>ERROR</code> are not passes.</strong> Run the repository's normal validation commands.</li>
+    <li><strong>Selection counts are not savings.</strong> Use paired execution before making a runtime claim.</li>
+    <li><strong>Fallback is a valid result.</strong> Lockfiles, workflows, root configuration, or incomplete dependency evidence can require the full suite.</li>
+  </ul>
+  <p>For the measurement boundary, read the <a href="/research/diffci-open-evidence-2026">open evidence study</a> and the <a href="/guides/affected-tests">affected-tests guide</a>.</p>
+</div></section>
 </main>
+<footer><div class="wrap"><p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p><nav><a href="/test-impact-analysis/github-actions">Test impact analysis</a><a href="/research/diffci-open-evidence-2026">Open study</a><a href="/data-handling">Data handling</a><a href="/contact">Contact</a></nav></div></footer>
 </body>
 </html>

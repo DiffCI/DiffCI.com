@@ -1,0 +1,113 @@
+import assert from "node:assert/strict";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const site = path.join(root, "site");
+
+function htmlFiles(directory = site): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) return htmlFiles(absolute);
+    return entry.name.endsWith(".html") ? [absolute] : [];
+  });
+}
+
+function fileForUrl(url: URL): string {
+  if (url.pathname === "/") return path.join(site, "index.html");
+  return path.join(site, `${url.pathname.slice(1)}.html`);
+}
+
+function localFileForPath(pathname: string): string {
+  if (pathname === "/") return path.join(site, "index.html");
+  const relative = pathname.slice(1);
+  if (path.extname(relative)) return path.join(site, relative);
+  return path.join(site, `${relative}.html`);
+}
+
+test("robots.txt advertises the canonical sitemap", () => {
+  const robots = readFileSync(path.join(site, "robots.txt"), "utf8");
+  assert.match(robots, /^User-agent: \*$/m);
+  assert.match(robots, /^Sitemap: https:\/\/diffci\.com\/sitemap\.xml$/m);
+});
+
+test("homepage publishes Bing ownership verification", () => {
+  const homepage = readFileSync(path.join(site, "index.html"), "utf8");
+  assert.match(homepage, /<meta name="msvalidate\.01" content="00B8B6EF3F3F58410655A46BF6E141E2">/);
+});
+
+test("sitemap contains only canonical, indexable, existing HTML pages", () => {
+  const sitemap = readFileSync(path.join(site, "sitemap.xml"), "utf8");
+  const urls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]!));
+  const lastModified = [...sitemap.matchAll(/<lastmod>(.*?)<\/lastmod>/g)].map((match) => match[1]!);
+  assert.ok(urls.length >= 10);
+  assert.equal(lastModified.length, urls.length, "every sitemap URL needs an accurate freshness signal");
+  for (const date of lastModified) assert.match(date, /^\d{4}-\d{2}-\d{2}$/);
+  assert.equal(new Set(urls.map(String)).size, urls.length, "sitemap URLs must be unique");
+  for (const url of urls) {
+    assert.equal(url.origin, "https://diffci.com");
+    if (url.pathname !== "/") assert.doesNotMatch(url.pathname, /\.html$|\/$/);
+    const file = fileForUrl(url);
+    assert.ok(existsSync(file), `${url} must resolve to ${path.relative(root, file)}`);
+    const body = readFileSync(file, "utf8");
+    assert.doesNotMatch(body, /<meta\s+name="robots"\s+content="[^"]*noindex/i, `${url} is noindex`);
+    assert.match(body, new RegExp(`<link\\s+rel="canonical"\\s+href="${url.toString().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  }
+});
+
+test("IndexNow ownership key is published for automated URL discovery", () => {
+  const key = "0d8ca887374f35142a6b1b1cb64ad550";
+  assert.equal(readFileSync(path.join(site, `${key}.txt`), "utf8").trim(), key);
+});
+
+test("indexable pages have complete search and social metadata", () => {
+  for (const file of htmlFiles()) {
+    const relative = path.relative(site, file).replaceAll("\\", "/");
+    if (relative === "404.html" || relative === "welcome.html") continue;
+    const body = readFileSync(file, "utf8");
+    assert.equal((body.match(/<h1\b/gi) ?? []).length, 1, `${relative} must have one h1`);
+    assert.match(body, /<title>[^<]+<\/title>/i, `${relative} needs a title`);
+    assert.match(body, /<meta\s+name="description"\s+content="[^"]+"/i, `${relative} needs a description`);
+    assert.match(body, /<link\s+rel="canonical"\s+href="https:\/\/diffci\.com\/[^"]*"/i, `${relative} needs a canonical`);
+    assert.match(body, /<meta\s+property="og:image"\s+content="https:\/\/diffci\.com\/assets\/diffci-social-card\.png"/i, `${relative} needs a social image`);
+    assert.doesNotMatch(body, /canonical"\s+href="[^"]*\.html"/i, `${relative} canonical must not redirect`);
+    assert.doesNotMatch(body, /href="\/[^"]*\.html(?:[#?][^"]*)?"/i, `${relative} internal links must be clean`);
+  }
+});
+
+test("internal links resolve directly and fragments exist", () => {
+  for (const file of htmlFiles()) {
+    const body = readFileSync(file, "utf8");
+    const sourceCanonical = body.match(/<link\s+rel="canonical"\s+href="([^"]+)"/i)?.[1] ?? "https://diffci.com/";
+    for (const match of body.matchAll(/href="([^"]+)"/gi)) {
+      const href = match[1]!;
+      if (/^(?:mailto:|tel:|data:|javascript:)/i.test(href)) continue;
+      const target = new URL(href, sourceCanonical);
+      if (target.origin !== "https://diffci.com") continue;
+      const targetFile = localFileForPath(target.pathname);
+      assert.ok(existsSync(targetFile), `${path.relative(site, file)} links to missing ${target.pathname}`);
+      if (target.hash && path.extname(target.pathname) !== ".txt") {
+        const id = decodeURIComponent(target.hash.slice(1));
+        const targetBody = readFileSync(targetFile, "utf8");
+        assert.match(targetBody, new RegExp(`\\bid=["']${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["']`), `${target.pathname}${target.hash} is missing its target`);
+      }
+    }
+  }
+});
+
+test("public agent pages describe check execution accurately", () => {
+  const files = [path.join(site, "llms.txt"), ...htmlFiles(path.join(site, "docs"))];
+  for (const file of files) {
+    const body = readFileSync(file, "utf8");
+    assert.doesNotMatch(body, /check is observation-only|default command is observation-only|check[^.\n]*runs no tests/i, path.relative(root, file));
+  }
+});
+
+test("the social image exists at the declared dimensions", () => {
+  const png = readFileSync(path.join(site, "assets/diffci-social-card.png"));
+  assert.equal(png.subarray(1, 4).toString("ascii"), "PNG");
+  assert.equal(png.readUInt32BE(16), 1200);
+  assert.equal(png.readUInt32BE(20), 630);
+});

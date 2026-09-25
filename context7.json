@@ -6,7 +6,7 @@
   "description": "Change-aware CI analysis with a published npm CLI, an observation-only GitHub Action, and coding agent integrations.",
   "folders": ["docs/context7"],
   "rules": [
-    "Run npx @diffci.com/diffci@latest check from a Git repository root to analyze a change and compare inferred test commands when available.",
+    "Run npx \"@diffci.com/diffci@latest\" check from a Git repository root to analyze a change and compare inferred test commands when available.",
     "Use observe --no-send for analysis without executing tests or sending reports.",
     "Keep required CI tests authoritative. REFUSED, ERROR, and full-validation fallback require the repository's normal test commands."
   ]

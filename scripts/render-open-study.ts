@@ -325,6 +325,9 @@ function sectionHtml(s: StudySection): string {
 export function renderHtml(study: StudyFindings): string {
   const urls = publicUrls(study);
   const description = `${study.subtitle}. Every number with its evidence level, under CC BY 4.0.`;
+  const seoTitle = "Change-Aware Test Selection Benchmark 2026 | DiffCI";
+  const seoDescription = "A measured benchmark of change-aware test selection on open-source CI, including fallbacks, failures, runtime economics, and where it saved nothing.";
+  const socialImage = `${SITE_ORIGIN}/assets/diffci-social-card.png`;
 
   const figuresHtml = study.headlineFindings
     .map((h) => `    <div><b>${escapeHtml(h.value)}</b><span>${escapeHtml(h.label)}</span></div>`)
@@ -343,14 +346,17 @@ export function renderHtml(study: StudyFindings): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0c0e11">
 <script>(function(){var d=document.documentElement,k='diffci-theme';function set(t){d.setAttribute('data-theme',t);var b=document.querySelectorAll('.theme-toggle');for(var i=0;i<b.length;i++)b[i].setAttribute('aria-label',t==='light'?'Switch to dark theme':'Switch to light theme');}try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')set(s);}catch(e){}document.addEventListener('DOMContentLoaded',function(){set(d.getAttribute('data-theme')==='light'?'light':'dark');});document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var n=d.getAttribute('data-theme')==='light'?'dark':'light';set(n);try{localStorage.setItem(k,n);}catch(e){}});})();</script>
-<title>${escapeHtml(study.studyName)}</title>
-<meta name="description" content="${escapeHtml(description)}">
+<title>${escapeHtml(seoTitle)}</title>
+<meta name="description" content="${escapeHtml(seoDescription)}">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="DiffCI">
-<meta property="og:title" content="${escapeHtml(study.studyName)}">
+<meta property="og:title" content="${escapeHtml(seoTitle)}">
 <meta property="og:description" content="${escapeHtml(description)}">
 <meta property="og:url" content="${urls.page}">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="${socialImage}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="${urls.page}">
 <link rel="license" href="${study.license.url}">
 <link rel="stylesheet" href="/styles.css">
@@ -365,13 +371,30 @@ ${JSON.stringify(
     url: urls.page,
     identifier: study.studyId,
     version: study.version,
+    datePublished: study.asOf,
     dateModified: study.asOf,
+    keywords: ["test impact analysis", "regression test selection", "continuous integration", "affected tests", "CI optimization"],
+    image: socialImage,
     temporalCoverage: `${study.windowStart}/${study.windowEnd}`,
     license: study.license.url,
     creator: { "@type": "Organization", name: study.publisher, url: SITE_ORIGIN },
     distribution: [
       { "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: `${SITE_ORIGIN}${urls.csv}` },
       { "@type": "DataDownload", encodingFormat: "application/pdf", contentUrl: `${SITE_ORIGIN}${urls.pdf}` },
+    ],
+  },
+  null,
+  2,
+)}
+</script>
+<script type="application/ld+json">
+${JSON.stringify(
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "DiffCI", item: `${SITE_ORIGIN}/` },
+      { "@type": "ListItem", position: 2, name: "Open evidence study", item: urls.page },
     ],
   },
   null,

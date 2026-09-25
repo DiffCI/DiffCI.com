@@ -11,7 +11,7 @@ body:
         Run DiffCI once from a repository checkout:
 
         ```bash
-        npx @diffci.com/diffci@latest check
+        npx "@diffci.com/diffci@latest" check
         ```
 
         It writes reports outside the checkout and sends nothing by default. Existing CI remains authoritative.
@@ -27,7 +27,7 @@ body:
     id: command
     attributes:
       label: Command run
-      value: npx @diffci.com/diffci@latest check
+      value: npx "@diffci.com/diffci@latest" check
     validations:
       required: true
   - type: dropdown

@@ -15,7 +15,7 @@ and leaves required CI authoritative.
 ## Links
 
 - Website: https://diffci.com/
-- Agent docs: https://diffci.com/docs/ai-agents.html
+- Agent docs: https://diffci.com/docs/ai-agents
 - MCP docs: https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md
 - LLM discovery: https://diffci.com/llms.txt
 - npm: https://www.npmjs.com/package/@diffci.com/diffci
@@ -26,13 +26,13 @@ and leaves required CI authoritative.
 CLI:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 MCP:
 
 ```bash
-npx -p @diffci.com/diffci@latest diffci-mcp
+npx -p "@diffci.com/diffci@latest" diffci-mcp
 ```
 
 ## Discovery CTA
@@ -43,7 +43,7 @@ Use this in directory descriptions, Marketplace copy, README snippets, and commu
 Try DiffCI locally:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 DiffCI analyzes the current change, runs inferred full and selected commands when safe, writes reports
@@ -73,8 +73,8 @@ Body:
 ```md
 DiffCI now ships an npm CLI and stdio MCP server for AI coding agents:
 
-- CLI: `npx @diffci.com/diffci@latest check`
-- MCP: `npx -p @diffci.com/diffci@latest diffci-mcp`
+- CLI: `npx "@diffci.com/diffci@latest" check`
+- MCP: `npx -p "@diffci.com/diffci@latest" diffci-mcp`
 
 It is intended as an optional validation lens before agents mark work PR-ready. DiffCI analyzes the
 current checkout, explains affected tests, can run inferred local validation through `diffci check`,
@@ -82,7 +82,7 @@ and does not skip, cancel, reorder, or modify required CI.
 
 Docs:
 
-- https://diffci.com/docs/ai-agents.html
+- https://diffci.com/docs/ai-agents
 - https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md
 
 Would you be open to adding DiffCI as an optional validation command/example for AI coding agents?
@@ -108,13 +108,13 @@ When someone shares a first report, reply with exactly one next step:
 Before marking changes PR-ready, agents can run:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 Agents with MCP support can configure:
 
 ```bash
-npx -p @diffci.com/diffci@latest diffci-mcp
+npx -p "@diffci.com/diffci@latest" diffci-mcp
 ```
 
 DiffCI is a validation lens: it explains affected tests and keeps required CI authoritative.

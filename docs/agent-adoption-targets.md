@@ -41,9 +41,9 @@ small optional-instruction PR from [`agent-adoption-kit.md`](agent-adoption-kit.
 
 1. Start with documentation/example repos, not large application repos.
 2. Add only an optional validation instruction, never a required check.
-3. Link to `https://diffci.com/docs/ai-agents.html` and `https://diffci.com/llms.txt`.
+3. Link to `https://diffci.com/docs/ai-agents` and `https://diffci.com/llms.txt`.
 4. State that DiffCI sends nothing by default and changes no CI behavior.
-5. If maintainers ask for a workflow, suggest `npx @diffci.com/diffci@latest init --workflow`.
+5. If maintainers ask for a workflow, suggest `npx "@diffci.com/diffci@latest" init --workflow`.
 
 ## Minimal Patch Shape
 
@@ -53,7 +53,7 @@ Add this to the repository's agent instruction file:
 Before marking changes PR-ready, run:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 DiffCI check analyzes the change and runs inferred full and selected test commands to measure time.

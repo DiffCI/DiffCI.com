@@ -41,8 +41,8 @@ Use the version actually qualified for the release; do not reuse an existing tag
 
 ```bash
 npm view @diffci.com/diffci version license dist-tags
-npx @diffci.com/diffci@latest version
-npx @diffci.com/diffci@latest observe --help
+npx "@diffci.com/diffci@latest" version
+npx "@diffci.com/diffci@latest" observe --help
 npm run check:public-metadata -- --remote
 ```
 

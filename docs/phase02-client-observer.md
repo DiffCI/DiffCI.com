@@ -120,8 +120,8 @@ None of the above satisfies "seven days in a third-party repository". That needs
 
 ## Not done, stated so it is not discovered later
 
-- **Now package-shaped.** The npm package name is `@diffci.com/diffci`, with `npx @diffci.com/diffci observe` and
-  `npx @diffci.com/diffci verify-workflow` as the standalone CLI surface. Publishing still requires an npm token
+- **Now package-shaped.** The npm package name is `@diffci.com/diffci`, with `npx "@diffci.com/diffci" observe` and
+  `npx "@diffci.com/diffci" verify-workflow` as the standalone CLI surface. Publishing still requires an npm token
   and a tagged release.
 - **No ingest.** Reports stay on the runner as artifacts. Sending them anywhere — and the tenancy that
   has to exist before that is safe — is Phase 03.

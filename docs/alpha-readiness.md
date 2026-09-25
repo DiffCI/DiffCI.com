@@ -47,8 +47,8 @@ DiffCI is ready for a private alpha when all of these are true:
 Use one disposable repository and run the full path as a user would:
 
 ```bash
-npx @diffci.com/diffci@latest verify-workflow
-npx @diffci.com/diffci@latest observe
+npx "@diffci.com/diffci@latest" verify-workflow
+npx "@diffci.com/diffci@latest" observe
 ```
 
 Then install the GitHub Action with the hosted `api-url` and repository token. Capture:

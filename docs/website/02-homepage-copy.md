@@ -13,8 +13,8 @@ that is still open.
 > DiffCI watches your repository's real CI runs, works out which tests each change could actually have
 > affected, and reports how much compute was avoidable — in hindsight, against what your CI really did.
 >
-> It has no permission to skip, cancel, or modify anything. That is not a setting. It is the only mode
-> that exists.
+> It has no permission to skip, cancel, or modify a CI run. Local checks may execute test commands,
+> but required CI remains unchanged.
 >
 > **[ Install the read-only App ]**  ·  [Read the evidence](#evidence)
 

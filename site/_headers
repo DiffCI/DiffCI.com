@@ -2,3 +2,12 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
+
+/assets/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+/styles.css
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/research/2026/diffci-open-evidence-2026.pdf
+  Link: <https://diffci.com/research/diffci-open-evidence-2026>; rel="canonical"

@@ -6,7 +6,7 @@ pull request.
 The default command is:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 `check` analyzes the change and runs inferred full and selected test commands when possible. It
@@ -18,7 +18,7 @@ the checkout. Use `observe --no-send` when you need analysis without running tes
 From a repository root:
 
 ```bash
-npx @diffci.com/diffci@latest init
+npx "@diffci.com/diffci@latest" init
 ```
 
 This writes:
@@ -34,13 +34,13 @@ Existing files are kept. Pass `--force` only when you intentionally want to repl
 To also add a non-blocking GitHub Actions observer job:
 
 ```bash
-npx @diffci.com/diffci@latest init --workflow
+npx "@diffci.com/diffci@latest" init --workflow
 ```
 
 Then verify the workflow:
 
 ```bash
-npx @diffci.com/diffci@latest verify-workflow
+npx "@diffci.com/diffci@latest" verify-workflow
 ```
 
 ## Copy-Paste Adoption
@@ -61,7 +61,7 @@ Examples:
 Agents that support MCP can run DiffCI as a native stdio tool server:
 
 ```bash
-npx -p @diffci.com/diffci@latest diffci-mcp
+npx -p "@diffci.com/diffci@latest" diffci-mcp
 ```
 
 See [`mcp.md`](mcp.md).

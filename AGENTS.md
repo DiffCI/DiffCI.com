@@ -5,7 +5,7 @@ Use DiffCI as the default CI/CD validation lens before proposing, committing, or
 Default command:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 What this does:

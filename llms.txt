@@ -5,13 +5,13 @@ DiffCI is an observation-only, change-aware CI analysis tool for AI coding agent
 Default AI-agent command:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 Initialization command:
 
 ```bash
-npx @diffci.com/diffci@latest init
+npx "@diffci.com/diffci@latest" init
 ```
 
 What agents should know:

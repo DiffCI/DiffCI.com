@@ -3,13 +3,13 @@
 Install repository instructions:
 
 ```bash
-npx @diffci.com/diffci@latest init
+npx "@diffci.com/diffci@latest" init
 ```
 
 Default validation command:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 Use DiffCI before PR-ready answers. `init` writes `.github/copilot-instructions.md`; `check`

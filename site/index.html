@@ -5,17 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0c0e11">
 <script>(function(){var d=document.documentElement,k='diffci-theme';function set(t){d.setAttribute('data-theme',t);var b=document.querySelectorAll('.theme-toggle');for(var i=0;i<b.length;i++)b[i].setAttribute('aria-label',t==='light'?'Switch to dark theme':'Switch to light theme');}try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')set(s);}catch(e){}document.addEventListener('DOMContentLoaded',function(){set(d.getAttribute('data-theme')==='light'?'light':'dark');});document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var n=d.getAttribute('data-theme')==='light'?'dark':'light';set(n);try{localStorage.setItem(k,n);}catch(e){}});})();</script>
-<title>DiffCI — find out what your CI is wasting</title>
-<meta name="description" content="DiffCI observes your repository's real CI runs and reports how much compute was avoidable, in hindsight, without ever changing your CI.">
+<title>Change-Aware CI Analysis &amp; Test Selection | DiffCI</title>
+<meta name="description" content="DiffCI analyzes code changes, finds affected tests, and measures potential CI savings with conservative full-run fallbacks. Try the CLI or GitHub Action.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DiffCI">
-<meta property="og:title" content="DiffCI — find out what your CI is wasting">
-<meta property="og:description" content="DiffCI observes your repository's real CI runs and reports how much compute was avoidable, in hindsight, without ever changing your CI.">
+<meta property="og:title" content="Change-Aware CI Analysis &amp; Test Selection | DiffCI">
+<meta property="og:description" content="Analyze code changes, find affected tests, and measure potential CI savings without giving DiffCI authority over required CI.">
 <meta property="og:url" content="https://diffci.com/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="DiffCI — change-aware CI analysis and conservative test selection">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Change-Aware CI Analysis &amp; Test Selection | DiffCI">
+<meta name="twitter:description" content="Analyze code changes, find affected tests, and measure potential CI savings with conservative full-run fallbacks.">
+<meta name="twitter:image" content="https://diffci.com/assets/diffci-social-card.png">
 <link rel="canonical" href="https://diffci.com/">
+<meta name="msvalidate.01" content="00B8B6EF3F3F58410655A46BF6E141E2">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://diffci.com/#organization",
+      "name": "DiffCI",
+      "url": "https://diffci.com/",
+      "logo": "https://diffci.com/assets/diffci-logo.png",
+      "sameAs": [
+        "https://github.com/DiffCI",
+        "https://www.npmjs.com/package/@diffci.com/diffci"
+      ]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://diffci.com/#cli",
+      "name": "DiffCI CLI",
+      "url": "https://diffci.com/",
+      "downloadUrl": "https://www.npmjs.com/package/@diffci.com/diffci",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows, macOS, Linux",
+      "softwareRequirements": "Node.js 22.5 or later and Git",
+      "isAccessibleForFree": true,
+      "publisher": { "@id": "https://diffci.com/#organization" },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -42,20 +85,20 @@
   <div class="wrap wrap-wide">
     <div class="hero-grid">
       <div>
-        <p class="hero-claim">Read-only · zero CI authority</p>
-        <h1>Find out what your CI is wasting. Without changing your CI.</h1>
+        <p class="hero-claim">Measured locally · zero CI authority</p>
+        <h1>Measure CI waste with change-aware test selection.</h1>
         <p class="lede">
-          DiffCI watches your repository's real CI runs, works out which jobs each change could actually
-          have affected, and reports how much compute was avoidable — in hindsight, against what your CI
-          really did.
+          DiffCI performs conservative test impact analysis: it follows a code change through the
+          dependency graph, identifies affected tests and CI jobs, and measures the selected path
+          against the full path when both can be executed safely.
         </p>
         <p>
-          It has no permission to skip, cancel, or modify anything. That is not a setting. It is the only
-          mode that exists.
+          It has no permission to skip, cancel, or modify a CI run. Local checks may execute test
+          commands, but required CI remains unchanged.
         </p>
 
         <div class="hero-actions">
-          <a class="button" href="/docs/ai-agents.html">Add to an AI coding agent</a>
+          <a class="button" href="/docs/ai-agents">Add to an AI coding agent</a>
           <a class="button-secondary" href="#install">Install options</a>
         </div>
       </div>
@@ -105,6 +148,11 @@
       for.
     </p>
     <p><strong>DiffCI is the measurement, delivered before the risk.</strong></p>
+    <p>
+      Start with the <a href="/test-impact-analysis/github-actions">test impact analysis guide</a>,
+      learn how to <a href="/guides/affected-tests">run affected tests conservatively</a>, or compare
+      graph selection with <a href="/compare/test-selection-vs-path-filters">path filters and task-graph tools</a>.
+    </p>
   </div>
 </section>
 
@@ -112,8 +160,9 @@
   <div class="wrap wrap-wide">
     <h2>Install DiffCI</h2>
     <p>
-      DiffCI has three entry points with the same contract: observe CI, write a report, and leave the
-      repository's real jobs alone.
+      DiffCI has local, agent, Action and hosted-observer entry points. The local <code>check</code>
+      command may run inferred test commands; none of the entry points can skip, cancel or reorder
+      your required CI jobs.
     </p>
 
     <div class="install-grid">
@@ -125,11 +174,11 @@
           <code>diffci.config.json</code>. Agents then have one safe command to run before calling a
           change PR-ready.
         </p>
-        <pre><code>npx @diffci.com/diffci@latest init
-npx @diffci.com/diffci@latest check</code></pre>
+        <pre><code>npx "@diffci.com/diffci@latest" init
+npx "@diffci.com/diffci@latest" check</code></pre>
         <p class="fine">
           DiffCI changes no CI behavior. <code>check</code> may run inferred local test commands to
-          validate the change. <a href="/docs/ai-agents.html">Agent docs →</a>
+          validate the change. <a href="/docs/ai-agents">Agent docs →</a>
         </p>
       </article>
 
@@ -140,7 +189,7 @@ npx @diffci.com/diffci@latest check</code></pre>
           MCP-capable agents can call <code>diffci_check</code>, <code>diffci_init</code>, and
           <code>diffci_verify_workflow</code> without inventing shell commands.
         </p>
-        <pre><code>npx -p @diffci.com/diffci@latest diffci-mcp</code></pre>
+        <pre><code>npx -p "@diffci.com/diffci@latest" diffci-mcp</code></pre>
         <p class="fine">
           Works as a stdio MCP server for Claude, Cursor, Codex-style clients, and other MCP agents.
           <a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md">MCP docs →</a>
@@ -154,9 +203,9 @@ npx @diffci.com/diffci@latest check</code></pre>
           The npm package is <code>@diffci.com/diffci</code>. Use <code>npx</code> for a one-off
           observation, or install it as a dev dependency if you want a pinned local tool.
         </p>
-        <pre><code>npx @diffci.com/diffci@latest check
-npx @diffci.com/diffci@latest observe
-npx @diffci.com/diffci@latest verify-workflow
+        <pre><code>npx "@diffci.com/diffci@latest" check
+npx "@diffci.com/diffci@latest" observe
+npx "@diffci.com/diffci@latest" verify-workflow
 
 npm install --save-dev @diffci.com/diffci</code></pre>
         <p class="fine">
@@ -428,6 +477,7 @@ npm install --save-dev @diffci.com/diffci</code></pre>
       external repositories to say. Where it can be computed, the pilot report includes that comparison
       for your repository and reports the sign either way.
     </p>
+    <p><a href="/compare/test-selection-vs-path-filters">Compare dependency-graph selection, path filters and task-graph tools →</a></p>
   </div>
 </section>
 
@@ -525,6 +575,9 @@ npm install --save-dev @diffci.com/diffci</code></pre>
       <a href="/case-studies/deepseek-harness">deepseek-harness</a>
       <a href="/case-studies/diffci-own-ci">our own CI</a>
       <a href="/research/diffci-open-evidence-2026">Open study</a>
+      <a href="/test-impact-analysis/github-actions">Test impact analysis</a>
+      <a href="/guides/affected-tests">Affected tests</a>
+      <a href="/docs/ai-agents">Agent docs</a>
       <a href="/data-handling">Data handling</a>
       <a href="/contact">Contact</a>
     </nav>

@@ -7,7 +7,7 @@ describe("DiffCI Adoption App pull requests", () => {
   it("builds the zero-compute workflow with an exact DiffCI version", () => {
     const change = workflowOnlyChange("0.2.5");
     assert.equal(change.path, ".github/workflows/diffci.yml");
-    assert.match(change.content, /npx @diffci\.com\/diffci@0\.2\.5 observe --no-send/);
+    assert.match(change.content, /npx "@diffci\.com\/diffci@0\.2\.5" observe --no-send/);
     assert.match(change.content, /continue-on-error: true/);
     assert.throws(() => workflowOnlyChange("latest"), /invalid DiffCI version/);
   });

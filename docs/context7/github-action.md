@@ -21,7 +21,7 @@ jobs:
 This example pins the Action at the verified `v0.2.7` feature commit. Verify the installed workflow locally:
 
 ```sh
-npx @diffci.com/diffci@latest verify-workflow
+npx "@diffci.com/diffci@latest" verify-workflow
 ```
 
 Keep the DiffCI job out of required checks and other jobs' `needs` lists. The Action uploads the `diffci-observation` artifact by default. Sending a report to DiffCI's hosted service requires an explicitly configured endpoint and token. See the [distribution guide](../distribution.md) for the installation contract.

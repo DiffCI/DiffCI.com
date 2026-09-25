@@ -34,7 +34,7 @@ executes, and the complete workload cost including setup and analysis. Each answ
 Try observation mode in a supported checkout with Node.js 22.5+:
 
 ```sh
-npx @diffci.com/diffci@0.1.3 observe --no-send
+npx "@diffci.com/diffci@0.1.3" observe --no-send
 ```
 
 The command reports a proposed selection; it does not run the selected tests or measure savings.

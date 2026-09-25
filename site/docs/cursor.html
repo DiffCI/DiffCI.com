@@ -1,2 +1,25 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>DiffCI for Cursor</title><meta name="description" content="Use DiffCI as Cursor's observation-only CI/CD validation command."><link rel="canonical" href="https://diffci.com/docs/cursor.html"><link rel="stylesheet" href="/styles.css"><link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg"></head><body><header class="masthead"><div class="wrap"><a class="wordmark" href="/">DiffCI</a><nav><a href="/docs/ai-agents.html">AI agents</a><a href="/llms.txt">llms.txt</a></nav></div></header><main><section class="hero"><div class="wrap"><p class="hero-claim">Cursor</p><h1>Use DiffCI before Cursor marks a change PR-ready.</h1><pre><code>npx @diffci.com/diffci@latest init
-npx @diffci.com/diffci@latest check</code></pre><p class="lede">DiffCI init writes Cursor rules. DiffCI check is observation-only: it analyzes the change, writes a report outside the checkout, sends nothing by default, and does not run, skip, cancel, or reorder tests.</p></div></section></main></body></html>
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DiffCI for Cursor: Rules and MCP Setup</title>
+<meta name="description" content="Configure Cursor rules or MCP for change-aware CI analysis, affected-test evidence, paired validation, and conservative fallbacks.">
+<meta property="og:type" content="article"><meta property="og:site_name" content="DiffCI"><meta property="og:title" content="DiffCI for Cursor: Rules and MCP Setup"><meta property="og:description" content="Add DiffCI project rules and optional MCP tools to Cursor."><meta property="og:url" content="https://diffci.com/docs/cursor"><meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://diffci.com/docs/cursor"><link rel="stylesheet" href="/styles.css"><link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"DiffCI for Cursor: Rules and MCP Setup","url":"https://diffci.com/docs/cursor","author":{"@type":"Organization","name":"DiffCI","url":"https://diffci.com/"},"image":"https://diffci.com/assets/diffci-social-card.png"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"AI agents","item":"https://diffci.com/docs/ai-agents"},{"@type":"ListItem","position":3,"name":"Cursor","item":"https://diffci.com/docs/cursor"}]}</script>
+</head><body>
+<header class="masthead"><div class="wrap"><a class="wordmark" href="/">DiffCI</a><nav><a href="/docs/ai-agents">AI agents</a><a href="/guides/affected-tests">Affected tests</a><a href="/llms.txt">llms.txt</a></nav></div></header>
+<main><section class="hero"><div class="wrap"><p class="hero-claim">Cursor</p><h1>Put change-aware CI validation in Cursor's project rules.</h1><p class="lede">DiffCI can be exposed through a generated Cursor rule, a shell command, or a native MCP tool while required repository checks remain authoritative.</p><pre><code>npx "@diffci.com/diffci@latest" init
+npx "@diffci.com/diffci@latest" check</code></pre></div></section>
+<section class="numbered"><div class="wrap"><h2>Generate the project rule</h2><p><code>init</code> writes <code>.cursor/rules/diffci.mdc</code>. The rule tells Cursor when to run DiffCI, how to handle <code>REFUSED</code> or <code>ERROR</code>, and why a selected command cannot replace required CI.</p><p>Review the generated file with the rest of the repository policy. Existing Cursor rules are preserved unless replacement is explicitly requested.</p></div></section>
+<section class="numbered"><div class="wrap"><h2>Connect the MCP server</h2><pre><code>{
+  "mcpServers": {
+    "diffci": {
+      "command": "npx",
+      "args": ["-p", "@diffci.com/diffci@latest", "diffci-mcp"],
+      "cwd": "/path/to/repository"
+    }
+  }
+}</code></pre><p>Cursor can then call <code>diffci_check</code>, <code>diffci_init</code>, and <code>diffci_verify_workflow</code>. <code>diffci_check</code> may run the inferred full and selected commands just like the CLI.</p></div></section>
+<section class="numbered"><div class="wrap"><h2>Pick the safe mode</h2><p>Use <code>check</code> when paired execution is desired and repository scripts may run. Use <code>observe --no-send</code> when Cursor should analyze the diff without executing tests. In both modes, nothing is sent without explicit hosted configuration.</p><p><a href="/docs/ai-agents">Read the complete agent policy →</a></p></div></section></main>
+<footer><div class="wrap"><p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p><nav><a href="/test-impact-analysis/github-actions">Test impact analysis</a><a href="/research/diffci-open-evidence-2026">Open study</a><a href="/contact">Contact</a></nav></div></footer>
+</body></html>

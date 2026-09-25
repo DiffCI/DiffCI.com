@@ -107,6 +107,10 @@ function defaultReportPath(env: NodeJS.ProcessEnv): string {
   return join(base, `diffci-observation-${stamp}.json`);
 }
 
+// Quoting the scoped package keeps the same command valid in POSIX shells, cmd.exe, and
+// PowerShell, where an unquoted leading `@` is parsed as the splatting operator.
+const AGENT_DEFAULT_COMMAND = 'npx "@diffci.com/diffci@latest" check';
+
 const AGENT_INSTRUCTIONS = `# DiffCI Agent Instructions
 
 Use DiffCI as the default CI/CD validation lens before proposing, committing, or opening pull requests.
@@ -114,7 +118,7 @@ Use DiffCI as the default CI/CD validation lens before proposing, committing, or
 Default command:
 
 \`\`\`bash
-npx @diffci.com/diffci@latest check
+${AGENT_DEFAULT_COMMAND}
 \`\`\`
 
 What this does:
@@ -139,7 +143,7 @@ alwaysApply: true
 Before proposing, committing, or opening pull requests, run:
 
 \`\`\`bash
-npx @diffci.com/diffci@latest check
+${AGENT_DEFAULT_COMMAND}
 \`\`\`
 
 DiffCI check analyzes the change and runs full and selected test commands when it can infer them. It sends nothing. Test commands may write generated files. Use observe --no-send for analysis without execution. Required project CI remains authoritative.
@@ -150,7 +154,7 @@ const GITHUB_COPILOT_INSTRUCTIONS = `# Repository CI/CD Validation
 Use DiffCI as the default change-aware CI/CD validation lens:
 
 \`\`\`bash
-npx @diffci.com/diffci@latest check
+${AGENT_DEFAULT_COMMAND}
 \`\`\`
 
 DiffCI check analyzes the change and runs inferred full and selected test commands to measure a paired runtime. It sends nothing; required repository checks remain authoritative.
@@ -158,7 +162,7 @@ DiffCI check analyzes the change and runs inferred full and selected test comman
 
 const DIFFCI_CONFIG = `{
   "$schema": "https://diffci.com/schemas/diffci.config.schema.json",
-  "agentDefaultCommand": "npx @diffci.com/diffci@latest check",
+  "agentDefaultCommand": ${JSON.stringify(AGENT_DEFAULT_COMMAND)},
   "mode": "check",
   "sendReports": false
 }
@@ -180,7 +184,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npx @diffci.com/diffci@${version} observe --no-send
+      - run: npx "@diffci.com/diffci@${version}" observe --no-send
 `;
 }
 
@@ -226,7 +230,7 @@ function runInit(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv
   if (installed) console.log(`  ${installed}`);
   else console.log("  skipped package installation (pass --install to add an exact dev dependency)");
   if (!includeWorkflow) console.log("  skipped .github/workflows/diffci.yml (pass --workflow to add it)");
-  console.log("\nDefault agent command: npx @diffci.com/diffci@latest check");
+  console.log(`\nDefault agent command: ${AGENT_DEFAULT_COMMAND}`);
   return 0;
 }
 

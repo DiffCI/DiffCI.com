@@ -6,12 +6,12 @@ Copy only the integration your repository needs. DiffCI does not replace require
 
 Add this to `AGENTS.md` or the equivalent agent instruction file:
 
-> Before calling a change PR-ready, run `npx @diffci.com/diffci@latest check` from the repository
+> Before calling a change PR-ready, run `npx "@diffci.com/diffci@latest" check` from the repository
 > root. Use its output to understand affected tests and fallback reasons. Keep the repository's
 > required CI authoritative. If DiffCI reports `REFUSED` or `ERROR`, run the normal tests.
 
 `check` may execute the repository's full and selected test commands, which may write generated
-files. For analysis without executing tests, run `npx @diffci.com/diffci@latest observe --no-send`.
+files. For analysis without executing tests, run `npx "@diffci.com/diffci@latest" observe --no-send`.
 
 ## GitHub Action
 
@@ -33,7 +33,7 @@ jobs:
       - uses: DiffCI/DiffCI.com@e852523fade14bf5e0457a6331e97c8a76eedc2b # v0.2.7
 ```
 
-Run `npx @diffci.com/diffci@latest verify-workflow` before starting a pilot. The Action uploads a
+Run `npx "@diffci.com/diffci@latest" verify-workflow` before starting a pilot. The Action uploads a
 GitHub artifact by default; it sends nothing to DiffCI Cloud without an explicit endpoint and token.
 
 ## MCP client
@@ -68,7 +68,7 @@ Suggested description:
 
 - [npm package](https://www.npmjs.com/package/@diffci.com/diffci)
 - [GitHub Marketplace Action](https://github.com/marketplace/actions/diffci-observer)
-- [Agent guide](https://diffci.com/docs/ai-agents.html)
+- [Agent guide](https://diffci.com/docs/ai-agents)
 - [Context7 CLI documentation](https://context7.com/diffci/diffci.com)
 - [Share a first DiffCI report](https://github.com/DiffCI/DiffCI.com/issues/new?template=first-diffci-report.yml)
 
@@ -76,7 +76,7 @@ If a maintainer is evaluating DiffCI for the first time, ask for one local run b
 workflow change:
 
 ```bash
-npx @diffci.com/diffci@latest check
+npx "@diffci.com/diffci@latest" check
 ```
 
 Then use the first-report issue template to capture the result, fallback/refusal reasons, CI shape,

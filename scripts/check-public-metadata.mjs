@@ -23,6 +23,7 @@ function contains(label, body, expected) {
 
 equal("package name", pkg.name, manifest.packageName);
 equal("package description", pkg.description, manifest.packageDescription);
+equal("package homepage", pkg.homepage, `${manifest.homepage}/`);
 equal("package version", pkg.version, manifest.packageVersion);
 equal("package license", pkg.license, manifest.license);
 equal("package Node requirement", pkg.engines?.node, manifest.nodeRequirement);

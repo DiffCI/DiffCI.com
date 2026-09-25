@@ -5,15 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0c0e11">
 <script>(function(){var d=document.documentElement,k='diffci-theme';function set(t){d.setAttribute('data-theme',t);var b=document.querySelectorAll('.theme-toggle');for(var i=0;i<b.length;i++)b[i].setAttribute('aria-label',t==='light'?'Switch to dark theme':'Switch to light theme');}try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')set(s);}catch(e){}document.addEventListener('DOMContentLoaded',function(){set(d.getAttribute('data-theme')==='light'?'light':'dark');});document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var n=d.getAttribute('data-theme')==='light'?'dark':'light';set(n);try{localStorage.setItem(k,n);}catch(e){}});})();</script>
-<title>deepseek-harness — DiffCI case study</title>
-<meta name="description" content="Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.">
-<meta property="og:type" content="website">
+<title>Test Selection on deepseek-harness | DiffCI</title>
+<meta name="description" content="Five deepseek-harness merges: 79.5–89.5% measured job-level reduction, 3 of 3 mutation recall, and one result withheld when execution differed.">
+<meta property="og:type" content="article">
 <meta property="og:site_name" content="DiffCI">
-<meta property="og:title" content="deepseek-harness — DiffCI case study">
+<meta property="og:title" content="Test Selection on deepseek-harness | DiffCI">
 <meta property="og:description" content="Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.">
 <meta property="og:url" content="https://diffci.com/case-studies/deepseek-harness">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://diffci.com/case-studies/deepseek-harness">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"Test Selection on deepseek-harness","description":"Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.","url":"https://diffci.com/case-studies/deepseek-harness","image":"https://diffci.com/assets/diffci-social-card.png","author":{"@type":"Organization","name":"DiffCI","url":"https://diffci.com/"},"publisher":{"@type":"Organization","name":"DiffCI","url":"https://diffci.com/"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"deepseek-harness case study","item":"https://diffci.com/case-studies/deepseek-harness"}]}]}
+</script>
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
 </head>
