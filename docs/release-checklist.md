@@ -37,6 +37,10 @@ release, and verifies npm, GitHub About, the release, and Marketplace. A stable 
 `latest`; a prerelease tag such as `v<version>-alpha.1` publishes under the `alpha` dist tag without deleting the stable `latest` tag.
 Use the version actually qualified for the release; do not reuse an existing tag.
 
+After npm publication, run the protected `Publish MCP Registry listing` workflow from `main` and approve
+its `mcp-registry-publish` environment deployment. Registry OIDC is intentionally main-only; tag workflows
+must not attempt to enter that environment.
+
 ## Post-release verification
 
 ```bash

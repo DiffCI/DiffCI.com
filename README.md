@@ -150,7 +150,7 @@ jobs:
 Then check the workflow locally with `npx "@diffci.com/diffci@latest" verify-workflow`. Keep the observer
 out of required checks and other jobs' `needs` lists. The Action adds a job summary and a
 `diffci-observation` artifact to the run; it does not alter which tests your other jobs execute.
-The example pins release `v0.2.10` to its qualified feature commit SHA for reproducibility.
+The example pins release `v0.2.11` to its qualified feature commit SHA for reproducibility.
 
 The CLI sends no report with `--no-send`. The Action uploads a GitHub artifact by default; sending to
 DiffCI's hosted service requires an explicitly configured endpoint and token.

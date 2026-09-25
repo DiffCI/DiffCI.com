@@ -97,7 +97,7 @@ They are supporting signals only.
 
 | Signal | Value | Interpretation |
 | --- | ---: | --- |
-| npm latest version | `0.2.10` | Current CLI and MCP binaries are publicly available. |
+| npm latest version | `0.2.11` | Current CLI and MCP binaries are publicly available. |
 | npm downloads, last complete registry week (`2026-09-15`–`2026-09-21`) | 1,929 | Distribution activity; not unique users or repositories. |
 | GitHub stars / forks / watchers | 0 / 0 / 0 | No repository-level community conversion yet. |
 | GitHub views, available 14-day window | 18 views / 4 unique visitors | Early discovery signal. |
@@ -120,6 +120,7 @@ Existing outreach log:
 | 2026-09-22 | ciembor/agent-rules-books | Issue | https://github.com/ciembor/agent-rules-books/issues/8 | Open; no reply as of 2026-09-25 | Follow up once on 2026-09-30; offer a PR only if invited. |
 | 2026-09-22 | jbarbier/CLAUDE.md | Issue | https://github.com/jbarbier/CLAUDE.md/issues/12 | Open; no reply as of 2026-09-25 | Follow up once on 2026-09-30; offer a PR only if invited. |
 | 2026-09-22 | Official MCP Registry | Directory | `io.github.adityankale190895/diffci` | Published | Consider moving to `io.github.DiffCI/diffci` after GitHub org namespace authorization is available. |
+| 2026-09-25 | Official MCP Registry | Directory | `io.github.DiffCI/diffci` | Migration in progress | Organization namespace authorized through GitHub OIDC. |
 | 2026-09-22 | Glama | Directory | TBD | Planned | Submit repository URL. |
 | 2026-09-22 | Smithery | Directory | TBD | Blocked | Needs Smithery account/API key. |
 

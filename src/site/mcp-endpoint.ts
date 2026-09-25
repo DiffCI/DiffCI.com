@@ -24,7 +24,7 @@ interface ToolCallParams {
   arguments?: Record<string, unknown>;
 }
 
-export const MCP_SERVER_INFO = { name: "io.github.adityankale190895/diffci", version: "0.2.10" };
+export const MCP_SERVER_INFO = { name: "io.github.DiffCI/diffci", version: "0.2.11" };
 const SUPPORTED_PROTOCOLS = new Set(["2025-03-26", "2025-06-18", "2025-11-25"]);
 const DEFAULT_PROTOCOL = "2025-11-25";
 

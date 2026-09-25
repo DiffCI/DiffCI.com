@@ -78,7 +78,7 @@ test("serves a stateless Streamable HTTP MCP endpoint", async () => {
   assert.match(initialized.headers.get("content-type") ?? "", /^application\/json/);
   const initBody = await initialized.json() as { result?: { protocolVersion?: string; serverInfo?: { name?: string } } };
   assert.equal(initBody.result?.protocolVersion, "2025-11-25");
-  assert.equal(initBody.result?.serverInfo?.name, "io.github.adityankale190895/diffci");
+  assert.equal(initBody.result?.serverInfo?.name, "io.github.DiffCI/diffci");
 
   const listed = await mcp({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} }, {
     "MCP-Protocol-Version": "2025-11-25",
@@ -160,7 +160,7 @@ test("publishes cacheable MCP server-card and AI catalog discovery documents", a
   const etag = card.headers.get("etag");
   assert.ok(etag);
   const cardBody = await card.json() as { name?: string; remotes?: Array<{ url?: string }> };
-  assert.equal(cardBody.name, "io.github.adityankale190895/diffci");
+  assert.equal(cardBody.name, "io.github.DiffCI/diffci");
   assert.equal(cardBody.remotes?.[0]?.url, "https://diffci.com/mcp");
 
   const unchanged = await worker.fetch(new Request("https://diffci.com/mcp/server-card", {

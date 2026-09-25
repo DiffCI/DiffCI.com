@@ -71,7 +71,7 @@ jobs:
       - uses: DiffCI/DiffCI.com@e1d7bab271c5d83899bda0034d70d3e34c10c1f7
 ```
 
-The example pins release `v0.2.10` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
+The example pins release `v0.2.11` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
@@ -136,7 +136,7 @@ the OSS core rather than define a separate feature tier. The readiness checklist
 and documentation versions. Prepare a future release with:
 
 ```bash
-npm run release:sync -- 0.2.10 <qualified-40-character-action-sha>
+npm run release:sync -- 0.2.11 <qualified-40-character-action-sha>
 npm run check:public-metadata
 ```
 

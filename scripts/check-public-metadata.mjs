@@ -43,9 +43,11 @@ contains(
 );
 equal("MCP package namespace", pkg.mcpName, server.name);
 equal("MCP landing page", server.websiteUrl, `${manifest.homepage}/mcp-server`);
-contains("MCP release automation dependency", read(".github/workflows/release.yml"), "needs: npm");
-contains("MCP release automation publish", read(".github/workflows/release.yml"), "./mcp-publisher publish server.json");
-contains("MCP release automation verification", read(".github/workflows/release.yml"), "npm run registry:verify");
+const mcpPublishWorkflow = read(".github/workflows/publish-mcp-registry.yml");
+contains("MCP release automation main guard", mcpPublishWorkflow, "if: github.ref == 'refs/heads/main'");
+contains("MCP release automation protected environment", mcpPublishWorkflow, "environment: mcp-registry-publish");
+contains("MCP release automation publish", mcpPublishWorkflow, "./mcp-publisher publish server.json");
+contains("MCP release automation verification", mcpPublishWorkflow, "npm run registry:verify");
 equal("Smithery package version", smithery.version, manifest.packageVersion);
 contains("Action name", action, `name: ${manifest.actionName}`);
 contains("Action description", action, `description: ${manifest.actionDescription}`);
