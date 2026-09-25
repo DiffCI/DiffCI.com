@@ -4,7 +4,7 @@
   "homepage": "https://diffci.com",
   "packageName": "@diffci.com/diffci",
   "packageDescription": "Change-aware CI analysis and conservative affected-test selection for GitHub Actions and coding agents",
-  "packageVersion": "0.2.7",
+  "packageVersion": "0.2.8",
   "actionVersion": "v0.2.7",
   "actionSha": "e852523fade14bf5e0457a6331e97c8a76eedc2b",
   "actionName": "DiffCI observer",
