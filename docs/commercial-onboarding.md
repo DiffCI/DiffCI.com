@@ -57,3 +57,21 @@ Managed execution and production savings require their own evidence; this panel 
 - The workflow remains in a draft PR, not merged into main. Other required CI checks were still
   pending when this smoke-test evidence was recorded. This report proves upload operation, not
   runtime savings or completion of the entire commercial roadmap.
+
+## Self-service reconnection follow-up (2026-09-25)
+
+The earlier assisted-reconnection gap is addressed by release commit `39a689b`, deployed as product
+Worker version `3e889b7e-b344-481a-a62d-c35ae39c0b93`. Organization pages now offer
+“Already installed? Connect a repository”. Entering owner/name verifies the app installation, current
+GitHub admin permission, and immutable GitHub user identity before connecting only that repository.
+The POST requires an authenticated session, CSRF, and DiffCI organization membership. Unknown GitHub
+responses fail closed, and repositories belonging to another tenant are not moved.
+
+Validation: the DiffCI check completed both full and selected test commands; TypeScript checking and
+18 focused reconnection/UI tests passed. Live browser submission for DiffCI/DiffCI.com succeeded and
+preserved the same repository, its one live credential, and both received observations. Anonymous POST
+returned 401. Negative authorization cases were tested locally rather than by changing live permissions.
+
+PR #10 is merged after all its checks passed. The observer also passed on main in run
+https://github.com/DiffCI/DiffCI.com/actions/runs/36168243245 and the dashboard received the main-branch
+report for commit d7179de12. No manual callback is needed for the new reconnect form.
