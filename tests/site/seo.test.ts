@@ -38,6 +38,11 @@ test("homepage publishes Bing ownership verification", () => {
   assert.match(homepage, /<meta name="msvalidate\.01" content="00B8B6EF3F3F58410655A46BF6E141E2">/);
 });
 
+test("homepage credits DentalPresence as DiffCI's original dogfooding target", () => {
+  const homepage = readFileSync(path.join(site, "index.html"), "utf8");
+  assert.match(homepage, /Original dogfooding target: <a href="https:\/\/dentalpresence\.in\/">DentalPresence<\/a>/);
+});
+
 test("site headers enforce HTTPS and disable unused browser capabilities", () => {
   const headers = readFileSync(path.join(site, "_headers"), "utf8");
   assert.match(headers, /^\s*Strict-Transport-Security: max-age=31536000; includeSubDomains$/m);
