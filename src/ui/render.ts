@@ -123,6 +123,11 @@ const SCRIPT = `
     var url = button.dataset.url, method = button.dataset.method || "POST";
     var target = button.dataset.target ? document.getElementById(button.dataset.target) : null;
     var body = button.dataset.body;
+    if (button.dataset.jsonForm) {
+      var jsonForm = document.getElementById(button.dataset.jsonForm);
+      if (!jsonForm || !jsonForm.reportValidity()) return;
+      body = JSON.stringify(Object.fromEntries(new FormData(jsonForm)));
+    }
     if (button.dataset.policyForm) {
       var form = document.getElementById(button.dataset.policyForm);
       if (!form || !form.reportValidity()) return;

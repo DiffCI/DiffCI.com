@@ -162,6 +162,14 @@ export function renderOrganization(data: OrganizationPageData): string {
         : html`<p class="notice">
             The GitHub App is not configured in this environment, so repositories cannot be connected from here.
           </p>`}
+      ${data.installUrl ? html`<details><summary>Already installed? Connect a repository</summary>
+        <p>Enter a repository where you are a GitHub administrator and the DiffCI App is already installed.
+        Only this repository will be connected. Existing data and credentials stay with their organization.</p>
+        <form id="reconnect-form">
+          <input type="hidden" name="organizationId" value="${data.organization.id}">
+          <label>GitHub repository <input name="repository" placeholder="owner/repository" required maxlength="200"></label>
+          <button type="button" data-url="/v1/installations/reconnect" data-json-form="reconnect-form" data-target="reconnect-result">Connect existing repository</button>
+        </form><p id="reconnect-result" role="status"></p></details>` : ""}
       ${data.repositories.length === 0
         ? html`<p class="empty">No repositories connected yet.</p>`
         : html`<table>

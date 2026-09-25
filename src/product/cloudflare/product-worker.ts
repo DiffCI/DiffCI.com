@@ -61,6 +61,7 @@ import { connectInstallation } from "../../install/github-installation.js";
 import { handleInstallationWebhook } from "../../install/webhook.js";
 import { forwardReadOnlyWebhook } from "../../install/unified-read-webhook.js";
 import { makeD1PendingInstallationStore, claimInstallation } from "../../install/pending.js";
+import { reconnectRepository } from "../../install/reconnect.js";
 import { makeD1WebhookDeliveryStore } from "../../install/delivery-log.js";
 import { currentMonth, getMonthlyLedgerForOrganization, type LedgerRouteDeps } from "../../ledger/routes.js";
 import { makeD1InvoiceStore } from "../../billing/invoice-store.js";
@@ -555,6 +556,20 @@ export default {
           fleet: fleet?.ok && policyDetails?.ok ? { report: fleet.data, canEditPolicy: policyDetails.data.canEdit, history: policyDetails.data.history } : undefined,
         }),
       );
+    }
+
+    if (request.method === "POST" && url.pathname === "/v1/installations/reconnect") {
+      const principal = await authenticateRequest(request, { config: authConfig, sessionStore });
+      if (!principal) return json({ ok: false, error: "unauthorized" }, 401);
+      if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+      if (!env.GITHUB_APP_ID || !env.GITHUB_APP_PRIVATE_KEY) return json({ ok: false, error: "GitHub App is not configured" }, 503);
+      const body = await request.json().catch(() => null) as { organizationId?: unknown; repository?: unknown } | null;
+      if (typeof body?.organizationId !== "string" || typeof body.repository !== "string")
+        return json({ ok: false, error: "organizationId and repository are required" }, 400);
+      const result = await reconnectRepository({ productStore: store, oauthStore,
+        credentials: { appId: env.GITHUB_APP_ID, privateKeyPkcs8Pem: env.GITHUB_APP_PRIVATE_KEY } },
+        { userId: principal.userId, organizationId: body.organizationId, repository: body.repository.trim() });
+      return json(result, result.ok ? 200 : 403);
     }
 
     // Start of the App installation flow. The state is server-generated and single-use (the same
