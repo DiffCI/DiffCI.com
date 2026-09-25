@@ -36,10 +36,12 @@ export async function analyzePublicRepository(repository: string, fetchImpl: typ
   const signal = AbortSignal.timeout(20000);
   const base = `https://api.github.com/repos/${repository.split("/").map(encodeURIComponent).join("/")}`;
   async function get(path: string): Promise<unknown> {
-    const response = await fetchImpl(`${base}${path}`, { redirect: "error", signal,
+    // Workers supports manual/follow only; manual lets us refuse redirects without following them.
+    const response = await fetchImpl(`${base}${path}`, { redirect: "manual", signal,
       headers: { Accept: "application/vnd.github+json", "User-Agent": "DiffCI-public-diagnostic" } });
     if (!response.ok) {
       await response.body?.cancel();
+      if (response.status >= 300 && response.status < 400) throw new Error("repository_unavailable");
       throw new Error(response.status === 404 ? "repository_unavailable" : response.status === 403 || response.status === 429 ? "upstream_rate_limited" : "upstream_unavailable");
     }
     return JSON.parse(await readBoundedText(response, 128 * 1024));

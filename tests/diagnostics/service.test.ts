@@ -9,7 +9,7 @@ const sha = "a".repeat(40);
 function upstream(seen: string[] = []): typeof fetch {
   return (async (url, init) => {
     seen.push(String(url));
-    assert.equal(init?.redirect, "error");
+    assert.equal(init?.redirect, "manual");
     assert.equal(new Headers(init?.headers).has("Authorization"), false);
     const path = new URL(String(url)).pathname;
     if (path.endsWith("/commits/main")) return Response.json({ sha });
@@ -53,6 +53,15 @@ it("refuses private or unknown privacy before reading manifests", async () => {
     await assert.rejects(analyzePublicRepository("acme/project", (async () => { calls++; return Response.json(metadata); }) as typeof fetch), /repository_unavailable/);
     assert.equal(calls, 1);
   }
+});
+it("uses the Workers-supported manual mode and refuses redirects without fetching their target", async () => {
+  let calls = 0;
+  await assert.rejects(analyzePublicRepository("acme/project", (async (_url, init) => {
+    calls++;
+    assert.equal(init?.redirect, "manual");
+    return new Response(null, { status: 302, headers: { Location: "https://example.invalid/private" } });
+  }) as typeof fetch), /repository_unavailable/);
+  assert.equal(calls, 1);
 });
 it("caps streamed bytes without Content-Length and decodes split UTF-8", async () => {
   const bytes = new TextEncoder().encode("éé");
