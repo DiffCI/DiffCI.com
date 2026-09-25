@@ -6,7 +6,7 @@
  *   2. www.diffci.com is answered with a 301 to the apex (the www custom domain used to 522);
  *   3. legacy .html and trailing-slash document URLs are permanently redirected to the clean,
  *      extensionless canonical URL;
- *   4. /mcp serves the stateless Streamable HTTP MCP endpoint;
+ *   4. /mcp and /mcp/v1 serve the stateless Streamable HTTP MCP endpoint;
  *   5. /mcp/server-card and /.well-known/ai-catalog.json expose machine-readable discovery metadata;
  *   6. every other request is served from the ./site assets unchanged.
  */
@@ -35,7 +35,7 @@ const serverCard = {
   icons: [{ src: "https://diffci.com/assets/diffci-mark.svg", mimeType: "image/svg+xml", sizes: ["any"] }],
   remotes: [{
     type: "streamable-http",
-    url: "https://diffci.com/mcp",
+    url: "https://diffci.com/mcp/v1",
     supportedProtocolVersions: ["2025-03-26", "2025-06-18", "2025-11-25"],
   }],
 };
@@ -98,10 +98,11 @@ export default {
     }
     if (movedOrigin || movedDocument) {
       // Preserve POST when a caller accidentally uses http:// for the HTTPS MCP endpoint.
-      const status = url.pathname === "/mcp" && request.method !== "GET" ? 308 : movedOrigin ? 301 : 308;
+      const isMcpEndpoint = url.pathname === "/mcp" || url.pathname === "/mcp/v1";
+      const status = isMcpEndpoint && request.method !== "GET" ? 308 : movedOrigin ? 301 : 308;
       return Response.redirect(url.toString(), status);
     }
-    if (url.pathname === "/mcp") return handleMcpRequest(request);
+    if (url.pathname === "/mcp" || url.pathname === "/mcp/v1") return handleMcpRequest(request);
     if (url.pathname === "/mcp/server-card") {
       return discoveryResponse(request, serverCard, "application/mcp-server-card+json", `"diffci-mcp-${MCP_SERVER_INFO.version}"`);
     }

@@ -37,7 +37,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://diffci.com/mcp"
+      "url": "https://diffci.com/mcp/v1"
     }
   ]
 }

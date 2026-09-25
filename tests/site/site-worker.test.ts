@@ -101,6 +101,14 @@ test("serves a stateless Streamable HTTP MCP endpoint", async () => {
     "@diffci.com/diffci@latest", "observe", "--no-send", "--repo", "/work/repo",
   ]);
   assert.equal(callBody.result?.structuredContent?.runsTests, false);
+
+  const versioned = await worker.fetch(new Request("https://diffci.com/mcp/v1", {
+    method: "POST",
+    headers: mcpHeaders,
+    body: JSON.stringify({ jsonrpc: "2.0", id: 4, method: "ping" }),
+  }), env());
+  assert.equal(versioned.status, 200);
+  assert.deepEqual(await versioned.json(), { jsonrpc: "2.0", id: 4, result: {} });
 });
 
 test("interprets reports and checks submitted workflow text without repository access", async () => {
@@ -161,7 +169,7 @@ test("publishes cacheable MCP server-card and AI catalog discovery documents", a
   assert.ok(etag);
   const cardBody = await card.json() as { name?: string; remotes?: Array<{ url?: string }> };
   assert.equal(cardBody.name, "io.github.DiffCI/diffci");
-  assert.equal(cardBody.remotes?.[0]?.url, "https://diffci.com/mcp");
+  assert.equal(cardBody.remotes?.[0]?.url, "https://diffci.com/mcp/v1");
 
   const unchanged = await worker.fetch(new Request("https://diffci.com/mcp/server-card", {
     headers: { "If-None-Match": etag },

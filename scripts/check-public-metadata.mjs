@@ -35,7 +35,7 @@ equal("MCP server version", server.version, manifest.packageVersion);
 equal("MCP npm package", server.packages?.[0]?.identifier, manifest.packageName);
 equal("MCP npm version", server.packages?.[0]?.version, manifest.packageVersion);
 equal("MCP HTTPS transport", server.remotes?.[0]?.type, "streamable-http");
-equal("MCP HTTPS endpoint", server.remotes?.[0]?.url, `${manifest.homepage}/mcp`);
+equal("MCP HTTPS endpoint", server.remotes?.[0]?.url, `${manifest.homepage}/mcp/v1`);
 contains(
   "MCP HTTPS server version",
   read("src/site/mcp-endpoint.ts"),

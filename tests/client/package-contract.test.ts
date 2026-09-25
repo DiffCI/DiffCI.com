@@ -89,6 +89,6 @@ describe("npm package contract", () => {
     assert.equal(server.packages?.[0]?.version, pkg.version);
     assert.equal(server.packages?.[0]?.transport?.type, "stdio");
     assert.deepEqual(server.packages?.[0]?.packageArguments, [{ type: "positional", value: "mcp" }]);
-    assert.deepEqual(server.remotes, [{ type: "streamable-http", url: "https://diffci.com/mcp" }]);
+    assert.deepEqual(server.remotes, [{ type: "streamable-http", url: "https://diffci.com/mcp/v1" }]);
   });
 });
