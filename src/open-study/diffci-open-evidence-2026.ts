@@ -82,6 +82,7 @@ export type StudyFindings = {
   readonly subtitle: string;
   readonly version: string;
   readonly asOf: string;
+  readonly updatedAsOf: string;
   readonly windowStart: string;
   readonly windowEnd: string;
   readonly publisher: string;
@@ -279,6 +280,7 @@ export const diffciOpenEvidenceStudy2026: StudyFindings = {
   subtitle: "What change-aware test selection is actually worth on real open-source CI, measured, including where it is worth nothing",
   version: "v1",
   asOf: "2026-09-03",
+  updatedAsOf: "2026-09-25",
   windowStart: "2026-08-19",
   windowEnd: "2026-09-03",
   publisher: "DiffCI",

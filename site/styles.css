@@ -1143,6 +1143,35 @@ article h2.no-rule { border-top: 0; padding-top: 0; margin-top: 1.75rem; }
 
 .backlink:hover { color: var(--accent-ink); }
 
+.breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 1rem;
+  color: var(--ink-3);
+  font-size: 0.82rem;
+}
+
+.breadcrumbs a { color: var(--ink-2); text-decoration: none; }
+.breadcrumbs a:hover { color: var(--accent-ink); text-decoration: underline; }
+
+.article-meta {
+  margin: 0.75rem 0 1.5rem;
+  color: var(--ink-3);
+  font-size: 0.86rem;
+}
+
+.related-guides {
+  margin-top: 2.75rem;
+  padding: 1.2rem 1.35rem;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.related-guides h2 { border: 0; margin: 0 0 0.65rem; padding: 0; font-size: 1.05rem; }
+.related-guides ul { margin-bottom: 0; }
+
 pre {
   font-family: var(--mono);
   font-size: 0.83rem;

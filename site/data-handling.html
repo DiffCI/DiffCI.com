@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0c0e11">
 <script>(function(){var d=document.documentElement,k='diffci-theme';function set(t){d.setAttribute('data-theme',t);var b=document.querySelectorAll('.theme-toggle');for(var i=0;i<b.length;i++)b[i].setAttribute('aria-label',t==='light'?'Switch to dark theme':'Switch to light theme');}try{var s=localStorage.getItem(k);if(s==='light'||s==='dark')set(s);}catch(e){}document.addEventListener('DOMContentLoaded',function(){set(d.getAttribute('data-theme')==='light'?'light':'dark');});document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('.theme-toggle');if(!b)return;var n=d.getAttribute('data-theme')==='light'?'dark':'light';set(n);try{localStorage.setItem(k,n);}catch(e){}});})();</script>
-<title>Data handling — DiffCI</title>
-<meta name="description" content="What DiffCI reads, what it stores, how long it keeps it, and how to have it deleted.">
+<title>Data Handling and Privacy | DiffCI</title>
+<meta name="description" content="What DiffCI reads, stores, and deletes; retention periods; hosted and local boundaries; security reporting; and how to request privacy or data deletion help.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DiffCI">
-<meta property="og:title" content="Data handling — DiffCI">
-<meta property="og:description" content="What DiffCI reads, what it stores, how long it keeps it, and how to have it deleted.">
+<meta property="og:title" content="Data Handling and Privacy | DiffCI">
+<meta property="og:description" content="What DiffCI reads, stores, and deletes; retention periods; security reporting; and privacy help.">
 <meta property="og:url" content="https://diffci.com/data-handling">
 <meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
+<meta property="og:image:alt" content="DiffCI — change-aware CI analysis and conservative test selection">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://diffci.com/data-handling">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Data Handling and Privacy","url":"https://diffci.com/data-handling","datePublished":"2026-08-26","dateModified":"2026-09-25","about":{"@id":"https://diffci.com/#organization"}}</script>
 </head>
 <body>
 
@@ -42,6 +44,7 @@
 
   <p class="eyebrow">Commitments, not marketing</p>
   <h1>Data handling</h1>
+  <p class="article-meta">Published August 26, 2026 · Updated September 25, 2026 · Maintained by <a href="/about">DiffCI</a></p>
 
   <div class="disclaimer">
     Both automated deletion paths below - uninstall-triggered erasure and the 90-day cap - are
@@ -159,11 +162,11 @@
 
   <h2>Contact</h2>
   <p>
-    A dedicated address for deletion requests and security reports is not yet published; this site has
-    no mailbox of its own yet. Until it does, the self-service route works immediately: uninstalling the
-    App from GitHub's Settings → Installations page triggers erasure of that repository's records, as
-    described above. For anything the self-service route does not cover, use the
-    <a href="/contact">contact form</a>. The public source is maintained in the
+    Report suspected vulnerabilities privately to <a href="mailto:security@diffci.com">security@diffci.com</a>.
+    For deletion or privacy requests, use the <a href="/contact">contact form</a>; include a reply address
+    if you want confirmation. The self-service route works immediately: uninstalling the App from GitHub's
+    Settings → Installations page triggers erasure of that repository's records, as described above.
+    The public source is maintained in the
     <a href="https://github.com/DiffCI">DiffCI GitHub organization</a>.
   </p>
 

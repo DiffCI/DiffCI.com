@@ -3,7 +3,7 @@
   "repositoryDescription": "DiffCI CLI and GitHub Action for change-aware CI analysis and conservative test selection",
   "homepage": "https://diffci.com",
   "packageName": "@diffci.com/diffci",
-  "packageDescription": "DiffCI - deterministic change-aware CI planning",
+  "packageDescription": "Change-aware CI analysis and conservative affected-test selection for GitHub Actions and coding agents",
   "packageVersion": "0.2.7",
   "actionVersion": "v0.2.7",
   "actionSha": "e852523fade14bf5e0457a6331e97c8a76eedc2b",

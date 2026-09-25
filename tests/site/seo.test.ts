@@ -38,6 +38,12 @@ test("homepage publishes Bing ownership verification", () => {
   assert.match(homepage, /<meta name="msvalidate\.01" content="00B8B6EF3F3F58410655A46BF6E141E2">/);
 });
 
+test("site headers enforce HTTPS and disable unused browser capabilities", () => {
+  const headers = readFileSync(path.join(site, "_headers"), "utf8");
+  assert.match(headers, /^\s*Strict-Transport-Security: max-age=31536000; includeSubDomains$/m);
+  assert.match(headers, /^\s*Permissions-Policy: camera=\(\), geolocation=\(\), microphone=\(\)$/m);
+});
+
 test("sitemap contains only canonical, indexable, existing HTML pages", () => {
   const sitemap = readFileSync(path.join(site, "sitemap.xml"), "utf8");
   const urls = [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map((match) => new URL(match[1]!));
@@ -75,6 +81,33 @@ test("indexable pages have complete search and social metadata", () => {
     assert.doesNotMatch(body, /canonical"\s+href="[^"]*\.html"/i, `${relative} canonical must not redirect`);
     assert.doesNotMatch(body, /href="\/[^"]*\.html(?:[#?][^"]*)?"/i, `${relative} internal links must be clean`);
   }
+});
+
+test("technical articles expose trustworthy authorship and freshness", () => {
+  for (const file of htmlFiles()) {
+    const body = readFileSync(file, "utf8");
+    if (!body.includes('"@type":"TechArticle"')) continue;
+    const relative = path.relative(site, file).replaceAll("\\", "/");
+    assert.match(body, /"datePublished":"\d{4}-\d{2}-\d{2}"/, `${relative} needs datePublished`);
+    assert.match(body, /"dateModified":"\d{4}-\d{2}-\d{2}"/, `${relative} needs dateModified`);
+    assert.match(body, /"author":\{"@type":"Organization","@id":"https:\/\/diffci\.com\/#organization"/, `${relative} needs the canonical author entity`);
+    assert.match(body, /class="article-meta"[^>]*>[^<]*(?:<[^>]+>[^<]*<\/[^>]+>[^<]*)*By\s+<a href="\/about">DiffCI<\/a>/, `${relative} needs a visible byline`);
+  }
+});
+
+test("about and data-handling pages publish verifiable trust routes", () => {
+  const about = readFileSync(path.join(site, "about.html"), "utf8");
+  const dataHandling = readFileSync(path.join(site, "data-handling.html"), "utf8");
+  assert.match(about, /<title>About DiffCI/);
+  assert.match(about, /mailto:security@diffci\.com/);
+  assert.match(dataHandling, /mailto:security@diffci\.com/);
+  assert.doesNotMatch(dataHandling, /no mailbox of its own|address for deletion requests and security reports is not yet published/i);
+});
+
+test("sitemap generation is an explicit build step", () => {
+  const packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as { scripts?: Record<string, string> };
+  assert.equal(packageJson.scripts?.["site:sitemap"], "node scripts/generate-site-sitemap.mjs");
+  assert.ok(existsSync(path.join(root, "scripts", "generate-site-sitemap.mjs")));
 });
 
 test("internal links resolve directly and fragments exist", () => {
