@@ -372,12 +372,17 @@ ${JSON.stringify(
     identifier: study.studyId,
     version: study.version,
     datePublished: study.asOf,
-    dateModified: study.asOf,
+    dateModified: study.updatedAsOf,
     keywords: ["test impact analysis", "regression test selection", "continuous integration", "affected tests", "CI optimization"],
     image: socialImage,
     temporalCoverage: `${study.windowStart}/${study.windowEnd}`,
     license: study.license.url,
-    creator: { "@type": "Organization", name: study.publisher, url: SITE_ORIGIN },
+    creator: {
+      "@type": "Organization",
+      "@id": `${SITE_ORIGIN}/#organization`,
+      name: study.publisher,
+      url: `${SITE_ORIGIN}/about`,
+    },
     distribution: [
       { "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: `${SITE_ORIGIN}${urls.csv}` },
       { "@type": "DataDownload", encodingFormat: "application/pdf", contentUrl: `${SITE_ORIGIN}${urls.pdf}` },
@@ -422,10 +427,12 @@ ${JSON.stringify(
 <main>
 <article class="wrap">
 
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><span>Open evidence study</span></nav>
   <a class="backlink" href="/#evidence">← All evidence</a>
 
   <p class="eyebrow">Open study · ${escapeHtml(study.license.name.replace(/ \(.*\)$/, ""))} · ${escapeHtml(study.studyId)}</p>
   <h1>${escapeHtml(study.studyName)}</h1>
+  <p class="article-meta">Published September 3, 2026 · Updated September 25, 2026 · By <a href="/about">DiffCI</a></p>
   <p class="lede">${escapeHtml(study.subtitle)}.</p>
 
   <div class="disclaimer">

@@ -1,7 +1,7 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.2.7",
-  "description": "DiffCI - deterministic change-aware CI planning",
+  "version": "0.2.9",
+  "description": "Change-aware CI analysis and conservative affected-test selection for GitHub Actions and coding agents",
   "keywords": [
     "ci",
     "cicd",
@@ -73,7 +73,7 @@
     "impact": "tsx scripts/diffci.ts impact",
     "observe": "tsx src/client/cli.ts observe",
     "verify-workflow": "tsx src/client/cli.ts verify-workflow",
-    "build:client": "tsc -p tsconfig.client.json",
+    "build:client": "tsc -p tsconfig.client.json && node scripts/ensure-client-executables.mjs",
     "build:agent": "tsx scripts/build-agent.ts",
     "inspect:agent": "tsx scripts/inspect-agent-package.ts",
     "dogfood": "tsx scripts/dogfood-observe.ts",
@@ -99,7 +99,9 @@
     "product:migrate": "tsx scripts/migrate-product-db.ts",
     "site:dev": "wrangler dev --config wrangler.site.jsonc --port 8788",
     "site:deploy": "wrangler deploy --config wrangler.site.jsonc",
+    "site:sitemap": "node scripts/generate-site-sitemap.mjs",
     "site:indexnow": "node scripts/submit-indexnow.mjs",
+    "release:sync": "node scripts/sync-public-metadata.mjs",
     "study:render": "tsx scripts/render-open-study.ts",
     "validation:deploy": "wrangler deploy --config wrangler.validation-env.jsonc",
     "validation:pack": "tsx scripts/diffci-validation-cli.ts pack",

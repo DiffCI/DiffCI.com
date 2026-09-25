@@ -36,7 +36,8 @@
       "logo": "https://diffci.com/assets/diffci-logo.png",
       "sameAs": [
         "https://github.com/DiffCI",
-        "https://www.npmjs.com/package/@diffci.com/diffci"
+        "https://www.npmjs.com/package/@diffci.com/diffci",
+        "https://fossunited.org/grants/directory/diffci"
       ]
     },
     {
@@ -48,6 +49,10 @@
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Windows, macOS, Linux",
       "softwareRequirements": "Node.js 22.5 or later and Git",
+      "softwareVersion": "0.2.9",
+      "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+      "codeRepository": "https://github.com/DiffCI/DiffCI.com",
+      "installUrl": "https://www.npmjs.com/package/@diffci.com/diffci",
       "isAccessibleForFree": true,
       "publisher": { "@id": "https://diffci.com/#organization" },
       "offers": {
@@ -219,7 +224,7 @@ npm install --save-dev @diffci.com/diffci</code></pre>
         <h3>Add one non-blocking observer job</h3>
         <p>
           Put DiffCI in its own job so a DiffCI failure cannot become your workflow's conclusion. For
-          a reproducible installation, the example pins release <code>v0.2.7</code> to its qualified feature commit SHA.
+          a reproducible installation, the example pins release <code>v0.2.9</code> to its qualified feature commit SHA.
         </p>
         <pre><code>jobs:
   diffci:
@@ -231,7 +236,7 @@ npm install --save-dev @diffci.com/diffci</code></pre>
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@e852523fade14bf5e0457a6331e97c8a76eedc2b</code></pre>
+      - uses: DiffCI/DiffCI.com@5458e133a549b24f7224b1364811ef487fa4e153</code></pre>
         <p class="fine">
           The Action writes a report artifact, prints a summary, and cannot skip tests, cancel jobs,
           comment on pull requests, or change required checks.
@@ -578,6 +583,7 @@ npm install --save-dev @diffci.com/diffci</code></pre>
       <a href="/test-impact-analysis/github-actions">Test impact analysis</a>
       <a href="/guides/affected-tests">Affected tests</a>
       <a href="/docs/ai-agents">Agent docs</a>
+      <a href="/about">About</a>
       <a href="/data-handling">Data handling</a>
       <a href="/contact">Contact</a>
     </nav>
