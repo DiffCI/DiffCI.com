@@ -104,12 +104,17 @@ try {
   const packJson = runNpm(["pack", "--ignore-scripts", "--json", "--pack-destination", temp]);
   const pack = JSON.parse(packJson)[0];
   const packedPaths = new Set(pack.files.map((file) => file.path));
+  const packedFiles = new Map(pack.files.map((file) => [file.path, file]));
   const maxPackedBytes = 8 * 1024 * 1024;
   const maxUnpackedBytes = 40 * 1024 * 1024;
   assert(pack.size <= maxPackedBytes, `npm tarball is ${pack.size} bytes; reviewed limit is ${maxPackedBytes}`);
   assert(pack.unpackedSize <= maxUnpackedBytes, `unpacked npm package is ${pack.unpackedSize} bytes; reviewed limit is ${maxUnpackedBytes}`);
   assert(packedPaths.has("node_modules/@diffci.com/core/dist/index.js"), "Core engine must be bundled into the CLI tarball");
   assert(packedPaths.has("node_modules/@diffci.com/core/dist/repo/adapters/maven.js"), "Maven adapter must be bundled into the CLI tarball");
+  if (process.platform !== "win32") {
+    assert(packedFiles.get("dist-client/src/client/cli.js")?.mode === 0o755, "diffci CLI must be executable in the npm tarball");
+    assert(packedFiles.get("dist-client/src/client/mcp.js")?.mode === 0o755, "diffci MCP server must be executable in the npm tarball");
+  }
   for (const devOnlyPackage of ["@cloudflare/sandbox", "@cloudflare/containers", "wrangler", "pdf-lib", "tsx", "esbuild"]) {
     assert(![...packedPaths].some((path) => path.startsWith(`node_modules/${devOnlyPackage}/`)), `development-only package ${devOnlyPackage} must not ship in the CLI tarball`);
   }

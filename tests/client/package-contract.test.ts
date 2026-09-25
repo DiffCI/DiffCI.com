@@ -36,6 +36,7 @@ describe("npm package contract", () => {
     assert.equal(pkg.bin?.diffci, "dist-client/src/client/cli.js");
     assert.equal(pkg.bin?.["diffci-mcp"], "dist-client/src/client/mcp.js");
     assert.equal(pkg.scripts?.prepack, "npm run build:client");
+    assert.equal(pkg.scripts?.["build:client"], "tsc -p tsconfig.client.json && node scripts/ensure-client-executables.mjs");
     assert.equal(pkg.scripts?.["check:oss-boundary"], "node scripts/check-oss-boundary.mjs");
     assert.ok(pkg.files?.includes("dist-client/src/client"));
     assert.deepEqual(pkg.bundleDependencies, ["@diffci.com/core"]);
