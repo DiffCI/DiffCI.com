@@ -120,7 +120,7 @@ Existing outreach log:
 | 2026-09-22 | ciembor/agent-rules-books | Issue | https://github.com/ciembor/agent-rules-books/issues/8 | Open; no reply as of 2026-09-25 | Follow up once on 2026-09-30; offer a PR only if invited. |
 | 2026-09-22 | jbarbier/CLAUDE.md | Issue | https://github.com/jbarbier/CLAUDE.md/issues/12 | Open; no reply as of 2026-09-25 | Follow up once on 2026-09-30; offer a PR only if invited. |
 | 2026-09-22 | Official MCP Registry | Directory | `io.github.adityankale190895/diffci` | Published | Consider moving to `io.github.DiffCI/diffci` after GitHub org namespace authorization is available. |
-| 2026-09-25 | Official MCP Registry | Directory | `io.github.DiffCI/diffci` | Migration in progress | Organization namespace authorized through GitHub OIDC. |
+| 2026-09-25 | Official MCP Registry | Directory | `io.github.DiffCI/diffci` | Published | Organization namespace authorized through GitHub OIDC; the listing uses the versioned `https://diffci.com/mcp/v1` remote. |
 | 2026-09-22 | Glama | Directory | TBD | Planned | Submit repository URL. |
 | 2026-09-22 | Smithery | Directory | TBD | Blocked | Needs Smithery account/API key. |
 
