@@ -66,6 +66,18 @@ const observation: ObservationRecord = {
 
 const install = buildInstallInstructions({ repository, agentArtifact: TEST_PINNED_AGENT, apiOrigin: "https://api.diffci.test" });
 
+it("repository setup distinguishes waiting for evidence from unavailable reads", () => {
+  const data = { email: "dev@acme.test", organization, repository, install, observations: [], tokens: [
+    { id: "t1", organizationId: organization.id, repositoryId: repository.id, tokenPrefix: "dci_example", createdAt: "2026-09-01T00:00:00Z" },
+  ] };
+  assert.match(renderRepository(data), /Waiting for the first report/);
+  const unavailable = renderRepository({ ...data, evidenceAvailable: false });
+  assert.match(unavailable, /Setup status is unavailable/);
+  assert.doesNotMatch(unavailable, /Waiting for the first report/);
+  assert.doesNotMatch(unavailable, /Nothing received yet|No live tokens/);
+  assert.match(renderRepository({ ...data, observations: [observation] }), /Observation received/);
+});
+
 describe("HTML escaping", () => {
   it("escapes every interpolated value by default", () => {
     const rendered = renderSafe(html`<p>${'<script>alert("x")</script>'}</p>`);

@@ -508,20 +508,25 @@ export default {
       if (repositoryId) {
         const install = await getInstallInstructionsForRepository(ingestDeps, principal.userId, organizationId, repositoryId);
         if (!install.ok) return htmlResponse(renderSignedOut({ githubConfigured: true }), outcomeStatus(install.error));
-        const [repository, tokens, observations] = await Promise.all([
-          store.getRepository(repositoryId),
+        const repository = await store.getRepository(repositoryId);
+        if (!repository || repository.organizationId !== organizationId || repository.status === "removed") {
+          return htmlResponse(renderSignedOut({ githubConfigured: true }), 404);
+        }
+        const [tokenRead, observationRead] = await Promise.allSettled([
           listIngestTokensForOrganization(ingestDeps, principal.userId, organizationId),
           listObservationsForOrganization(ingestDeps, principal.userId, organizationId, { repositoryId, limit: 20 }),
         ]);
-        if (!repository) return htmlResponse(renderSignedOut({ githubConfigured: true }), 404);
+        const tokens = tokenRead.status === "fulfilled" ? tokenRead.value : undefined;
+        const observations = observationRead.status === "fulfilled" ? observationRead.value : undefined;
         return htmlResponse(
           renderRepository({
             email,
             organization: details.data.organization,
             repository,
             install: install.data,
-            tokens: (tokens.ok ? tokens.data : []).filter((token) => token.repositoryId === repositoryId),
-            observations: observations.ok ? observations.data.observations : [],
+            evidenceAvailable: !!tokens?.ok && !!observations?.ok,
+            tokens: (tokens?.ok ? tokens.data : []).filter((token) => token.repositoryId === repositoryId),
+            observations: observations?.ok ? observations.data.observations : [],
           }),
         );
       }

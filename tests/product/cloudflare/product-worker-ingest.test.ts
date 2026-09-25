@@ -221,6 +221,14 @@ describe("product-worker.ts - self-serve install, ingest, and isolation", () => 
     // Another organization's console pages are refused the same way its API is.
     assert.equal((await page(`/app/orgs/${other.org.id}`, acme.headers)).status, 403);
     assert.equal((await page(`/app/orgs/${other.org.id}/repos/${repo.id}`, acme.headers)).status, 403);
+
+    // A failed evidence read must not masquerade as a new repository with no reports.
+    db.prepare("UPDATE repositories SET status = 'active' WHERE id = ?").run(repo.id);
+    db.exec("DROP TABLE observations");
+    const degraded = await page(`/app/orgs/${acme.org.id}/repos/${repo.id}`, acme.headers);
+    assert.equal(degraded.status, 200);
+    assert.match(degraded.body, /Setup status is unavailable/);
+    assert.doesNotMatch(degraded.body, /Waiting for the first report/);
   });
 
   it("a revoked credential stops working immediately", async () => {

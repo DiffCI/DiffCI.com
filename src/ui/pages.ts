@@ -20,6 +20,7 @@ import type { StoredInvoice } from "../billing/invoice-store.js";
 import { formatUsdCents, type ReconciliationResult } from "../billing/metered.js";
 import { html, layout, type SafeHtml } from "./render.js";
 import { renderFleetPanel, type FleetPanelData } from "./fleet.js";
+import { buildOnboardingStatus } from "../product/onboarding.js";
 
 function shortSha(sha: string | undefined): string {
   return sha ? sha.slice(0, 9) : "—";
@@ -208,6 +209,7 @@ export function renderOrganization(data: OrganizationPageData): string {
 }
 
 export interface RepositoryPageData {
+  evidenceAvailable?: boolean;
   email: string;
   organization: Organization;
   repository: Repository;
@@ -218,6 +220,7 @@ export interface RepositoryPageData {
 
 export function renderRepository(data: RepositoryPageData): string {
   const live = data.tokens.filter((token) => !token.revokedAt);
+  const onboarding = buildOnboardingStatus(data);
   return layout({
     title: data.repository.ownerName,
     subtitle: data.email,
@@ -234,6 +237,13 @@ export function renderRepository(data: RepositoryPageData): string {
            handing someone a mutable ref. The instructions either exist and are SHA-pinned, or this page
            is never reached because the route refused with action_not_pinned. -->
 
+      <section class="card" aria-labelledby="setup-status">
+        <h2 id="setup-status">${onboarding.title}</h2>
+        <p>${onboarding.nextStep}</p>
+        ${onboarding.latestReceivedAt ? html`<p class="muted">Latest report received: ${onboarding.latestReceivedAt}</p>` : html``}
+        <p><a href="/app/orgs/${data.organization.id}/repos/${data.repository.id}">Refresh setup status</a></p>
+      </section>
+
       <h2>1. Create an ingest token</h2>
       <div class="card">
         <p class="muted">
@@ -244,7 +254,9 @@ export function renderRepository(data: RepositoryPageData): string {
         <div id="token-result"></div>
       </div>
 
-      ${live.length === 0
+      ${data.evidenceAvailable === false
+        ? html`<p class="notice">Credential status could not be confirmed. Reload before creating a replacement.</p>`
+        : live.length === 0
         ? html`<p class="empty">No live tokens.</p>`
         : html`<table>
             <thead><tr><th>Token</th><th>Name</th><th>Created</th><th>Last used</th><th></th></tr></thead>
@@ -273,7 +285,9 @@ export function renderRepository(data: RepositoryPageData): string {
       <pre><code>${data.install.workflowYaml}</code></pre>
 
       <h2>Observations</h2>
-      ${renderObservationsTable(data.observations)}
+      ${data.evidenceAvailable === false
+        ? html`<p class="notice">Observation history could not be confirmed. Reload to retry.</p>`
+        : renderObservationsTable(data.observations)}
     `,
   });
 }
