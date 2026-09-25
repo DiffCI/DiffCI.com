@@ -21,7 +21,7 @@ older report succeeded. Expired and revoked credentials cannot establish upload 
 confirms a past upload; it does not establish freshness, prospective safety, realized savings, or
 permission to change required CI. Fleet reporting handles longer-term observation quality separately.
 
-No new schema or migration is needed. An authenticated install-to-report smoke test remains pending.
+No new schema or migration is needed. The own-repository credential-to-report smoke test passed.
 Automated coverage exercises tenant scoping, expired
 credentials, failure precedence, incomplete evidence, and rendered setup states.
 
@@ -41,7 +41,19 @@ Managed execution and production savings require their own evidence; this panel 
   TypeScript checking and 49 focused onboarding, installer, UI and ingest tests passed.
 - A fresh installation of the verified public tarball using `--ignore-scripts` completed a local
   `observe --no-send` run with an unchanged checkout. This is not evidence of a hosted upload.
-- Signed-in organization creation succeeded for the DiffCI organization. GitHub shows an existing
-  DiffCI App installation for the DiffCI account, but entering its configuration requires the owner's
-  passkey/authenticator confirmation. Repository connection, credential creation, the CI upload and
-  the dashboard's first observation have not yet been verified. No new ingest secret was created.
+- Signed-in organization creation succeeded for DiffCI. After the owner confirmed GitHub access,
+  the existing App installation was verified as read-only and limited to `DiffCI/DiffCI.com`.
+  Its older installation had no pending product webhook record, and GitHub's configuration page did
+  not return to setup. Connection therefore used an assisted authenticated callback with fresh state;
+  this does not prove unattended existing-installation discovery/reconnection works.
+- Created a repository-scoped ingest credential through the console and stored it as the repository's
+  `DIFFCI_TOKEN` Actions secret. No credential value is recorded here.
+- Draft PR https://github.com/DiffCI/DiffCI.com/pull/10 adds the generated workflow under
+  `.github/workflows/diffci-onboarding.yml`, preserving the existing observer workflow.
+- Run https://github.com/DiffCI/DiffCI.com/actions/runs/36167933369 succeeded: package installation
+  and verification passed, analysis completed, the checkout stayed unchanged, and `delivery: sent`
+  was logged. The dashboard independently showed `Observation received` at
+  `2026-09-25T17:34:16.539Z` for commit `7545c13c6`.
+- The workflow remains in a draft PR, not merged into main. Other required CI checks were still
+  pending when this smoke-test evidence was recorded. This report proves upload operation, not
+  runtime savings or completion of the entire commercial roadmap.
