@@ -75,3 +75,20 @@ returned 401. Negative authorization cases were tested locally rather than by ch
 PR #10 is merged after all its checks passed. The observer also passed on main in run
 https://github.com/DiffCI/DiffCI.com/actions/runs/36168243245 and the dashboard received the main-branch
 report for commit d7179de12. No manual callback is needed for the new reconnect form.
+
+## Delivery-health alerts and second repository (2026-10-01)
+
+DentalPresence is connected as the second repository. PR #114 is merged, and main-branch Actions run
+https://github.com/adityankale190895/DentalPresence.in/actions/runs/36899594427 completed successfully,
+including the non-blocking DiffCI observation job and a live upload.
+
+Product Worker version `a5bdccad-3077-431f-9e03-a36baf01eaeb` adds repository delivery-health
+alerts. A new or replacement credential gets a one-hour grace period; after that, the repository page
+flags that no report has arrived. A last successful report older than 48 hours is marked stale and
+points the operator to the workflow and Actions log. Failed and unsafe reports retain their more
+specific diagnostics.
+
+The observer-side GitHub warning annotation is prepared in PR
+https://github.com/DiffCI/DiffCI.com/pull/11 as version 0.2.12. It remains non-blocking. Publishing and
+updating the hosted package pin follow that PR's merge and release because this workstation has no npm
+authentication.
