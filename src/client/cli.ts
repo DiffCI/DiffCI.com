@@ -35,6 +35,7 @@ import { inferFullCommand, inferSelectedCommand } from "./full-command.js";
 import { addDiffciPackageScripts, installDiffci } from "./install.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
+import { githubDeliveryWarning } from "./delivery-warning.js";
 import { sendUsageSignal } from "./usage-signal.js";
 import { detectSpecificationConflicts, readSpecificationFile } from "./spec-conflicts.js";
 import { formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
@@ -447,9 +448,7 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
   // Sending happens before the job summary is written, so the summary can say whether it worked.
   // It is allowed to fail: by this point the report is on disk and (in the action) about to become an
   // artifact, so a delivery problem costs the observation nothing - it is DiffCI's problem to fix, not
-  // the host repository's build to fail. By this point the report is on
-  // disk and (in the action) about to become an artifact, so a delivery problem costs the observation
-  // nothing - it is DiffCI's problem to fix, not the host repository's build to fail.
+  // the host repository's build to fail.
   const apiUrl = typeof flags["api-url"] === "string" ? flags["api-url"] : env.DIFFCI_API_URL;
   const apiToken = typeof flags["api-token"] === "string" ? flags["api-token"] : env.DIFFCI_TOKEN;
   let delivery: string | undefined;
@@ -462,6 +461,11 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
   } else if (apiUrl && !apiToken && flags["no-send"] !== true) {
     delivery = "not sent: an api-url was given with no api-token";
     if (flags.quiet !== true) console.log(`  delivery: ${delivery}`);
+  }
+
+  if (delivery) {
+    const warning = githubDeliveryWarning(delivery, env);
+    if (warning) console.log(warning);
   }
 
   // GitHub renders this under the job. It is the only place most people will ever read a report, so it
