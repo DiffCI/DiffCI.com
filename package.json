@@ -1,6 +1,6 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "Change-aware CI analysis and conservative affected-test selection for GitHub Actions and coding agents",
   "keywords": [
     "ci",
