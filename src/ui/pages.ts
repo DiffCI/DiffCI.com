@@ -224,6 +224,7 @@ export interface RepositoryPageData {
   install: InstallInstructions;
   tokens: IngestTokenRecord[];
   observations: ObservationRecord[];
+  now?: Date;
 }
 
 export function renderRepository(data: RepositoryPageData): string {
@@ -247,6 +248,8 @@ export function renderRepository(data: RepositoryPageData): string {
 
       <section class="card" aria-labelledby="setup-status">
         <h2 id="setup-status">${onboarding.title}</h2>
+        ${onboarding.state === "delivery_overdue" || onboarding.state === "stale"
+          ? html`<p class="notice" role="alert">Observation delivery needs attention.</p>` : html``}
         <p>${onboarding.nextStep}</p>
         ${onboarding.latestReceivedAt ? html`<p class="muted">Latest report received: ${onboarding.latestReceivedAt}</p>` : html``}
         <p><a href="/app/orgs/${data.organization.id}/repos/${data.repository.id}">Refresh setup status</a></p>

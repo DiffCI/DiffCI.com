@@ -3,11 +3,14 @@ import type { ObservationRecord } from "../ingest/types.js";
 import type { IngestTokenRecord } from "../ingest/token.js";
 
 export interface OnboardingStatus {
-  state: "inactive" | "unavailable" | "needs_token" | "awaiting_report" | "needs_attention" | "observing";
+  state: "inactive" | "unavailable" | "needs_token" | "awaiting_report" | "delivery_overdue" | "stale" | "needs_attention" | "observing";
   title: string;
   nextStep: string;
   latestReceivedAt?: string;
 }
+
+export const FIRST_REPORT_GRACE_MS = 60 * 60 * 1000;
+export const REPORT_STALE_AFTER_MS = 48 * 60 * 60 * 1000;
 
 /** Describes the observer upload path only, never enforcement or savings readiness. */
 export function buildOnboardingStatus(input: {
@@ -31,10 +34,17 @@ export function buildOnboardingStatus(input: {
   const latest = input.observations.filter(belongs).sort((a, b) =>
     b.receivedAt.localeCompare(a.receivedAt) || b.id.localeCompare(a.id))[0];
   const now = (input.now ?? new Date()).getTime();
-  if (!input.tokens.some(token => belongs(token) && !token.revokedAt &&
-    (!token.expiresAt || Date.parse(token.expiresAt) > now))) return {
+  const liveTokens = input.tokens.filter(token => belongs(token) && !token.revokedAt &&
+    (!token.expiresAt || Date.parse(token.expiresAt) > now));
+  if (liveTokens.length === 0) return {
     state: "needs_token", title: "Create a repository credential",
     nextStep: "Create an ingest token below and save it as the GitHub Actions secret. A previously received report does not confirm that uploads still work.",
+  };
+  const newestToken = liveTokens.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))[0]!;
+  const newestTokenAge = now - Date.parse(newestToken.createdAt);
+  if (!latest && newestTokenAge > FIRST_REPORT_GRACE_MS) return {
+    state: "delivery_overdue", title: "No report received after setup",
+    nextStep: "Trigger the DiffCI workflow and open its Action log. Confirm DIFFCI_OBSERVER_TOKEN is set to the newest live token and review any delivery warning.",
   };
   if (!latest) return {
     state: "awaiting_report", title: "Waiting for the first report",
@@ -48,6 +58,14 @@ export function buildOnboardingStatus(input: {
   if (!latest.worktreeUnchanged || latest.blockingWorkflowFindings > 0 || !latest.identityVerified) return {
     state: "needs_attention", title: "Review the latest report",
     nextStep: "Confirm repository identity and run diffci verify-workflow. Resolve workflow findings and checkout changes before relying on this report.", latestReceivedAt,
+  };
+  if (newestToken.createdAt > latest.receivedAt && newestTokenAge > FIRST_REPORT_GRACE_MS) return {
+    state: "delivery_overdue", title: "Replacement credential has not delivered a report",
+    nextStep: "Trigger the DiffCI workflow and check its Action log. Confirm DIFFCI_OBSERVER_TOKEN contains the newest token and review any delivery warning.", latestReceivedAt,
+  };
+  if (now - Date.parse(latest.receivedAt) > REPORT_STALE_AFTER_MS) return {
+    state: "stale", title: "No recent DiffCI report",
+    nextStep: "Trigger the observation workflow or inspect recent Actions runs. If the repository has had activity, review the job for a delivery warning.", latestReceivedAt,
   };
   return {
     state: "observing", title: "Observation received",

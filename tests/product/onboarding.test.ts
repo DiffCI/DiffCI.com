@@ -25,13 +25,26 @@ const input = { repository, tokens: [token], observations: [observation], now: n
 
 test("onboarding advances from credential to report to observation", () => {
   assert.equal(buildOnboardingStatus({ ...input, tokens: [], observations: [] }).state, "needs_token");
-  assert.equal(buildOnboardingStatus({ ...input, observations: [] }).state, "awaiting_report");
+  assert.equal(buildOnboardingStatus({ ...input, observations: [] }).state, "delivery_overdue");
   assert.equal(buildOnboardingStatus(input).state, "observing");
+});
+test("alerts when initial or replacement credentials do not deliver within the grace period", () => {
+  const overdueNow = new Date("2026-09-25T02:00:00Z");
+  const recentToken = { ...token, createdAt: "2026-09-25T01:30:00Z" };
+  assert.equal(buildOnboardingStatus({ ...input, tokens: [recentToken], observations: [], now: overdueNow }).state, "awaiting_report");
+  assert.equal(buildOnboardingStatus({ ...input, observations: [], now: overdueNow }).state, "delivery_overdue");
+  const replacement = { ...token, id: "t2", createdAt: "2026-09-25T00:30:00Z" };
+  assert.equal(buildOnboardingStatus({ ...input, tokens: [replacement], now: overdueNow }).state, "delivery_overdue");
+});
+test("alerts when the latest successful observation is stale", () => {
+  const status = buildOnboardingStatus({ ...input, now: new Date("2026-09-27T00:00:02Z") });
+  assert.equal(status.state, "stale");
+  assert.match(status.nextStep, /workflow|Actions/);
 });
 test("foreign evidence cannot complete repository setup", () => {
   for (const scope of [{ organizationId: "other" }, { repositoryId: "other" }]) {
     assert.equal(buildOnboardingStatus({ ...input, tokens: [{ ...token, ...scope }] }).state, "needs_token");
-    assert.equal(buildOnboardingStatus({ ...input, observations: [{ ...observation, ...scope }] }).state, "awaiting_report");
+    assert.equal(buildOnboardingStatus({ ...input, observations: [{ ...observation, ...scope }] }).state, "delivery_overdue");
   }
 });
 test("expired, malformed expiry and revoked tokens do not confirm upload readiness", () => {

@@ -70,12 +70,14 @@ it("repository setup distinguishes waiting for evidence from unavailable reads",
   const data = { email: "dev@acme.test", organization, repository, install, observations: [], tokens: [
     { id: "t1", organizationId: organization.id, repositoryId: repository.id, tokenPrefix: "dci_example", createdAt: "2026-09-01T00:00:00Z" },
   ] };
-  assert.match(renderRepository(data), /Waiting for the first report/);
+  assert.match(renderRepository({ ...data, now: new Date("2026-09-01T00:30:00Z") }), /Waiting for the first report/);
+  assert.match(renderRepository({ ...data, now: new Date("2026-09-01T02:00:00Z") }), /No report received after setup/);
+  assert.match(renderRepository({ ...data, now: new Date("2026-09-01T02:00:00Z") }), /role="alert"/);
   const unavailable = renderRepository({ ...data, evidenceAvailable: false });
   assert.match(unavailable, /Setup status is unavailable/);
   assert.doesNotMatch(unavailable, /Waiting for the first report/);
   assert.doesNotMatch(unavailable, /Nothing received yet|No live tokens/);
-  assert.match(renderRepository({ ...data, observations: [observation] }), /Observation received/);
+  assert.match(renderRepository({ ...data, observations: [observation], now: new Date("2026-08-26T11:00:00Z") }), /Observation received/);
 });
 
 describe("HTML escaping", () => {
