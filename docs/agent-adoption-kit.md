@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@e1d7bab271c5d83899bda0034d70d3e34c10c1f7 # v0.2.11
+      - uses: DiffCI/DiffCI.com@c269712c9b08ccf28d44a9f7cb511e6404323927 # v0.2.12
 ```
 
 Run `npx "@diffci.com/diffci@latest" verify-workflow` before starting a pilot. The Action uploads a
