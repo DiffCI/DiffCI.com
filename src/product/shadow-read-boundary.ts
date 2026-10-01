@@ -146,12 +146,12 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
       const { results } = await db
         .prepare(
           `SELECT p.logical_delta_key, p.repository, p.head_sha, g.workflow_run_id, g.evidence_workflow_path, p.plan_mode,
-                  p.tests_selected_diffci, p.tests_total_full, p.tests_selected_path, p.diffci_analysis_overhead_ms, p.created_at
+                  p.tests_selected_diffci, p.tests_total_full, p.tests_selected_path, p.diffci_analysis_overhead_ms, p.prediction_created_at
            FROM shadow_ground_truth g
            JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
            WHERE g.repository = ? AND g.evidence_validity = 'VERIFIED' AND g.workflow_run_id IS NOT NULL
-             AND g.evidence_workflow_path IS NOT NULL AND p.created_at >= ? AND p.created_at < ?
-           ORDER BY p.created_at DESC`,
+             AND g.evidence_workflow_path IS NOT NULL AND p.prediction_created_at >= ? AND p.prediction_created_at < ?
+           ORDER BY p.prediction_created_at DESC`,
         )
         .bind(ownerName, startIso, endIso)
         .all<Record<string, unknown>>();
@@ -166,7 +166,7 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
         testsTotalFull: row.tests_total_full as number,
         testsSelectedPath: row.tests_selected_path as number,
         diffciAnalysisOverheadMs: row.diffci_analysis_overhead_ms as number,
-        predictionCreatedAt: row.created_at as string,
+        predictionCreatedAt: row.prediction_created_at as string,
       }));
     },
 

@@ -71,7 +71,7 @@ jobs:
       - uses: DiffCI/DiffCI.com@2f72b7fc017cc987fb0fd80c7e2351f33240e7d4
 ```
 
-The example pins release `v0.2.12` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
+The example pins release `v0.2.13` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
