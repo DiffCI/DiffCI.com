@@ -47,6 +47,9 @@ describe("npm package contract", () => {
 
   it("keeps the published package on the OSS core side of the boundary", () => {
     const allowed = new Set([
+      ".agents/plugins/marketplace.json",
+      "docs/agent-plugin.md",
+      "packaging/agent-plugin",
       "action.yml",
       "dist-client/src/client",
       "dist-client/src/preflight",
