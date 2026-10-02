@@ -70,6 +70,10 @@ describe("DiffCI MCP server", () => {
     assert.equal(messages[0]?.error, undefined);
     assert.equal(messages[1]?.id, 2);
     assert.deepEqual(messages[1]?.result?.tools?.map((tool) => tool.name), [
+      "diffci_changed_files",
+      "diffci_select_tests",
+      "diffci_explain_selection",
+      "diffci_run_affected_tests",
       "diffci_verify",
       "diffci_verify_changed",
       "diffci_check",

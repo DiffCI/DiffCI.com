@@ -2,6 +2,7 @@
 import { execFile } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { StringDecoder } from "node:string_decoder";
+import { agentChangedFiles, agentSelection } from "./agent-selection.js";
 
 type JsonRpcId = string | number | null;
 
@@ -20,6 +21,23 @@ interface ToolCallParams {
 const SERVER_INFO = { name: "diffci-mcp", version: "0.1.0" };
 
 const tools = [
+  ...["diffci_changed_files", "diffci_select_tests", "diffci_explain_selection", "diffci_run_affected_tests"].map((name) => ({
+    name,
+    description: name === "diffci_run_affected_tests"
+      ? "Reanalyze and verify the current working-tree snapshot with affected tests or conservative full fallback. Required CI remains authoritative."
+      : name === "diffci_changed_files"
+      ? "List staged, unstaged and non-ignored untracked changed paths relative to HEAD, with a snapshot identity. Builds no dependency graph and runs no tests."
+      : "Inspect current staged, unstaged and non-ignored untracked changes and return a snapshot-bound affected-test plan and fallback reasons. Runs no tests; a plan is not a passing receipt.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        repo: { type: "string", description: "Absolute repository path; defaults to server working directory. Always pass the edited repository when using a plugin." },
+        ...(name === "diffci_run_affected_tests" ? { timeoutMs: { type: "number", minimum: 0 } } : {}),
+      },
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: name !== "diffci_run_affected_tests", openWorldHint: false },
+  })),
   {
     name: "diffci_verify",
     description: "Verify a clean commit range and return a receipt bound to the checked-out head commit. Resolves the CI event range automatically when base and head are omitted.",
@@ -119,6 +137,7 @@ function commandForTool(name: string, args: Record<string, unknown>): string[] {
       if (booleanArg(args, "redactPaths")) command.push("--redact-paths");
       return command;
     }
+    case "diffci_run_affected_tests":
     case "diffci_verify_changed": {
       const command = ["verify", "--changed", "--json"];
       if (repo) command.push("--repo", resolve(repo));
@@ -175,7 +194,7 @@ function runCli(args: string[]): Promise<{ exitCode: number; stdout: string; std
 
 function writeMessage(message: unknown): void {
   const body = JSON.stringify(message);
-  process.stdout.write(`Content-Length: ${Buffer.byteLength(body, "utf8")}\r\n\r\n${body}`);
+  process.stdout.write(lineTransport ? `${body}\n` : `Content-Length: ${Buffer.byteLength(body, "utf8")}\r\n\r\n${body}`);
 }
 
 function success(id: JsonRpcId | undefined, result: unknown): void {
@@ -210,6 +229,25 @@ async function handle(request: JsonRpcRequest): Promise<void> {
         return;
       }
       const args = params.arguments ?? {};
+      const tool = tools.find((entry) => entry.name === params.name);
+      if (!tool || !args || typeof args !== "object" || Array.isArray(args)) {
+        failure(id, -32602, "unknown tool or invalid arguments");
+        return;
+      }
+      const properties = tool.inputSchema.properties;
+      for (const [key, value] of Object.entries(args)) {
+        const property = properties[key as keyof typeof properties] as { type: string } | undefined;
+        if (!property || typeof value !== property.type || (key === "timeoutMs" && (!Number.isFinite(value) || (value as number) < 0))) {
+          failure(id, -32602, `invalid argument: ${key}`);
+          return;
+        }
+      }
+      if (["diffci_changed_files", "diffci_select_tests", "diffci_explain_selection"].includes(params.name)) {
+        const repo = stringArg(args, "repo") ?? process.cwd();
+        const plan = params.name === "diffci_changed_files" ? agentChangedFiles(repo) : await agentSelection(repo);
+        success(id, { content: [{ type: "text", text: JSON.stringify(plan) }], structuredContent: plan, isError: plan.status === "blocked" });
+        return;
+      }
       const run = await runCli(commandForTool(params.name, args));
       const text = [
         run.stdout.trim(),
@@ -217,7 +255,7 @@ async function handle(request: JsonRpcRequest): Promise<void> {
         `exitCode: ${run.exitCode}`,
       ].filter(Boolean).join("\n\n");
       let structuredContent: unknown;
-      if ((params.name === "diffci_verify" || params.name === "diffci_verify_changed") && run.stdout.trim()) {
+      if (["diffci_verify", "diffci_verify_changed", "diffci_run_affected_tests"].includes(params.name) && run.stdout.trim()) {
         try { structuredContent = JSON.parse(run.stdout); }
         catch { /* The text and non-zero status still carry the failure. */ }
       }
@@ -234,10 +272,22 @@ async function handle(request: JsonRpcRequest): Promise<void> {
 }
 
 let buffer = Buffer.alloc(0);
+let lineTransport = false;
 const decoder = new StringDecoder("utf8");
 
 function readMessages(): void {
   while (true) {
+    while (buffer.length && [9, 10, 13, 32].includes(buffer[0]!)) buffer = buffer.subarray(1);
+    if (buffer.length === 0) return;
+    if (buffer[0] === 123 || buffer[0] === 91 || lineTransport) {
+      lineTransport = true;
+      const end = buffer.indexOf("\n");
+      if (end === -1) return;
+      const body = buffer.subarray(0, end).toString("utf8").trim();
+      buffer = buffer.subarray(end + 1);
+      if (body) dispatch(body);
+      continue;
+    }
     const headerEnd = buffer.indexOf("\r\n\r\n");
     if (headerEnd === -1) return;
     const header = decoder.write(buffer.subarray(0, headerEnd));
@@ -252,12 +302,20 @@ function readMessages(): void {
     if (buffer.length < bodyEnd) return;
     const body = buffer.subarray(bodyStart, bodyEnd).toString("utf8");
     buffer = buffer.subarray(bodyEnd);
-    const request = JSON.parse(body) as JsonRpcRequest;
-    void handle(request).catch((error: unknown) => {
-      const message = error instanceof Error ? error.message : String(error);
-      failure(request.id, -32603, message);
-    });
+    dispatch(body);
   }
+}
+
+function dispatch(body: string): void {
+  let request: JsonRpcRequest;
+  try { request = JSON.parse(body) as JsonRpcRequest; }
+  catch { failure(null, -32700, "invalid JSON"); return; }
+  if (!request || typeof request !== "object" || Array.isArray(request)) {
+    failure(null, -32600, "invalid request"); return;
+  }
+  void handle(request).catch((error: unknown) => {
+    failure(request.id, -32603, error instanceof Error ? error.message : String(error));
+  });
 }
 
 process.stdin.on("data", (chunk: Buffer) => {

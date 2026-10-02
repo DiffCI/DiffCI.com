@@ -10,6 +10,9 @@ const npmPackArgs =
     : ["pack", "--ignore-scripts", "--dry-run", "--json"];
 
 const ALLOWED_PACKAGE_PREFIXES = [
+  ".agents/plugins/marketplace.json",
+  "docs/agent-plugin.md",
+  "packaging/agent-plugin/",
   "action.yml",
   "dist-client/src/client/",
   "dist-client/src/preflight/",
