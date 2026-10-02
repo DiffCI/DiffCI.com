@@ -10,13 +10,13 @@ export interface InstallPlan {
   args: string[];
   packageSpec: string;
 }
-
 export interface PackageScriptResult {
   added: string[];
   kept: string[];
 }
 
 const DIFFCI_SCRIPTS: Readonly<Record<string, string>> = {
+  "diffci:verify": "diffci verify --changed --json",
   "diffci:check": "diffci check",
   "diffci:observe": "diffci observe --no-send",
 };

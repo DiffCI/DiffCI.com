@@ -21,6 +21,34 @@ const SERVER_INFO = { name: "diffci-mcp", version: "0.1.0" };
 
 const tools = [
   {
+    name: "diffci_verify",
+    description: "Verify a clean commit range and return a receipt bound to the checked-out head commit. Resolves the CI event range automatically when base and head are omitted.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        repo: { type: "string", description: "Repository path. Defaults to the MCP server working directory." },
+        base: { type: "string", description: "Optional base commit SHA. Must be paired with head." },
+        head: { type: "string", description: "Optional head commit SHA. Must be paired with base and match checked-out HEAD." },
+        timeoutMs: { type: "number", description: "Maximum verification-command runtime in milliseconds." },
+        redactPaths: { type: "boolean", description: "Replace paths with stable digests in analysis." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "diffci_verify_changed",
+    description: "Verify the current staged, unstaged, and non-ignored untracked changes. Fails closed unless the exact working-tree snapshot passes selected or full fallback verification.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        repo: { type: "string", description: "Repository path. Defaults to the MCP server working directory." },
+        timeoutMs: { type: "number", description: "Maximum verification-command runtime in milliseconds." },
+        redactPaths: { type: "boolean", description: "Replace paths with stable digests in analysis." },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: "diffci_check",
     description: "Analyze the repository, run inferred full and selected test commands when available, and report paired runtime. Sends nothing to DiffCI Cloud.",
     inputSchema: {
@@ -44,6 +72,7 @@ const tools = [
       properties: {
         repo: { type: "string", description: "Repository path. Defaults to the MCP server working directory." },
         workflow: { type: "boolean", description: "Also add the non-blocking GitHub Actions observer workflow." },
+        verificationWorkflow: { type: "boolean", description: "Also add the blocking GitHub Actions verification workflow." },
         force: { type: "boolean", description: "Overwrite existing instruction files." },
       },
       additionalProperties: false,
@@ -78,6 +107,26 @@ function booleanArg(args: Record<string, unknown>, name: string): boolean {
 function commandForTool(name: string, args: Record<string, unknown>): string[] {
   const repo = stringArg(args, "repo");
   switch (name) {
+    case "diffci_verify": {
+      const command = ["verify", "--json"];
+      if (repo) command.push("--repo", resolve(repo));
+      for (const flag of ["base", "head"]) {
+        const value = stringArg(args, flag);
+        if (value) command.push(`--${flag}`, value);
+      }
+      const timeoutMs = args.timeoutMs;
+      if (typeof timeoutMs === "number" && Number.isFinite(timeoutMs) && timeoutMs >= 0) command.push("--timeout-ms", String(timeoutMs));
+      if (booleanArg(args, "redactPaths")) command.push("--redact-paths");
+      return command;
+    }
+    case "diffci_verify_changed": {
+      const command = ["verify", "--changed", "--json"];
+      if (repo) command.push("--repo", resolve(repo));
+      const timeoutMs = args.timeoutMs;
+      if (typeof timeoutMs === "number" && Number.isFinite(timeoutMs) && timeoutMs >= 0) command.push("--timeout-ms", String(timeoutMs));
+      if (booleanArg(args, "redactPaths")) command.push("--redact-paths");
+      return command;
+    }
     case "diffci_check": {
       const command = ["check"];
       if (repo) command.push("--repo", resolve(repo));
@@ -94,6 +143,7 @@ function commandForTool(name: string, args: Record<string, unknown>): string[] {
       const command = ["init"];
       if (repo) command.push("--repo", resolve(repo));
       if (booleanArg(args, "workflow")) command.push("--workflow");
+      if (booleanArg(args, "verificationWorkflow")) command.push("--verification-workflow");
       if (booleanArg(args, "force")) command.push("--force");
       return command;
     }
@@ -166,9 +216,15 @@ async function handle(request: JsonRpcRequest): Promise<void> {
         run.stderr.trim() ? `stderr:\n${run.stderr.trim()}` : "",
         `exitCode: ${run.exitCode}`,
       ].filter(Boolean).join("\n\n");
+      let structuredContent: unknown;
+      if ((params.name === "diffci_verify" || params.name === "diffci_verify_changed") && run.stdout.trim()) {
+        try { structuredContent = JSON.parse(run.stdout); }
+        catch { /* The text and non-zero status still carry the failure. */ }
+      }
       success(id, {
         content: [{ type: "text", text }],
         isError: run.exitCode !== 0,
+        structuredContent,
       });
       return;
     }

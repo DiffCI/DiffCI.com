@@ -1,7 +1,7 @@
 # DiffCI Distribution
 
-DiffCI has three install surfaces with the same initial contract: observe CI, write a report, and do
-not change what the host repository runs.
+DiffCI has complementary install surfaces: a fail-closed agent verifier, a blocking CI verification
+workflow, and an observation-only Action for measuring opportunities without changing required CI.
 
 The product model is open core. The npm CLI and basic GitHub Action are the open-source adoption path;
 DiffCI Cloud adds hosted history, organization dashboards, policies, managed operations, and support.
@@ -13,8 +13,9 @@ Reviewed 2026-09-22. These channels have different jobs in the same adoption pat
 
 | Channel | Role for DiffCI | Next step |
 | --- | --- | --- |
-| npm | Developer discovery and local evaluation of `@diffci.com/diffci` | Lead with `observe`, a sample report, and the observation-only contract. |
-| GitHub Action | Repeatable CI adoption | Use the dedicated, non-blocking job below and verify the workflow before a pilot. |
+| npm | Agent-native local and CI verification through `@diffci.com/diffci` | Lead with `verify --changed --json` and its content-bound receipt. |
+| GitHub workflow | Repeatable blocking verification | Generate it with `init --verification-workflow`, pilot it, then make the job required. |
+| GitHub Action | Observation-only adoption | Use the dedicated, non-blocking job below and verify the workflow before a pilot. |
 | GitHub Marketplace | CI-specific discovery of the same Action | [DiffCI observer is live](https://github.com/marketplace/actions/diffci-observer); keep the installation example and release pin current. |
 | MCP directories | Discovery for agents that install stdio tools | Publish matching npm and registry metadata, then submit to the official MCP Registry and Glama. |
 | Tidelift | Potential package maintenance assurance and maintainer income | Pursue package acceptance using the existing submission packet; do not present support as active. |
@@ -71,7 +72,7 @@ jobs:
       - uses: DiffCI/DiffCI.com@2f72b7fc017cc987fb0fd80c7e2351f33240e7d4
 ```
 
-The example pins release `v0.2.13` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
+The example pins release `v0.3.0-rc.1` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
@@ -80,9 +81,15 @@ of CI.
 The CLI is the standalone npm package surface. The package name is `@diffci.com/diffci`:
 
 ```bash
+npx "@diffci.com/diffci@latest" verify --changed --json
+npx "@diffci.com/diffci@latest" verify --json
 npx "@diffci.com/diffci@latest" observe
 npx "@diffci.com/diffci@latest" verify-workflow
 ```
+
+`verify --changed` covers staged, unstaged, and non-ignored untracked changes. `verify --json` covers
+a clean CI commit range. Both execute the narrowest safe command, broaden to the full inferred test
+command on uncertainty, fail closed, and emit a `diffci.verification.v1` receipt.
 
 `observe` writes a JSON report outside the checkout by default. It never runs, skips, cancels, or
 reorders tests. A hosted endpoint is opt-in: reports are sent only when both `DIFFCI_API_URL` and

@@ -2,9 +2,9 @@
   "manifest_version": "0.3",
   "name": "diffci",
   "display_name": "DiffCI",
-  "version": "0.2.13",
-  "description": "Change-aware CI validation and affected-test selection for coding agents.",
-  "long_description": "DiffCI analyzes a local Git checkout, identifies test-selection opportunities, and validates CI workflow safety. It runs on the user's machine, preserves access to local and uncommitted changes, and sends nothing to DiffCI Cloud.",
+  "version": "0.3.0-rc.1",
+  "description": "Fail-closed verification and affected-test selection for AI coding agents.",
+  "long_description": "DiffCI snapshots local or committed changes, selects the minimum executable test verification with conservative full fallback, runs it, and returns a machine-readable receipt. It sends nothing to DiffCI Cloud.",
   "author": {
     "name": "DiffCI",
     "url": "https://diffci.com"
