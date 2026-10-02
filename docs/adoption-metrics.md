@@ -97,7 +97,7 @@ They are supporting signals only.
 
 | Signal | Value | Interpretation |
 | --- | ---: | --- |
-| npm latest version | `0.3.0` | Current CLI and MCP binaries are publicly available. |
+| npm latest version | `0.3.1` | Current CLI and MCP binaries are publicly available. |
 | npm downloads, last complete registry week (`2026-09-15`–`2026-09-21`) | 1,929 | Distribution activity; not unique users or repositories. |
 | GitHub stars / forks / watchers | 0 / 0 / 0 | No repository-level community conversion yet. |
 | GitHub views, available 14-day window | 18 views / 4 unique visitors | Early discovery signal. |
