@@ -26,14 +26,16 @@
 <div class="wrap"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><span>AI agent documentation</span></nav></div>
 <section class="hero"><div class="wrap">
   <p class="hero-claim">AI-agent CI validation</p>
-  <h1>Give coding agents evidence before they call a change CI-ready.</h1>
+  <h1>Require verification before an agent ships a change.</h1>
   <p class="article-meta">Published September 21, 2026 · Updated September 25, 2026 · By <a href="/about">DiffCI</a></p>
-  <p class="lede">DiffCI analyzes the current Git change, traces affected tests, explains conservative fallbacks, and can run the inferred full and selected commands as a paired measurement.</p>
-  <pre><code>npx "@diffci.com/diffci@latest" check</code></pre>
+  <p class="lede">DiffCI snapshots the current change, traces affected tests, runs the minimum justified verification, and falls back to the full inferred test command when evidence is incomplete.</p>
+  <pre><code>npx "@diffci.com/diffci@latest" verify --changed --json</code></pre>
   <p>The command sends nothing to DiffCI Cloud. It does not skip, cancel, reorder, or replace required CI checks.</p>
 </div></section>
 <section class="numbered" id="commands"><div class="wrap">
   <h2>Choose the command that matches the task</h2>
+  <h3><code>verify --changed --json</code>: gate local agent changes</h3>
+  <p>This covers staged, unstaged, and non-ignored untracked content. Continue only when the content-bound receipt says <code>safe_to_continue: true</code>.</p>
   <h3><code>check</code>: validate and measure</h3>
   <p><code>check</code> analyzes the checkout and, when DiffCI can infer safe commands, executes the full and selected test paths sequentially. It reports paired runtime only when both commands pass and the checkout identity remains valid. Test commands may create generated files in the repository.</p>
   <h3><code>observe --no-send</code>: analyze without test execution</h3>
@@ -44,7 +46,7 @@
 <section class="numbered" id="install"><div class="wrap">
   <h2>Install repository instructions</h2>
   <pre><code>npx "@diffci.com/diffci@latest" init</code></pre>
-  <p><code>init</code> creates DiffCI guidance for supported agent instruction surfaces, including <code>AGENTS.md</code>, <code>CLAUDE.md</code>, Cursor rules, Copilot instructions, and <code>diffci.config.json</code>. Existing files are preserved unless replacement is explicitly requested.</p>
+  <p><code>init</code> creates persistent DiffCI guidance for supported agent instruction surfaces, including <code>AGENTS.md</code>, <code>CLAUDE.md</code>, Cursor rules, Copilot instructions, and <code>diffci.config.json</code>. Use <code>--verification-workflow</code> to add a blocking commit-range gate.</p>
   <p>Agent-specific setup:</p>
   <ul>
     <li><a href="/docs/codex">Codex</a> — repository instructions, command interpretation, and PowerShell.</li>
@@ -68,13 +70,14 @@
     }
   }
 }</code></pre>
-  <p>Call <code>diffci_check</code> before a PR-ready answer. It has the same execution behavior as the CLI <code>check</code> command.</p>
+  <p>Call <code>diffci_verify_changed</code> for local edits or <code>diffci_verify</code> for a clean CI range. Both return the same machine-readable receipt as the CLI.</p>
 </div></section>
 <section class="numbered" id="guardrails"><div class="wrap">
   <h2>Interpret the result conservatively</h2>
   <ul class="limits">
     <li><strong>A selected command is evidence, not authority.</strong> Required project CI remains authoritative.</li>
     <li><strong><code>REFUSED</code> and <code>ERROR</code> are not passes.</strong> Run the repository's normal validation commands.</li>
+    <li><strong><code>safe_to_continue: false</code> blocks shipping.</strong> Fix the failure or run the required broader verification.</li>
     <li><strong>Selection counts are not savings.</strong> Use paired execution before making a runtime claim.</li>
     <li><strong>Fallback is a valid result.</strong> Lockfiles, workflows, root configuration, or incomplete dependency evidence can require the full suite.</li>
   </ul>

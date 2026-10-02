@@ -72,6 +72,29 @@ function createFixtureRepo(parent) {
   return { repoPath, base, head };
 }
 
+function createVerificationFixtureRepo(parent) {
+  const repoPath = join(parent, "verification-fixture");
+  mkdirSync(repoPath, { recursive: true });
+  git(repoPath, ["init", "--quiet"]);
+  git(repoPath, ["config", "user.email", "test@diffci.local"]);
+  git(repoPath, ["config", "user.name", "DiffCI Package Smoke"]);
+  git(repoPath, ["config", "core.autocrlf", "false"]);
+  write(join(repoPath, "package.json"), `${JSON.stringify({ name: "verification-fixture", type: "module", scripts: { test: "node --test" } }, null, 2)}\n`);
+  write(join(repoPath, "tsconfig.json"), `${JSON.stringify({ compilerOptions: { target: "ES2022", module: "NodeNext", moduleResolution: "NodeNext", allowJs: true }, include: ["src", "test"] }, null, 2)}\n`);
+  write(join(repoPath, "src", "alpha.js"), "export const alpha = () => 1;\n");
+  write(join(repoPath, "src", "beta.js"), "export const beta = () => 2;\n");
+  write(join(repoPath, "test", "alpha.test.js"), "import test from 'node:test'; import assert from 'node:assert/strict'; import {alpha} from '../src/alpha.js'; test('alpha', () => assert.equal(alpha(), 1));\n");
+  write(join(repoPath, "test", "beta.test.js"), "import test from 'node:test'; import assert from 'node:assert/strict'; import {beta} from '../src/beta.js'; test('beta', () => assert.equal(beta(), 2));\n");
+  git(repoPath, ["add", "-A"]);
+  git(repoPath, ["commit", "--quiet", "-m", "initial"]);
+  const base = git(repoPath, ["rev-parse", "HEAD"]).trim();
+  write(join(repoPath, "src", "alpha.js"), "export const alpha = () => 2;\n");
+  write(join(repoPath, "test", "alpha.test.js"), "import test from 'node:test'; import assert from 'node:assert/strict'; import {alpha} from '../src/alpha.js'; test('alpha', () => assert.equal(alpha(), 2));\n");
+  git(repoPath, ["add", "-A"]);
+  git(repoPath, ["commit", "--quiet", "-m", "change alpha"]);
+  return { repoPath, base, head: git(repoPath, ["rev-parse", "HEAD"]).trim() };
+}
+
 function createMavenFixtureRepo(parent) {
   const repoPath = join(parent, "maven-fixture");
   mkdirSync(repoPath, { recursive: true });
@@ -148,6 +171,24 @@ try {
   );
   assert(report.nonInterference?.worktreeUnchanged === true, "packaged CLI changed the observed checkout");
 
+  const verification = createVerificationFixtureRepo(temp);
+  const rangeReceiptPath = join(temp, "range-verification.json");
+  runNpm(["exec", "--", "diffci", "verify", "--repo", verification.repoPath, "--base", verification.base, "--head", verification.head, "--out", rangeReceiptPath, "--json"], { cwd: consumer });
+  const rangeReceipt = JSON.parse(readFileSync(rangeReceiptPath, "utf8"));
+  assert(rangeReceipt.schema === "diffci.verification.v1", `unexpected range verification schema: ${rangeReceipt.schema}`);
+  assert(rangeReceipt.scope === "commit-range" && rangeReceipt.safe_to_continue === true, `packaged commit-range verification did not pass: ${rangeReceipt.reason ?? rangeReceipt.verification}`);
+  assert(rangeReceipt.commit_range?.base_sha === verification.base && rangeReceipt.commit_range?.head_sha === verification.head, "packaged commit-range receipt is not bound to the requested commits");
+  assert(rangeReceipt.snapshot?.base_sha === verification.head && rangeReceipt.snapshot?.unchanged === true, "packaged commit-range receipt is not bound to the unchanged checkout");
+
+  write(join(verification.repoPath, "src", "alpha.js"), "export const alpha = () => 3;\n");
+  write(join(verification.repoPath, "test", "alpha.test.js"), "import test from 'node:test'; import assert from 'node:assert/strict'; import {alpha} from '../src/alpha.js'; test('alpha', () => assert.equal(alpha(), 3));\n");
+  const changedReceiptPath = join(temp, "working-tree-verification.json");
+  runNpm(["exec", "--", "diffci", "verify", "--changed", "--repo", verification.repoPath, "--out", changedReceiptPath, "--json"], { cwd: consumer });
+  const changedReceipt = JSON.parse(readFileSync(changedReceiptPath, "utf8"));
+  assert(changedReceipt.scope === "working-tree" && changedReceipt.safe_to_continue === true, `packaged working-tree verification did not pass: ${changedReceipt.reason ?? changedReceipt.verification}`);
+  assert(changedReceipt.commit_range === undefined, "working-tree verification must not expose its synthetic analysis commit as a real commit range");
+  assert(changedReceipt.snapshot?.unchanged === true, "packaged working-tree verification changed the checkout");
+
   const maven = createMavenFixtureRepo(temp);
   const mavenReportPath = join(temp, "maven-report.json");
   runNpm(["exec", "--", "diffci", "observe", "--repo", maven.repoPath, "--base", maven.base, "--head", maven.head, "--out", mavenReportPath, "--json", "--no-send"], { cwd: consumer });
@@ -156,8 +197,7 @@ try {
   assert(mavenReport.result.proposedCommands?.includes("mvn -pl tools -am verify -P run-its"), `unexpected Maven command: ${JSON.stringify(mavenReport.result.proposedCommands)}`);
   assert(mavenReport.nonInterference?.worktreeUnchanged === true, "packaged CLI changed the Maven checkout");
 
-  console.log(`Package smoke passed: ${pack.filename} (${pack.size} bytes packed, ${pack.unpackedSize} unpacked) installed and ran JavaScript and Maven observations.`);
+  console.log(`Package smoke passed: ${pack.filename} (${pack.size} bytes packed, ${pack.unpackedSize} unpacked) installed and ran JavaScript/Maven observations plus commit-range and working-tree verification.`);
 } finally {
   rmSync(temp, { recursive: true, force: true });
 }
-

@@ -1,7 +1,7 @@
 {
   "name": "@diffci.com/diffci",
-  "version": "0.2.9",
-  "description": "Change-aware CI analysis and conservative affected-test selection for GitHub Actions and coding agents",
+  "version": "0.3.0-rc.1",
+  "description": "Fail-closed, change-aware verification for AI coding agents with conservative affected-test selection",
   "keywords": [
     "ci",
     "cicd",
@@ -21,7 +21,7 @@
     "github-actions"
   ],
   "license": "AGPL-3.0-only",
-  "mcpName": "io.github.adityankale190895/diffci",
+  "mcpName": "io.github.DiffCI/diffci",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/DiffCI/DiffCI.com.git"
@@ -39,6 +39,7 @@
   "files": [
     "action.yml",
     "dist-client/src/client",
+    "dist-client/src/preflight",
     "README.md",
     "server.json",
     "glama.json",

@@ -18,8 +18,9 @@ describe("agent-facing CLI commands", () => {
   it("prints check and init as first-class commands", () => {
     const result = runCli(["help"], ROOT);
     assert.equal(result.status, 0);
-    assert.match(result.stdout, /diffci init \[--repo <path>\] \[--workflow\] \[--install\] \[--force\]/);
+    assert.match(result.stdout, /diffci init \[--repo <path>\] \[--workflow\] \[--verification-workflow\] \[--install\] \[--force\]/);
     assert.match(result.stdout, /diffci mcp/);
+    assert.match(result.stdout, /diffci verify \[--changed \| --base <sha> --head <sha>\]/);
     assert.match(result.stdout, /diffci check \[--repo <path>\]/);
     assert.match(result.stdout, /check analyzes the change, runs inferred full and selected commands/);
   });
@@ -29,19 +30,32 @@ describe("agent-facing CLI commands", () => {
     try {
       writeFileSync(join(dir, "AGENTS.md"), "# Existing agent policy\n", "utf8");
 
-      const result = runCli(["init", "--repo", dir, "--workflow"], ROOT);
+      const result = runCli(["init", "--repo", dir, "--workflow", "--verification-workflow"], ROOT);
       assert.equal(result.status, 0, result.stderr);
-      assert.match(result.stdout, /kept AGENTS\.md \(already exists\)/);
+      assert.match(result.stdout, /updated AGENTS\.md \(DiffCI managed section\)/);
       assert.match(result.stdout, /wrote CLAUDE\.md/);
       assert.match(result.stdout, /wrote \.github\/workflows\/diffci\.yml/);
-      assert.equal(readFileSync(join(dir, "AGENTS.md"), "utf8"), "# Existing agent policy\n");
-      assert.match(readFileSync(join(dir, "CLAUDE.md"), "utf8"), /npx "@diffci\.com\/diffci@latest" check/);
+      assert.match(result.stdout, /wrote \.github\/workflows\/diffci-verify\.yml/);
+      const agents = readFileSync(join(dir, "AGENTS.md"), "utf8");
+      assert.match(agents, /^# Existing agent policy/);
+      assert.match(agents, /<!-- diffci:managed:start -->/);
+      assert.match(agents, /verify --changed --json/);
+      assert.match(readFileSync(join(dir, "CLAUDE.md"), "utf8"), /npx "@diffci\.com\/diffci@latest" verify --changed --json/);
       assert.match(readFileSync(join(dir, ".cursor", "rules", "diffci.mdc"), "utf8"), /alwaysApply: true/);
       assert.match(readFileSync(join(dir, ".github", "copilot-instructions.md"), "utf8"), /Repository CI\/CD Validation/);
-      const config = JSON.parse(readFileSync(join(dir, "diffci.config.json"), "utf8")) as { agentDefaultCommand?: string; sendReports?: boolean };
-      assert.equal(config.agentDefaultCommand, 'npx "@diffci.com/diffci@latest" check');
+      const config = JSON.parse(readFileSync(join(dir, "diffci.config.json"), "utf8")) as { agentDefaultCommand?: string; mode?: string; sendReports?: boolean };
+      assert.equal(config.agentDefaultCommand, 'npx "@diffci.com/diffci@latest" verify --changed --json');
+      assert.equal(config.mode, "verify-changed");
       assert.equal(config.sendReports, false);
       assert.match(readFileSync(join(dir, ".github", "workflows", "diffci.yml"), "utf8"), new RegExp(`npx "@diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")}" observe --no-send`));
+      const verificationWorkflow = readFileSync(join(dir, ".github", "workflows", "diffci-verify.yml"), "utf8");
+      assert.match(verificationWorkflow, new RegExp(`npx "@diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")}" verify --json`));
+      assert.match(verificationWorkflow, /fetch-depth: 0/);
+      assert.match(verificationWorkflow, /github\.event\.pull_request\.head\.sha \|\| github\.sha/);
+      assert.match(verificationWorkflow, /actions\/upload-artifact@v4/);
+      assert.doesNotMatch(verificationWorkflow, /continue-on-error/);
+      const workflowCheck = runCli(["verify-workflow", "--repo", dir], ROOT);
+      assert.equal(workflowCheck.status, 0, workflowCheck.stdout + workflowCheck.stderr);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -55,6 +69,7 @@ describe("agent-facing CLI commands", () => {
       assert.match(result.stdout, /skipped \.github\/workflows\/diffci\.yml/);
       assert.match(result.stdout, /skipped package installation/);
       assert.equal(existsSync(join(dir, ".github", "workflows", "diffci.yml")), false);
+      assert.equal(existsSync(join(dir, ".github", "workflows", "diffci-verify.yml")), false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -108,15 +123,21 @@ describe("agent-facing CLI commands", () => {
         devDependencies: Record<string, string>;
       };
       assert.equal(manifest.scripts.test, "node --test");
+      assert.equal(manifest.scripts["diffci:verify"], "diffci verify --changed --json");
       assert.equal(manifest.scripts["diffci:check"], "diffci check");
       assert.equal(manifest.scripts["diffci:observe"], "diffci observe --no-send");
       assert.match(manifest.devDependencies["@diffci.com/diffci"], /^file:/);
       const lock = JSON.parse(readFileSync(join(consumerDir, "package-lock.json"), "utf8")) as { packages?: Record<string, unknown> };
       assert.ok(lock.packages?.["node_modules/@diffci.com/diffci"]);
       assert.match(readFileSync(join(consumerDir, ".github", "workflows", "diffci.yml"), "utf8"), new RegExp(`@diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")}`));
+      const agentInstructions = readFileSync(join(consumerDir, "AGENTS.md"), "utf8");
+      assert.equal(agentInstructions.match(/<!-- diffci:managed:start -->/g)?.length, 1);
+      assert.match(agentInstructions, /npm run diffci:verify/);
+      assert.doesNotMatch(agentInstructions, /@latest/);
+      const config = JSON.parse(readFileSync(join(consumerDir, "diffci.config.json"), "utf8")) as { agentDefaultCommand?: string };
+      assert.equal(config.agentDefaultCommand, "npm run diffci:verify");
     } finally {
       rmSync(parent, { recursive: true, force: true });
     }
   });
 });
-

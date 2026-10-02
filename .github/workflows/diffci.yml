@@ -16,6 +16,12 @@ jobs:
       # Package-distribution canary. The local Action is dogfooded separately in
       # diffci-observe.yml; this command stays analysis-only to avoid duplicating CI tests.
       # Run outside the checkout so npm cannot mistake this package for the registry install.
-      - run: |
-          cd "$RUNNER_TEMP"
-          npx --yes --package "@diffci.com/diffci@0.2.9" diffci observe --repo "$GITHUB_WORKSPACE" --no-send
+      - name: Observe with the release package or source fallback
+        run: |
+          if npm view "@diffci.com/diffci@0.3.0-rc.1" version >/dev/null 2>&1; then
+            (cd "$RUNNER_TEMP" && npx --yes --package "@diffci.com/diffci@0.3.0-rc.1" diffci observe --repo "$GITHUB_WORKSPACE" --no-send)
+          else
+            echo "Package 0.3.0-rc.1 is not published yet; validating this release candidate from source."
+            npm ci
+            node --import tsx src/client/cli.ts observe --repo "$GITHUB_WORKSPACE" --no-send
+          fi

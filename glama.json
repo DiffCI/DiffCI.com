@@ -1,6 +1,6 @@
 {
   "name": "DiffCI",
-  "description": "Change-aware CI validation, affected-test selection, and workflow safety for coding agents.",
+  "description": "Fail-closed verification, affected-test selection, and workflow safety for AI coding agents.",
   "category": "developer-tools",
   "homepage": "https://diffci.com/mcp-server",
   "repository": "https://github.com/DiffCI/DiffCI.com",

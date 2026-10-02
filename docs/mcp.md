@@ -61,16 +61,24 @@ On Windows, keep the same command shape and use a Windows path:
 ```
 
 For Claude Desktop, Claude Code, Cursor, Codex-style MCP clients, and other stdio-compatible agents,
-name the server `diffci` and call `diffci_check` before PR-ready answers.
+name the server `diffci` and call the verification tool that matches the change scope before PR-ready
+answers.
 
 Available tools:
 
+- `diffci_verify_changed` - verifies staged, unstaged, and non-ignored untracked changes and returns a
+  machine-readable, content-bound receipt.
+- `diffci_verify` - verifies a clean commit range, resolving the CI range automatically or accepting
+  explicit base and head revisions.
 - `diffci_check` - runs `diffci check`, including inferred full and selected test commands.
 - `diffci_init` - runs `diffci init` to seed agent instruction files.
 - `diffci_verify_workflow` - runs `diffci verify-workflow` to check non-interference.
 
-The stdio MCP server delegates to the same open-source CLI. `diffci_check` sends nothing to DiffCI Cloud,
-but it runs test commands when it can infer them. Use the CLI's `observe --no-send` for analysis only.
+The verification tools return the same `diffci.verification.v1` receipt as the CLI, including
+`verification`, `safe_to_continue`, change and selection counts, fallback reasoning, the executed
+command result, and checkout identities. The stdio MCP server delegates to the same open-source CLI
+and sends nothing to DiffCI Cloud. Verification runs repository test commands; use the CLI's
+`observe --no-send` for analysis only.
 
 Keep required project CI authoritative. DiffCI output is a validation lens, not permission to skip
 required checks.
@@ -88,5 +96,5 @@ Discovery links:
 
 Short description:
 
-> Change-aware CI/CD validation for AI coding agents. DiffCI analyzes the checkout, can run paired
-> full and selected test commands, and keeps required CI authoritative.
+> Fail-closed, change-aware verification for AI coding agents. DiffCI selects the minimum justified
+> test command, broadens to full verification on uncertainty, and returns a machine-readable receipt.

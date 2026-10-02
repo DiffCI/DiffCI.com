@@ -49,7 +49,6 @@ export interface WorkflowGuardOptions {
    */
   actionPattern?: RegExp;
 }
-
 export interface WorkflowGuardResult {
   /** "<workflow file>#<job id>" for every job that runs the DiffCI action. */
   observerJobs: string[];
@@ -108,6 +107,13 @@ function listWorkflowFiles(repoPath: string): string[] {
  */
 function runReferencesDiffCi(run: string, actionPattern: RegExp): boolean {
   return actionPattern.test(commandText(run));
+}
+
+/** A fail-closed `verify` job is intentionally allowed to affect its own check conclusion. */
+function runInvokesDiffCiVerification(run: string): boolean {
+  const command = commandText(run);
+  return /\bdiffci:verify\b/i.test(command) ||
+    /\b(?:diffci(?:\.com\/diffci)?(?:@[^\s"']+)?|cli\.(?:js|ts))["']?\s+verify(?=\s|$)/i.test(command);
 }
 
 /**
@@ -199,7 +205,11 @@ export function auditWorkflows(repoPath: string, options: WorkflowGuardOptions =
       const isDiffCiStep = (step: Record<string, unknown>): boolean =>
         (typeof step.uses === "string" && referencesDiffCi(step.uses, repoPath, actionPattern)) ||
         (typeof step.run === "string" && runReferencesDiffCi(step.run, actionPattern));
-      const diffciSteps = steps.filter(isDiffCiStep);
+      const isVerificationStep = (step: Record<string, unknown>): boolean =>
+        typeof step.run === "string" && runInvokesDiffCiVerification(step.run);
+      // This guard proves that observation jobs are inert. A dedicated fail-closed verification job
+      // is a different product surface: making its own status check fail is its intended contract.
+      const diffciSteps = steps.filter((step) => isDiffCiStep(step) && !isVerificationStep(step));
       if (diffciSteps.length === 0) continue;
 
       observerJobs.push(`${relativePath}#${jobId}`);
@@ -235,7 +245,7 @@ export function auditWorkflows(repoPath: string, options: WorkflowGuardOptions =
         // DiffCI became a package rather than an Action it invokes itself with `run:`, and the rule
         // below - "any run: step is real work" - was written when that could not happen. Leaving the
         // order the other way round made the product's own generated workflow fail its own guard.
-        if (isDiffCiStep(step)) return false;
+        if (isDiffCiStep(step) && !isVerificationStep(step)) return false;
         // Any other shell step in this job IS real work, and DiffCI must not share a job with it.
         if (typeof step.run === "string") return true;
         if (typeof step.uses !== "string") return false;
