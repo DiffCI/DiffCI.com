@@ -7,6 +7,34 @@ export interface FullCommandDecision {
   reason: string;
 }
 
+/** Automatic timing must retain the non-selected phases of the declared test script. */
+export function inferComparableSelectedCommand(repoPath: string, proposed: string, selectedTests: readonly string[]): FullCommandDecision {
+  const selected = inferSelectedCommand(repoPath, proposed, selectedTests);
+  if (!selected.command) return selected;
+  const packagePath = join(repoPath, "package.json");
+  if (!existsSync(packagePath)) return selected;
+  let scripts: Record<string, unknown>;
+  try { scripts = JSON.parse(readFileSync(packagePath, "utf8")).scripts ?? {}; }
+  catch { return { reason: "package.json could not be read" }; }
+  const script = scripts.test;
+  const refusal = { reason: "Cannot prove equal validation scope for automatic timing; use explicit matched commands with verify-savings" };
+  if (typeof script !== "string" || scripts.pretest || scripts.posttest) return refusal;
+  if (!/\bvitest run(?:\s|$)/.test(selected.command)) {
+    // Existing direct runner support remains available; compound scripts need a phase adapter.
+    return /[&|;\r\n]/.test(script) ? refusal : selected;
+  }
+  const phases = script.split(/\s*&&\s*/);
+  const runtime = phases.map((phase, index) => ({ index, match: /^vitest(?: run)?( --typecheck)?$/.exec(phase.trim()) }))
+    .filter(phase => phase.match);
+  if (runtime.length !== 1) return refusal;
+  const target = runtime[0]!;
+  // Only simple package-script invocations are retained. Shell programs, pipelines,
+  // environment assignments, runner flags and multiple suites need an explicit adapter.
+  if (phases.some((phase, index) => index !== target.index && !/^(?:npm|pnpm|yarn|bun) (?:run )?[\w:-]+$/.test(phase.trim()))) return refusal;
+  phases[target.index] = selected.command + (target.match![1] ?? "");
+  return { command: phases.join(" && "), reason: "Selected Vitest files with all declared test phases preserved" };
+}
+
 /** Preserve the repository's TypeScript test loader for selected node:test files. */
 export function inferSelectedCommand(repoPath: string, proposed: string, selectedTests: readonly string[]): FullCommandDecision {
   if (!/^node --test(?:\s|$)/.test(proposed) || !selectedTests.some(path => /\.(?:ts|tsx|mts|cts)$/.test(path))) {

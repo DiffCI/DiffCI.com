@@ -32,7 +32,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 
 import { observe, isInsideRepository } from "./observe.js";
-import { inferFullCommand, inferSelectedCommand } from "./full-command.js";
+import { inferFullCommand, inferComparableSelectedCommand } from "./full-command.js";
 import { addDiffciPackageScripts, detectPackageManager, installDiffci, type SupportedPackageManager } from "./install.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
@@ -533,7 +533,7 @@ async function runCheck(flags: Record<string, string | boolean>, env: NodeJS.Pro
     return 0;
   }
 
-  const selected = inferSelectedCommand(repoPath, observation.result.proposedCommands[0], observation.result.selectedTests);
+  const selected = inferComparableSelectedCommand(repoPath, observation.result.proposedCommands[0], observation.result.selectedTests);
   if (!selected.command) {
     print(`  timing: unavailable (${selected.reason})`);
     if (flags.json === true) console.log(JSON.stringify({ observation, timing: null, reason: selected.reason }, null, 2));

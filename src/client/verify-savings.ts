@@ -414,14 +414,15 @@ function assessFailures(trials: readonly SavingsTrial[]): FailureAssessment {
 export function measureCommand(command: string, options: Pick<VerifySavingsOptions, "cwd" | "timeoutMs" | "tailBytes">): CommandMeasurement {
   const startedAt = new Date().toISOString();
   const started = Date.now();
-  const shellCommand = process.platform === "win32" ? "powershell.exe" : "sh";
-  const shellArgv = process.platform === "win32" ? ["-NoProfile", "-NonInteractive", "-Command", command] : ["-c", command];
+  const shellCommand = process.platform === "win32" ? "cmd.exe" : "sh";
+  const shellArgv = process.platform === "win32" ? ["/d", "/s", "/c", command] : ["-c", command];
   const result = spawnSync(shellCommand, shellArgv, {
     cwd: options.cwd,
     encoding: "utf8",
     timeout: options.timeoutMs,
     maxBuffer: 256 * 1024 * 1024,
     shell: false,
+    windowsVerbatimArguments: process.platform === "win32",
     env: {
       ...process.env,
       CI: "1",
