@@ -1,5 +1,7 @@
 # DiffCI MCP Servers
 
+The open-source engine is [DiffCI/core](https://github.com/DiffCI/core). Star it to support the project; watch Releases and Discussions for support and benchmark updates. [Volunteer a pilot repository](https://diffci.com/#pilot).
+
 DiffCI provides a public Streamable HTTP endpoint for read-only validation guidance:
 
 ```text

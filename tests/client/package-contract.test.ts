@@ -54,6 +54,7 @@ describe("npm package contract", () => {
       "dist-client/src/client",
       "dist-client/src/preflight",
       "README.md",
+      "site/assets/calcom-runtime-evidence.svg",
       "server.json",
       "glama.json",
       "llms.txt",

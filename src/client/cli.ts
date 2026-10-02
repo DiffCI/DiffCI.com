@@ -40,7 +40,7 @@ import { githubDeliveryWarning } from "./delivery-warning.js";
 import { sendUsageSignal } from "./usage-signal.js";
 import { detectSpecificationConflicts, readSpecificationFile } from "./spec-conflicts.js";
 import { formatVerificationSummary, verificationExitCode, verifyChanged, verifyRange } from "./verify.js";
-import { formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
+import { formatGrowthPrompt, formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
 import { auditWorkflows, isNonInterfering } from "./workflow-guard.js";
 
 interface ParsedArgs {
@@ -559,6 +559,7 @@ async function runCheck(flags: Record<string, string | boolean>, env: NodeJS.Pro
   });
   writeVerifySavingsReport(savings, { out: savingsPath, markdown: markdownPath });
   print(formatVerifySavingsSummary(savings));
+  if (formatGrowthPrompt(savings)) print(formatGrowthPrompt(savings));
   print(`  savings report: ${savingsPath}`);
   print(`  markdown: ${markdownPath}`);
   if (flags.json === true) console.log(JSON.stringify({ observation, savings }, null, 2));
@@ -642,7 +643,7 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
     try {
       writeFileSync(
         env.GITHUB_STEP_SUMMARY,
-        `### DiffCI (observation only)\n\n\`\`\`\n${summary}${delivery ? `\n  delivery: ${delivery}` : ""}\n\`\`\`\n`,
+        `### DiffCI (observation only)\n\n\`\`\`\n${summary}${delivery ? `\n  delivery: ${delivery}` : ""}\n\`\`\`\n\n[Open-source engine: DiffCI/core](https://github.com/DiffCI/core)\n`,
         { flag: "a" },
       );
     } catch {
@@ -743,6 +744,7 @@ function runVerifySavingsCommand(flags: Record<string, string | boolean>, env: N
   const report = runVerifySavings(options);
   writeVerifySavingsReport(report, { out: options.out, markdown: options.markdown });
   console.log(formatVerifySavingsSummary(report));
+  if (formatGrowthPrompt(report)) console.log(formatGrowthPrompt(report));
   console.log(`  report: ${options.out}`);
   if (options.markdown) console.log(`  markdown: ${options.markdown}`);
   return report.comparison.evidenceValid ? 0 : 1;
@@ -819,6 +821,7 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
   writeVerifySavingsReport(savings, { out: savingsPath, markdown: markdownPath });
 
   console.log(formatVerifySavingsSummary(savings));
+  if (formatGrowthPrompt(savings)) console.log(formatGrowthPrompt(savings));
   console.log(`  savings report: ${savingsPath}`);
   console.log(`  markdown: ${markdownPath}`);
   return savings.comparison.evidenceValid ? 0 : 1;
@@ -838,6 +841,9 @@ function runValidateSpecs(flags: Record<string, string | boolean>): number {
 }
 
 const USAGE = `diffci - change-aware CI analysis and paired timing
+
+Open-source engine: https://github.com/DiffCI/core
+Pilot a repository: https://diffci.com/#pilot
 
 Usage:
   diffci init [--repo <path>] [--workflow] [--verification-workflow] [--install] [--force]
