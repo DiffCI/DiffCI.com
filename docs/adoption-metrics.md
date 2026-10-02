@@ -97,7 +97,7 @@ They are supporting signals only.
 
 | Signal | Value | Interpretation |
 | --- | ---: | --- |
-| npm latest version | `0.3.0-rc.1` | Current CLI and MCP binaries are publicly available. |
+| npm latest version | `0.3.0` | Current CLI and MCP binaries are publicly available. |
 | npm downloads, last complete registry week (`2026-09-15`–`2026-09-21`) | 1,929 | Distribution activity; not unique users or repositories. |
 | GitHub stars / forks / watchers | 0 / 0 / 0 | No repository-level community conversion yet. |
 | GitHub views, available 14-day window | 18 views / 4 unique visitors | Early discovery signal. |
@@ -110,6 +110,13 @@ They are supporting signals only.
 The next adoption milestone is one independently owned repository that shares a first report or
 completes a non-blocking observation pilot. Do not claim user or repository counts from downloads,
 clones, or opted-in executions.
+
+## Agent-verification checkpoint — 2026-10-02
+
+The stable 0.3.0 release gate uses two real repository integrations rather than three. DiffCI.com and
+DentalPresence.in both completed the install-to-verification path and passed their remote verification
+workflows. This is product-integration evidence, not independent adoption: both repositories are
+maintainer-owned, and the independently owned pilot count remains zero.
 
 Existing outreach log:
 
