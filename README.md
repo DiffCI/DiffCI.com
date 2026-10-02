@@ -15,7 +15,16 @@ runs it. Uncertainty broadens to full verification; a failed, incomplete, or cha
 The `check` command remains the paired-runtime evaluation surface. `observe` and the Marketplace Action
 remain observation-only; DiffCI also generates a separate blocking verification workflow.
 
-## Try DiffCI
+## Evaluate CI savings
+
+DiffCI is open-source test-impact analysis for faster CI. Run
+`npx "@diffci.com/diffci@latest" check` on a supported repository and a representative code change.
+Review the measured runtime or fallback reason, then [share a first report](https://github.com/DiffCI/DiffCI.com/issues/new?template=first-diffci-report.yml).
+After a useful evaluation, run `init --install --workflow` to add a pinned dependency and a separate
+non-blocking observation pilot. Review the generated changes before enabling the workflow.
+Observation reports explain selection; repeated paired comparisons establish runtime savings.
+
+## Verify coding-agent changes
 
 From a Git repository checkout, with Node.js 22.5+ and Git installed, run:
 

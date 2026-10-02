@@ -86,8 +86,13 @@ Suggested description:
 - [Context7 CLI documentation](https://context7.com/diffci/diffci.com)
 - [Share a first DiffCI report](https://github.com/DiffCI/DiffCI.com/issues/new?template=first-diffci-report.yml)
 
-If a maintainer is evaluating DiffCI for the first time, ask for one local run before proposing a
-workflow change:
+For a CI savings evaluation, ask for one local `check` run before proposing a workflow change:
+
+```bash
+npx "@diffci.com/diffci@latest" check
+```
+
+For a coding-agent verification evaluation, use:
 
 ```bash
 npx "@diffci.com/diffci@latest" verify --changed --json
