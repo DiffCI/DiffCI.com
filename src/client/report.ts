@@ -177,6 +177,8 @@ export interface ObservationResult {
   fallbackReasons: string[];
   /** The command DiffCI would have run. Present even in observe mode - it is the claim being tested. */
   proposedCommands: string[];
+  /** Workspace execution can widen affected files to whole state-sharing suites. */
+  workspaceCommands?: boolean;
   /** Explicit Go CI universe, when configured by the repository. */
   goScope?: "root-module";
   vueScope?: { packageRoot: string; testConfig: string };
