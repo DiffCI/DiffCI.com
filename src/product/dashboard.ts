@@ -98,7 +98,7 @@ export interface DashboardContract {
 }
 
 export function buildDashboardReportLinks(reportBaseUrl: string, access: readonly { repository: string; isPrivate: boolean; token?: string }[]): DashboardReportLink[] {
-  return access.map((a) => {
+  return access.filter((a) => !a.isPrivate || !!a.token).map((a) => {
     const url = new URL(reportBaseUrl);
     url.searchParams.set("repository", a.repository);
     url.searchParams.set("days", "7");

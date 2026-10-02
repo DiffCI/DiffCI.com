@@ -23,7 +23,7 @@ import { validateObservationReport, type ObservationReport } from "../client/rep
 import type { ProductStore } from "../product/store.js";
 import type { UsageStore } from "../usage/store.js";
 import type { IngestTokenStore } from "./token.js";
-import type { NewObservation, ObservationStore } from "./store.js";
+import { RepositoryInactiveError, type NewObservation, type ObservationStore } from "./store.js";
 import type { IngestResult } from "./types.js";
 
 /**
@@ -34,6 +34,7 @@ import type { IngestResult } from "./types.js";
 export const MAX_REPORT_BYTES = 1024 * 1024;
 
 export interface IngestDeps {
+  allowRequest?: (organizationId: string, repositoryId: string) => Promise<boolean>;
   tokenStore: IngestTokenStore;
   observationStore: ObservationStore;
   productStore: Pick<ProductStore, "getRepository" | "recordAuditEvent">;
@@ -165,6 +166,9 @@ export async function ingestObservation(request: IngestRequest, deps: IngestDeps
     return { ok: false, rejection, message };
   }
   const token = verification.record;
+  if (deps.allowRequest && !await deps.allowRequest(token.organizationId, token.repositoryId)) {
+    return { ok: false, rejection: "rate_limited", message: "Repository ingest limit reached. Retry after 60 seconds." };
+  }
 
   let parsed: unknown;
   try {
@@ -184,6 +188,10 @@ export async function ingestObservation(request: IngestRequest, deps: IngestDeps
     };
   }
   const report = validation.report;
+  const producedAt = Date.parse(report.producedAt);
+  if (!Number.isFinite(producedAt) || producedAt > Date.now() + 300000 || producedAt <= Date.now() - 90 * 86400000) {
+    return { ok: false, rejection: "malformed_payload", message: "Report timestamp must be valid, within the 90-day retention window, and no more than five minutes in the future." };
+  }
 
   const repository = await deps.productStore.getRepository(token.repositoryId);
   if (!repository || repository.organizationId !== token.organizationId) {
@@ -221,7 +229,8 @@ export async function ingestObservation(request: IngestRequest, deps: IngestDeps
   }
 
   const idempotencyKey = await deriveIdempotencyKey(repository.id, report, request.body);
-  const { record, duplicate } = await deps.observationStore.recordIfNew(
+  let saved: Awaited<ReturnType<ObservationStore["recordIfNew"]>>;
+  try { saved = await deps.observationStore.recordIfNew(
     toNewObservation({
       organizationId: repository.organizationId,
       repositoryId: repository.id,
@@ -230,7 +239,11 @@ export async function ingestObservation(request: IngestRequest, deps: IngestDeps
       reportBytes,
       identityVerified,
     }),
-  );
+  ); } catch (error) {
+    if (error instanceof RepositoryInactiveError) return { ok: false, rejection: "repository_inactive", message: "Repository was disconnected while this report was being accepted." };
+    throw error;
+  }
+  const { record, duplicate } = saved;
 
   // A duplicate stops here: it must not re-meter, re-audit, or refresh last_used_at, or a workflow
   // retrying ten times would look like ten observations and a dead token would look alive.

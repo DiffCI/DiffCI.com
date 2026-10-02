@@ -38,8 +38,13 @@ export interface ExecutionQueueStore {
   listItemsForOrganization(organizationId: string, limit?: number): Promise<QueueItem[]>;
   /** Queued items across ALL organizations, oldest-highest-priority first - the scheduler's raw input
    * before per-organization concurrency limiting is applied (Part 17, see scheduler.ts). */
-  listQueuedItems(limit?: number): Promise<QueueItem[]>;
+  listQueuedItems(limit?: number, organizationId?: string): Promise<QueueItem[]>;
   countInFlightForOrganization(organizationId: string): Promise<number>;
+  claimForAssignment(id: string, maxConcurrency: number): Promise<boolean>;
+  completeAssignment(id: string, attempt: number, runnerId: string): Promise<boolean>;
+  startExecution(id: string, organizationId: string, runnerId: string): Promise<boolean>;
+  failAssignment(id: string, attempt: number, safeToRetry?: boolean): Promise<void>;
+  expireAssignments(cutoffIso: string): Promise<number>;
   updateStatus(id: string, status: QueueItemStatus, extra?: { assignedRunnerId?: string; incrementAttempts?: boolean }): Promise<void>;
 }
 
@@ -72,8 +77,8 @@ export function makeD1ExecutionQueueStore(db: D1Binding): ExecutionQueueStore {
       return results.map(rowToQueueItem);
     },
 
-    async listQueuedItems(limit = 200) {
-      const { results } = await db.prepare(`SELECT * FROM execution_queue_items WHERE status = 'queued' ORDER BY priority ASC, created_at ASC LIMIT ?`).bind(limit).all<Record<string, unknown>>();
+    async listQueuedItems(limit = 200, organizationId) {
+      const { results } = await db.prepare(`SELECT * FROM execution_queue_items WHERE status = 'queued'${organizationId ? " AND organization_id = ?" : ""} ORDER BY priority ASC, created_at ASC LIMIT ?`).bind(...(organizationId ? [organizationId, limit] : [limit])).all<Record<string, unknown>>();
       return results.map(rowToQueueItem);
     },
 
@@ -83,6 +88,46 @@ export function makeD1ExecutionQueueStore(db: D1Binding): ExecutionQueueStore {
         .bind(organizationId)
         .first<{ n: number }>();
       return row?.n ?? 0;
+    },
+
+    async claimForAssignment(id, maxConcurrency) {
+      const row = await db.prepare(`UPDATE execution_queue_items SET status = 'assigning', attempts = attempts + 1, updated_at = ?
+        WHERE id = ? AND status = 'queued' AND attempts < max_attempts
+          AND (? < 0 OR (SELECT COUNT(*) FROM execution_queue_items q WHERE q.organization_id = execution_queue_items.organization_id
+            AND q.status IN ('assigning','assigned','running')) < ?)
+          AND (repository_id IS NULL OR EXISTS (SELECT 1 FROM repositories r WHERE r.id = repository_id AND r.organization_id = execution_queue_items.organization_id AND r.status NOT IN ('removed','paused')))
+        RETURNING id`).bind(nowIso(), id, maxConcurrency, maxConcurrency).first();
+      return !!row;
+    },
+
+    async completeAssignment(id, attempt, runnerId) {
+      const row = await db.prepare(`UPDATE execution_queue_items SET status = 'assigned', assigned_runner_id = ?, updated_at = ?
+        WHERE id = ? AND status = 'assigning' AND attempts = ?
+          AND (repository_id IS NULL OR EXISTS (SELECT 1 FROM repositories r WHERE r.id = repository_id
+            AND r.organization_id = execution_queue_items.organization_id AND r.status NOT IN ('removed','paused')))
+        RETURNING id`).bind(runnerId, nowIso(), id, attempt).first();
+      return !!row;
+    },
+
+    async startExecution(id, organizationId, runnerId) {
+      const row = await db.prepare(`UPDATE execution_queue_items SET status = 'running', updated_at = ?
+        WHERE id = ? AND organization_id = ? AND assigned_runner_id = ? AND status = 'assigned'
+          AND (repository_id IS NULL OR EXISTS (SELECT 1 FROM repositories r WHERE r.id = repository_id
+            AND r.organization_id = execution_queue_items.organization_id AND r.status NOT IN ('removed','paused')))
+        RETURNING id`).bind(nowIso(), id, organizationId, runnerId).first();
+      return !!row;
+    },
+
+    async failAssignment(id, attempt, safeToRetry = true) {
+      await db.prepare(`UPDATE execution_queue_items SET status = CASE WHEN ? = 0 THEN 'timed_out' WHEN attempts >= max_attempts THEN 'failed' ELSE 'queued' END, updated_at = ?
+        WHERE id = ? AND status = 'assigning' AND attempts = ?`).bind(safeToRetry ? 1 : 0, nowIso(), id, attempt).run();
+    },
+
+    async expireAssignments(cutoffIso) {
+      // Never retry an uncertain allocation automatically: a provider may still hold a runner.
+      const result = await db.prepare(`UPDATE execution_queue_items SET status = 'timed_out', updated_at = ?
+        WHERE status = 'assigning' AND updated_at < ?`).bind(nowIso(), cutoffIso).run();
+      return result.meta?.changes ?? 0;
     },
 
     async updateStatus(id, status, extra) {

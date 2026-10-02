@@ -123,6 +123,18 @@ const SCRIPT = `
     var url = button.dataset.url, method = button.dataset.method || "POST";
     var target = button.dataset.target ? document.getElementById(button.dataset.target) : null;
     var body = button.dataset.body;
+    if (button.dataset.jsonForm) {
+      var jsonForm = document.getElementById(button.dataset.jsonForm);
+      if (!jsonForm || !jsonForm.reportValidity()) return;
+      body = JSON.stringify(Object.fromEntries(new FormData(jsonForm)));
+    }
+    if (button.dataset.policyForm) {
+      var form = document.getElementById(button.dataset.policyForm);
+      if (!form || !form.reportValidity()) return;
+      var policy = {};
+      new FormData(form).forEach(function (value, key) { policy[key] = Number(value); });
+      body = JSON.stringify({ expectedRevision: Number(button.dataset.revision), policy: policy });
+    }
     if (button.dataset.confirm && !window.confirm(button.dataset.confirm)) return;
     button.disabled = true;
     try {
@@ -134,7 +146,7 @@ const SCRIPT = `
       });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) {
-        if (target) { target.textContent = (data.error || ("request failed (" + response.status + ")")); target.className = "bad"; }
+        if (target) { target.textContent = data.error === "revision_conflict" ? "The policy changed while you were editing. Reload and review the latest revision." : (data.error || ("request failed (" + response.status + ")")); target.className = "bad"; }
         button.disabled = false;
         return;
       }

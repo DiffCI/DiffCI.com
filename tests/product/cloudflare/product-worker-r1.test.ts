@@ -72,6 +72,33 @@ describe("product-worker.ts R1 wiring - real end-to-end route composition", () =
     return { org, user, headers: { "X-DiffCI-User-Id": user.id, "Content-Type": "application/json" } };
   }
 
+  it("exposes tenant-scoped, revision-checked managed execution consent", async () => {
+    const db = freshProductDb(["runner", "execution-queue", "usage"]);
+    const capturedRunnerCalls: Array<{ url: string; body: unknown }> = [];
+    const { org, user, headers } = await setupOrgAndAuthHeaders(db);
+    const store = makeD1ProductStore(makeD1(db));
+    const repository = await store.createRepository({ organizationId: org.id, providerRepositoryId: "managed-1", ownerName: "acme/managed" });
+    await store.setRepositoryStatus(repository.id, "active");
+    const env = buildEnv(db, capturedRunnerCalls);
+    const ctx = mockCtx();
+    const url = `https://product.example/v1/organizations/${org.id}/repositories/${repository.id}/execution-consent`;
+
+    const initial = await productWorker.fetch(new Request(url, { headers }), env as never, ctx);
+    assert.equal(initial.status, 200);
+    const initialBody = await initial.json() as { current: { mode: string; revision: number }; canEdit: boolean };
+    assert.deepEqual({ mode: initialBody.current.mode, revision: initialBody.current.revision, canEdit: initialBody.canEdit }, { mode: "observation_only", revision: 0, canEdit: true });
+
+    const enabled = await productWorker.fetch(new Request(url, { method: "PUT", headers, body: JSON.stringify({ expectedRevision: 0, mode: "verification", maxDurationSeconds: 900 }) }), env as never, ctx);
+    assert.equal(enabled.status, 200);
+    const enabledBody = await enabled.json() as { current: { mode: string; revision: number; consentedByUserId: string } };
+    assert.equal(enabledBody.current.mode, "verification");
+    assert.equal(enabledBody.current.revision, 1);
+    assert.equal(enabledBody.current.consentedByUserId, user.id);
+
+    const stale = await productWorker.fetch(new Request(url, { method: "PUT", headers, body: JSON.stringify({ expectedRevision: 0, mode: "observation_only", maxDurationSeconds: 900 }) }), env as never, ctx);
+    assert.equal(stale.status, 409);
+  });
+
   it("full real flow: create synthetic job -> scheduler assigns -> real runner-agent calls (register/claim/result) -> usage + audit + termination", async () => {
     const db = freshProductDb(["runner", "execution-queue", "usage"]);
     const capturedRunnerCalls: Array<{ url: string; body: unknown }> = [];

@@ -19,6 +19,8 @@ import type { LedgerRow, MonthlyLedger } from "../ledger/ledger.js";
 import type { StoredInvoice } from "../billing/invoice-store.js";
 import { formatUsdCents, type ReconciliationResult } from "../billing/metered.js";
 import { html, layout, type SafeHtml } from "./render.js";
+import { renderFleetPanel, type FleetPanelData } from "./fleet.js";
+import { buildOnboardingStatus } from "../product/onboarding.js";
 
 function shortSha(sha: string | undefined): string {
   return sha ? sha.slice(0, 9) : "—";
@@ -120,6 +122,7 @@ function renderUserReports(reports: UserReports): SafeHtml {
 }
 
 export interface OrganizationPageData {
+  fleet?: FleetPanelData;
   email: string;
   organization: Organization;
   repositories: Repository[];
@@ -159,6 +162,14 @@ export function renderOrganization(data: OrganizationPageData): string {
         : html`<p class="notice">
             The GitHub App is not configured in this environment, so repositories cannot be connected from here.
           </p>`}
+      ${data.installUrl ? html`<details><summary>Already installed? Connect a repository</summary>
+        <p>Enter a repository where you are a GitHub administrator and the DiffCI App is already installed.
+        Only this repository will be connected. Existing data and credentials stay with their organization.</p>
+        <form id="reconnect-form">
+          <input type="hidden" name="organizationId" value="${data.organization.id}">
+          <label>GitHub repository <input name="repository" placeholder="owner/repository" required maxlength="200"></label>
+          <button type="button" data-url="/v1/installations/reconnect" data-json-form="reconnect-form" data-target="reconnect-result">Connect existing repository</button>
+        </form><p id="reconnect-result" role="status"></p></details>` : ""}
       ${data.repositories.length === 0
         ? html`<p class="empty">No repositories connected yet.</p>`
         : html`<table>
@@ -179,6 +190,8 @@ export function renderOrganization(data: OrganizationPageData): string {
               )}
             </tbody>
           </table>`}
+
+      ${renderFleetPanel(data.organization.id, data.fleet)}
 
       <h2>Savings</h2>
       <p><a href="/app/orgs/${data.organization.id}/invoices">Invoices</a> ·
@@ -204,16 +217,19 @@ export function renderOrganization(data: OrganizationPageData): string {
 }
 
 export interface RepositoryPageData {
+  evidenceAvailable?: boolean;
   email: string;
   organization: Organization;
   repository: Repository;
   install: InstallInstructions;
   tokens: IngestTokenRecord[];
   observations: ObservationRecord[];
+  now?: Date;
 }
 
 export function renderRepository(data: RepositoryPageData): string {
   const live = data.tokens.filter((token) => !token.revokedAt);
+  const onboarding = buildOnboardingStatus(data);
   return layout({
     title: data.repository.ownerName,
     subtitle: data.email,
@@ -230,6 +246,15 @@ export function renderRepository(data: RepositoryPageData): string {
            handing someone a mutable ref. The instructions either exist and are SHA-pinned, or this page
            is never reached because the route refused with action_not_pinned. -->
 
+      <section class="card" aria-labelledby="setup-status">
+        <h2 id="setup-status">${onboarding.title}</h2>
+        ${onboarding.state === "delivery_overdue" || onboarding.state === "stale"
+          ? html`<p class="notice" role="alert">Observation delivery needs attention.</p>` : html``}
+        <p>${onboarding.nextStep}</p>
+        ${onboarding.latestReceivedAt ? html`<p class="muted">Latest report received: ${onboarding.latestReceivedAt}</p>` : html``}
+        <p><a href="/app/orgs/${data.organization.id}/repos/${data.repository.id}">Refresh setup status</a></p>
+      </section>
+
       <h2>1. Create an ingest token</h2>
       <div class="card">
         <p class="muted">
@@ -240,7 +265,9 @@ export function renderRepository(data: RepositoryPageData): string {
         <div id="token-result"></div>
       </div>
 
-      ${live.length === 0
+      ${data.evidenceAvailable === false
+        ? html`<p class="notice">Credential status could not be confirmed. Reload before creating a replacement.</p>`
+        : live.length === 0
         ? html`<p class="empty">No live tokens.</p>`
         : html`<table>
             <thead><tr><th>Token</th><th>Name</th><th>Created</th><th>Last used</th><th></th></tr></thead>
@@ -269,7 +296,9 @@ export function renderRepository(data: RepositoryPageData): string {
       <pre><code>${data.install.workflowYaml}</code></pre>
 
       <h2>Observations</h2>
-      ${renderObservationsTable(data.observations)}
+      ${data.evidenceAvailable === false
+        ? html`<p class="notice">Observation history could not be confirmed. Reload to retry.</p>`
+        : renderObservationsTable(data.observations)}
     `,
   });
 }

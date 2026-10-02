@@ -203,8 +203,8 @@ describe("tenant isolation: org A cannot reach org B", () => {
  * and that nothing joins it by accident.
  */
 const ALLOWED_UNSCOPED: Array<{ sql: RegExp; reason: string }> = [
-  { sql: /^DELETE FROM observations WHERE received_at < \?$/, reason: "retention sweep - the 90-day cap is a promise about every row, not one tenant's" },
-  { sql: /^SELECT COUNT\(\*\) AS n FROM observations WHERE received_at < \?$/, reason: "retention health count, same reason" },
+  { sql: /^DELETE FROM observations WHERE received_at < \? OR julianday\(produced_at\) < julianday\(\?\) OR julianday\(produced_at\) IS NULL$/, reason: "retention sweep - enforce the age cap from analysis or receipt, including malformed legacy timestamps, across every tenant" },
+  { sql: /^SELECT COUNT\(\*\) AS n FROM observations WHERE received_at < \? OR julianday\(produced_at\) < julianday\(\?\) OR julianday\(produced_at\) IS NULL$/, reason: "retention health count, same predicate as deletion" },
   { sql: /^SELECT \* FROM ingest_tokens WHERE token_hash = \?$/, reason: "token lookup IS how an organization is established; it cannot presuppose one" },
   { sql: /^UPDATE ingest_tokens SET last_used_at = \? WHERE id = \?$/, reason: "stamps a row already resolved from a verified token; writes no tenant-visible data" },
 ];

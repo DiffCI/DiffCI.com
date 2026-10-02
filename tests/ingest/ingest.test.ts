@@ -43,6 +43,32 @@ function send(body: unknown, token?: string) {
 }
 
 describe("observation ingest", () => {
+  it("limits authenticated uploads before storing evidence", async () => {
+    const f = await fixture();
+    const result = await ingestObservation(send(makeReport(), f.tokenA.raw), { ...f.deps, allowRequest: async () => false });
+    assert.equal(!result.ok && result.rejection, "rate_limited");
+    assert.equal((await f.observationStore.listForRepository(f.orgA.id, f.repoA.id)).length, 0);
+  });
+
+  it("fences an uninstall occurring after validation but before insertion", async () => {
+    const f = await fixture();
+    const result = await ingestObservation(send(makeReport(), f.tokenA.raw), { ...f.deps,
+      observationStore: { ...f.observationStore, recordIfNew: async (input) => {
+        await f.productStore.setRepositoryStatus(f.repoA.id, "removed");
+        return f.observationStore.recordIfNew(input);
+      } },
+    });
+    assert.equal(!result.ok && result.rejection, "repository_inactive");
+    assert.equal((await f.observationStore.listForRepository(f.orgA.id, f.repoA.id)).length, 0);
+  });
+
+  it("retention removes old analysis even if it arrived recently", async () => {
+    const f = await fixture();
+    await ingestObservation(send(makeReport(), f.tokenA.raw), f.deps);
+    f.db.prepare("UPDATE observations SET produced_at='2000-01-01T00:00:00Z'").run();
+    assert.equal(await f.observationStore.unscopedPurgeReceivedBefore("2020-01-01T00:00:00Z"), 1);
+  });
+
   it("accepts a well-formed report and files it under the credential's own repository", async () => {
     const { deps, orgA, repoA, tokenA, observationStore } = await fixture();
     const result = await ingestObservation(send(makeReport(), tokenA.raw), deps);

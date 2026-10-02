@@ -7,6 +7,24 @@ import { runOrphanCleanup } from "../../src/runner/cleanup.js";
 import { freshProductDb, makeD1 } from "../helpers/product-db.js";
 
 describe("runOrphanCleanup - Part 15 (no compute resource should remain indefinitely)", () => {
+  it("retries provider termination after the first sweep leaves a terminating runner", async () => {
+    const db = freshProductDb(["runner"]);
+    const product = makeD1ProductStore(makeD1(db));
+    const user = await product.createUser({ email: "retry@example.com" });
+    const org = await product.createOrganization({ name: "Retry", slug: "retry", ownerUserId: user.id });
+    const store = makeD1RunnerStore(makeD1(db));
+    const runner = await store.createRunner({ organizationId: org.id, provider: "mock", requestedResourceClass: "standard-2" });
+    await store.setProviderRunnerId(runner.id, "resource");
+    let attempts = 0;
+    const provider = { ...createMockRunnerProvider(), terminateRunner: async () => { if (++attempts === 1) throw new Error("temporary failure"); } };
+    const future = new Date(Date.now() + 3600000);
+    assert.equal((await runOrphanCleanup(store, provider, undefined, future))[0]!.terminated, false);
+    assert.equal((await store.getRunner(runner.id))!.status, "terminating");
+    assert.equal((await runOrphanCleanup(store, provider, undefined, future))[0]!.terminated, true);
+    assert.equal(attempts, 2);
+    db.close();
+  });
+
   it("terminates a runner stuck in 'requested' past the provisioning timeout", async () => {
     const db = freshProductDb(["runner"]);
     const productStore = makeD1ProductStore(makeD1(db));

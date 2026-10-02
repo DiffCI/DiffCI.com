@@ -21,9 +21,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # npm Trusted Publishing requires Node >=22.14 and npm >=11.5.1.
+          # Node 24 is the registry's recommended GitHub Actions runtime.
+          node-version: 24
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
+      - name: Install OIDC-capable npm CLI
+        run: npm install --global npm@latest
       - run: npm ci
       - run: npm run check
       - run: npm run build:client
@@ -46,6 +51,9 @@ jobs:
           prerelease_tag=$(node scripts/npm-dist-tag.mjs "$package_version")
           npm publish --provenance --access public --tag "$prerelease_tag"
         env:
+          # npm prefers the GitHub OIDC identity when the package's trusted
+          # publisher is configured. Keep the short-lived granular token as a
+          # fallback until that external npm setting has been verified.
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       # An explicit prerelease tag keeps prereleases off latest. Do not remove the stable dist-tag.
       - name: Publish stable

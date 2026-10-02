@@ -35,6 +35,9 @@
   // absence is what proves no deploy process could have silently left the dev-header path enabled.
   "vars": {
     "DIFFCI_PRODUCT_ENABLED": "true",
+    // Enable only after applying src/hosted/schema.sql and setting ANALYZER_RATE_SECRET.
+    "DIFFCI_PUBLIC_ANALYZER_ENABLED": "true",
+    "DIFFCI_AGENT_ARTIFACT": "npm:@diffci.com/diffci@0.2.13#sha512-iR7xhi2x/Gb5Pf+cngUpQBcfPJQ29RUn3eivn5zXBrc5xX3QD6rydz1XbXyfEz9p2ttMKIRMqT7PXUgW3jty3A==",
     "DIFFCI_ENVIRONMENT": "production",
     "DIFFCI_SESSION_TTL_MS": "2592000000", // 30 days
     // Points the runner-provider selection (product-worker.ts runnerProviderFromEnv) at the real
@@ -88,5 +91,6 @@
   //   GITHUB_OAUTH_CLIENT_ID, GITHUB_OAUTH_CLIENT_SECRET - GitHub OAuth App credentials (Part 6) - see
   //     docs/product/2026-09-05-github-oauth-app-registration.md for the exact registration steps
   //   CSRF_SECRET - signs the double-submit CSRF token (Part 9); generate with
+  //   ANALYZER_RATE_SECRET - independent random secret for rotating anonymous rate-limit identifiers
   //     `openssl rand -base64 32` or equivalent, never reused across environments
 }

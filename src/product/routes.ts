@@ -76,6 +76,10 @@ export async function getUsageSummaryForOrganization(deps: RouteDeps, userId: st
 export async function getSavingsSummaryForOrganization(deps: RouteDeps, userId: string, organizationId: string, ownerName: string): Promise<RouteOutcome<ReturnType<typeof aggregateSavings>>> {
   const org = await requireMembership(deps, organizationId, userId);
   if (!org) return { ok: false, error: "unauthorized" };
+  const repositories = await deps.productStore.listRepositories(organizationId);
+  if (!repositories.some((repo) => repo.ownerName === ownerName && repo.status !== "removed")) {
+    return { ok: false, error: "not_found" };
+  }
   const now = new Date();
   const predictions = await deps.shadowBoundary.listPredictions(ownerName, startOfUtcMonth(now).toISOString(), endOfUtcMonth(now).toISOString());
   const perPrediction = predictions.map((p) => computeSavingsForPrediction(p, deps.savingsOptions));
@@ -117,7 +121,7 @@ export async function getDashboardForOrganization(deps: RouteDeps, userId: strin
   if (!org) return { ok: false, error: "unauthorized" };
 
   const now = new Date();
-  const repositories = await deps.productStore.listRepositories(organizationId);
+  const repositories = (await deps.productStore.listRepositories(organizationId)).filter((repo) => repo.status !== "removed");
   const usageSummary = await summarizeUsage(deps.usageStore, organizationId, startOfUtcMonth(now), endOfUtcMonth(now));
   const entitlements = getEntitlementsForOrganization(org);
   const allowance = computeAllowanceStatus(entitlements, usageSummary.ciRunsAnalyzed);
@@ -132,7 +136,16 @@ export async function getDashboardForOrganization(deps: RouteDeps, userId: strin
   const perPredictionSavings = allPredictions.map((p) => computeSavingsForPrediction({ logicalDeltaKey: "", repository: p.repository, headSha: p.headSha, planMode: p.planMode, opportunityCategory: "DISCRIMINATIVE_OPPORTUNITY", testsSelectedDiffci: p.testsSelectedDiffci, testsTotalFull: p.testsTotalFull, testsSelectedPath: p.testsSelectedPath, diffciAnalysisOverheadMs: p.diffciAnalysisOverheadMs, createdAt: p.createdAt }, deps.savingsOptions));
   const savings = aggregateSavings(perPredictionSavings);
 
-  const safetySnapshot = await deps.shadowBoundary.getSafetySnapshot(repositories[0]?.ownerName);
+  // Never use the boundary's unscoped/global form, including for an empty organization.
+  const safetySnapshot = { evaluableFailures: 0, failuresPreserved: 0, falseNegatives: 0,
+    verifiedGroundTruthRows: 0, evidenceBasis: "verified_ground_truth_only" as const };
+  for (const repo of repositories) {
+    const snapshot = await deps.shadowBoundary.getSafetySnapshot(repo.ownerName);
+    safetySnapshot.evaluableFailures += snapshot.evaluableFailures;
+    safetySnapshot.failuresPreserved += snapshot.failuresPreserved;
+    safetySnapshot.falseNegatives += snapshot.falseNegatives;
+    safetySnapshot.verifiedGroundTruthRows += snapshot.verifiedGroundTruthRows;
+  }
   // 2026-09-05: every repository's evidence-workflow state, so the dashboard can say "awaiting
   // identification" instead of showing zeros for a repository whose CI workflow nobody has named yet.
   const evidenceWorkflows = [];
@@ -142,7 +155,7 @@ export async function getDashboardForOrganization(deps: RouteDeps, userId: strin
   const overview = buildDashboardOverview(org, repositories.length, usageSummary, { selective: selectiveCount, full: fullCount }, savings);
   const safety = buildDashboardSafety(safetySnapshot, evidenceWorkflows);
   const usage = buildDashboardUsage(entitlements, allowance);
-  const recentActivity = buildDashboardRecentActivity(allPredictions.slice(0, 10), recentRunners);
+  const recentActivity = buildDashboardRecentActivity(allPredictions.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 10), recentRunners);
   // 2026-09-05 seamless install: report links, with the token for private repositories - served only to
   // a verified member (requireMembership above).
   const access: Array<{ repository: string; isPrivate: boolean; token?: string }> = [];

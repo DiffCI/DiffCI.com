@@ -12,6 +12,7 @@
  * that has to cross tenants by definition. Same discipline as ProductStore.listAllRepositories.
  */
 import type { ObservationRecord } from "./types.js";
+export class RepositoryInactiveError extends Error {}
 
 export interface D1Binding {
   prepare(query: string): {
@@ -136,7 +137,8 @@ export function makeD1ObservationStore(db: D1Binding): ObservationStore {
              baseline_mode, baseline_selected_test_count, blind_spot, worktree_unchanged,
              blocking_workflow_findings, paths_redacted, identity_verified, observer_version, engine_sha,
              produced_at, received_at, report_bytes, report_json
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+             WHERE EXISTS (SELECT 1 FROM repositories WHERE id = ? AND organization_id = ? AND status NOT IN ('removed','paused'))`,
         )
         .bind(
           id,
@@ -172,12 +174,17 @@ export function makeD1ObservationStore(db: D1Binding): ObservationStore {
           receivedAt,
           input.reportBytes,
           reportJson,
+          input.repositoryId,
+          input.organizationId,
         )
         .run();
 
       if ((result.meta?.changes ?? 0) > 0) {
         return { record: { ...input, id, receivedAt }, duplicate: false };
       }
+      const active = await db.prepare("SELECT id FROM repositories WHERE id = ? AND organization_id = ? AND status NOT IN ('removed','paused')")
+        .bind(input.repositoryId, input.organizationId).first();
+      if (!active) throw new RepositoryInactiveError("Repository is inactive");
       // Lost the insert (or repeated it): return what is actually stored, scoped to the organization
       // this credential belongs to. A key collision across organizations would return nothing here
       // rather than another tenant's row.
@@ -268,14 +275,14 @@ export function makeD1ObservationStore(db: D1Binding): ObservationStore {
     },
 
     async unscopedPurgeReceivedBefore(cutoffIso) {
-      const result = await db.prepare(`DELETE FROM observations WHERE received_at < ?`).bind(cutoffIso).run();
+      const result = await db.prepare(`DELETE FROM observations WHERE received_at < ? OR julianday(produced_at) < julianday(?) OR julianday(produced_at) IS NULL`).bind(cutoffIso, cutoffIso).run();
       return result.meta?.changes ?? 0;
     },
 
     async unscopedCountReceivedBefore(cutoffIso) {
       const row = await db
-        .prepare(`SELECT COUNT(*) AS n FROM observations WHERE received_at < ?`)
-        .bind(cutoffIso)
+        .prepare(`SELECT COUNT(*) AS n FROM observations WHERE received_at < ? OR julianday(produced_at) < julianday(?) OR julianday(produced_at) IS NULL`)
+        .bind(cutoffIso, cutoffIso)
         .first<Record<string, unknown>>();
       return Number(row?.n ?? 0);
     },

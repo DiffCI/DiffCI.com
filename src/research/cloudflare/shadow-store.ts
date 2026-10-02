@@ -387,7 +387,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
     },
 
     async pauseRepository(repository: string, reason: string) {
-      await db.prepare(`UPDATE shadow_repositories SET state = 'PAUSED', notes = ? WHERE repository = ?`).bind(reason, repository).run();
+      await db.prepare(`UPDATE shadow_repositories SET state = 'PAUSED', notes = ? WHERE repository = ? AND state != 'REMOVED'`).bind(reason, repository).run();
     },
 
     async consecutivePollErrors(repository: string) {
@@ -714,9 +714,9 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
     },
 
     async getReportAccess(repository) {
-      const r = await db.prepare(`SELECT is_private, report_token FROM shadow_repositories WHERE repository = ?`).bind(repository).first<{ is_private: number | null; report_token: string | null }>();
+      const r = await db.prepare(`SELECT is_private, report_token FROM shadow_repositories WHERE repository = ? AND state != 'REMOVED'`).bind(repository).first<{ is_private: number | null; report_token: string | null }>();
       if (!r) return undefined;
-      return { isPrivate: r.is_private === 1, token: r.report_token ?? undefined };
+      return { isPrivate: r.is_private !== 0, token: r.is_private === null ? undefined : r.report_token ?? undefined };
     },
 
     async listReportAccessCandidates(limit) {
@@ -726,11 +726,11 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
         .prepare(`SELECT repository, state, is_private, report_token FROM shadow_repositories WHERE state != 'REMOVED' AND installation_id IS NOT NULL ORDER BY enrolled_at ASC LIMIT ?`)
         .bind(limit)
         .all<{ repository: string; state: string; is_private: number | null; report_token: string | null }>();
-      return results.map((r) => ({ repository: r.repository, state: r.state, isPrivate: r.is_private === 1, reportToken: r.report_token ?? undefined }));
+      return results.map((r) => ({ repository: r.repository, state: r.state, isPrivate: r.is_private !== 0, reportToken: r.is_private === null ? undefined : r.report_token ?? undefined }));
     },
 
     async setRepositoryStateWithNote(repository, state, note) {
-      await db.prepare(`UPDATE shadow_repositories SET state = ?, notes = ? WHERE repository = ?`).bind(state, note ?? null, repository).run();
+      await db.prepare(`UPDATE shadow_repositories SET state = ?, notes = ? WHERE repository = ? AND (state != 'REMOVED' OR ? = 'REMOVED')`).bind(state, note ?? null, repository, state).run();
     },
 
     async setGroundTruthValidity(logicalEventKey, validity, evidenceWorkflowPath) {
@@ -798,11 +798,11 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
 
     async updateLastPolled(repository, sha) {
       const now = new Date().toISOString();
-      await db.prepare(`UPDATE shadow_repositories SET last_polled_sha = ?, last_polled_at = ? WHERE repository = ?`).bind(sha, now, repository).run();
+      await db.prepare(`UPDATE shadow_repositories SET last_polled_sha = ?, last_polled_at = ? WHERE repository = ? AND state NOT IN ('REMOVED','PAUSED')`).bind(sha, now, repository).run();
     },
 
     async setRepositoryState(repository, state) {
-      await db.prepare(`UPDATE shadow_repositories SET state = ? WHERE repository = ?`).bind(state, repository).run();
+      await db.prepare(`UPDATE shadow_repositories SET state = ? WHERE repository = ? AND state != 'REMOVED'`).bind(state, repository).run();
     },
 
     async recordPrediction(input, r2EvidenceKey) {
@@ -815,7 +815,8 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
              opportunity_category, tests_selected_diffci, tests_selected_path, tests_total_full,
              diffci_analysis_overhead_ms, r2_evidence_key, prediction_created_at, created_at,
              engine_source_sha
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+           WHERE EXISTS (SELECT 1 FROM shadow_repositories WHERE repository = ? AND state NOT IN ('REMOVED','PAUSED'))
            ON CONFLICT(logical_delta_key) DO NOTHING`,
         )
         .bind(
@@ -825,6 +826,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
           input.testsSelectedDiffci, input.testsSelectedPath, input.testsTotalFull,
           input.diffciAnalysisOverheadMs, r2EvidenceKey, input.predictionCreatedAt, now,
           input.engineSourceSha ?? null,
+          input.repository,
         )
         .run();
       return { inserted: (result.meta?.changes ?? 0) > 0 };
@@ -840,7 +842,9 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
              relevant_failures_observed, relevant_failures_evaluable, failures_preserved_by_diffci,
              failures_preserved_by_path, prediction_preceded_ground_truth, r2_evidence_key,
              ground_truth_fetched_at, created_at, evidence_workflow_path, evidence_validity
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+           WHERE EXISTS (SELECT 1 FROM shadow_repositories WHERE repository = ? AND state NOT IN ('REMOVED','PAUSED'))
+             AND EXISTS (SELECT 1 FROM shadow_predictions WHERE logical_delta_key = ? AND repository = ?)
            ON CONFLICT(logical_event_key) DO NOTHING`,
         )
         .bind(
@@ -851,6 +855,7 @@ export function makeD1ShadowStore(db: D1Binding): ShadowStore {
           input.failuresPreservedByPath, input.predictionPrecededGroundTruth ? 1 : 0, r2EvidenceKey,
           input.groundTruthFetchedAt, now,
           input.evidenceWorkflowPath ?? null, input.evidenceWorkflowPath ? "VERIFIED" : "UNVERIFIED",
+          input.repository, input.logicalDeltaKey, input.repository,
         )
         .run();
       return { inserted: (result.meta?.changes ?? 0) > 0 };

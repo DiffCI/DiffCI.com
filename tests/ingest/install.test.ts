@@ -16,6 +16,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
 import YAML from "yaml";
+import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 
 import { buildInstallInstructions } from "../../src/ingest/install.js";
 import { pinnedArtifact, TEST_INTEGRITY, TEST_PINNED_AGENT } from "../helpers/agent-artifact.js";
@@ -24,6 +26,35 @@ import { auditWorkflows, isNonInterfering } from "../../src/client/workflow-guar
 const repository = { ownerName: "acme/checkout", defaultBranch: "trunk" };
 
 describe("self-serve install instructions", () => {
+  it("installs the public observer without asking for a registry credential", () => {
+    const install = buildInstallInstructions({ repository, agentArtifact: pinnedArtifact(`npm:@diffci.com/diffci@0.2.11#${TEST_INTEGRITY}`), apiOrigin: "https://app.diffci.test" });
+    assert.equal(install.registrySecretName, undefined);
+    assert.ok(!install.workflowYaml.includes("DIFFCI_REGISTRY_TOKEN"));
+    assert.ok(!install.steps.join(" ").includes("registry credential"));
+    const workflow = YAML.parse(install.workflowYaml);
+    assert.equal(workflow.jobs.diffci.steps.find((s: { uses?: string }) => s.uses === "actions/setup-node@v4").with["node-version"], "22");
+  });
+
+  it("the emitted verifier accepts the pinned bytes and refuses a tampered tarball before installation", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-install-integrity-"));
+    try {
+      const bytes = Buffer.from("package bytes");
+      const integrity = `sha512-${createHash("sha512").update(bytes).digest("base64")}`;
+      const install = buildInstallInstructions({ repository, agentArtifact: pinnedArtifact(`npm:@diffci.com/diffci@0.2.11#${integrity}`), apiOrigin: "https://app.diffci.test" });
+      const workflow = YAML.parse(install.workflowYaml);
+      const script: string = workflow.jobs.diffci.steps.find((s: { name?: string }) => s.name === "Install DiffCI").run;
+      const verifier = script.match(/node -e '([^']+)'/)![1]!;
+      const file = join(dir, "observer.tgz");
+      writeFileSync(file, bytes);
+      assert.equal(spawnSync(process.execPath, ["-e", verifier, file, integrity]).status, 0);
+      writeFileSync(file, "tampered");
+      assert.notEqual(spawnSync(process.execPath, ["-e", verifier, file, integrity]).status, 0);
+      assert.ok(script.indexOf("node -e") < script.indexOf("npm install"));
+      assert.match(script, /set -euo pipefail/);
+      assert.match(script, /--ignore-scripts --no-audit/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
   it("names both secrets, the file, and the endpoint reports go to", () => {
     const install = buildInstallInstructions({ repository, agentArtifact: TEST_PINNED_AGENT, apiOrigin: "https://app.diffci.test/" });
 

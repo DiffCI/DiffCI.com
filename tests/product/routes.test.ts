@@ -47,6 +47,39 @@ async function setup() {
 }
 
 describe("product routes - Part 23 (user A cannot read organization B)", () => {
+  it("a member cannot query another organization's repository through their own savings endpoint", async () => {
+    const { deps, productStore, userA, orgA, orgB } = await setup();
+    await productStore.createRepository({ organizationId: orgB.id, providerRepositoryId: "private", ownerName: "b/private" });
+    deps.shadowBoundary.listPredictions = async () => { throw new Error("foreign data must never be read"); };
+    assert.deepEqual(await getSavingsSummaryForOrganization(deps, userA.id, orgA.id, "b/private"), { ok: false, error: "not_found" });
+  });
+
+  it("an empty organization's dashboard never reads global research safety", async () => {
+    const { deps, userA, orgA } = await setup();
+    deps.shadowBoundary.getSafetySnapshot = async () => { throw new Error("global safety leak"); };
+    const result = await getDashboardForOrganization(deps, userA.id, orgA.id);
+    assert.ok(result.ok);
+    assert.equal(result.data.safety.verifiedGroundTruthRows, 0);
+  });
+
+  it("dashboard safety covers every connected repository and recent activity is sorted across repositories", async () => {
+    const { deps, productStore, userA, orgA } = await setup();
+    for (const name of ["a/older", "a/newer"]) await productStore.createRepository({ organizationId: orgA.id, providerRepositoryId: name, ownerName: name });
+    const seen: string[] = [];
+    deps.shadowBoundary.getSafetySnapshot = async (name) => {
+      assert.ok(name); seen.push(name);
+      return { evidenceBasis: "verified_ground_truth_only", evaluableFailures: 2, failuresPreserved: 1, falseNegatives: 1, verifiedGroundTruthRows: 3 };
+    };
+    deps.shadowBoundary.listPredictions = async (name) => [{ logicalDeltaKey: name, repository: name, headSha: "abc", planMode: "FULL", opportunityCategory: "MANDATORY_FALLBACK",
+      testsSelectedDiffci: 1, testsTotalFull: 1, testsSelectedPath: 1, diffciAnalysisOverheadMs: 1,
+      createdAt: name.endsWith("older") ? "2026-09-01T00:00:00Z" : "2026-09-02T00:00:00Z" }];
+    const result = await getDashboardForOrganization(deps, userA.id, orgA.id);
+    assert.ok(result.ok);
+    assert.deepEqual(seen.sort(), ["a/newer", "a/older"]);
+    assert.equal(result.data.safety.falseNegatives, 2);
+    assert.equal(result.data.safety.verifiedGroundTruthRows, 6);
+    assert.equal(result.data.recentActivity.recentPredictions[0]?.repository, "a/newer");
+  });
   it("getOrganizationDetails: userB cannot read orgA", async () => {
     const { deps, userB, orgA } = await setup();
     const outcome = await getOrganizationDetails(deps, userB.id, orgA.id);

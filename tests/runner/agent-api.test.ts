@@ -16,6 +16,7 @@ function seedFixture(db: DatabaseSync, jobReference: string = DEFAULT_JOB_STEPS)
   db.exec(`INSERT INTO organizations (id, name, slug, created_at, updated_at) VALUES ('org-2', 'Other', 'other', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`);
   db.exec(`INSERT INTO runners (id, organization_id, provider, status, requested_resource_class, created_at) VALUES ('runner-1', 'org-1', 'cloudflare-containers-async', 'assigned', 'lite', '2026-01-01T00:00:00Z')`);
   db.prepare(`INSERT INTO execution_queue_items (id, organization_id, job_reference, requested_resource_class, priority, status, attempts, max_attempts, created_at, updated_at) VALUES ('job-1', 'org-1', ?, 'lite', 100, 'assigned', 1, 3, '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')`).run(jobReference);
+  db.exec("UPDATE execution_queue_items SET assigned_runner_id='runner-1' WHERE id='job-1'");
 }
 
 interface AuditEvent {
@@ -91,6 +92,19 @@ describe("handleHeartbeat", () => {
 });
 
 describe("handleClaim", () => {
+  it("refuses expired assignments and tokens scoped to a different organization", async () => {
+    for (const variant of ["timed_out", "foreign"]) {
+      const db = freshProductDb(["runner", "execution-queue", "usage"]);
+      seedFixture(db);
+      const { deps } = makeDeps(db);
+      if (variant === "timed_out") db.exec("UPDATE execution_queue_items SET status='timed_out'");
+      const { raw } = await deps.tokenStore.issueToken({ runnerId: "runner-1", jobId: "job-1", organizationId: variant === "foreign" ? "org-2" : "org-1", ttlMs: 60000 });
+      assert.equal((await handleClaim(raw, deps)).error, "job_not_found");
+      assert.equal((await deps.runnerStore.getRunner("runner-1"))!.status, "assigned");
+      db.close();
+    }
+  });
+
   it("returns the real command from the queue item and transitions the runner to busy", async () => {
     const db = freshProductDb(["runner", "execution-queue", "usage"]);
     seedFixture(db);
@@ -160,6 +174,17 @@ describe("handleClaim", () => {
 });
 
 describe("handleResult", () => {
+  it("a late result cannot revive a timed-out assignment", async () => {
+    const db = freshProductDb(["runner", "execution-queue", "usage"]);
+    seedFixture(db);
+    const { deps } = makeDeps(db);
+    const { raw } = await deps.tokenStore.issueToken({ runnerId: "runner-1", jobId: "job-1", organizationId: "org-1", ttlMs: 60000 });
+    db.exec("UPDATE execution_queue_items SET status='timed_out'");
+    assert.equal((await handleResult({ token: raw, exitCode: 0, stdout: "", durationMs: 100 }, deps)).error, "job_not_found");
+    assert.equal((await deps.queueStore.getItem("job-1"))!.status, "timed_out");
+    db.close();
+  });
+
   async function claimedFixture() {
     const db = freshProductDb(["runner", "execution-queue", "usage"]);
     seedFixture(db);
