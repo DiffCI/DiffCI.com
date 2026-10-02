@@ -12,7 +12,7 @@ or a Linux Foundation/OpenSSF/LFX relationship.
 | Impact estimation | Git delta, dependency graph, language adapters, confidence and fallback |
 | Local execution | `verify`, `check`, `pilot` and `verify-savings` |
 | Basic integrations | npm CLI, GitHub Action/App, MCP and coding-agent instructions |
-| Hosted service | Cloudflare product Worker, organization/repository tenancy and authenticated report ingest |
+| Hosted service | Cloudflare product Worker, organization/repository tenancy, authenticated report ingest and Lemon Squeezy Merchant-of-Record billing |
 | Acceleration | Structured ephemeral-runner execution, immutable commit policy, bounded commands and fail-closed repository authorization |
 | Dashboards | Organization, repository onboarding, reports, delivery health and fleet windows |
 | Enterprise policy | Revision-checked evidence policy, append-only managed-execution consent and audit history |
@@ -27,15 +27,16 @@ every repository job unless its caller supplies a successful authorization decis
 alone cannot authorize execution.
 
 Code completion does not turn experimental evidence into a production-savings claim. External pilot
-evidence decides when a consented repository should use the managed verification path. Billing becomes
-live only after provider credentials and products are configured. Formal support response times become
+evidence decides when a consented repository should use the managed verification path. Lemon Squeezy is
+the sole Merchant of Record in the code contract; billing becomes live only after its credentials,
+products, variants and webhook are configured. Formal support response times become
 an SLA only after DiffCI offers and staffs the contract.
 
 The remaining diagram branches are external outcomes:
 
 - independent users, maintainers and ecosystem distribution;
 - npm trusted-publisher registration (the workflow is OIDC-ready);
-- billing-provider account configuration;
+- Lemon Squeezy account, product, variant, webhook and payout configuration;
 - paid support commitments and revenue;
 - YC/VC funding;
 - Linux Foundation, OpenSSF and LFX participation or acceptance.

@@ -24,6 +24,7 @@
  */
 import { makeD1ProductStore, type D1Binding as ProductD1Binding } from "../store.js";
 import { makeD1BillingStore } from "../../billing/store.js";
+import { MERCHANT_OF_RECORD } from "../../billing/types.js";
 import { buildPlanCatalog, type PlanId } from "../../billing/plans.js";
 import { createLemonSqueezyProvider } from "../../billing/lemonsqueezy.js";
 import { tryLoadLemonSqueezyConfig, type RawLemonSqueezyEnv } from "../../billing/config.js";
@@ -410,6 +411,8 @@ export default {
         productDbReachable: dbReachable,
         authConfigValid: true, // reaching this line already proves parseAuthConfig() didn't throw
         environment: authConfig.environment,
+        merchantOfRecord: MERCHANT_OF_RECORD,
+        billingProvider: MERCHANT_OF_RECORD,
         billingConfigured: billingConfig !== undefined,
         githubOAuthConfigured: readGithubOAuthEnv(env).ok, // validated, not merely present - a malformed id reads as unconfigured
         csrfConfigured: Boolean(env.CSRF_SECRET),

@@ -84,6 +84,8 @@
     { "binding": "RESEARCH_DB", "database_name": "diffci-research", "database_id": "84ddc2e5-0f1d-424f-8bfc-81f4e39dc534" }
   ]
   // Secrets (NOT committed here - set via `wrangler secret put <NAME> --config wrangler.product.jsonc`):
+  //   Lemon Squeezy is DiffCI's exclusive Merchant of Record. These secrets activate its checkout,
+  //   customer portal, subscription webhooks, and entitlement synchronization:
   //   LEMONSQUEEZY_API_KEY, LEMONSQUEEZY_WEBHOOK_SECRET, LEMONSQUEEZY_STORE_ID  - billing (Part 12/13,
   //     deferred per this build's own scoping decision - not yet configured, checkout/portal/webhook
   //     routes correctly return 503 "billing is not configured" until they are)
