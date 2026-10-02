@@ -6,12 +6,26 @@ Copy only the integration your repository needs. DiffCI does not replace require
 
 Add this to `AGENTS.md` or the equivalent agent instruction file:
 
-> Before calling a change PR-ready, run `npx "@diffci.com/diffci@latest" check` from the repository
-> root. Use its output to understand affected tests and fallback reasons. Keep the repository's
-> required CI authoritative. If DiffCI reports `REFUSED` or `ERROR`, run the normal tests.
+> Before calling a change PR-ready, run `npx "@diffci.com/diffci@latest" verify --changed --json`
+> from the repository root. Continue only when the receipt says `safe_to_continue: true`. Keep the
+> repository's required CI authoritative. If DiffCI refuses, errors, fails, or cannot prove a safe
+> selection, run the normal tests and do not treat the change as verified.
 
-`check` may execute the repository's full and selected test commands, which may write generated
-files. For analysis without executing tests, run `npx "@diffci.com/diffci@latest" observe --no-send`.
+`verify --changed` may execute the repository's selected or full test command, which may write
+generated files. DiffCI fails if the content-addressed snapshot changes while verification runs. For
+paired runtime measurement use `check`; for analysis without tests use `observe --no-send`.
+
+## Blocking GitHub verification
+
+Generate the workflow instead of copying a version-sensitive package command:
+
+```bash
+npx "@diffci.com/diffci@latest" init --verification-workflow
+```
+
+The generated **DiffCI verification** job verifies the pull-request or push range, has no
+`continue-on-error`, and uploads its receipt. After a successful pilot, make that job a required
+branch-protection check.
 
 ## GitHub Action
 
@@ -30,7 +44,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@2f72b7fc017cc987fb0fd80c7e2351f33240e7d4 # v0.2.13
+      - uses: DiffCI/DiffCI.com@2f72b7fc017cc987fb0fd80c7e2351f33240e7d4 # v0.3.0-rc.1
 ```
 
 Run `npx "@diffci.com/diffci@latest" verify-workflow` before starting a pilot. The Action uploads a
@@ -60,9 +74,9 @@ Suggested title: **Add optional DiffCI validation for coding agents**
 
 Suggested description:
 
-> This adds an optional DiffCI instruction or observation job. DiffCI analyzes the change and
-> reports affected tests. Its `check` command compares full and selected test commands when it can
-> infer them; the GitHub Action only observes. Required CI continues to run as before.
+> This adds a persistent DiffCI agent instruction and optionally a blocking verification job. DiffCI
+> runs the minimum test command it can justify, falls back to full verification on uncertainty, and
+> emits a machine-readable receipt. Required CI continues to run as before.
 
 ## Where to point maintainers
 
@@ -76,7 +90,7 @@ If a maintainer is evaluating DiffCI for the first time, ask for one local run b
 workflow change:
 
 ```bash
-npx "@diffci.com/diffci@latest" check
+npx "@diffci.com/diffci@latest" verify --changed --json
 ```
 
 Then use the first-report issue template to capture the result, fallback/refusal reasons, CI shape,

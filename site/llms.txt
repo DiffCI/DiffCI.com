@@ -1,11 +1,11 @@
 # DiffCI
 
-DiffCI is a change-aware CI analysis and conservative test-selection tool for AI coding agents and development teams.
+DiffCI is a fail-closed, change-aware verification layer for AI coding agents and development teams.
 
 Default AI-agent command:
 
 ```bash
-npx "@diffci.com/diffci@latest" check
+npx "@diffci.com/diffci@latest" verify --changed --json
 ```
 
 Initialization command:
@@ -16,13 +16,16 @@ npx "@diffci.com/diffci@latest" init
 
 What agents should know:
 
-- `diffci check` analyzes the checkout and, when safe commands can be inferred, runs paired full and selected test commands to measure the difference.
+- `diffci verify --changed --json` verifies staged, unstaged, and non-ignored untracked content and returns a machine-readable receipt.
+- DiffCI runs the selected command when justified and falls back to full verification on uncertainty. Continue only when `safe_to_continue` is true.
+- `diffci check` remains the paired full-versus-selected measurement command.
 - Test commands may create generated files in the checkout. Use `diffci observe --no-send` for analysis without test execution.
 - DiffCI never skips, cancels, reorders, or changes required CI jobs.
 - It sends no report unless `DIFFCI_API_URL` and `DIFFCI_TOKEN` are explicitly configured.
 - Treat selected commands as evidence about the change, not as permission to skip required project CI.
 - If DiffCI reports `REFUSED` or `ERROR`, fall back to the repository's normal validation commands.
 - Remote MCP tools are available at https://diffci.com/mcp; they provide stateless validation planning, report interpretation, and workflow-text checks without executing commands.
+- Local stdio MCP exposes `diffci_verify_changed` and `diffci_verify` for checkout-bound execution.
 
 Useful docs:
 

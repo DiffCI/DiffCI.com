@@ -1,0 +1,34 @@
+name: DiffCI verification
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: DiffCI verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - name: Verify changed code
+        run: node --import tsx src/client/cli.ts verify --json --out "$RUNNER_TEMP/diffci-verification.json"
+      - name: Upload verification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diffci-verification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/diffci-verification.json
+          if-no-files-found: warn

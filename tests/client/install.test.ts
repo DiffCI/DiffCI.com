@@ -18,17 +18,18 @@ describe("DiffCI dependency installation", () => {
     const dir = fixture({ scripts: { test: "node --test", "diffci:check": "custom-check" } });
     try {
       assert.deepEqual(addDiffciPackageScripts(dir), {
-        added: ["diffci:observe"],
+        added: ["diffci:verify", "diffci:observe"],
         kept: ["diffci:check"],
       });
       assert.deepEqual(addDiffciPackageScripts(dir), {
         added: [],
-        kept: ["diffci:check", "diffci:observe"],
+        kept: ["diffci:verify", "diffci:check", "diffci:observe"],
       });
       const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as { scripts: Record<string, string> };
       assert.deepEqual(manifest.scripts, {
         test: "node --test",
         "diffci:check": "custom-check",
+        "diffci:verify": "diffci verify --changed --json",
         "diffci:observe": "diffci observe --no-send",
       });
     } finally {
