@@ -31,7 +31,7 @@ Managed execution and production savings require their own evidence; this panel 
 
 ## Public observer installation and deployment evidence
 
-- Production pins `@diffci.com/diffci@0.2.11` with the npm-published SHA-512 integrity value.
+- Production pins `@diffci.com/diffci@0.2.13` with the npm-published SHA-512 integrity value.
   Downloaded package bytes were independently verified against that value.
 - Generated workflows use Node 22, download the exact package outside the checkout, verify its
   integrity before installation, and disable package lifecycle scripts. The public observer needs
