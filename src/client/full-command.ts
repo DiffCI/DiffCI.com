@@ -1,6 +1,30 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { readRepositoryConfig } from "@diffci.com/core/repo/repo-config";
+import { analyzeRepository } from "@diffci.com/core/repo/analyzer";
+import { commandSpecToString, planSelectiveTestCommands } from "@diffci.com/core/planner/test-command";
+
+/** Rebuild the complete plan locally; never join arbitrary report commands. */
+export function inferWorkspaceComparison(repoPath: string, proposed: readonly string[], selectedTests: readonly string[]): { full?: string; selected?: string; reason: string } {
+  const profile = analyzeRepository({ repoPath });
+  if (!profile.workspaceTestPackages?.length) return { reason: "No declared workspace test suites" };
+  const scripts = profile.packageJson.scripts;
+  if (scripts.pretest || scripts.posttest) return { reason: "Root lifecycle hooks cannot be omitted" };
+  const npm = profile.packageManager === "npm" && !scripts.test;
+  const pnpm = profile.packageManager === "pnpm" && scripts.test === "pnpm -r run test";
+  if (!npm && !pnpm) return { reason: "Workspace full validation scope is not recognized" };
+  const plan = planSelectiveTestCommands(profile, selectedTests);
+  if (plan.refusalReason || !plan.commands.length) return { reason: plan.refusalReason ?? "No workspace commands" };
+  const expected = plan.commands.map(commandSpecToString);
+  if (JSON.stringify(expected) !== JSON.stringify(proposed)) return { reason: "Report commands differ from the verified workspace plan" };
+  // This deliberately limited shell vocabulary works on both cmd.exe and sh.
+  // Unusual names require structured execution rather than guessed escaping.
+  if (plan.commands.some(command => command.env || !/^[\w-]+$/.test(command.executable) || command.args.some(arg => !/^[\w./:@=-]+$/.test(arg)))) return { reason: "Workspace command contains unsupported shell arguments" };
+  const full = npm ? profile.workspaceTestPackages.map(suite => `npm test --workspace=${suite.packageRoot} -- --run`).join(" && ") : "pnpm test";
+  const selected = plan.commands.map(command => [command.executable, ...command.args].join(" ")).join(" && ");
+  if (full.length > 6000 || selected.length > 6000) return { reason: "Complete workspace chain exceeds the safe shell command length" };
+  return { full, selected, reason: "Verified workspace plan with full auxiliary validation retained" };
+}
 
 export interface FullCommandDecision {
   command?: string;

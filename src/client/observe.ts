@@ -274,6 +274,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
         totalTestCount: profile.testFilePaths.length,
         fallbackReasons: impact.fallbackReasons,
         proposedCommands: (commandPlan?.commands ?? []).map(commandSpecToString),
+        workspaceCommands: Boolean(profile.workspaceTestPackages?.length),
         goScope: profile.diffciConfig?.go?.scope,
         vueScope: profile.vueScope ? { packageRoot: hashPath(profile.vueScope.packageRoot), testConfig: hashPath(profile.vueScope.testConfig) } : undefined,
         scopedTestFiles: profile.vueScope ? profile.testFilePaths.map(hashPath) : undefined,

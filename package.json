@@ -146,7 +146,7 @@
     "registry:verify": "node scripts/verify-mcp-registry.mjs"
   },
   "dependencies": {
-    "@diffci.com/core": "git+https://github.com/DiffCI/core.git#db1d637dfcca8d8f7fa047500dfe0027d0d018a7",
+    "@diffci.com/core": "git+https://github.com/DiffCI/core.git#6bd9a23caeca850997806f4aa3501f8e7197139f",
     "@types/node": "^22.15.12",
     "@vue/compiler-sfc": "3.5.42",
     "typescript": "^5.8.3",

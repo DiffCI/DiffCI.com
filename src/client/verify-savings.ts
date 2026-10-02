@@ -168,7 +168,7 @@ function tail(value: string, bytes: number): string {
   return value.slice(-bytes);
 }
 
-function readSelectionFromObservation(path: string): ResolvedSelection {
+function readSelectionFromObservation(path: string, override?: string): ResolvedSelection {
   const absolutePath = resolve(path);
   const bytes = readFileSync(absolutePath);
   const parsed = JSON.parse(bytes.toString("utf8")) as {
@@ -184,10 +184,10 @@ function readSelectionFromObservation(path: string): ResolvedSelection {
   };
   if (parsed.status !== "OBSERVED") throw new Error(`--selected-from-report requires an OBSERVED report; got ${String(parsed.status)}`);
   const commands = parsed.result?.proposedCommands;
-  if (!Array.isArray(commands) || commands.length !== 1 || typeof commands[0] !== "string" || !commands[0].trim()) {
+  if (!Array.isArray(commands) || !commands.length || commands.some(command => typeof command !== "string" || !command.trim()) || (commands.length !== 1 && !override)) {
     throw new Error("--selected-from-report requires exactly one non-empty proposed command; use --selected with an explicit command covering the complete selection for multi-command plans");
   }
-  const command = commands[0];
+  const command = override ?? commands[0];
   const selectedTests = Array.isArray(parsed.result?.selectedTests) ? parsed.result.selectedTests : undefined;
   return {
     command,
@@ -324,8 +324,7 @@ function buildProvenance(
 
 function resolveSelection(options: VerifySavingsOptions): ResolvedSelection {
   if (options.selectedFromReport) {
-    const selection = readSelectionFromObservation(options.selectedFromReport);
-    return options.selectedCommandOverride ? { ...selection, command: options.selectedCommandOverride } : selection;
+    return readSelectionFromObservation(options.selectedFromReport, options.selectedCommandOverride);
   }
   if (!options.selected) throw new Error("--selected <command> or --selected-from-report <path> is required");
   return { command: options.selected, source: "manual" };
