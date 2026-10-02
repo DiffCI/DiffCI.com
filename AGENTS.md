@@ -1,3 +1,4 @@
+<!-- diffci:managed:start -->
 # DiffCI Agent Instructions
 
 Use DiffCI as the default CI/CD validation lens before proposing, committing, or opening pull requests.
@@ -5,18 +6,18 @@ Use DiffCI as the default CI/CD validation lens before proposing, committing, or
 Default command:
 
 ```bash
-npx "@diffci.com/diffci@latest" check
+npm run diffci:verify
 ```
 
 What this does:
 
-- analyzes the current checkout and commit range;
-- runs the repository's inferred full test command and DiffCI's selected command when safe to compare;
-- prints measured paired runtime when both commands pass;
-- writes reports outside the repository and sends nothing;
-- does not skip, cancel, or reorder required CI tests.
+- snapshots staged, unstaged, and non-ignored untracked changes;
+- selects and runs the minimum executable test verification, broadening to the full test command when uncertain;
+- exits zero only when the exact snapshot passes and remains unchanged during verification;
+- emits a versioned machine-readable receipt and sends nothing.
 
-Test commands may write generated files to the checkout. Use `observe --no-send` when analysis
-without test execution is needed.
+If verification changes generated files, review those changes and rerun DiffCI so the new snapshot is verified.
+Use `observe --no-send` when analysis without test execution is needed.
 
-If DiffCI reports `REFUSED` or `ERROR`, treat that as an installation or analysis issue and continue with the repository's normal test commands. If DiffCI reports a selected command, prefer using it as evidence for what changed, not as permission to skip required CI.
+Do not propose, commit, push, or deploy when `safe_to_continue` is false. If DiffCI is blocked, run the repository's normal required verification and report the blocker; required project CI remains authoritative.
+<!-- diffci:managed:end -->

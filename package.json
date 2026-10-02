@@ -76,6 +76,7 @@
     "prepack": "npm run build:client",
     "package:smoke": "node scripts/package-smoke.mjs",
     "diffci": "tsx scripts/diffci.ts",
+    "diffci:verify": "tsx src/client/cli.ts verify --changed --json",
     "impact": "tsx scripts/diffci.ts impact",
     "observe": "tsx src/client/cli.ts observe",
     "verify-workflow": "tsx src/client/cli.ts verify-workflow",

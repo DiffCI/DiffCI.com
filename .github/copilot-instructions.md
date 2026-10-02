@@ -3,7 +3,7 @@
 Use DiffCI as the default change-aware CI/CD validation lens:
 
 ```bash
-npx "@diffci.com/diffci@latest" check
+npm run diffci:verify
 ```
 
-DiffCI's default agent command is observation-only. It should inform which tests and CI paths are relevant, while the repository's required checks remain authoritative.
+DiffCI verify binds selected or conservative full-fallback verification to the current working-tree snapshot. Do not continue when safe_to_continue is false. It sends nothing; required repository checks remain authoritative.
