@@ -7,7 +7,9 @@
 /** DiffCI's own subscription state machine (Part 8), not a raw provider status string. */
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "cancelled" | "expired" | "unpaid" | "paused";
 
-export type BillingProviderName = "lemonsqueezy";
+/** DiffCI's commercial checkout, subscription, tax, and payment counterparty. */
+export const MERCHANT_OF_RECORD = "lemonsqueezy" as const;
+export type BillingProviderName = typeof MERCHANT_OF_RECORD;
 
 export interface BillingCustomer {
   id: string;

@@ -321,6 +321,9 @@ describe("onboarding refuses to hand out an unpinned agent", () => {
     assert.equal(unpinned.body.agentArtifactRejection, "not_immutable");
 
     const pinned = await call(envWithAgentArtifact(db, PINNED_AGENT), "GET", "/health");
+    assert.equal(pinned.body.merchantOfRecord, "lemonsqueezy");
+    assert.equal(pinned.body.billingProvider, "lemonsqueezy");
+    assert.equal(pinned.body.billingConfigured, false);
     assert.equal(pinned.body.agentArtifactPinned, true);
     assert.equal(pinned.body.agentArtifactRejection, undefined);
   });
