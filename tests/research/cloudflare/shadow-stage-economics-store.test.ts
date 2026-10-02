@@ -125,6 +125,10 @@ describe("step 3 persistence", () => {
     await shadow.recordPrediction(prediction({ logicalDeltaKey: "v", headSha: "hv" }), "r2/v");
     await shadow.recordPrediction(prediction({ logicalDeltaKey: "u", headSha: "hu" }), "r2/u");
     await shadow.recordPrediction(prediction({ logicalDeltaKey: "c", headSha: "hc" }), "r2/c");
+    // The read window uses the collector receipt time, not predictionCreatedAt.
+    // Pin that fixture timestamp so the test does not expire after September.
+    db.prepare("UPDATE shadow_predictions SET created_at = ? WHERE repository = ?")
+      .run("2026-09-04T12:00:00.000Z", "acme/web");
     await shadow.recordGroundTruth(groundTruth({ logicalEventKey: "ge-v", logicalDeltaKey: "v", workflowRunId: "901", evidenceWorkflowPath: ".github/workflows/ci.yml" }), "r2/ge-v");
     await shadow.recordGroundTruth(groundTruth({ logicalEventKey: "ge-u", logicalDeltaKey: "u", workflowRunId: "902" }), "r2/ge-u");
     await shadow.recordGroundTruth(groundTruth({ logicalEventKey: "ge-c", logicalDeltaKey: "c", workflowRunId: "903", evidenceWorkflowPath: ".github/workflows/ci.yml" }), "r2/ge-c");
