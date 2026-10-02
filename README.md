@@ -1,5 +1,23 @@
 # DiffCI
 
+**Open-source test-impact analysis for faster CI.** DiffCI finds tests affected by a code change and measures full versus selected runtime for teams evaluating CI savings.
+
+```bash
+npx "@diffci.com/diffci@latest" check
+```
+
+Requires Git and Node.js 22.5+. Runs tests locally and sends nothing by default; keep required CI authoritative.
+
+**Measured example:** a controlled Cal.com sandbox replay measured **44.2% net reduction** in an install + pretest + test workload, including analysis overhead. This is one job-equivalent comparison, not production savings or a forecast.
+[Timings and limitations](docs/research/2026-08-24-calcom-execution-observability/11-frozen-identity-and-complete-job-savings.md).
+
+![Recorded Cal.com sandbox runtime comparison](site/assets/calcom-runtime-evidence.svg)
+
+[Star the open-source engine](https://github.com/DiffCI/core) · [Volunteer a pilot repository](https://diffci.com/#pilot).
+Watch → Custom → Releases and Discussions on Core to follow support and benchmark updates.
+
+The engine lives in **[DiffCI/core](https://github.com/DiffCI/core)**. This repository contains the CLI, integrations, website, and product surfaces.
+
 [Website](https://diffci.com/) · [Test impact analysis guide](https://diffci.com/test-impact-analysis/github-actions) · [Open evidence study](https://diffci.com/research/diffci-open-evidence-2026)
 
 
@@ -393,3 +411,5 @@ DiffCI Cloud build on that trust boundary for teams that want shared reports and
 [`docs/distribution.md`](docs/distribution.md) for the package and Action positioning,
 [`docs/open-core-packaging.md`](docs/open-core-packaging.md) for the commercial split, and
 [`docs/npm-adoption.md`](docs/npm-adoption.md) for copy-paste pilot material.
+
+Useful? [Star DiffCI/core](https://github.com/DiffCI/core), watch Releases and Discussions, or [volunteer a pilot repository](https://diffci.com/#pilot).
