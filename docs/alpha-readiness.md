@@ -37,8 +37,14 @@ DiffCI is ready for a private alpha when all of these are true:
    observations.
 7. Retention and uninstall behavior have been tested against a real installed repository, not only
    fixtures.
-8. At least three repositories have seven calendar days of observation, with at least one repository
+8. At least two repositories have seven calendar days of observation, with at least one repository
    producing discriminative opportunities and reconciled ground truth.
+
+The cohort minimum was reduced from three repositories to two on 2026-10-02. Two repositories are
+enough to expose cross-repository installation and agent-integration failures without making a third
+installation a release blocker. This changes the sample-size threshold only: it does not waive the
+seven-day observation window, reconciled ground truth, or the requirement to distinguish internally
+owned pilots from independent adoption.
 
 ## Immediate work
 
@@ -98,7 +104,7 @@ The alpha needs active repositories, not just compatible repositories. A good fi
 - test jobs that are identifiable without custom founder knowledge;
 - maintainers willing to share seven days of artifacts or use hosted ingest.
 
-Start with three repositories. Do not grow the cohort until all three have one clean install-to-report
+Start with two repositories. Do not grow the cohort until both have one clean install-to-report
 cycle.
 
 ## Stop conditions
