@@ -36,21 +36,25 @@ function fixture(): string {
   return dir;
 }
 
+function localTestEnv(): NodeJS.ProcessEnv {
+  return Object.fromEntries(
+    Object.entries(process.env).filter(([name]) => name !== "NODE_TEST_CONTEXT" && !name.startsWith("GITHUB_")),
+  );
+}
+
 function runVerify(dir: string) {
-  const { NODE_TEST_CONTEXT: _nodeTestContext, ...env } = process.env;
   return spawnSync(
     process.execPath,
     ["--import", "tsx", CLI, "verify", "--changed", "--repo", dir, "--json"],
-    { cwd: ROOT, encoding: "utf8", timeout: 600_000, env },
+    { cwd: ROOT, encoding: "utf8", timeout: 600_000, env: localTestEnv() },
   );
 }
 
 function runVerifyRange(dir: string, args: string[] = []) {
-  const { NODE_TEST_CONTEXT: _nodeTestContext, ...env } = process.env;
   return spawnSync(
     process.execPath,
     ["--import", "tsx", CLI, "verify", "--repo", dir, "--json", ...args],
-    { cwd: ROOT, encoding: "utf8", timeout: 600_000, env },
+    { cwd: ROOT, encoding: "utf8", timeout: 600_000, env: localTestEnv() },
   );
 }
 
@@ -233,5 +237,4 @@ describe("verify commit range", () => {
     }
   });
 });
-
 
