@@ -6,7 +6,7 @@ alwaysApply: true
 Before proposing, committing, or opening pull requests, run:
 
 ```bash
-npx "@diffci.com/diffci@latest" check
+npm run diffci:verify
 ```
 
-DiffCI is observation-only by default. It analyzes the change, writes a report outside the checkout, and sends nothing without explicit configuration. Do not use a DiffCI selection as permission to skip required project CI.
+DiffCI verify snapshots staged, unstaged, and untracked changes, runs selected or conservative full-fallback verification, and succeeds only when the exact snapshot passes. It sends nothing. If verification changes generated files, review them and rerun. Required project CI remains authoritative.
