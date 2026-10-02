@@ -36,4 +36,15 @@ describe("npm prerelease distribution tags", () => {
     assert.match(workflow, new RegExp(`npm view "@diffci\\.com/diffci@${PACKAGE_VERSION.replaceAll(".", "\\.")}" version`));
     assert.match(workflow, /node --import tsx src\/client\/cli\.ts observe/);
   });
+
+  it("installs dependencies before upgrading to the OIDC publisher", () => {
+    const workflow = readFileSync(join(ROOT, ".github", "workflows", "release.yml"), "utf8");
+    const cleanInstall = workflow.indexOf("- run: npm ci");
+    const publisherInstall = workflow.indexOf("run: npm install --global npm@11");
+
+    assert.notEqual(cleanInstall, -1);
+    assert.notEqual(publisherInstall, -1);
+    assert.ok(cleanInstall < publisherInstall, "npm ci must run before installing the publisher npm CLI");
+    assert.doesNotMatch(workflow, /npm install --global npm@latest/);
+  });
 });
