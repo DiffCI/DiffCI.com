@@ -204,3 +204,24 @@ describe("scheduleNext - R1 mintRunnerCredential hook", () => {
     assert.equal(outcomes[0]?.outcome, "assigned");
   });
 });
+
+describe("scheduleNext - managed repository execution consent", () => {
+  it("never provisions a repository workload without an explicit authorization decision", async () => {
+    const db = freshProductDb(["runner", "execution-queue"]);
+    const productStore = makeD1ProductStore(makeD1(db));
+    const user = await productStore.createUser({ email: "consent@example.com" });
+    const org = await productStore.createOrganization({ name: "Consent", slug: "consent", ownerUserId: user.id });
+    const repository = await productStore.createRepository({ organizationId: org.id, providerRepositoryId: "991", ownerName: "acme/app" });
+    const runnerStore = makeD1RunnerStore(makeD1(db));
+    const queueStore = makeD1ExecutionQueueStore(makeD1(db));
+    const provider = createMockRunnerProvider();
+    const item = await queueStore.enqueue({ organizationId: org.id, repositoryId: repository.id, jobReference: "job-1", requestedResourceClass: "standard-2" });
+
+    const denied = await scheduleNext({ queueStore, runnerStore, runnerProvider: provider, getMaxConcurrency: async () => 5 });
+    assert.deepEqual(denied, [{ queueItemId: item.id, organizationId: org.id, outcome: "skipped_not_authorized" }]);
+    assert.equal((await runnerStore.listRunnersForOrganization(org.id)).length, 0);
+
+    const allowed = await scheduleNext({ queueStore, runnerStore, runnerProvider: provider, getMaxConcurrency: async () => 5, authorizeRepositoryExecution: async (candidate) => candidate.repositoryId === repository.id });
+    assert.equal(allowed[0]?.outcome, "assigned");
+  });
+});

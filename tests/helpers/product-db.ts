@@ -15,7 +15,7 @@ export type SchemaModule = "product" | "billing" | "auth" | "usage" | "runner" |
 // 'auth' applies BOTH auth files - schema.sql (sessions) and schema-oauth.sql (provider_identities,
 // oauth_states) - since every real deployment applies them together (see scripts/migrate-product-db.ts).
 const SCHEMA_FILES: Record<SchemaModule, string[]> = {
-  product: ["src/product/cloudflare/schema.sql", "src/product/cloudflare/schema-evidence-policy.sql", "src/hosted/schema.sql"],
+  product: ["src/product/cloudflare/schema.sql", "src/product/cloudflare/schema-evidence-policy.sql", "src/product/cloudflare/schema-managed-execution.sql", "src/hosted/schema.sql"],
   billing: ["src/billing/cloudflare/schema.sql", "src/billing/cloudflare/schema-metered-invoices.sql"],
   auth: ["src/auth/cloudflare/schema.sql", "src/auth/cloudflare/schema-oauth.sql"],
   usage: ["src/usage/cloudflare/schema.sql"],

@@ -19,6 +19,9 @@ export interface SchedulerDeps {
   runnerProvider: RunnerProvider;
   /** Returns the organization's current max-concurrency entitlement (-1 = unlimited). */
   getMaxConcurrency: (organizationId: string) => Promise<number>;
+  /** Repository workloads fail closed unless the caller proves that this exact tenant/repository job
+   * is authorized for managed execution. Organization-only synthetic health jobs are unaffected. */
+  authorizeRepositoryExecution?: (item: QueueItem) => Promise<boolean>;
   /** R1 (Real Runner) addition - optional. When a provider needs a real, per-runner, per-job
    * authentication credential (src/runner/agent-api.ts's register/claim/result boundary) rather than
    * running synchronously inside one control-plane-initiated call, this hook mints one AFTER the
@@ -33,7 +36,7 @@ export interface SchedulerDeps {
 export interface ScheduleOutcome {
   queueItemId: string;
   organizationId: string;
-  outcome: "assigned" | "skipped_concurrency_limit" | "provisioning_failed";
+  outcome: "assigned" | "skipped_concurrency_limit" | "skipped_not_authorized" | "provisioning_failed";
   runnerId?: string;
   error?: string;
 }
@@ -43,6 +46,10 @@ export async function scheduleNext(deps: SchedulerDeps, batchLimit = 50): Promis
   const outcomes: ScheduleOutcome[] = [];
 
   for (const item of queued) {
+    if (item.repositoryId && (!deps.authorizeRepositoryExecution || !await deps.authorizeRepositoryExecution(item))) {
+      outcomes.push({ queueItemId: item.id, organizationId: item.organizationId, outcome: "skipped_not_authorized" });
+      continue;
+    }
     const maxConcurrency = await deps.getMaxConcurrency(item.organizationId);
     if (maxConcurrency >= 0) {
       const alreadyInFlight = await deps.queueStore.countInFlightForOrganization(item.organizationId);

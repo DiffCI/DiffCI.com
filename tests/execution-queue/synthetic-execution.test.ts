@@ -43,7 +43,10 @@ describe("Synthetic execution proof - Part 18", () => {
     assert.equal(item.status, "queued");
 
     // --- runner provision -> runner ready -> job assigned (via the real scheduler) -----------------
-    const [outcome] = await scheduleNext({ queueStore, runnerStore, runnerProvider: provider, getMaxConcurrency: async () => 5 });
+    const [outcome] = await scheduleNext({ queueStore, runnerStore, runnerProvider: provider, getMaxConcurrency: async () => 5,
+      // This fixture explicitly models the authorization layer succeeding; separate scheduler tests
+      // prove that omitting or denying it never provisions a repository runner.
+      authorizeRepositoryExecution: async (candidate) => candidate.repositoryId === repo.id });
     assert.equal(outcome?.outcome, "assigned");
     const runnerId = outcome!.runnerId!;
 

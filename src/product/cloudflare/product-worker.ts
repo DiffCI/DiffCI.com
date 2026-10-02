@@ -110,6 +110,7 @@ import {
 import { makeD1FleetEvidenceReader } from "../shadow-read-boundary.js";
 import { getFleetForOrganization } from "../fleet.js";
 import { makeD1EvidencePolicyStore, readEvidencePolicy, updateEvidencePolicy } from "../evidence-policy.js";
+import { makeD1ManagedExecutionConsentStore, readManagedExecutionConsent, updateManagedExecutionConsent } from "../managed-execution.js";
 import { readBoundedText, BodyLimitError, takeRateLimit } from "../../hosted/limits.js";
 import { handleDiagnosticRequest, drainDiagnosticQueue } from "../../diagnostics/service.js";
 import { diagnosticPage } from "../../diagnostics/page.js";
@@ -335,6 +336,7 @@ export default {
     const shadowBoundary = makeD1ShadowReadBoundary(env.RESEARCH_DB);
     const routeDeps: RouteDeps = { productStore: store, shadowBoundary, runnerStore, queueStore, usageStore };
     const policies = makeD1EvidencePolicyStore(env.PRODUCT_DB);
+    const executionConsents = makeD1ManagedExecutionConsentStore(env.PRODUCT_DB);
     const fleetDeps = { productStore: store, policies, evidence: makeD1FleetEvidenceReader(env.RESEARCH_DB), shadow: shadowBoundary };
 
     // Phase 03 ingest. `actionRef` is what generated install instructions tell a customer to pin; it is
@@ -972,6 +974,27 @@ export default {
           return outcome.ok ? json({ ok: true, current: outcome.data }) : json({ ok: false, error: outcome.error },
             outcome.error === "revision_conflict" ? 409 : outcome.error === "invalid_policy" ? 400 : 403);
         } catch { return json({ ok: false, error: "policy_unavailable" }, 503); }
+      }
+
+      const executionConsentMatch = subPath.match(/^\/repositories\/([^/]+)\/execution-consent$/);
+      if (executionConsentMatch && request.method === "GET") {
+        try {
+          const outcome = await readManagedExecutionConsent(store, executionConsents, userId, organizationId, executionConsentMatch[1]!);
+          return outcome.ok ? json({ ok: true, ...outcome.data }) : json({ ok: false, error: outcome.error }, outcome.error === "not_found" ? 404 : 403);
+        } catch { return json({ ok: false, error: "execution_consent_unavailable" }, 503); }
+      }
+      if (executionConsentMatch && request.method === "PUT") {
+        if (principal.authenticationMethod === "session" && !env.CSRF_SECRET) return json({ ok: false, error: "csrf_unconfigured" }, 503);
+        if (!(await requireCsrf(request, env, principal))) return json({ ok: false, error: "csrf_invalid" }, 403);
+        const raw = await request.text();
+        if (new TextEncoder().encode(raw).length > 2048) return json({ ok: false, error: "invalid_consent" }, 413);
+        let body: unknown;
+        try { body = JSON.parse(raw); } catch { return json({ ok: false, error: "invalid_consent" }, 400); }
+        try {
+          const outcome = await updateManagedExecutionConsent(store, executionConsents, userId, organizationId, executionConsentMatch[1]!, body);
+          return outcome.ok ? json({ ok: true, current: outcome.data }) : json({ ok: false, error: outcome.error },
+            outcome.error === "revision_conflict" ? 409 : outcome.error === "invalid_consent" ? 400 : outcome.error === "not_found" ? 404 : 403);
+        } catch { return json({ ok: false, error: "execution_consent_unavailable" }, 503); }
       }
 
       if (request.method === "GET" && subPath === "") {
