@@ -841,9 +841,9 @@ async function shadowReport(request: Request, env: ValidationEnv, ctx: Execution
   // The refusal is indistinguishable from "not enrolled" on purpose - the URL must not confirm that a
   // private repository exists.
   const access = await makeD1ShadowStore(env.RESEARCH_DB).getReportAccess(repository);
-  if (access?.isPrivate) {
+  if (!access || access.isPrivate) {
     const token = url.searchParams.get("token") ?? "";
-    if (!access.token || token.length !== access.token.length || !timingSafeEqualString(token, access.token)) {
+    if (!access?.token || token.length !== access.token.length || !timingSafeEqualString(token, access.token)) {
       return new Response("No public report exists for this repository. A private repository's report link is available in the DiffCI dashboard after signing in with GitHub.\n", { status: 404, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
     }
   }
@@ -851,7 +851,7 @@ async function shadowReport(request: Request, env: ValidationEnv, ctx: Execution
   const report = await buildLiveShadowReport(env.RESEARCH_DB as unknown as ShadowReportD1, repository, days);
   const text = renderShadowReport(report);
   if (env.POSTHOG_API_KEY) ctx.waitUntil(recordReportServed(env, repository, days).catch(e => console.error('shadow-analytics: report capture failed', String(e))));
-  return new Response(`${text}\n`, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=300" } });
+  return new Response(`${text}\n`, { status: 200, headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store", "referrer-policy": "no-referrer" } });
 }
 
 /**
@@ -1041,6 +1041,11 @@ async function executeShadowPoll(env: ValidationEnv, owner: string, name: string
         r2Key,
       );
       if (inserted) predictionsRecorded++;
+      // An uninstall may finish between the R2 upload and the fenced D1 write.
+      if (!inserted && (await store.getRepositoryPollState(repository))?.state === "REMOVED") {
+        if (!env.RESEARCH_BUCKET.delete) throw new Error("evidence_erasure_unavailable");
+        await env.RESEARCH_BUCKET.delete([r2Key]);
+      }
     }
 
     await store.updateLastPolled(repository, result.newHeadSha);
@@ -1234,7 +1239,7 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
       const logicalEventKey = computeLogicalEventKey({ repository, headSha: row.headSha, workflowRunId: result.workflowRunId });
       const r2Key = `shadow/ground-truth/${repository}/${logicalEventKey}`;
       await evidenceStore.put(r2Key, result);
-      await store.recordGroundTruth(
+      const { inserted } = await store.recordGroundTruth(
         {
           logicalEventKey, logicalDeltaKey: row.logicalDeltaKey, repository, headSha: row.headSha,
           workflowRunId: result.workflowRunId, workflowRunAttempt: result.workflowRunAttempt ?? 1, eventType: "poll-detected",
@@ -1247,7 +1252,11 @@ async function executeShadowReconcile(env: ValidationEnv, repository: string, li
         },
         r2Key,
       );
-      reconciled++;
+      if (inserted) reconciled++;
+      else if ((await store.getRepositoryPollState(repository))?.state === "REMOVED") {
+        if (!env.RESEARCH_BUCKET.delete) throw new Error("evidence_erasure_unavailable");
+        await env.RESEARCH_BUCKET.delete([r2Key]);
+      }
     } catch (error: unknown) {
       errors.push(`${row.logicalDeltaKey}: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -1571,16 +1580,11 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
       // site/data-handling.html: "Uninstalling deletes it." Real erasure (shadow-erasure.ts) against
       // this Worker's own D1 store and R2 bucket - not a log line. See shadow-webhook.ts's own doc
       // comment for why suspend does NOT go through this path.
-      eraseInstallation: (installationId) => {
-        ctx.waitUntil(
-          eraseShadowInstallation(store, new R2EvidenceStore(env.RESEARCH_BUCKET), installationId, new Date().toISOString())
-            .then((r) =>
-              console.log(
-                `shadow-webhook: erasure for installation ${installationId}: repositories=${r.repositories.length} predictions=${r.predictionsDeleted} groundTruth=${r.groundTruthDeleted} economics=${r.economicsDeleted} r2Objects=${r.evidenceObjectsDeleted}`,
-              ),
-            )
-            .catch((error: unknown) => console.log(`shadow-webhook: erasure for installation ${installationId} failed: ${error instanceof Error ? error.message : String(error)}`)),
-        );
+      eraseInstallation: async (installationId) => {
+        await eraseShadowInstallation(store, new R2EvidenceStore(env.RESEARCH_BUCKET), installationId, new Date().toISOString());
+      },
+      eraseRepositories: async (installationId, repositories) => {
+        await eraseShadowInstallation(store, new R2EvidenceStore(env.RESEARCH_BUCKET), installationId, new Date().toISOString(), repositories);
       },
       log: (message) => console.log(message),
     },

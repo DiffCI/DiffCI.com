@@ -24,6 +24,9 @@ import { assertShellSafeArgs } from "./shell-safety.js";
 // Fixed order - each entry's comment states the dependency reason it must come after the previous ones.
 export const MIGRATION_FILES = [
   "src/product/cloudflare/schema.sql", // base: users, organizations, organization_members, repositories, audit_log - no dependencies
+  "src/product/cloudflare/schema-evidence-policy.sql", // append-only reporting policies reference organizations and users
+  "src/product/cloudflare/schema-managed-execution.sql", // append-only execution consent references repositories, organizations and users
+  "src/hosted/schema.sql", // bounded public diagnostic queue and shared request counters
   "src/billing/cloudflare/schema.sql", // billing_customers/subscriptions/billing_events reference organizations(id)
   "src/auth/cloudflare/schema.sql", // sessions references users(id)
   "src/auth/cloudflare/schema-oauth.sql", // provider_identities references users(id); oauth_states has no FK

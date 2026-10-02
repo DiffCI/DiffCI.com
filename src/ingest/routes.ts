@@ -68,6 +68,7 @@ export async function issueIngestTokenForRepository(
   if (!(await requireMembership(deps, organizationId, userId))) return { ok: false, error: "unauthorized" };
   const repository = await requireRepository(deps, organizationId, userId, repositoryId);
   if (!repository) return { ok: false, error: "not_found" };
+  if (repository.status === "removed" || repository.status === "paused") return { ok: false, error: "not_found" };
   // Checked BEFORE the token is minted. Issuing a live credential and then refusing to say what to
   // do with it would leave the customer holding a secret with no instructions, and would leave a
   // revocable-but-never-revoked token in the database on every attempt.

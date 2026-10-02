@@ -265,8 +265,48 @@ jobs:
       rmSync(dir, { recursive: true, force: true });
     }
   });
-});
 
+  it("does not misclassify a dedicated fail-closed verification check as an observer", () => {
+    const dir = repoWithWorkflow(`
+name: DiffCI verification
+jobs:
+  diffci-verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx "@diffci.com/diffci@0.2.9" verify --json
+`);
+    try {
+      const result = auditWorkflows(dir);
+      assert.deepEqual(result.observerJobs, []);
+      assert.deepEqual(result.findings, []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("recognises the repository's source-mode verification command", () => {
+    const dir = repoWithWorkflow(`
+name: DiffCI verification
+jobs:
+  diffci-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm ci
+      - run: npm run typecheck
+      - run: node --import tsx src/client/cli.ts verify --json --out "$RUNNER_TEMP/diffci-verification.json"
+`);
+    try {
+      const result = auditWorkflows(dir);
+      assert.deepEqual(result.observerJobs, []);
+      assert.deepEqual(result.findings, []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
 describe("run: steps - what counts as running DiffCI (2026-09-06)", () => {
   const RUN_FORMS = `
 name: CI

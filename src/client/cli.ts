@@ -11,6 +11,7 @@
  * Commands:
  *   init               seed a repository with AI-agent instructions for using DiffCI
  *   mcp                run the stdio MCP server
+ *   verify             fail-closed verification of a working-tree snapshot or commit range
  *   check              analysis plus automatic paired runtime measurement
  *   observe            analyse the checkout and write an observation report
  *   verify-savings     run a paired full-versus-selected timing check
@@ -32,11 +33,13 @@ import { basename, dirname, join, resolve } from "node:path";
 
 import { observe, isInsideRepository } from "./observe.js";
 import { inferFullCommand, inferSelectedCommand } from "./full-command.js";
-import { addDiffciPackageScripts, installDiffci } from "./install.js";
+import { addDiffciPackageScripts, detectPackageManager, installDiffci, type SupportedPackageManager } from "./install.js";
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
+import { githubDeliveryWarning } from "./delivery-warning.js";
 import { sendUsageSignal } from "./usage-signal.js";
 import { detectSpecificationConflicts, readSpecificationFile } from "./spec-conflicts.js";
+import { formatVerificationSummary, verificationExitCode, verifyChanged, verifyRange } from "./verify.js";
 import { formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
 import { auditWorkflows, isNonInterfering } from "./workflow-guard.js";
 
@@ -111,33 +114,35 @@ function defaultReportPath(env: NodeJS.ProcessEnv): string {
 
 // Quoting the scoped package keeps the same command valid in POSIX shells, cmd.exe, and
 // PowerShell, where an unquoted leading `@` is parsed as the splatting operator.
-const AGENT_DEFAULT_COMMAND = 'npx "@diffci.com/diffci@latest" check';
+const PUBLIC_AGENT_DEFAULT_COMMAND = 'npx "@diffci.com/diffci@latest" verify --changed --json';
 
-const AGENT_INSTRUCTIONS = `# DiffCI Agent Instructions
+function agentInstructions(command: string): string {
+  return `# DiffCI Agent Instructions
 
 Use DiffCI as the default CI/CD validation lens before proposing, committing, or opening pull requests.
 
 Default command:
 
 \`\`\`bash
-${AGENT_DEFAULT_COMMAND}
+${command}
 \`\`\`
 
 What this does:
 
-- analyzes the current checkout and commit range;
-- runs the repository's inferred full test command and DiffCI's selected command when safe to compare;
-- prints measured paired runtime when both commands pass;
-- writes reports outside the repository and sends nothing;
-- does not skip, cancel, or reorder required CI tests.
+- snapshots staged, unstaged, and non-ignored untracked changes;
+- selects and runs the minimum executable test verification, broadening to the full test command when uncertain;
+- exits zero only when the exact snapshot passes and remains unchanged during verification;
+- emits a versioned machine-readable receipt and sends nothing.
 
-Test commands may write generated files to the checkout. Use \`observe --no-send\` when analysis
-without test execution is needed.
+If verification changes generated files, review those changes and rerun DiffCI so the new snapshot is verified.
+Use \`observe --no-send\` when analysis without test execution is needed.
 
-If DiffCI reports \`REFUSED\` or \`ERROR\`, treat that as an installation or analysis issue and continue with the repository's normal test commands. If DiffCI reports a selected command, prefer using it as evidence for what changed, not as permission to skip required CI.
+Do not propose, commit, push, or deploy when \`safe_to_continue\` is false. If DiffCI is blocked, run the repository's normal required verification and report the blocker; required project CI remains authoritative.
 `;
+}
 
-const CURSOR_RULE = `---
+function cursorRule(command: string): string {
+  return `---
 description: Use DiffCI as the default CI/CD validation lens
 alwaysApply: true
 ---
@@ -145,30 +150,42 @@ alwaysApply: true
 Before proposing, committing, or opening pull requests, run:
 
 \`\`\`bash
-${AGENT_DEFAULT_COMMAND}
+${command}
 \`\`\`
 
-DiffCI check analyzes the change and runs full and selected test commands when it can infer them. It sends nothing. Test commands may write generated files. Use observe --no-send for analysis without execution. Required project CI remains authoritative.
+DiffCI verify snapshots staged, unstaged, and untracked changes, runs selected or conservative full-fallback verification, and succeeds only when the exact snapshot passes. It sends nothing. If verification changes generated files, review them and rerun. Required project CI remains authoritative.
 `;
+}
 
-const GITHUB_COPILOT_INSTRUCTIONS = `# Repository CI/CD Validation
+function githubCopilotInstructions(command: string): string {
+  return `# Repository CI/CD Validation
 
 Use DiffCI as the default change-aware CI/CD validation lens:
 
 \`\`\`bash
-${AGENT_DEFAULT_COMMAND}
+${command}
 \`\`\`
 
-DiffCI check analyzes the change and runs inferred full and selected test commands to measure a paired runtime. It sends nothing; required repository checks remain authoritative.
+DiffCI verify binds selected or conservative full-fallback verification to the current working-tree snapshot. Do not continue when safe_to_continue is false. It sends nothing; required repository checks remain authoritative.
 `;
+}
 
-const DIFFCI_CONFIG = `{
+function diffciConfig(command: string): string {
+  return `{
   "$schema": "https://diffci.com/schemas/diffci.config.schema.json",
-  "agentDefaultCommand": ${JSON.stringify(AGENT_DEFAULT_COMMAND)},
-  "mode": "check",
+  "agentDefaultCommand": ${JSON.stringify(command)},
+  "mode": "verify-changed",
   "sendReports": false
 }
 `;
+}
+
+const MANAGED_INSTRUCTIONS_BEGIN = "<!-- diffci:managed:start -->";
+const MANAGED_INSTRUCTIONS_END = "<!-- diffci:managed:end -->";
+
+function managedInstructions(content: string): string {
+  return `${MANAGED_INSTRUCTIONS_BEGIN}\n${content.trim()}\n${MANAGED_INSTRUCTIONS_END}\n`;
+}
 
 function diffciWorkflow(version: string): string {
   return `name: DiffCI observation
@@ -190,6 +207,35 @@ jobs:
 `;
 }
 
+function diffciVerificationWorkflow(version: string): string {
+  return `name: DiffCI verification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  diffci-verify:
+    name: DiffCI verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: \${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify changed code
+        run: npx "@diffci.com/diffci@${version}" verify --json --out "$RUNNER_TEMP/diffci-verification.json"
+      - name: Upload verification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diffci-verification-\${{ github.run_id }}-\${{ github.run_attempt }}
+          path: \${{ runner.temp }}/diffci-verification.json
+          if-no-files-found: warn
+`;
+}
+
 function writeInitFile(repoPath: string, relativePath: string, content: string, force: boolean): string {
   const absolutePath = join(repoPath, relativePath);
   const existed = existsSync(absolutePath);
@@ -199,21 +245,81 @@ function writeInitFile(repoPath: string, relativePath: string, content: string, 
   return `${existed ? "overwrote" : "wrote"} ${relativePath}`;
 }
 
+function writeManagedInstructionsFile(repoPath: string, relativePath: string, content: string): string {
+  const absolutePath = join(repoPath, relativePath);
+  const block = managedInstructions(content);
+  mkdirSync(dirname(absolutePath), { recursive: true });
+  if (!existsSync(absolutePath)) {
+    writeFileSync(absolutePath, block, "utf8");
+    return `wrote ${relativePath}`;
+  }
+
+  const existing = readFileSync(absolutePath, "utf8");
+  const start = existing.indexOf(MANAGED_INSTRUCTIONS_BEGIN);
+  const end = existing.indexOf(MANAGED_INSTRUCTIONS_END);
+  let next: string;
+  if (start >= 0 && end >= start) {
+    const after = end + MANAGED_INSTRUCTIONS_END.length;
+    next = `${existing.slice(0, start)}${block.trimEnd()}${existing.slice(after)}`;
+    if (existing.endsWith("\n") && !next.endsWith("\n")) next += "\n";
+  } else if (existing.trimStart().startsWith("# DiffCI Agent Instructions")) {
+    // Files generated by DiffCI before managed markers were introduced were dedicated DiffCI files.
+    next = block;
+  } else {
+    next = `${existing.trimEnd()}\n\n${block}`;
+  }
+  if (next === existing) return `kept ${relativePath} (managed section current)`;
+  writeFileSync(absolutePath, next, "utf8");
+  return `updated ${relativePath} (DiffCI managed section)`;
+}
+
+function writeDiffciConfig(repoPath: string, force: boolean, command: string): string {
+  const relativePath = "diffci.config.json";
+  const absolutePath = join(repoPath, relativePath);
+  const generated = diffciConfig(command);
+  if (!existsSync(absolutePath)) return writeInitFile(repoPath, relativePath, generated, false);
+  try {
+    const existing = JSON.parse(readFileSync(absolutePath, "utf8")) as Record<string, unknown>;
+    if (existing.$schema === "https://diffci.com/schemas/diffci.config.schema.json") {
+      existing.agentDefaultCommand = command;
+      existing.mode = "verify-changed";
+      if (existing.sendReports === undefined) existing.sendReports = false;
+      const next = `${JSON.stringify(existing, null, 2)}\n`;
+      if (next === readFileSync(absolutePath, "utf8")) return `kept ${relativePath} (current)`;
+      writeFileSync(absolutePath, next, "utf8");
+      return `updated ${relativePath}`;
+    }
+  } catch {
+    // An unrelated or invalid existing file is preserved unless the caller explicitly asked to force.
+  }
+  return writeInitFile(repoPath, relativePath, generated, force);
+}
+
+function installedDiffciManager(repoPath: string): SupportedPackageManager | undefined {
+  const packagePath = join(repoPath, "package.json");
+  if (!existsSync(packagePath)) return undefined;
+  try {
+    const manifest = JSON.parse(readFileSync(packagePath, "utf8")) as {
+      dependencies?: Record<string, unknown>;
+      devDependencies?: Record<string, unknown>;
+      optionalDependencies?: Record<string, unknown>;
+    };
+    const installed = [manifest.dependencies, manifest.devDependencies, manifest.optionalDependencies]
+      .some((dependencies) => dependencies && typeof dependencies["@diffci.com/diffci"] === "string");
+    return installed ? detectPackageManager(repoPath) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function runInit(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): number {
   const repoPath = resolve(typeof flags.repo === "string" ? flags.repo : env.GITHUB_WORKSPACE ?? process.cwd());
   const force = flags.force === true;
   const includeWorkflow = flags.workflow === true;
+  const includeVerificationWorkflow = flags["verification-workflow"] === true;
   const identity = observerIdentity();
-  const writes = [
-    writeInitFile(repoPath, "AGENTS.md", AGENT_INSTRUCTIONS, force),
-    writeInitFile(repoPath, "CLAUDE.md", AGENT_INSTRUCTIONS, force),
-    writeInitFile(repoPath, ".cursor/rules/diffci.mdc", CURSOR_RULE, force),
-    writeInitFile(repoPath, ".github/copilot-instructions.md", GITHUB_COPILOT_INSTRUCTIONS, force),
-    writeInitFile(repoPath, "diffci.config.json", DIFFCI_CONFIG, force),
-  ];
-  if (includeWorkflow) writes.push(writeInitFile(repoPath, ".github/workflows/diffci.yml", diffciWorkflow(identity.version), force));
-
   let installed: string | undefined;
+  let manager = installedDiffciManager(repoPath);
   if (flags.install === true) {
     const { plan, result } = installDiffci(repoPath, identity.version);
     if (result.error) throw result.error;
@@ -222,9 +328,29 @@ function runInit(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv
       throw new Error(`could not install ${plan.packageSpec}: ${detail}`);
     }
     const scripts = addDiffciPackageScripts(repoPath);
+    manager = plan.manager;
     installed = `installed ${plan.packageSpec} as an exact dev dependency with ${plan.manager}`;
     if (scripts.added.length > 0) installed += `; added package scripts ${scripts.added.join(", ")}`;
     if (scripts.kept.length > 0) installed += `; kept existing package scripts ${scripts.kept.join(", ")}`;
+  } else if (manager) {
+    const scripts = addDiffciPackageScripts(repoPath);
+    installed = `found the existing exact or ranged @diffci.com/diffci dependency with ${manager}`;
+    if (scripts.added.length > 0) installed += `; added package scripts ${scripts.added.join(", ")}`;
+    if (scripts.kept.length > 0) installed += `; kept existing package scripts ${scripts.kept.join(", ")}`;
+  }
+
+  const agentCommand = manager ? `${manager} run diffci:verify` : PUBLIC_AGENT_DEFAULT_COMMAND;
+  const instructions = agentInstructions(agentCommand);
+  const writes = [
+    writeManagedInstructionsFile(repoPath, "AGENTS.md", instructions),
+    writeManagedInstructionsFile(repoPath, "CLAUDE.md", instructions),
+    writeInitFile(repoPath, ".cursor/rules/diffci.mdc", cursorRule(agentCommand), force),
+    writeManagedInstructionsFile(repoPath, ".github/copilot-instructions.md", githubCopilotInstructions(agentCommand)),
+    writeDiffciConfig(repoPath, force, agentCommand),
+  ];
+  if (includeWorkflow) writes.push(writeInitFile(repoPath, ".github/workflows/diffci.yml", diffciWorkflow(identity.version), force));
+  if (includeVerificationWorkflow) {
+    writes.push(writeInitFile(repoPath, ".github/workflows/diffci-verify.yml", diffciVerificationWorkflow(identity.version), force));
   }
 
   console.log(`DiffCI initialized for AI coding agents in ${repoPath}`);
@@ -232,7 +358,8 @@ function runInit(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv
   if (installed) console.log(`  ${installed}`);
   else console.log("  skipped package installation (pass --install to add an exact dev dependency)");
   if (!includeWorkflow) console.log("  skipped .github/workflows/diffci.yml (pass --workflow to add it)");
-  console.log(`\nDefault agent command: ${AGENT_DEFAULT_COMMAND}`);
+  if (!includeVerificationWorkflow) console.log("  skipped .github/workflows/diffci-verify.yml (pass --verification-workflow to add it)");
+  console.log(`\nDefault agent command: ${agentCommand}`);
   return 0;
 }
 
@@ -246,6 +373,48 @@ function runMcp(): number {
   if (typeof result.status === "number") return result.status;
   if (result.error) throw result.error;
   return 0;
+}
+
+async function runVerifyCommand(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): Promise<number> {
+  const changed = flags.changed === true;
+  if (changed && (flags.base !== undefined || flags.head !== undefined)) {
+    console.error("diffci verify accepts either --changed or --base/--head, not both");
+    return 2;
+  }
+  const repoPath = resolve(stringFlag(flags, "repo") ?? env.GITHUB_WORKSPACE ?? process.cwd());
+  const out = stringFlag(flags, "out");
+  const reportPath = out ? resolve(out) : undefined;
+  if (reportPath && (reportPath === repoPath || isInsideRepository(repoPath, reportPath))) {
+    console.error(`Refusing to write the verification receipt inside the repository: ${reportPath}. Use --out with a path outside the checkout.`);
+    return 2;
+  }
+  const identity = observerIdentity();
+  const common = {
+    repoPath,
+    env: env as Record<string, string | undefined>,
+    version: identity.version,
+    engineSha: identity.sha,
+    timeoutMs: numberFlag(flags, "timeout-ms") ?? 30 * 60 * 1000,
+    tailBytes: numberFlag(flags, "tail-bytes") ?? 12_000,
+    redactPaths: flags["redact-paths"] === true,
+  };
+  const report = changed
+    ? await verifyChanged(common)
+    : await verifyRange({
+        ...common,
+        baseOverride: stringFlag(flags, "base"),
+        headOverride: stringFlag(flags, "head"),
+      });
+  if (reportPath) {
+    mkdirSync(dirname(reportPath), { recursive: true });
+    writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
+  }
+  if (flags.json === true) console.log(JSON.stringify(report, null, 2));
+  else {
+    console.log(formatVerificationSummary(report));
+    if (reportPath) console.log(`  receipt: ${reportPath}`);
+  }
+  return verificationExitCode(report);
 }
 
 function formatFinding(finding: WorkflowFinding): string {
@@ -447,9 +616,7 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
   // Sending happens before the job summary is written, so the summary can say whether it worked.
   // It is allowed to fail: by this point the report is on disk and (in the action) about to become an
   // artifact, so a delivery problem costs the observation nothing - it is DiffCI's problem to fix, not
-  // the host repository's build to fail. By this point the report is on
-  // disk and (in the action) about to become an artifact, so a delivery problem costs the observation
-  // nothing - it is DiffCI's problem to fix, not the host repository's build to fail.
+  // the host repository's build to fail.
   const apiUrl = typeof flags["api-url"] === "string" ? flags["api-url"] : env.DIFFCI_API_URL;
   const apiToken = typeof flags["api-token"] === "string" ? flags["api-token"] : env.DIFFCI_TOKEN;
   let delivery: string | undefined;
@@ -462,6 +629,11 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
   } else if (apiUrl && !apiToken && flags["no-send"] !== true) {
     delivery = "not sent: an api-url was given with no api-token";
     if (flags.quiet !== true) console.log(`  delivery: ${delivery}`);
+  }
+
+  if (delivery) {
+    const warning = githubDeliveryWarning(delivery, env);
+    if (warning) console.log(warning);
   }
 
   // GitHub renders this under the job. It is the only place most people will ever read a report, so it
@@ -668,8 +840,10 @@ function runValidateSpecs(flags: Record<string, string | boolean>): number {
 const USAGE = `diffci - change-aware CI analysis and paired timing
 
 Usage:
-  diffci init [--repo <path>] [--workflow] [--install] [--force]
+  diffci init [--repo <path>] [--workflow] [--verification-workflow] [--install] [--force]
   diffci mcp
+  diffci verify [--changed | --base <sha> --head <sha>] [--repo <path>] [--out <file>] [--json]
+                [--redact-paths] [--timeout-ms <ms>]
   diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>] [--share-usage]
   diffci pilot --full <command> [--repo <path>] [--out-dir <dir>] [--label <name>]
@@ -688,8 +862,13 @@ Usage:
 init writes AGENTS.md, CLAUDE.md, Cursor rules, Copilot instructions, and diffci.config.json.
 --workflow adds a separate non-blocking observation workflow. --install detects npm, pnpm, Yarn,
 or Bun, installs this DiffCI version as an exact dev dependency, updates the manager's lockfile,
-and adds diffci:check and diffci:observe package scripts without replacing existing scripts.
+and adds diffci:verify, diffci:check, and diffci:observe package scripts without replacing existing scripts.
+--verification-workflow adds a blocking GitHub check that uploads a commit-bound verification receipt.
 mcp runs the stdio MCP server for native agent integrations.
+verify --changed snapshots staged, unstaged, and non-ignored untracked changes, runs the minimum
+executable verification (or full fallback), and exits zero only when that exact snapshot passes.
+verify without --changed resolves the CI event range (or HEAD^..HEAD locally), requires a clean checkout,
+and exits zero only when the analyzed head is the commit that actually passed verification.
 check analyzes the change, runs inferred full and selected commands, and shows measured savings.
 pilot runs observe and verify-savings together, writing reports to ../diffci-output by default.
 observe analyses the checkout and writes one JSON report. It runs nothing and changes nothing.
@@ -720,6 +899,9 @@ async function main(): Promise<void> {
       return;
     case "mcp":
       process.exitCode = runMcp();
+      return;
+    case "verify":
+      process.exitCode = await runVerifyCommand(flags, env);
       return;
     case "check":
       process.exitCode = await runCheck(flags, env);

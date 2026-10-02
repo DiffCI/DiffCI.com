@@ -32,6 +32,7 @@ function makeFakes(state: Partial<FakeState> = {}): { store: ErasureStore; bucke
   };
 
   const store: ErasureStore = {
+    async setRepositoryStateWithNote() {},
     async listRepositoriesByInstallation(installationId) {
       return calls.reposByInstallation[installationId] ?? [];
     },
@@ -65,6 +66,24 @@ function makeFakes(state: Partial<FakeState> = {}): { store: ErasureStore; bucke
 }
 
 describe("eraseInstallation", () => {
+  it("fences access before deletion and restricts repository removals to the installation", async () => {
+    const { store, bucket, calls } = makeFakes({ reposByInstallation: { "111": ["acme/web", "acme/api"] }, evidenceKeysByRepo: { "acme/web": ["key"] } });
+    const order: string[] = [];
+    store.setRepositoryStateWithNote = async (repo, state) => { assert.equal(state, "REMOVED"); order.push(repo); };
+    bucket.deleteMany = async () => { assert.deepEqual(order, ["acme/web"]); return 1; };
+    await eraseInstallation(store, bucket, "111", "2026-09-25T00:00:00Z", ["acme/web", "other/private"]);
+    assert.deepEqual(calls.erasedRepos, ["acme/web"]);
+    assert.deepEqual(calls.removedRepos.map((r) => r.repository), ["acme/web"]);
+  });
+
+  it("a storage failure leaves installation attribution available for retry", async () => {
+    const { store, bucket, calls } = makeFakes({ reposByInstallation: { "111": ["acme/web"] }, evidenceKeysByRepo: { "acme/web": ["key"] } });
+    bucket.deleteMany = async () => { throw new Error("R2 unavailable"); };
+    await assert.rejects(eraseInstallation(store, bucket, "111", "2026-09-25T00:00:00Z"), /R2 unavailable/);
+    assert.deepEqual(calls.removedRepos, []);
+    assert.deepEqual(calls.erasedRepos, []);
+  });
+
   it("erases every repository attributed to the installation: R2 keys read+deleted BEFORE the D1 rows naming them", async () => {
     const { store, bucket, calls } = makeFakes({
       reposByInstallation: { "111": ["acme/web", "acme/api"] },

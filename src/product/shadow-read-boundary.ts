@@ -13,6 +13,58 @@
  * replicated summary table or an internal service call remains possible without changing this
  * interface's shape.
  */
+export interface FleetWindowEvidence {
+  predictions: number;
+  selective: number;
+  full: number;
+  verifiedPredictions: number;
+  evaluableFailures: number;
+  failuresPreserved: number;
+  missedFailures: number;
+  analysisOverheadMs: number;
+  latestPredictionAt: string | null;
+}
+
+export interface FleetEvidenceReader {
+  summarize(ownerName: string, startIso: string, endIso: string): Promise<FleetWindowEvidence>;
+}
+
+/** Bounded aggregate queries, never a global scan or a list of every prediction in memory.
+ * Verification uses distinct predictions; CI retries must not inflate coverage above 100%.
+ * Safety counts are per verified prospective CI attempt, not distinct failures across attempts. */
+export function makeD1FleetEvidenceReader(db: D1Binding): FleetEvidenceReader {
+  return {
+    async summarize(ownerName, startIso, endIso) {
+      const prediction = await db.prepare(`SELECT COUNT(*) AS predictions,
+        COALESCE(SUM(p.plan_mode = 'SELECTIVE'), 0) AS selective,
+        COALESCE(SUM(p.plan_mode = 'FULL'), 0) AS full,
+        COALESCE(SUM(p.diffci_analysis_overhead_ms), 0) AS overhead,
+        MAX(p.created_at) AS latest,
+        COALESCE(SUM(EXISTS (SELECT 1 FROM shadow_ground_truth g
+          WHERE g.logical_delta_key = p.logical_delta_key AND g.repository = p.repository AND g.head_sha = p.head_sha
+            AND g.evidence_validity = 'VERIFIED' AND g.prediction_preceded_ground_truth = 1)), 0) AS verified
+        FROM shadow_predictions p WHERE p.repository = ? AND p.created_at >= ? AND p.created_at < ?`)
+        .bind(ownerName, startIso, endIso).first<Record<string, unknown>>();
+      const safety = await db.prepare(`SELECT
+        COALESCE(SUM(g.relevant_failures_evaluable), 0) AS evaluable,
+        COALESCE(SUM(g.failures_preserved_by_diffci), 0) AS preserved,
+        COALESCE(SUM(MAX(0, g.relevant_failures_evaluable - g.failures_preserved_by_diffci)), 0) AS missed
+        FROM shadow_ground_truth g JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
+        AND g.repository = p.repository AND g.head_sha = p.head_sha
+        WHERE p.repository = ? AND p.created_at >= ? AND p.created_at < ?
+          AND g.evidence_validity = 'VERIFIED' AND g.prediction_preceded_ground_truth = 1`)
+        .bind(ownerName, startIso, endIso).first<Record<string, unknown>>();
+      return {
+        predictions: Number(prediction?.predictions ?? 0), selective: Number(prediction?.selective ?? 0),
+        full: Number(prediction?.full ?? 0), verifiedPredictions: Number(prediction?.verified ?? 0),
+        analysisOverheadMs: Number(prediction?.overhead ?? 0), latestPredictionAt: prediction?.latest ? String(prediction.latest) : null,
+        evaluableFailures: Number(safety?.evaluable ?? 0), failuresPreserved: Number(safety?.preserved ?? 0),
+        missedFailures: Number(safety?.missed ?? 0),
+      };
+    },
+  };
+}
+
 export interface D1Binding {
   prepare(query: string): {
     bind(...values: unknown[]): {
@@ -146,12 +198,12 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
       const { results } = await db
         .prepare(
           `SELECT p.logical_delta_key, p.repository, p.head_sha, g.workflow_run_id, g.evidence_workflow_path, p.plan_mode,
-                  p.tests_selected_diffci, p.tests_total_full, p.tests_selected_path, p.diffci_analysis_overhead_ms, p.created_at
+                  p.tests_selected_diffci, p.tests_total_full, p.tests_selected_path, p.diffci_analysis_overhead_ms, p.prediction_created_at
            FROM shadow_ground_truth g
            JOIN shadow_predictions p ON p.logical_delta_key = g.logical_delta_key
            WHERE g.repository = ? AND g.evidence_validity = 'VERIFIED' AND g.workflow_run_id IS NOT NULL
-             AND g.evidence_workflow_path IS NOT NULL AND p.created_at >= ? AND p.created_at < ?
-           ORDER BY p.created_at DESC`,
+             AND g.evidence_workflow_path IS NOT NULL AND p.prediction_created_at >= ? AND p.prediction_created_at < ?
+           ORDER BY p.prediction_created_at DESC`,
         )
         .bind(ownerName, startIso, endIso)
         .all<Record<string, unknown>>();
@@ -166,7 +218,7 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
         testsTotalFull: row.tests_total_full as number,
         testsSelectedPath: row.tests_selected_path as number,
         diffciAnalysisOverheadMs: row.diffci_analysis_overhead_ms as number,
-        predictionCreatedAt: row.created_at as string,
+        predictionCreatedAt: row.prediction_created_at as string,
       }));
     },
 
@@ -221,9 +273,9 @@ export function makeD1ShadowReadBoundary(db: D1Binding): ShadowReadBoundary {
     },
 
     async getReportAccess(ownerName) {
-      const row = await db.prepare(`SELECT is_private, report_token FROM shadow_repositories WHERE repository = ?`).bind(ownerName).first<{ is_private: number | null; report_token: string | null }>();
+      const row = await db.prepare(`SELECT is_private, report_token FROM shadow_repositories WHERE repository = ? AND state != 'REMOVED'`).bind(ownerName).first<{ is_private: number | null; report_token: string | null }>();
       if (!row) return undefined;
-      return { isPrivate: row.is_private === 1, token: row.report_token ?? undefined };
+      return { isPrivate: row.is_private !== 0, token: row.is_private === null ? undefined : row.report_token ?? undefined };
     },
 
     async getEvidenceWorkflowState(ownerName) {

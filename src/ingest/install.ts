@@ -5,18 +5,17 @@
  * after someone connects a repository, when the product either hands them the exact file to commit and
  * the exact secrets to set, or asks them to talk to a human. This module is the former.
  *
- * DISTRIBUTION (2026-08-27). DiffCI is proprietary and source-private, so it is not a third-party
- * `uses:` Action: that would require a public repository holding either the source or a committed
- * bundle. The generated workflow instead installs an authenticated, version-and-integrity-pinned
- * package and runs it. The pin is the security property, and it is enforced by the type of
- * `agentArtifact` - see ./agent-artifact.ts.
+ * The public observer installs from npm without registry credentials. Other npm artifacts retain
+ * private-registry authentication. Every npm artifact is version-pinned and its downloaded tarball
+ * is integrity-checked before installation; OCI artifacts use a digest. The pin is enforced by the
+ * type of `agentArtifact` - see ./agent-artifact.ts.
  *
  * The generated workflow still passes DiffCI's own non-interference guard
  * (src/client/workflow-guard.ts): its own job, `continue-on-error: true`, `contents: read`,
  * `fetch-depth: 0`, nothing depending on it. Generating anything else would mean the product's own
  * onboarding produced an installation its own checker rejects.
  *
- * No raw credential appears in the generated YAML. Both tokens go in repository secrets and the YAML
+ * No raw credential appears in the generated YAML. Credentials go in repository secrets and the YAML
  * references them, so the file committed to their repository - and reviewed in a pull request - carries
  * nothing sensitive.
  */
@@ -27,7 +26,7 @@ export interface InstallInstructions {
   /** The GitHub Actions secret holding the ingest credential. */
   secretName: string;
   /** The GitHub Actions secret holding the registry credential used to install the agent. */
-  registrySecretName: string;
+  registrySecretName?: string;
   /** Where the generated file goes in their repository. */
   workflowPath: string;
   workflowYaml: string;
@@ -77,6 +76,8 @@ function agentSteps(artifact: PinnedAgentArtifact, registrySecretName: string): 
   }
 
   const scope = artifact.name.startsWith("@") ? artifact.name.split("/")[0]! : undefined;
+  const registryAuthRequired = artifact.name !== "@diffci.com/diffci";
+  const tarball = `${artifact.name.replace(/^@/, "").replace("/", "-")}-${artifact.version}.tgz`;
 
   // EVERYTHING HERE HAPPENS OUTSIDE THE CHECKOUT, and that is the point rather than a detail.
   //
@@ -94,13 +95,21 @@ function agentSteps(artifact: PinnedAgentArtifact, registrySecretName: string): 
         shell: bash
         run: |
           set -euo pipefail
-          {${scope ? `\n            echo "${scope}:registry=https://registry.npmjs.org/"` : ""}
+          mkdir -p "\${RUNNER_TEMP}/diffci-package"
+          trap 'rm -f "\${RUNNER_TEMP}/.npmrc"' EXIT
+          {${scope ? `\n            echo "${scope}:registry=https://registry.npmjs.org/"` : ""}${registryAuthRequired ? `
             echo "//registry.npmjs.org/:_authToken=\${DIFFCI_REGISTRY_TOKEN}"
+` : "\n"}
           } > "\${RUNNER_TEMP}/.npmrc"
+          npm pack --userconfig "\${RUNNER_TEMP}/.npmrc" --ignore-scripts \\
+            --pack-destination "\${RUNNER_TEMP}/diffci-package" ${artifact.name}@${artifact.version}
+          node -e 'const fs = require("node:fs"), crypto = require("node:crypto"); const [file, expected] = process.argv.slice(1); const algorithm = expected.split("-")[0]; const actual = algorithm + "-" + crypto.createHash(algorithm).update(fs.readFileSync(file)).digest("base64"); if (actual !== expected) throw new Error("DiffCI package integrity mismatch");' \\
+            "\${RUNNER_TEMP}/diffci-package/${tarball}" '${artifact.integrity}'
           npm install --userconfig "\${RUNNER_TEMP}/.npmrc" --prefix "\${RUNNER_TEMP}/diffci" \\
-            --no-audit --no-fund ${artifact.name}@${artifact.version}
+            --ignore-scripts --no-audit --no-fund "\${RUNNER_TEMP}/diffci-package/${tarball}"${registryAuthRequired ? `
         env:
           DIFFCI_REGISTRY_TOKEN: \${{ secrets.${registrySecretName} }}
+` : "\n"}
 
       # A block scalar, not an inline value. An inline \`run:\` beginning with a quote is parsed by YAML
       # as a quoted scalar with trailing content after the closing quote, which makes the whole
@@ -149,13 +158,17 @@ jobs:
         with:
           # DiffCI compares two commits; the default shallow checkout does not contain the base one.
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
 ${agentSteps(artifact, registrySecretName)}
 `;
 
+  const registryAuthRequired = artifact.kind === "npm" && artifact.name !== "@diffci.com/diffci";
   const steps = [
-    `Add a repository secret named ${registrySecretName} with the DiffCI registry token shown once above (Settings -> Secrets and variables -> Actions -> New repository secret). It is read-only and only permits installing the DiffCI agent.`,
-    `Add a second repository secret named ${secretName} with the ingest token shown once above.`,
+    ...(registryAuthRequired ? [`Add a repository secret named ${registrySecretName} with a read-only registry credential supplied by your package administrator (Settings -> Secrets and variables -> Actions -> New repository secret).`] : []),
+    `Add a repository secret named ${secretName} with the ingest token shown once above.`,
     `Commit the file below as ${workflowPath}.`,
     `Open a pull request, or push to ${defaultBranch}. The job appears as "DiffCI observation" and the report is sent here.`,
     `Nothing else changes: no existing job is modified, and no job waits on this one.`,
@@ -164,7 +177,7 @@ ${agentSteps(artifact, registrySecretName)}
 
   return {
     secretName,
-    registrySecretName,
+    ...(registryAuthRequired ? { registrySecretName } : {}),
     workflowPath,
     workflowYaml,
     agent: artifact.display,

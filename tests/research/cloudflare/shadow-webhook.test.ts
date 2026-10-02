@@ -45,6 +45,17 @@ async function deliver(eventName: string, payload: unknown, deps: ShadowWebhookD
 }
 
 describe("handleShadowWebhook", () => {
+  it("waits for erasure and propagates failures so a failed deletion is not acknowledged", async () => {
+    const { deps } = makeDeps();
+    deps.eraseInstallation = async () => { throw new Error("storage unavailable"); };
+    await assert.rejects(deliver("installation", { action: "deleted", installation: { id: 123 } }, deps), /storage unavailable/);
+    let removed: string[] = [];
+    deps.eraseRepositories = async (id, repos) => { assert.equal(id, "123"); removed = repos; };
+    const result = await deliver("installation_repositories", { action: "removed", installation: { id: 123 }, repositories_removed: [{ full_name: "acme/web" }] }, deps);
+    assert.equal(result.status, 200);
+    assert.deepEqual(removed, ["acme/web"]);
+  });
+
   it("rejects an invalid signature with 401 and processes nothing - ping included", async () => {
     const { deps, calls } = makeDeps();
     const outcome = await deliver("ping", { zen: "hi" }, deps, { badSignature: true });
@@ -84,18 +95,18 @@ describe("handleShadowWebhook", () => {
     ]);
   });
 
-  it("logs an uninstall loudly as unerased when no eraseInstallation dependency is configured", async () => {
+  it("refuses to acknowledge uninstall when erasure is unavailable", async () => {
     const { deps, calls } = makeDeps();
     assert.equal(deps.eraseInstallation, undefined, "makeDeps()'s baseline fixture must not supply it - every existing caller stays unaffected");
     const outcome = await deliver("installation", { action: "deleted", installation: { id: 12345 } }, deps);
-    assert.equal(outcome.status, 200);
+    assert.equal(outcome.status, 503);
     assert.deepEqual(calls.enrolled, []);
-    assert.equal(calls.logs.filter((l) => l.includes("deleted") && l.includes("NOT performed")).length, 1, "an unconfigured environment must say so loudly, never silently claim the data-handling.html promise was kept");
+    assert.equal(outcome.body.error, "erasure_unavailable");
   });
 
   it("triggers eraseInstallation with the installation id when configured, on delete only", async () => {
     const { deps, calls } = makeDeps();
-    deps.eraseInstallation = (installationId) => calls.erasures.push(installationId);
+    deps.eraseInstallation = (installationId) => { calls.erasures.push(installationId); };
     const outcome = await deliver("installation", { action: "deleted", installation: { id: 12345 } }, deps);
     assert.equal(outcome.status, 200);
     assert.equal(outcome.body.action, "installation-deleted-erasure-scheduled");
@@ -104,7 +115,7 @@ describe("handleShadowWebhook", () => {
 
   it("does NOT erase on suspend - a suspension is reversible by the same tenant, unlike an uninstall", async () => {
     const { deps, calls } = makeDeps();
-    deps.eraseInstallation = (installationId) => calls.erasures.push(installationId);
+    deps.eraseInstallation = (installationId) => { calls.erasures.push(installationId); };
     const outcome = await deliver("installation", { action: "suspend", installation: { id: 12345 } }, deps);
     assert.equal(outcome.status, 200);
     assert.equal(outcome.body.action, "installation-suspend-acknowledged");

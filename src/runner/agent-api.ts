@@ -89,8 +89,8 @@ export async function handleClaim(rawToken: string, deps: AgentApiDeps): Promise
   const claimed = await deps.tokenStore.markClaimed(rawToken);
   if (!claimed) return { ok: false, error: "already_claimed" }; // Part 28: token replay / wrong (repeat) job claim
 
-  const queueItem = await deps.queueStore.getItem(verified.record.jobId);
-  if (!queueItem) return { ok: false, error: "job_not_found" };
+  const queueItem = await deps.queueStore.getItemForOrganization(verified.record.jobId, verified.record.organizationId);
+  if (!queueItem || queueItem.assignedRunnerId !== verified.record.runnerId || queueItem.status !== "assigned") return { ok: false, error: "job_not_found" };
 
   let steps: ClaimStep[];
   try {
@@ -105,11 +105,11 @@ export async function handleClaim(rawToken: string, deps: AgentApiDeps): Promise
     return { ok: false, error: "job_not_found" }; // a corrupt/invalid stored job spec is treated the same as "no such job" - never partially trusted
   }
 
+  if (!await deps.queueStore.startExecution(queueItem.id, verified.record.organizationId, verified.record.runnerId)) return { ok: false, error: "job_not_found" };
   await deps.runnerStore.transitionRunnerStatus(verified.record.runnerId, "busy");
   await deps.runnerStore.recordHeartbeat(verified.record.runnerId);
   // R2 Part 23: the queue item moves to 'running' the moment real execution actually starts - closes
   // the R1 gap where nothing past 'assigned' was ever reachable.
-  await deps.queueStore.updateStatus(verified.record.jobId, "running");
   await deps.recordAuditEvent({ organizationId: verified.record.organizationId, action: "runner.execution_started", targetType: "runner", targetId: verified.record.runnerId, metadata: { jobId: verified.record.jobId } });
 
   return { ok: true, data: { runnerId: verified.record.runnerId, jobId: verified.record.jobId, steps } };
@@ -141,6 +141,12 @@ export async function handleResult(input: SubmitResultInput, deps: AgentApiDeps)
   if (!verified.ok) return { ok: false, error: tokenFailureToError(verified.reason) };
 
   const runtimeSeconds = Math.max(0, input.durationMs) / 1000;
+  if (!verified.record.resultSubmittedAt) {
+    const job = await deps.queueStore.getItemForOrganization(verified.record.jobId, verified.record.organizationId);
+    if (!job || job.assignedRunnerId !== verified.record.runnerId || !["assigned", "running"].includes(job.status)) {
+      return { ok: false, error: "job_not_found" };
+    }
+  }
   const submitted = await deps.tokenStore.markResultSubmitted(input.token);
   if (!submitted) {
     // Part 28: a duplicate result callback is a safe, idempotent no-op - never a second usage event,

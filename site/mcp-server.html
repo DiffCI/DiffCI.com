@@ -17,7 +17,7 @@
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"DiffCI MCP Server","description":"A stateless HTTPS MCP server for change-aware CI validation, affected-test guidance, report interpretation, and GitHub Actions workflow safety checks.","url":"https://diffci.com/mcp-server","applicationCategory":"DeveloperApplication","operatingSystem":"Any MCP client","isAccessibleForFree":true,"softwareVersion":"0.2.9","codeRepository":"https://github.com/DiffCI/DiffCI.com","publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"MCP server","item":"https://diffci.com/mcp-server"}]}]}
+{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"DiffCI MCP Server","description":"A stateless HTTPS MCP server for change-aware CI validation, affected-test guidance, report interpretation, and GitHub Actions workflow safety checks.","url":"https://diffci.com/mcp-server","applicationCategory":"DeveloperApplication","operatingSystem":"Any MCP client","isAccessibleForFree":true,"softwareVersion":"0.3.0-rc.1","codeRepository":"https://github.com/DiffCI/DiffCI.com","publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"MCP server","item":"https://diffci.com/mcp-server"}]}]}
 </script>
 </head>
 <body>
@@ -71,7 +71,7 @@ codex mcp list</code></pre><p class="fine">This uses Codex's supported remote HT
   <p>The HTTPS endpoint is stateless. It requires no account, stores no session, receives no repository content unless you explicitly pass a report or workflow to a tool, and never executes a command.</p>
   <p>For tools that inspect a checkout or run tests, use the local stdio server from the repository directory:</p>
   <pre><code>npx -p "@diffci.com/diffci@latest" diffci-mcp</code></pre>
-  <p>The local server exposes <code>diffci_check</code>, <code>diffci_init</code>, and <code>diffci_verify_workflow</code>. Required project CI remains authoritative.</p>
+  <p>The local server exposes <code>diffci_verify_changed</code> for working-tree edits, <code>diffci_verify</code> for clean commit ranges, <code>diffci_check</code> for paired measurement, plus initialization and workflow tools. Verification returns a <code>diffci.verification.v1</code> receipt; required project CI remains authoritative.</p>
 </div></section>
 
 <section class="numbered"><div class="wrap">

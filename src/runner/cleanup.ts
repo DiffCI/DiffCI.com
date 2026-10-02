@@ -24,6 +24,7 @@ export const DEFAULT_TIMEOUT_CONFIG: TimeoutConfig = {
 const STATUS_TIMEOUT_MS: Record<string, keyof TimeoutConfig> = {
   requested: "maxProvisioningMs",
   provisioning: "maxProvisioningMs",
+  terminating: "maxProvisioningMs",
   ready: "maxIdleReadyMs",
   assigned: "maxIdleReadyMs",
   busy: "maxExecutionMs",
