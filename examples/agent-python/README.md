@@ -5,7 +5,7 @@ Node.js because the current package is distributed through npm.
 
 ```bash
 npx "@diffci.com/diffci@latest" init
-npx "@diffci.com/diffci@latest" check
+npx "@diffci.com/diffci@latest" verify --changed --json
 ```
 
 Keep normal Python checks such as `pytest`, `ruff`, or `mypy` authoritative.

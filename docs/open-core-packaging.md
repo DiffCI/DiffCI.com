@@ -2,6 +2,12 @@
 
 **Date:** 2026-09-19
 
+**Status clarification, 2026-09-25:** this document describes the intended product boundary, not a
+completed commercial launch or accepted Tidelift offering. See [`distribution.md`](distribution.md)
+for dated channel status. The observation-only promise below applies to `observe` and the Action;
+the CLI's explicitly invoked `check`, `pilot`, and `verify-savings` commands execute tests for runtime
+comparison. Hosted feature lists describe scope and do not establish general availability.
+
 DiffCI should be packaged as an open-source core with a commercial hosted layer. The core earns trust by
 being inspectable, local, and inert. The commercial product sells memory, coordination, policy, and
 operations around that core.

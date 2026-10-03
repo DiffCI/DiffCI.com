@@ -1,5 +1,9 @@
 # Tidelift one-pager
 
+**Reviewed 2026-09-25:** proposed support scope, not an accepted Tidelift offering. See
+[`tidelift-package-support.md`](tidelift-package-support.md) for readiness and
+[`distribution.md`](distribution.md) for current distribution status.
+
 ## Package
 
 `@diffci.com/diffci`
@@ -16,10 +20,11 @@ npm / JavaScript / TypeScript
 
 ## What the package does
 
-DiffCI Core is an observation-only CI analysis package. It reads a checkout, analyzes the changed files,
-and reports what DiffCI would have selected. It does not skip, cancel, reorder, block, or modify CI.
+DiffCI analyzes changed files and reports proposed test selections. `observe` and the basic GitHub
+Action are observation-only. The CLI also provides explicitly invoked `check`, `pilot`, and
+`verify-savings` commands that execute tests for runtime comparison without replacing required CI.
 
-Supported package surfaces:
+Proposed support surfaces (to agree with Tidelift):
 
 - `diffci observe`
 - `diffci verify-workflow`

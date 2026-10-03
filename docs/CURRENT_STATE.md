@@ -1,4 +1,10 @@
-# DiffCI — Current State
+# DiffCI — Historical research state (2026-08-21)
+
+> Current distribution and release status is tracked in [`distribution.md`](distribution.md), reviewed
+> 2026-09-25. The snapshot below describes August research infrastructure, not today's release or
+> commercial readiness. In current releases, `check`, `pilot`, and `verify-savings` can execute tests;
+> `observe` and the GitHub Action remain observation-only. Historical counts and infrastructure claims
+> below have not been reverified as part of the documentation update.
 
 **Original snapshot:** 2026-08-21 (live-verified against the deployed Worker and this repo's own CI at
 the time of writing) · **CI operations updated:** 2026-09-25

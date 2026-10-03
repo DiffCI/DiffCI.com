@@ -1,7 +1,8 @@
 # Tidelift outreach draft
 
-Use this after publishing the next npm release with AGPL metadata, support policies, and package-boundary
-checks.
+Draft reviewed 2026-09-25. npm publication is complete; recheck the intended release's metadata,
+support policies, and package-boundary checks before sending. No sending or acceptance confirmation
+is recorded here. See [`distribution.md`](distribution.md) for the dated live status.
 
 ## Short ask
 
@@ -9,12 +10,12 @@ Subject: Supported npm package inquiry for `@diffci.com/diffci`
 
 Hello Tidelift team,
 
-We maintain `@diffci.com/diffci`, an AGPL-3.0-only npm package for observation-only CI analysis. We
+We maintain `@diffci.com/diffci`, an AGPL-3.0-only npm package for change-aware CI analysis. We
 would like to make it available as a supported open-source package through Tidelift.
 
-DiffCI Core runs in a customer's own CI environment, keeps source code local, and reports what DiffCI
-would have selected. It does not skip, cancel, reorder, block, or modify CI. DiffCI Cloud is a separate
-commercial hosted product and is not part of the OSS package support boundary.
+The `observe` command and basic GitHub Action report proposed selections without changing required CI.
+The CLI's explicitly invoked `check`, `pilot`, and `verify-savings` commands execute tests for runtime
+comparison. DiffCI Cloud is a separate commercial hosted product outside the OSS package support boundary.
 
 Package and project details:
 
@@ -41,4 +42,4 @@ DiffCI maintainers
 - npm package URL
 - GitHub repository URL
 - latest release tag
-- install evidence under `docs/evidence/alpha-install-smoke-01/`
+- current release qualification and install evidence (the `alpha-install-smoke-01` record is historical `0.1.3` evidence)
