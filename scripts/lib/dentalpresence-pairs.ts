@@ -9,6 +9,11 @@ const mono = (value: unknown): bigint | null => typeof value === "string" && /^\
 
 export interface PairArtifact { pair: unknown; predictionBytes: Buffer; receiptBytes: Buffer }
 
+export const DENTALPRESENCE_SELECTOR_PINS: Readonly<Record<string, string>> = {
+  "0.2.11": "sha512-c6mWfEU7P6k+nroa0LO7/NJyR/Ubzoa36mh3XRoWSOzkZwYIcGC+2QfbM+gHzCWsAqWew4sM0KT3XleSrjqosg==",
+  "0.3.2": "sha512-45tYPyabvMjrhlJCPtEP0UUeIVY567XZl6eGsIXy1LSHADmr9Dj1VSvh7HIAtfea03ZbTwhJ2s8sh/YTSU8Mwg==",
+};
+
 /** Recompute eligibility from the artifacts, never trust producer assessment booleans. */
 function inspectPair(input: PairArtifact) {
   const invalid = (reason: string) => ({ accepted: false as const, reason });
@@ -36,8 +41,9 @@ function inspectPair(input: PairArtifact) {
       identity.headSha !== pair.executedSha || identity.baseSha !== pair.baseSha || prediction.schema !== "diffci.observation.v1" ||
       prediction.status !== "OBSERVED" || prediction.commitRange?.headSha !== pair.executedSha || prediction.commitRange?.baseSha !== pair.baseSha ||
       prediction.nonInterference?.worktreeUnchanged !== true) return invalid("PREDICTION_IDENTITY");
-  if (pair.selectorPackage?.version !== "0.2.11" ||
-      pair.selectorPackage.integrity !== "sha512-c6mWfEU7P6k+nroa0LO7/NJyR/Ubzoa36mh3XRoWSOzkZwYIcGC+2QfbM+gHzCWsAqWew4sM0KT3XleSrjqosg==" ||
+  const selectorVersion = pair.selectorPackage?.version;
+  if (typeof selectorVersion !== "string" || !Object.hasOwn(DENTALPRESENCE_SELECTOR_PINS, selectorVersion) ||
+      pair.selectorPackage.integrity !== DENTALPRESENCE_SELECTOR_PINS[selectorVersion] ||
       prediction.observer?.version !== pair.selectorPackage.version || identity.selectorVersion !== pair.selectorPackage.version) return invalid("SELECTOR_IDENTITY");
   if (pair.mode !== "SELECTIVE" || prediction.result?.mode !== "SELECTIVE") return invalid("FULL_FALLBACK");
   const files: unknown = prediction.result.selectedTests;
