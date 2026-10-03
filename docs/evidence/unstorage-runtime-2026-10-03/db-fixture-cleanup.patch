@@ -1,0 +1,15 @@
+diff --git a/test/drivers/db0.test.ts b/test/drivers/db0.test.ts
+index 05b70dd..d41c100 100644
+--- a/test/drivers/db0.test.ts
++++ b/test/drivers/db0.test.ts
+@@ -46,6 +46,10 @@ for (const driver of drivers) {
+     const db = await driver.getDB();
+ 
+     afterAll(async () => {
++      // testDriver disposes in-memory databases; only persistent MySQL needs table cleanup.
++      if (driver.name !== "mysql") {
++        return;
++      }
+       const dbCleanup = await driver.getDB();
+       await dbCleanup.sql`DROP TABLE IF EXISTS unstorage`;
+       await dbCleanup.dispose();

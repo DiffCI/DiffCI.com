@@ -168,7 +168,7 @@ function tail(value: string, bytes: number): string {
   return value.slice(-bytes);
 }
 
-function readSelectionFromObservation(path: string): ResolvedSelection {
+function readSelectionFromObservation(path: string, override?: string): ResolvedSelection {
   const absolutePath = resolve(path);
   const bytes = readFileSync(absolutePath);
   const parsed = JSON.parse(bytes.toString("utf8")) as {
@@ -184,10 +184,10 @@ function readSelectionFromObservation(path: string): ResolvedSelection {
   };
   if (parsed.status !== "OBSERVED") throw new Error(`--selected-from-report requires an OBSERVED report; got ${String(parsed.status)}`);
   const commands = parsed.result?.proposedCommands;
-  if (!Array.isArray(commands) || commands.length !== 1 || typeof commands[0] !== "string" || !commands[0].trim()) {
+  if (!Array.isArray(commands) || !commands.length || commands.some(command => typeof command !== "string" || !command.trim()) || (commands.length !== 1 && !override)) {
     throw new Error("--selected-from-report requires exactly one non-empty proposed command; use --selected with an explicit command covering the complete selection for multi-command plans");
   }
-  const command = commands[0];
+  const command = override ?? commands[0];
   const selectedTests = Array.isArray(parsed.result?.selectedTests) ? parsed.result.selectedTests : undefined;
   return {
     command,
@@ -324,8 +324,7 @@ function buildProvenance(
 
 function resolveSelection(options: VerifySavingsOptions): ResolvedSelection {
   if (options.selectedFromReport) {
-    const selection = readSelectionFromObservation(options.selectedFromReport);
-    return options.selectedCommandOverride ? { ...selection, command: options.selectedCommandOverride } : selection;
+    return readSelectionFromObservation(options.selectedFromReport, options.selectedCommandOverride);
   }
   if (!options.selected) throw new Error("--selected <command> or --selected-from-report <path> is required");
   return { command: options.selected, source: "manual" };
@@ -494,7 +493,11 @@ export function buildVerifySavingsReport(input: {
   const selectedCommandSucceeded = trials.every((trial) => trial.selected.exitCode === 0 && !trial.selected.timedOut);
   const missedFailureSignal = trials.some((trial) => (trial.full.exitCode !== 0 || trial.full.timedOut) && trial.selected.exitCode === 0 && !trial.selected.timedOut);
   const preparationsSucceeded = trials.every((trial) => trial.preparations.every((preparation) => preparation.exitCode === 0 && !preparation.timedOut));
-  const evidenceValid = fullCommandSucceeded && selectedCommandSucceeded && provenance.checkoutStable && preparationsSucceeded;
+  // A suspended runner or clock discontinuity can exceed spawnSync's active timeout
+  // while the child still exits zero. Such elapsed times cannot establish savings.
+  const elapsedTimesValid = trials.every((trial) => [...trial.preparations, trial.full, trial.selected]
+    .every((measurement) => Number.isFinite(measurement.wallMs) && measurement.wallMs >= 0 && (input.timeoutMs === 0 || measurement.wallMs <= input.timeoutMs)));
+  const evidenceValid = fullCommandSucceeded && selectedCommandSucceeded && provenance.checkoutStable && preparationsSucceeded && elapsedTimesValid;
   const performanceEvidence = !evidenceValid
     ? "INVALID"
     : protocol.repetitions >= 3 && protocol.alternatingOrder && protocol.cacheStateControlled
@@ -513,6 +516,7 @@ export function buildVerifySavingsReport(input: {
     ? "Runtime evidence used at least three alternating, cache-prepared repetitions."
     : "Runtime evidence is preliminary until at least three alternating, cache-prepared repetitions agree.");
   if (missedFailureSignal) notes.push("Full failed while selected passed; inspect outputs before treating the selection as safe.");
+  if (!elapsedTimesValid) notes.push("Timing invalid: elapsed wall time is outside the configured timeout bounds; runner suspension or a clock discontinuity may have occurred.");
   if (input.provenance && !input.provenance.checkoutStable) notes.push(`Checkout provenance invalid: ${input.provenance.invalidReasons.join("; ")}.`);
 
   return {
@@ -756,7 +760,8 @@ export function formatVerifySavingsSummary(report: VerifySavingsReport): string 
       (report.comparison.missedFailureSignal ? "\n  warning: full failed while selected passed; inspect outputs before claiming safety" : "");
   }
   if (!report.comparison.evidenceValid) {
-    return `DiffCI verify-savings: comparison invalid because checkout provenance failed\n  ${report.provenance.invalidReasons.join("; ")}`;
+    if (!report.provenance.checkoutStable) return `DiffCI verify-savings: comparison invalid because checkout provenance failed\n  ${report.provenance.invalidReasons.join("; ")}`;
+    return `DiffCI verify-savings: comparison invalid\n  ${report.notes.find(note => note.startsWith("Timing invalid:")) ?? "Cache preparation failed."}`;
   }
   const lines = [
     `DiffCI verify-savings: ${report.comparison.performanceEvidence === "CONTROLLED" ? "controlled repeated" : "preliminary"} test execution ${Math.abs(report.comparison.grossPercentChange).toFixed(1)}% ${report.comparison.grossPercentChange >= 0 ? "faster" : "slower"} (${report.comparison.repetitions} ${report.comparison.repetitions === 1 ? "trial" : "trials"})`,

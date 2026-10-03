@@ -33,6 +33,30 @@ const verifiedProvenance = (): SavingsProvenance => ({
 });
 
 describe("verify-savings pilot report", () => {
+  it("rejects suspended or invalid elapsed measurements even when every command passed", () => {
+    for (const phase of ["full", "selected", "preparation"] as const) {
+      for (const wallMs of [4_615_617, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+        const full = measurement("npm test", 0, phase === "full" ? wallMs : 500);
+        const selected = measurement("npm test a.test.ts", 0, phase === "selected" ? wallMs : 100);
+        const provenance = verifiedProvenance();
+        const report = buildReport({
+          cwd: "/repo", timeoutMs: 1000, selection: { source: "manual" }, full, selected, provenance,
+          trials: [{ index: 1, order: ["full", "selected"], cacheState: { full: "cold", selected: "cold" },
+            preparations: phase === "preparation" ? [measurement("reset cache", 0, wallMs)] : [], full, selected, provenance }],
+        });
+        assert.equal(report.comparison.fullCommandSucceeded, true);
+        assert.equal(report.comparison.selectedCommandSucceeded, true);
+        assert.equal(report.comparison.evidenceValid, false);
+        assert.equal(report.comparison.performanceEvidence, "INVALID");
+        assert.match(formatVerifySavingsSummary(report), /Timing invalid:.*timeout bounds/);
+        assert.doesNotMatch(formatVerifySavingsSummary(report), /faster|saved/);
+      }
+    }
+    const unlimited = buildReport({ cwd: "/repo", timeoutMs: 0, selection: { source: "manual" },
+      full: measurement("npm test", 0, 500), selected: measurement("npm test a.test.ts", 0, 100), provenance: verifiedProvenance() });
+    assert.equal(unlimited.comparison.evidenceValid, true);
+  });
+
   it("invalidates a passing pair when the full command changes the worktree", () => {
     const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-provenance-"));
     execFileSync("git", ["init", "--quiet"], { cwd: dir });
