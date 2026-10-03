@@ -414,6 +414,8 @@ function assessFailures(trials: readonly SavingsTrial[]): FailureAssessment {
 export function measureCommand(command: string, options: Pick<VerifySavingsOptions, "cwd" | "timeoutMs" | "tailBytes">): CommandMeasurement {
   const startedAt = new Date().toISOString();
   const started = Date.now();
+  // Match the shell used by Windows package scripts, including && short-circuiting
+  // and native exit codes; Windows PowerShell 5 cannot execute those chains.
   const shellCommand = process.platform === "win32" ? "cmd.exe" : "sh";
   const shellArgv = process.platform === "win32" ? ["/d", "/s", "/c", command] : ["-c", command];
   const result = spawnSync(shellCommand, shellArgv, {
@@ -562,6 +564,12 @@ function formatPercent(value: number): string {
   return `${value >= 0 ? "+" : ""}${value.toFixed(1)}%`;
 }
 
+export function formatGrowthPrompt(report: VerifySavingsReport): string {
+  return report.comparison.evidenceValid && report.comparison.percentChange > 0
+    ? "Useful? Star the open-source engine: https://github.com/DiffCI/core"
+    : "";
+}
+
 export function renderVerifySavingsMarkdown(report: VerifySavingsReport): string {
   const deltaLabel = report.comparison.deltaMs >= 0 ? "faster" : "slower";
   const overhead = report.analysisOverheadMs === undefined ? "not provided" : formatMs(report.analysisOverheadMs);
@@ -664,6 +672,9 @@ ${!report.comparison.fullCommandSucceeded || !report.comparison.selectedCommandS
 ## Interpretation Notes
 
 ${report.notes.map((note) => `- ${note}`).join("\n")}
+
+Open-source engine: [DiffCI/core](https://github.com/DiffCI/core).
+${formatGrowthPrompt(report) ? "\nUseful? [Star DiffCI](https://github.com/DiffCI/core) or [volunteer a pilot repository](https://diffci.com/#pilot).\n" : ""}
 `;
 }
 
