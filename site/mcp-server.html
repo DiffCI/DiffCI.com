@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0c0e11">
 <title>DiffCI MCP Server for CI Validation &amp; Affected Tests</title>
-<meta name="description" content="Connect coding agents to DiffCI's free HTTPS MCP server for change-aware CI validation, affected-test guidance, report interpretation, and workflow safety checks.">
+<meta name="description" content="Connect coding agents to DiffCI's free HTTPS MCP server for affected-test guidance, CI report interpretation, and GitHub Actions safety checks.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="DiffCI">
 <meta property="og:title" content="DiffCI MCP Server for CI Validation &amp; Affected Tests">
 <meta property="og:description" content="A stateless HTTPS MCP server for change-aware CI validation, affected-test guidance, and GitHub Actions safety checks.">
 <meta property="og:url" content="https://diffci.com/mcp-server">
-<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="DiffCI MCP Server for CI Validation &amp; Affected Tests">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="DiffCI MCP Server for CI Validation &amp; Affected Tests"><meta name="twitter:description" content="A stateless HTTPS MCP server for change-aware CI validation, affected-test guidance, and GitHub Actions safety checks."><meta name="twitter:image" content="https://diffci.com/assets/diffci-social-card.png">
 <link rel="canonical" href="https://diffci.com/mcp-server">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"DiffCI MCP Server","description":"A stateless HTTPS MCP server for change-aware CI validation, affected-test guidance, report interpretation, and GitHub Actions workflow safety checks.","url":"https://diffci.com/mcp-server","applicationCategory":"DeveloperApplication","operatingSystem":"Any MCP client","isAccessibleForFree":true,"softwareVersion":"0.3.2","codeRepository":"https://github.com/DiffCI/DiffCI.com","publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"MCP server","item":"https://diffci.com/mcp-server"}]}]}
+{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"DiffCI MCP Server","description":"A stateless HTTPS MCP server for change-aware CI validation, affected-test guidance, report interpretation, and GitHub Actions workflow safety checks.","url":"https://diffci.com/mcp-server","applicationCategory":"DeveloperApplication","operatingSystem":"Any MCP client","isAccessibleForFree":true,"softwareVersion":"0.2.9","codeRepository":"https://github.com/DiffCI/DiffCI.com","publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"MCP server","item":"https://diffci.com/mcp-server"}]}]}
 </script>
 </head>
 <body>
@@ -27,6 +27,7 @@
 <section class="hero"><div class="wrap">
   <p class="hero-claim">Public Streamable HTTP MCP</p>
   <h1>Give coding agents a safe CI-validation tool.</h1>
+  <p>The engine is open source: <a href="https://github.com/DiffCI/core">star DiffCI/core</a> or watch Releases and Discussions for support and benchmark updates.</p>
   <p class="lede">DiffCI's public MCP server plans change-aware validation, interprets observation reports, and checks GitHub Actions isolation without credentials or repository access.</p>
   <pre><code>https://diffci.com/mcp</code></pre>
   <div class="hero-actions"><a class="button" href="#connect">Connect your client</a><a class="button-secondary" href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/mcp.md">View source and docs</a></div>
@@ -37,14 +38,14 @@
   <div class="install-grid">
     <article class="install-panel"><p class="kicker">Codex</p><h3>Codex CLI and app</h3><pre><code>codex mcp add diffci --url https://diffci.com/mcp
 codex mcp list</code></pre><p class="fine">This uses Codex's supported remote HTTP configuration. <a href="https://developers.openai.com/learn/docs-mcp">Official Codex MCP docs →</a></p></article>
-    <article class="install-panel"><p class="kicker">Claude Code</p><h3>Add an HTTP server</h3><pre><code>claude mcp add --transport http diffci https://diffci.com/mcp</code></pre></article>
+    <article class="install-panel"><p class="kicker">Claude Code</p><h3>Add an HTTP server</h3><pre><code>claude mcp add --transport http diffci https://diffci.com/mcp</code></pre><p class="fine"><a href="/docs/claude-code">Claude Code setup and verification →</a></p></article>
     <article class="install-panel"><p class="kicker">Cursor</p><h3>MCP JSON</h3><pre><code>{
   "mcpServers": {
     "diffci": {
       "url": "https://diffci.com/mcp"
     }
   }
-}</code></pre></article>
+}</code></pre><p class="fine"><a href="/docs/cursor">Cursor rules, MCP, and troubleshooting →</a></p></article>
     <article class="install-panel"><p class="kicker">VS Code</p><h3>MCP JSON</h3><pre><code>{
   "servers": {
     "diffci": {
@@ -64,6 +65,11 @@ codex mcp list</code></pre><p class="fine">This uses Codex's supported remote HT
     <li><strong><code>diffci_verify_workflow_text</code></strong> checks one GitHub Actions YAML document for a dedicated, non-blocking, read-only observer job and immutable references.</li>
   </ul>
   <p>The server also exposes the <code>diffci_validate_change</code> prompt and agent-policy/setup resources.</p>
+  <h3>Example tasks</h3>
+  <pre><code>Plan a read-only validation command for this repository change.
+Interpret this diffci.observation.v1 report and explain every fallback.
+Check whether this observer workflow can block or influence required CI.</code></pre>
+  <p>The public endpoint returns plans and interpretations. It cannot inspect a local checkout because the server has no access to the caller's filesystem; use the local stdio server when a tool needs to read Git history, dependency files, or test configuration.</p>
 </div></section>
 
 <section class="numbered" id="boundary"><div class="wrap">
@@ -71,7 +77,14 @@ codex mcp list</code></pre><p class="fine">This uses Codex's supported remote HT
   <p>The HTTPS endpoint is stateless. It requires no account, stores no session, receives no repository content unless you explicitly pass a report or workflow to a tool, and never executes a command.</p>
   <p>For tools that inspect a checkout or run tests, use the local stdio server from the repository directory:</p>
   <pre><code>npx -p "@diffci.com/diffci@latest" diffci-mcp</code></pre>
-  <p>The local server exposes <code>diffci_verify_changed</code> for working-tree edits, <code>diffci_verify</code> for clean commit ranges, <code>diffci_check</code> for paired measurement, plus initialization and workflow tools. Verification returns a <code>diffci.verification.v1</code> receipt; required project CI remains authoritative.</p>
+  <p>The local server exposes <code>diffci_verify</code>, <code>diffci_verify_changed</code>, <code>diffci_check</code>, <code>diffci_init</code>, and <code>diffci_verify_workflow</code>. The verification tools return a structured receipt and block unless the exact commit range or working-tree snapshot passes. Required project CI remains authoritative.</p>
+  <div class="table-scroll"><table><thead><tr><th>Connection</th><th>Can read checkout</th><th>Can run repository tests</th><th>Use for</th></tr></thead><tbody><tr><td>Public HTTPS</td><td>No</td><td>No</td><td>Plans, report interpretation, and submitted workflow-text checks</td></tr><tr><td>Local stdio</td><td>Yes, from configured working directory</td><td>Only when the selected tool and mode permit it</td><td>Real Git diff analysis, affected tests, initialization, and paired validation</td></tr></tbody></table></div>
+</div></section>
+
+<section class="numbered" id="troubleshooting"><div class="wrap">
+  <h2>Troubleshoot the connection</h2>
+  <div class="table-scroll"><table><thead><tr><th>Symptom</th><th>Check</th><th>Resolution</th></tr></thead><tbody><tr><td>Server is absent from the client</td><td>Transport must be Streamable HTTP and the URL must end in <code>/mcp</code>.</td><td>Re-add the server, restart client discovery, and list configured MCP servers.</td></tr><tr><td>Local tool cannot find a repository</td><td>The stdio process inherited the wrong working directory.</td><td>Set <code>cwd</code> to the Git repository root and retry.</td></tr><tr><td><code>REFUSED</code> result</td><td>Comparison commits, Node, Git, or repository shape did not meet eligibility.</td><td>Preserve the reason and run the repository's normal validation.</td></tr><tr><td>Workflow check reports dependency findings</td><td>The observer may be required by another job or lack <code>continue-on-error</code>.</td><td>Restore isolation before treating the job as non-blocking.</td></tr></tbody></table></div>
+  <p>For a client-independent policy, start with <a href="/docs/ai-agents">CI validation for AI coding agents</a>. For execution behavior and full-run triggers, use the <a href="/guides/affected-tests">affected-tests safety guide</a>.</p>
 </div></section>
 
 <section class="numbered"><div class="wrap">
