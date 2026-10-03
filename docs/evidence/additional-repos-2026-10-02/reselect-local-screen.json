@@ -1,0 +1,134 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-10-02T13:58:45.671Z",
+  "observer": {
+    "version": "0.3.1",
+    "engineSha": "721bc390024853ef9850fe634360e2a0d1a77596",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "f4a5eba22e289522cc5fe7ad1adc83c45876b865",
+    "headSha": "099dcf89c84e0614f1f7b1cf83b5ae2b37b42616",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 4,
+    "changedFiles": [
+      "src/weakMapMemoize.ts",
+      "test/weakMapMemoize.maxSize.spec.ts",
+      "type-tests/argsMemoize.test-d.ts",
+      "typescript_test/argsMemoize.typetest.ts"
+    ],
+    "affectedSourceFileCount": 17,
+    "selectedTests": [
+      "test/autotrackMemoize.spec.ts",
+      "test/cacheSizeCheck.test.ts",
+      "test/computationComparisons.spec.tsx",
+      "test/createSelector.withTypes.test.ts",
+      "test/createStructuredSelector.spec.ts",
+      "test/createStructuredSelector.withTypes.test.ts",
+      "test/examples.test.ts",
+      "test/identityFunctionCheck.test.ts",
+      "test/inputStabilityCheck.spec.ts",
+      "test/lruMemoize.test.ts",
+      "test/perfComparisons.spec.ts",
+      "test/reselect.spec.ts",
+      "test/selectorUtils.spec.ts",
+      "test/weakMapMemoize.allocations.spec.ts",
+      "test/weakMapMemoize.maxSize.spec.ts",
+      "test/weakMapMemoize.memory.spec.ts",
+      "test/weakmapMemoize.spec.ts"
+    ],
+    "totalTestCount": 17,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "yarn run vitest run --config vitest.config.mts test/autotrackMemoize.spec.ts test/cacheSizeCheck.test.ts test/computationComparisons.spec.tsx test/createSelector.withTypes.test.ts test/createStructuredSelector.spec.ts test/createStructuredSelector.withTypes.test.ts test/examples.test.ts test/identityFunctionCheck.test.ts test/inputStabilityCheck.spec.ts test/lruMemoize.test.ts test/perfComparisons.spec.ts test/reselect.spec.ts test/selectorUtils.spec.ts test/weakMapMemoize.allocations.spec.ts test/weakMapMemoize.maxSize.spec.ts test/weakMapMemoize.memory.spec.ts test/weakmapMemoize.spec.ts"
+    ],
+    "workspaceCommands": false,
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 37,
+      "edges": 91,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 13902,
+      "phasesMs": {
+        "repositoryDiscovery": 1032.7686,
+        "scopeDiscovery": 0.7311,
+        "adapterInventory": 143.4633,
+        "adapters": 0.3849,
+        "typescriptProgram": 12487.0269,
+        "importExtractionAndResolution": 231.7235,
+        "graphFinalization": 5.7598
+      },
+      "adapterMetrics": {}
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 17,
+      "selectedTests": [
+        "test/autotrackMemoize.spec.ts",
+        "test/cacheSizeCheck.test.ts",
+        "test/computationComparisons.spec.tsx",
+        "test/createSelector.withTypes.test.ts",
+        "test/createStructuredSelector.spec.ts",
+        "test/createStructuredSelector.withTypes.test.ts",
+        "test/examples.test.ts",
+        "test/identityFunctionCheck.test.ts",
+        "test/inputStabilityCheck.spec.ts",
+        "test/lruMemoize.test.ts",
+        "test/perfComparisons.spec.ts",
+        "test/reselect.spec.ts",
+        "test/selectorUtils.spec.ts",
+        "test/weakMapMemoize.allocations.spec.ts",
+        "test/weakMapMemoize.maxSize.spec.ts",
+        "test/weakMapMemoize.memory.spec.ts",
+        "test/weakmapMemoize.spec.ts"
+      ],
+      "matchedRules": [
+        "no directory scoping applies -> run all tests"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "099dcf89c84e0614f1f7b1cf83b5ae2b37b42616",
+    "headShaAfter": "099dcf89c84e0614f1f7b1cf83b5ae2b37b42616",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 25634,
+    "preObserveMs": 27035,
+    "phasesMs": {
+      "context": 3737,
+      "engineLoad": 4534,
+      "eligibility": 1,
+      "delta": 2845,
+      "graph": 13904,
+      "impactAndCommands": 20,
+      "finalization": 590
+    }
+  }
+}

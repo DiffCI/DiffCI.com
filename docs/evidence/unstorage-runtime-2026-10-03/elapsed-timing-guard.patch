@@ -1,0 +1,70 @@
+diff --git a/src/client/verify-savings.ts b/src/client/verify-savings.ts
+index ba3b6b7..10a551e 100644
+--- a/src/client/verify-savings.ts
++++ b/src/client/verify-savings.ts
+@@ -493,7 +493,11 @@ export function buildVerifySavingsReport(input: {
+   const selectedCommandSucceeded = trials.every((trial) => trial.selected.exitCode === 0 && !trial.selected.timedOut);
+   const missedFailureSignal = trials.some((trial) => (trial.full.exitCode !== 0 || trial.full.timedOut) && trial.selected.exitCode === 0 && !trial.selected.timedOut);
+   const preparationsSucceeded = trials.every((trial) => trial.preparations.every((preparation) => preparation.exitCode === 0 && !preparation.timedOut));
+-  const evidenceValid = fullCommandSucceeded && selectedCommandSucceeded && provenance.checkoutStable && preparationsSucceeded;
++  // A suspended runner or clock discontinuity can exceed spawnSync's active timeout
++  // while the child still exits zero. Such elapsed times cannot establish savings.
++  const elapsedTimesValid = trials.every((trial) => [...trial.preparations, trial.full, trial.selected]
++    .every((measurement) => Number.isFinite(measurement.wallMs) && measurement.wallMs >= 0 && (input.timeoutMs === 0 || measurement.wallMs <= input.timeoutMs)));
++  const evidenceValid = fullCommandSucceeded && selectedCommandSucceeded && provenance.checkoutStable && preparationsSucceeded && elapsedTimesValid;
+   const performanceEvidence = !evidenceValid
+     ? "INVALID"
+     : protocol.repetitions >= 3 && protocol.alternatingOrder && protocol.cacheStateControlled
+@@ -512,6 +516,7 @@ export function buildVerifySavingsReport(input: {
+     ? "Runtime evidence used at least three alternating, cache-prepared repetitions."
+     : "Runtime evidence is preliminary until at least three alternating, cache-prepared repetitions agree.");
+   if (missedFailureSignal) notes.push("Full failed while selected passed; inspect outputs before treating the selection as safe.");
++  if (!elapsedTimesValid) notes.push("Timing invalid: elapsed wall time is outside the configured timeout bounds; runner suspension or a clock discontinuity may have occurred.");
+   if (input.provenance && !input.provenance.checkoutStable) notes.push(`Checkout provenance invalid: ${input.provenance.invalidReasons.join("; ")}.`);
+ 
+   return {
+@@ -755,7 +760,8 @@ export function formatVerifySavingsSummary(report: VerifySavingsReport): string
+       (report.comparison.missedFailureSignal ? "\n  warning: full failed while selected passed; inspect outputs before claiming safety" : "");
+   }
+   if (!report.comparison.evidenceValid) {
+-    return `DiffCI verify-savings: comparison invalid because checkout provenance failed\n  ${report.provenance.invalidReasons.join("; ")}`;
++    if (!report.provenance.checkoutStable) return `DiffCI verify-savings: comparison invalid because checkout provenance failed\n  ${report.provenance.invalidReasons.join("; ")}`;
++    return `DiffCI verify-savings: comparison invalid\n  ${report.notes.find(note => note.startsWith("Timing invalid:")) ?? "Cache preparation failed."}`;
+   }
+   const lines = [
+     `DiffCI verify-savings: ${report.comparison.performanceEvidence === "CONTROLLED" ? "controlled repeated" : "preliminary"} test execution ${Math.abs(report.comparison.grossPercentChange).toFixed(1)}% ${report.comparison.grossPercentChange >= 0 ? "faster" : "slower"} (${report.comparison.repetitions} ${report.comparison.repetitions === 1 ? "trial" : "trials"})`,
+diff --git a/tests/scripts/verify-savings-pilot.test.ts b/tests/scripts/verify-savings-pilot.test.ts
+index 615501d..b5e5a1d 100644
+--- a/tests/scripts/verify-savings-pilot.test.ts
++++ b/tests/scripts/verify-savings-pilot.test.ts
+@@ -33,6 +33,30 @@ const verifiedProvenance = (): SavingsProvenance => ({
+ });
+ 
+ describe("verify-savings pilot report", () => {
++  it("rejects suspended or invalid elapsed measurements even when every command passed", () => {
++    for (const phase of ["full", "selected", "preparation"] as const) {
++      for (const wallMs of [4_615_617, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
++        const full = measurement("npm test", 0, phase === "full" ? wallMs : 500);
++        const selected = measurement("npm test a.test.ts", 0, phase === "selected" ? wallMs : 100);
++        const provenance = verifiedProvenance();
++        const report = buildReport({
++          cwd: "/repo", timeoutMs: 1000, selection: { source: "manual" }, full, selected, provenance,
++          trials: [{ index: 1, order: ["full", "selected"], cacheState: { full: "cold", selected: "cold" },
++            preparations: phase === "preparation" ? [measurement("reset cache", 0, wallMs)] : [], full, selected, provenance }],
++        });
++        assert.equal(report.comparison.fullCommandSucceeded, true);
++        assert.equal(report.comparison.selectedCommandSucceeded, true);
++        assert.equal(report.comparison.evidenceValid, false);
++        assert.equal(report.comparison.performanceEvidence, "INVALID");
++        assert.match(formatVerifySavingsSummary(report), /Timing invalid:.*timeout bounds/);
++        assert.doesNotMatch(formatVerifySavingsSummary(report), /faster|saved/);
++      }
++    }
++    const unlimited = buildReport({ cwd: "/repo", timeoutMs: 0, selection: { source: "manual" },
++      full: measurement("npm test", 0, 500), selected: measurement("npm test a.test.ts", 0, 100), provenance: verifiedProvenance() });
++    assert.equal(unlimited.comparison.evidenceValid, true);
++  });
++
+   it("invalidates a passing pair when the full command changes the worktree", () => {
+     const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-provenance-"));
+     execFileSync("git", ["init", "--quiet"], { cwd: dir });

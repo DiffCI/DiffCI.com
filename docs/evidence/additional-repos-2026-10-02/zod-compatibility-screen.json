@@ -1,0 +1,39 @@
+{
+  "repository": "zod",
+  "full": {
+    "reason": "unsupported package manager: nub"
+  },
+  "manager": "pnpm",
+  "tests": 202,
+  "projects": [
+    {
+      "file": "vitest.compile.config.ts"
+    },
+    {
+      "file": "vitest.config.ts",
+      "projects": null
+    }
+  ],
+  "workspaces": [
+    {
+      "root": "packages/mini",
+      "test": "nub exec --node vitest run",
+      "tests": 1,
+      "projects": [
+        {
+          "file": "vitest.config.ts"
+        }
+      ]
+    },
+    {
+      "root": "packages/zod",
+      "test": "nub exec --node vitest run",
+      "tests": 196,
+      "projects": [
+        {
+          "file": "vitest.config.ts"
+        }
+      ]
+    }
+  ]
+}

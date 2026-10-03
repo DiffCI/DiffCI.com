@@ -1,0 +1,117 @@
+f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6|5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f|2026-04-29|chore(release): v1.6.4
+
+CHANGELOG.md
+package.json
+5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f|a7b94e69ff6159de8ddfd4940c90db4708c0d67e|2026-04-29|fix(withoutBase): collapse leading slashes (#335)
+
+src/utils.ts
+test/base.test.ts
+a7b94e69ff6159de8ddfd4940c90db4708c0d67e|a5ae11a45c2269e5af793432eacba15b5a0d349f|2026-04-29|chore(deps): update codecov/codecov-action action to v6 (#325)
+
+.github/workflows/ci.yml
+a5ae11a45c2269e5af793432eacba15b5a0d349f|78070102134fc18db2e850bace89b169da9fd796|2026-04-29|chore(deps): update pnpm to v10.33.2 (#315)
+
+package.json
+78070102134fc18db2e850bace89b169da9fd796|f7299167d9bea84db287a43323c751eac122c5ce|2026-04-27|chore: update deps
+
+package.json
+pnpm-lock.yaml
+tsconfig.json
+f7299167d9bea84db287a43323c751eac122c5ce|11308c0bb5cb4a4bc3bfcbdc5c03177b097423e6|2026-03-11|chore(deps): update autofix-ci/action digest to 7a166d7 (#316)
+
+.github/workflows/autofix.yml
+11308c0bb5cb4a4bc3bfcbdc5c03177b097423e6|04b73bd85348c3d8af3efa888f7f5cc4576e74c5|2026-01-15|chore(release): v1.6.3
+
+CHANGELOG.md
+package.json
+04b73bd85348c3d8af3efa888f7f5cc4576e74c5|eb29945470c8629309764f026a36e7f477a9a1ff|2026-01-15|chore: update deps
+
+package.json
+pnpm-lock.yaml
+eb29945470c8629309764f026a36e7f477a9a1ff|5fb179d51384301ffb66b48e213863a27cadd1ff|2026-01-15|fix(withBase, withoutBase): prevent false prefix matches (#313)
+
+src/utils.ts
+test/base.test.ts
+5fb179d51384301ffb66b48e213863a27cadd1ff|7da3795f204bc89d9b7da00e16853a62f402b245|2026-01-11|chore(deps): update all non-major dependencies (#312)
+
+package.json
+pnpm-lock.yaml
+7da3795f204bc89d9b7da00e16853a62f402b245|5f95528ac8770782e3537053f47cb2e881c701f8|2026-01-06|chore(release): v1.6.2
+
+CHANGELOG.md
+package.json
+5f95528ac8770782e3537053f47cb2e881c701f8|845758145aabf88952344f516f018c94935a84fb|2026-01-06|fix: fix `parsePath` return type (#293)
+
+src/parse.ts
+845758145aabf88952344f516f018c94935a84fb|3c8e8dc7fcfdb6c0492c8351143757658334c23b|2026-01-06|build: fix exports condition order to prefer esm with default fallback
+
+package.json
+3c8e8dc7fcfdb6c0492c8351143757658334c23b|07a503f71547216c197450de77f4af3a2395c528|2026-01-06|chore(deps): update actions/checkout action to v6 (#311)
+
+.github/workflows/autofix.yml
+.github/workflows/ci.yml
+07a503f71547216c197450de77f4af3a2395c528|018167768365752f0bbe5b0867818cf9a1fbea50|2026-01-06|chore(deps): update actions/setup-node action to v6 (#306)
+
+.github/workflows/autofix.yml
+.github/workflows/ci.yml
+018167768365752f0bbe5b0867818cf9a1fbea50|9d1833b8a53e2347abc404d8e3db76a8f676bd4c|2026-01-06|chore: lint
+
+src/punycode.ts
+test/query.test.ts
+test/resolve.test.ts
+test/url.test.ts
+9d1833b8a53e2347abc404d8e3db76a8f676bd4c|4025c7a449506dfc3d561081efabf1977ae6e385|2026-01-06|chore: update deps
+
+package.json
+pnpm-lock.yaml
+4025c7a449506dfc3d561081efabf1977ae6e385|8515b2439f3056c66e58def2c71418c8e2620e6a|2025-07-11|chore(deps): update autofix-ci/action digest to 635ffb0 (#295)
+
+.github/workflows/autofix.yml
+8515b2439f3056c66e58def2c71418c8e2620e6a|b83cbea04b7cabdfb0592f357520c08f1bf647c4|2025-04-15|docs: add more examples in jsdoc (#291)
+
+README.md
+src/parse.ts
+src/query.ts
+src/utils.ts
+b83cbea04b7cabdfb0592f357520c08f1bf647c4|31ea74cdd893473abceb7a7a1f5350d3aefcd1fc|2025-04-08|chore(release): v1.6.1
+
+CHANGELOG.md
+package.json
+31ea74cdd893473abceb7a7a1f5350d3aefcd1fc|5b87427f05d0f34f484b1c9559175d65573b8e1c|2025-04-08|fix(query): use `Object.create(null)` (#290)
+
+src/query.ts
+5b87427f05d0f34f484b1c9559175d65573b8e1c|3c4b43de1128f2c04c2131db9a7e9fe2c7daf0d5|2025-04-07|chore(release): v1.6.0
+
+CHANGELOG.md
+package.json
+3c4b43de1128f2c04c2131db9a7e9fe2c7daf0d5|7959de5b49f52e7eb2919a33a9bfe30911e05712|2025-04-07|feat: add `filterQuery` utility (#287)
+
+README.md
+src/utils.ts
+test/query.test.ts
+7959de5b49f52e7eb2919a33a9bfe30911e05712|4d024df0134e2484b1e22ba17a08fea31e90de92|2025-04-07|fix(parseFilename): use optional chaining to access `opts.strict` (#284)
+
+README.md
+src/parse.ts
+test/parse.test.ts
+4d024df0134e2484b1e22ba17a08fea31e90de92|e383832e6aa1253a0b423cbb588bc0716f274f83|2025-04-07|fix(parseQuery): use object with null prototype (#286)
+
+src/query.ts
+test/query.test.ts
+e383832e6aa1253a0b423cbb588bc0716f274f83|1f2b9fe840f41b2662720c43750af90a643712c5|2025-04-07|ci: always update corepack
+
+.github/workflows/autofix.yml
+.github/workflows/ci.yml
+1f2b9fe840f41b2662720c43750af90a643712c5|a7012eb102b8493d7162ad7e9da9c7b0d67ab350|2025-04-07|chore(deps): update codecov/codecov-action action to v5 (#267)
+
+.github/workflows/ci.yml
+a7012eb102b8493d7162ad7e9da9c7b0d67ab350|9eaa57c3d59f5ef0d26988f4b21e07e6cc0c990e|2025-04-07|chore: lint
+
+src/utils.ts
+9eaa57c3d59f5ef0d26988f4b21e07e6cc0c990e|46d0a0404c7c20d62ddf8d69286b5f21482a020f|2025-04-07|chore: update dev dependencies
+
+package.json
+pnpm-lock.yaml
+46d0a0404c7c20d62ddf8d69286b5f21482a020f|b4079eac8065e3058c9a4dfe9510ee79d84c95c9|2025-03-31|chore: apply automated lint fixes
+
+README.md

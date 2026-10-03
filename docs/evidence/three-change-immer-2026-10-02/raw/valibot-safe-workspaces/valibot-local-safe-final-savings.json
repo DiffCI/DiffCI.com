@@ -1,0 +1,459 @@
+{
+  "schema": "diffci.verifySavings.v3",
+  "producedAt": "2026-10-02T13:25:02.041Z",
+  "label": "valibot",
+  "cwd": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\valibot",
+  "timeoutMs": 1800000,
+  "analysisOverheadMs": 23720.282199999998,
+  "selectionSource": "diffci-observation",
+  "observationReportPath": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\valibot-local-safe-final.json",
+  "selectedTestCount": 274,
+  "totalTestCount": 287,
+  "provenance": {
+    "baseSha": "78682df86f6bf66717b6e85377bb5ce5846eca46",
+    "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+    "observationSha256": "1edb79f5b2ed96a966b7a416745a1f55447f01b79aa2f26d9f220a08cf328010",
+    "observerVersion": "0.3.1",
+    "beforeFull": {
+      "capturedAt": "2026-10-02T13:23:55.593Z",
+      "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+      "dependencyInputFiles": [
+        "codemod/migrate-to-v0.31.0/package.json",
+        "codemod/zod-to-valibot/package.json",
+        "library/package.json",
+        "package.json",
+        "packages/i18n/package.json",
+        "packages/to-json-schema/package.json",
+        "pnpm-lock.yaml",
+        "website/package.json",
+        "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+        "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+      ],
+      "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "afterFull": {
+      "capturedAt": "2026-10-02T13:24:26.269Z",
+      "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+      "dependencyInputFiles": [
+        "codemod/migrate-to-v0.31.0/package.json",
+        "codemod/zod-to-valibot/package.json",
+        "library/package.json",
+        "package.json",
+        "packages/i18n/package.json",
+        "packages/to-json-schema/package.json",
+        "pnpm-lock.yaml",
+        "website/package.json",
+        "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+        "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+      ],
+      "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "afterSelected": {
+      "capturedAt": "2026-10-02T13:25:01.187Z",
+      "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+      "dependencyInputFiles": [
+        "codemod/migrate-to-v0.31.0/package.json",
+        "codemod/zod-to-valibot/package.json",
+        "library/package.json",
+        "package.json",
+        "packages/i18n/package.json",
+        "packages/to-json-schema/package.json",
+        "pnpm-lock.yaml",
+        "website/package.json",
+        "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+        "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+      ],
+      "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "snapshots": [
+      {
+        "capturedAt": "2026-10-02T13:23:55.593Z",
+        "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+        "dependencyInputFiles": [
+          "codemod/migrate-to-v0.31.0/package.json",
+          "codemod/zod-to-valibot/package.json",
+          "library/package.json",
+          "package.json",
+          "packages/i18n/package.json",
+          "packages/to-json-schema/package.json",
+          "pnpm-lock.yaml",
+          "website/package.json",
+          "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+          "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+        ],
+        "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T13:24:26.269Z",
+        "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+        "dependencyInputFiles": [
+          "codemod/migrate-to-v0.31.0/package.json",
+          "codemod/zod-to-valibot/package.json",
+          "library/package.json",
+          "package.json",
+          "packages/i18n/package.json",
+          "packages/to-json-schema/package.json",
+          "pnpm-lock.yaml",
+          "website/package.json",
+          "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+          "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+        ],
+        "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T13:24:26.966Z",
+        "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+        "dependencyInputFiles": [
+          "codemod/migrate-to-v0.31.0/package.json",
+          "codemod/zod-to-valibot/package.json",
+          "library/package.json",
+          "package.json",
+          "packages/i18n/package.json",
+          "packages/to-json-schema/package.json",
+          "pnpm-lock.yaml",
+          "website/package.json",
+          "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+          "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+        ],
+        "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T13:25:01.187Z",
+        "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+        "dependencyInputFiles": [
+          "codemod/migrate-to-v0.31.0/package.json",
+          "codemod/zod-to-valibot/package.json",
+          "library/package.json",
+          "package.json",
+          "packages/i18n/package.json",
+          "packages/to-json-schema/package.json",
+          "pnpm-lock.yaml",
+          "website/package.json",
+          "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+          "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+        ],
+        "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      }
+    ],
+    "checkoutStable": true,
+    "invalidReasons": []
+  },
+  "runnerIdentity": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.26200",
+    "nodeVersion": "v24.16.0",
+    "cpuModel": "13th Gen Intel(R) Core(TM) i5-1335U",
+    "cpuCount": 12,
+    "totalMemoryBytes": 16876888064,
+    "ci": "true",
+    "fingerprintSha256": "a59018791e67833b225a7cead8b58e2eb06c46efc9e1660981303729eb335807"
+  },
+  "protocol": {
+    "repetitions": 1,
+    "alternatingOrder": false,
+    "declaredCacheState": "unknown",
+    "cacheStateControlled": false
+  },
+  "trials": [
+    {
+      "index": 1,
+      "order": [
+        "full",
+        "selected"
+      ],
+      "cacheState": {
+        "full": "unknown",
+        "selected": "potentially-warmed"
+      },
+      "preparations": [],
+      "full": {
+        "command": "pnpm test",
+        "exitCode": 1,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T13:23:56.313Z",
+        "finishedAt": "2026-10-02T13:24:26.269Z",
+        "wallMs": 29956,
+        "stdoutTail": "-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema = v.string();\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + const Schema = v.string();\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - type Input = v.InferInput<typeof Schema>;\ncodemod/zod-to-valibot test: + type Input = v.InferInput<typeof Schema>;\ncodemod/zod-to-valibot test: - type Output1 = v.InferOutput<typeof Schema>;\ncodemod/zod-to-valibot test: + type Output1 = v.InferOutput<typeof Schema>;\ncodemod/zod-to-valibot test:   type Output2 = v.InferOutput<typeof Schema>;\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > undefined-schema\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.undefined();\ncodemod/zod-to-valibot test: + const Schema1 = v.undefined();\ncodemod/zod-to-valibot test: - const Schema2 = v.undefined(\"some message\");\ncodemod/zod-to-valibot test: + const Schema2 = v.undefined(\"some message\");\ncodemod/zod-to-valibot test:   const Schema3 = v.pipe(v.undefined(), v.description(\"some description\"));\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > union-schema\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.union([v.string(), v.number(), v.boolean()]);\ncodemod/zod-to-valibot test: + const Schema1 = v.union([v.string(), v.number(), v.boolean()]);\ncodemod/zod-to-valibot test:   const Schema2 = v.union([v.string(), v.number(), v.boolean()], \"some message\");\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > unknown-schema\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.unknown();\ncodemod/zod-to-valibot test: + const Schema1 = v.unknown();\ncodemod/zod-to-valibot test: - const Schema2 = v.unknown();\ncodemod/zod-to-valibot test: + const Schema2 = v.unknown();\ncodemod/zod-to-valibot test:   const Schema3 = v.pipe(v.unknown(), v.description(\"some description\"));\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > validation-error-msg\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.pipe(v.string(), v.email(\"invalid email address\"));\ncodemod/zod-to-valibot test: + const Schema1 = v.pipe(v.string(), v.email(\"invalid email address\"));\ncodemod/zod-to-valibot test: - const Schema2 = v.pipe(v.string(), v.url(\"invalid url\"));\ncodemod/zod-to-valibot test: + const Schema2 = v.pipe(v.string(), v.url(\"invalid url\"));\ncodemod/zod-to-valibot test: - const Schema3 = v.pipe(v.string(), v.length(5, \"must be exactly 5 characters long\"));\ncodemod/zod-to-valibot test: + const Schema3 = v.pipe(v.string(), v.length(5, \"must be exactly 5 characters long\"));\ncodemod/zod-to-valibot test:   const Schema4 = v.pipe(v.string(), v.startsWith(\"https://\", \"must provide secure url\"));\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > void-schema\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.void();\ncodemod/zod-to-valibot test: + const Schema1 = v.void();\ncodemod/zod-to-valibot test: - const Schema2 = v.void(\"some message\");\ncodemod/zod-to-valibot test: + const Schema2 = v.void(\"some message\");\ncodemod/zod-to-valibot test:   const Schema3 = v.pipe(v.void(), v.description(\"some description\"));\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > zod-enum\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\n// e…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - // enum creation\ncodemod/zod-to-valibot test: + // enum creation\ncodemod/zod-to-valibot test: - // way #1\ncodemod/zod-to-valibot test: + // way #1\ncodemod/zod-to-valibot test: - const FruitEnum = v.picklist([\"Apple\", \"Orange\", \"Banana\"]);\ncodemod/zod-to-valibot test: + const FruitEnum = v.picklist([\"Apple\", \"Orange\", \"Banana\"]);\ncodemod/zod-to-valibot test: - // way #2\ncodemod/zod-to-valibot test: + // way #2\ncodemod/zod-to-valibot test: - const VALUES = [\"Valibot\", \"ModularForms\"] as const;\ncodemod/zod-to-valibot test: + const VALUES = [\"Valibot\", \"ModularForms\"] as const;\ncodemod/zod-to-valibot test: - const LibraryEnum = v.picklist(VALUES);\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + const LibraryEnum = v.picklist(VALUES);\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - // the enum property, not supported by Valibot\ncodemod/zod-to-valibot test: + // the enum property, not supported by Valibot\ncodemod/zod-to-valibot test: - const AnswerEnum = v.picklist([\"Yes\", \"No\"]);\ncodemod/zod-to-valibot test: + const AnswerEnum = v.picklist([\"Yes\", \"No\"]);\ncodemod/zod-to-valibot test: - const AnswerObj = AnswerEnum.enum; \ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + const AnswerObj = AnswerEnum.enum; \ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - // retrieve the list of options\ncodemod/zod-to-valibot test: + // retrieve the list of options\ncodemod/zod-to-valibot test: - const BoolEnum = v.picklist([\"true\", \"false\"]);\ncodemod/zod-to-valibot test: + const BoolEnum = v.picklist([\"true\", \"false\"]);\ncodemod/zod-to-valibot test: - const boolOptions = BoolEnum.options;\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + const boolOptions = BoolEnum.options;\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - // extract or exclude values \ncodemod/zod-to-valibot test: + // extract or exclude values \ncodemod/zod-to-valibot test: - const FishEnum = v.picklist([\"Salmon\", \"Tuna\", \"Trout\"]);\ncodemod/zod-to-valibot test: + const FishEnum = v.picklist([\"Salmon\", \"Tuna\", \"Trout\"]);\ncodemod/zod-to-valibot test: - const SalmonAndTrout = v.picklist([\"Salmon\", \"Trout\"]);\ncodemod/zod-to-valibot test: + const SalmonAndTrout = v.picklist([\"Salmon\", \"Trout\"]);\ncodemod/zod-to-valibot test: - // `exclude` is not supported by Valibot\ncodemod/zod-to-valibot test: + // `exclude` is not supported by Valibot\ncodemod/zod-to-valibot test:   const SalmonOnly = v.exclude(FishEnum, [\"Tuna\", \"Trout\"]);\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/71]⎯\ncodemod/zod-to-valibot test: Failed\nC:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\valibot\\codemod\\zod-to-valibot:\r\n[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @valibot/zod-to-valibot@0.1.2 test: `vitest`\nExit status 1\n[ELIFECYCLE] Test failed. See above for more details.\n",
+        "stderrTail": "$ pnpm -r run test\n"
+      },
+      "selected": {
+        "command": "pnpm --dir library exec vitest run --typecheck && pnpm --dir packages/to-json-schema exec vitest run --typecheck",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T13:24:27.656Z",
+        "finishedAt": "2026-10-02T13:25:01.187Z",
+        "wallMs": 33531,
+        "stdoutTail": "\n RUN  v4.1.8 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/valibot/library\n\n\n Test Files  530 passed (530)\n      Tests  4694 passed (4694)\nType Errors  no errors\n   Start at  18:54:30\n   Duration  18.50s (transform 55.16s, setup 0ms, import 104.27s, tests 2.33s, environment 700.40s, typecheck 4.36s)\n\n\n RUN  v4.1.8 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/valibot/packages/to-json-schema\n\n\n Test Files  6 passed (6)\n      Tests  315 passed (315)\nType Errors  no errors\n   Start at  18:54:51\n   Duration  9.88s (transform 34.37s, setup 0ms, import 54.72s, tests 297ms, environment 2ms)\n\n",
+        "stderrTail": "Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\nTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\n"
+      },
+      "provenance": {
+        "baseSha": "78682df86f6bf66717b6e85377bb5ce5846eca46",
+        "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+        "observationSha256": "1edb79f5b2ed96a966b7a416745a1f55447f01b79aa2f26d9f220a08cf328010",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-02T13:23:55.593Z",
+          "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+          "dependencyInputFiles": [
+            "codemod/migrate-to-v0.31.0/package.json",
+            "codemod/zod-to-valibot/package.json",
+            "library/package.json",
+            "package.json",
+            "packages/i18n/package.json",
+            "packages/to-json-schema/package.json",
+            "pnpm-lock.yaml",
+            "website/package.json",
+            "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+            "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+          ],
+          "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-02T13:24:26.269Z",
+          "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+          "dependencyInputFiles": [
+            "codemod/migrate-to-v0.31.0/package.json",
+            "codemod/zod-to-valibot/package.json",
+            "library/package.json",
+            "package.json",
+            "packages/i18n/package.json",
+            "packages/to-json-schema/package.json",
+            "pnpm-lock.yaml",
+            "website/package.json",
+            "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+            "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+          ],
+          "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-02T13:25:01.187Z",
+          "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+          "dependencyInputFiles": [
+            "codemod/migrate-to-v0.31.0/package.json",
+            "codemod/zod-to-valibot/package.json",
+            "library/package.json",
+            "package.json",
+            "packages/i18n/package.json",
+            "packages/to-json-schema/package.json",
+            "pnpm-lock.yaml",
+            "website/package.json",
+            "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+            "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+          ],
+          "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-02T13:23:55.593Z",
+            "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+            "dependencyInputFiles": [
+              "codemod/migrate-to-v0.31.0/package.json",
+              "codemod/zod-to-valibot/package.json",
+              "library/package.json",
+              "package.json",
+              "packages/i18n/package.json",
+              "packages/to-json-schema/package.json",
+              "pnpm-lock.yaml",
+              "website/package.json",
+              "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+              "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+            ],
+            "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T13:24:26.269Z",
+            "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+            "dependencyInputFiles": [
+              "codemod/migrate-to-v0.31.0/package.json",
+              "codemod/zod-to-valibot/package.json",
+              "library/package.json",
+              "package.json",
+              "packages/i18n/package.json",
+              "packages/to-json-schema/package.json",
+              "pnpm-lock.yaml",
+              "website/package.json",
+              "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+              "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+            ],
+            "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T13:24:26.966Z",
+            "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+            "dependencyInputFiles": [
+              "codemod/migrate-to-v0.31.0/package.json",
+              "codemod/zod-to-valibot/package.json",
+              "library/package.json",
+              "package.json",
+              "packages/i18n/package.json",
+              "packages/to-json-schema/package.json",
+              "pnpm-lock.yaml",
+              "website/package.json",
+              "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+              "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+            ],
+            "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T13:25:01.187Z",
+            "headSha": "e90339fec658103adbfe0620ee12471603a24196",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "d80e29230f18d7b4eb6b67706368d4b2ac47aa4dd3a6e692f66e83236cacd32b",
+            "dependencyInputFiles": [
+              "codemod/migrate-to-v0.31.0/package.json",
+              "codemod/zod-to-valibot/package.json",
+              "library/package.json",
+              "package.json",
+              "packages/i18n/package.json",
+              "packages/to-json-schema/package.json",
+              "pnpm-lock.yaml",
+              "website/package.json",
+              "website/src/routes/guides/(migration)/migrate-from-zod/zod/v3/package.json",
+              "website/src/routes/guides/(migration)/migrate-from-zod/zod/v4/package.json"
+            ],
+            "resolvedDependencySha256": "9471563d1d06ac957ee96e5f3a6141361dba9c65c7d810c97cc70011b4c1bf64",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    }
+  ],
+  "failureAssessment": {
+    "kind": "inconclusive",
+    "confidence": "low",
+    "explanation": "The full arm failed while the selected arm passed, but fewer than three repetitions cannot separate a stable miss from a flake.",
+    "evidence": [
+      {
+        "arm": "full",
+        "trial": 1,
+        "failureClass": "UNIT_TEST",
+        "fingerprint": "UNIT_TEST|verify-savings|||$ pnpm -r run test -to-valibot test: - expected codemod/zod-to-valibot test: + received codemod/zod-to-valibot test: - import * as v from \"valibot\"; codemod/zod-to-valibot test: - codemod/zod-to-valib"
+      }
+    ]
+  },
+  "full": {
+    "command": "pnpm test",
+    "exitCode": 1,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T13:23:56.313Z",
+    "finishedAt": "2026-10-02T13:24:26.269Z",
+    "wallMs": 29956,
+    "stdoutTail": "-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema = v.string();\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + const Schema = v.string();\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - type Input = v.InferInput<typeof Schema>;\ncodemod/zod-to-valibot test: + type Input = v.InferInput<typeof Schema>;\ncodemod/zod-to-valibot test: - type Output1 = v.InferOutput<typeof Schema>;\ncodemod/zod-to-valibot test: + type Output1 = v.InferOutput<typeof Schema>;\ncodemod/zod-to-valibot test:   type Output2 = v.InferOutput<typeof Schema>;\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > undefined-schema\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.undefined();\ncodemod/zod-to-valibot test: + const Schema1 = v.undefined();\ncodemod/zod-to-valibot test: - const Schema2 = v.undefined(\"some message\");\ncodemod/zod-to-valibot test: + const Schema2 = v.undefined(\"some message\");\ncodemod/zod-to-valibot test:   const Schema3 = v.pipe(v.undefined(), v.description(\"some description\"));\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > union-schema\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.union([v.string(), v.number(), v.boolean()]);\ncodemod/zod-to-valibot test: + const Schema1 = v.union([v.string(), v.number(), v.boolean()]);\ncodemod/zod-to-valibot test:   const Schema2 = v.union([v.string(), v.number(), v.boolean()], \"some message\");\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > unknown-schema\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.unknown();\ncodemod/zod-to-valibot test: + const Schema1 = v.unknown();\ncodemod/zod-to-valibot test: - const Schema2 = v.unknown();\ncodemod/zod-to-valibot test: + const Schema2 = v.unknown();\ncodemod/zod-to-valibot test:   const Schema3 = v.pipe(v.unknown(), v.description(\"some description\"));\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > validation-error-msg\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.pipe(v.string(), v.email(\"invalid email address\"));\ncodemod/zod-to-valibot test: + const Schema1 = v.pipe(v.string(), v.email(\"invalid email address\"));\ncodemod/zod-to-valibot test: - const Schema2 = v.pipe(v.string(), v.url(\"invalid url\"));\ncodemod/zod-to-valibot test: + const Schema2 = v.pipe(v.string(), v.url(\"invalid url\"));\ncodemod/zod-to-valibot test: - const Schema3 = v.pipe(v.string(), v.length(5, \"must be exactly 5 characters long\"));\ncodemod/zod-to-valibot test: + const Schema3 = v.pipe(v.string(), v.length(5, \"must be exactly 5 characters long\"));\ncodemod/zod-to-valibot test:   const Schema4 = v.pipe(v.string(), v.startsWith(\"https://\", \"must provide secure url\"));\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > void-schema\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\ncons…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - const Schema1 = v.void();\ncodemod/zod-to-valibot test: + const Schema1 = v.void();\ncodemod/zod-to-valibot test: - const Schema2 = v.void(\"some message\");\ncodemod/zod-to-valibot test: + const Schema2 = v.void(\"some message\");\ncodemod/zod-to-valibot test:   const Schema3 = v.pipe(v.void(), v.description(\"some description\"));\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/71]⎯\ncodemod/zod-to-valibot test:  FAIL  src/test-setup.test.ts > zod-enum\ncodemod/zod-to-valibot test: AssertionError: expected 'import * as v from \"valibot\";\\r\\n\\r\\n…' to be 'import * as v from \"valibot\";\\n\\n// e…' // Object.is equality\ncodemod/zod-to-valibot test: - Expected\ncodemod/zod-to-valibot test: + Received\ncodemod/zod-to-valibot test: - import * as v from \"valibot\";\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + import * as v from \"valibot\";\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - // enum creation\ncodemod/zod-to-valibot test: + // enum creation\ncodemod/zod-to-valibot test: - // way #1\ncodemod/zod-to-valibot test: + // way #1\ncodemod/zod-to-valibot test: - const FruitEnum = v.picklist([\"Apple\", \"Orange\", \"Banana\"]);\ncodemod/zod-to-valibot test: + const FruitEnum = v.picklist([\"Apple\", \"Orange\", \"Banana\"]);\ncodemod/zod-to-valibot test: - // way #2\ncodemod/zod-to-valibot test: + // way #2\ncodemod/zod-to-valibot test: - const VALUES = [\"Valibot\", \"ModularForms\"] as const;\ncodemod/zod-to-valibot test: + const VALUES = [\"Valibot\", \"ModularForms\"] as const;\ncodemod/zod-to-valibot test: - const LibraryEnum = v.picklist(VALUES);\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + const LibraryEnum = v.picklist(VALUES);\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - // the enum property, not supported by Valibot\ncodemod/zod-to-valibot test: + // the enum property, not supported by Valibot\ncodemod/zod-to-valibot test: - const AnswerEnum = v.picklist([\"Yes\", \"No\"]);\ncodemod/zod-to-valibot test: + const AnswerEnum = v.picklist([\"Yes\", \"No\"]);\ncodemod/zod-to-valibot test: - const AnswerObj = AnswerEnum.enum; \ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + const AnswerObj = AnswerEnum.enum; \ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - // retrieve the list of options\ncodemod/zod-to-valibot test: + // retrieve the list of options\ncodemod/zod-to-valibot test: - const BoolEnum = v.picklist([\"true\", \"false\"]);\ncodemod/zod-to-valibot test: + const BoolEnum = v.picklist([\"true\", \"false\"]);\ncodemod/zod-to-valibot test: - const boolOptions = BoolEnum.options;\ncodemod/zod-to-valibot test: -\ncodemod/zod-to-valibot test: + const boolOptions = BoolEnum.options;\ncodemod/zod-to-valibot test: + \ncodemod/zod-to-valibot test: - // extract or exclude values \ncodemod/zod-to-valibot test: + // extract or exclude values \ncodemod/zod-to-valibot test: - const FishEnum = v.picklist([\"Salmon\", \"Tuna\", \"Trout\"]);\ncodemod/zod-to-valibot test: + const FishEnum = v.picklist([\"Salmon\", \"Tuna\", \"Trout\"]);\ncodemod/zod-to-valibot test: - const SalmonAndTrout = v.picklist([\"Salmon\", \"Trout\"]);\ncodemod/zod-to-valibot test: + const SalmonAndTrout = v.picklist([\"Salmon\", \"Trout\"]);\ncodemod/zod-to-valibot test: - // `exclude` is not supported by Valibot\ncodemod/zod-to-valibot test: + // `exclude` is not supported by Valibot\ncodemod/zod-to-valibot test:   const SalmonOnly = v.exclude(FishEnum, [\"Tuna\", \"Trout\"]);\ncodemod/zod-to-valibot test:  ❯ src/utils.ts:74:30\ncodemod/zod-to-valibot test:      72|         () => {}\ncodemod/zod-to-valibot test:      73|       );\ncodemod/zod-to-valibot test:      74|       expect(output?.trim()).toBe(expectedOutput.trim());\ncodemod/zod-to-valibot test:        |                              ^\ncodemod/zod-to-valibot test:      75|     });\ncodemod/zod-to-valibot test:      76|   }\ncodemod/zod-to-valibot test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/71]⎯\ncodemod/zod-to-valibot test: Failed\nC:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\valibot\\codemod\\zod-to-valibot:\r\n[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @valibot/zod-to-valibot@0.1.2 test: `vitest`\nExit status 1\n[ELIFECYCLE] Test failed. See above for more details.\n",
+    "stderrTail": "$ pnpm -r run test\n"
+  },
+  "selected": {
+    "command": "pnpm --dir library exec vitest run --typecheck && pnpm --dir packages/to-json-schema exec vitest run --typecheck",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T13:24:27.656Z",
+    "finishedAt": "2026-10-02T13:25:01.187Z",
+    "wallMs": 33531,
+    "stdoutTail": "\n RUN  v4.1.8 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/valibot/library\n\n\n Test Files  530 passed (530)\n      Tests  4694 passed (4694)\nType Errors  no errors\n   Start at  18:54:30\n   Duration  18.50s (transform 55.16s, setup 0ms, import 104.27s, tests 2.33s, environment 700.40s, typecheck 4.36s)\n\n\n RUN  v4.1.8 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/valibot/packages/to-json-schema\n\n\n Test Files  6 passed (6)\n      Tests  315 passed (315)\nType Errors  no errors\n   Start at  18:54:51\n   Duration  9.88s (transform 34.37s, setup 0ms, import 54.72s, tests 297ms, environment 2ms)\n\n",
+    "stderrTail": "Testing types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\nTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\n"
+  },
+  "comparison": {
+    "fullWallMs": 29956,
+    "selectedWallMs": 33531,
+    "netSelectedMs": 57251.2822,
+    "deltaMs": -27295.2822,
+    "grossPercentChange": -11.934170116170382,
+    "percentChange": -91.11791360662305,
+    "selectedCommandSucceeded": true,
+    "fullCommandSucceeded": false,
+    "missedFailureSignal": true,
+    "evidenceValid": false,
+    "performanceEvidence": "INVALID",
+    "repetitions": 1,
+    "fullWallMsRange": {
+      "min": 29956,
+      "median": 29956,
+      "max": 29956
+    },
+    "selectedWallMsRange": {
+      "min": 33531,
+      "median": 33531,
+      "max": 33531
+    }
+  },
+  "notes": [
+    "This is paired runtime evidence, not a production-savings claim.",
+    "Full and selected commands were run sequentially in the same checkout.",
+    "Net selected runtime includes DiffCI analysis overhead.",
+    "Runtime evidence is preliminary until at least three alternating, cache-prepared repetitions agree.",
+    "Full failed while selected passed; inspect outputs before treating the selection as safe."
+  ]
+}

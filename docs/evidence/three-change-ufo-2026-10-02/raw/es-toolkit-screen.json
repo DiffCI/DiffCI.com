@@ -1,0 +1,120 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-10-02T08:29:31.064Z",
+  "observer": {
+    "version": "0.3.1",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "4504e985a433fe1e348d803a233b2c02d41e4b3c",
+    "headSha": "43e1118884e07cebdf1e767038f6e7f697fa27ec",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "FULL",
+    "changedFileCount": 7,
+    "changedFiles": [
+      "benchmarks/bundle-size/camelCase.spec.ts",
+      "docs/ja/reference/string/deburr.md",
+      "docs/ko/reference/string/deburr.md",
+      "docs/reference/string/deburr.md",
+      "docs/zh_hans/reference/string/deburr.md",
+      "src/string/deburr.spec.ts",
+      "src/string/deburr.ts"
+    ],
+    "affectedSourceFileCount": 79,
+    "selectedTests": [],
+    "totalTestCount": 0,
+    "fallbackReasons": [
+      "Repository declares vitest but no test files were discovered; full validation required"
+    ],
+    "proposedCommands": [],
+    "unroutedTestPaths": [],
+    "blindSpot": true,
+    "riskSignals": [
+      {
+        "level": "critical",
+        "reason": "TEST_UNIVERSE_EMPTY"
+      }
+    ],
+    "graph": {
+      "nodes": 2046,
+      "edges": 3947,
+      "confidence": "UNSAFE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 11954,
+      "phasesMs": {
+        "repositoryDiscovery": 80.2911,
+        "scopeDiscovery": 0.2779,
+        "adapterInventory": 11.2419,
+        "adapters": 967.9446,
+        "typescriptProgram": 9255.6755,
+        "importExtractionAndResolution": 1574.4328,
+        "graphFinalization": 64.3981
+      },
+      "adapterMetrics": {
+        "vue": {
+          "phasesMs": {
+            "compilerLoad": 863.9909000000001,
+            "sourceRead": 18.5357999999992,
+            "sfcParse": 21.13240000000019,
+            "scriptCompile": 36.79890000000046,
+            "templateCompile": 24.92390000000023,
+            "typeCacheInvalidation": 0.3047999999996591
+          },
+          "counts": {
+            "components": 17,
+            "typeReads": 1,
+            "registrationScans": 0
+          }
+        }
+      }
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 0,
+      "selectedTests": [],
+      "matchedRules": [
+        "no directory scoping applies -> run all tests"
+      ]
+    },
+    "analysisStatus": "FALLBACK"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "43e1118884e07cebdf1e767038f6e7f697fa27ec",
+    "headShaAfter": "43e1118884e07cebdf1e767038f6e7f697fa27ec",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 12790,
+    "preObserveMs": 157,
+    "phasesMs": {
+      "context": 196,
+      "engineLoad": 222,
+      "eligibility": 0,
+      "delta": 214,
+      "graph": 11955,
+      "impactAndCommands": 11,
+      "finalization": 189
+    }
+  }
+}

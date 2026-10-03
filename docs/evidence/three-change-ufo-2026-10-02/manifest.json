@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-02",
+  "repository": "https://github.com/unjs/ufo",
+  "frozenDefaultHead": "f06c800d0c59f2a4a1b9ba65eb6cb61a84419be6",
+  "diffciVersion": "0.3.1",
+  "nodeVersion": "v24.16.0",
+  "platform": "win32",
+  "samplingPolicy": "Latest source fix, latest change touching at least three source/test paths, latest dependency or package-manager configuration change in the frozen first-parent history. Categories chosen before their measured comparisons.",
+  "measurementScope": "Runtime Vitest phase only; pnpm exec vitest run versus the complete command proposed in the observation. Type tests, lint, build, and coverage are outside the timing comparison.",
+  "repetitions": 3,
+  "cacheState": "unknown",
+  "outreachSent": false,
+  "cases": [
+    {
+      "label": "source",
+      "base": "a7b94e69ff6159de8ddfd4940c90db4708c0d67e",
+      "head": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+      "date": "2026-04-29",
+      "description": "Fix withoutBase leading slashes",
+      "pnpmVersion": "10.33.2"
+    },
+    {
+      "label": "broad",
+      "base": "9d1833b8a53e2347abc404d8e3db76a8f676bd4c",
+      "head": "018167768365752f0bbe5b0867818cf9a1fbea50",
+      "date": "2026-01-06",
+      "description": "Lint adjustment in punycode and three test files; formatting change, not a behavior fix",
+      "pnpmVersion": "10.27.0"
+    },
+    {
+      "label": "configuration",
+      "base": "78070102134fc18db2e850bace89b169da9fd796",
+      "head": "a5ae11a45c2269e5af793432eacba15b5a0d349f",
+      "date": "2026-04-29",
+      "description": "Update package manager to pnpm 10.33.2",
+      "pnpmVersion": "10.33.2"
+    }
+  ]
+}

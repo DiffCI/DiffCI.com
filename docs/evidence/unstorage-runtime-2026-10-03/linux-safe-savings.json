@@ -1,0 +1,877 @@
+{
+  "schema": "diffci.verifySavings.v3",
+  "producedAt": "2026-10-03T05:05:11.356Z",
+  "label": "Unstorage: unpublished DiffCI, Linux, local S3 emulator, one worker, full source and declaration guards",
+  "cwd": "/work/unstorage",
+  "timeoutMs": 180000,
+  "analysisOverheadMs": 8818.860618,
+  "selectionSource": "diffci-observation",
+  "observationReportPath": "/evidence/linux-safe-prebuild-observation.json",
+  "selectedTestCount": 5,
+  "totalTestCount": 40,
+  "provenance": {
+    "baseSha": "88f8e43b40ea5533a96118770784ecb58d945243",
+    "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+    "observationSha256": "bb3d0361168de64931b6a2511f211178fffd8beb203a6c9a2052c2c6a3cd560d",
+    "observerVersion": "0.3.1",
+    "beforeFull": {
+      "capturedAt": "2026-10-03T05:01:30.306Z",
+      "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+      "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+      "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+      "dependencyInputFiles": [
+        "docs/package.json",
+        "docs/pnpm-lock.yaml",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "afterFull": {
+      "capturedAt": "2026-10-03T05:02:45.773Z",
+      "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+      "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+      "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+      "dependencyInputFiles": [
+        "docs/package.json",
+        "docs/pnpm-lock.yaml",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "afterSelected": {
+      "capturedAt": "2026-10-03T05:03:04.155Z",
+      "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+      "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+      "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+      "dependencyInputFiles": [
+        "docs/package.json",
+        "docs/pnpm-lock.yaml",
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "snapshots": [
+      {
+        "capturedAt": "2026-10-03T05:01:30.306Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:02:45.773Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:02:45.884Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:03:04.155Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:03:04.227Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:03:19.591Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:03:19.690Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:04:07.242Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:04:07.333Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:04:56.577Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:04:56.768Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-03T05:05:11.335Z",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+        "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+        "dependencyInputFiles": [
+          "docs/package.json",
+          "docs/pnpm-lock.yaml",
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      }
+    ],
+    "checkoutStable": true,
+    "invalidReasons": []
+  },
+  "runnerIdentity": {
+    "platform": "linux",
+    "architecture": "x64",
+    "osRelease": "6.18.33.2-microsoft-standard-WSL2",
+    "nodeVersion": "v24.16.0",
+    "cpuModel": "13th Gen Intel(R) Core(TM) i5-1335U",
+    "cpuCount": 12,
+    "totalMemoryBytes": 8175366144,
+    "ci": "true",
+    "fingerprintSha256": "0a1f86143b381589065216700816f7b4f42bbc0724bfe54c0c0bb93efec2da5f"
+  },
+  "protocol": {
+    "repetitions": 3,
+    "alternatingOrder": true,
+    "declaredCacheState": "cold",
+    "cachePreparationCommand": "node /evidence/reset-vitest-cache.mjs",
+    "cacheStateControlled": true
+  },
+  "trials": [
+    {
+      "index": 1,
+      "order": [
+        "full",
+        "selected"
+      ],
+      "cacheState": {
+        "full": "cold",
+        "selected": "cold"
+      },
+      "preparations": [
+        {
+          "command": "node /evidence/reset-vitest-cache.mjs",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "startedAt": "2026-10-03T05:01:30.221Z",
+          "finishedAt": "2026-10-03T05:01:30.306Z",
+          "wallMs": 63,
+          "stdoutTail": "",
+          "stderrTail": ""
+        },
+        {
+          "command": "node /evidence/reset-vitest-cache.mjs",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "startedAt": "2026-10-03T05:02:45.794Z",
+          "finishedAt": "2026-10-03T05:02:45.884Z",
+          "wallMs": 90,
+          "stdoutTail": "",
+          "stderrTail": ""
+        }
+      ],
+      "full": {
+        "command": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test --maxWorkers=1",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-03T05:01:30.421Z",
+        "finishedAt": "2026-10-03T05:02:45.769Z",
+        "wallMs": 75348,
+        "stdoutTail": "Generated drivers metadata file to /work/unstorage/src/_drivers.ts\n[log] 📦 Building `unstorage` (`/work/unstorage`)\n[log] 🧻 Cleaning up `./dist`\nWriting third-party licenses to /work/unstorage/dist/THIRD-PARTY-LICENSES.md\n[log] \n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/index.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 23.8 kB, \u001b[1m14.6 kB\u001b[22m\u001b[2m minified, 4.32 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m builtinDriverDependencies, builtinDrivers, createStorage, filterKeyByBase, filterKeyByDepth, joinKeys, normalizeBaseKey, normalizeKey, prefixStorage, restoreSnapshot, snapshot\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/server.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 25.9 kB, \u001b[1m14.7 kB\u001b[22m\u001b[2m minified, 5.11 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m createStorageHandler\u001b[22m\n\u001b[2m\u001b[1mDependencies:\u001b[22m\u001b[2m [Node.js]\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/tracing.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 2.6 kB, \u001b[1m1.26 kB\u001b[22m\u001b[2m minified, 671 B min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m withTracing\u001b[22m\n[log] \n\u001b[35m[transform] \u001b[39m\u001b[4m./dist/drivers/\u001b[24m\n\u001b[2m./dist/drivers/azure-app-configuration.mjs   \n./dist/drivers/azure-cosmos.mjs              \n./dist/drivers/azure-key-vault.mjs           \n./dist/drivers/azure-storage-blob.mjs        \n./dist/drivers/azure-storage-table.mjs       \n./dist/drivers/capacitor-preferences.mjs     \n./dist/drivers/cloudflare-cache-binding.mjs  \n./dist/drivers/cloudflare-kv-binding.mjs     \n./dist/drivers/cloudflare-kv-http.mjs        \n./dist/drivers/cloudflare-r2-binding.mjs     \n./dist/drivers/db0.mjs                       \n./dist/drivers/deno-kv-node.mjs              \n./dist/drivers/deno-kv.mjs                   \n./dist/drivers/fs-lite.mjs                   \n./dist/drivers/fs.mjs                        \n./dist/drivers/github.mjs                    \n./dist/drivers/http.mjs                      \n./dist/drivers/indexedb.mjs                  \n./dist/drivers/localstorage.mjs              \n./dist/drivers/lru-cache.mjs                 \n./dist/drivers/memory.mjs                    \n./dist/drivers/mongodb.mjs                   \n./dist/drivers/netlify-blobs.mjs             \n./dist/drivers/null.mjs                      \n./dist/drivers/overlay.mjs                   \n./dist/drivers/planetscale.mjs               \n./dist/drivers/redis.mjs                     \n./dist/drivers/s3.mjs                        \n./dist/drivers/session-storage.mjs           \n./dist/drivers/uploadthing.mjs               \n./dist/drivers/upstash.mjs                   \n./dist/drivers/vercel-blob.mjs               \n./dist/drivers/vercel-runtime-cache.mjs      \n./dist/drivers/utils/azure.mjs               \n./dist/drivers/utils/cloudflare.mjs          \n./dist/drivers/utils/fetch.mjs               \n./dist/drivers/utils/index.mjs               \n./dist/drivers/utils/node-fs.mjs             \n./dist/drivers/utils/path.mjs                \u001b[22m\n[log] \u001b[2m\nΣ Total dist byte size: \u001b[4m197 kB\u001b[24m (\u001b[4m94\u001b[24m files)\u001b[22m\n[log] \n✅ obuild finished in 799ms\nFound 0 warnings and 0 errors.\nFinished in 192ms on 94 files with 96 rules using 12 threads.\nChecking formatting...\n\nAll matched files use the correct format.\nFinished in 971ms on 134 files using 12 threads.\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n      \u001b[2mCoverage enabled with \u001b[22m\u001b[33mv8\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[44m\u001b[1m TS \u001b[22m\u001b[49m test/storage.test-d.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/tracing.test.ts \u001b[2m(\u001b[22m\u001b[2m29 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 38\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/storage.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 44\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/fs.test.ts \u001b[2m(\u001b[22m\u001b[2m51 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 2156\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m watch filesystem \u001b[33m 546\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m reads concurrent with a write never observe a truncated value \u001b[33m 595\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m watch never observes in-progress temp files \u001b[33m 512\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/s3-list.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 115\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/fs-lite.test.ts \u001b[2m(\u001b[22m\u001b[2m45 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 723\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m reads concurrent with a write never observe a truncated value \u001b[33m 370\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/server.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 264\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-storage-blob.test.ts \u001b[2m(\u001b[22m\u001b[2m20 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m20 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/s3.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1139\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-cache-binding-fake.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 77\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/mongodb.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 944\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/db0.test.ts \u001b[2m(\u001b[22m\u001b[2m68 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 5671\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 5187\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/localstorage.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 51\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/session-storage.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 71\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m33 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 27\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/redis.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 34\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/vercel-runtime-cache.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m2 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 65\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-r2-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 2772\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 663\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m getKeys with depth \u001b[33m 308\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/indexedb.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 59\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/http.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 248\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/cloudflare-cache-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/netlify-blobs.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1163\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-kv-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1524\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/deno-kv.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/github.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 880\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m can read a repository files \u001b[33m 464\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m can read a json file content \u001b[33m 412\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-types.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/vercel-blob.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m30 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/capacitor-preferences.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 39\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/lru-cache.test.ts \u001b[2m(\u001b[22m\u001b[2m31 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 28\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/memory.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 67\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-storage-table.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/cloudflare-kv-http.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/upstash.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/uploadthing.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/null.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 6\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/planetscale.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 12\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-key-vault.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/deno-kv-node.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1608\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 1476\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-app-configuration.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/overlay.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 58\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-cosmos.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m30 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m11 skipped\u001b[39m\u001b[90m (41)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m567 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m204 skipped\u001b[39m\u001b[90m (772)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:01:40\n\u001b[2m   Duration \u001b[22m 64.68s\u001b[2m (transform 2.62s, setup 0ms, import 32.82s, tests 19.89s, environment 6ms, typecheck 708ms)\u001b[22m\n\n\u001b[34m % \u001b[39m\u001b[2mCoverage report from \u001b[22m\u001b[33mv8\u001b[39m\n-------------------|---------|----------|---------|---------|-------------------\nFile               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s \n-------------------|---------|----------|---------|---------|-------------------\nAll files          |   71.42 |     63.4 |   71.38 |   71.78 |                   \n src               |   92.12 |    84.14 |   98.19 |   92.24 |                   \n  _drivers.ts      |     100 |      100 |     100 |     100 |                   \n  _utils.ts        |   81.81 |    81.48 |      90 |   84.37 | 53,61,65,74,81    \n  index.ts         |       0 |        0 |       0 |       0 |                   \n  server.ts        |   95.83 |    90.24 |     100 |   95.74 | 55,128            \n  storage.ts       |   92.12 |    84.32 |   98.57 |   91.62 | ...03,412,415-416 \n  tracing.ts       |   91.89 |       75 |     100 |   94.28 | 60,66             \n  types.ts         |       0 |        0 |       0 |       0 |                   \n  utils.ts         |   95.55 |       85 |     100 |   95.23 | 35,106            \n src/drivers       |   62.59 |       53 |   63.44 |   62.98 |                   \n  ...figuration.ts |   20.93 |    16.66 |    7.69 |   21.95 | 66-81,89-165      \n  azure-cosmos.ts  |   16.66 |        0 |    8.33 |   17.24 | 68-90,98-139      \n  ...-key-vault.ts |    10.9 |        0 |    5.88 |   11.32 | ...71-123,136-152 \n  ...orage-blob.ts |    9.85 |      5.4 |    4.54 |      10 | ...19-194,210-232 \n  ...rage-table.ts |   13.04 |    30.43 |    7.69 |   13.33 | 77-106,114-162    \n  ...references.ts |     100 |      100 |     100 |     100 |                   \n  ...he-binding.ts |    65.9 |     64.7 |      50 |    65.9 | ...,93-96,104-114 \n  ...kv-binding.ts |   97.14 |       75 |   92.85 |   96.77 | 41                \n  ...re-kv-http.ts |    2.81 |        0 |       0 |    3.07 | 85-220            \n  ...r2-binding.ts |   86.27 |    72.72 |   89.47 |   86.66 | 26,88-100         \n  db0.ts           |   87.09 |    63.88 |   94.11 |   86.88 | ...98,108,175-187 \n  deno-kv-node.ts  |   88.88 |      100 |      75 |   88.88 | 46                \n  deno-kv.ts       |      88 |    60.86 |   92.85 |   87.75 | 37-49,57          \n  fs-lite.ts       |   80.64 |    66.66 |   91.66 |   80.64 | 31,64,69,75,81,90 \n  fs.ts            |   83.58 |    68.57 |   95.45 |   83.33 | ...50,166-169,183 \n  github.ts        |   93.61 |       70 |     100 |   93.61 | 68,114,161        \n  http.ts          |    92.1 |    69.56 |     100 |   91.66 | 22,35,72          \n  indexedb.ts      |     100 |    93.33 |     100 |     100 | 57                \n  localstorage.ts  |   83.78 |    75.75 |   86.66 |   83.33 | 24,32-35,41,81    \n  lru-cache.ts     |      88 |    76.92 |     100 |      88 | 94-99             \n  memory.ts        |   89.74 |    76.92 |     100 |   89.74 | 40,47,62-63       \n  mongodb.ts       |     100 |    78.57 |      95 |     100 | 61-62,129         \n  netlify-blobs.ts |   89.28 |       75 |   93.75 |   89.28 | 73,78,96          \n  null.ts          |   44.44 |      100 |      25 |   44.44 | 9,15-24           \n  overlay.ts       |     100 |    92.85 |     100 |     100 | 73                \n  planetscale.ts   |   23.33 |       25 |    7.14 |   24.13 | 41-62,70-116      \n  redis.ts         |   82.65 |    56.52 |   92.85 |   81.11 | ...88,216,225-231 \n  s3.ts            |    92.3 |    81.03 |   97.43 |   91.81 | ...15,307,331,335 \n  ...on-storage.ts |     100 |      100 |     100 |     100 |                   \n  uploadthing.ts   |   17.64 |    18.18 |    4.16 |   21.95 | ...7-59,63,72-113 \n  upstash.ts       |      20 |        0 |    5.55 |   21.62 | ...7,61-72,79-112 \n  vercel-blob.ts   |    5.45 |        0 |       0 |       6 | 52-168            \n  ...time-cache.ts |   96.55 |       80 |     100 |   96.29 | 121               \n src/drivers/utils |   87.58 |    76.61 |   82.92 |   87.41 |                   \n  azure.ts         |       0 |      100 |       0 |       0 | 20-26             \n  cloudflare.ts    |   83.33 |       70 |     100 |   83.33 | 15,20             \n  fetch.ts         |   86.66 |     75.6 |      75 |   86.66 | ...9-60,78-79,120 \n  index.ts         |   83.33 |    72.72 |   85.71 |   83.33 | 48,80-82          \n  node-fs.ts       |   98.11 |    88.88 |   89.47 |   98.03 | 68                \n  path.ts          |   78.57 |    65.38 |     100 |   78.57 | 5,8,26            \n test/drivers      |    98.9 |     87.5 |     100 |   98.87 |                   \n  utils.ts         |    98.9 |     87.5 |     100 |   98.87 | 131               \n-------------------|---------|----------|---------|---------|-------------------\n",
+        "stderrTail": "$ pnpm gen-drivers && obuild\n$ node scripts/gen-drivers.ts\n$ pnpm lint && pnpm test:types && vitest run --coverage --maxWorkers=1\n$ oxlint . && oxfmt --check .\n$ tsc --noEmit --skipLibCheck\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[90mstderr\u001b[2m | test/drivers/db0.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: db0 - sqlite\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39m[unstorage]: Database driver is experimental and behavior may change in the future.\n\n\u001b[90mstderr\u001b[2m | test/drivers/vercel-runtime-cache.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: vercel-runtime-cache\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39mRuntime Cache unavailable in this environment. Falling back to in-memory cache.\n\n"
+      },
+      "selected": {
+        "command": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 test:types && corepack pnpm@11.21.0 exec vitest run --typecheck.only --maxWorkers=1 && corepack pnpm@11.21.0 exec vitest run --coverage --maxWorkers=1 test/driver-dependencies.test.ts test/driver-types.test.ts test/drivers/db0.test.ts test/drivers/s3-list.test.ts test/drivers/s3.test.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-03T05:02:45.911Z",
+        "finishedAt": "2026-10-03T05:03:04.155Z",
+        "wallMs": 18244,
+        "stdoutTail": "Generated drivers metadata file to /work/unstorage/src/_drivers.ts\n[log] 📦 Building `unstorage` (`/work/unstorage`)\n[log] 🧻 Cleaning up `./dist`\nWriting third-party licenses to /work/unstorage/dist/THIRD-PARTY-LICENSES.md\n[log] \n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/index.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 23.8 kB, \u001b[1m14.6 kB\u001b[22m\u001b[2m minified, 4.32 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m builtinDriverDependencies, builtinDrivers, createStorage, filterKeyByBase, filterKeyByDepth, joinKeys, normalizeBaseKey, normalizeKey, prefixStorage, restoreSnapshot, snapshot\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/server.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 25.9 kB, \u001b[1m14.7 kB\u001b[22m\u001b[2m minified, 5.11 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m createStorageHandler\u001b[22m\n\u001b[2m\u001b[1mDependencies:\u001b[22m\u001b[2m [Node.js]\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/tracing.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 2.6 kB, \u001b[1m1.26 kB\u001b[22m\u001b[2m minified, 671 B min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m withTracing\u001b[22m\n[log] \n\u001b[35m[transform] \u001b[39m\u001b[4m./dist/drivers/\u001b[24m\n\u001b[2m./dist/drivers/azure-app-configuration.mjs   \n./dist/drivers/azure-cosmos.mjs              \n./dist/drivers/azure-key-vault.mjs           \n./dist/drivers/azure-storage-blob.mjs        \n./dist/drivers/azure-storage-table.mjs       \n./dist/drivers/capacitor-preferences.mjs     \n./dist/drivers/cloudflare-cache-binding.mjs  \n./dist/drivers/cloudflare-kv-binding.mjs     \n./dist/drivers/cloudflare-kv-http.mjs        \n./dist/drivers/cloudflare-r2-binding.mjs     \n./dist/drivers/db0.mjs                       \n./dist/drivers/deno-kv-node.mjs              \n./dist/drivers/deno-kv.mjs                   \n./dist/drivers/fs-lite.mjs                   \n./dist/drivers/fs.mjs                        \n./dist/drivers/github.mjs                    \n./dist/drivers/http.mjs                      \n./dist/drivers/indexedb.mjs                  \n./dist/drivers/localstorage.mjs              \n./dist/drivers/lru-cache.mjs                 \n./dist/drivers/memory.mjs                    \n./dist/drivers/mongodb.mjs                   \n./dist/drivers/netlify-blobs.mjs             \n./dist/drivers/null.mjs                      \n./dist/drivers/overlay.mjs                   \n./dist/drivers/planetscale.mjs               \n./dist/drivers/redis.mjs                     \n./dist/drivers/s3.mjs                        \n./dist/drivers/session-storage.mjs           \n./dist/drivers/uploadthing.mjs               \n./dist/drivers/upstash.mjs                   \n./dist/drivers/vercel-blob.mjs               \n./dist/drivers/vercel-runtime-cache.mjs      \n./dist/drivers/utils/azure.mjs               \n./dist/drivers/utils/cloudflare.mjs          \n./dist/drivers/utils/fetch.mjs               \n./dist/drivers/utils/index.mjs               \n./dist/drivers/utils/node-fs.mjs             \n./dist/drivers/utils/path.mjs                \u001b[22m\n[log] \u001b[2m\nΣ Total dist byte size: \u001b[4m197 kB\u001b[24m (\u001b[4m94\u001b[24m files)\u001b[22m\n[log] \n✅ obuild finished in 547ms\nFound 0 warnings and 0 errors.\nFinished in 27ms on 94 files with 96 rules using 12 threads.\nChecking formatting...\n\nAll matched files use the correct format.\nFinished in 1698ms on 134 files using 12 threads.\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[44m\u001b[1m TS \u001b[22m\u001b[49m test/storage.test-d.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:02:54\n\u001b[2m   Duration \u001b[22m 1.39s\u001b[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms, typecheck 1.26s)\u001b[22m\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n      \u001b[2mCoverage enabled with \u001b[22m\u001b[33mv8\u001b[39m\n\n \u001b[32m✓\u001b[39m test/drivers/s3-list.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 179\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/s3.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 942\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/db0.test.ts \u001b[2m(\u001b[22m\u001b[2m68 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 4053\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 3921\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m33 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 34\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-types.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 8\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m119 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[90m (136)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:02:56\n\u001b[2m   Duration \u001b[22m 7.07s\u001b[2m (transform 264ms, setup 0ms, import 575ms, tests 5.22s, environment 1ms)\u001b[22m\n\n\u001b[34m % \u001b[39m\u001b[2mCoverage report from \u001b[22m\u001b[33mv8\u001b[39m\n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\nFile               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                                                                     \n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\nAll files          |   66.93 |    54.72 |   63.95 |   67.61 |                                                                                                                                       \n src               |   51.68 |    48.61 |   47.42 |    53.4 |                                                                                                                                       \n  _drivers.ts      |     100 |      100 |     100 |     100 |                                                                                                                                       \n  _utils.ts        |   48.48 |    59.25 |      50 |      50 | 6,18,52-81                                                                                                                            \n  index.ts         |       0 |        0 |       0 |       0 |                                                                                                                                       \n  storage.ts       |   55.09 |    46.26 |   52.85 |   56.65 | 54,78-80,85-90,95-102,173-181,205,209,214,224-226,235,251,257-260,277,281,291,305-311,317-320,345,364-366,376-441,444-446,455-463,476 \n  types.ts         |       0 |        0 |       0 |       0 |                                                                                                                                       \n  utils.ts         |   35.55 |       50 |   23.52 |   38.09 | 33-85,96,106                                                                                                                          \n src/drivers       |   75.22 |    65.42 |   77.14 |   74.28 |                                                                                                                                       \n  db0.ts           |   87.09 |    63.88 |   94.11 |   86.88 | 56,87,97-98,108,175-187                                                                                                               \n  memory.ts        |    5.12 |        0 |       0 |    5.12 | 6-84                                                                                                                                  \n  s3.ts            |    92.3 |    81.03 |   97.43 |   91.81 | 91,94,97,100,127,215,307,331,335                                                                                                      \n src/drivers/utils |   55.55 |    45.45 |   42.85 |   55.55 |                                                                                                                                       \n  index.ts         |   55.55 |    45.45 |   42.85 |   55.55 | 43,48,64-65,79-85                                                                                                                     \n test/drivers      |    98.9 |     62.5 |     100 |   98.87 |                                                                                                                                       \n  utils.ts         |    98.9 |     62.5 |     100 |   98.87 | 131                                                                                                                                   \n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\n",
+        "stderrTail": "$ pnpm gen-drivers && obuild\n$ node scripts/gen-drivers.ts\n$ oxlint . && oxfmt --check .\n$ tsc --noEmit --skipLibCheck\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[90mstderr\u001b[2m | test/drivers/db0.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: db0 - sqlite\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39m[unstorage]: Database driver is experimental and behavior may change in the future.\n\n"
+      },
+      "provenance": {
+        "baseSha": "88f8e43b40ea5533a96118770784ecb58d945243",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "observationSha256": "bb3d0361168de64931b6a2511f211178fffd8beb203a6c9a2052c2c6a3cd560d",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-03T05:01:30.306Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-03T05:02:45.773Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-03T05:03:04.155Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-03T05:01:30.306Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:02:45.773Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:02:45.884Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:03:04.155Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    },
+    {
+      "index": 2,
+      "order": [
+        "selected",
+        "full"
+      ],
+      "cacheState": {
+        "selected": "cold",
+        "full": "cold"
+      },
+      "preparations": [
+        {
+          "command": "node /evidence/reset-vitest-cache.mjs",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "startedAt": "2026-10-03T05:03:04.171Z",
+          "finishedAt": "2026-10-03T05:03:04.227Z",
+          "wallMs": 56,
+          "stdoutTail": "",
+          "stderrTail": ""
+        },
+        {
+          "command": "node /evidence/reset-vitest-cache.mjs",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "startedAt": "2026-10-03T05:03:19.608Z",
+          "finishedAt": "2026-10-03T05:03:19.690Z",
+          "wallMs": 82,
+          "stdoutTail": "",
+          "stderrTail": ""
+        }
+      ],
+      "full": {
+        "command": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test --maxWorkers=1",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-03T05:03:19.704Z",
+        "finishedAt": "2026-10-03T05:04:07.242Z",
+        "wallMs": 47538,
+        "stdoutTail": "Generated drivers metadata file to /work/unstorage/src/_drivers.ts\n[log] 📦 Building `unstorage` (`/work/unstorage`)\n[log] 🧻 Cleaning up `./dist`\nWriting third-party licenses to /work/unstorage/dist/THIRD-PARTY-LICENSES.md\n[log] \n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/index.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 23.8 kB, \u001b[1m14.6 kB\u001b[22m\u001b[2m minified, 4.32 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m builtinDriverDependencies, builtinDrivers, createStorage, filterKeyByBase, filterKeyByDepth, joinKeys, normalizeBaseKey, normalizeKey, prefixStorage, restoreSnapshot, snapshot\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/server.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 25.9 kB, \u001b[1m14.7 kB\u001b[22m\u001b[2m minified, 5.11 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m createStorageHandler\u001b[22m\n\u001b[2m\u001b[1mDependencies:\u001b[22m\u001b[2m [Node.js]\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/tracing.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 2.6 kB, \u001b[1m1.26 kB\u001b[22m\u001b[2m minified, 671 B min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m withTracing\u001b[22m\n[log] \n\u001b[35m[transform] \u001b[39m\u001b[4m./dist/drivers/\u001b[24m\n\u001b[2m./dist/drivers/azure-app-configuration.mjs   \n./dist/drivers/azure-cosmos.mjs              \n./dist/drivers/azure-key-vault.mjs           \n./dist/drivers/azure-storage-blob.mjs        \n./dist/drivers/azure-storage-table.mjs       \n./dist/drivers/capacitor-preferences.mjs     \n./dist/drivers/cloudflare-cache-binding.mjs  \n./dist/drivers/cloudflare-kv-binding.mjs     \n./dist/drivers/cloudflare-kv-http.mjs        \n./dist/drivers/cloudflare-r2-binding.mjs     \n./dist/drivers/db0.mjs                       \n./dist/drivers/deno-kv-node.mjs              \n./dist/drivers/deno-kv.mjs                   \n./dist/drivers/fs-lite.mjs                   \n./dist/drivers/fs.mjs                        \n./dist/drivers/github.mjs                    \n./dist/drivers/http.mjs                      \n./dist/drivers/indexedb.mjs                  \n./dist/drivers/localstorage.mjs              \n./dist/drivers/lru-cache.mjs                 \n./dist/drivers/memory.mjs                    \n./dist/drivers/mongodb.mjs                   \n./dist/drivers/netlify-blobs.mjs             \n./dist/drivers/null.mjs                      \n./dist/drivers/overlay.mjs                   \n./dist/drivers/planetscale.mjs               \n./dist/drivers/redis.mjs                     \n./dist/drivers/s3.mjs                        \n./dist/drivers/session-storage.mjs           \n./dist/drivers/uploadthing.mjs               \n./dist/drivers/upstash.mjs                   \n./dist/drivers/vercel-blob.mjs               \n./dist/drivers/vercel-runtime-cache.mjs      \n./dist/drivers/utils/azure.mjs               \n./dist/drivers/utils/cloudflare.mjs          \n./dist/drivers/utils/fetch.mjs               \n./dist/drivers/utils/index.mjs               \n./dist/drivers/utils/node-fs.mjs             \n./dist/drivers/utils/path.mjs                \u001b[22m\n[log] \u001b[2m\nΣ Total dist byte size: \u001b[4m197 kB\u001b[24m (\u001b[4m94\u001b[24m files)\u001b[22m\n[log] \n✅ obuild finished in 347ms\nFound 0 warnings and 0 errors.\nFinished in 36ms on 94 files with 96 rules using 12 threads.\nChecking formatting...\n\nAll matched files use the correct format.\nFinished in 999ms on 134 files using 12 threads.\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n      \u001b[2mCoverage enabled with \u001b[22m\u001b[33mv8\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[44m\u001b[1m TS \u001b[22m\u001b[49m test/storage.test-d.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/tracing.test.ts \u001b[2m(\u001b[22m\u001b[2m29 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 41\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/storage.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 53\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/fs.test.ts \u001b[2m(\u001b[22m\u001b[2m51 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1730\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m watch filesystem \u001b[33m 525\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m reads concurrent with a write never observe a truncated value \u001b[33m 397\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m watch never observes in-progress temp files \u001b[33m 508\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/s3-list.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 131\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/fs-lite.test.ts \u001b[2m(\u001b[22m\u001b[2m45 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 561\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m reads concurrent with a write never observe a truncated value \u001b[33m 374\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/server.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 113\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-storage-blob.test.ts \u001b[2m(\u001b[22m\u001b[2m20 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m20 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/s3.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 601\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-cache-binding-fake.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 50\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/mongodb.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 628\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/db0.test.ts \u001b[2m(\u001b[22m\u001b[2m68 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 3585\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 3422\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/localstorage.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 36\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/session-storage.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 37\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m33 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 38\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/redis.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 51\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/vercel-runtime-cache.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m2 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 48\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-r2-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1856\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/indexedb.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 55\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/http.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 282\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/cloudflare-cache-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/netlify-blobs.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1164\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-kv-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1886\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/deno-kv.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/github.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1592\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m can read a repository files \u001b[33m 557\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m can read a json file content \u001b[33m 1023\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-types.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 18\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/vercel-blob.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m30 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/capacitor-preferences.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 73\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/lru-cache.test.ts \u001b[2m(\u001b[22m\u001b[2m31 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 55\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/memory.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 95\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-storage-table.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/cloudflare-kv-http.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/upstash.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/uploadthing.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/null.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 11\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/planetscale.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 9\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-key-vault.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/deno-kv-node.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 284\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-app-configuration.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/overlay.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 28\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-cosmos.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m30 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m11 skipped\u001b[39m\u001b[90m (41)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m567 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m204 skipped\u001b[39m\u001b[90m (772)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:03:25\n\u001b[2m   Duration \u001b[22m 41.28s\u001b[2m (transform 1.34s, setup 0ms, import 13.62s, tests 15.11s, environment 7ms, typecheck 501ms)\u001b[22m\n\n\u001b[34m % \u001b[39m\u001b[2mCoverage report from \u001b[22m\u001b[33mv8\u001b[39m\n-------------------|---------|----------|---------|---------|-------------------\nFile               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s \n-------------------|---------|----------|---------|---------|-------------------\nAll files          |   71.42 |     63.4 |   71.38 |   71.78 |                   \n src               |   92.12 |    84.14 |   98.19 |   92.24 |                   \n  _drivers.ts      |     100 |      100 |     100 |     100 |                   \n  _utils.ts        |   81.81 |    81.48 |      90 |   84.37 | 53,61,65,74,81    \n  index.ts         |       0 |        0 |       0 |       0 |                   \n  server.ts        |   95.83 |    90.24 |     100 |   95.74 | 55,128            \n  storage.ts       |   92.12 |    84.32 |   98.57 |   91.62 | ...03,412,415-416 \n  tracing.ts       |   91.89 |       75 |     100 |   94.28 | 60,66             \n  types.ts         |       0 |        0 |       0 |       0 |                   \n  utils.ts         |   95.55 |       85 |     100 |   95.23 | 35,106            \n src/drivers       |   62.59 |       53 |   63.44 |   62.98 |                   \n  ...figuration.ts |   20.93 |    16.66 |    7.69 |   21.95 | 66-81,89-165      \n  azure-cosmos.ts  |   16.66 |        0 |    8.33 |   17.24 | 68-90,98-139      \n  ...-key-vault.ts |    10.9 |        0 |    5.88 |   11.32 | ...71-123,136-152 \n  ...orage-blob.ts |    9.85 |      5.4 |    4.54 |      10 | ...19-194,210-232 \n  ...rage-table.ts |   13.04 |    30.43 |    7.69 |   13.33 | 77-106,114-162    \n  ...references.ts |     100 |      100 |     100 |     100 |                   \n  ...he-binding.ts |    65.9 |     64.7 |      50 |    65.9 | ...,93-96,104-114 \n  ...kv-binding.ts |   97.14 |       75 |   92.85 |   96.77 | 41                \n  ...re-kv-http.ts |    2.81 |        0 |       0 |    3.07 | 85-220            \n  ...r2-binding.ts |   86.27 |    72.72 |   89.47 |   86.66 | 26,88-100         \n  db0.ts           |   87.09 |    63.88 |   94.11 |   86.88 | ...98,108,175-187 \n  deno-kv-node.ts  |   88.88 |      100 |      75 |   88.88 | 46                \n  deno-kv.ts       |      88 |    60.86 |   92.85 |   87.75 | 37-49,57          \n  fs-lite.ts       |   80.64 |    66.66 |   91.66 |   80.64 | 31,64,69,75,81,90 \n  fs.ts            |   83.58 |    68.57 |   95.45 |   83.33 | ...50,166-169,183 \n  github.ts        |   93.61 |       70 |     100 |   93.61 | 68,114,161        \n  http.ts          |    92.1 |    69.56 |     100 |   91.66 | 22,35,72          \n  indexedb.ts      |     100 |    93.33 |     100 |     100 | 57                \n  localstorage.ts  |   83.78 |    75.75 |   86.66 |   83.33 | 24,32-35,41,81    \n  lru-cache.ts     |      88 |    76.92 |     100 |      88 | 94-99             \n  memory.ts        |   89.74 |    76.92 |     100 |   89.74 | 40,47,62-63       \n  mongodb.ts       |     100 |    78.57 |      95 |     100 | 61-62,129         \n  netlify-blobs.ts |   89.28 |       75 |   93.75 |   89.28 | 73,78,96          \n  null.ts          |   44.44 |      100 |      25 |   44.44 | 9,15-24           \n  overlay.ts       |     100 |    92.85 |     100 |     100 | 73                \n  planetscale.ts   |   23.33 |       25 |    7.14 |   24.13 | 41-62,70-116      \n  redis.ts         |   82.65 |    56.52 |   92.85 |   81.11 | ...88,216,225-231 \n  s3.ts            |    92.3 |    81.03 |   97.43 |   91.81 | ...15,307,331,335 \n  ...on-storage.ts |     100 |      100 |     100 |     100 |                   \n  uploadthing.ts   |   17.64 |    18.18 |    4.16 |   21.95 | ...7-59,63,72-113 \n  upstash.ts       |      20 |        0 |    5.55 |   21.62 | ...7,61-72,79-112 \n  vercel-blob.ts   |    5.45 |        0 |       0 |       6 | 52-168            \n  ...time-cache.ts |   96.55 |       80 |     100 |   96.29 | 121               \n src/drivers/utils |   87.58 |    76.61 |   82.92 |   87.41 |                   \n  azure.ts         |       0 |      100 |       0 |       0 | 20-26             \n  cloudflare.ts    |   83.33 |       70 |     100 |   83.33 | 15,20             \n  fetch.ts         |   86.66 |     75.6 |      75 |   86.66 | ...9-60,78-79,120 \n  index.ts         |   83.33 |    72.72 |   85.71 |   83.33 | 48,80-82          \n  node-fs.ts       |   98.11 |    88.88 |   89.47 |   98.03 | 68                \n  path.ts          |   78.57 |    65.38 |     100 |   78.57 | 5,8,26            \n test/drivers      |    98.9 |     87.5 |     100 |   98.87 |                   \n  utils.ts         |    98.9 |     87.5 |     100 |   98.87 | 131               \n-------------------|---------|----------|---------|---------|-------------------\n",
+        "stderrTail": "$ pnpm gen-drivers && obuild\n$ node scripts/gen-drivers.ts\n$ pnpm lint && pnpm test:types && vitest run --coverage --maxWorkers=1\n$ oxlint . && oxfmt --check .\n$ tsc --noEmit --skipLibCheck\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[90mstderr\u001b[2m | test/drivers/db0.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: db0 - sqlite\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39m[unstorage]: Database driver is experimental and behavior may change in the future.\n\n\u001b[90mstderr\u001b[2m | test/drivers/vercel-runtime-cache.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: vercel-runtime-cache\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39mRuntime Cache unavailable in this environment. Falling back to in-memory cache.\n\n"
+      },
+      "selected": {
+        "command": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 test:types && corepack pnpm@11.21.0 exec vitest run --typecheck.only --maxWorkers=1 && corepack pnpm@11.21.0 exec vitest run --coverage --maxWorkers=1 test/driver-dependencies.test.ts test/driver-types.test.ts test/drivers/db0.test.ts test/drivers/s3-list.test.ts test/drivers/s3.test.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-03T05:03:04.247Z",
+        "finishedAt": "2026-10-03T05:03:19.591Z",
+        "wallMs": 15344,
+        "stdoutTail": "Generated drivers metadata file to /work/unstorage/src/_drivers.ts\n[log] 📦 Building `unstorage` (`/work/unstorage`)\n[log] 🧻 Cleaning up `./dist`\nWriting third-party licenses to /work/unstorage/dist/THIRD-PARTY-LICENSES.md\n[log] \n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/index.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 23.8 kB, \u001b[1m14.6 kB\u001b[22m\u001b[2m minified, 4.32 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m builtinDriverDependencies, builtinDrivers, createStorage, filterKeyByBase, filterKeyByDepth, joinKeys, normalizeBaseKey, normalizeKey, prefixStorage, restoreSnapshot, snapshot\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/server.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 25.9 kB, \u001b[1m14.7 kB\u001b[22m\u001b[2m minified, 5.11 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m createStorageHandler\u001b[22m\n\u001b[2m\u001b[1mDependencies:\u001b[22m\u001b[2m [Node.js]\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/tracing.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 2.6 kB, \u001b[1m1.26 kB\u001b[22m\u001b[2m minified, 671 B min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m withTracing\u001b[22m\n[log] \n\u001b[35m[transform] \u001b[39m\u001b[4m./dist/drivers/\u001b[24m\n\u001b[2m./dist/drivers/azure-app-configuration.mjs   \n./dist/drivers/azure-cosmos.mjs              \n./dist/drivers/azure-key-vault.mjs           \n./dist/drivers/azure-storage-blob.mjs        \n./dist/drivers/azure-storage-table.mjs       \n./dist/drivers/capacitor-preferences.mjs     \n./dist/drivers/cloudflare-cache-binding.mjs  \n./dist/drivers/cloudflare-kv-binding.mjs     \n./dist/drivers/cloudflare-kv-http.mjs        \n./dist/drivers/cloudflare-r2-binding.mjs     \n./dist/drivers/db0.mjs                       \n./dist/drivers/deno-kv-node.mjs              \n./dist/drivers/deno-kv.mjs                   \n./dist/drivers/fs-lite.mjs                   \n./dist/drivers/fs.mjs                        \n./dist/drivers/github.mjs                    \n./dist/drivers/http.mjs                      \n./dist/drivers/indexedb.mjs                  \n./dist/drivers/localstorage.mjs              \n./dist/drivers/lru-cache.mjs                 \n./dist/drivers/memory.mjs                    \n./dist/drivers/mongodb.mjs                   \n./dist/drivers/netlify-blobs.mjs             \n./dist/drivers/null.mjs                      \n./dist/drivers/overlay.mjs                   \n./dist/drivers/planetscale.mjs               \n./dist/drivers/redis.mjs                     \n./dist/drivers/s3.mjs                        \n./dist/drivers/session-storage.mjs           \n./dist/drivers/uploadthing.mjs               \n./dist/drivers/upstash.mjs                   \n./dist/drivers/vercel-blob.mjs               \n./dist/drivers/vercel-runtime-cache.mjs      \n./dist/drivers/utils/azure.mjs               \n./dist/drivers/utils/cloudflare.mjs          \n./dist/drivers/utils/fetch.mjs               \n./dist/drivers/utils/index.mjs               \n./dist/drivers/utils/node-fs.mjs             \n./dist/drivers/utils/path.mjs                \u001b[22m\n[log] \u001b[2m\nΣ Total dist byte size: \u001b[4m197 kB\u001b[24m (\u001b[4m94\u001b[24m files)\u001b[22m\n[log] \n✅ obuild finished in 400ms\nFound 0 warnings and 0 errors.\nFinished in 29ms on 94 files with 96 rules using 12 threads.\nChecking formatting...\n\nAll matched files use the correct format.\nFinished in 1378ms on 134 files using 12 threads.\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[44m\u001b[1m TS \u001b[22m\u001b[49m test/storage.test-d.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:03:11\n\u001b[2m   Duration \u001b[22m 1.03s\u001b[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms, typecheck 976ms)\u001b[22m\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n      \u001b[2mCoverage enabled with \u001b[22m\u001b[33mv8\u001b[39m\n\n \u001b[32m✓\u001b[39m test/drivers/s3-list.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 132\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/s3.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 618\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/db0.test.ts \u001b[2m(\u001b[22m\u001b[2m68 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 3166\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 3043\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m33 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 27\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-types.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m119 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[90m (136)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:03:13\n\u001b[2m   Duration \u001b[22m 5.54s\u001b[2m (transform 198ms, setup 0ms, import 498ms, tests 3.95s, environment 1ms)\u001b[22m\n\n\u001b[34m % \u001b[39m\u001b[2mCoverage report from \u001b[22m\u001b[33mv8\u001b[39m\n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\nFile               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                                                                     \n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\nAll files          |   66.93 |    54.72 |   63.95 |   67.61 |                                                                                                                                       \n src               |   51.68 |    48.61 |   47.42 |    53.4 |                                                                                                                                       \n  _drivers.ts      |     100 |      100 |     100 |     100 |                                                                                                                                       \n  _utils.ts        |   48.48 |    59.25 |      50 |      50 | 6,18,52-81                                                                                                                            \n  index.ts         |       0 |        0 |       0 |       0 |                                                                                                                                       \n  storage.ts       |   55.09 |    46.26 |   52.85 |   56.65 | 54,78-80,85-90,95-102,173-181,205,209,214,224-226,235,251,257-260,277,281,291,305-311,317-320,345,364-366,376-441,444-446,455-463,476 \n  types.ts         |       0 |        0 |       0 |       0 |                                                                                                                                       \n  utils.ts         |   35.55 |       50 |   23.52 |   38.09 | 33-85,96,106                                                                                                                          \n src/drivers       |   75.22 |    65.42 |   77.14 |   74.28 |                                                                                                                                       \n  db0.ts           |   87.09 |    63.88 |   94.11 |   86.88 | 56,87,97-98,108,175-187                                                                                                               \n  memory.ts        |    5.12 |        0 |       0 |    5.12 | 6-84                                                                                                                                  \n  s3.ts            |    92.3 |    81.03 |   97.43 |   91.81 | 91,94,97,100,127,215,307,331,335                                                                                                      \n src/drivers/utils |   55.55 |    45.45 |   42.85 |   55.55 |                                                                                                                                       \n  index.ts         |   55.55 |    45.45 |   42.85 |   55.55 | 43,48,64-65,79-85                                                                                                                     \n test/drivers      |    98.9 |     62.5 |     100 |   98.87 |                                                                                                                                       \n  utils.ts         |    98.9 |     62.5 |     100 |   98.87 | 131                                                                                                                                   \n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\n",
+        "stderrTail": "$ pnpm gen-drivers && obuild\n$ node scripts/gen-drivers.ts\n$ oxlint . && oxfmt --check .\n$ tsc --noEmit --skipLibCheck\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[90mstderr\u001b[2m | test/drivers/db0.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: db0 - sqlite\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39m[unstorage]: Database driver is experimental and behavior may change in the future.\n\n"
+      },
+      "provenance": {
+        "baseSha": "88f8e43b40ea5533a96118770784ecb58d945243",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "observationSha256": "bb3d0361168de64931b6a2511f211178fffd8beb203a6c9a2052c2c6a3cd560d",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-03T05:03:19.690Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-03T05:04:07.242Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-03T05:03:19.591Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-03T05:03:04.227Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:03:19.591Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:03:19.690Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:04:07.242Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    },
+    {
+      "index": 3,
+      "order": [
+        "full",
+        "selected"
+      ],
+      "cacheState": {
+        "full": "cold",
+        "selected": "cold"
+      },
+      "preparations": [
+        {
+          "command": "node /evidence/reset-vitest-cache.mjs",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "startedAt": "2026-10-03T05:04:07.269Z",
+          "finishedAt": "2026-10-03T05:04:07.333Z",
+          "wallMs": 64,
+          "stdoutTail": "",
+          "stderrTail": ""
+        },
+        {
+          "command": "node /evidence/reset-vitest-cache.mjs",
+          "exitCode": 0,
+          "signal": null,
+          "timedOut": false,
+          "startedAt": "2026-10-03T05:04:56.593Z",
+          "finishedAt": "2026-10-03T05:04:56.768Z",
+          "wallMs": 175,
+          "stdoutTail": "",
+          "stderrTail": ""
+        }
+      ],
+      "full": {
+        "command": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test --maxWorkers=1",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-03T05:04:07.361Z",
+        "finishedAt": "2026-10-03T05:04:56.577Z",
+        "wallMs": 49216,
+        "stdoutTail": "Generated drivers metadata file to /work/unstorage/src/_drivers.ts\n[log] 📦 Building `unstorage` (`/work/unstorage`)\n[log] 🧻 Cleaning up `./dist`\nWriting third-party licenses to /work/unstorage/dist/THIRD-PARTY-LICENSES.md\n[log] \n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/index.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 23.8 kB, \u001b[1m14.6 kB\u001b[22m\u001b[2m minified, 4.32 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m builtinDriverDependencies, builtinDrivers, createStorage, filterKeyByBase, filterKeyByDepth, joinKeys, normalizeBaseKey, normalizeKey, prefixStorage, restoreSnapshot, snapshot\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/server.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 25.9 kB, \u001b[1m14.7 kB\u001b[22m\u001b[2m minified, 5.11 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m createStorageHandler\u001b[22m\n\u001b[2m\u001b[1mDependencies:\u001b[22m\u001b[2m [Node.js]\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/tracing.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 2.6 kB, \u001b[1m1.26 kB\u001b[22m\u001b[2m minified, 671 B min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m withTracing\u001b[22m\n[log] \n\u001b[35m[transform] \u001b[39m\u001b[4m./dist/drivers/\u001b[24m\n\u001b[2m./dist/drivers/azure-app-configuration.mjs   \n./dist/drivers/azure-cosmos.mjs              \n./dist/drivers/azure-key-vault.mjs           \n./dist/drivers/azure-storage-blob.mjs        \n./dist/drivers/azure-storage-table.mjs       \n./dist/drivers/capacitor-preferences.mjs     \n./dist/drivers/cloudflare-cache-binding.mjs  \n./dist/drivers/cloudflare-kv-binding.mjs     \n./dist/drivers/cloudflare-kv-http.mjs        \n./dist/drivers/cloudflare-r2-binding.mjs     \n./dist/drivers/db0.mjs                       \n./dist/drivers/deno-kv-node.mjs              \n./dist/drivers/deno-kv.mjs                   \n./dist/drivers/fs-lite.mjs                   \n./dist/drivers/fs.mjs                        \n./dist/drivers/github.mjs                    \n./dist/drivers/http.mjs                      \n./dist/drivers/indexedb.mjs                  \n./dist/drivers/localstorage.mjs              \n./dist/drivers/lru-cache.mjs                 \n./dist/drivers/memory.mjs                    \n./dist/drivers/mongodb.mjs                   \n./dist/drivers/netlify-blobs.mjs             \n./dist/drivers/null.mjs                      \n./dist/drivers/overlay.mjs                   \n./dist/drivers/planetscale.mjs               \n./dist/drivers/redis.mjs                     \n./dist/drivers/s3.mjs                        \n./dist/drivers/session-storage.mjs           \n./dist/drivers/uploadthing.mjs               \n./dist/drivers/upstash.mjs                   \n./dist/drivers/vercel-blob.mjs               \n./dist/drivers/vercel-runtime-cache.mjs      \n./dist/drivers/utils/azure.mjs               \n./dist/drivers/utils/cloudflare.mjs          \n./dist/drivers/utils/fetch.mjs               \n./dist/drivers/utils/index.mjs               \n./dist/drivers/utils/node-fs.mjs             \n./dist/drivers/utils/path.mjs                \u001b[22m\n[log] \u001b[2m\nΣ Total dist byte size: \u001b[4m197 kB\u001b[24m (\u001b[4m94\u001b[24m files)\u001b[22m\n[log] \n✅ obuild finished in 671ms\nFound 0 warnings and 0 errors.\nFinished in 33ms on 94 files with 96 rules using 12 threads.\nChecking formatting...\n\nAll matched files use the correct format.\nFinished in 2766ms on 134 files using 12 threads.\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n      \u001b[2mCoverage enabled with \u001b[22m\u001b[33mv8\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[44m\u001b[1m TS \u001b[22m\u001b[49m test/storage.test-d.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/tracing.test.ts \u001b[2m(\u001b[22m\u001b[2m29 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 48\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/storage.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 52\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/fs.test.ts \u001b[2m(\u001b[22m\u001b[2m51 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1802\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m watch filesystem \u001b[33m 529\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m reads concurrent with a write never observe a truncated value \u001b[33m 430\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m watch never observes in-progress temp files \u001b[33m 507\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/s3-list.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 133\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/fs-lite.test.ts \u001b[2m(\u001b[22m\u001b[2m45 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 655\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m reads concurrent with a write never observe a truncated value \u001b[33m 412\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/server.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 134\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-storage-blob.test.ts \u001b[2m(\u001b[22m\u001b[2m20 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m20 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/s3.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 710\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-cache-binding-fake.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 44\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/mongodb.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 751\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/db0.test.ts \u001b[2m(\u001b[22m\u001b[2m68 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 3682\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 3532\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/localstorage.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 38\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/session-storage.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 26\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m33 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 50\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/redis.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 74\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/vercel-runtime-cache.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m2 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 58\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-r2-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 2445\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/indexedb.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 40\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/http.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 226\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/cloudflare-cache-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/netlify-blobs.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1157\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-kv-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1666\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 317\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/deno-kv.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/github.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 943\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m can read a repository files \u001b[33m 525\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m can read a json file content \u001b[33m 413\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-types.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/vercel-blob.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m30 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/capacitor-preferences.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 36\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/lru-cache.test.ts \u001b[2m(\u001b[22m\u001b[2m31 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 31\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/memory.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 70\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-storage-table.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/cloudflare-kv-http.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/upstash.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/uploadthing.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/null.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 6\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/planetscale.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 5\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-key-vault.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/deno-kv-node.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 125\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-app-configuration.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/overlay.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 22\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-cosmos.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m30 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m11 skipped\u001b[39m\u001b[90m (41)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m567 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m204 skipped\u001b[39m\u001b[90m (772)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:04:18\n\u001b[2m   Duration \u001b[22m 37.58s\u001b[2m (transform 1.12s, setup 0ms, import 12.48s, tests 15.04s, environment 6ms, typecheck 631ms)\u001b[22m\n\n\u001b[34m % \u001b[39m\u001b[2mCoverage report from \u001b[22m\u001b[33mv8\u001b[39m\n-------------------|---------|----------|---------|---------|-------------------\nFile               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s \n-------------------|---------|----------|---------|---------|-------------------\nAll files          |   71.42 |     63.4 |   71.38 |   71.78 |                   \n src               |   92.12 |    84.14 |   98.19 |   92.24 |                   \n  _drivers.ts      |     100 |      100 |     100 |     100 |                   \n  _utils.ts        |   81.81 |    81.48 |      90 |   84.37 | 53,61,65,74,81    \n  index.ts         |       0 |        0 |       0 |       0 |                   \n  server.ts        |   95.83 |    90.24 |     100 |   95.74 | 55,128            \n  storage.ts       |   92.12 |    84.32 |   98.57 |   91.62 | ...03,412,415-416 \n  tracing.ts       |   91.89 |       75 |     100 |   94.28 | 60,66             \n  types.ts         |       0 |        0 |       0 |       0 |                   \n  utils.ts         |   95.55 |       85 |     100 |   95.23 | 35,106            \n src/drivers       |   62.59 |       53 |   63.44 |   62.98 |                   \n  ...figuration.ts |   20.93 |    16.66 |    7.69 |   21.95 | 66-81,89-165      \n  azure-cosmos.ts  |   16.66 |        0 |    8.33 |   17.24 | 68-90,98-139      \n  ...-key-vault.ts |    10.9 |        0 |    5.88 |   11.32 | ...71-123,136-152 \n  ...orage-blob.ts |    9.85 |      5.4 |    4.54 |      10 | ...19-194,210-232 \n  ...rage-table.ts |   13.04 |    30.43 |    7.69 |   13.33 | 77-106,114-162    \n  ...references.ts |     100 |      100 |     100 |     100 |                   \n  ...he-binding.ts |    65.9 |     64.7 |      50 |    65.9 | ...,93-96,104-114 \n  ...kv-binding.ts |   97.14 |       75 |   92.85 |   96.77 | 41                \n  ...re-kv-http.ts |    2.81 |        0 |       0 |    3.07 | 85-220            \n  ...r2-binding.ts |   86.27 |    72.72 |   89.47 |   86.66 | 26,88-100         \n  db0.ts           |   87.09 |    63.88 |   94.11 |   86.88 | ...98,108,175-187 \n  deno-kv-node.ts  |   88.88 |      100 |      75 |   88.88 | 46                \n  deno-kv.ts       |      88 |    60.86 |   92.85 |   87.75 | 37-49,57          \n  fs-lite.ts       |   80.64 |    66.66 |   91.66 |   80.64 | 31,64,69,75,81,90 \n  fs.ts            |   83.58 |    68.57 |   95.45 |   83.33 | ...50,166-169,183 \n  github.ts        |   93.61 |       70 |     100 |   93.61 | 68,114,161        \n  http.ts          |    92.1 |    69.56 |     100 |   91.66 | 22,35,72          \n  indexedb.ts      |     100 |    93.33 |     100 |     100 | 57                \n  localstorage.ts  |   83.78 |    75.75 |   86.66 |   83.33 | 24,32-35,41,81    \n  lru-cache.ts     |      88 |    76.92 |     100 |      88 | 94-99             \n  memory.ts        |   89.74 |    76.92 |     100 |   89.74 | 40,47,62-63       \n  mongodb.ts       |     100 |    78.57 |      95 |     100 | 61-62,129         \n  netlify-blobs.ts |   89.28 |       75 |   93.75 |   89.28 | 73,78,96          \n  null.ts          |   44.44 |      100 |      25 |   44.44 | 9,15-24           \n  overlay.ts       |     100 |    92.85 |     100 |     100 | 73                \n  planetscale.ts   |   23.33 |       25 |    7.14 |   24.13 | 41-62,70-116      \n  redis.ts         |   82.65 |    56.52 |   92.85 |   81.11 | ...88,216,225-231 \n  s3.ts            |    92.3 |    81.03 |   97.43 |   91.81 | ...15,307,331,335 \n  ...on-storage.ts |     100 |      100 |     100 |     100 |                   \n  uploadthing.ts   |   17.64 |    18.18 |    4.16 |   21.95 | ...7-59,63,72-113 \n  upstash.ts       |      20 |        0 |    5.55 |   21.62 | ...7,61-72,79-112 \n  vercel-blob.ts   |    5.45 |        0 |       0 |       6 | 52-168            \n  ...time-cache.ts |   96.55 |       80 |     100 |   96.29 | 121               \n src/drivers/utils |   87.58 |    76.61 |   82.92 |   87.41 |                   \n  azure.ts         |       0 |      100 |       0 |       0 | 20-26             \n  cloudflare.ts    |   83.33 |       70 |     100 |   83.33 | 15,20             \n  fetch.ts         |   86.66 |     75.6 |      75 |   86.66 | ...9-60,78-79,120 \n  index.ts         |   83.33 |    72.72 |   85.71 |   83.33 | 48,80-82          \n  node-fs.ts       |   98.11 |    88.88 |   89.47 |   98.03 | 68                \n  path.ts          |   78.57 |    65.38 |     100 |   78.57 | 5,8,26            \n test/drivers      |    98.9 |     87.5 |     100 |   98.87 |                   \n  utils.ts         |    98.9 |     87.5 |     100 |   98.87 | 131               \n-------------------|---------|----------|---------|---------|-------------------\n",
+        "stderrTail": "$ pnpm gen-drivers && obuild\n$ node scripts/gen-drivers.ts\n$ pnpm lint && pnpm test:types && vitest run --coverage --maxWorkers=1\n$ oxlint . && oxfmt --check .\n$ tsc --noEmit --skipLibCheck\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[90mstderr\u001b[2m | test/drivers/db0.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: db0 - sqlite\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39m[unstorage]: Database driver is experimental and behavior may change in the future.\n\n\u001b[90mstderr\u001b[2m | test/drivers/vercel-runtime-cache.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: vercel-runtime-cache\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39mRuntime Cache unavailable in this environment. Falling back to in-memory cache.\n\n"
+      },
+      "selected": {
+        "command": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 test:types && corepack pnpm@11.21.0 exec vitest run --typecheck.only --maxWorkers=1 && corepack pnpm@11.21.0 exec vitest run --coverage --maxWorkers=1 test/driver-dependencies.test.ts test/driver-types.test.ts test/drivers/db0.test.ts test/drivers/s3-list.test.ts test/drivers/s3.test.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-03T05:04:56.797Z",
+        "finishedAt": "2026-10-03T05:05:11.335Z",
+        "wallMs": 14538,
+        "stdoutTail": "Generated drivers metadata file to /work/unstorage/src/_drivers.ts\n[log] 📦 Building `unstorage` (`/work/unstorage`)\n[log] 🧻 Cleaning up `./dist`\nWriting third-party licenses to /work/unstorage/dist/THIRD-PARTY-LICENSES.md\n[log] \n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/index.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 23.8 kB, \u001b[1m14.6 kB\u001b[22m\u001b[2m minified, 4.32 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m builtinDriverDependencies, builtinDrivers, createStorage, filterKeyByBase, filterKeyByDepth, joinKeys, normalizeBaseKey, normalizeKey, prefixStorage, restoreSnapshot, snapshot\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/server.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 25.9 kB, \u001b[1m14.7 kB\u001b[22m\u001b[2m minified, 5.11 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m createStorageHandler\u001b[22m\n\u001b[2m\u001b[1mDependencies:\u001b[22m\u001b[2m [Node.js]\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/tracing.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 2.6 kB, \u001b[1m1.26 kB\u001b[22m\u001b[2m minified, 671 B min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m withTracing\u001b[22m\n[log] \n\u001b[35m[transform] \u001b[39m\u001b[4m./dist/drivers/\u001b[24m\n\u001b[2m./dist/drivers/azure-app-configuration.mjs   \n./dist/drivers/azure-cosmos.mjs              \n./dist/drivers/azure-key-vault.mjs           \n./dist/drivers/azure-storage-blob.mjs        \n./dist/drivers/azure-storage-table.mjs       \n./dist/drivers/capacitor-preferences.mjs     \n./dist/drivers/cloudflare-cache-binding.mjs  \n./dist/drivers/cloudflare-kv-binding.mjs     \n./dist/drivers/cloudflare-kv-http.mjs        \n./dist/drivers/cloudflare-r2-binding.mjs     \n./dist/drivers/db0.mjs                       \n./dist/drivers/deno-kv-node.mjs              \n./dist/drivers/deno-kv.mjs                   \n./dist/drivers/fs-lite.mjs                   \n./dist/drivers/fs.mjs                        \n./dist/drivers/github.mjs                    \n./dist/drivers/http.mjs                      \n./dist/drivers/indexedb.mjs                  \n./dist/drivers/localstorage.mjs              \n./dist/drivers/lru-cache.mjs                 \n./dist/drivers/memory.mjs                    \n./dist/drivers/mongodb.mjs                   \n./dist/drivers/netlify-blobs.mjs             \n./dist/drivers/null.mjs                      \n./dist/drivers/overlay.mjs                   \n./dist/drivers/planetscale.mjs               \n./dist/drivers/redis.mjs                     \n./dist/drivers/s3.mjs                        \n./dist/drivers/session-storage.mjs           \n./dist/drivers/uploadthing.mjs               \n./dist/drivers/upstash.mjs                   \n./dist/drivers/vercel-blob.mjs               \n./dist/drivers/vercel-runtime-cache.mjs      \n./dist/drivers/utils/azure.mjs               \n./dist/drivers/utils/cloudflare.mjs          \n./dist/drivers/utils/fetch.mjs               \n./dist/drivers/utils/index.mjs               \n./dist/drivers/utils/node-fs.mjs             \n./dist/drivers/utils/path.mjs                \u001b[22m\n[log] \u001b[2m\nΣ Total dist byte size: \u001b[4m197 kB\u001b[24m (\u001b[4m94\u001b[24m files)\u001b[22m\n[log] \n✅ obuild finished in 385ms\nFound 0 warnings and 0 errors.\nFinished in 32ms on 94 files with 96 rules using 12 threads.\nChecking formatting...\n\nAll matched files use the correct format.\nFinished in 908ms on 134 files using 12 threads.\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[44m\u001b[1m TS \u001b[22m\u001b[49m test/storage.test-d.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:05:02\n\u001b[2m   Duration \u001b[22m 651ms\u001b[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms, typecheck 599ms)\u001b[22m\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n      \u001b[2mCoverage enabled with \u001b[22m\u001b[33mv8\u001b[39m\n\n \u001b[32m✓\u001b[39m test/drivers/s3-list.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 149\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/s3.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 680\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/db0.test.ts \u001b[2m(\u001b[22m\u001b[2m68 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 3747\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 3572\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m33 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 49\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-types.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 17\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m119 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[90m (136)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:05:04\n\u001b[2m   Duration \u001b[22m 6.57s\u001b[2m (transform 220ms, setup 0ms, import 550ms, tests 4.64s, environment 1ms)\u001b[22m\n\n\u001b[34m % \u001b[39m\u001b[2mCoverage report from \u001b[22m\u001b[33mv8\u001b[39m\n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\nFile               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                                                                     \n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\nAll files          |   66.93 |    54.72 |   63.95 |   67.61 |                                                                                                                                       \n src               |   51.68 |    48.61 |   47.42 |    53.4 |                                                                                                                                       \n  _drivers.ts      |     100 |      100 |     100 |     100 |                                                                                                                                       \n  _utils.ts        |   48.48 |    59.25 |      50 |      50 | 6,18,52-81                                                                                                                            \n  index.ts         |       0 |        0 |       0 |       0 |                                                                                                                                       \n  storage.ts       |   55.09 |    46.26 |   52.85 |   56.65 | 54,78-80,85-90,95-102,173-181,205,209,214,224-226,235,251,257-260,277,281,291,305-311,317-320,345,364-366,376-441,444-446,455-463,476 \n  types.ts         |       0 |        0 |       0 |       0 |                                                                                                                                       \n  utils.ts         |   35.55 |       50 |   23.52 |   38.09 | 33-85,96,106                                                                                                                          \n src/drivers       |   75.22 |    65.42 |   77.14 |   74.28 |                                                                                                                                       \n  db0.ts           |   87.09 |    63.88 |   94.11 |   86.88 | 56,87,97-98,108,175-187                                                                                                               \n  memory.ts        |    5.12 |        0 |       0 |    5.12 | 6-84                                                                                                                                  \n  s3.ts            |    92.3 |    81.03 |   97.43 |   91.81 | 91,94,97,100,127,215,307,331,335                                                                                                      \n src/drivers/utils |   55.55 |    45.45 |   42.85 |   55.55 |                                                                                                                                       \n  index.ts         |   55.55 |    45.45 |   42.85 |   55.55 | 43,48,64-65,79-85                                                                                                                     \n test/drivers      |    98.9 |     62.5 |     100 |   98.87 |                                                                                                                                       \n  utils.ts         |    98.9 |     62.5 |     100 |   98.87 | 131                                                                                                                                   \n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\n",
+        "stderrTail": "$ pnpm gen-drivers && obuild\n$ node scripts/gen-drivers.ts\n$ oxlint . && oxfmt --check .\n$ tsc --noEmit --skipLibCheck\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[90mstderr\u001b[2m | test/drivers/db0.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: db0 - sqlite\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39m[unstorage]: Database driver is experimental and behavior may change in the future.\n\n"
+      },
+      "provenance": {
+        "baseSha": "88f8e43b40ea5533a96118770784ecb58d945243",
+        "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+        "observationSha256": "bb3d0361168de64931b6a2511f211178fffd8beb203a6c9a2052c2c6a3cd560d",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-03T05:04:07.333Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-03T05:04:56.577Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-03T05:05:11.335Z",
+          "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+          "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+          "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+          "dependencyInputFiles": [
+            "docs/package.json",
+            "docs/pnpm-lock.yaml",
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-03T05:04:07.333Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:04:56.577Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:04:56.768Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-03T05:05:11.335Z",
+            "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+            "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
+            "dependencyInputsSha256": "a5e3b9e204866bce9d50afde97f0e77e4533e448fd40d42ed7050db9b303414b",
+            "dependencyInputFiles": [
+              "docs/package.json",
+              "docs/pnpm-lock.yaml",
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "d28947a676f83c2b12ef1b0e0ed946f344443192a7ceeba06ddc8dca3af53075",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    }
+  ],
+  "failureAssessment": {
+    "kind": "none",
+    "confidence": "not-applicable",
+    "explanation": "Every measured arm passed.",
+    "evidence": []
+  },
+  "full": {
+    "command": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test --maxWorkers=1",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-03T05:01:30.421Z",
+    "finishedAt": "2026-10-03T05:02:45.769Z",
+    "wallMs": 75348,
+    "stdoutTail": "Generated drivers metadata file to /work/unstorage/src/_drivers.ts\n[log] 📦 Building `unstorage` (`/work/unstorage`)\n[log] 🧻 Cleaning up `./dist`\nWriting third-party licenses to /work/unstorage/dist/THIRD-PARTY-LICENSES.md\n[log] \n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/index.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 23.8 kB, \u001b[1m14.6 kB\u001b[22m\u001b[2m minified, 4.32 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m builtinDriverDependencies, builtinDrivers, createStorage, filterKeyByBase, filterKeyByDepth, joinKeys, normalizeBaseKey, normalizeKey, prefixStorage, restoreSnapshot, snapshot\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/server.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 25.9 kB, \u001b[1m14.7 kB\u001b[22m\u001b[2m minified, 5.11 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m createStorageHandler\u001b[22m\n\u001b[2m\u001b[1mDependencies:\u001b[22m\u001b[2m [Node.js]\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/tracing.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 2.6 kB, \u001b[1m1.26 kB\u001b[22m\u001b[2m minified, 671 B min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m withTracing\u001b[22m\n[log] \n\u001b[35m[transform] \u001b[39m\u001b[4m./dist/drivers/\u001b[24m\n\u001b[2m./dist/drivers/azure-app-configuration.mjs   \n./dist/drivers/azure-cosmos.mjs              \n./dist/drivers/azure-key-vault.mjs           \n./dist/drivers/azure-storage-blob.mjs        \n./dist/drivers/azure-storage-table.mjs       \n./dist/drivers/capacitor-preferences.mjs     \n./dist/drivers/cloudflare-cache-binding.mjs  \n./dist/drivers/cloudflare-kv-binding.mjs     \n./dist/drivers/cloudflare-kv-http.mjs        \n./dist/drivers/cloudflare-r2-binding.mjs     \n./dist/drivers/db0.mjs                       \n./dist/drivers/deno-kv-node.mjs              \n./dist/drivers/deno-kv.mjs                   \n./dist/drivers/fs-lite.mjs                   \n./dist/drivers/fs.mjs                        \n./dist/drivers/github.mjs                    \n./dist/drivers/http.mjs                      \n./dist/drivers/indexedb.mjs                  \n./dist/drivers/localstorage.mjs              \n./dist/drivers/lru-cache.mjs                 \n./dist/drivers/memory.mjs                    \n./dist/drivers/mongodb.mjs                   \n./dist/drivers/netlify-blobs.mjs             \n./dist/drivers/null.mjs                      \n./dist/drivers/overlay.mjs                   \n./dist/drivers/planetscale.mjs               \n./dist/drivers/redis.mjs                     \n./dist/drivers/s3.mjs                        \n./dist/drivers/session-storage.mjs           \n./dist/drivers/uploadthing.mjs               \n./dist/drivers/upstash.mjs                   \n./dist/drivers/vercel-blob.mjs               \n./dist/drivers/vercel-runtime-cache.mjs      \n./dist/drivers/utils/azure.mjs               \n./dist/drivers/utils/cloudflare.mjs          \n./dist/drivers/utils/fetch.mjs               \n./dist/drivers/utils/index.mjs               \n./dist/drivers/utils/node-fs.mjs             \n./dist/drivers/utils/path.mjs                \u001b[22m\n[log] \u001b[2m\nΣ Total dist byte size: \u001b[4m197 kB\u001b[24m (\u001b[4m94\u001b[24m files)\u001b[22m\n[log] \n✅ obuild finished in 799ms\nFound 0 warnings and 0 errors.\nFinished in 192ms on 94 files with 96 rules using 12 threads.\nChecking formatting...\n\nAll matched files use the correct format.\nFinished in 971ms on 134 files using 12 threads.\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n      \u001b[2mCoverage enabled with \u001b[22m\u001b[33mv8\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[44m\u001b[1m TS \u001b[22m\u001b[49m test/storage.test-d.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/tracing.test.ts \u001b[2m(\u001b[22m\u001b[2m29 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 38\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/storage.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 44\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/fs.test.ts \u001b[2m(\u001b[22m\u001b[2m51 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 2156\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m watch filesystem \u001b[33m 546\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m reads concurrent with a write never observe a truncated value \u001b[33m 595\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m watch never observes in-progress temp files \u001b[33m 512\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/s3-list.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 115\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/fs-lite.test.ts \u001b[2m(\u001b[22m\u001b[2m45 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 723\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m reads concurrent with a write never observe a truncated value \u001b[33m 370\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/server.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 264\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-storage-blob.test.ts \u001b[2m(\u001b[22m\u001b[2m20 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m20 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/s3.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1139\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-cache-binding-fake.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 77\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/mongodb.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 944\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/db0.test.ts \u001b[2m(\u001b[22m\u001b[2m68 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 5671\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 5187\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/localstorage.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 51\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/session-storage.test.ts \u001b[2m(\u001b[22m\u001b[2m18 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 71\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m33 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 27\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/redis.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 34\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/vercel-runtime-cache.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m2 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[32m 65\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-r2-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 2772\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 663\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m getKeys with depth \u001b[33m 308\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/indexedb.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 59\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/http.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 248\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/cloudflare-cache-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/netlify-blobs.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1163\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/cloudflare-kv-binding.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1524\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/deno-kv.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/github.test.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 880\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m can read a repository files \u001b[33m 464\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m can read a json file content \u001b[33m 412\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-types.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/vercel-blob.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m30 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/capacitor-preferences.test.ts \u001b[2m(\u001b[22m\u001b[2m30 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 39\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/lru-cache.test.ts \u001b[2m(\u001b[22m\u001b[2m31 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 28\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/memory.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 67\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-storage-table.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/cloudflare-kv-http.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/upstash.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/uploadthing.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/null.test.ts \u001b[2m(\u001b[22m\u001b[2m2 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 6\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/planetscale.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 12\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-key-vault.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/deno-kv-node.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 1608\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 1476\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-app-configuration.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n \u001b[32m✓\u001b[39m test/drivers/overlay.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 58\u001b[2mms\u001b[22m\u001b[39m\n \u001b[2m\u001b[90m↓\u001b[39m\u001b[22m test/drivers/azure-cosmos.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m15 skipped\u001b[39m\u001b[2m)\u001b[22m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m30 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m11 skipped\u001b[39m\u001b[90m (41)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m567 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m204 skipped\u001b[39m\u001b[90m (772)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:01:40\n\u001b[2m   Duration \u001b[22m 64.68s\u001b[2m (transform 2.62s, setup 0ms, import 32.82s, tests 19.89s, environment 6ms, typecheck 708ms)\u001b[22m\n\n\u001b[34m % \u001b[39m\u001b[2mCoverage report from \u001b[22m\u001b[33mv8\u001b[39m\n-------------------|---------|----------|---------|---------|-------------------\nFile               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s \n-------------------|---------|----------|---------|---------|-------------------\nAll files          |   71.42 |     63.4 |   71.38 |   71.78 |                   \n src               |   92.12 |    84.14 |   98.19 |   92.24 |                   \n  _drivers.ts      |     100 |      100 |     100 |     100 |                   \n  _utils.ts        |   81.81 |    81.48 |      90 |   84.37 | 53,61,65,74,81    \n  index.ts         |       0 |        0 |       0 |       0 |                   \n  server.ts        |   95.83 |    90.24 |     100 |   95.74 | 55,128            \n  storage.ts       |   92.12 |    84.32 |   98.57 |   91.62 | ...03,412,415-416 \n  tracing.ts       |   91.89 |       75 |     100 |   94.28 | 60,66             \n  types.ts         |       0 |        0 |       0 |       0 |                   \n  utils.ts         |   95.55 |       85 |     100 |   95.23 | 35,106            \n src/drivers       |   62.59 |       53 |   63.44 |   62.98 |                   \n  ...figuration.ts |   20.93 |    16.66 |    7.69 |   21.95 | 66-81,89-165      \n  azure-cosmos.ts  |   16.66 |        0 |    8.33 |   17.24 | 68-90,98-139      \n  ...-key-vault.ts |    10.9 |        0 |    5.88 |   11.32 | ...71-123,136-152 \n  ...orage-blob.ts |    9.85 |      5.4 |    4.54 |      10 | ...19-194,210-232 \n  ...rage-table.ts |   13.04 |    30.43 |    7.69 |   13.33 | 77-106,114-162    \n  ...references.ts |     100 |      100 |     100 |     100 |                   \n  ...he-binding.ts |    65.9 |     64.7 |      50 |    65.9 | ...,93-96,104-114 \n  ...kv-binding.ts |   97.14 |       75 |   92.85 |   96.77 | 41                \n  ...re-kv-http.ts |    2.81 |        0 |       0 |    3.07 | 85-220            \n  ...r2-binding.ts |   86.27 |    72.72 |   89.47 |   86.66 | 26,88-100         \n  db0.ts           |   87.09 |    63.88 |   94.11 |   86.88 | ...98,108,175-187 \n  deno-kv-node.ts  |   88.88 |      100 |      75 |   88.88 | 46                \n  deno-kv.ts       |      88 |    60.86 |   92.85 |   87.75 | 37-49,57          \n  fs-lite.ts       |   80.64 |    66.66 |   91.66 |   80.64 | 31,64,69,75,81,90 \n  fs.ts            |   83.58 |    68.57 |   95.45 |   83.33 | ...50,166-169,183 \n  github.ts        |   93.61 |       70 |     100 |   93.61 | 68,114,161        \n  http.ts          |    92.1 |    69.56 |     100 |   91.66 | 22,35,72          \n  indexedb.ts      |     100 |    93.33 |     100 |     100 | 57                \n  localstorage.ts  |   83.78 |    75.75 |   86.66 |   83.33 | 24,32-35,41,81    \n  lru-cache.ts     |      88 |    76.92 |     100 |      88 | 94-99             \n  memory.ts        |   89.74 |    76.92 |     100 |   89.74 | 40,47,62-63       \n  mongodb.ts       |     100 |    78.57 |      95 |     100 | 61-62,129         \n  netlify-blobs.ts |   89.28 |       75 |   93.75 |   89.28 | 73,78,96          \n  null.ts          |   44.44 |      100 |      25 |   44.44 | 9,15-24           \n  overlay.ts       |     100 |    92.85 |     100 |     100 | 73                \n  planetscale.ts   |   23.33 |       25 |    7.14 |   24.13 | 41-62,70-116      \n  redis.ts         |   82.65 |    56.52 |   92.85 |   81.11 | ...88,216,225-231 \n  s3.ts            |    92.3 |    81.03 |   97.43 |   91.81 | ...15,307,331,335 \n  ...on-storage.ts |     100 |      100 |     100 |     100 |                   \n  uploadthing.ts   |   17.64 |    18.18 |    4.16 |   21.95 | ...7-59,63,72-113 \n  upstash.ts       |      20 |        0 |    5.55 |   21.62 | ...7,61-72,79-112 \n  vercel-blob.ts   |    5.45 |        0 |       0 |       6 | 52-168            \n  ...time-cache.ts |   96.55 |       80 |     100 |   96.29 | 121               \n src/drivers/utils |   87.58 |    76.61 |   82.92 |   87.41 |                   \n  azure.ts         |       0 |      100 |       0 |       0 | 20-26             \n  cloudflare.ts    |   83.33 |       70 |     100 |   83.33 | 15,20             \n  fetch.ts         |   86.66 |     75.6 |      75 |   86.66 | ...9-60,78-79,120 \n  index.ts         |   83.33 |    72.72 |   85.71 |   83.33 | 48,80-82          \n  node-fs.ts       |   98.11 |    88.88 |   89.47 |   98.03 | 68                \n  path.ts          |   78.57 |    65.38 |     100 |   78.57 | 5,8,26            \n test/drivers      |    98.9 |     87.5 |     100 |   98.87 |                   \n  utils.ts         |    98.9 |     87.5 |     100 |   98.87 | 131               \n-------------------|---------|----------|---------|---------|-------------------\n",
+    "stderrTail": "$ pnpm gen-drivers && obuild\n$ node scripts/gen-drivers.ts\n$ pnpm lint && pnpm test:types && vitest run --coverage --maxWorkers=1\n$ oxlint . && oxfmt --check .\n$ tsc --noEmit --skipLibCheck\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[90mstderr\u001b[2m | test/drivers/db0.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: db0 - sqlite\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39m[unstorage]: Database driver is experimental and behavior may change in the future.\n\n\u001b[90mstderr\u001b[2m | test/drivers/vercel-runtime-cache.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: vercel-runtime-cache\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39mRuntime Cache unavailable in this environment. Falling back to in-memory cache.\n\n"
+  },
+  "selected": {
+    "command": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 test:types && corepack pnpm@11.21.0 exec vitest run --typecheck.only --maxWorkers=1 && corepack pnpm@11.21.0 exec vitest run --coverage --maxWorkers=1 test/driver-dependencies.test.ts test/driver-types.test.ts test/drivers/db0.test.ts test/drivers/s3-list.test.ts test/drivers/s3.test.ts",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-03T05:02:45.911Z",
+    "finishedAt": "2026-10-03T05:03:04.155Z",
+    "wallMs": 18244,
+    "stdoutTail": "Generated drivers metadata file to /work/unstorage/src/_drivers.ts\n[log] 📦 Building `unstorage` (`/work/unstorage`)\n[log] 🧻 Cleaning up `./dist`\nWriting third-party licenses to /work/unstorage/dist/THIRD-PARTY-LICENSES.md\n[log] \n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/index.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 23.8 kB, \u001b[1m14.6 kB\u001b[22m\u001b[2m minified, 4.32 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m builtinDriverDependencies, builtinDrivers, createStorage, filterKeyByBase, filterKeyByDepth, joinKeys, normalizeBaseKey, normalizeKey, prefixStorage, restoreSnapshot, snapshot\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/server.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 25.9 kB, \u001b[1m14.7 kB\u001b[22m\u001b[2m minified, 5.11 kB min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m createStorageHandler\u001b[22m\n\u001b[2m\u001b[1mDependencies:\u001b[22m\u001b[2m [Node.js]\u001b[22m\n\n\u001b[35m[bundle] \u001b[39m\u001b[4m./dist/tracing.mjs\u001b[24m\n\u001b[2m\u001b[1mSize:\u001b[22m\u001b[2m 2.6 kB, \u001b[1m1.26 kB\u001b[22m\u001b[2m minified, 671 B min+gzipped (Side effects: 0 B)\u001b[22m\n\u001b[2m\u001b[1mExports:\u001b[22m\u001b[2m withTracing\u001b[22m\n[log] \n\u001b[35m[transform] \u001b[39m\u001b[4m./dist/drivers/\u001b[24m\n\u001b[2m./dist/drivers/azure-app-configuration.mjs   \n./dist/drivers/azure-cosmos.mjs              \n./dist/drivers/azure-key-vault.mjs           \n./dist/drivers/azure-storage-blob.mjs        \n./dist/drivers/azure-storage-table.mjs       \n./dist/drivers/capacitor-preferences.mjs     \n./dist/drivers/cloudflare-cache-binding.mjs  \n./dist/drivers/cloudflare-kv-binding.mjs     \n./dist/drivers/cloudflare-kv-http.mjs        \n./dist/drivers/cloudflare-r2-binding.mjs     \n./dist/drivers/db0.mjs                       \n./dist/drivers/deno-kv-node.mjs              \n./dist/drivers/deno-kv.mjs                   \n./dist/drivers/fs-lite.mjs                   \n./dist/drivers/fs.mjs                        \n./dist/drivers/github.mjs                    \n./dist/drivers/http.mjs                      \n./dist/drivers/indexedb.mjs                  \n./dist/drivers/localstorage.mjs              \n./dist/drivers/lru-cache.mjs                 \n./dist/drivers/memory.mjs                    \n./dist/drivers/mongodb.mjs                   \n./dist/drivers/netlify-blobs.mjs             \n./dist/drivers/null.mjs                      \n./dist/drivers/overlay.mjs                   \n./dist/drivers/planetscale.mjs               \n./dist/drivers/redis.mjs                     \n./dist/drivers/s3.mjs                        \n./dist/drivers/session-storage.mjs           \n./dist/drivers/uploadthing.mjs               \n./dist/drivers/upstash.mjs                   \n./dist/drivers/vercel-blob.mjs               \n./dist/drivers/vercel-runtime-cache.mjs      \n./dist/drivers/utils/azure.mjs               \n./dist/drivers/utils/cloudflare.mjs          \n./dist/drivers/utils/fetch.mjs               \n./dist/drivers/utils/index.mjs               \n./dist/drivers/utils/node-fs.mjs             \n./dist/drivers/utils/path.mjs                \u001b[22m\n[log] \u001b[2m\nΣ Total dist byte size: \u001b[4m197 kB\u001b[24m (\u001b[4m94\u001b[24m files)\u001b[22m\n[log] \n✅ obuild finished in 547ms\nFound 0 warnings and 0 errors.\nFinished in 27ms on 94 files with 96 rules using 12 threads.\nChecking formatting...\n\nAll matched files use the correct format.\nFinished in 1698ms on 134 files using 12 threads.\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n\n \u001b[32m✓\u001b[39m \u001b[44m\u001b[1m TS \u001b[22m\u001b[49m test/storage.test-d.ts \u001b[2m(\u001b[22m\u001b[2m4 tests\u001b[22m\u001b[2m)\u001b[22m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m1 passed\u001b[39m\u001b[22m\u001b[90m (1)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m4 passed\u001b[39m\u001b[22m\u001b[90m (4)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:02:54\n\u001b[2m   Duration \u001b[22m 1.39s\u001b[2m (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms, typecheck 1.26s)\u001b[22m\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv4.1.10 \u001b[39m\u001b[90m/work/unstorage\u001b[39m\n      \u001b[2mCoverage enabled with \u001b[22m\u001b[33mv8\u001b[39m\n\n \u001b[32m✓\u001b[39m test/drivers/s3-list.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 179\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/s3.test.ts \u001b[2m(\u001b[22m\u001b[2m19 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[33m 942\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/drivers/db0.test.ts \u001b[2m(\u001b[22m\u001b[2m68 tests\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[2m)\u001b[22m\u001b[33m 4053\u001b[2mms\u001b[22m\u001b[39m\n     \u001b[33m\u001b[2m✓\u001b[22m\u001b[39m init \u001b[33m 3921\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-dependencies.test.ts \u001b[2m(\u001b[22m\u001b[2m33 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 34\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m test/driver-types.test.ts \u001b[2m(\u001b[22m\u001b[2m1 test\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 8\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m119 passed\u001b[39m\u001b[22m\u001b[2m | \u001b[22m\u001b[33m17 skipped\u001b[39m\u001b[90m (136)\u001b[39m\n\u001b[2mType Errors \u001b[22m \u001b[2mno errors\u001b[22m\n\u001b[2m   Start at \u001b[22m 05:02:56\n\u001b[2m   Duration \u001b[22m 7.07s\u001b[2m (transform 264ms, setup 0ms, import 575ms, tests 5.22s, environment 1ms)\u001b[22m\n\n\u001b[34m % \u001b[39m\u001b[2mCoverage report from \u001b[22m\u001b[33mv8\u001b[39m\n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\nFile               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                                                                                     \n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\nAll files          |   66.93 |    54.72 |   63.95 |   67.61 |                                                                                                                                       \n src               |   51.68 |    48.61 |   47.42 |    53.4 |                                                                                                                                       \n  _drivers.ts      |     100 |      100 |     100 |     100 |                                                                                                                                       \n  _utils.ts        |   48.48 |    59.25 |      50 |      50 | 6,18,52-81                                                                                                                            \n  index.ts         |       0 |        0 |       0 |       0 |                                                                                                                                       \n  storage.ts       |   55.09 |    46.26 |   52.85 |   56.65 | 54,78-80,85-90,95-102,173-181,205,209,214,224-226,235,251,257-260,277,281,291,305-311,317-320,345,364-366,376-441,444-446,455-463,476 \n  types.ts         |       0 |        0 |       0 |       0 |                                                                                                                                       \n  utils.ts         |   35.55 |       50 |   23.52 |   38.09 | 33-85,96,106                                                                                                                          \n src/drivers       |   75.22 |    65.42 |   77.14 |   74.28 |                                                                                                                                       \n  db0.ts           |   87.09 |    63.88 |   94.11 |   86.88 | 56,87,97-98,108,175-187                                                                                                               \n  memory.ts        |    5.12 |        0 |       0 |    5.12 | 6-84                                                                                                                                  \n  s3.ts            |    92.3 |    81.03 |   97.43 |   91.81 | 91,94,97,100,127,215,307,331,335                                                                                                      \n src/drivers/utils |   55.55 |    45.45 |   42.85 |   55.55 |                                                                                                                                       \n  index.ts         |   55.55 |    45.45 |   42.85 |   55.55 | 43,48,64-65,79-85                                                                                                                     \n test/drivers      |    98.9 |     62.5 |     100 |   98.87 |                                                                                                                                       \n  utils.ts         |    98.9 |     62.5 |     100 |   98.87 | 131                                                                                                                                   \n-------------------|---------|----------|---------|---------|---------------------------------------------------------------------------------------------------------------------------------------\n",
+    "stderrTail": "$ pnpm gen-drivers && obuild\n$ node scripts/gen-drivers.ts\n$ oxlint . && oxfmt --check .\n$ tsc --noEmit --skipLibCheck\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[33mTesting types with tsc and vue-tsc is an experimental feature.\nBreaking changes might not follow SemVer, please pin Vitest's version when using it.\u001b[39m\n\u001b[90mstderr\u001b[2m | test/drivers/db0.test.ts\u001b[2m > \u001b[22m\u001b[2mdrivers: db0 - sqlite\u001b[2m > \u001b[22m\u001b[2minit\n\u001b[22m\u001b[39m[unstorage]: Database driver is experimental and behavior may change in the future.\n\n"
+  },
+  "comparison": {
+    "fullWallMs": 49216,
+    "selectedWallMs": 15344,
+    "netSelectedMs": 24162.860618,
+    "deltaMs": 25053.139382,
+    "grossPercentChange": 68.82314694408322,
+    "percentChange": 50.904460707899865,
+    "selectedCommandSucceeded": true,
+    "fullCommandSucceeded": true,
+    "missedFailureSignal": false,
+    "evidenceValid": true,
+    "performanceEvidence": "CONTROLLED",
+    "repetitions": 3,
+    "fullWallMsRange": {
+      "min": 47538,
+      "median": 49216,
+      "max": 75348
+    },
+    "selectedWallMsRange": {
+      "min": 14538,
+      "median": 15344,
+      "max": 18244
+    }
+  },
+  "notes": [
+    "This is paired runtime evidence, not a production-savings claim.",
+    "Full and selected commands were run sequentially in the same checkout.",
+    "Net selected runtime includes DiffCI analysis overhead.",
+    "Runtime evidence used at least three alternating, cache-prepared repetitions."
+  ]
+}

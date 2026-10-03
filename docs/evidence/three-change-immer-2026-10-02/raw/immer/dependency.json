@@ -1,0 +1,126 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-10-02T09:14:17.792Z",
+  "observer": {
+    "version": "0.3.1",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "unknown"
+  },
+  "commitRange": {
+    "baseSha": "6c5343eb92b2408c07340d41ac168872ed54aded",
+    "headSha": "6c7a3deb5b2cacf625d8f99263af627ae69f36e3",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "FULL",
+    "changedFileCount": 1,
+    "changedFiles": [
+      "yarn.lock"
+    ],
+    "affectedSourceFileCount": 0,
+    "selectedTests": [],
+    "totalTestCount": 22,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required",
+      "Lockfile changed; full validation required"
+    ],
+    "proposedCommands": [],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [
+      {
+        "level": "critical",
+        "reason": "CONFIG_GLOBAL"
+      },
+      {
+        "level": "critical",
+        "reason": "LOCKFILE_GLOBAL"
+      }
+    ],
+    "graph": {
+      "nodes": 39,
+      "edges": 60,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 1153,
+      "phasesMs": {
+        "repositoryDiscovery": 11.1299,
+        "scopeDiscovery": 0.2947,
+        "adapterInventory": 1.9371,
+        "adapters": 0.0901,
+        "typescriptProgram": 1107.3094,
+        "importExtractionAndResolution": 22.478,
+        "graphFinalization": 9.9598
+      },
+      "adapterMetrics": {}
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 22,
+      "selectedTests": [
+        "__tests__/base.js",
+        "__tests__/current.js",
+        "__tests__/curry.js",
+        "__tests__/draft.ts",
+        "__tests__/empty.ts",
+        "__tests__/frozen.js",
+        "__tests__/immutable.ts",
+        "__tests__/isDraftable.js",
+        "__tests__/manual.js",
+        "__tests__/map-set.js",
+        "__tests__/not-strict-copy.ts",
+        "__tests__/null.js",
+        "__tests__/original.js",
+        "__tests__/patch.js",
+        "__tests__/plugins.js",
+        "__tests__/produce.ts",
+        "__tests__/readme.js",
+        "__tests__/redux.ts",
+        "__tests__/regressions.js",
+        "__tests__/spec_ts.ts",
+        "__tests__/type-external.ts",
+        "__tests__/updateScenarios.js"
+      ],
+      "matchedRules": [
+        "config/dependency -> full fallback"
+      ]
+    },
+    "analysisStatus": "FALLBACK"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "6c7a3deb5b2cacf625d8f99263af627ae69f36e3",
+    "headShaAfter": "6c7a3deb5b2cacf625d8f99263af627ae69f36e3",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1754,
+    "preObserveMs": 120,
+    "phasesMs": {
+      "context": 145,
+      "engineLoad": 203,
+      "eligibility": 0,
+      "delta": 163,
+      "graph": 1154,
+      "impactAndCommands": 2,
+      "finalization": 85
+    }
+  }
+}

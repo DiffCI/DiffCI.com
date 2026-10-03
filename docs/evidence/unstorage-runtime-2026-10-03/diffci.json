@@ -1,0 +1,7 @@
+{
+  "alwaysRunTests": [
+    "test/drivers/db0.test.ts",
+    "test/driver-dependencies.test.ts",
+    "test/driver-types.test.ts"
+  ]
+}

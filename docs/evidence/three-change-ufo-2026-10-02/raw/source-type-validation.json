@@ -1,0 +1,7 @@
+{
+  "before": [],
+  "command": "pnpm exec vitest run --typecheck",
+  "after": [],
+  "head": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+  "exitCode": 0
+}

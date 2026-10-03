@@ -1,0 +1,29 @@
+[
+  {
+    "label": "broad-screen",
+    "base": "8f8e6c368ce3ba54d68c1cba8d23a4e8e00ac7fd",
+    "head": "d4da61a0ac696f8421f97328f329a560b67143a9",
+    "mode": "SELECTIVE",
+    "selected": 271,
+    "total": 287,
+    "analysisMs": 15660
+  },
+  {
+    "label": "dependency-screen",
+    "base": "8a9d4e089eba2193b71437253f466f6b6d36331d",
+    "head": "140e5347146a2d89272ed8b435898f79ce61ef81",
+    "mode": "FULL",
+    "selected": 0,
+    "total": 287,
+    "analysisMs": 14677
+  },
+  {
+    "label": "source-screen",
+    "base": "78682df86f6bf66717b6e85377bb5ce5846eca46",
+    "head": "e90339fec658103adbfe0620ee12471603a24196",
+    "mode": "SELECTIVE",
+    "selected": 268,
+    "total": 287,
+    "analysisMs": 25587
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "schema": "diffci.fullValidation.v1",
+  "observationReportPath": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo-packet\\configuration.json",
+  "full": {
+    "command": "pnpm test",
+    "exitCode": 1,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T08:37:12.305Z",
+    "finishedAt": "2026-10-02T08:37:26.245Z",
+    "wallMs": 13940,
+    "stdoutTail": "\n> ufo@1.6.3 test C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo\n> pnpm lint && vitest run --typecheck\n\n\n> ufo@1.6.3 lint C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo\n> eslint . && prettier -c src test\n\nChecking formatting...\n ELIFECYCLE  Command failed with exit code 1.\n ELIFECYCLE  Test failed. See above for more details.\n",
+    "stderrTail": "[warn] src/encoding.ts\n[warn] src/index.ts\n[warn] src/punycode.ts\n[warn] src/query.ts\n[warn] src/url.ts\n[warn] test/double-slash.test.ts\n[warn] test/encoding.test.ts\n[warn] test/fixture/README.md\n[warn] test/fixture/toascii.json\n[warn] test/fixture/urltestdata.json\n[warn] test/is-same.test.ts\n[warn] test/join.test.ts\n[warn] test/normalize.test.ts\n[warn] test/parse.test.ts\n[warn] test/punycode.test.ts\n[warn] test/query.test.ts\n[warn] test/resolve.test.ts\n[warn] test/trailing-slash.test.ts\n[warn] test/types.test-d.ts\n[warn] test/url.test.ts\n[warn] test/utilities.test.ts\n[warn] Code style issues found in 21 files. Run Prettier with --write to fix.\n"
+  }
+}

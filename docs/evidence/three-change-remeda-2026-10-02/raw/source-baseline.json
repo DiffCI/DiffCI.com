@@ -1,0 +1,8 @@
+{
+  "exitCode": 1,
+  "wallMs": 23037,
+  "command": "npm --workspace packages/remeda test -- --run",
+  "head": "b9ec4b0ac5ba86f2f687bae6e92d318db02eea24",
+  "gitStatusBefore": [],
+  "gitStatusAfter": []
+}

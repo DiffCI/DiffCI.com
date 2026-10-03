@@ -1,0 +1,735 @@
+{
+  "schema": "diffci.verifySavings.v3",
+  "producedAt": "2026-10-02T09:12:37.890Z",
+  "label": "Immer runtime phase source change",
+  "cwd": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer",
+  "timeoutMs": 1800000,
+  "analysisOverheadMs": 2613,
+  "selectionSource": "diffci-observation",
+  "observationReportPath": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer-packet\\source.json",
+  "selectedTestCount": 21,
+  "totalTestCount": 22,
+  "provenance": {
+    "baseSha": "6c7a3deb5b2cacf625d8f99263af627ae69f36e3",
+    "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+    "observationSha256": "64b52bf36bb7da55dd5e94c577ee85e662ed7d7b8a79f43c8628be9e4c1a1df5",
+    "observerVersion": "0.3.1",
+    "beforeFull": {
+      "capturedAt": "2026-10-02T09:11:58.558Z",
+      "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+      "dependencyInputFiles": [
+        "package.json",
+        "perf-testing/package.json",
+        "perf-testing/yarn.lock",
+        "website/package.json",
+        "website/yarn.lock",
+        "yarn.lock"
+      ]
+    },
+    "afterFull": {
+      "capturedAt": "2026-10-02T09:12:05.529Z",
+      "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+      "dependencyInputFiles": [
+        "package.json",
+        "perf-testing/package.json",
+        "perf-testing/yarn.lock",
+        "website/package.json",
+        "website/yarn.lock",
+        "yarn.lock"
+      ]
+    },
+    "afterSelected": {
+      "capturedAt": "2026-10-02T09:12:13.199Z",
+      "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+      "dependencyInputFiles": [
+        "package.json",
+        "perf-testing/package.json",
+        "perf-testing/yarn.lock",
+        "website/package.json",
+        "website/yarn.lock",
+        "yarn.lock"
+      ]
+    },
+    "snapshots": [
+      {
+        "capturedAt": "2026-10-02T09:11:58.558Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:05.529Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:05.725Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:13.199Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:13.416Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:19.344Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:19.543Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:25.520Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:25.711Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:31.861Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:32.059Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T09:12:37.656Z",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+        "dependencyInputFiles": [
+          "package.json",
+          "perf-testing/package.json",
+          "perf-testing/yarn.lock",
+          "website/package.json",
+          "website/yarn.lock",
+          "yarn.lock"
+        ]
+      }
+    ],
+    "checkoutStable": true,
+    "invalidReasons": []
+  },
+  "runnerIdentity": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.26200",
+    "nodeVersion": "v24.16.0",
+    "cpuModel": "13th Gen Intel(R) Core(TM) i5-1335U",
+    "cpuCount": 12,
+    "totalMemoryBytes": 16876888064,
+    "ci": "true",
+    "fingerprintSha256": "a59018791e67833b225a7cead8b58e2eb06c46efc9e1660981303729eb335807"
+  },
+  "protocol": {
+    "repetitions": 3,
+    "alternatingOrder": true,
+    "declaredCacheState": "unknown",
+    "cacheStateControlled": false
+  },
+  "trials": [
+    {
+      "index": 1,
+      "order": [
+        "full",
+        "selected"
+      ],
+      "cacheState": {
+        "full": "unknown",
+        "selected": "potentially-warmed"
+      },
+      "preparations": [],
+      "full": {
+        "command": "yarn run vitest run --config vitest.config.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T09:11:58.785Z",
+        "finishedAt": "2026-10-02T09:12:05.529Z",
+        "wallMs": 6744,
+        "stdoutTail": "yarn run v1.22.22\n$ \"C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer\\node_modules\\.bin\\vitest\" run --config vitest.config.ts\n\n RUN  v3.2.6 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/immer\n\n ✓ __tests__/empty.ts (8 tests) 22ms\n ✓ __tests__/current.js (13 tests) 35ms\n ✓ __tests__/manual.js (10 tests) 31ms\n ✓ __tests__/produce.ts (37 tests) 35ms\n ✓ __tests__/frozen.js (20 tests) 41ms\n ✓ __tests__/regressions.js (64 tests | 8 skipped) 57ms\n ✓ __tests__/map-set.js (52 tests) 92ms\n ✓ __tests__/readme.js (8 tests) 59ms\n ✓ __tests__/updateScenarios.js (17 tests) 155ms\n ✓ __tests__/patch.js (204 tests) 194ms\n ✓ __tests__/curry.js (6 tests) 54ms\n ✓ __tests__/original.js (4 tests) 16ms\n ✓ __tests__/not-strict-copy.ts (6 tests) 15ms\n ✓ __tests__/immutable.ts (4 tests) 10ms\n ✓ __tests__/draft.ts (6 tests) 14ms\n ✓ __tests__/null.js (1 test) 6ms\n ✓ __tests__/plugins.js (4 tests) 12ms\n ✓ __tests__/redux.ts (5 tests) 8ms\n ✓ __tests__/isDraftable.js (1 test) 6ms\n ✓ __tests__/type-external.ts (5 tests) 9ms\n ✓ __tests__/spec_ts.ts (1 test) 6ms\n ✓ __tests__/base.js (3287 tests) 2779ms\n\n Test Files  22 passed (22)\n      Tests  3755 passed | 8 skipped (3763)\n   Start at  14:42:00\n   Duration  4.97s (transform 1.78s, setup 0ms, collect 9.37s, tests 3.66s, environment 11ms, prepare 11.32s)\n\nDone in 6.21s.\n",
+        "stderrTail": ""
+      },
+      "selected": {
+        "command": "yarn run vitest run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T09:12:06.005Z",
+        "finishedAt": "2026-10-02T09:12:13.199Z",
+        "wallMs": 7194,
+        "stdoutTail": "yarn run v1.22.22\n$ \"C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer\\node_modules\\.bin\\vitest\" run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js\n\n RUN  v3.2.6 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/immer\n\n ✓ __tests__/curry.js (6 tests) 23ms\n ✓ __tests__/current.js (13 tests) 31ms\n ✓ __tests__/frozen.js (20 tests) 32ms\n ✓ __tests__/manual.js (10 tests) 25ms\n ✓ __tests__/produce.ts (37 tests) 28ms\n ✓ __tests__/regressions.js (64 tests | 8 skipped) 51ms\n ✓ __tests__/readme.js (8 tests) 55ms\n ✓ __tests__/map-set.js (52 tests) 63ms\n ✓ __tests__/updateScenarios.js (17 tests) 131ms\n ✓ __tests__/patch.js (204 tests) 162ms\n ✓ __tests__/empty.ts (8 tests) 24ms\n ✓ __tests__/original.js (4 tests) 15ms\n ✓ __tests__/not-strict-copy.ts (6 tests) 17ms\n ✓ __tests__/plugins.js (4 tests) 14ms\n ✓ __tests__/draft.ts (6 tests) 11ms\n ✓ __tests__/immutable.ts (4 tests) 13ms\n ✓ __tests__/null.js (1 test) 7ms\n ✓ __tests__/isDraftable.js (1 test) 7ms\n ✓ __tests__/redux.ts (5 tests) 8ms\n ✓ __tests__/type-external.ts (5 tests) 10ms\n ✓ __tests__/base.js (3287 tests) 2707ms\n\n Test Files  21 passed (21)\n      Tests  3754 passed | 8 skipped (3762)\n   Start at  14:42:08\n   Duration  4.82s (transform 1.77s, setup 0ms, collect 9.96s, tests 3.43s, environment 11ms, prepare 9.50s)\n\nDone in 6.51s.\n",
+        "stderrTail": ""
+      },
+      "provenance": {
+        "baseSha": "6c7a3deb5b2cacf625d8f99263af627ae69f36e3",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "observationSha256": "64b52bf36bb7da55dd5e94c577ee85e662ed7d7b8a79f43c8628be9e4c1a1df5",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-02T09:11:58.558Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-02T09:12:05.529Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-02T09:12:13.199Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-02T09:11:58.558Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:05.529Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:05.725Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:13.199Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    },
+    {
+      "index": 2,
+      "order": [
+        "selected",
+        "full"
+      ],
+      "cacheState": {
+        "selected": "unknown",
+        "full": "potentially-warmed"
+      },
+      "preparations": [],
+      "full": {
+        "command": "yarn run vitest run --config vitest.config.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T09:12:19.764Z",
+        "finishedAt": "2026-10-02T09:12:25.520Z",
+        "wallMs": 5756,
+        "stdoutTail": "yarn run v1.22.22\n$ \"C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer\\node_modules\\.bin\\vitest\" run --config vitest.config.ts\n\n RUN  v3.2.6 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/immer\n\n ✓ __tests__/frozen.js (20 tests) 26ms\n ✓ __tests__/curry.js (6 tests) 20ms\n ✓ __tests__/produce.ts (37 tests) 31ms\n ✓ __tests__/manual.js (10 tests) 32ms\n ✓ __tests__/regressions.js (64 tests | 8 skipped) 34ms\n ✓ __tests__/current.js (13 tests) 29ms\n ✓ __tests__/map-set.js (52 tests) 59ms\n ✓ __tests__/readme.js (8 tests) 62ms\n ✓ __tests__/updateScenarios.js (17 tests) 122ms\n ✓ __tests__/patch.js (204 tests) 140ms\n ✓ __tests__/empty.ts (8 tests) 23ms\n ✓ __tests__/original.js (4 tests) 14ms\n ✓ __tests__/not-strict-copy.ts (6 tests) 14ms\n ✓ __tests__/plugins.js (4 tests) 11ms\n ✓ __tests__/isDraftable.js (1 test) 5ms\n ✓ __tests__/draft.ts (6 tests) 13ms\n ✓ __tests__/immutable.ts (4 tests) 9ms\n ✓ __tests__/null.js (1 test) 5ms\n ✓ __tests__/redux.ts (5 tests) 8ms\n ✓ __tests__/type-external.ts (5 tests) 8ms\n ✓ __tests__/spec_ts.ts (1 test) 5ms\n ✓ __tests__/base.js (3287 tests) 2398ms\n\n Test Files  22 passed (22)\n      Tests  3755 passed | 8 skipped (3763)\n   Start at  14:42:20\n   Duration  4.31s (transform 1.65s, setup 0ms, collect 8.60s, tests 3.07s, environment 10ms, prepare 8.21s)\n\nDone in 5.30s.\n",
+        "stderrTail": ""
+      },
+      "selected": {
+        "command": "yarn run vitest run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T09:12:13.627Z",
+        "finishedAt": "2026-10-02T09:12:19.344Z",
+        "wallMs": 5717,
+        "stdoutTail": "yarn run v1.22.22\n$ \"C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer\\node_modules\\.bin\\vitest\" run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js\n\n RUN  v3.2.6 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/immer\n\n ✓ __tests__/empty.ts (8 tests) 21ms\n ✓ __tests__/frozen.js (20 tests) 33ms\n ✓ __tests__/produce.ts (37 tests) 25ms\n ✓ __tests__/current.js (13 tests) 29ms\n ✓ __tests__/manual.js (10 tests) 29ms\n ✓ __tests__/map-set.js (52 tests) 57ms\n ✓ __tests__/regressions.js (64 tests | 8 skipped) 73ms\n ✓ __tests__/readme.js (8 tests) 87ms\n ✓ __tests__/updateScenarios.js (17 tests) 124ms\n ✓ __tests__/patch.js (204 tests) 133ms\n ✓ __tests__/curry.js (6 tests) 22ms\n ✓ __tests__/not-strict-copy.ts (6 tests) 15ms\n ✓ __tests__/original.js (4 tests) 17ms\n ✓ __tests__/plugins.js (4 tests) 11ms\n ✓ __tests__/immutable.ts (4 tests) 6ms\n ✓ __tests__/draft.ts (6 tests) 11ms\n ✓ __tests__/isDraftable.js (1 test) 6ms\n ✓ __tests__/redux.ts (5 tests) 8ms\n ✓ __tests__/null.js (1 test) 6ms\n ✓ __tests__/type-external.ts (5 tests) 7ms\n ✓ __tests__/base.js (3287 tests) 2168ms\n\n Test Files  21 passed (21)\n      Tests  3754 passed | 8 skipped (3762)\n   Start at  14:42:14\n   Duration  4.21s (transform 1.60s, setup 0ms, collect 9.10s, tests 2.89s, environment 10ms, prepare 8.60s)\n\nDone in 5.23s.\n",
+        "stderrTail": ""
+      },
+      "provenance": {
+        "baseSha": "6c7a3deb5b2cacf625d8f99263af627ae69f36e3",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "observationSha256": "64b52bf36bb7da55dd5e94c577ee85e662ed7d7b8a79f43c8628be9e4c1a1df5",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-02T09:12:19.543Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-02T09:12:25.520Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-02T09:12:19.344Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-02T09:12:13.416Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:19.344Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:19.543Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:25.520Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    },
+    {
+      "index": 3,
+      "order": [
+        "full",
+        "selected"
+      ],
+      "cacheState": {
+        "full": "unknown",
+        "selected": "potentially-warmed"
+      },
+      "preparations": [],
+      "full": {
+        "command": "yarn run vitest run --config vitest.config.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T09:12:25.909Z",
+        "finishedAt": "2026-10-02T09:12:31.861Z",
+        "wallMs": 5952,
+        "stdoutTail": "yarn run v1.22.22\n$ \"C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer\\node_modules\\.bin\\vitest\" run --config vitest.config.ts\n\n RUN  v3.2.6 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/immer\n\n ✓ __tests__/empty.ts (8 tests) 22ms\n ✓ __tests__/manual.js (10 tests) 26ms\n ✓ __tests__/produce.ts (37 tests) 41ms\n ✓ __tests__/regressions.js (64 tests | 8 skipped) 51ms\n ✓ __tests__/frozen.js (20 tests) 35ms\n ✓ __tests__/readme.js (8 tests) 48ms\n ✓ __tests__/current.js (13 tests) 30ms\n ✓ __tests__/map-set.js (52 tests) 88ms\n ✓ __tests__/updateScenarios.js (17 tests) 149ms\n ✓ __tests__/patch.js (204 tests) 161ms\n ✓ __tests__/original.js (4 tests) 16ms\n ✓ __tests__/plugins.js (4 tests) 13ms\n ✓ __tests__/curry.js (6 tests) 21ms\n ✓ __tests__/immutable.ts (4 tests) 10ms\n ✓ __tests__/null.js (1 test) 9ms\n ✓ __tests__/draft.ts (6 tests) 15ms\n ✓ __tests__/not-strict-copy.ts (6 tests) 13ms\n ✓ __tests__/isDraftable.js (1 test) 6ms\n ✓ __tests__/redux.ts (5 tests) 24ms\n ✓ __tests__/type-external.ts (5 tests) 8ms\n ✓ __tests__/spec_ts.ts (1 test) 4ms\n ✓ __tests__/base.js (3287 tests) 2510ms\n\n Test Files  22 passed (22)\n      Tests  3755 passed | 8 skipped (3763)\n   Start at  14:42:27\n   Duration  4.46s (transform 1.69s, setup 0ms, collect 9.58s, tests 3.30s, environment 10ms, prepare 8.18s)\n\nDone in 5.48s.\n",
+        "stderrTail": ""
+      },
+      "selected": {
+        "command": "yarn run vitest run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T09:12:32.258Z",
+        "finishedAt": "2026-10-02T09:12:37.656Z",
+        "wallMs": 5398,
+        "stdoutTail": "yarn run v1.22.22\n$ \"C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer\\node_modules\\.bin\\vitest\" run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js\n\n RUN  v3.2.6 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/immer\n\n ✓ __tests__/produce.ts (37 tests) 22ms\n ✓ __tests__/manual.js (10 tests) 29ms\n ✓ __tests__/current.js (13 tests) 29ms\n ✓ __tests__/frozen.js (20 tests) 37ms\n ✓ __tests__/redux.ts (5 tests) 7ms\n ✓ __tests__/readme.js (8 tests) 56ms\n ✓ __tests__/map-set.js (52 tests) 63ms\n ✓ __tests__/regressions.js (64 tests | 8 skipped) 75ms\n ✓ __tests__/updateScenarios.js (17 tests) 121ms\n ✓ __tests__/patch.js (204 tests) 125ms\n ✓ __tests__/curry.js (6 tests) 22ms\n ✓ __tests__/draft.ts (6 tests) 10ms\n ✓ __tests__/original.js (4 tests) 13ms\n ✓ __tests__/empty.ts (8 tests) 26ms\n ✓ __tests__/immutable.ts (4 tests) 9ms\n ✓ __tests__/not-strict-copy.ts (6 tests) 15ms\n ✓ __tests__/plugins.js (4 tests) 11ms\n ✓ __tests__/null.js (1 test) 6ms\n ✓ __tests__/isDraftable.js (1 test) 6ms\n ✓ __tests__/type-external.ts (5 tests) 8ms\n ✓ __tests__/base.js (3287 tests) 2207ms\n\n Test Files  21 passed (21)\n      Tests  3754 passed | 8 skipped (3762)\n   Start at  14:42:33\n   Duration  3.92s (transform 1.72s, setup 0ms, collect 8.18s, tests 2.90s, environment 10ms, prepare 7.20s)\n\nDone in 4.92s.\n",
+        "stderrTail": ""
+      },
+      "provenance": {
+        "baseSha": "6c7a3deb5b2cacf625d8f99263af627ae69f36e3",
+        "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+        "observationSha256": "64b52bf36bb7da55dd5e94c577ee85e662ed7d7b8a79f43c8628be9e4c1a1df5",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-02T09:12:25.711Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-02T09:12:31.861Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-02T09:12:37.656Z",
+          "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+          "dependencyInputFiles": [
+            "package.json",
+            "perf-testing/package.json",
+            "perf-testing/yarn.lock",
+            "website/package.json",
+            "website/yarn.lock",
+            "yarn.lock"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-02T09:12:25.711Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:31.861Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:32.059Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T09:12:37.656Z",
+            "headSha": "b00474e3755954f6b27a392dcb4bce97254c100c",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "b88494d3a4bebe7e25847fef1a7f1b65c341569800e083faf2540ef59cab99fe",
+            "dependencyInputFiles": [
+              "package.json",
+              "perf-testing/package.json",
+              "perf-testing/yarn.lock",
+              "website/package.json",
+              "website/yarn.lock",
+              "yarn.lock"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    }
+  ],
+  "failureAssessment": {
+    "kind": "none",
+    "confidence": "not-applicable",
+    "explanation": "Every measured arm passed.",
+    "evidence": []
+  },
+  "full": {
+    "command": "yarn run vitest run --config vitest.config.ts",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T09:11:58.785Z",
+    "finishedAt": "2026-10-02T09:12:05.529Z",
+    "wallMs": 6744,
+    "stdoutTail": "yarn run v1.22.22\n$ \"C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer\\node_modules\\.bin\\vitest\" run --config vitest.config.ts\n\n RUN  v3.2.6 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/immer\n\n ✓ __tests__/empty.ts (8 tests) 22ms\n ✓ __tests__/current.js (13 tests) 35ms\n ✓ __tests__/manual.js (10 tests) 31ms\n ✓ __tests__/produce.ts (37 tests) 35ms\n ✓ __tests__/frozen.js (20 tests) 41ms\n ✓ __tests__/regressions.js (64 tests | 8 skipped) 57ms\n ✓ __tests__/map-set.js (52 tests) 92ms\n ✓ __tests__/readme.js (8 tests) 59ms\n ✓ __tests__/updateScenarios.js (17 tests) 155ms\n ✓ __tests__/patch.js (204 tests) 194ms\n ✓ __tests__/curry.js (6 tests) 54ms\n ✓ __tests__/original.js (4 tests) 16ms\n ✓ __tests__/not-strict-copy.ts (6 tests) 15ms\n ✓ __tests__/immutable.ts (4 tests) 10ms\n ✓ __tests__/draft.ts (6 tests) 14ms\n ✓ __tests__/null.js (1 test) 6ms\n ✓ __tests__/plugins.js (4 tests) 12ms\n ✓ __tests__/redux.ts (5 tests) 8ms\n ✓ __tests__/isDraftable.js (1 test) 6ms\n ✓ __tests__/type-external.ts (5 tests) 9ms\n ✓ __tests__/spec_ts.ts (1 test) 6ms\n ✓ __tests__/base.js (3287 tests) 2779ms\n\n Test Files  22 passed (22)\n      Tests  3755 passed | 8 skipped (3763)\n   Start at  14:42:00\n   Duration  4.97s (transform 1.78s, setup 0ms, collect 9.37s, tests 3.66s, environment 11ms, prepare 11.32s)\n\nDone in 6.21s.\n",
+    "stderrTail": ""
+  },
+  "selected": {
+    "command": "yarn run vitest run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T09:12:06.005Z",
+    "finishedAt": "2026-10-02T09:12:13.199Z",
+    "wallMs": 7194,
+    "stdoutTail": "yarn run v1.22.22\n$ \"C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\immer\\node_modules\\.bin\\vitest\" run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js\n\n RUN  v3.2.6 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/immer\n\n ✓ __tests__/curry.js (6 tests) 23ms\n ✓ __tests__/current.js (13 tests) 31ms\n ✓ __tests__/frozen.js (20 tests) 32ms\n ✓ __tests__/manual.js (10 tests) 25ms\n ✓ __tests__/produce.ts (37 tests) 28ms\n ✓ __tests__/regressions.js (64 tests | 8 skipped) 51ms\n ✓ __tests__/readme.js (8 tests) 55ms\n ✓ __tests__/map-set.js (52 tests) 63ms\n ✓ __tests__/updateScenarios.js (17 tests) 131ms\n ✓ __tests__/patch.js (204 tests) 162ms\n ✓ __tests__/empty.ts (8 tests) 24ms\n ✓ __tests__/original.js (4 tests) 15ms\n ✓ __tests__/not-strict-copy.ts (6 tests) 17ms\n ✓ __tests__/plugins.js (4 tests) 14ms\n ✓ __tests__/draft.ts (6 tests) 11ms\n ✓ __tests__/immutable.ts (4 tests) 13ms\n ✓ __tests__/null.js (1 test) 7ms\n ✓ __tests__/isDraftable.js (1 test) 7ms\n ✓ __tests__/redux.ts (5 tests) 8ms\n ✓ __tests__/type-external.ts (5 tests) 10ms\n ✓ __tests__/base.js (3287 tests) 2707ms\n\n Test Files  21 passed (21)\n      Tests  3754 passed | 8 skipped (3762)\n   Start at  14:42:08\n   Duration  4.82s (transform 1.77s, setup 0ms, collect 9.96s, tests 3.43s, environment 11ms, prepare 9.50s)\n\nDone in 6.51s.\n",
+    "stderrTail": ""
+  },
+  "comparison": {
+    "fullWallMs": 5952,
+    "selectedWallMs": 5717,
+    "netSelectedMs": 8330,
+    "deltaMs": -2378,
+    "grossPercentChange": 3.948252688172043,
+    "percentChange": -39.95295698924731,
+    "selectedCommandSucceeded": true,
+    "fullCommandSucceeded": true,
+    "missedFailureSignal": false,
+    "evidenceValid": true,
+    "performanceEvidence": "PRELIMINARY",
+    "repetitions": 3,
+    "fullWallMsRange": {
+      "min": 5756,
+      "median": 5952,
+      "max": 6744
+    },
+    "selectedWallMsRange": {
+      "min": 5398,
+      "median": 5717,
+      "max": 7194
+    }
+  },
+  "notes": [
+    "This is paired runtime evidence, not a production-savings claim.",
+    "Full and selected commands were run sequentially in the same checkout.",
+    "Net selected runtime includes DiffCI analysis overhead.",
+    "Runtime evidence is preliminary until at least three alternating, cache-prepared repetitions agree."
+  ]
+}

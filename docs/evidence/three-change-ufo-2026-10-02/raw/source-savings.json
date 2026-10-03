@@ -1,0 +1,347 @@
+{
+  "schema": "diffci.verifySavings.v3",
+  "producedAt": "2026-10-02T08:33:31.213Z",
+  "label": "ufo",
+  "cwd": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo",
+  "timeoutMs": 120000,
+  "analysisOverheadMs": 1569,
+  "selectionSource": "diffci-observation",
+  "observationReportPath": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo-packet\\source.json",
+  "selectedTestCount": 12,
+  "totalTestCount": 13,
+  "provenance": {
+    "baseSha": "a7b94e69ff6159de8ddfd4940c90db4708c0d67e",
+    "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+    "observationSha256": "26446160e23582aaca7976d8df3ed507fe701c21be5b05d62de0d769ddf9dcda",
+    "observerVersion": "0.3.1",
+    "beforeFull": {
+      "capturedAt": "2026-10-02T08:33:23.040Z",
+      "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+      "dependencyInputFiles": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "afterFull": {
+      "capturedAt": "2026-10-02T08:33:28.457Z",
+      "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+      "dependencyInputFiles": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "afterSelected": {
+      "capturedAt": "2026-10-02T08:33:30.959Z",
+      "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+      "dependencyInputFiles": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "snapshots": [
+      {
+        "capturedAt": "2026-10-02T08:33:23.040Z",
+        "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:33:28.457Z",
+        "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:33:28.673Z",
+        "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:33:30.959Z",
+        "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      }
+    ],
+    "checkoutStable": true,
+    "invalidReasons": []
+  },
+  "runnerIdentity": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.26200",
+    "nodeVersion": "v24.16.0",
+    "cpuModel": "13th Gen Intel(R) Core(TM) i5-1335U",
+    "cpuCount": 12,
+    "totalMemoryBytes": 16876888064,
+    "ci": "true",
+    "fingerprintSha256": "a59018791e67833b225a7cead8b58e2eb06c46efc9e1660981303729eb335807"
+  },
+  "protocol": {
+    "repetitions": 1,
+    "alternatingOrder": false,
+    "declaredCacheState": "unknown",
+    "cacheStateControlled": false
+  },
+  "trials": [
+    {
+      "index": 1,
+      "order": [
+        "full",
+        "selected"
+      ],
+      "cacheState": {
+        "full": "unknown",
+        "selected": "potentially-warmed"
+      },
+      "preparations": [],
+      "full": {
+        "command": "pnpm test",
+        "exitCode": 1,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T08:33:23.258Z",
+        "finishedAt": "2026-10-02T08:33:28.457Z",
+        "wallMs": 5199,
+        "stdoutTail": "\n> ufo@1.6.3 test C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo\n> pnpm lint && vitest run --typecheck\n\n\n> ufo@1.6.3 lint C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo\n> eslint . && prettier -c src test\n\nChecking formatting...\n ELIFECYCLE  Command failed with exit code 1.\n ELIFECYCLE  Test failed. See above for more details.\n",
+        "stderrTail": "[warn] src/encoding.ts\n[warn] src/index.ts\n[warn] src/parse.ts\n[warn] src/punycode.ts\n[warn] src/query.ts\n[warn] src/url.ts\n[warn] src/utils.ts\n[warn] test/base.test.ts\n[warn] test/double-slash.test.ts\n[warn] test/encoding.test.ts\n[warn] test/fixture/README.md\n[warn] test/fixture/toascii.json\n[warn] test/fixture/urltestdata.json\n[warn] test/is-same.test.ts\n[warn] test/join.test.ts\n[warn] test/normalize.test.ts\n[warn] test/parse.test.ts\n[warn] test/punycode.test.ts\n[warn] test/query.test.ts\n[warn] test/resolve.test.ts\n[warn] test/trailing-slash.test.ts\n[warn] test/types.test-d.ts\n[warn] test/url.test.ts\n[warn] test/utilities.test.ts\n[warn] Code style issues found in 24 files. Run Prettier with --write to fix.\n"
+      },
+      "selected": {
+        "command": "pnpm exec vitest run test/base.test.ts test/double-slash.test.ts test/encoding.test.ts test/is-same.test.ts test/join.test.ts test/normalize.test.ts test/parse.test.ts test/query.test.ts test/resolve.test.ts test/trailing-slash.test.ts test/url.test.ts test/utilities.test.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T08:33:28.886Z",
+        "finishedAt": "2026-10-02T08:33:30.959Z",
+        "wallMs": 2073,
+        "stdoutTail": "\n RUN  v4.1.5 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n\n Test Files  12 passed (12)\n      Tests  465 passed (465)\n   Start at  14:03:29\n   Duration  1.04s (transform 1.53s, setup 0ms, import 2.66s, tests 183ms, environment 2ms)\n\n",
+        "stderrTail": ""
+      },
+      "provenance": {
+        "baseSha": "a7b94e69ff6159de8ddfd4940c90db4708c0d67e",
+        "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+        "observationSha256": "26446160e23582aaca7976d8df3ed507fe701c21be5b05d62de0d769ddf9dcda",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-02T08:33:23.040Z",
+          "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-02T08:33:28.457Z",
+          "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-02T08:33:30.959Z",
+          "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-02T08:33:23.040Z",
+            "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:33:28.457Z",
+            "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:33:28.673Z",
+            "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:33:30.959Z",
+            "headSha": "5cd9e676711af3f4e4b5398ddf6ca8d52c1c7e1f",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "9d42cf2200e6df602e3042a792012005f484ec81f965224fdab691d401eda0f1",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "022bd75560a4341b94954f493e39f4bc72ffee360042f32dbe2974ece97e1bb3",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    }
+  ],
+  "failureAssessment": {
+    "kind": "inconclusive",
+    "confidence": "low",
+    "explanation": "The full arm failed while the selected arm passed, but fewer than three repetitions cannot separate a stable miss from a flake.",
+    "evidence": [
+      {
+        "arm": "full",
+        "trial": 1,
+        "failureClass": "LINT",
+        "fingerprint": "LINT|verify-savings|||[warn] src<path> [warn] src<path> [warn] src<path> [warn] src<path> [warn] src<path> [warn] src<path> [warn] src<path> [warn] test<path> [warn] test<path> [warn] test<path> [warn] test/fixture/readme."
+      }
+    ]
+  },
+  "full": {
+    "command": "pnpm test",
+    "exitCode": 1,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T08:33:23.258Z",
+    "finishedAt": "2026-10-02T08:33:28.457Z",
+    "wallMs": 5199,
+    "stdoutTail": "\n> ufo@1.6.3 test C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo\n> pnpm lint && vitest run --typecheck\n\n\n> ufo@1.6.3 lint C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo\n> eslint . && prettier -c src test\n\nChecking formatting...\n ELIFECYCLE  Command failed with exit code 1.\n ELIFECYCLE  Test failed. See above for more details.\n",
+    "stderrTail": "[warn] src/encoding.ts\n[warn] src/index.ts\n[warn] src/parse.ts\n[warn] src/punycode.ts\n[warn] src/query.ts\n[warn] src/url.ts\n[warn] src/utils.ts\n[warn] test/base.test.ts\n[warn] test/double-slash.test.ts\n[warn] test/encoding.test.ts\n[warn] test/fixture/README.md\n[warn] test/fixture/toascii.json\n[warn] test/fixture/urltestdata.json\n[warn] test/is-same.test.ts\n[warn] test/join.test.ts\n[warn] test/normalize.test.ts\n[warn] test/parse.test.ts\n[warn] test/punycode.test.ts\n[warn] test/query.test.ts\n[warn] test/resolve.test.ts\n[warn] test/trailing-slash.test.ts\n[warn] test/types.test-d.ts\n[warn] test/url.test.ts\n[warn] test/utilities.test.ts\n[warn] Code style issues found in 24 files. Run Prettier with --write to fix.\n"
+  },
+  "selected": {
+    "command": "pnpm exec vitest run test/base.test.ts test/double-slash.test.ts test/encoding.test.ts test/is-same.test.ts test/join.test.ts test/normalize.test.ts test/parse.test.ts test/query.test.ts test/resolve.test.ts test/trailing-slash.test.ts test/url.test.ts test/utilities.test.ts",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T08:33:28.886Z",
+    "finishedAt": "2026-10-02T08:33:30.959Z",
+    "wallMs": 2073,
+    "stdoutTail": "\n RUN  v4.1.5 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n\n Test Files  12 passed (12)\n      Tests  465 passed (465)\n   Start at  14:03:29\n   Duration  1.04s (transform 1.53s, setup 0ms, import 2.66s, tests 183ms, environment 2ms)\n\n",
+    "stderrTail": ""
+  },
+  "comparison": {
+    "fullWallMs": 5199,
+    "selectedWallMs": 2073,
+    "netSelectedMs": 3642,
+    "deltaMs": 1557,
+    "grossPercentChange": 60.12694748990191,
+    "percentChange": 29.948066935949218,
+    "selectedCommandSucceeded": true,
+    "fullCommandSucceeded": false,
+    "missedFailureSignal": true,
+    "evidenceValid": false,
+    "performanceEvidence": "INVALID",
+    "repetitions": 1,
+    "fullWallMsRange": {
+      "min": 5199,
+      "median": 5199,
+      "max": 5199
+    },
+    "selectedWallMsRange": {
+      "min": 2073,
+      "median": 2073,
+      "max": 2073
+    }
+  },
+  "notes": [
+    "This is paired runtime evidence, not a production-savings claim.",
+    "Full and selected commands were run sequentially in the same checkout.",
+    "Net selected runtime includes DiffCI analysis overhead.",
+    "Runtime evidence is preliminary until at least three alternating, cache-prepared repetitions agree.",
+    "Full failed while selected passed; inspect outputs before treating the selection as safe."
+  ]
+}
