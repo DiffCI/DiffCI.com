@@ -18,7 +18,7 @@ jobs:
       - uses: DiffCI/DiffCI.com@edac0ad48ae4bbdcf7e7839cf0bb371201a46872
 ```
 
-This example pins the Action at the verified `v0.3.1` feature commit. Verify the installed workflow locally:
+This example pins the Action at the verified `v0.3.2` feature commit. Verify the installed workflow locally:
 
 ```sh
 npx "@diffci.com/diffci@latest" verify-workflow
