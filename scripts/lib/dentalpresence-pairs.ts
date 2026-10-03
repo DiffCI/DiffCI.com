@@ -10,10 +10,11 @@ const mono = (value: unknown): bigint | null => typeof value === "string" && /^\
 export interface PairArtifact { pair: unknown; predictionBytes: Buffer; receiptBytes: Buffer }
 
 // Explicit historical cohorts: upgrading a producer never silently authorizes a new selector.
-export const dentalPresenceSelectorPins: Record<string, string> = {
+export const DENTALPRESENCE_SELECTOR_PINS: Readonly<Record<string, string>> = {
   "0.2.11": "sha512-c6mWfEU7P6k+nroa0LO7/NJyR/Ubzoa36mh3XRoWSOzkZwYIcGC+2QfbM+gHzCWsAqWew4sM0KT3XleSrjqosg==",
   "0.3.2": "sha512-45tYPyabvMjrhlJCPtEP0UUeIVY567XZl6eGsIXy1LSHADmr9Dj1VSvh7HIAtfea03ZbTwhJ2s8sh/YTSU8Mwg==",
 };
+export const dentalPresenceSelectorPins = DENTALPRESENCE_SELECTOR_PINS;
 
 /** Recompute eligibility from the artifacts, never trust producer assessment booleans. */
 function inspectPair(input: PairArtifact) {
