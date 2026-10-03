@@ -1,0 +1,137 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-10-03T03:41:05.343Z",
+  "observer": {
+    "version": "0.3.1",
+    "node": "v24.16.0",
+    "platform": "linux"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "88f8e43b40ea5533a96118770784ecb58d945243",
+    "headSha": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 2,
+    "changedFiles": [
+      "src/drivers/s3.ts",
+      "test/drivers/s3-list.test.ts"
+    ],
+    "affectedSourceFileCount": 1,
+    "selectedTests": [
+      "test/driver-dependencies.test.ts",
+      "test/driver-types.test.ts",
+      "test/drivers/db0.test.ts",
+      "test/drivers/s3-list.test.ts",
+      "test/drivers/s3.test.ts"
+    ],
+    "totalTestCount": 40,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "pnpm exec vitest run test/driver-dependencies.test.ts test/driver-types.test.ts test/drivers/db0.test.ts test/drivers/s3-list.test.ts test/drivers/s3.test.ts"
+    ],
+    "workspaceCommands": false,
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 91,
+      "edges": 170,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 7604,
+      "phasesMs": {
+        "repositoryDiscovery": 38.679785,
+        "scopeDiscovery": 0.495811,
+        "adapterInventory": 9.652629,
+        "adapters": 0.243443,
+        "typescriptProgram": 7437.866302,
+        "importExtractionAndResolution": 106.713278,
+        "graphFinalization": 10.591057
+      },
+      "adapterMetrics": {}
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 35,
+      "selectedTests": [
+        "test/drivers/azure-app-configuration.test.ts",
+        "test/drivers/azure-cosmos.test.ts",
+        "test/drivers/azure-key-vault.test.ts",
+        "test/drivers/azure-storage-blob.test.ts",
+        "test/drivers/azure-storage-table.test.ts",
+        "test/drivers/capacitor-preferences.test.ts",
+        "test/drivers/cloudflare-cache-binding-fake.test.ts",
+        "test/drivers/cloudflare-cache-binding.test.ts",
+        "test/drivers/cloudflare-kv-binding.test.ts",
+        "test/drivers/cloudflare-kv-http.test.ts",
+        "test/drivers/cloudflare-r2-binding.test.ts",
+        "test/drivers/db0.test.ts",
+        "test/drivers/deno-kv-node.test.ts",
+        "test/drivers/deno-kv.test.ts",
+        "test/drivers/fs-lite.test.ts",
+        "test/drivers/fs.test.ts",
+        "test/drivers/github.test.ts",
+        "test/drivers/http.test.ts",
+        "test/drivers/indexedb.test.ts",
+        "test/drivers/localstorage.test.ts",
+        "test/drivers/lru-cache.test.ts",
+        "test/drivers/memory.test.ts",
+        "test/drivers/mongodb.test.ts",
+        "test/drivers/netlify-blobs.test.ts",
+        "test/drivers/null.test.ts",
+        "test/drivers/overlay.test.ts",
+        "test/drivers/planetscale.test.ts",
+        "test/drivers/redis.test.ts",
+        "test/drivers/s3-list.test.ts",
+        "test/drivers/s3.test.ts",
+        "test/drivers/session-storage.test.ts",
+        "test/drivers/uploadthing.test.ts",
+        "test/drivers/upstash.test.ts",
+        "test/drivers/vercel-blob.test.ts",
+        "test/drivers/vercel-runtime-cache.test.ts"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under test/drivers"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+    "headShaAfter": "c9361afa5833d601cf262d137f068e3907fd8c9d",
+    "worktreeDigestBefore": "3d5eaae378873efea41d37f65b9e0ff25c6589afe321f79043b2b6b0711e3b14",
+    "worktreeDigestAfter": "3d5eaae378873efea41d37f65b9e0ff25c6589afe321f79043b2b6b0711e3b14",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 7934,
+    "preObserveMs": 878,
+    "phasesMs": {
+      "context": 57,
+      "engineLoad": 34,
+      "eligibility": 0,
+      "delta": 109,
+      "graph": 7606,
+      "impactAndCommands": 19,
+      "finalization": 62
+    }
+  }
+}

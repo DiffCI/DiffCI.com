@@ -1,0 +1,60 @@
+{
+  "repository": "date-fns",
+  "full": {
+    "reason": "package.json has no test script"
+  },
+  "manager": "pnpm",
+  "tests": 331,
+  "projects": [
+    {
+      "file": "vitest.config.ts",
+      "projects": null
+    }
+  ],
+  "workspaces": [
+    {
+      "root": "pkgs/core",
+      "test": "vitest run",
+      "tests": 317,
+      "projects": [
+        {
+          "file": "vitest.config.ts",
+          "projects": null,
+          "isolationUnsafe": true
+        }
+      ]
+    },
+    {
+      "root": "pkgs/docs",
+      "test": "echo \"Error: no test specified\" && exit 1",
+      "tests": 1,
+      "projects": [
+        {
+          "file": "vitest.config.ts",
+          "isolationUnsafe": true
+        }
+      ]
+    },
+    {
+      "root": "pkgs/tz",
+      "test": "vitest run",
+      "tests": 11,
+      "projects": [
+        {
+          "file": "vitest.config.ts",
+          "isolationUnsafe": true
+        }
+      ]
+    },
+    {
+      "root": "pkgs/utc",
+      "test": "env TZ=Asia/Kolkata vitest",
+      "tests": 2,
+      "projects": [
+        {
+          "file": "vitest.config.ts"
+        }
+      ]
+    }
+  ]
+}

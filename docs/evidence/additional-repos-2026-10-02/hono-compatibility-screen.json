@@ -1,0 +1,65 @@
+{
+  "repository": "hono",
+  "full": {
+    "command": "pnpm test",
+    "reason": "package.json test script via pnpm"
+  },
+  "manager": "pnpm",
+  "tests": 157,
+  "projects": [
+    {
+      "file": "vitest.config.ts",
+      "projects": null
+    }
+  ],
+  "workspaces": [
+    {
+      "root": "adapters/aws-lambda",
+      "test": "tsc -p tsconfig.json && vp test --run",
+      "tests": 5,
+      "projects": []
+    },
+    {
+      "root": "adapters/bun",
+      "test": "tsc -p tsconfig.json && bun test",
+      "tests": 4,
+      "projects": []
+    },
+    {
+      "root": "adapters/cloudflare-workers",
+      "test": "tsc -p tsconfig.json && vp test --run",
+      "tests": 5,
+      "projects": []
+    },
+    {
+      "root": "adapters/deno",
+      "test": "tsc -p tsconfig.json && vp test --run",
+      "tests": 4,
+      "projects": []
+    },
+    {
+      "root": "adapters/lambda-edge",
+      "test": "tsc -p tsconfig.json && vp test --run",
+      "tests": 3,
+      "projects": []
+    },
+    {
+      "root": "adapters/netlify",
+      "test": "tsc -p tsconfig.json && vp test --run",
+      "tests": 1,
+      "projects": []
+    },
+    {
+      "root": "adapters/service-worker",
+      "test": "tsc -p tsconfig.json && vp test --run",
+      "tests": 1,
+      "projects": []
+    },
+    {
+      "root": "adapters/vercel",
+      "test": "tsc -p tsconfig.json && vp test --run",
+      "tests": 2,
+      "projects": []
+    }
+  ]
+}
