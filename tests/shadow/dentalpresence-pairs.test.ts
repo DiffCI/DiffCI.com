@@ -1,18 +1,18 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
-import { DENTALPRESENCE_SELECTOR_PINS, inspectDentalPresencePair, summarizeDentalPresencePairs } from "../../scripts/lib/dentalpresence-pairs.js";
+import { dentalPresenceSelectorPins, inspectDentalPresencePair, summarizeDentalPresencePairs } from "../../scripts/lib/dentalpresence-pairs.js";
 
 const hash = (value: string | Buffer) => createHash("sha256").update(value).digest("hex");
-function artifact(version = "0.2.11") {
+function artifact() {
   const head = "a".repeat(40); const base = "b".repeat(40);
   const files = ["selected.test.mjs", "omitted.test.mjs"];
   const fileIds = files.map(hash);
   const predictionBytes = Buffer.from(JSON.stringify({ schema: "diffci.observation.v1", status: "OBSERVED", producedAt: "2026-10-02T00:00:00Z",
-    observer: { version }, commitRange: { headSha: head, baseSha: base }, nonInterference: { worktreeUnchanged: true },
+    observer: { version: "0.2.11" }, commitRange: { headSha: head, baseSha: base }, nonInterference: { worktreeUnchanged: true },
     result: { mode: "SELECTIVE", selectedTests: [files[0]], blindSpot: false, unroutedTestPaths: [] } }));
   const prediction = { headSha: head, baseSha: base, frozenSha256: hash(predictionBytes), finalSha256: hash(predictionBytes),
-    frozenAt: "2026-10-02T00:00:00Z", frozenMonotonicNs: "1", selectorVersion: version };
+    frozenAt: "2026-10-02T00:00:00Z", frozenMonotonicNs: "1", selectorVersion: "0.2.11" };
   const outcome = (index: number) => ({ kind: "test", fileId: fileIds[index], testId: hash(`case-${index}`), status: "PASS" });
   const arm = (role: string) => ({ role, status: "PASS", executedSha: head, universeSha256: hash("universe"), checkoutStable: true,
     wallMs: role === "full" ? 1000 : 400, startedAt: "2026-10-02T00:00:01Z", completedAt: "2026-10-02T00:00:02Z", startedMonotonicNs: "2",
@@ -26,19 +26,11 @@ function artifact(version = "0.2.11") {
     status: "COMPLETE", cleanupConfirmed: true, isolation: "independent-local-clones", cachePolicy: "fresh-workspaces-no-restored-test-cache",
     checkoutTextPolicy: "canonical-git-lf",
     harnessSha256: hash("harness"), executedSha: head, baseSha: base, prediction,
-    selectorPackage: { version, integrity: DENTALPRESENCE_SELECTOR_PINS[version] },
+    selectorPackage: { version: "0.2.11", integrity: "sha512-c6mWfEU7P6k+nroa0LO7/NJyR/Ubzoa36mh3XRoWSOzkZwYIcGC+2QfbM+gHzCWsAqWew4sM0KT3XleSrjqosg==" },
     mode: "SELECTIVE", selectedFileIds: [fileIds[0]], fullFileIds: fileIds, fullTestFiles: 2, selectedTestFiles: 1,
     universeSha256: hash("universe"), mandatoryPhaseIndices: [] as number[], analysisWallMs: 100, full: arm("full"), selected: arm("selected"),
   } };
 }
-
-test("accepts both qualified releases but rejects mismatched and unknown selector pins", () => {
-  for (const version of ["0.2.11", "0.3.2"]) assert.equal(inspectDentalPresencePair(artifact(version)).accepted, true);
-  const mismatched = artifact("0.3.2");
-  mismatched.pair.selectorPackage.integrity = DENTALPRESENCE_SELECTOR_PINS["0.2.11"];
-  assert.equal(inspectDentalPresencePair(mismatched).accepted, false);
-  assert.equal(inspectDentalPresencePair(artifact("0.3.3")).accepted, false);
-});
 
 test("recomputes runtime with analysis overhead and deduplicates real pair identity", () => {
   const input = artifact();
@@ -82,4 +74,27 @@ test("a conflicting companion prediction quarantines the pair even if pair.json 
   const report = summarizeDentalPresencePairs([first, conflict]);
   assert.equal(report.acceptedPairs, 0);
   assert.equal(report.exclusions.CONFLICTING_PAIR, 1);
+});
+
+test("accepts reviewed selector pins, partitions cohorts, and rejects unknown or mismatched integrity", () => {
+  const historical = artifact(); const current = artifact();
+  current.pair.runId = "101";
+  const version = "0.3.2";
+  current.pair.selectorPackage = { version, integrity: dentalPresenceSelectorPins[version] };
+  const prediction = JSON.parse(current.predictionBytes.toString()); prediction.observer.version = version;
+  current.predictionBytes = Buffer.from(JSON.stringify(prediction));
+  Object.assign(current.pair.prediction, { selectorVersion: version, frozenSha256: hash(current.predictionBytes), finalSha256: hash(current.predictionBytes) });
+  current.receiptBytes = Buffer.from(JSON.stringify(current.pair.prediction));
+  const report = summarizeDentalPresencePairs([historical, current]);
+  assert.equal(report.acceptedPairs, 2);
+  assert.deepEqual(Object.keys(report.cohorts), ["0.2.11", "0.3.2"]);
+  current.pair.selectorPackage.integrity = historical.pair.selectorPackage.integrity;
+  assert.deepEqual(inspectDentalPresencePair(current), { accepted: false, reason: "SELECTOR_IDENTITY" });
+  current.pair.selectorPackage.version = "999.0.0";
+  assert.equal(inspectDentalPresencePair(current).accepted, false);
+});
+
+test("seeded failures cannot enter natural-change or performance cohorts", () => {
+  const input = artifact(); Object.assign(input.pair, { seededMutation: { id: "fixture" } });
+  assert.deepEqual(inspectDentalPresencePair(input), { accepted: false, reason: "SEEDED_EXPERIMENT" });
 });

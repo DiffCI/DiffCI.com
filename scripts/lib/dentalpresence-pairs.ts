@@ -9,7 +9,8 @@ const mono = (value: unknown): bigint | null => typeof value === "string" && /^\
 
 export interface PairArtifact { pair: unknown; predictionBytes: Buffer; receiptBytes: Buffer }
 
-export const DENTALPRESENCE_SELECTOR_PINS: Readonly<Record<string, string>> = {
+// Explicit historical cohorts: upgrading a producer never silently authorizes a new selector.
+export const dentalPresenceSelectorPins: Record<string, string> = {
   "0.2.11": "sha512-c6mWfEU7P6k+nroa0LO7/NJyR/Ubzoa36mh3XRoWSOzkZwYIcGC+2QfbM+gHzCWsAqWew4sM0KT3XleSrjqosg==",
   "0.3.2": "sha512-45tYPyabvMjrhlJCPtEP0UUeIVY567XZl6eGsIXy1LSHADmr9Dj1VSvh7HIAtfea03ZbTwhJ2s8sh/YTSU8Mwg==",
 };
@@ -19,6 +20,7 @@ function inspectPair(input: PairArtifact) {
   const invalid = (reason: string) => ({ accepted: false as const, reason });
   const pair = input.pair;
   if (!object(pair) || pair.schema !== "dentalpresence.diffci.pair.v1") return invalid("INVALID_SCHEMA");
+  if (pair.seededMutation) return invalid("SEEDED_EXPERIMENT");
   if (pair.repository !== "adityankale190895/DentalPresence.in" || typeof pair.workflowRef !== "string" ||
       !/^adityankale190895\/DentalPresence\.in\/\.github\/workflows\/paired-ci-evidence\.yml@refs\//.test(pair.workflowRef) ||
       !/^\d+$/.test(String(pair.runId ?? "")) || !/^[1-9]\d*$/.test(String(pair.runAttempt ?? "")) ||
@@ -41,9 +43,9 @@ function inspectPair(input: PairArtifact) {
       identity.headSha !== pair.executedSha || identity.baseSha !== pair.baseSha || prediction.schema !== "diffci.observation.v1" ||
       prediction.status !== "OBSERVED" || prediction.commitRange?.headSha !== pair.executedSha || prediction.commitRange?.baseSha !== pair.baseSha ||
       prediction.nonInterference?.worktreeUnchanged !== true) return invalid("PREDICTION_IDENTITY");
-  const selectorVersion = pair.selectorPackage?.version;
-  if (typeof selectorVersion !== "string" || !Object.hasOwn(DENTALPRESENCE_SELECTOR_PINS, selectorVersion) ||
-      pair.selectorPackage.integrity !== DENTALPRESENCE_SELECTOR_PINS[selectorVersion] ||
+  const version = pair.selectorPackage?.version;
+  if (typeof version !== "string" || !Object.hasOwn(dentalPresenceSelectorPins, version) ||
+      pair.selectorPackage.integrity !== dentalPresenceSelectorPins[version] ||
       prediction.observer?.version !== pair.selectorPackage.version || identity.selectorVersion !== pair.selectorPackage.version) return invalid("SELECTOR_IDENTITY");
   if (pair.mode !== "SELECTIVE" || prediction.result?.mode !== "SELECTIVE") return invalid("FULL_FALLBACK");
   const files: unknown = prediction.result.selectedTests;
@@ -83,6 +85,7 @@ function inspectPair(input: PairArtifact) {
   const selectedFailures = new Set(allOutcomes[1].filter((test) => test.status === "FAIL").map((test) => test.testId));
   const omittedFailures = failed.filter((test) => !pair.selectedFileIds.includes(test.fileId)).length;
   return { accepted: true as const, id: `${pair.runId}:${pair.runAttempt}:${pair.executedSha}`, headSha: pair.executedSha as string,
+    selectorVersion: version,
     possibleMiss: pair.selected.status === "PASS" && omittedFailures > 0,
     fullFailingCases: failed.length, correspondingFailingCases: failed.filter((test) => selectedFailures.has(test.testId)).length,
     omittedFailingCases: omittedFailures, performanceEligible: pair.full.status === "PASS" && pair.selected.status === "PASS",
@@ -116,10 +119,21 @@ export function summarizeDentalPresencePairs(inputs: PairArtifact[]) {
   const fullWallMs = performance.reduce((sum, pair) => sum + pair.fullWallMs, 0);
   const selectedWallMs = performance.reduce((sum, pair) => sum + pair.selectedWallMs, 0);
   const analysisWallMs = performance.reduce((sum, pair) => sum + pair.analysisWallMs, 0);
+  const cohorts = Object.fromEntries([...new Set(pairs.map((pair) => pair.selectorVersion))].sort().map((version) => {
+    const cohort = pairs.filter((pair) => pair.selectorVersion === version);
+    const measured = cohort.filter((pair) => pair.performanceEligible);
+    const full = measured.reduce((sum, pair) => sum + pair.fullWallMs, 0);
+    const selected = measured.reduce((sum, pair) => sum + pair.selectedWallMs, 0);
+    const analysis = measured.reduce((sum, pair) => sum + pair.analysisWallMs, 0);
+    return [version, { acceptedPairs: cohort.length, performancePairs: measured.length,
+      possibleMissPairs: cohort.filter((pair) => pair.possibleMiss).length,
+      fullWallMs: full, selectedWallMs: selected, analysisWallMs: analysis,
+      netRuntimeReduction: full ? 1 - (selected + analysis) / full : null }];
+  }));
   return { schema: "diffci.dentalpresence.paired-summary.v1", inputArtifacts: inputs.length, duplicateDeliveries,
     acceptedPairs: pairs.length, performancePairs: performance.length, possibleMissPairs: pairs.filter((pair) => pair.possibleMiss).length,
     fullFailingCases: pairs.reduce((sum, pair) => sum + pair.fullFailingCases, 0),
-    omittedFailingCases: pairs.reduce((sum, pair) => sum + pair.omittedFailingCases, 0), exclusions,
+    omittedFailingCases: pairs.reduce((sum, pair) => sum + pair.omittedFailingCases, 0), exclusions, cohorts,
     fullWallMs, selectedWallMs, analysisWallMs,
     grossRuntimeReduction: fullWallMs ? 1 - selectedWallMs / fullWallMs : null,
     netRuntimeReduction: fullWallMs ? 1 - (selectedWallMs + analysisWallMs) / fullWallMs : null,
