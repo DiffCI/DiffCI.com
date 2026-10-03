@@ -12,11 +12,13 @@
 <meta property="og:title" content="Test Selection on deepseek-harness | DiffCI">
 <meta property="og:description" content="Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.">
 <meta property="og:url" content="https://diffci.com/case-studies/deepseek-harness">
-<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://diffci.com/assets/social/deepseek-case-study.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="deepseek-harness case study with one unhonored selection withheld">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://diffci.com/assets/social/deepseek-case-study.png"><meta name="twitter:title" content="Test Selection on deepseek-harness | DiffCI"><meta name="twitter:description" content="Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.">
 <link rel="canonical" href="https://diffci.com/case-studies/deepseek-harness">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"Test Selection on deepseek-harness","description":"Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.","url":"https://diffci.com/case-studies/deepseek-harness","mainEntityOfPage":"https://diffci.com/case-studies/deepseek-harness","datePublished":"2026-08-26","dateModified":"2026-09-25","image":"https://diffci.com/assets/diffci-social-card.png","author":{"@type":"Organization","@id":"https://diffci.com/#organization","name":"DiffCI","url":"https://diffci.com/about"},"publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"deepseek-harness case study","item":"https://diffci.com/case-studies/deepseek-harness"}]}]}
+{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"Test Selection on deepseek-harness","description":"Five merges on a repository with a dirty baseline: 79.5–89.5% job-level reduction, 3 of 3 mutation recall, and one result withheld because the selection was not honored.","url":"https://diffci.com/case-studies/deepseek-harness","mainEntityOfPage":"https://diffci.com/case-studies/deepseek-harness","datePublished":"2026-08-26","dateModified":"2026-09-25","image":"https://diffci.com/assets/social/deepseek-case-study.png","author":{"@type":"Person","@id":"https://diffci.com/about#maintainer","name":"Aditya Kale","url":"https://diffci.com/about#maintainer"},"publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"Case studies","item":"https://diffci.com/case-studies"},{"@type":"ListItem","position":3,"name":"deepseek-harness","item":"https://diffci.com/case-studies/deepseek-harness"}]}]}
 </script>
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
@@ -41,19 +43,21 @@
 <main>
 <article class="wrap">
 
-  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><span>deepseek-harness case study</span></nav>
-  <a class="backlink" href="/#evidence">← All evidence</a>
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><a href="/case-studies">Case studies</a><span aria-hidden="true">/</span><span>deepseek-harness</span></nav>
+  <a class="backlink" href="/case-studies">← All case studies</a>
 
   <p class="eyebrow">Case study</p>
   <h1>Affected-test selection on deepseek-harness</h1>
-  <p class="article-meta">Published August 26, 2026 · Updated September 25, 2026 · By <a href="/about">DiffCI</a></p>
+  <p class="article-meta">Published August 26, 2026 · Updated September 25, 2026 · By <a href="/about#maintainer">Aditya Kale</a>, primary maintainer</p>
 
   <div class="disclaimer">
-    <strong>deepseek-harness is not a DiffCI customer.</strong> It is a public open-source repository with
+    <strong>deepseek-harness is not a DiffCI customer.</strong> It is a <a href="https://github.com/deepseek-ai/deepseek-harness">public open-source repository</a> with
     public CI. Everything below was produced by analyzing its public source and replaying its own test
     suite in DiffCI's sandbox. Nobody associated with the project was contacted, and nothing here is an
     endorsement. No change was ever proposed to, or made in, its real CI.
   </div>
+
+  <figure class="article-visual"><img src="/assets/social/deepseek-case-study.svg" width="1200" height="630" alt="deepseek-harness test-selection case study with one result withheld because execution broadened the selection"><figcaption>The withheld fifth result is part of the evidence: the runner did not execute the complete proposed selection.</figcaption></figure>
 
   <div class="figures">
     <div><b>83.5–94.3%</b><span>test-stage reduction, net</span></div>
@@ -87,11 +91,11 @@
         <th>PR</th><th class="num">Selection</th><th>Runtime selection</th>
         <th class="num">Full</th><th class="num">Selected</th><th class="num">Job-level net</th>
       </tr>
-      <tr><td>#2760</td><td class="num">1 file (0.1%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">721.5s</td><td class="num">20.1s</td><td class="num">89.5%</td></tr>
-      <tr><td>#2808</td><td class="num">4 files (0.4%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">480.9s</td><td class="num">20.0s</td><td class="num">89.1%</td></tr>
-      <tr><td>#1373</td><td class="num">6 files (0.6%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">481.5s</td><td class="num">40.1s</td><td class="num">85.0%</td></tr>
-      <tr><td>#2814</td><td class="num">60 files (5.8%)</td><td>framework expansion</td><td class="num">722.7s</td><td class="num">100.3s</td><td class="num">79.5%</td></tr>
-      <tr><td>#2844</td><td class="num">254 files (24.8%)</td><td><code>IGNORED_OR_BROADENED</code></td><td class="num">482.4s</td><td class="num">—</td><td class="num">withheld</td></tr>
+      <tr><td><a href="https://github.com/deepseek-ai/deepseek-harness/commit/b7135e620674ef022a26a1d2cc87b79668790e7a">#2760</a></td><td class="num">1 file (0.1%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">721.5s</td><td class="num">20.1s</td><td class="num">89.5%</td></tr>
+      <tr><td><a href="https://github.com/deepseek-ai/deepseek-harness/commit/c71ff384cc80f8cfba5f364c5e2fefec1d69f28d">#2808</a></td><td class="num">4 files (0.4%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">480.9s</td><td class="num">20.0s</td><td class="num">89.1%</td></tr>
+      <tr><td><a href="https://github.com/deepseek-ai/deepseek-harness/commit/ed3ef7aceef1a567394b788c64b23fa6f96a7af3">#1373</a></td><td class="num">6 files (0.6%)</td><td><code>HONORED_EXACTLY</code></td><td class="num">481.5s</td><td class="num">40.1s</td><td class="num">85.0%</td></tr>
+      <tr><td><a href="https://github.com/deepseek-ai/deepseek-harness/commit/a67b9a4d31e9e9312cca3aa5fbb3dff299ef8388">#2814</a></td><td class="num">60 files (5.8%)</td><td>framework expansion</td><td class="num">722.7s</td><td class="num">100.3s</td><td class="num">79.5%</td></tr>
+      <tr><td><a href="https://github.com/deepseek-ai/deepseek-harness/commit/5951d19f58afbc190d3485e23660c8ffbc0c59ed">#2844</a></td><td class="num">254 files (24.8%)</td><td><code>IGNORED_OR_BROADENED</code></td><td class="num">482.4s</td><td class="num">—</td><td class="num">withheld</td></tr>
     </table>
   </div>
 
@@ -202,6 +206,12 @@
     summary where it had been too generous — the amendment sits at the top of the earlier report, not as a
     silent edit.
   </p>
+  <ul>
+    <li><a href="https://github.com/deepseek-ai/deepseek-harness">Upstream deepseek-harness repository</a></li>
+    <li><a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/research/2026-08-25-deepseek-execution-validation/2026-08-25-deepseek-v2-engine-canonical-replay-rows.jsonl">Canonical replay rows with merge SHAs and selected families</a></li>
+    <li><a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/research/2026-08-25-deepseek-execution-validation/">Sequential execution-validation reports</a></li>
+    <li><a href="/research/2026/diffci-open-evidence-2026.csv">Published evidence ledger CSV</a></li>
+  </ul>
 
 </article>
 </main>

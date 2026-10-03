@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0e11">
+<title>Measured CI Test Selection Case Studies | DiffCI</title>
+<meta name="description" content="Measured CI test-selection case studies with full and selected runtimes, source commits, withheld results, mutation recall, and explicit limitations.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DiffCI">
+<meta property="og:title" content="Measured CI Test Selection Case Studies | DiffCI">
+<meta property="og:description" content="Compare measured test-selection results, source evidence, limitations, and withheld outcomes across real open-source repositories.">
+<meta property="og:url" content="https://diffci.com/case-studies">
+<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="DiffCI measured CI test-selection case studies">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Measured CI Test Selection Case Studies | DiffCI">
+<meta name="twitter:description" content="Measured runtimes, source commits, safety evidence, withheld results, and limitations from real repositories.">
+<meta name="twitter:image" content="https://diffci.com/assets/diffci-social-card.png">
+<link rel="canonical" href="https://diffci.com/case-studies">
+<link rel="stylesheet" href="/styles.css">
+<link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","name":"Measured CI Test Selection Case Studies","url":"https://diffci.com/case-studies","description":"Measured test-selection and CI-economics case studies with source evidence and explicit limitations.","isPartOf":{"@id":"https://diffci.com/#website"},"hasPart":[{"@id":"https://diffci.com/case-studies/calcom"},{"@id":"https://diffci.com/case-studies/deepseek-harness"},{"@id":"https://diffci.com/case-studies/diffci-own-ci"}]},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"Case studies","item":"https://diffci.com/case-studies"}]}]}</script>
+</head>
+<body>
+<header class="masthead"><div class="wrap"><a class="wordmark" href="/">DiffCI</a><nav><a href="/guides">Guides</a><a href="/research/diffci-open-evidence-2026">Open study</a><a href="/compare/test-selection-vs-path-filters">Compare methods</a><a href="/about">About</a></nav></div></header>
+<main>
+<div class="wrap"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><span>Case studies</span></nav></div>
+<section class="hero"><div class="wrap"><p class="hero-claim">Executed evidence</p><h1>CI test-selection case studies with the failures left in.</h1><p class="lede">These studies report full and selected execution, analysis overhead, selection-honoring checks, mutation recall, repository scope, and results that were withheld when the experiment did not support a claim.</p></div></section>
+<section class="numbered"><div class="wrap wrap-wide"><h2>Compare the measured cases</h2><div class="cards">
+<article class="card"><p class="kicker">cal.com · six merges</p><h3>Setup cost changes the answer</h3><div class="figures"><div><b>44.2%</b><span>job-equivalent net reduction</span></div><div><b>8 of 8</b><span>selections honored exactly</span></div></div><p>Large test-stage reductions became a smaller job-level result after install and generation were included.</p><p class="more"><a href="/case-studies/calcom">Read the case study and source commits →</a></p></article>
+<article class="card"><p class="kicker">deepseek-harness · five merges</p><h3>A dirty baseline changes recall</h3><div class="figures"><div><b>79.5–89.5%</b><span>eligible job-level reductions</span></div><div><b>1 of 5</b><span>results withheld</span></div></div><p>Sixteen to eighteen pre-existing failures forced baseline-relative recall, and one broadened execution was excluded.</p><p class="more"><a href="/case-studies/deepseek-harness">Read the case study and source commits →</a></p></article>
+<article class="card"><p class="kicker">DiffCI's own repository</p><h3>Green CI was not running every test</h3><div class="figures"><div><b>15</b><span>test files hidden by a shell glob</span></div><div><b>0.696</b><span>historical preflight recall</span></div></div><p>The self-study documents infrastructure defects, a misleading green suite, and an initially overstated replay score.</p><p class="more"><a href="/case-studies/diffci-own-ci">Read the self-study and repository evidence →</a></p></article>
+</div></div></section>
+<section class="numbered"><div class="wrap"><h2>Use the evidence ledger, not only the summaries</h2><p>The <a href="/research/diffci-open-evidence-2026">DiffCI Open Evidence Study</a> consolidates the benchmark method, source reports, measured and inferred labels, limitations, downloadable CSV, and citable PDF. The case studies explain individual repositories; the ledger is the cross-repository record.</p><aside class="related-guides"><h2>Continue the evaluation</h2><ul><li><a href="/guides/affected-tests">How to run affected tests safely</a></li><li><a href="/test-impact-analysis/github-actions">Test impact analysis for GitHub Actions</a></li><li><a href="/github-actions-cost-optimization">Measure GitHub Actions cost</a></li><li><a href="/compare/test-selection-vs-path-filters">Compare path rules, task graphs, and source graphs</a></li></ul></aside></div></section>
+</main>
+<footer><div class="wrap"><p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p><nav><a href="/guides">Guides</a><a href="/research/diffci-open-evidence-2026">Open study</a><a href="/data-handling">Data handling</a><a href="/contact">Contact</a></nav></div></footer>
+</body>
+</html>

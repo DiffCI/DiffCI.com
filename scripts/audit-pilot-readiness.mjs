@@ -9,7 +9,7 @@ const repositories = ['statelyai/xstate', 'inngest/inngest-js', 'triggerdotdev/t
 const pages = await Promise.all([
   'http://diffci.com/', 'https://diffci.com/', 'https://www.diffci.com/',
   'https://diffci.com/welcome', 'https://diffci.com/contact', 'https://diffci.com/data-handling',
-  'https://github.com/apps/diffci-shadow',
+  'https://github.com/apps/diffci/installations/new',
   'https://app.diffci.com/report?repository=adityankale190895%2FDiffCI.com&days=7',
   'https://app.diffci.com/report?repository=adityankale190895%2FDentalPresence.in&days=7',
 ].map(async url => {

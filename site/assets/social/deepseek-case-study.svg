@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0c0e11"/><circle cx="1090" cy="70" r="300" fill="#12382f" opacity=".44"/>
+  <g transform="translate(72 62)"><rect width="50" height="50" rx="9" fill="none" stroke="#3fd1ad" stroke-width="6"/><path d="M25 0h25v50H25z" fill="#3fd1ad"/><text x="70" y="39" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700">DiffCI</text></g>
+  <text x="72" y="205" fill="#3fd1ad" font-family="Consolas,monospace" font-size="23" letter-spacing="2">MEASURED CASE STUDY</text>
+  <text x="72" y="282" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="56" font-weight="700">Affected tests on</text><text x="72" y="350" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="56" font-weight="700">deepseek-harness.</text>
+  <text x="74" y="420" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="27">79.5–89.5% counted reduction · one unhonored run withheld.</text>
+  <g transform="translate(858 140)"><circle cx="115" cy="145" r="108" fill="#151b1d" stroke="#3a504b" stroke-width="5"/><path d="M115 145L115 37A108 108 0 1 1 32 214Z" fill="#3fd1ad"/><path d="M115 145L32 214A108 108 0 0 1 115 37Z" fill="#7c5757"/><circle cx="115" cy="145" r="48" fill="#0c0e11"/><text x="115" y="154" text-anchor="middle" fill="#f3f6f5" font-family="Consolas,monospace" font-size="25">4 / 5</text></g>
+  <rect x="72" y="502" width="1056" height="1" fill="#30433f"/><text x="72" y="557" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="23">diffci.com/case-studies/deepseek-harness</text>
+</svg>

@@ -12,11 +12,13 @@
 <meta property="og:title" content="Change-Aware Test Selection on cal.com | DiffCI">
 <meta property="og:description" content="Six real cal.com merges, executed and timed: 86–91.6% test-stage reduction, 44.2% at job level, 8 of 8 selections honored exactly.">
 <meta property="og:url" content="https://diffci.com/case-studies/calcom">
-<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://diffci.com/assets/social/calcom-case-study.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="cal.com case study: 44.2% measured job-equivalent reduction">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="https://diffci.com/assets/social/calcom-case-study.png"><meta name="twitter:title" content="Change-Aware Test Selection on cal.com | DiffCI"><meta name="twitter:description" content="Six real cal.com merges, executed and timed: 86–91.6% test-stage reduction, 44.2% at job level, 8 of 8 selections honored exactly.">
 <link rel="canonical" href="https://diffci.com/case-studies/calcom">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"Change-Aware Test Selection on cal.com","description":"Six real cal.com merges, executed and timed: 86–91.6% test-stage reduction, 44.2% at job level, 8 of 8 selections honored exactly.","url":"https://diffci.com/case-studies/calcom","mainEntityOfPage":"https://diffci.com/case-studies/calcom","datePublished":"2026-08-26","dateModified":"2026-09-25","image":"https://diffci.com/assets/diffci-social-card.png","author":{"@type":"Organization","@id":"https://diffci.com/#organization","name":"DiffCI","url":"https://diffci.com/about"},"publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"cal.com case study","item":"https://diffci.com/case-studies/calcom"}]}]}
+{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"Change-Aware Test Selection on cal.com","description":"Six real cal.com merges, executed and timed: 86–91.6% test-stage reduction, 44.2% at job level, 8 of 8 selections honored exactly.","url":"https://diffci.com/case-studies/calcom","mainEntityOfPage":"https://diffci.com/case-studies/calcom","datePublished":"2026-08-26","dateModified":"2026-09-25","image":"https://diffci.com/assets/social/calcom-case-study.png","author":{"@type":"Person","@id":"https://diffci.com/about#maintainer","name":"Aditya Kale","url":"https://diffci.com/about#maintainer"},"publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"Case studies","item":"https://diffci.com/case-studies"},{"@type":"ListItem","position":3,"name":"cal.com","item":"https://diffci.com/case-studies/calcom"}]}]}
 </script>
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='5' y='5' width='22' height='22' rx='4' fill='none' stroke='%23146b5a' stroke-width='3'/><path d='M16 5 L27 5 L27 27 L16 27 Z' fill='%23146b5a'/></svg>">
@@ -41,19 +43,21 @@
 <main>
 <article class="wrap">
 
-  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><span>cal.com case study</span></nav>
-  <a class="backlink" href="/#evidence">← All evidence</a>
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><a href="/case-studies">Case studies</a><span aria-hidden="true">/</span><span>cal.com</span></nav>
+  <a class="backlink" href="/case-studies">← All case studies</a>
 
   <p class="eyebrow">Case study</p>
   <h1>Change-aware test selection on cal.com</h1>
-  <p class="article-meta">Published August 26, 2026 · Updated September 25, 2026 · By <a href="/about">DiffCI</a></p>
+  <p class="article-meta">Published August 26, 2026 · Updated September 25, 2026 · By <a href="/about#maintainer">Aditya Kale</a>, primary maintainer</p>
 
   <div class="disclaimer">
-    <strong>cal.com is not a DiffCI customer.</strong> It is a public open-source repository with public
+    <strong>cal.com is not a DiffCI customer.</strong> It is a <a href="https://github.com/calcom/cal.diy">public open-source repository</a> with public
     CI. Everything below was produced by analyzing its public source and replaying its own test suite in
     DiffCI's sandbox. cal.com has not installed DiffCI, has not been contacted about it, and has not
     endorsed anything here. No change was ever proposed to, or made in, cal.com's real CI.
   </div>
+
+  <figure class="article-visual"><img src="/assets/social/calcom-case-study.svg" width="1200" height="630" alt="cal.com test-selection case study showing a 44.2 percent job-equivalent reduction and exact execution checks"><figcaption>The job-equivalent result includes installation and pretest work paid by both the full and selected paths.</figcaption></figure>
 
   <h2 class="no-rule">The short version</h2>
   <p>
@@ -117,11 +121,11 @@
         <th>PR</th><th class="num">Selected / total</th><th class="num">Full test stage</th>
         <th class="num">Selected</th><th class="num">Net saved</th><th class="num">Reduction</th>
       </tr>
-      <tr><td>#29529</td><td class="num">1 / 250</td><td class="num">287.8s</td><td class="num">20.7s</td><td class="num">255.8s</td><td class="num">88.9%</td></tr>
-      <tr><td>#29819</td><td class="num">1 / 250</td><td class="num">461.4s</td><td class="num">20.1s</td><td class="num">421.6s</td><td class="num">91.4%</td></tr>
-      <tr><td>#29583</td><td class="num">2 / 250</td><td class="num">300.9s</td><td class="num">20.1s</td><td class="num">266.1s</td><td class="num">88.4%</td></tr>
-      <tr><td>#29541</td><td class="num">3 / 249</td><td class="num">462.3s</td><td class="num">20.1s</td><td class="num">423.6s</td><td class="num">91.6%</td></tr>
-      <tr><td>#28567</td><td class="num">5 / 249</td><td class="num">204.6s</td><td class="num">20.6s</td><td class="num">176.1s</td><td class="num">86.0%</td></tr>
+      <tr><td><a href="https://github.com/calcom/cal.diy/commit/ebf696a991ceea768225a9cda457aa27fc4f0928">#29529</a></td><td class="num">1 / 250</td><td class="num">287.8s</td><td class="num">20.7s</td><td class="num">255.8s</td><td class="num">88.9%</td></tr>
+      <tr><td><a href="https://github.com/calcom/cal.diy/commit/8418db70c71e5364e6baf26275aafa10e6bc9bd7">#29819</a></td><td class="num">1 / 250</td><td class="num">461.4s</td><td class="num">20.1s</td><td class="num">421.6s</td><td class="num">91.4%</td></tr>
+      <tr><td><a href="https://github.com/calcom/cal.diy/commit/53e32a5bbad43b262a5e1fef37f57fc67738afdb">#29583</a></td><td class="num">2 / 250</td><td class="num">300.9s</td><td class="num">20.1s</td><td class="num">266.1s</td><td class="num">88.4%</td></tr>
+      <tr><td><a href="https://github.com/calcom/cal.diy/commit/561cf889abc776d8553f9c692a16c47b5d1a5a03">#29541</a></td><td class="num">3 / 249</td><td class="num">462.3s</td><td class="num">20.1s</td><td class="num">423.6s</td><td class="num">91.6%</td></tr>
+      <tr><td><a href="https://github.com/calcom/cal.diy/commit/f00434927386c9ecdcbd7e6c5f82d22044a245bc">#28567</a></td><td class="num">5 / 249</td><td class="num">204.6s</td><td class="num">20.6s</td><td class="num">176.1s</td><td class="num">86.0%</td></tr>
     </table>
   </div>
 
@@ -224,6 +228,12 @@
     They include the failures: an argument-forwarding bug, an anomalous corrected run, and a
     project-qualified filter that behaved differently than expected. None were removed after the fact.
   </p>
+  <ul>
+    <li><a href="https://github.com/calcom/cal.diy">Upstream cal.com repository</a></li>
+    <li><a href="https://github.com/calcom/cal.diy/commit/176037d0afbe572f870a3c702985e7cd83fe6c0c">PR #29940 merge commit used for job-equivalent timing</a></li>
+    <li><a href="https://github.com/DiffCI/DiffCI.com/blob/main/docs/research/blind-baseline-2026-08-23/2026-08-24-calcom-adapted-replay-rows.jsonl">Blind-baseline replay rows</a></li>
+    <li><a href="/research/2026/diffci-open-evidence-2026.csv">Published evidence ledger CSV</a></li>
+  </ul>
 
 </article>
 </main>
