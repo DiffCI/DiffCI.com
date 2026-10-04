@@ -14,7 +14,7 @@ strategy:
     webpack: [latest]
 
 steps:
-  - uses: actions/setup-node@v4
+  - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # immutable setup-node pin
     with:
       node-version: ${{ matrix.node-version }}      # ← matrix defines `node`, not `node-version`
   - if: matrix.webpack-version != 'latest'          # ← matrix defines `webpack`, not `webpack-version`
