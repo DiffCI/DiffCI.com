@@ -54,6 +54,12 @@ test("passes canonical documents and assets through unchanged", async () => {
 
 });
 
+test("serves the directly addressable 404 document with a real 404 status", async () => {
+  const response = await worker.fetch(new Request("https://diffci.com/404"), env());
+  assert.equal(response.status, 404);
+  assert.equal(await response.text(), "/404.html");
+});
+
 const mcpHeaders = {
   "Content-Type": "application/json",
   Accept: "application/json, text/event-stream",
@@ -165,6 +171,7 @@ test("publishes cacheable MCP server-card and AI catalog discovery documents", a
   assert.equal(card.status, 200);
   assert.match(card.headers.get("content-type") ?? "", /^application\/mcp-server-card\+json/);
   assert.equal(card.headers.get("access-control-allow-origin"), "*");
+  assert.equal(card.headers.get("x-robots-tag"), "noindex");
   const etag = card.headers.get("etag");
   assert.ok(etag);
   const cardBody = await card.json() as { name?: string; remotes?: Array<{ url?: string }> };
@@ -178,8 +185,13 @@ test("publishes cacheable MCP server-card and AI catalog discovery documents", a
 
   const catalog = await worker.fetch(new Request("https://diffci.com/.well-known/ai-catalog.json"), env());
   assert.match(catalog.headers.get("content-type") ?? "", /^application\/ai-catalog\+json/);
-  const catalogBody = await catalog.json() as { entries?: Array<{ url?: string }> };
+  assert.equal(catalog.headers.get("x-robots-tag"), "noindex");
+  const catalogBody = await catalog.json() as {
+    entries?: Array<{ displayName?: string; representativeQueries?: string[]; url?: string }>;
+  };
   assert.equal(catalogBody.entries?.[0]?.url, "https://diffci.com/mcp/server-card");
+  assert.equal(catalogBody.entries?.[0]?.displayName, "DiffCI change-aware CI validation");
+  assert.equal(catalogBody.entries?.[0]?.representativeQueries?.length, 3);
 });
 
 test("implements HTTP and Origin guardrails for the MCP endpoint", async () => {
@@ -188,6 +200,7 @@ test("implements HTTP and Origin guardrails for the MCP endpoint", async () => {
   }), env());
   assert.equal(get.status, 405);
   assert.equal(get.headers.get("allow"), "POST, OPTIONS");
+  assert.equal(get.headers.get("x-robots-tag"), "noindex");
 
   const notification = await mcp({ jsonrpc: "2.0", method: "notifications/initialized", params: {} });
   assert.equal(notification.status, 202);

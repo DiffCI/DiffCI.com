@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c0e11">
+<title>CI Test Selection Guides and Evidence | DiffCI</title>
+<meta name="description" content="Practical guides to affected-test selection, GitHub Actions test impact analysis, CI cost measurement, language support, and conservative fallbacks.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="DiffCI"><meta property="og:title" content="CI Test Selection Guides and Evidence | DiffCI"><meta property="og:description" content="Implementation guides, comparisons, support boundaries, and measured evidence for change-aware CI."><meta property="og:url" content="https://diffci.com/guides"><meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png"><meta property="og:image:alt" content="DiffCI guides to change-aware CI analysis and conservative test selection"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="CI Test Selection Guides and Evidence | DiffCI"><meta name="twitter:description" content="Implementation guides, comparisons, support boundaries, and measured evidence for change-aware CI."><meta name="twitter:image" content="https://diffci.com/assets/diffci-social-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<link rel="canonical" href="https://diffci.com/guides"><link rel="stylesheet" href="/styles.css"><link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"CollectionPage","name":"DiffCI guides","description":"Practical guides and measured evidence for change-aware CI and affected-test selection.","url":"https://diffci.com/guides","publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"Guides","item":"https://diffci.com/guides"}]}]}</script>
+</head>
+<body>
+<header class="masthead"><div class="wrap"><a class="wordmark" href="/">DiffCI</a><nav><a href="#start">Start here</a><a href="#evaluate">Evaluate</a><a href="/research/diffci-open-evidence-2026">Evidence</a><a href="/docs/ai-agents">Agent docs</a></nav></div></header>
+<main><div class="wrap"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><span>Guides</span></nav></div>
+<section class="hero"><div class="wrap"><p class="hero-claim">Implementation and evaluation</p><h1>Change-aware CI guides grounded in measured evidence.</h1><p class="lede">Start with the decision you need to make: how to identify affected tests, how to preserve GitHub Actions prerequisites, or how to decide whether a narrower run saves any money.</p></div></section>
+
+<section class="numbered" id="start"><div class="wrap wrap-wide"><h2>Start with the implementation boundary</h2><div class="cards">
+  <article class="card"><p class="kicker">Implementation guide</p><h3>Run only affected tests safely</h3><p>Compare changed-path rules, task graphs, and source dependencies; define full-suite triggers before measuring a selection.</p><p class="more"><a href="/guides/affected-tests">Read the affected-tests guide →</a></p></article>
+  <article class="card"><p class="kicker">GitHub Actions</p><h3>Preserve the job that CI actually runs</h3><p>Model checkout history, installation, generation, services, matrices, and always-run checks instead of selecting test files in isolation.</p><p class="more"><a href="/test-impact-analysis/github-actions">Read the GitHub Actions guide →</a></p></article>
+  <article class="card"><p class="kicker">Support matrix</p><h3>Know what the analyzer can resolve</h3><p>See the implemented JavaScript/TypeScript, Vue, Go, and Maven boundaries—and the cases that deliberately require full validation.</p><p class="more"><a href="/guides/language-support">Review language support →</a></p></article>
+  <article class="card"><p class="kicker">Strategy comparison</p><h3>Path filters, task graphs, or source selection?</h3><p>Choose the cheapest maintainable evidence model that remains conservative for the repository in front of you.</p><p class="more"><a href="/compare/test-selection-vs-path-filters">Compare the strategies →</a></p></article>
+</div></div></section>
+
+<section class="numbered" id="evaluate"><div class="wrap wrap-wide"><h2>Evaluate economics separately from safety</h2><div class="cards">
+  <article class="card"><p class="kicker">CI economics</p><h3>Measure GitHub Actions cost</h3><p>Separate test-stage time, job-equivalent runtime, workflow latency, and billed compute before claiming a saving.</p><p class="more"><a href="/github-actions-cost-optimization">Use the cost guide →</a></p></article>
+  <article class="card"><p class="kicker">Open data</p><h3>Inspect the benchmark and its failures</h3><p>Download the evidence, see where a cheap path baseline won, and keep withheld or unhonored selections visible.</p><p class="more"><a href="/research/diffci-open-evidence-2026">Open the evidence study →</a></p></article>
+  <article class="card"><p class="kicker">Measured case study</p><h3>cal.com replay</h3><p>See why an 86–91.6% test-stage reduction became 44.2% after install and pretest cost were included.</p><p class="more"><a href="/case-studies/calcom">Read the cal.com case study →</a></p></article>
+  <article class="card"><p class="kicker">Measured case study</p><h3>deepseek-harness replay</h3><p>See 79.5–89.5% counted job-level reductions and the run withheld because execution did not honor the proposed selection.</p><p class="more"><a href="/case-studies/deepseek-harness">Read the deepseek-harness case study →</a></p></article>
+</div></div></section>
+
+<section class="numbered"><div class="wrap"><h2>Try one observation before changing CI</h2><p>Analyze the current checkout without executing tests or sending a report:</p><pre><code>npx "@diffci.com/diffci@latest" observe --no-send</code></pre><p>Use <code>check</code> only when repository test commands are allowed to run. A fallback is useful evidence that the change could not be narrowed safely; it is not a reason to remove required CI.</p></div></section>
+</main>
+<footer><div class="wrap"><p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p><nav><a href="/mcp-server">MCP server</a><a href="/">Home</a><a href="/docs/ai-agents">Agent docs</a><a href="/about">About</a><a href="/contact">Contact</a></nav></div></footer>
+</body></html>

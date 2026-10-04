@@ -11,13 +11,13 @@
 <meta property="og:title" content="CI Validation for AI Coding Agents | DiffCI">
 <meta property="og:description" content="Add change-aware CI analysis, affected-test evidence, and measured full-versus-selected validation to coding-agent workflows.">
 <meta property="og:url" content="https://diffci.com/docs/ai-agents">
-<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://diffci.com/assets/diffci-social-card.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="CI Validation for AI Coding Agents | DiffCI">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="CI Validation for AI Coding Agents | DiffCI"><meta name="twitter:description" content="Add change-aware CI analysis, affected-test evidence, and measured full-versus-selected validation to coding-agent workflows."><meta name="twitter:image" content="https://diffci.com/assets/diffci-social-card.png">
 <link rel="canonical" href="https://diffci.com/docs/ai-agents">
 <link rel="stylesheet" href="/styles.css">
 <link rel="icon" type="image/svg+xml" href="/assets/diffci-mark.svg">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","headline":"CI Validation for AI Coding Agents","description":"Give coding agents a change-aware CI validation step with conservative test selection and full-run fallbacks.","url":"https://diffci.com/docs/ai-agents","mainEntityOfPage":"https://diffci.com/docs/ai-agents","datePublished":"2026-09-21","dateModified":"2026-09-25","image":"https://diffci.com/assets/diffci-social-card.png","author":{"@type":"Organization","@id":"https://diffci.com/#organization","name":"DiffCI","url":"https://diffci.com/about"},"publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"AI agent documentation","item":"https://diffci.com/docs/ai-agents"}]}]}
+{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"CI Validation for AI Coding Agents","description":"Give coding agents a change-aware CI validation step with conservative test selection and full-run fallbacks.","url":"https://diffci.com/docs/ai-agents","mainEntityOfPage":"https://diffci.com/docs/ai-agents","datePublished":"2026-09-21","dateModified":"2026-09-25","image":"https://diffci.com/assets/diffci-social-card.png","author":{"@type":"Person","@id":"https://diffci.com/about#maintainer","name":"Aditya Kale","url":"https://diffci.com/about#maintainer"},"publisher":{"@id":"https://diffci.com/#organization"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"DiffCI","item":"https://diffci.com/"},{"@type":"ListItem","position":2,"name":"AI agent documentation","item":"https://diffci.com/docs/ai-agents"}]}]}
 </script>
 </head>
 <body>
@@ -26,16 +26,16 @@
 <div class="wrap"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">DiffCI</a><span aria-hidden="true">/</span><span>AI agent documentation</span></nav></div>
 <section class="hero"><div class="wrap">
   <p class="hero-claim">AI-agent CI validation</p>
-  <h1>Require verification before an agent ships a change.</h1>
-  <p class="article-meta">Published September 21, 2026 · Updated September 25, 2026 · By <a href="/about">DiffCI</a></p>
-  <p class="lede">DiffCI snapshots the current change, traces affected tests, runs the minimum justified verification, and falls back to the full inferred test command when evidence is incomplete.</p>
+  <h1>Give coding agents evidence before they call a change CI-ready.</h1>
+  <p class="article-meta">Published September 21, 2026 · Updated September 25, 2026 · By <a href="/about#maintainer">Aditya Kale</a>, primary maintainer</p>
+  <p class="lede">DiffCI snapshots the agent's current staged, unstaged, and untracked changes, traces affected tests, and runs selected or conservative full-fallback verification.</p>
   <pre><code>npx "@diffci.com/diffci@latest" verify --changed --json</code></pre>
   <p>The command sends nothing to DiffCI Cloud. It does not skip, cancel, reorder, or replace required CI checks.</p>
 </div></section>
 <section class="numbered" id="commands"><div class="wrap">
   <h2>Choose the command that matches the task</h2>
-  <h3><code>verify --changed --json</code>: gate local agent changes</h3>
-  <p>This covers staged, unstaged, and non-ignored untracked content. Continue only when the content-bound receipt says <code>safe_to_continue: true</code>.</p>
+  <h3><code>verify --changed --json</code>: fail-closed agent verification</h3>
+  <p>This binds execution to a content-addressed working-tree snapshot. Exit zero means the exact snapshot passed and remained unchanged; agents should continue only when <code>safe_to_continue</code> is true.</p>
   <h3><code>check</code>: validate and measure</h3>
   <p><code>check</code> analyzes the checkout and, when DiffCI can infer safe commands, executes the full and selected test paths sequentially. It reports paired runtime only when both commands pass and the checkout identity remains valid. Test commands may create generated files in the repository.</p>
   <h3><code>observe --no-send</code>: analyze without test execution</h3>
@@ -46,7 +46,7 @@
 <section class="numbered" id="install"><div class="wrap">
   <h2>Install repository instructions</h2>
   <pre><code>npx "@diffci.com/diffci@latest" init</code></pre>
-  <p><code>init</code> creates persistent DiffCI guidance for supported agent instruction surfaces, including <code>AGENTS.md</code>, <code>CLAUDE.md</code>, Cursor rules, Copilot instructions, and <code>diffci.config.json</code>. Use <code>--verification-workflow</code> to add a blocking commit-range gate.</p>
+  <p><code>init</code> creates DiffCI guidance for supported agent instruction surfaces, including <code>AGENTS.md</code>, <code>CLAUDE.md</code>, Cursor rules, Copilot instructions, and <code>diffci.config.json</code>. Existing files are preserved unless replacement is explicitly requested.</p>
   <p>Agent-specific setup:</p>
   <ul>
     <li><a href="/docs/codex">Codex</a> — repository instructions, command interpretation, and PowerShell.</li>
@@ -70,14 +70,13 @@
     }
   }
 }</code></pre>
-  <p>Call <code>diffci_verify_changed</code> for local edits or <code>diffci_verify</code> for a clean CI range. Both return the same machine-readable receipt as the CLI.</p>
+  <p>Call <code>diffci_verify_changed</code> before a PR-ready answer and continue only when <code>safe_to_continue</code> is true. Use <code>diffci_verify</code> for a clean committed range or CI checkout. Both return the structured <code>diffci.verification.v1</code> receipt.</p>
 </div></section>
 <section class="numbered" id="guardrails"><div class="wrap">
   <h2>Interpret the result conservatively</h2>
   <ul class="limits">
     <li><strong>A selected command is evidence, not authority.</strong> Required project CI remains authoritative.</li>
     <li><strong><code>REFUSED</code> and <code>ERROR</code> are not passes.</strong> Run the repository's normal validation commands.</li>
-    <li><strong><code>safe_to_continue: false</code> blocks shipping.</strong> Fix the failure or run the required broader verification.</li>
     <li><strong>Selection counts are not savings.</strong> Use paired execution before making a runtime claim.</li>
     <li><strong>Fallback is a valid result.</strong> Lockfiles, workflows, root configuration, or incomplete dependency evidence can require the full suite.</li>
   </ul>
@@ -85,6 +84,6 @@
   <aside class="related-guides"><h2>Agent setup guides</h2><ul><li><a href="/docs/codex">Codex</a></li><li><a href="/docs/claude-code">Claude Code</a></li><li><a href="/docs/cursor">Cursor</a></li><li><a href="/docs/copilot">GitHub Copilot</a></li><li><a href="/docs/grok">Grok</a></li></ul></aside>
 </div></section>
 </main>
-<footer><div class="wrap"><p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p><nav><a href="/test-impact-analysis/github-actions">Test impact analysis</a><a href="/research/diffci-open-evidence-2026">Open study</a><a href="/data-handling">Data handling</a><a href="/contact">Contact</a></nav></div></footer>
+<footer><div class="wrap"><p><strong>DiffCI</strong> — deterministic, change-aware CI planning.</p><nav><a href="/mcp-server">MCP server</a><a href="/test-impact-analysis/github-actions">Test impact analysis</a><a href="/research/diffci-open-evidence-2026">Open study</a><a href="/data-handling">Data handling</a><a href="/contact">Contact</a></nav></div></footer>
 </body>
 </html>

@@ -327,7 +327,8 @@ export function renderHtml(study: StudyFindings): string {
   const description = `${study.subtitle}. Every number with its evidence level, under CC BY 4.0.`;
   const seoTitle = "Change-Aware Test Selection Benchmark 2026 | DiffCI";
   const seoDescription = "A measured benchmark of change-aware test selection on open-source CI, including fallbacks, failures, runtime economics, and where it saved nothing.";
-  const socialImage = `${SITE_ORIGIN}/assets/diffci-social-card.png`;
+  const socialImage = `${SITE_ORIGIN}/assets/social/open-evidence-study.png`;
+  const socialImageAlt = "DiffCI Open Evidence Study 2026: savings, fallbacks, failures, and where selection lost";
 
   const figuresHtml = study.headlineFindings
     .map((h) => `    <div><b>${escapeHtml(h.value)}</b><span>${escapeHtml(h.label)}</span></div>`)
@@ -356,7 +357,8 @@ export function renderHtml(study: StudyFindings): string {
 <meta property="og:image" content="${socialImage}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image:alt" content="${escapeHtml(socialImageAlt)}">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="${socialImage}"><meta name="twitter:title" content="${escapeHtml(seoTitle)}"><meta name="twitter:description" content="${escapeHtml(description)}">
 <link rel="canonical" href="${urls.page}">
 <link rel="license" href="${study.license.url}">
 <link rel="stylesheet" href="/styles.css">

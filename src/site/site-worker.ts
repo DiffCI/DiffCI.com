@@ -22,6 +22,7 @@ const discoveryHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, If-None-Match",
   "Access-Control-Expose-Headers": "ETag",
   "Cache-Control": "public, max-age=3600",
+  "X-Robots-Tag": "noindex",
 };
 
 const serverCard = {
@@ -44,8 +45,14 @@ const aiCatalog = {
   specVersion: "1.0",
   entries: [{
     identifier: "urn:air:diffci.com:mcp:diffci",
+    displayName: "DiffCI change-aware CI validation",
     type: "application/mcp-server-card+json",
     url: "https://diffci.com/mcp/server-card",
+    representativeQueries: [
+      "Which tests are affected by the current code change?",
+      "Interpret this DiffCI observation report and explain the fallback reason.",
+      "Check whether this GitHub Actions observer job is isolated from required CI.",
+    ],
   }],
 };
 
@@ -102,12 +109,29 @@ export default {
       const status = isMcpEndpoint && request.method !== "GET" ? 308 : movedOrigin ? 301 : 308;
       return Response.redirect(url.toString(), status);
     }
-    if (url.pathname === "/mcp" || url.pathname === "/mcp/v1") return handleMcpRequest(request);
+    if (url.pathname === "/mcp" || url.pathname === "/mcp/v1") {
+      const response = await handleMcpRequest(request);
+      const headers = new Headers(response.headers);
+      headers.set("X-Robots-Tag", "noindex");
+      return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+    }
     if (url.pathname === "/mcp/server-card") {
       return discoveryResponse(request, serverCard, "application/mcp-server-card+json", `"diffci-mcp-${MCP_SERVER_INFO.version}"`);
     }
     if (url.pathname === "/.well-known/ai-catalog.json") {
       return discoveryResponse(request, aiCatalog, "application/ai-catalog+json", `"diffci-ai-catalog-${MCP_SERVER_INFO.version}"`);
+    }
+    if (url.pathname === "/404") {
+      const assetUrl = new URL("/404.html", url);
+      const assetRequest = new Request(assetUrl, {
+        method: request.method === "HEAD" ? "HEAD" : "GET",
+        headers: request.headers,
+      });
+      const asset = await env.ASSETS.fetch(assetRequest);
+      return new Response(request.method === "HEAD" ? null : asset.body, {
+        status: 404,
+        headers: asset.headers,
+      });
     }
     return env.ASSETS.fetch(request);
   },

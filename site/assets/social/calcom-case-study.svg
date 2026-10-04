@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0c0e11"/><circle cx="1100" cy="540" r="350" fill="#101f28" opacity=".9"/>
+  <g transform="translate(72 62)"><rect width="50" height="50" rx="9" fill="none" stroke="#3fd1ad" stroke-width="6"/><path d="M25 0h25v50H25z" fill="#3fd1ad"/><text x="70" y="39" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700">DiffCI</text></g>
+  <text x="72" y="205" fill="#3fd1ad" font-family="Consolas,monospace" font-size="23" letter-spacing="2">MEASURED CASE STUDY</text>
+  <text x="72" y="285" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="61" font-weight="700">Test selection on cal.com.</text>
+  <text x="72" y="365" fill="#3fd1ad" font-family="Segoe UI,Arial,sans-serif" font-size="72" font-weight="750">44.2%</text><text x="300" y="365" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="29">job-equivalent reduction</text>
+  <text x="74" y="420" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="27">Install + pretest + test, measured in one controlled replay.</text>
+  <g transform="translate(820 180)"><rect width="290" height="58" rx="10" fill="#31433f"/><rect width="160" height="58" rx="10" fill="#3fd1ad"/><text x="145" y="112" text-anchor="middle" fill="#f3f6f5" font-family="Consolas,monospace" font-size="25">selected 55.8%</text><path d="M0 144h290" stroke="#536d66" stroke-width="4"/></g>
+  <rect x="72" y="502" width="1056" height="1" fill="#30433f"/><text x="72" y="557" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="23">diffci.com/case-studies/calcom</text>
+</svg>

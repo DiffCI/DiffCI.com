@@ -11,13 +11,14 @@ const npmPackArgs =
 
 const ALLOWED_PACKAGE_PREFIXES = [
   ".agents/plugins/marketplace.json",
-  "docs/agent-plugin.md",
-  "packaging/agent-plugin/",
   "action.yml",
   "dist-client/src/client/",
   "dist-client/src/preflight/",
   "node_modules/",
   "README.md",
+  "site/assets/calcom-runtime-evidence.svg",
+  "site/llms.txt",
+  "packaging/agent-plugin/",
   "server.json",
   "glama.json",
   "llms.txt",
@@ -30,6 +31,7 @@ const ALLOWED_PACKAGE_PREFIXES = [
   "docs/agent-adoption-kit.md",
   "docs/agent-adoption-targets.md",
   "docs/mcp.md",
+  "docs/agent-plugin.md",
   "docs/codex.md",
   "docs/claude-code.md",
   "docs/cursor.md",
@@ -62,6 +64,7 @@ function isAllowed(path) {
 
 function isForbidden(path) {
   if (path.startsWith("node_modules/")) return false;
+  if (path === "site/assets/calcom-runtime-evidence.svg" || path === "site/llms.txt") return false;
   return FORBIDDEN_PACKAGE_PATTERNS.some((pattern) => pattern.test(path));
 }
 

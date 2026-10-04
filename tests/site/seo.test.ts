@@ -43,10 +43,31 @@ test("homepage credits DentalPresence as DiffCI's original dogfooding target", (
   assert.match(homepage, /Original dogfooding target: <a href="https:\/\/dentalpresence\.in\/">DentalPresence<\/a>/);
 });
 
+test("homepage GitHub App CTAs use the unified public installation route", () => {
+  const homepage = readFileSync(path.join(site, "index.html"), "utf8");
+  const installUrl = "https://github.com/apps/diffci/installations/new";
+  assert.equal((homepage.match(new RegExp(installUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) ?? []).length, 2);
+  assert.doesNotMatch(homepage, /github\.com\/apps\/diffci-shadow/);
+});
+
 test("site headers enforce HTTPS and disable unused browser capabilities", () => {
   const headers = readFileSync(path.join(site, "_headers"), "utf8");
   assert.match(headers, /^\s*Strict-Transport-Security: max-age=31536000; includeSubDomains$/m);
   assert.match(headers, /^\s*Permissions-Policy: camera=\(\), geolocation=\(\), microphone=\(\)$/m);
+  assert.match(headers, /\/assets\/\*\r?\n\s+Cache-Control: public, max-age=31536000, immutable/);
+  assert.match(headers, /\/styles\.css\r?\n\s+Cache-Control: public, max-age=604800, stale-while-revalidate=2592000/);
+});
+
+test("non-HTML discovery and evidence resources have an explicit noindex policy", () => {
+  const headers = readFileSync(path.join(site, "_headers"), "utf8");
+  for (const resource of [
+    "/research/2026/diffci-open-evidence-2026.csv",
+    "/llms.txt",
+    "/0d8ca887374f35142a6b1b1cb64ad550.txt",
+  ]) {
+    const escaped = resource.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    assert.match(headers, new RegExp(`${escaped}\\r?\\n\\s+X-Robots-Tag: noindex`));
+  }
 });
 
 test("sitemap contains only canonical, indexable, existing HTML pages", () => {
@@ -82,21 +103,60 @@ test("indexable pages have complete search and social metadata", () => {
     assert.match(body, /<title>[^<]+<\/title>/i, `${relative} needs a title`);
     assert.match(body, /<meta\s+name="description"\s+content="[^"]+"/i, `${relative} needs a description`);
     assert.match(body, /<link\s+rel="canonical"\s+href="https:\/\/diffci\.com\/[^"]*"/i, `${relative} needs a canonical`);
-    assert.match(body, /<meta\s+property="og:image"\s+content="https:\/\/diffci\.com\/assets\/diffci-social-card\.png"/i, `${relative} needs a social image`);
+    const socialImage = body.match(/<meta\s+property="og:image"\s+content="(https:\/\/diffci\.com\/assets\/[^"]+\.png)"/i)?.[1];
+    assert.ok(socialImage, `${relative} needs a social image`);
+    assert.match(body, /<meta\s+property="og:image:width"\s+content="1200">/i, `${relative} needs an OG image width`);
+    assert.match(body, /<meta\s+property="og:image:height"\s+content="630">/i, `${relative} needs an OG image height`);
+    assert.match(body, /<meta\s+property="og:image:alt"\s+content="[^"]+">/i, `${relative} needs OG image alt text`);
+    assert.match(body, /<meta\s+name="twitter:title"\s+content="[^"]+">/i, `${relative} needs a Twitter title`);
+    assert.match(body, /<meta\s+name="twitter:description"\s+content="[^"]+">/i, `${relative} needs a Twitter description`);
+    const twitterImage = body.match(/<meta\s+name="twitter:image"\s+content="(https:\/\/diffci\.com\/assets\/[^"]+\.png)"/i)?.[1];
+    assert.ok(twitterImage, `${relative} needs a Twitter image`);
+    assert.equal(twitterImage, socialImage, `${relative} should use one primary social image`);
+    const socialPath = new URL(socialImage).pathname.slice(1);
+    assert.ok(existsSync(path.join(site, socialPath)), `${relative} social image must exist at ${socialPath}`);
     assert.doesNotMatch(body, /canonical"\s+href="[^"]*\.html"/i, `${relative} canonical must not redirect`);
     assert.doesNotMatch(body, /href="\/[^"]*\.html(?:[#?][^"]*)?"/i, `${relative} internal links must be clean`);
   }
 });
 
-test("technical articles expose trustworthy authorship and freshness", () => {
+test("articles use a Google-supported schema type and expose trustworthy authorship and freshness", () => {
   for (const file of htmlFiles()) {
     const body = readFileSync(file, "utf8");
-    if (!body.includes('"@type":"TechArticle"')) continue;
     const relative = path.relative(site, file).replaceAll("\\", "/");
+    assert.doesNotMatch(body, /"@type":"TechArticle"/, `${relative} uses an unsupported Google article type`);
+    if (!body.includes('"@type":"Article"')) continue;
     assert.match(body, /"datePublished":"\d{4}-\d{2}-\d{2}"/, `${relative} needs datePublished`);
     assert.match(body, /"dateModified":"\d{4}-\d{2}-\d{2}"/, `${relative} needs dateModified`);
-    assert.match(body, /"author":\{"@type":"Organization","@id":"https:\/\/diffci\.com\/#organization"/, `${relative} needs the canonical author entity`);
-    assert.match(body, /class="article-meta"[^>]*>[^<]*(?:<[^>]+>[^<]*<\/[^>]+>[^<]*)*By\s+<a href="\/about">DiffCI<\/a>/, `${relative} needs a visible byline`);
+    assert.match(body, /"author":\{"@type":"Person","@id":"https:\/\/diffci\.com\/about#maintainer","name":"Aditya Kale"/, `${relative} needs the canonical author entity`);
+    assert.match(body, /class="article-meta"[^>]*>[^<]*(?:<[^>]+>[^<]*<\/[^>]+>[^<]*)*By\s+<a href="\/about#maintainer">Aditya Kale<\/a>/, `${relative} needs a visible byline`);
+  }
+});
+
+test("homepage identifies the site as a WebSite entity", () => {
+  const homepage = readFileSync(path.join(site, "index.html"), "utf8");
+  assert.match(homepage, /"@type"\s*:\s*"WebSite"/);
+  assert.match(homepage, /"@id"\s*:\s*"https:\/\/diffci\.com\/#website"/);
+});
+
+test("article schema images match their primary social images", () => {
+  for (const file of htmlFiles()) {
+    const body = readFileSync(file, "utf8");
+    if (!body.includes('"@type":"Article"')) continue;
+    const relative = path.relative(site, file).replaceAll("\\", "/");
+    const openGraphImage = body.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i)?.[1];
+    const schemaImage = body.match(/"image":"([^"]+)"/)?.[1];
+    assert.equal(schemaImage, openGraphImage, `${relative} schema image should match og:image`);
+  }
+});
+
+test("structured data blocks contain valid JSON", () => {
+  for (const file of htmlFiles()) {
+    const body = readFileSync(file, "utf8");
+    const relative = path.relative(site, file).replaceAll("\\", "/");
+    for (const match of body.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)) {
+      assert.doesNotThrow(() => JSON.parse(match[1]!), `${relative} contains invalid JSON-LD`);
+    }
   }
 });
 
@@ -105,10 +165,28 @@ test("about and data-handling pages publish verifiable trust routes", () => {
   const dataHandling = readFileSync(path.join(site, "data-handling.html"), "utf8");
   assert.match(about, /<title>About DiffCI/);
   assert.match(about, /github\.com\/adityankale190895/);
+  assert.match(about, /id="maintainer"/);
+  assert.match(about, /<strong>Aditya Kale<\/strong>/);
   assert.match(about, /mailto:aditya@diffci\.com/);
   assert.match(about, /mailto:security@diffci\.com/);
   assert.match(dataHandling, /mailto:security@diffci\.com/);
   assert.doesNotMatch(dataHandling, /no mailbox of its own|address for deletion requests and security reports is not yet published/i);
+});
+
+test("guide hub exposes priority intents and honest support boundaries", () => {
+  const hub = readFileSync(path.join(site, "guides.html"), "utf8");
+  const support = readFileSync(path.join(site, "guides", "language-support.html"), "utf8");
+  for (const pathname of [
+    "/guides/affected-tests",
+    "/test-impact-analysis/github-actions",
+    "/github-actions-cost-optimization",
+    "/guides/language-support",
+    "/compare/test-selection-vs-path-filters",
+    "/research/diffci-open-evidence-2026",
+  ]) assert.match(hub, new RegExp(`href="${pathname.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  assert.match(support, /Python, Svelte, Astro, C#, Rust/);
+  assert.match(support, /No semantic adapter in the current release/);
+  assert.match(support, /full validation/i);
 });
 
 test("case-study headings describe the measured search intent", () => {
@@ -120,6 +198,46 @@ test("case-study headings describe the measured search intent", () => {
   for (const [name, heading] of expectations) {
     assert.match(readFileSync(path.join(site, "case-studies", name), "utf8"), heading);
   }
+});
+
+test("case studies have a crawlable hub and cite verifiable source evidence", () => {
+  const hub = readFileSync(path.join(site, "case-studies.html"), "utf8");
+  for (const pathname of [
+    "/case-studies/calcom",
+    "/case-studies/deepseek-harness",
+    "/case-studies/diffci-own-ci",
+  ]) {
+    assert.match(hub, new RegExp(`href="${pathname.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+  }
+
+  const calcom = readFileSync(path.join(site, "case-studies", "calcom.html"), "utf8");
+  const deepseek = readFileSync(path.join(site, "case-studies", "deepseek-harness.html"), "utf8");
+  const ownCi = readFileSync(path.join(site, "case-studies", "diffci-own-ci.html"), "utf8");
+  assert.match(calcom, /github\.com\/calcom\/cal\.diy\/commit\//);
+  assert.match(deepseek, /github\.com\/deepseek-ai\/deepseek-harness\/commit\//);
+  assert.match(ownCi, /github\.com\/DiffCI\/DiffCI\.com\/blob\/main\/package\.json/);
+});
+
+test("priority articles contain descriptive in-page visuals", () => {
+  for (const relative of [
+    "guides/affected-tests.html",
+    "test-impact-analysis/github-actions.html",
+    "github-actions-cost-optimization.html",
+    "case-studies/calcom.html",
+    "case-studies/deepseek-harness.html",
+  ]) {
+    const body = readFileSync(path.join(site, relative), "utf8");
+    assert.match(body, /<figure class="article-visual">[\s\S]*?<img\s+src="\/assets\/social\/[^"]+\.svg"[^>]*\salt="[^"]+"/);
+  }
+});
+
+test("the MCP page is supported by the documentation link graph", () => {
+  let inboundLinks = 0;
+  for (const file of htmlFiles()) {
+    const body = readFileSync(file, "utf8");
+    inboundLinks += (body.match(/href="\/mcp-server"/g) ?? []).length;
+  }
+  assert.ok(inboundLinks >= 8, `expected at least 8 internal MCP links, found ${inboundLinks}`);
 });
 
 test("agent-specific guides cross-link to every other supported setup", () => {
@@ -137,6 +255,8 @@ test("sitemap generation is an explicit build step", () => {
   const packageJson = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8")) as { scripts?: Record<string, string> };
   assert.equal(packageJson.scripts?.["site:sitemap"], "node scripts/generate-site-sitemap.mjs");
   assert.ok(existsSync(path.join(root, "scripts", "generate-site-sitemap.mjs")));
+  assert.match(packageJson.scripts?.["site:prepare"] ?? "", /site:sitemap.*site:check/);
+  assert.match(packageJson.scripts?.["site:deploy"] ?? "", /site:prepare.*wrangler deploy.*site:indexnow/);
 });
 
 test("internal links resolve directly and fragments exist", () => {
@@ -169,9 +289,18 @@ test("public agent pages describe check execution accurately", () => {
   }
 });
 
-test("the social image exists at the declared dimensions", () => {
-  const png = readFileSync(path.join(site, "assets/diffci-social-card.png"));
-  assert.equal(png.subarray(1, 4).toString("ascii"), "PNG");
-  assert.equal(png.readUInt32BE(16), 1200);
-  assert.equal(png.readUInt32BE(20), 630);
+test("social images exist at the declared dimensions", () => {
+  const cards = [
+    path.join(site, "assets", "diffci-social-card.png"),
+    ...readdirSync(path.join(site, "assets", "social"))
+      .filter((name) => name.endsWith(".png"))
+      .map((name) => path.join(site, "assets", "social", name)),
+  ];
+  assert.ok(cards.length >= 7, "priority articles need dedicated social cards");
+  for (const card of cards) {
+    const png = readFileSync(card);
+    assert.equal(png.subarray(1, 4).toString("ascii"), "PNG", path.relative(site, card));
+    assert.equal(png.readUInt32BE(16), 1200, path.relative(site, card));
+    assert.equal(png.readUInt32BE(20), 630, path.relative(site, card));
+  }
 });

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0c0e11"/><circle cx="1080" cy="560" r="360" fill="#101f28" opacity=".9"/>
+  <g transform="translate(72 62)"><rect width="50" height="50" rx="9" fill="none" stroke="#3fd1ad" stroke-width="6"/><path d="M25 0h25v50H25z" fill="#3fd1ad"/><text x="70" y="39" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700">DiffCI</text></g>
+  <text x="72" y="205" fill="#3fd1ad" font-family="Consolas,monospace" font-size="23" letter-spacing="2">GITHUB ACTIONS GUIDE</text>
+  <text x="72" y="285" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="60" font-weight="700">Test impact analysis</text>
+  <text x="72" y="357" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="60" font-weight="700">for GitHub Actions.</text>
+  <text x="74" y="420" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="27">Model the job, preserve required CI, retain the proof.</text>
+  <g transform="translate(825 140)"><rect width="270" height="290" rx="22" fill="#151b1d" stroke="#3a504b" stroke-width="4"/><circle cx="38" cy="40" r="8" fill="#3fd1ad"/><rect x="62" y="31" width="134" height="18" rx="5" fill="#6d817c"/><g fill="#263c37"><rect x="30" y="84" width="210" height="48" rx="10"/><rect x="30" y="151" width="210" height="48" rx="10"/><rect x="30" y="218" width="210" height="48" rx="10"/></g><path d="M49 106l10 10 20-24M49 173l10 10 20-24" fill="none" stroke="#3fd1ad" stroke-width="7"/><circle cx="62" cy="242" r="13" fill="none" stroke="#9caaa6" stroke-width="6"/></g>
+  <rect x="72" y="502" width="1056" height="1" fill="#30433f"/><text x="72" y="557" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="23">diffci.com/test-impact-analysis/github-actions</text>
+</svg>

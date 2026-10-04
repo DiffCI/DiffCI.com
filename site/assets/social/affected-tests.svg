@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0c0e11"/><circle cx="1110" cy="60" r="280" fill="#12382f" opacity=".5"/>
+  <g transform="translate(72 62)"><rect width="50" height="50" rx="9" fill="none" stroke="#3fd1ad" stroke-width="6"/><path d="M25 0h25v50H25z" fill="#3fd1ad"/><text x="70" y="39" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="44" font-weight="700">DiffCI</text></g>
+  <text x="72" y="205" fill="#3fd1ad" font-family="Consolas,monospace" font-size="23" letter-spacing="2">IMPLEMENTATION GUIDE</text>
+  <text x="72" y="285" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="62" font-weight="700">Run only affected tests.</text>
+  <text x="72" y="360" fill="#f3f6f5" font-family="Segoe UI,Arial,sans-serif" font-size="62" font-weight="700">Fall back when evidence ends.</text>
+  <text x="74" y="420" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="27">Paths, task graphs, source dependencies, and full-suite triggers.</text>
+  <g transform="translate(900 180) scale(.68)" stroke-linecap="round" stroke-linejoin="round"><path d="M22 160h92l78-82h124" fill="none" stroke="#3fd1ad" stroke-width="10"/><path d="M114 160l74 92h128" fill="none" stroke="#4d6660" stroke-width="8"/><g fill="#151b1d" stroke="#6d817c" stroke-width="5"><rect x="0" y="135" width="50" height="50" rx="9"/><rect x="90" y="135" width="50" height="50" rx="9"/><rect x="292" y="53" width="50" height="50" rx="9"/><rect x="292" y="227" width="50" height="50" rx="9"/></g><rect x="292" y="53" width="50" height="50" rx="9" fill="#3fd1ad"/></g>
+  <rect x="72" y="502" width="1056" height="1" fill="#30433f"/><text x="72" y="557" fill="#9caaa6" font-family="Segoe UI,Arial,sans-serif" font-size="23">diffci.com/guides/affected-tests</text>
+</svg>
