@@ -14,7 +14,7 @@
 #
 #   jobs:
 #     diffci:
-#       runs-on: ubuntu-latest
+#       runs-on: ubuntu-24.04
 #       continue-on-error: true         # a DiffCI failure must not become the workflow's conclusion
 #       permissions:
 #         contents: read
