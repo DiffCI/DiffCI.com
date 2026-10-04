@@ -81,7 +81,7 @@ it("selects the live snapshot without tests, executes affected tests, and fails 
     response = await call("diffci_run_affected_tests", { repo });
     assert.equal(response.result.isError, true);
     assert.equal(response.result.structuredContent.safe_to_continue, false);
-    write("package.json", JSON.stringify({ type: "module", scripts: { test: "node --test" }, description: "broad change" }));
+    write("tsconfig.json", JSON.stringify({ compilerOptions: { allowJs: true, module: "NodeNext", moduleResolution: "NodeNext", strict: true }, include: ["src", "test"] }));
     response = await call("diffci_select_tests", { repo });
     assert.equal(response.result.structuredContent.selection, "full");
     assert.equal(response.result.structuredContent.tests_selected, 2);
