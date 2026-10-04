@@ -3,6 +3,12 @@
 Everything needed to operate the external shadow pilot without reconstructing it from source. Written for
 someone who did not build it.
 
+This is the credentialed DiffCI operator runbook, not the public repository-install guide. Maintainers
+trying DiffCI should start with the [npm and Action setup](npm-adoption.md) or the consolidated
+[distribution guide](distribution.md). Those paths use local `check`/`observe`, a dedicated
+non-blocking Action, and optional hosted ingest; they do not require the research Worker admin token
+shown below.
+
 ## What the shadow pilot does
 
 For each enrolled repository, DiffCI watches the default branch, and when the head moves it analyses that
