@@ -23,6 +23,30 @@ community posts:
 Route maintainers who have already run it to the
 [`Share a first DiffCI report`](../.github/ISSUE_TEMPLATE/first-diffci-report.yml) issue template.
 
+## Adoption definitions
+
+Count independently owned repositories, excluding DiffCI-owned repositories, internal dogfood runs,
+and benchmark-only sandbox replays. Deduplicate by repository; retain the evidence link and date.
+
+| Metric | Evidence required |
+| --- | --- |
+| First successful report | Maintainer-shared completed analysis or verification receipt. Record selective and full-fallback results separately; refusals/errors are attempts, not activation. |
+| Recurring installation | Maintainer-approved installation plus executions on at least two distinct days within seven days. A merged PR alone is an installation milestone. |
+| Known active repositories | Distinct independent repositories with an evidenced completed execution in the trailing seven days, through public workflow activity or consenting pilot reports. Report observation and verification separately. |
+| Four-week retention | Activated repositories with an evidenced completed execution in days 22–28 after activation, divided by activated repositories whose full 28-day window has elapsed. Report numerator and denominator. |
+| Measured net runtime savings | Comparable full/selected runs including analysis overhead, with checkout identity, command coverage, exit codes, cache conditions, and repeated timings recorded. Include zero/negative results; do not infer runtime from selection counts. |
+| External contributors | Distinct independent people with an accepted code, fixture, documentation, or reproducible benchmark contribution during the reporting period. |
+
+Maintain one weekly row per consenting pilot or publicly evidenced repository in the canonical
+[DiffCI Outreach Tracker](https://docs.google.com/spreadsheets/d/1TvZo9YnDawOLR75WTyPSAf95vQ5VdoBx6iBeqJF_d60/edit):
+repository, acquisition channel, first attempt/report dates, outcome, installation evidence,
+latest execution evidence/date, observation or verification, retention eligibility/result,
+runtime evidence, blocker, and next action. Use consented identifiers for private pilots.
+Unknown activity stays unknown; do not interpret unavailable evidence as confirmed inactivity.
+
+Known active repositories is a lower bound on evidenced usage, not total active repositories.
+Current anonymous opt-in events cannot establish unique repositories or retention.
+
 ## Opt-in CLI usage
 
 Users can run `diffci check --share-usage` or set `DIFFCI_SHARE_USAGE=1` for `check` and
@@ -80,8 +104,9 @@ track conversion signals, not only application status:
 
 Weekly loop:
 
-1. Check npm version/downloads, GitHub traffic, Marketplace/listing signals, stars, issues, and opt-in
-   usage events.
+1. Review first reports, recurring installations, known active repositories, mature four-week
+   retention cohorts, measured savings, and external contributions. Record evidence and denominators.
+   Review downloads, traffic, directory listings, and anonymous usage separately as discovery signals.
 2. Label first-run reports with `first-report` and record whether they are selective, full fallback,
    refused, or errored.
 3. Reply to every first-report issue with one next step: inspect fallback/refusal, repeat with controlled
@@ -131,5 +156,6 @@ Existing outreach log:
 | 2026-09-22 | Glama | Directory | TBD | Planned | Submit repository URL. |
 | 2026-09-22 | Smithery | Directory | TBD | Blocked | Needs Smithery account/API key. |
 
-Use merged PRs and accepted directory listings as the primary adoption signal. Use stars, downloads,
-and page views as supporting indicators, not proof that agents are actually using DiffCI.
+Use independently evidenced subsequent executions and retention as the primary adoption signals.
+Merged installation PRs are installation milestones; accepted directory listings are distribution
+milestones. Stars, downloads, and page views support discovery analysis and do not prove usage.

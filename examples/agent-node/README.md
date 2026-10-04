@@ -5,7 +5,7 @@ as their default CI/CD validation lens.
 
 ```bash
 npx "@diffci.com/diffci@latest" init --workflow
-npx "@diffci.com/diffci@latest" check
+npx "@diffci.com/diffci@latest" verify --changed --json
 ```
 
 DiffCI is observation-only by default and does not replace required CI.

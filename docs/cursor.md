@@ -9,10 +9,11 @@ npx "@diffci.com/diffci@latest" init
 Default validation command:
 
 ```bash
-npx "@diffci.com/diffci@latest" check
+npx "@diffci.com/diffci@latest" verify --changed --json
 ```
 
-Use DiffCI before PR-ready changes. `init` writes `.cursor/rules/diffci.mdc`; `check` analyzes the
-change and runs inferred full and selected test commands to measure time. It sends nothing by
-default. Test commands may write generated files; use `observe --no-send` for analysis only. Keep
+Use DiffCI before PR-ready changes. `init` writes `.cursor/rules/diffci.mdc`; verification covers the
+current staged, unstaged, and untracked snapshot and uses full fallback when uncertain. Continue only
+when `safe_to_continue` is true. It sends nothing by default. If tests change files, review them and
+rerun; use `observe --no-send` for analysis only. Keep
 the repository's required checks authoritative.

@@ -101,5 +101,6 @@ Use voluntary feedback and opt-in hosted reports. A successful local run is not 
    caching, request limits, and isolated execution for later runtime validation.
 7. Submit to directories once outside users consistently reach a useful first report.
 
-Marketplace preparation remains open: verify listing status, review GitHub's Action-focused repository
-guidance, and choose a dedicated wrapper only if necessary. Do not equate a release with a listing.
+The [DiffCI observer Marketplace listing](https://github.com/marketplace/actions/diffci-observer) is live.
+Remaining work is release alignment and installation verification; see the dated status snapshot in
+[`distribution.md`](../distribution.md). This Action listing does not establish a GitHub App listing.
