@@ -1,0 +1,51 @@
+name: Deploy product Worker
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: product-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+      - run: npm run check
+
+      - name: Deploy product Worker
+        run: npm run product:deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Verify deployed onboarding artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          health=$(curl --fail --silent --show-error --retry 5 --retry-delay 2 \
+            https://app.diffci.com/health)
+          echo "$health"
+          echo "$health" | node -e '
+            let body = "";
+            process.stdin.on("data", chunk => { body += chunk; });
+            process.stdin.on("end", () => {
+              const health = JSON.parse(body);
+              if (!health.agentArtifactPinned) throw new Error("product Worker has no pinned onboarding artifact");
+              if (health.agentArtifact !== "npm:@diffci.com/diffci@0.3.3#sha512-MRGml/ip56og4nT28uZ6GIMhJCaAH7O8GTD2VdPsrveLY0gMuxQq72fXVK6MDxjyAejOq9XjCIvFCsAcAYQcaA==") {
+                throw new Error(`unexpected onboarding artifact: ${health.agentArtifact}`);
+              }
+              console.log("product onboarding artifact is pinned to DiffCI 0.3.3");
+            });
+          '
