@@ -9,6 +9,9 @@ describe("DiffCI Adoption App pull requests", () => {
     assert.equal(change.path, ".github/workflows/diffci.yml");
     assert.match(change.content, /npx "@diffci\.com\/diffci@0\.2\.5" observe --no-send/);
     assert.match(change.content, /continue-on-error: true/);
+    assert.match(change.content, /runs-on: ubuntu-24\.04/);
+    assert.match(change.content, /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1/);
+    assert.match(change.content, /actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020/);
     assert.throws(() => workflowOnlyChange("latest"), /invalid DiffCI version/);
   });
 

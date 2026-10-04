@@ -24,7 +24,7 @@ permissions:
 jobs:
   diffci:
     name: DiffCI observation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # A runaway analysis would cost the host repository runner minutes, which is a real cost even
     # though it changes no result. Bounded here rather than trusted to finish.
     timeout-minutes: 20
@@ -33,7 +33,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           # DiffCI compares two commits. With the default shallow checkout the base commit is simply
           # not present locally, and DiffCI will refuse rather than analyse a range it had to guess.

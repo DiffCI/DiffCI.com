@@ -19,11 +19,11 @@ permissions:
 
 jobs:
   diffci:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           fetch-depth: 0
       - uses: DiffCI/DiffCI.com@5458e133a549b24f7224b1364811ef487fa4e153</code></pre><p>No required job should list <code>diffci</code> in <code>needs</code>, and the observer itself should not be configured as a required check. Verify generated or edited workflow text before committing it:</p><pre><code>npx "@diffci.com/diffci@latest" verify-workflow</code></pre></div></section>

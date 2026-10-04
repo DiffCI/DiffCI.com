@@ -32,7 +32,9 @@ describe("self-serve install instructions", () => {
     assert.ok(!install.workflowYaml.includes("DIFFCI_REGISTRY_TOKEN"));
     assert.ok(!install.steps.join(" ").includes("registry credential"));
     const workflow = YAML.parse(install.workflowYaml);
-    assert.equal(workflow.jobs.diffci.steps.find((s: { uses?: string }) => s.uses === "actions/setup-node@v4").with["node-version"], "22");
+    assert.equal(workflow.jobs.diffci["runs-on"], "ubuntu-24.04");
+    assert.ok(workflow.jobs.diffci.steps.some((s: { uses?: string }) => s.uses === "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1"));
+    assert.equal(workflow.jobs.diffci.steps.find((s: { uses?: string }) => s.uses === "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020").with["node-version"], "22");
   });
 
   it("the emitted verifier accepts the pinned bytes and refuses a tampered tarball before installation", () => {

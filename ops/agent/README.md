@@ -18,12 +18,12 @@ shape, not the version you should use:
 ```yaml
 jobs:
   diffci:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true          # a DiffCI failure must never become your workflow's conclusion
     permissions:
       contents: read                 # the only permission needed
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           fetch-depth: 0             # the base commit must exist locally, or DiffCI refuses
       # Your onboarding page generates this whole file with your own values filled in.

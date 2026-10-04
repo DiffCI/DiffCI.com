@@ -143,7 +143,7 @@ permissions:
 jobs:
   diffci:
     name: DiffCI observation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     # Keeps a DiffCI failure out of this workflow's own conclusion, which is what a required status
     # check and a merge queue read.
@@ -154,11 +154,11 @@ jobs:
       DIFFCI_API_URL: ${ingestUrl}
       DIFFCI_TOKEN: \${{ secrets.${secretName} }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           # DiffCI compares two commits; the default shallow checkout does not contain the base one.
           fetch-depth: 0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # immutable setup-node pin
         with:
           node-version: '22'
 
