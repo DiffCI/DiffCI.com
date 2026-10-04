@@ -28,5 +28,5 @@
   "repetitions": 3,
   "maxWorkers": 1,
   "worktreeDigest": "9e8a24f268744edd18aea1afe682845f4638576f70d71bd24687a9af56ee57d8",
-  "elapsedGuardValidation": { "localUncommitted": true, "diffciSafeToContinue": true, "selectedTestsPassed": 32, "fullTestsPassed": 2334, "fullTestsSkipped": 7, "typecheckPassed": true, "clientBuildPassed": true }
+  "elapsedGuardValidation": { "localUncommitted": false, "diffciSafeToContinue": true, "selectedTestsPassed": 32, "fullTestsPassed": 2334, "fullTestsSkipped": 7, "typecheckPassed": true, "clientBuildPassed": true }
 }

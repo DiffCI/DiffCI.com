@@ -6,9 +6,11 @@ import { dirname, join } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { inferFullCommand, inferSelectedCommand, inferComparableSelectedCommand } from "../../src/client/full-command.js";
+import { inferFullCommand, inferSelectedCommand, inferComparableSelectedCommand, inferWorkspaceComparison } from "../../src/client/full-command.js";
+import { analyzeRepository } from "@diffci.com/core/repo/analyzer";
+import { commandSpecToString, planSelectiveTestCommands } from "@diffci.com/core/planner/test-command";
 
-import { measureCommand } from "../../src/client/verify-savings.js";
+import { measureCommand, runVerifySavings } from "../../src/client/verify-savings.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const CLI = join(ROOT, "src", "client", "cli.ts");
@@ -24,6 +26,43 @@ function write(root: string, path: string, contents: string): void {
 }
 
 describe("automatic check timing", () => {
+  it("binds a verified multi-command override to observation provenance", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-check-multi-"));
+    try {
+      git(dir, "init"); git(dir, "config", "user.email", "fixture@example.com"); git(dir, "config", "user.name", "Fixture");
+      write(dir, "package.json", JSON.stringify({ name: "fixture" }));
+      git(dir, "add", "package.json"); git(dir, "commit", "-m", "fixture");
+      const path = join(dir, "observation.json");
+      write(dir, "observation.json", JSON.stringify({ status: "OBSERVED", commitRange: { headSha: git(dir, "rev-parse", "HEAD") }, result: { proposedCommands: ["node --version", "node --version"], selectedTests: ["a.test.ts"], totalTestCount: 2 }, timings: { totalMs: 1 } }));
+      const options = { full: "node --version", selectedFromReport: path, out: join(dir, "savings.json"), cwd: dir, timeoutMs: 10000, tailBytes: 1000 };
+      assert.throws(() => runVerifySavings(options), /exactly one/);
+      const result = runVerifySavings({ ...options, selectedCommandOverride: "node --version && node --version" });
+      assert.equal(result.comparison.evidenceValid, true);
+      assert.equal(result.selectionSource, "diffci-observation");
+      assert.equal(result.provenance.headSha, git(dir, "rev-parse", "HEAD"));
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+  it("compares complete workspace plans and rejects modified report commands or root hooks", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-check-workspace-"));
+    try {
+      write(dir, "package.json", JSON.stringify({ scripts: { test: "pnpm -r run test" } }));
+      write(dir, "pnpm-lock.yaml", "lockfileVersion: '9.0'");
+      write(dir, "pnpm-workspace.yaml", "packages:\n  - 'packages/*'\n");
+      for (const name of ["a", "b"]) {
+        write(dir, `packages/${name}/package.json`, JSON.stringify({ scripts: { test: "vitest --typecheck" }, devDependencies: { vitest: "4.1.8" } }));
+        write(dir, `packages/${name}/src/value.test.ts`, "export const value=1;");
+      }
+      const paths = ["packages/a/src/value.test.ts"];
+      const proposed = planSelectiveTestCommands(analyzeRepository({ repoPath: dir }), paths).commands.map(commandSpecToString);
+      const pair = inferWorkspaceComparison(dir, proposed, paths);
+      assert.equal(pair.full, "pnpm test");
+      assert.ok(pair.selected?.includes("packages/a exec vitest run src/value.test.ts"));
+      assert.ok(pair.selected?.includes("packages/b exec vitest run --typecheck.only --passWithNoTests"));
+      assert.equal(inferWorkspaceComparison(dir, [...proposed, "echo fake"], paths).selected, undefined);
+      write(dir, "package.json", JSON.stringify({ scripts: { test: "pnpm -r run test", pretest: "node setup.js" } }));
+      assert.equal(inferWorkspaceComparison(dir, proposed, paths).selected, undefined);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
   it("executes package-script chains and preserves failure short-circuiting", () => {
     const dir = mkdtempSync(join(tmpdir(), "diffci-check-chain-"));
     try {
