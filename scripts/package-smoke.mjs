@@ -149,6 +149,13 @@ try {
   mkdirSync(consumer);
   runNpm(["init", "-y"], { cwd: consumer, stdio: "ignore" });
   runNpm(["install", "--ignore-scripts", "--no-audit", "--fund=false", tarball], { cwd: consumer, stdio: "inherit" });
+  write(join(consumer, ".gitignore"), "node_modules/\n");
+  git(consumer, ["init", "--quiet"]);
+  git(consumer, ["config", "user.email", "test@diffci.local"]);
+  git(consumer, ["config", "user.name", "DiffCI Package Smoke"]);
+  git(consumer, ["add", "-A"]);
+  git(consumer, ["commit", "--quiet", "-m", "consumer"]);
+  const consumerHead = git(consumer, ["rev-parse", "HEAD"]).trim();
 
   const { repoPath, base, head } = createFixtureRepo(temp);
   const reportPath = join(temp, "report.json");
@@ -164,6 +171,7 @@ try {
 
   const report = JSON.parse(readFileSync(reportPath, "utf8"));
   assert(report.status === "OBSERVED", `expected OBSERVED, got ${report.status}: ${report.reason ?? ""}`);
+  assert(report.observer?.engineSha === undefined, `installed package reported consumer commit ${consumerHead} as its engine SHA`);
   assert(report.result?.mode === "SELECTIVE", `expected SELECTIVE, got ${report.result?.mode}`);
   assert(
     JSON.stringify(report.result.selectedTests) === JSON.stringify(["test/alpha.test.ts"]),
