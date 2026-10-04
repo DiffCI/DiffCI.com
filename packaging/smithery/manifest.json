@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "diffci",
   "display_name": "DiffCI",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Fail-closed verification and affected-test selection for AI coding agents.",
   "long_description": "DiffCI snapshots local or committed changes, selects the minimum executable test verification with conservative full fallback, runs it, and returns a machine-readable receipt. It sends nothing to DiffCI Cloud.",
   "author": {
