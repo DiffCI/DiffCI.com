@@ -175,28 +175,7 @@ async function executeObservation(
     return report;
   }
 
-  let selection: "selected" | "full";
-  let command: string | undefined;
-  let reason: string;
-  if (result.mode === "SELECTIVE" && !result.commandRefusalReason && result.proposedCommands.length === 1) {
-    const selected = inferSelectedCommand(options.repoPath, result.proposedCommands[0]!, result.selectedTests);
-    if (selected.command) {
-      selection = "selected";
-      command = selected.command;
-      reason = "dependency impact";
-    } else {
-      selection = "full";
-      const full = inferFullCommand(options.repoPath);
-      command = full.command;
-      reason = `selected verification was not executable (${selected.reason}); broadened to full verification`;
-    }
-  } else {
-    selection = "full";
-    const full = inferFullCommand(options.repoPath);
-    command = full.command;
-    const fallback = result.fallbackReasons[0] ?? result.commandRefusalReason;
-    reason = fallback ? `full verification required: ${fallback}` : "full verification required";
-  }
+  const { selection, command, reason } = executableSelection(options.repoPath, result);
 
   if (!command) {
     const inferred = inferFullCommand(options.repoPath);
@@ -358,3 +337,31 @@ export function formatVerificationSummary(report: VerificationReport): string {
 }
 
 
+
+/** Shared executable plan for read-only agent selection and verification. */
+export function executableSelection(repoPath: string, result: NonNullable<ObservationReport["result"]>) {
+  let selection: "selected" | "full";
+  let command: string | undefined;
+  let reason: string;
+  if (result.mode === "SELECTIVE" && !result.commandRefusalReason && result.proposedCommands.length === 1) {
+    const selected = inferSelectedCommand(repoPath, result.proposedCommands[0]!, result.selectedTests);
+    if (selected.command) {
+      selection = "selected";
+      command = selected.command;
+      reason = "dependency impact";
+    } else {
+      selection = "full";
+      const full = inferFullCommand(repoPath);
+      command = full.command;
+      reason = `selected verification was not executable (${selected.reason}); broadened to full verification`;
+    }
+  } else {
+    selection = "full";
+    const full = inferFullCommand(repoPath);
+    command = full.command;
+    const fallback = result.fallbackReasons[0] ?? result.commandRefusalReason;
+    reason = fallback ? `full verification required: ${fallback}` : "full verification required";
+  }
+
+  return { selection, command, reason };
+}

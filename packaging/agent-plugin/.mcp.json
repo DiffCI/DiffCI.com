@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "diffci": {
+      "command": "npx",
+      "args": [
+        "--yes",
+        "--package",
+        "@diffci.com/diffci@0.3.2",
+        "diffci-mcp"
+      ]
+    }
+  }
+}

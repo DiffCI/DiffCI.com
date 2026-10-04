@@ -1,0 +1,8 @@
+{
+  "name": "diffci",
+  "version": "0.1.0",
+  "description": "Verify coding changes with affected tests and conservative full fallback.",
+  "license": "AGPL-3.0-only",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

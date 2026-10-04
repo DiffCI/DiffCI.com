@@ -60,7 +60,10 @@
     "docs/language-support.md",
     "SECURITY.md",
     "SUPPORT.md",
-    "COMMERCIAL.md"
+    "COMMERCIAL.md",
+    ".agents/plugins/marketplace.json",
+    "docs/agent-plugin.md",
+    "packaging/agent-plugin"
   ],
   "exports": {
     "./*": {

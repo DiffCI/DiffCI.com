@@ -98,3 +98,5 @@ Short description:
 
 > Fail-closed, change-aware verification for AI coding agents. DiffCI selects the minimum justified
 > test command, broadens to full verification on uncertainty, and returns a machine-readable receipt.
+
+See [agent-plugin.md](agent-plugin.md) for Claude Code and Codex installation.

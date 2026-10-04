@@ -34,6 +34,13 @@ const pkg = readJson("package.json");
 pkg.version = manifest.packageVersion;
 writeJson("package.json", pkg);
 
+const agentMcp = readJson("packaging/agent-plugin/.mcp.json");
+agentMcp.mcpServers.diffci.args = agentMcp.mcpServers.diffci.args.map((arg) =>
+  typeof arg === "string" && arg.startsWith(`${manifest.packageName}@`)
+    ? `${manifest.packageName}@${manifest.packageVersion}` : arg,
+);
+writeJson("packaging/agent-plugin/.mcp.json", agentMcp);
+
 const lock = readJson("package-lock.json");
 lock.version = manifest.packageVersion;
 lock.packages[""].version = manifest.packageVersion;
