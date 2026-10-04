@@ -1,5 +1,7 @@
 # DiffCI Distribution
 
+Open-source campaigns should lead to [DiffCI/core](https://github.com/DiffCI/core). The npm CLI and MCP wrapper retain their actual source-repository metadata. Use a Core star link after a valid positive runtime comparison, and link to the engine from directory copy. See [the October execution plan](growth/30-day-execution.md) for pilot and launch drafts.
+
 DiffCI has complementary install surfaces: a fail-closed agent verifier, a blocking CI verification
 workflow, and an observation-only Action for measuring opportunities without changing required CI.
 
