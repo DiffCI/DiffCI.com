@@ -86,7 +86,19 @@ function observerIdentity(): { version: string; root?: string; sha?: string } {
         if (parsed.name === "@diffci.com/diffci" || parsed.name === "diffci") {
           let sha: string | undefined;
           try {
-            sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: current, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+            const gitRoot = execFileSync("git", ["rev-parse", "--show-toplevel"], {
+              cwd: current,
+              encoding: "utf8",
+              stdio: ["ignore", "pipe", "ignore"],
+            }).trim();
+            const packageRoot = resolve(current);
+            const normalizedGitRoot = resolve(gitRoot);
+            const rootsMatch = process.platform === "win32"
+              ? packageRoot.toLowerCase() === normalizedGitRoot.toLowerCase()
+              : packageRoot === normalizedGitRoot;
+            if (rootsMatch) {
+              sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: current, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+            }
           } catch {
             // Installed from a tarball rather than a checkout: there is no commit to report, and
             // inventing one would be worse than the field being absent.
