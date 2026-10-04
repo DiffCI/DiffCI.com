@@ -11,7 +11,7 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Full history, not the default depth-1: the test suite runs real git against this checkout
           # (tests/git/*), and delta analysis of HEAD^..HEAD needs parent commits to exist.
