@@ -13,7 +13,7 @@ permissions:
 jobs:
   diffci:
     name: DiffCI observation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     # Keeps a DiffCI failure out of this workflow's own conclusion, which is what a required status
     # check and a merge queue read.
