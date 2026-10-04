@@ -45,7 +45,7 @@ jobs:
             process.stdin.on("end", () => {
               const health = JSON.parse(body);
               if (!health.agentArtifactPinned) throw new Error("product Worker has no pinned onboarding artifact");
-              if (health.agentArtifact !== "npm:@diffci.com/diffci@0.3.3#sha512-MRGml/ip56og4nT28uZ6GIMhJCaAH7O8GTD2VdPsrveLY0gMuxQq72fXVK6MDxjyAejOq9XjCIvFCsAcAYQcaA==") {
+              if (health.agentArtifact !== "@diffci.com/diffci@0.3.3") {
                 throw new Error(`unexpected onboarding artifact: ${health.agentArtifact}`);
               }
               console.log("product onboarding artifact is pinned to DiffCI 0.3.3");
