@@ -187,7 +187,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@db73353e680c3713a8426817e13b045a1f2dcb15
+      - uses: DiffCI/DiffCI.com@9b21094e99f8e0860c9d66f7b28dd3ac7def75c4
 ```
 
 Then check the workflow locally with `npx "@diffci.com/diffci@latest" verify-workflow`. Keep the observer
@@ -396,7 +396,7 @@ npm run research:sandbox:deploy
 DiffCI is intended to be installable as infrastructure, not only as a hosted shadow experiment:
 
 ```yaml
-- uses: DiffCI/DiffCI.com@db73353e680c3713a8426817e13b045a1f2dcb15
+- uses: DiffCI/DiffCI.com@9b21094e99f8e0860c9d66f7b28dd3ac7def75c4
 ```
 
 ```bash

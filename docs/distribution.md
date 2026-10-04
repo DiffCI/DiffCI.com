@@ -71,7 +71,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@db73353e680c3713a8426817e13b045a1f2dcb15
+      - uses: DiffCI/DiffCI.com@9b21094e99f8e0860c9d66f7b28dd3ac7def75c4
 ```
 
 The example pins release `v0.3.3` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
