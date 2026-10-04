@@ -60,12 +60,10 @@ manifest shape is noted in `wrangler.github-runner.jsonc`'s comments.
 1. **Create the App.** GitHub → Settings → Developer settings → GitHub Apps → *New GitHub App*
    (personal account is fine for now; transferable to an org later).
    - Name: `DiffCI` — Homepage URL: `https://diffci.com`
-   - Webhook: enter the URL from the manifest but leave **Active** unchecked for now — the
-     `/v1/shadow/webhook` route isn't wired in the Worker yet (deliberate: polling covers observation
-     today; the webhook route is a small follow-up once the App exists). Set a **webhook secret**
-     anyway (e.g. `openssl rand -hex 32`) and stash it — you'll enable Active later without re-visiting
-     secrets. Installation-token API access (the part the pipeline can use immediately, e.g. for
-     private design-partner repos) works fine with the webhook inactive.
+   - Webhook: enter the `/v1/shadow/webhook` URL from the manifest and generate a webhook secret
+     (for example, `openssl rand -hex 32`). The route is implemented and live. For a new App or Worker
+     environment, leave **Active** unchecked only until step 3 stores the matching credentials and a
+     signed test delivery succeeds; then enable it. The existing production App is already active.
    - Repository permissions — exactly these four, **all Read-only**, nothing else:
      Metadata, Contents, Actions, Checks. (Pull requests was requested until 2026-09-03 and dropped
      because nothing used it; re-add it only when PR-delta analysis actually ships.)
@@ -95,15 +93,17 @@ manifest shape is noted in `wrangler.github-runner.jsonc`'s comments.
    link is also what you hand a design partner). Each installation has an **installation ID** (visible
    in the URL of Settings → Installations → Configure) — `exchangeInstallationToken` needs it
    per-installed-account.
-5. **Tell this repo it happened**: after registering, the follow-up engineering (wiring
-   `/v1/shadow/webhook` to `verifyWebhookSignature` + the existing prediction path, and using
-   installation tokens in `reconcile.ts` where `GITHUB_TOKEN` is used today) is a small, purely
-   config-driven change — the architecture doc's "config/secrets change, not a new engineering
-   effort" promise.
+5. **Verify the installation before onboarding anyone else.** Send a signed webhook test delivery,
+   confirm HTTP 200 in GitHub's Recent Deliveries, and verify that `installation.created`, `push`, and
+   `workflow_run` deliveries resolve to the intended installation and repository. Confirm that the
+   repository enters `VALIDATING` or `SHADOW_ACTIVE` without manual D1 edits. A successful enrollment
+   proves delivery and identity wiring; it does not prove that a prediction or seven-day report is
+   complete.
 
 ## What NOT to do
 
 - Do not request any write permission "while we're in there." Read-only is the product.
 - Do not reuse this App's private key or webhook secret for the runner dispatcher App.
-- Do not enable the webhook Active flag before the Worker route exists — failed deliveries pile up in
-  the App's Advanced → Recent Deliveries log and just add noise.
+- Do not enable the webhook for a new environment until its App ID, PKCS#8 private key, webhook secret,
+  and deployed route match. Failed deliveries pile up in Advanced → Recent Deliveries and can hide a
+  real identity or signature mismatch.
