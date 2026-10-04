@@ -1,0 +1,141 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-10-02T09:13:02.097Z",
+  "observer": {
+    "version": "0.3.1",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "unknown"
+  },
+  "commitRange": {
+    "baseSha": "d2c158f5bac7081a760bbaf501ea5c360b7856e1",
+    "headSha": "907395ad21aef22ed2c71d11f4fb4172683ab62a",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 4,
+    "changedFiles": [
+      "__tests__/base.js",
+      "__tests__/map-set.js",
+      "src/plugins/arrayMethods.ts",
+      "src/utils/common.ts"
+    ],
+    "affectedSourceFileCount": 15,
+    "selectedTests": [
+      "__tests__/base.js",
+      "__tests__/current.js",
+      "__tests__/curry.js",
+      "__tests__/draft.ts",
+      "__tests__/empty.ts",
+      "__tests__/frozen.js",
+      "__tests__/immutable.ts",
+      "__tests__/isDraftable.js",
+      "__tests__/manual.js",
+      "__tests__/map-set.js",
+      "__tests__/not-strict-copy.ts",
+      "__tests__/null.js",
+      "__tests__/original.js",
+      "__tests__/patch.js",
+      "__tests__/plugins.js",
+      "__tests__/produce.ts",
+      "__tests__/readme.js",
+      "__tests__/redux.ts",
+      "__tests__/regressions.js",
+      "__tests__/type-external.ts",
+      "__tests__/updateScenarios.js"
+    ],
+    "totalTestCount": 22,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "yarn run vitest run --config vitest.config.ts __tests__/base.js __tests__/current.js __tests__/curry.js __tests__/draft.ts __tests__/empty.ts __tests__/frozen.js __tests__/immutable.ts __tests__/isDraftable.js __tests__/manual.js __tests__/map-set.js __tests__/not-strict-copy.ts __tests__/null.js __tests__/original.js __tests__/patch.js __tests__/plugins.js __tests__/produce.ts __tests__/readme.js __tests__/redux.ts __tests__/regressions.js __tests__/type-external.ts __tests__/updateScenarios.js"
+    ],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 39,
+      "edges": 60,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 1195,
+      "phasesMs": {
+        "repositoryDiscovery": 11.9236,
+        "scopeDiscovery": 0.2462,
+        "adapterInventory": 1.898,
+        "adapters": 0.0933,
+        "typescriptProgram": 1158.2655,
+        "importExtractionAndResolution": 21.2265,
+        "graphFinalization": 1.1993
+      },
+      "adapterMetrics": {}
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 22,
+      "selectedTests": [
+        "__tests__/base.js",
+        "__tests__/current.js",
+        "__tests__/curry.js",
+        "__tests__/draft.ts",
+        "__tests__/empty.ts",
+        "__tests__/frozen.js",
+        "__tests__/immutable.ts",
+        "__tests__/isDraftable.js",
+        "__tests__/manual.js",
+        "__tests__/map-set.js",
+        "__tests__/not-strict-copy.ts",
+        "__tests__/null.js",
+        "__tests__/original.js",
+        "__tests__/patch.js",
+        "__tests__/plugins.js",
+        "__tests__/produce.ts",
+        "__tests__/readme.js",
+        "__tests__/redux.ts",
+        "__tests__/regressions.js",
+        "__tests__/spec_ts.ts",
+        "__tests__/type-external.ts",
+        "__tests__/updateScenarios.js"
+      ],
+      "matchedRules": [
+        "no directory scoping applies -> run all tests"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "907395ad21aef22ed2c71d11f4fb4172683ab62a",
+    "headShaAfter": "907395ad21aef22ed2c71d11f4fb4172683ab62a",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1813,
+    "preObserveMs": 98,
+    "phasesMs": {
+      "context": 139,
+      "engineLoad": 203,
+      "eligibility": 0,
+      "delta": 189,
+      "graph": 1196,
+      "impactAndCommands": 7,
+      "finalization": 79
+    }
+  }
+}

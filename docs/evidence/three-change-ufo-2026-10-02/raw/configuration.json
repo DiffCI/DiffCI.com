@@ -1,0 +1,112 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-10-02T08:37:12.258Z",
+  "observer": {
+    "version": "0.3.1",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "unknown"
+  },
+  "commitRange": {
+    "baseSha": "78070102134fc18db2e850bace89b169da9fd796",
+    "headSha": "a5ae11a45c2269e5af793432eacba15b5a0d349f",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "FULL",
+    "changedFileCount": 1,
+    "changedFiles": [
+      "package.json"
+    ],
+    "affectedSourceFileCount": 0,
+    "selectedTests": [],
+    "totalTestCount": 13,
+    "fallbackReasons": [
+      "Configuration file(s) changed; full validation required"
+    ],
+    "proposedCommands": [],
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [
+      {
+        "level": "critical",
+        "reason": "CONFIG_GLOBAL"
+      }
+    ],
+    "graph": {
+      "nodes": 21,
+      "edges": 31,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 943,
+      "phasesMs": {
+        "repositoryDiscovery": 7.6192,
+        "scopeDiscovery": 0.2653,
+        "adapterInventory": 0.5451,
+        "adapters": 0.0722,
+        "typescriptProgram": 913.9302,
+        "importExtractionAndResolution": 10.0656,
+        "graphFinalization": 10.28
+      },
+      "adapterMetrics": {}
+    },
+    "pathBaseline": {
+      "mode": "FULL",
+      "selectedTestCount": 13,
+      "selectedTests": [
+        "test/base.test.ts",
+        "test/double-slash.test.ts",
+        "test/encoding.test.ts",
+        "test/is-same.test.ts",
+        "test/join.test.ts",
+        "test/normalize.test.ts",
+        "test/parse.test.ts",
+        "test/punycode.test.ts",
+        "test/query.test.ts",
+        "test/resolve.test.ts",
+        "test/trailing-slash.test.ts",
+        "test/url.test.ts",
+        "test/utilities.test.ts"
+      ],
+      "matchedRules": [
+        "config/dependency -> full fallback"
+      ]
+    },
+    "analysisStatus": "FALLBACK"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "a5ae11a45c2269e5af793432eacba15b5a0d349f",
+    "headShaAfter": "a5ae11a45c2269e5af793432eacba15b5a0d349f",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 1781,
+    "preObserveMs": 144,
+    "phasesMs": {
+      "context": 191,
+      "engineLoad": 207,
+      "eligibility": 0,
+      "delta": 319,
+      "graph": 944,
+      "impactAndCommands": 2,
+      "finalization": 116
+    }
+  }
+}

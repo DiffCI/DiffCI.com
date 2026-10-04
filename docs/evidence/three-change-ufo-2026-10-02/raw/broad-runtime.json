@@ -1,0 +1,735 @@
+{
+  "schema": "diffci.verifySavings.v3",
+  "producedAt": "2026-10-02T08:36:52.178Z",
+  "label": "UFO runtime phase broad change",
+  "cwd": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo",
+  "timeoutMs": 1800000,
+  "analysisOverheadMs": 1822,
+  "selectionSource": "diffci-observation",
+  "observationReportPath": "C:\\Users\\Swati Kale\\.codex\\diffci-evidence\\2026-10-02\\ufo-packet\\broad.json",
+  "selectedTestCount": 13,
+  "totalTestCount": 13,
+  "provenance": {
+    "baseSha": "9d1833b8a53e2347abc404d8e3db76a8f676bd4c",
+    "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+    "observationSha256": "d333b0ca8590f227ca7bbfb623ac22f28bcd930c337be7fb82041a6e7789401d",
+    "observerVersion": "0.3.1",
+    "beforeFull": {
+      "capturedAt": "2026-10-02T08:36:33.817Z",
+      "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+      "dependencyInputFiles": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "afterFull": {
+      "capturedAt": "2026-10-02T08:36:36.306Z",
+      "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+      "dependencyInputFiles": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "afterSelected": {
+      "capturedAt": "2026-10-02T08:36:39.035Z",
+      "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+      "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+      "dependencyInputFiles": [
+        "package.json",
+        "pnpm-lock.yaml"
+      ],
+      "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+      "resolvedDependencyFiles": [
+        "node_modules/.modules.yaml"
+      ]
+    },
+    "snapshots": [
+      {
+        "capturedAt": "2026-10-02T08:36:33.817Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:36.306Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:36.503Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:39.035Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:39.243Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:41.982Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:42.255Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:45.278Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:45.551Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:48.524Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:48.785Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      },
+      {
+        "capturedAt": "2026-10-02T08:36:51.870Z",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+        "dependencyInputFiles": [
+          "package.json",
+          "pnpm-lock.yaml"
+        ],
+        "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+        "resolvedDependencyFiles": [
+          "node_modules/.modules.yaml"
+        ]
+      }
+    ],
+    "checkoutStable": true,
+    "invalidReasons": []
+  },
+  "runnerIdentity": {
+    "platform": "win32",
+    "architecture": "x64",
+    "osRelease": "10.0.26200",
+    "nodeVersion": "v24.16.0",
+    "cpuModel": "13th Gen Intel(R) Core(TM) i5-1335U",
+    "cpuCount": 12,
+    "totalMemoryBytes": 16876888064,
+    "ci": "true",
+    "fingerprintSha256": "a59018791e67833b225a7cead8b58e2eb06c46efc9e1660981303729eb335807"
+  },
+  "protocol": {
+    "repetitions": 3,
+    "alternatingOrder": true,
+    "declaredCacheState": "unknown",
+    "cacheStateControlled": false
+  },
+  "trials": [
+    {
+      "index": 1,
+      "order": [
+        "full",
+        "selected"
+      ],
+      "cacheState": {
+        "full": "unknown",
+        "selected": "potentially-warmed"
+      },
+      "preparations": [],
+      "full": {
+        "command": "pnpm exec vitest run",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T08:36:34.033Z",
+        "finishedAt": "2026-10-02T08:36:36.306Z",
+        "wallMs": 2273,
+        "stdoutTail": "\n RUN  v4.0.16 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n ✓ test/punycode.test.ts (24 tests) 5ms\n ✓ test/url.test.ts (6 tests) 13ms\n ✓ test/encoding.test.ts (58 tests) 15ms\n ✓ test/base.test.ts (24 tests) 8ms\n ✓ test/join.test.ts (45 tests) 15ms\n ✓ test/query.test.ts (34 tests) 17ms\n ✓ test/resolve.test.ts (12 tests) 13ms\n ✓ test/parse.test.ts (56 tests) 18ms\n ✓ test/normalize.test.ts (65 tests) 22ms\n ✓ test/utilities.test.ts (98 tests) 23ms\n ✓ test/trailing-slash.test.ts (45 tests) 10ms\n ✓ test/is-same.test.ts (5 tests) 2ms\n ✓ test/double-slash.test.ts (5 tests) 2ms\n\n Test Files  13 passed (13)\n      Tests  477 passed (477)\n   Start at  14:06:35\n   Duration  1.03s (transform 1.60s, setup 0ms, import 2.68s, tests 162ms, environment 3ms)\n\n",
+        "stderrTail": ""
+      },
+      "selected": {
+        "command": "pnpm exec vitest run test/base.test.ts test/double-slash.test.ts test/encoding.test.ts test/is-same.test.ts test/join.test.ts test/normalize.test.ts test/parse.test.ts test/punycode.test.ts test/query.test.ts test/resolve.test.ts test/trailing-slash.test.ts test/url.test.ts test/utilities.test.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T08:36:36.715Z",
+        "finishedAt": "2026-10-02T08:36:39.035Z",
+        "wallMs": 2320,
+        "stdoutTail": "\n RUN  v4.0.16 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n ✓ test/punycode.test.ts (24 tests) 4ms\n ✓ test/resolve.test.ts (12 tests) 9ms\n ✓ test/url.test.ts (6 tests) 11ms\n ✓ test/base.test.ts (24 tests) 10ms\n ✓ test/parse.test.ts (56 tests) 19ms\n ✓ test/trailing-slash.test.ts (45 tests) 12ms\n ✓ test/join.test.ts (45 tests) 13ms\n ✓ test/query.test.ts (34 tests) 15ms\n ✓ test/normalize.test.ts (65 tests) 21ms\n ✓ test/utilities.test.ts (98 tests) 30ms\n ✓ test/encoding.test.ts (58 tests) 15ms\n ✓ test/is-same.test.ts (5 tests) 3ms\n ✓ test/double-slash.test.ts (5 tests) 2ms\n\n Test Files  13 passed (13)\n      Tests  477 passed (477)\n   Start at  14:06:37\n   Duration  1.05s (transform 1.65s, setup 0ms, import 2.75s, tests 164ms, environment 3ms)\n\n",
+        "stderrTail": ""
+      },
+      "provenance": {
+        "baseSha": "9d1833b8a53e2347abc404d8e3db76a8f676bd4c",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "observationSha256": "d333b0ca8590f227ca7bbfb623ac22f28bcd930c337be7fb82041a6e7789401d",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-02T08:36:33.817Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-02T08:36:36.306Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-02T08:36:39.035Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-02T08:36:33.817Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:36.306Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:36.503Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:39.035Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    },
+    {
+      "index": 2,
+      "order": [
+        "selected",
+        "full"
+      ],
+      "cacheState": {
+        "selected": "unknown",
+        "full": "potentially-warmed"
+      },
+      "preparations": [],
+      "full": {
+        "command": "pnpm exec vitest run",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T08:36:42.481Z",
+        "finishedAt": "2026-10-02T08:36:45.278Z",
+        "wallMs": 2797,
+        "stdoutTail": "\n RUN  v4.0.16 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n ✓ test/punycode.test.ts (24 tests) 9ms\n ✓ test/resolve.test.ts (12 tests) 13ms\n ✓ test/trailing-slash.test.ts (45 tests) 18ms\n ✓ test/base.test.ts (24 tests) 13ms\n ✓ test/join.test.ts (45 tests) 28ms\n ✓ test/url.test.ts (6 tests) 20ms\n ✓ test/query.test.ts (34 tests) 26ms\n ✓ test/parse.test.ts (56 tests) 30ms\n ✓ test/encoding.test.ts (58 tests) 32ms\n ✓ test/utilities.test.ts (98 tests) 35ms\n ✓ test/normalize.test.ts (65 tests) 47ms\n ✓ test/is-same.test.ts (5 tests) 4ms\n ✓ test/double-slash.test.ts (5 tests) 3ms\n\n Test Files  13 passed (13)\n      Tests  477 passed (477)\n   Start at  14:06:43\n   Duration  1.44s (transform 2.52s, setup 0ms, import 4.19s, tests 279ms, environment 5ms)\n\n",
+        "stderrTail": ""
+      },
+      "selected": {
+        "command": "pnpm exec vitest run test/base.test.ts test/double-slash.test.ts test/encoding.test.ts test/is-same.test.ts test/join.test.ts test/normalize.test.ts test/parse.test.ts test/punycode.test.ts test/query.test.ts test/resolve.test.ts test/trailing-slash.test.ts test/url.test.ts test/utilities.test.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T08:36:39.441Z",
+        "finishedAt": "2026-10-02T08:36:41.982Z",
+        "wallMs": 2541,
+        "stdoutTail": "\n RUN  v4.0.16 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n ✓ test/punycode.test.ts (24 tests) 9ms\n ✓ test/base.test.ts (24 tests) 10ms\n ✓ test/url.test.ts (6 tests) 19ms\n ✓ test/encoding.test.ts (58 tests) 20ms\n ✓ test/join.test.ts (45 tests) 21ms\n ✓ test/resolve.test.ts (12 tests) 21ms\n ✓ test/query.test.ts (34 tests) 25ms\n ✓ test/trailing-slash.test.ts (45 tests) 23ms\n ✓ test/parse.test.ts (56 tests) 38ms\n ✓ test/normalize.test.ts (65 tests) 34ms\n ✓ test/utilities.test.ts (98 tests) 42ms\n ✓ test/is-same.test.ts (5 tests) 3ms\n ✓ test/double-slash.test.ts (5 tests) 3ms\n\n Test Files  13 passed (13)\n      Tests  477 passed (477)\n   Start at  14:06:40\n   Duration  1.27s (transform 2.20s, setup 0ms, import 3.76s, tests 269ms, environment 5ms)\n\n",
+        "stderrTail": ""
+      },
+      "provenance": {
+        "baseSha": "9d1833b8a53e2347abc404d8e3db76a8f676bd4c",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "observationSha256": "d333b0ca8590f227ca7bbfb623ac22f28bcd930c337be7fb82041a6e7789401d",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-02T08:36:42.255Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-02T08:36:45.278Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-02T08:36:41.982Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-02T08:36:39.243Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:41.982Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:42.255Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:45.278Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    },
+    {
+      "index": 3,
+      "order": [
+        "full",
+        "selected"
+      ],
+      "cacheState": {
+        "full": "unknown",
+        "selected": "potentially-warmed"
+      },
+      "preparations": [],
+      "full": {
+        "command": "pnpm exec vitest run",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T08:36:45.769Z",
+        "finishedAt": "2026-10-02T08:36:48.524Z",
+        "wallMs": 2755,
+        "stdoutTail": "\n RUN  v4.0.16 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n ✓ test/punycode.test.ts (24 tests) 9ms\n ✓ test/base.test.ts (24 tests) 13ms\n ✓ test/url.test.ts (6 tests) 23ms\n ✓ test/query.test.ts (34 tests) 25ms\n ✓ test/trailing-slash.test.ts (45 tests) 28ms\n ✓ test/resolve.test.ts (12 tests) 32ms\n ✓ test/parse.test.ts (56 tests) 32ms\n ✓ test/normalize.test.ts (65 tests) 34ms\n ✓ test/join.test.ts (45 tests) 22ms\n ✓ test/encoding.test.ts (58 tests) 30ms\n ✓ test/utilities.test.ts (98 tests) 29ms\n ✓ test/is-same.test.ts (5 tests) 3ms\n ✓ test/double-slash.test.ts (5 tests) 3ms\n\n Test Files  13 passed (13)\n      Tests  477 passed (477)\n   Start at  14:06:46\n   Duration  1.46s (transform 2.09s, setup 0ms, import 3.69s, tests 283ms, environment 5ms)\n\n",
+        "stderrTail": ""
+      },
+      "selected": {
+        "command": "pnpm exec vitest run test/base.test.ts test/double-slash.test.ts test/encoding.test.ts test/is-same.test.ts test/join.test.ts test/normalize.test.ts test/parse.test.ts test/punycode.test.ts test/query.test.ts test/resolve.test.ts test/trailing-slash.test.ts test/url.test.ts test/utilities.test.ts",
+        "exitCode": 0,
+        "signal": null,
+        "timedOut": false,
+        "startedAt": "2026-10-02T08:36:49.048Z",
+        "finishedAt": "2026-10-02T08:36:51.870Z",
+        "wallMs": 2822,
+        "stdoutTail": "\n RUN  v4.0.16 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n ✓ test/punycode.test.ts (24 tests) 9ms\n ✓ test/base.test.ts (24 tests) 13ms\n ✓ test/resolve.test.ts (12 tests) 14ms\n ✓ test/url.test.ts (6 tests) 21ms\n ✓ test/encoding.test.ts (58 tests) 21ms\n ✓ test/join.test.ts (45 tests) 20ms\n ✓ test/query.test.ts (34 tests) 27ms\n ✓ test/trailing-slash.test.ts (45 tests) 20ms\n ✓ test/parse.test.ts (56 tests) 28ms\n ✓ test/utilities.test.ts (98 tests) 31ms\n ✓ test/normalize.test.ts (65 tests) 36ms\n ✓ test/is-same.test.ts (5 tests) 3ms\n ✓ test/double-slash.test.ts (5 tests) 3ms\n\n Test Files  13 passed (13)\n      Tests  477 passed (477)\n   Start at  14:06:50\n   Duration  1.48s (transform 2.57s, setup 0ms, import 4.26s, tests 246ms, environment 6ms)\n\n",
+        "stderrTail": ""
+      },
+      "provenance": {
+        "baseSha": "9d1833b8a53e2347abc404d8e3db76a8f676bd4c",
+        "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+        "observationSha256": "d333b0ca8590f227ca7bbfb623ac22f28bcd930c337be7fb82041a6e7789401d",
+        "observerVersion": "0.3.1",
+        "beforeFull": {
+          "capturedAt": "2026-10-02T08:36:45.551Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterFull": {
+          "capturedAt": "2026-10-02T08:36:48.524Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "afterSelected": {
+          "capturedAt": "2026-10-02T08:36:51.870Z",
+          "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+          "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+          "dependencyInputFiles": [
+            "package.json",
+            "pnpm-lock.yaml"
+          ],
+          "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+          "resolvedDependencyFiles": [
+            "node_modules/.modules.yaml"
+          ]
+        },
+        "snapshots": [
+          {
+            "capturedAt": "2026-10-02T08:36:45.551Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:48.524Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:48.785Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          },
+          {
+            "capturedAt": "2026-10-02T08:36:51.870Z",
+            "headSha": "018167768365752f0bbe5b0867818cf9a1fbea50",
+            "worktreeDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "dependencyInputsSha256": "1218f5f8c6995443a29915d09629f0c06e9fc9fde701dfd821d28b7db4bd2a6c",
+            "dependencyInputFiles": [
+              "package.json",
+              "pnpm-lock.yaml"
+            ],
+            "resolvedDependencySha256": "6301642731075af5cce42477bed071e2a36dbb74555abbe6c2bf59dbe78070e1",
+            "resolvedDependencyFiles": [
+              "node_modules/.modules.yaml"
+            ]
+          }
+        ],
+        "checkoutStable": true,
+        "invalidReasons": []
+      }
+    }
+  ],
+  "failureAssessment": {
+    "kind": "none",
+    "confidence": "not-applicable",
+    "explanation": "Every measured arm passed.",
+    "evidence": []
+  },
+  "full": {
+    "command": "pnpm exec vitest run",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T08:36:34.033Z",
+    "finishedAt": "2026-10-02T08:36:36.306Z",
+    "wallMs": 2273,
+    "stdoutTail": "\n RUN  v4.0.16 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n ✓ test/punycode.test.ts (24 tests) 5ms\n ✓ test/url.test.ts (6 tests) 13ms\n ✓ test/encoding.test.ts (58 tests) 15ms\n ✓ test/base.test.ts (24 tests) 8ms\n ✓ test/join.test.ts (45 tests) 15ms\n ✓ test/query.test.ts (34 tests) 17ms\n ✓ test/resolve.test.ts (12 tests) 13ms\n ✓ test/parse.test.ts (56 tests) 18ms\n ✓ test/normalize.test.ts (65 tests) 22ms\n ✓ test/utilities.test.ts (98 tests) 23ms\n ✓ test/trailing-slash.test.ts (45 tests) 10ms\n ✓ test/is-same.test.ts (5 tests) 2ms\n ✓ test/double-slash.test.ts (5 tests) 2ms\n\n Test Files  13 passed (13)\n      Tests  477 passed (477)\n   Start at  14:06:35\n   Duration  1.03s (transform 1.60s, setup 0ms, import 2.68s, tests 162ms, environment 3ms)\n\n",
+    "stderrTail": ""
+  },
+  "selected": {
+    "command": "pnpm exec vitest run test/base.test.ts test/double-slash.test.ts test/encoding.test.ts test/is-same.test.ts test/join.test.ts test/normalize.test.ts test/parse.test.ts test/punycode.test.ts test/query.test.ts test/resolve.test.ts test/trailing-slash.test.ts test/url.test.ts test/utilities.test.ts",
+    "exitCode": 0,
+    "signal": null,
+    "timedOut": false,
+    "startedAt": "2026-10-02T08:36:36.715Z",
+    "finishedAt": "2026-10-02T08:36:39.035Z",
+    "wallMs": 2320,
+    "stdoutTail": "\n RUN  v4.0.16 C:/Users/Swati Kale/.codex/diffci-evidence/2026-10-02/ufo\n\n ✓ test/punycode.test.ts (24 tests) 4ms\n ✓ test/resolve.test.ts (12 tests) 9ms\n ✓ test/url.test.ts (6 tests) 11ms\n ✓ test/base.test.ts (24 tests) 10ms\n ✓ test/parse.test.ts (56 tests) 19ms\n ✓ test/trailing-slash.test.ts (45 tests) 12ms\n ✓ test/join.test.ts (45 tests) 13ms\n ✓ test/query.test.ts (34 tests) 15ms\n ✓ test/normalize.test.ts (65 tests) 21ms\n ✓ test/utilities.test.ts (98 tests) 30ms\n ✓ test/encoding.test.ts (58 tests) 15ms\n ✓ test/is-same.test.ts (5 tests) 3ms\n ✓ test/double-slash.test.ts (5 tests) 2ms\n\n Test Files  13 passed (13)\n      Tests  477 passed (477)\n   Start at  14:06:37\n   Duration  1.05s (transform 1.65s, setup 0ms, import 2.75s, tests 164ms, environment 3ms)\n\n",
+    "stderrTail": ""
+  },
+  "comparison": {
+    "fullWallMs": 2755,
+    "selectedWallMs": 2541,
+    "netSelectedMs": 4363,
+    "deltaMs": -1608,
+    "grossPercentChange": 7.7676950998185115,
+    "percentChange": -58.366606170598914,
+    "selectedCommandSucceeded": true,
+    "fullCommandSucceeded": true,
+    "missedFailureSignal": false,
+    "evidenceValid": true,
+    "performanceEvidence": "PRELIMINARY",
+    "repetitions": 3,
+    "fullWallMsRange": {
+      "min": 2273,
+      "median": 2755,
+      "max": 2797
+    },
+    "selectedWallMsRange": {
+      "min": 2320,
+      "median": 2541,
+      "max": 2822
+    }
+  },
+  "notes": [
+    "This is paired runtime evidence, not a production-savings claim.",
+    "Full and selected commands were run sequentially in the same checkout.",
+    "Net selected runtime includes DiffCI analysis overhead.",
+    "Runtime evidence is preliminary until at least three alternating, cache-prepared repetitions agree."
+  ]
+}

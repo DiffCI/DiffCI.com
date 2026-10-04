@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-02",
+  "repository": "https://github.com/remeda/remeda",
+  "frozenDefaultHead": "9955bb0eca98cc5d1bbb17dc4314dd38a10a28d5",
+  "diffciVersion": "0.3.1",
+  "nodeVersion": "v24.16.0",
+  "npmVersion": "11.13.0",
+  "platform": "win32",
+  "samplingPolicy": "Latest source fix, latest source fix touching at least five implementation files, latest dependency update in the frozen first-parent history",
+  "lifecycleScriptsExecuted": false,
+  "outreachSent": false,
+  "cases": [
+    {
+      "label": "source",
+      "head": "b9ec4b0ac5ba86f2f687bae6e92d318db02eea24",
+      "base": "5d7dc5fc95b6a4c7ab21278f3ca85631d31bddae"
+    },
+    {
+      "label": "broad",
+      "head": "09afe15535be715c13c437a1d4d06b08ba4cdbcd",
+      "base": "7f134659d0a03a4e77c631bf5fe0485e9359b092"
+    },
+    {
+      "label": "dependency",
+      "head": "9955bb0eca98cc5d1bbb17dc4314dd38a10a28d5",
+      "base": "e8292ddf03f8a334cf8b048983d518f89fe6be97"
+    }
+  ]
+}

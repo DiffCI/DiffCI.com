@@ -1,0 +1,17 @@
+{
+  "evaluatedAt": "2026-10-02",
+  "repository": "https://github.com/immerjs/immer",
+  "diffciVersion": "0.3.1",
+  "nodeVersion": "24.16.0",
+  "yarnVersion": "1.22.22",
+  "platform": "Windows",
+  "cacheState": "unknown",
+  "repetitions": 3,
+  "fullRuntimeCommand": "yarn run vitest run --config vitest.config.ts",
+  "normalTestCommand": "yarn test",
+  "cases": [
+    {"label":"source","head":"b00474e3755954f6b27a392dcb4bce97254c100c","base":"6c7a3deb5b2cacf625d8f99263af627ae69f36e3","description":"Remove global Iterator declaration conflicting with ESNext types","date":"2026-08-19"},
+    {"label":"broad","head":"907395ad21aef22ed2c71d11f4fb4172683ab62a","base":"d2c158f5bac7081a760bbaf501ea5c360b7856e1","description":"Preserve structural sharing for no-op array-method calls","date":"2026-08-15"},
+    {"label":"dependency","head":"6c7a3deb5b2cacf625d8f99263af627ae69f36e3","base":"6c5343eb92b2408c07340d41ac168872ed54aded","description":"Update shell-quote in yarn.lock","date":"2026-08-19"}
+  ]
+}

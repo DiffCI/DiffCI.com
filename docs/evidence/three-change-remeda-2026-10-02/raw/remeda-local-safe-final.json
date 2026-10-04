@@ -1,0 +1,3334 @@
+{
+  "advisoryOnly": true,
+  "base": "5d7dc5fc95b6a4c7ab21278f3ca85631d31bddae",
+  "head": "b9ec4b0ac5ba86f2f687bae6e92d318db02eea24",
+  "plan": {
+    "version": "5.0.0",
+    "mode": "SELECTIVE",
+    "tasks": [
+      {
+        "id": ".github/workflows/canaries::test-source",
+        "command": "🐦 Canaries / 📒 Test source [TypeScript ${{ matrix.typescript-version }}]",
+        "category": "typecheck",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/canaries::build",
+        "command": "🐦 Canaries / 🏗️ Build",
+        "category": "build",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/canaries::test-dist",
+        "command": "🐦 Canaries / 📦 Test dist [TypeScript ${{ matrix.typescript-version }}]",
+        "category": "typecheck",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-docs::typecheck",
+        "command": "📖 CI - Docs / 👷 Typecheck",
+        "category": "typecheck",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-docs::lint",
+        "command": "📖 CI - Docs / 🧹 Lint",
+        "category": "lint",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-docs::formatting",
+        "command": "📖 CI - Docs / 💄 Format",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/ci-docs::formatting input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::typecheck",
+        "command": "CI - Library / 👷 Typecheck",
+        "category": "typecheck",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::build",
+        "command": "CI - Library / 🏗️ Build",
+        "category": "build",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::test-types",
+        "command": "CI - Library / Tests/📋 Types [TypeScript ${{ matrix.typescript-version }}]",
+        "category": "typecheck",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::test-runtime",
+        "command": "CI - Library / Tests/🧪 Runtime [Node ${{ matrix.node }}]",
+        "category": "test",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No affected tests matched this task via changed files in current delta",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::test-prop",
+        "command": "CI - Library / Tests/🎲 Property",
+        "category": "test",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No affected tests matched this task via changed files in current delta",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::lint",
+        "command": "CI - Library / 🧹 Lint",
+        "category": "lint",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No matching changed files and task is not always-run",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::format",
+        "command": "CI - Library / 💄 Format",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/ci-library::format input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::slow-types",
+        "command": "CI - Library / 🐢 Slow types",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/ci-library::slow-types input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::preview",
+        "command": "CI - Library / 🧑‍🔬 Preview",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/ci-library::preview input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::release",
+        "command": "CI - Library / 🚀 Release",
+        "category": "security",
+        "status": "ALWAYS_RUN",
+        "reason": "Always-run policy: Workflow job 🚀 Release",
+        "alwaysRun": true,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::sign-release",
+        "command": "CI - Library / 🔏 Sign release",
+        "category": "test",
+        "status": "SKIP_CANDIDATE",
+        "reason": "No affected tests matched this task via changed files in current delta",
+        "alwaysRun": false,
+        "triggeredBy": [],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/ci-library::publish-jsr",
+        "command": "CI - Library / 🦕 Publish to JSR.io",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/ci-library::publish-jsr input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/codecov::codecov",
+        "command": "☔ Codecov / ☔ Coverage",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/codecov::codecov input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/codeql::analyze",
+        "command": "🔎 CodeQL Advanced / Analyze (${{ matrix.language }})",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/codeql::analyze input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/pr_titles::main",
+        "command": "📝 Lint PR / 🪧 Validate PR title",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/pr_titles::main input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": ".github/workflows/scorecard::analysis",
+        "command": "🛡️ Scorecard supply-chain security / 🕵️ Scorecard analysis",
+        "category": "validation",
+        "status": "RUN",
+        "reason": "Triggered by changed files matching .github/workflows/scorecard::analysis input patterns",
+        "alwaysRun": false,
+        "triggeredBy": [
+          "packages/remeda/src/endsWith.test-d.ts",
+          "packages/remeda/src/internal/types/Not.test-d.ts",
+          "packages/remeda/src/internal/types/Not.ts",
+          "packages/remeda/src/isNot.test-d.ts",
+          "packages/remeda/src/isNot.ts",
+          "packages/remeda/src/partition.ts",
+          "packages/remeda/src/startsWith.test-d.ts"
+        ],
+        "hasTestCommand": false
+      },
+      {
+        "id": "security:default",
+        "command": "npm audit --audit-level=moderate",
+        "category": "security",
+        "status": "ALWAYS_RUN",
+        "reason": "Always-run policy: security:default",
+        "alwaysRun": true,
+        "triggeredBy": []
+      },
+      {
+        "id": "infrastructure:default",
+        "command": "terraform validate --check",
+        "category": "infrastructure",
+        "status": "ALWAYS_RUN",
+        "reason": "Always-run policy: infrastructure:default",
+        "alwaysRun": true,
+        "triggeredBy": []
+      }
+    ],
+    "selectedTests": [
+      "packages/remeda/src/endsWith.test-d.ts",
+      "packages/remeda/src/find.test-d.ts",
+      "packages/remeda/src/findLast.test-d.ts",
+      "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+      "packages/remeda/src/funnel.lodash-debounce.test.ts",
+      "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+      "packages/remeda/src/funnel.lodash-throttle.test.ts",
+      "packages/remeda/src/funnel.reference-batch.test.ts",
+      "packages/remeda/src/funnel.remeda-debounce.test.ts",
+      "packages/remeda/src/internal/types/Not.test-d.ts",
+      "packages/remeda/src/isIncludedIn.test.ts",
+      "packages/remeda/src/isNot.test-d.ts",
+      "packages/remeda/src/isNot.test.ts",
+      "packages/remeda/src/partition.test-d.ts",
+      "packages/remeda/src/partition.test.ts",
+      "packages/remeda/src/startsWith.test-d.ts",
+      "packages/remeda/src/takeLastWhile.test-d.ts",
+      "packages/remeda/src/takeWhile.test-d.ts",
+      "packages/remeda/src/when.test.ts"
+    ],
+    "skippedTests": [
+      "packages/remeda/src/add.test.ts",
+      "packages/remeda/src/addProp.test-d.ts",
+      "packages/remeda/src/addProp.test.ts",
+      "packages/remeda/src/allPass.test.ts",
+      "packages/remeda/src/anyPass.test.ts",
+      "packages/remeda/src/capitalize.test-d.ts",
+      "packages/remeda/src/capitalize.test.ts",
+      "packages/remeda/src/ceil.test.ts",
+      "packages/remeda/src/chunk.test-d.ts",
+      "packages/remeda/src/chunk.test.ts",
+      "packages/remeda/src/clamp.test.ts",
+      "packages/remeda/src/clone.test.ts",
+      "packages/remeda/src/concat.test.ts",
+      "packages/remeda/src/conditional.test-d.ts",
+      "packages/remeda/src/conditional.test.ts",
+      "packages/remeda/src/constant.test-d.ts",
+      "packages/remeda/src/constant.test.ts",
+      "packages/remeda/src/countBy.test-d.ts",
+      "packages/remeda/src/countBy.test.ts",
+      "packages/remeda/src/debounce.test-d.ts",
+      "packages/remeda/src/debounce.test.ts",
+      "packages/remeda/src/defaultTo.test-d.ts",
+      "packages/remeda/src/defaultTo.test.ts",
+      "packages/remeda/src/difference.test.ts",
+      "packages/remeda/src/differenceWith.test.ts",
+      "packages/remeda/src/divide.test.ts",
+      "packages/remeda/src/doNothing.test-d.ts",
+      "packages/remeda/src/doNothing.test.ts",
+      "packages/remeda/src/drop.test-d.ts",
+      "packages/remeda/src/drop.test.ts",
+      "packages/remeda/src/dropFirstBy.test.ts",
+      "packages/remeda/src/dropLast.test-d.ts",
+      "packages/remeda/src/dropLast.test.ts",
+      "packages/remeda/src/dropLastWhile.test-d.ts",
+      "packages/remeda/src/dropLastWhile.test.ts",
+      "packages/remeda/src/dropWhile.test-d.ts",
+      "packages/remeda/src/dropWhile.test.ts",
+      "packages/remeda/src/endsWith.test.ts",
+      "packages/remeda/src/entries.test-d.ts",
+      "packages/remeda/src/entries.test.ts",
+      "packages/remeda/src/evolve.test-d.ts",
+      "packages/remeda/src/evolve.test.ts",
+      "packages/remeda/src/filter.test-d.ts",
+      "packages/remeda/src/filter.test.ts",
+      "packages/remeda/src/find.test.ts",
+      "packages/remeda/src/findIndex.test.ts",
+      "packages/remeda/src/findLast.test.ts",
+      "packages/remeda/src/findLastIndex.test.ts",
+      "packages/remeda/src/first.test-d.ts",
+      "packages/remeda/src/first.test.ts",
+      "packages/remeda/src/firstBy.test-d.ts",
+      "packages/remeda/src/firstBy.test.ts",
+      "packages/remeda/src/flat.test-d.ts",
+      "packages/remeda/src/flat.test.ts",
+      "packages/remeda/src/flatMap.test-d.ts",
+      "packages/remeda/src/flatMap.test.ts",
+      "packages/remeda/src/floor.test.ts",
+      "packages/remeda/src/forEach.test-d.ts",
+      "packages/remeda/src/forEach.test.ts",
+      "packages/remeda/src/forEachObj.test-d.ts",
+      "packages/remeda/src/forEachObj.test.ts",
+      "packages/remeda/src/fromEntries.test-d.ts",
+      "packages/remeda/src/fromEntries.test.ts",
+      "packages/remeda/src/fromKeys.test-d.ts",
+      "packages/remeda/src/fromKeys.test.ts",
+      "packages/remeda/src/funnel.test-d.ts",
+      "packages/remeda/src/funnel.test.ts",
+      "packages/remeda/src/groupBy.test-d.ts",
+      "packages/remeda/src/groupBy.test-prop.ts",
+      "packages/remeda/src/groupBy.test.ts",
+      "packages/remeda/src/groupByProp.test-d.ts",
+      "packages/remeda/src/groupByProp.test.ts",
+      "packages/remeda/src/hasAtLeast.test-d.ts",
+      "packages/remeda/src/hasAtLeast.test.ts",
+      "packages/remeda/src/hasProp.test-d.ts",
+      "packages/remeda/src/hasProp.test.ts",
+      "packages/remeda/src/hasSubObject.test-d.ts",
+      "packages/remeda/src/hasSubObject.test.ts",
+      "packages/remeda/src/identity.test-d.ts",
+      "packages/remeda/src/identity.test.ts",
+      "packages/remeda/src/indexBy.test-d.ts",
+      "packages/remeda/src/indexBy.test.ts",
+      "packages/remeda/src/internal/binarySearchCutoffIndex.test.ts",
+      "packages/remeda/src/internal/heap.test.ts",
+      "packages/remeda/src/internal/purryFromLazy.test.ts",
+      "packages/remeda/src/internal/types/ArrayAt.test-d.ts",
+      "packages/remeda/src/internal/types/ArrayRequiredPrefix.test-d.ts",
+      "packages/remeda/src/internal/types/Assignability.test-d.ts",
+      "packages/remeda/src/internal/types/Deduped.test-d.ts",
+      "packages/remeda/src/internal/types/DisjointUnionFields.test-d.ts",
+      "packages/remeda/src/internal/types/EnumerableStringKeyOf.test-d.ts",
+      "packages/remeda/src/internal/types/EnumerableStringKeyedValueOf.test-d.ts",
+      "packages/remeda/src/internal/types/FilteredArray.test-d.ts",
+      "packages/remeda/src/internal/types/First.test-d.ts",
+      "packages/remeda/src/internal/types/IsBounded.test-d.ts",
+      "packages/remeda/src/internal/types/NTuple.test-d.ts",
+      "packages/remeda/src/internal/types/Narrowed.test-d.ts",
+      "packages/remeda/src/internal/types/NonEmptyPrefix.test-d.ts",
+      "packages/remeda/src/internal/types/StringLength.test-d.ts",
+      "packages/remeda/src/internal/types/ToString.test-d.ts",
+      "packages/remeda/src/internal/types/TupleParts.test-d.ts",
+      "packages/remeda/src/internal/types/TupleSplits.test-d.ts",
+      "packages/remeda/src/internal/withPrecision.test.ts",
+      "packages/remeda/src/internal/words.test.ts",
+      "packages/remeda/src/intersection.test-d.ts",
+      "packages/remeda/src/intersection.test.ts",
+      "packages/remeda/src/intersectionWith.test.ts",
+      "packages/remeda/src/invert.test-d.ts",
+      "packages/remeda/src/invert.test.ts",
+      "packages/remeda/src/isArray.test-d.ts",
+      "packages/remeda/src/isArray.test.ts",
+      "packages/remeda/src/isBigInt.test-d.ts",
+      "packages/remeda/src/isBigInt.test.ts",
+      "packages/remeda/src/isBoolean.test-d.ts",
+      "packages/remeda/src/isBoolean.test.ts",
+      "packages/remeda/src/isDate.test-d.ts",
+      "packages/remeda/src/isDate.test.ts",
+      "packages/remeda/src/isDeepEqual.test-d.ts",
+      "packages/remeda/src/isDeepEqual.test.ts",
+      "packages/remeda/src/isDefined.test-d.ts",
+      "packages/remeda/src/isDefined.test.ts",
+      "packages/remeda/src/isEmpty.test-d.ts",
+      "packages/remeda/src/isEmpty.test.ts",
+      "packages/remeda/src/isEmptyish.test-d.ts",
+      "packages/remeda/src/isEmptyish.test.ts",
+      "packages/remeda/src/isError.test-d.ts",
+      "packages/remeda/src/isError.test.ts",
+      "packages/remeda/src/isFunction.test-d.ts",
+      "packages/remeda/src/isFunction.test.ts",
+      "packages/remeda/src/isIncludedIn.test-d.ts",
+      "packages/remeda/src/isNonNull.test-d.ts",
+      "packages/remeda/src/isNonNull.test.ts",
+      "packages/remeda/src/isNonNullish.test-d.ts",
+      "packages/remeda/src/isNonNullish.test.ts",
+      "packages/remeda/src/isNullish.test-d.ts",
+      "packages/remeda/src/isNullish.test.ts",
+      "packages/remeda/src/isNumber.test-d.ts",
+      "packages/remeda/src/isNumber.test.ts",
+      "packages/remeda/src/isObjectType.test-d.ts",
+      "packages/remeda/src/isObjectType.test.ts",
+      "packages/remeda/src/isPlainObject.test-d.ts",
+      "packages/remeda/src/isPlainObject.test.ts",
+      "packages/remeda/src/isPromise.test-d.ts",
+      "packages/remeda/src/isPromise.test.ts",
+      "packages/remeda/src/isShallowEqual.test-d.ts",
+      "packages/remeda/src/isShallowEqual.test.ts",
+      "packages/remeda/src/isStrictEqual.test-d.ts",
+      "packages/remeda/src/isStrictEqual.test.ts",
+      "packages/remeda/src/isString.test-d.ts",
+      "packages/remeda/src/isString.test.ts",
+      "packages/remeda/src/isSymbol.test-d.ts",
+      "packages/remeda/src/isSymbol.test.ts",
+      "packages/remeda/src/isTruthy.test-d.ts",
+      "packages/remeda/src/isTruthy.test.ts",
+      "packages/remeda/src/join.test-d.ts",
+      "packages/remeda/src/join.test.ts",
+      "packages/remeda/src/keys.test-d.ts",
+      "packages/remeda/src/keys.test.ts",
+      "packages/remeda/src/last.test-d.ts",
+      "packages/remeda/src/last.test.ts",
+      "packages/remeda/src/length.test.ts",
+      "packages/remeda/src/map.test-d.ts",
+      "packages/remeda/src/map.test.ts",
+      "packages/remeda/src/mapKeys.test-d.ts",
+      "packages/remeda/src/mapKeys.test.ts",
+      "packages/remeda/src/mapToObj.test.ts",
+      "packages/remeda/src/mapValues.test-d.ts",
+      "packages/remeda/src/mapValues.test.ts",
+      "packages/remeda/src/mapWithFeedback.test-d.ts",
+      "packages/remeda/src/mapWithFeedback.test.ts",
+      "packages/remeda/src/mean.test-d.ts",
+      "packages/remeda/src/mean.test.ts",
+      "packages/remeda/src/meanBy.test.ts",
+      "packages/remeda/src/median.test-d.ts",
+      "packages/remeda/src/median.test.ts",
+      "packages/remeda/src/merge.test-d.ts",
+      "packages/remeda/src/merge.test.ts",
+      "packages/remeda/src/mergeAll.test-d.ts",
+      "packages/remeda/src/mergeAll.test.ts",
+      "packages/remeda/src/mergeDeep.test-d.ts",
+      "packages/remeda/src/mergeDeep.test.ts",
+      "packages/remeda/src/multiply.test.ts",
+      "packages/remeda/src/nthBy.test-d.ts",
+      "packages/remeda/src/nthBy.test.ts",
+      "packages/remeda/src/objOf.test.ts",
+      "packages/remeda/src/omit.test-d.ts",
+      "packages/remeda/src/omit.test.ts",
+      "packages/remeda/src/omitBy.test-d.ts",
+      "packages/remeda/src/omitBy.test.ts",
+      "packages/remeda/src/once.test.ts",
+      "packages/remeda/src/only.test-d.ts",
+      "packages/remeda/src/only.test.ts",
+      "packages/remeda/src/partialBind.test-d.ts",
+      "packages/remeda/src/partialBind.test.ts",
+      "packages/remeda/src/partialLastBind.test-d.ts",
+      "packages/remeda/src/partialLastBind.test.ts",
+      "packages/remeda/src/pathOr.test-d.ts",
+      "packages/remeda/src/pathOr.test.ts",
+      "packages/remeda/src/pick.test-d.ts",
+      "packages/remeda/src/pick.test.ts",
+      "packages/remeda/src/pickBy.test-d.ts",
+      "packages/remeda/src/pickBy.test.ts",
+      "packages/remeda/src/pipe.test-d.ts",
+      "packages/remeda/src/pipe.test.ts",
+      "packages/remeda/src/piped.test.ts",
+      "packages/remeda/src/product.test-d.ts",
+      "packages/remeda/src/product.test.ts",
+      "packages/remeda/src/prop.test-d.ts",
+      "packages/remeda/src/prop.test.ts",
+      "packages/remeda/src/pullObject.test-d.ts",
+      "packages/remeda/src/pullObject.test.ts",
+      "packages/remeda/src/purry.test.ts",
+      "packages/remeda/src/randomBigInt.test-d.ts",
+      "packages/remeda/src/randomBigInt.test.ts",
+      "packages/remeda/src/randomInteger.test-d.ts",
+      "packages/remeda/src/randomInteger.test.ts",
+      "packages/remeda/src/randomString.test.ts",
+      "packages/remeda/src/range.test.ts",
+      "packages/remeda/src/rankBy.test.ts",
+      "packages/remeda/src/reduce.test.ts",
+      "packages/remeda/src/reverse.test-d.ts",
+      "packages/remeda/src/reverse.test.ts",
+      "packages/remeda/src/round.test.ts",
+      "packages/remeda/src/sample.test-d.ts",
+      "packages/remeda/src/sample.test.ts",
+      "packages/remeda/src/set.test-d.ts",
+      "packages/remeda/src/set.test.ts",
+      "packages/remeda/src/setPath.test-d.ts",
+      "packages/remeda/src/setPath.test.ts",
+      "packages/remeda/src/shuffle.test-d.ts",
+      "packages/remeda/src/shuffle.test.ts",
+      "packages/remeda/src/sliceString.test.ts",
+      "packages/remeda/src/sort.test-d.ts",
+      "packages/remeda/src/sort.test.ts",
+      "packages/remeda/src/sortBy.test-d.ts",
+      "packages/remeda/src/sortBy.test.ts",
+      "packages/remeda/src/sortedIndex.test.ts",
+      "packages/remeda/src/sortedIndexBy.test.ts",
+      "packages/remeda/src/sortedIndexWith.test.ts",
+      "packages/remeda/src/sortedLastIndex.test.ts",
+      "packages/remeda/src/sortedLastIndexBy.test.ts",
+      "packages/remeda/src/splice.test-d.ts",
+      "packages/remeda/src/splice.test.ts",
+      "packages/remeda/src/split.test-d.ts",
+      "packages/remeda/src/split.test.ts",
+      "packages/remeda/src/splitAt.test.ts",
+      "packages/remeda/src/splitWhen.test.ts",
+      "packages/remeda/src/startsWith.test.ts",
+      "packages/remeda/src/stringToPath.test-d.ts",
+      "packages/remeda/src/stringToPath.test.ts",
+      "packages/remeda/src/subtract.test.ts",
+      "packages/remeda/src/sum.test-d.ts",
+      "packages/remeda/src/sum.test.ts",
+      "packages/remeda/src/sumBy.test-d.ts",
+      "packages/remeda/src/sumBy.test.ts",
+      "packages/remeda/src/swapIndices.test.ts",
+      "packages/remeda/src/swapProps.test-d.ts",
+      "packages/remeda/src/swapProps.test.ts",
+      "packages/remeda/src/take.test-d.ts",
+      "packages/remeda/src/take.test.ts",
+      "packages/remeda/src/takeFirstBy.test.ts",
+      "packages/remeda/src/takeLast.test-d.ts",
+      "packages/remeda/src/takeLast.test.ts",
+      "packages/remeda/src/takeLastWhile.test.ts",
+      "packages/remeda/src/takeWhile.test.ts",
+      "packages/remeda/src/tap.test-d.ts",
+      "packages/remeda/src/tap.test.ts",
+      "packages/remeda/src/times.test-d.ts",
+      "packages/remeda/src/times.test.ts",
+      "packages/remeda/src/toCamelCase.test-d.ts",
+      "packages/remeda/src/toCamelCase.test.ts",
+      "packages/remeda/src/toKebabCase.test-d.ts",
+      "packages/remeda/src/toKebabCase.test.ts",
+      "packages/remeda/src/toLowerCase.test-d.ts",
+      "packages/remeda/src/toLowerCase.test.ts",
+      "packages/remeda/src/toSnakeCase.test-d.ts",
+      "packages/remeda/src/toSnakeCase.test.ts",
+      "packages/remeda/src/toTitleCase.test-d.ts",
+      "packages/remeda/src/toTitleCase.test.ts",
+      "packages/remeda/src/toUpperCase.test-d.ts",
+      "packages/remeda/src/toUpperCase.test.ts",
+      "packages/remeda/src/truncate.test-d.ts",
+      "packages/remeda/src/truncate.test.ts",
+      "packages/remeda/src/uncapitalize.test-d.ts",
+      "packages/remeda/src/uncapitalize.test.ts",
+      "packages/remeda/src/unique.test.ts",
+      "packages/remeda/src/uniqueBy.test-d.ts",
+      "packages/remeda/src/uniqueBy.test.ts",
+      "packages/remeda/src/uniqueWith.test.ts",
+      "packages/remeda/src/values.test-d.ts",
+      "packages/remeda/src/values.test.ts",
+      "packages/remeda/src/when.test-d.ts",
+      "packages/remeda/src/zip.test-d.ts",
+      "packages/remeda/src/zip.test.ts",
+      "packages/remeda/src/zipWith.test-d.ts",
+      "packages/remeda/src/zipWith.test.ts",
+      "packages/stackblitz-template/src/runtime.test.ts"
+    ],
+    "alwaysRunTasks": [
+      ".github/workflows/ci-library::release",
+      "security:default",
+      "infrastructure:default"
+    ],
+    "fallbackReasons": [],
+    "evidence": [
+      {
+        "reason": "NEXT_ENTRY_POINT",
+        "source": "impact",
+        "file": "packages/remeda/src/endsWith.test-d.ts"
+      },
+      {
+        "reason": "DIRECT_TEST_CHANGE",
+        "source": "impact",
+        "file": "packages/remeda/src/endsWith.test-d.ts"
+      },
+      {
+        "reason": "NEXT_ENTRY_POINT",
+        "source": "impact",
+        "file": "packages/remeda/src/internal/types/Not.test-d.ts"
+      },
+      {
+        "reason": "DIRECT_TEST_CHANGE",
+        "source": "impact",
+        "file": "packages/remeda/src/internal/types/Not.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/endsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/find.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/findLast.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.reference-batch.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.remeda-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/internal/types/Not.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isIncludedIn.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/startsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/takeLastWhile.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/takeWhile.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/when.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/endsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/find.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/findLast.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.reference-batch.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.remeda-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/internal/types/Not.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isIncludedIn.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/startsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/takeLastWhile.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/takeWhile.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/when.test.ts"
+      },
+      {
+        "reason": "NEXT_ENTRY_POINT",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test-d.ts"
+      },
+      {
+        "reason": "DIRECT_TEST_CHANGE",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/endsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/find.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/findLast.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.reference-batch.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.remeda-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isIncludedIn.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/startsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/takeLastWhile.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/takeWhile.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/when.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/endsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/find.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/findLast.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.reference-batch.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.remeda-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isIncludedIn.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/isNot.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/startsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/takeLastWhile.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/takeWhile.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/when.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/endsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.reference-batch.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.remeda-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/startsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/endsWith.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.lodash-throttle.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.reference-batch.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/funnel.remeda-debounce.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test-d.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/partition.test.ts"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "source": "impact",
+        "file": "packages/remeda/src/startsWith.test-d.ts"
+      },
+      {
+        "reason": "NEXT_ENTRY_POINT",
+        "source": "impact",
+        "file": "packages/remeda/src/startsWith.test-d.ts"
+      },
+      {
+        "reason": "DIRECT_TEST_CHANGE",
+        "source": "impact",
+        "file": "packages/remeda/src/startsWith.test-d.ts"
+      },
+      {
+        "reason": "ALWAYS_RUN_POLICY",
+        "source": "policy",
+        "file": ".github/workflows/ci-library::release"
+      },
+      {
+        "reason": "ALWAYS_RUN_POLICY",
+        "source": "policy",
+        "file": "security:default"
+      },
+      {
+        "reason": "ALWAYS_RUN_POLICY",
+        "source": "policy",
+        "file": "infrastructure:default"
+      }
+    ],
+    "safety": {
+      "graphConfidence": "PARTIAL",
+      "impactStatus": "SAFE_TO_PROPOSE",
+      "fallbackRequired": false
+    },
+    "commandSpecs": [],
+    "commandSynthesis": {
+      "status": "UNAVAILABLE",
+      "reason": "No workspace runtime suite can be safely narrowed; full validation is required"
+    }
+  },
+  "impact": {
+    "changedFiles": [
+      {
+        "file": {
+          "path": "packages/remeda/src/endsWith.test-d.ts",
+          "changeType": "modified",
+          "isBinary": false
+        },
+        "category": "test",
+        "reasons": [
+          "DIRECT_CHANGE"
+        ]
+      },
+      {
+        "file": {
+          "path": "packages/remeda/src/internal/types/Not.test-d.ts",
+          "changeType": "added",
+          "isBinary": false
+        },
+        "category": "test",
+        "reasons": [
+          "DIRECT_CHANGE"
+        ]
+      },
+      {
+        "file": {
+          "path": "packages/remeda/src/internal/types/Not.ts",
+          "changeType": "added",
+          "isBinary": false
+        },
+        "category": "source",
+        "reasons": [
+          "DIRECT_CHANGE"
+        ]
+      },
+      {
+        "file": {
+          "path": "packages/remeda/src/isNot.test-d.ts",
+          "changeType": "modified",
+          "isBinary": false
+        },
+        "category": "test",
+        "reasons": [
+          "DIRECT_CHANGE"
+        ]
+      },
+      {
+        "file": {
+          "path": "packages/remeda/src/isNot.ts",
+          "changeType": "modified",
+          "isBinary": false
+        },
+        "category": "source",
+        "reasons": [
+          "DIRECT_CHANGE"
+        ]
+      },
+      {
+        "file": {
+          "path": "packages/remeda/src/partition.ts",
+          "changeType": "modified",
+          "isBinary": false
+        },
+        "category": "source",
+        "reasons": [
+          "DIRECT_CHANGE"
+        ]
+      },
+      {
+        "file": {
+          "path": "packages/remeda/src/startsWith.test-d.ts",
+          "changeType": "modified",
+          "isBinary": false
+        },
+        "category": "test",
+        "reasons": [
+          "DIRECT_CHANGE"
+        ]
+      }
+    ],
+    "affectedSourceFiles": [
+      "packages/remeda/src/index.ts",
+      "packages/remeda/src/internal/types/Not.ts",
+      "packages/remeda/src/isNot.ts",
+      "packages/remeda/src/partition.ts"
+    ],
+    "affectedAssets": [],
+    "affectedTests": [
+      {
+        "path": "packages/remeda/src/endsWith.test-d.ts",
+        "reasons": [
+          "DIRECT_TEST_CHANGE",
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DIRECT_TEST_CHANGE",
+            "changedFile": "packages/remeda/src/endsWith.test-d.ts",
+            "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+            "message": "Affected test: packages/remeda/src/endsWith.test-d.ts due to DIRECT_TEST_CHANGE",
+            "path": {
+              "changedFile": "packages/remeda/src/endsWith.test-d.ts",
+              "path": [
+                "packages/remeda/src/endsWith.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+            "message": "Affected test: packages/remeda/src/endsWith.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/endsWith.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+            "message": "Affected test: packages/remeda/src/endsWith.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/endsWith.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+            "message": "Affected test: packages/remeda/src/endsWith.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/endsWith.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/find.test-d.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/find.test-d.ts",
+            "message": "Affected test: packages/remeda/src/find.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/find.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/find.test-d.ts",
+            "message": "Affected test: packages/remeda/src/find.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/find.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/findLast.test-d.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/findLast.test-d.ts",
+            "message": "Affected test: packages/remeda/src/findLast.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/findLast.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/findLast.test-d.ts",
+            "message": "Affected test: packages/remeda/src/findLast.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/findLast.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-debounce.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-debounce.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-debounce.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-debounce.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-debounce.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-debounce.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-throttle.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-throttle.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-throttle.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-throttle.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.lodash-throttle.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.lodash-throttle.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.reference-batch.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.reference-batch.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.reference-batch.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.reference-batch.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.reference-batch.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.reference-batch.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.reference-batch.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.remeda-debounce.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.remeda-debounce.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.remeda-debounce.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.remeda-debounce.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+            "message": "Affected test: packages/remeda/src/funnel.remeda-debounce.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/index.ts",
+                "packages/remeda/src/funnel.remeda-debounce.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/internal/types/Not.test-d.ts",
+        "reasons": [
+          "DIRECT_TEST_CHANGE",
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DIRECT_TEST_CHANGE",
+            "changedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+            "affectedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+            "message": "Affected test: packages/remeda/src/internal/types/Not.test-d.ts due to DIRECT_TEST_CHANGE",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+            "message": "Affected test: packages/remeda/src/internal/types/Not.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/internal/types/Not.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/isIncludedIn.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/isIncludedIn.test.ts",
+            "message": "Affected test: packages/remeda/src/isIncludedIn.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/isIncludedIn.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/isIncludedIn.test.ts",
+            "message": "Affected test: packages/remeda/src/isIncludedIn.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/isIncludedIn.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/isNot.test-d.ts",
+        "reasons": [
+          "DEPENDENCY",
+          "DIRECT_TEST_CHANGE"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+            "message": "Affected test: packages/remeda/src/isNot.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/isNot.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DIRECT_TEST_CHANGE",
+            "changedFile": "packages/remeda/src/isNot.test-d.ts",
+            "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+            "message": "Affected test: packages/remeda/src/isNot.test-d.ts due to DIRECT_TEST_CHANGE",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.test-d.ts",
+              "path": [
+                "packages/remeda/src/isNot.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+            "message": "Affected test: packages/remeda/src/isNot.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/isNot.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/isNot.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/isNot.test.ts",
+            "message": "Affected test: packages/remeda/src/isNot.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/isNot.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/isNot.test.ts",
+            "message": "Affected test: packages/remeda/src/isNot.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/isNot.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/partition.test-d.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/partition.test-d.ts",
+            "message": "Affected test: packages/remeda/src/partition.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/partition.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/partition.test-d.ts",
+            "message": "Affected test: packages/remeda/src/partition.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/partition.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/partition.test-d.ts",
+            "message": "Affected test: packages/remeda/src/partition.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/partition.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/partition.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/partition.test.ts",
+            "message": "Affected test: packages/remeda/src/partition.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/partition.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/partition.test.ts",
+            "message": "Affected test: packages/remeda/src/partition.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/partition.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/startsWith.test-d.ts",
+        "reasons": [
+          "DEPENDENCY",
+          "DIRECT_TEST_CHANGE"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+            "message": "Affected test: packages/remeda/src/startsWith.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/startsWith.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+            "message": "Affected test: packages/remeda/src/startsWith.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/startsWith.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/partition.ts",
+            "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+            "message": "Affected test: packages/remeda/src/startsWith.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/partition.ts",
+              "path": [
+                "packages/remeda/src/partition.ts",
+                "packages/remeda/src/startsWith.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DIRECT_TEST_CHANGE",
+            "changedFile": "packages/remeda/src/startsWith.test-d.ts",
+            "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+            "message": "Affected test: packages/remeda/src/startsWith.test-d.ts due to DIRECT_TEST_CHANGE",
+            "path": {
+              "changedFile": "packages/remeda/src/startsWith.test-d.ts",
+              "path": [
+                "packages/remeda/src/startsWith.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/takeLastWhile.test-d.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/takeLastWhile.test-d.ts",
+            "message": "Affected test: packages/remeda/src/takeLastWhile.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/takeLastWhile.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/takeLastWhile.test-d.ts",
+            "message": "Affected test: packages/remeda/src/takeLastWhile.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/takeLastWhile.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/takeWhile.test-d.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/takeWhile.test-d.ts",
+            "message": "Affected test: packages/remeda/src/takeWhile.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/takeWhile.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/takeWhile.test-d.ts",
+            "message": "Affected test: packages/remeda/src/takeWhile.test-d.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/takeWhile.test-d.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      },
+      {
+        "path": "packages/remeda/src/when.test.ts",
+        "reasons": [
+          "DEPENDENCY"
+        ],
+        "evidence": [
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/internal/types/Not.ts",
+            "affectedFile": "packages/remeda/src/when.test.ts",
+            "message": "Affected test: packages/remeda/src/when.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/internal/types/Not.ts",
+              "path": [
+                "packages/remeda/src/internal/types/Not.ts",
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/when.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          },
+          {
+            "reason": "DEPENDENCY",
+            "changedFile": "packages/remeda/src/isNot.ts",
+            "affectedFile": "packages/remeda/src/when.test.ts",
+            "message": "Affected test: packages/remeda/src/when.test.ts due to DEPENDENCY",
+            "path": {
+              "changedFile": "packages/remeda/src/isNot.ts",
+              "path": [
+                "packages/remeda/src/isNot.ts",
+                "packages/remeda/src/when.test.ts"
+              ],
+              "pathKind": "dependents"
+            }
+          }
+        ]
+      }
+    ],
+    "affectedEntryPoints": [
+      {
+        "path": "packages/remeda/src/endsWith.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "NEXT_ENTRY_POINT",
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/find.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/findLast.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.reference-batch.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/internal/types/Not.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "NEXT_ENTRY_POINT",
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/isIncludedIn.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/isNot.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY",
+          "NEXT_ENTRY_POINT"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/isNot.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/partition.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/partition.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/startsWith.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY",
+          "NEXT_ENTRY_POINT"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/takeLastWhile.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/takeWhile.test-d.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      },
+      {
+        "path": "packages/remeda/src/when.test.ts",
+        "kind": "test",
+        "reasons": [
+          "DEPENDENCY"
+        ]
+      }
+    ],
+    "affectedScripts": [],
+    "riskSignals": [],
+    "fallbackRequired": false,
+    "fallbackReasons": [],
+    "analysisStatus": "SAFE_TO_PROPOSE",
+    "effectiveGraphConfidence": "PARTIAL",
+    "evidence": [
+      {
+        "reason": "NEXT_ENTRY_POINT",
+        "changedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/endsWith.test-d.ts (test)"
+      },
+      {
+        "reason": "DIRECT_TEST_CHANGE",
+        "changedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "message": "Affected test: packages/remeda/src/endsWith.test-d.ts due to DIRECT_TEST_CHANGE",
+        "path": {
+          "changedFile": "packages/remeda/src/endsWith.test-d.ts",
+          "path": [
+            "packages/remeda/src/endsWith.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "NEXT_ENTRY_POINT",
+        "changedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+        "affectedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/internal/types/Not.test-d.ts (test)"
+      },
+      {
+        "reason": "DIRECT_TEST_CHANGE",
+        "changedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+        "affectedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+        "message": "Affected test: packages/remeda/src/internal/types/Not.test-d.ts due to DIRECT_TEST_CHANGE",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/endsWith.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/find.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/find.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/findLast.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/findLast.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-debounce.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-throttle.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.reference-batch.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.remeda-debounce.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/internal/types/Not.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/isIncludedIn.test.ts",
+        "message": "Affected entry point packages/remeda/src/isIncludedIn.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/isNot.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/isNot.test.ts",
+        "message": "Affected entry point packages/remeda/src/isNot.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/partition.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/partition.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/partition.test.ts",
+        "message": "Affected entry point packages/remeda/src/partition.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/startsWith.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/takeLastWhile.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/takeLastWhile.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/takeWhile.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/takeWhile.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/when.test.ts",
+        "message": "Affected entry point packages/remeda/src/when.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "message": "Affected test: packages/remeda/src/endsWith.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/endsWith.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/find.test-d.ts",
+        "message": "Affected test: packages/remeda/src/find.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/find.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/findLast.test-d.ts",
+        "message": "Affected test: packages/remeda/src/findLast.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/findLast.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-debounce.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-debounce.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-throttle.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-throttle.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.reference-batch.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.reference-batch.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.remeda-debounce.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.remeda-debounce.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/internal/types/Not.test-d.ts",
+        "message": "Affected test: packages/remeda/src/internal/types/Not.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/internal/types/Not.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/isIncludedIn.test.ts",
+        "message": "Affected test: packages/remeda/src/isIncludedIn.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/isIncludedIn.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+        "message": "Affected test: packages/remeda/src/isNot.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/isNot.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/isNot.test.ts",
+        "message": "Affected test: packages/remeda/src/isNot.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/isNot.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/partition.test-d.ts",
+        "message": "Affected test: packages/remeda/src/partition.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/partition.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/partition.test.ts",
+        "message": "Affected test: packages/remeda/src/partition.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/partition.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "message": "Affected test: packages/remeda/src/startsWith.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/startsWith.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/takeLastWhile.test-d.ts",
+        "message": "Affected test: packages/remeda/src/takeLastWhile.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/takeLastWhile.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/takeWhile.test-d.ts",
+        "message": "Affected test: packages/remeda/src/takeWhile.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/takeWhile.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/internal/types/Not.ts",
+        "affectedFile": "packages/remeda/src/when.test.ts",
+        "message": "Affected test: packages/remeda/src/when.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/internal/types/Not.ts",
+          "path": [
+            "packages/remeda/src/internal/types/Not.ts",
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/when.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "NEXT_ENTRY_POINT",
+        "changedFile": "packages/remeda/src/isNot.test-d.ts",
+        "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/isNot.test-d.ts (test)"
+      },
+      {
+        "reason": "DIRECT_TEST_CHANGE",
+        "changedFile": "packages/remeda/src/isNot.test-d.ts",
+        "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+        "message": "Affected test: packages/remeda/src/isNot.test-d.ts due to DIRECT_TEST_CHANGE",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.test-d.ts",
+          "path": [
+            "packages/remeda/src/isNot.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/endsWith.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/find.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/find.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/findLast.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/findLast.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-debounce.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-throttle.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.reference-batch.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.remeda-debounce.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/isIncludedIn.test.ts",
+        "message": "Affected entry point packages/remeda/src/isIncludedIn.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/isNot.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/isNot.test.ts",
+        "message": "Affected entry point packages/remeda/src/isNot.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/partition.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/partition.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/startsWith.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/takeLastWhile.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/takeLastWhile.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/takeWhile.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/takeWhile.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/when.test.ts",
+        "message": "Affected entry point packages/remeda/src/when.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "message": "Affected test: packages/remeda/src/endsWith.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/endsWith.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/find.test-d.ts",
+        "message": "Affected test: packages/remeda/src/find.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/find.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/findLast.test-d.ts",
+        "message": "Affected test: packages/remeda/src/findLast.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/findLast.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-debounce.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-debounce.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-throttle.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-throttle.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.reference-batch.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.reference-batch.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.remeda-debounce.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.remeda-debounce.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/isIncludedIn.test.ts",
+        "message": "Affected test: packages/remeda/src/isIncludedIn.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/isIncludedIn.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/isNot.test-d.ts",
+        "message": "Affected test: packages/remeda/src/isNot.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/isNot.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/isNot.test.ts",
+        "message": "Affected test: packages/remeda/src/isNot.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/isNot.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/partition.test-d.ts",
+        "message": "Affected test: packages/remeda/src/partition.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/partition.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "message": "Affected test: packages/remeda/src/startsWith.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/startsWith.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/takeLastWhile.test-d.ts",
+        "message": "Affected test: packages/remeda/src/takeLastWhile.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/takeLastWhile.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/takeWhile.test-d.ts",
+        "message": "Affected test: packages/remeda/src/takeWhile.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/takeWhile.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/isNot.ts",
+        "affectedFile": "packages/remeda/src/when.test.ts",
+        "message": "Affected test: packages/remeda/src/when.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/isNot.ts",
+          "path": [
+            "packages/remeda/src/isNot.ts",
+            "packages/remeda/src/when.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/endsWith.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-debounce.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.lodash-throttle.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.reference-batch.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+        "message": "Affected entry point packages/remeda/src/funnel.remeda-debounce.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/partition.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/partition.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/partition.test.ts",
+        "message": "Affected entry point packages/remeda/src/partition.test.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/startsWith.test-d.ts (test)"
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/endsWith.test-d.ts",
+        "message": "Affected test: packages/remeda/src/endsWith.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/endsWith.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-debounce-with-cached-value.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-debounce.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-debounce.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-debounce.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-throttle-with-cached-value.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.lodash-throttle.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.lodash-throttle.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.lodash-throttle.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.reference-batch.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.reference-batch.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.reference-batch.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/funnel.remeda-debounce.test.ts",
+        "message": "Affected test: packages/remeda/src/funnel.remeda-debounce.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/index.ts",
+            "packages/remeda/src/funnel.remeda-debounce.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/partition.test-d.ts",
+        "message": "Affected test: packages/remeda/src/partition.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/partition.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/partition.test.ts",
+        "message": "Affected test: packages/remeda/src/partition.test.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/partition.test.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "DEPENDENCY",
+        "changedFile": "packages/remeda/src/partition.ts",
+        "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "message": "Affected test: packages/remeda/src/startsWith.test-d.ts due to DEPENDENCY",
+        "path": {
+          "changedFile": "packages/remeda/src/partition.ts",
+          "path": [
+            "packages/remeda/src/partition.ts",
+            "packages/remeda/src/startsWith.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      },
+      {
+        "reason": "NEXT_ENTRY_POINT",
+        "changedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "message": "Affected entry point packages/remeda/src/startsWith.test-d.ts (test)"
+      },
+      {
+        "reason": "DIRECT_TEST_CHANGE",
+        "changedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "affectedFile": "packages/remeda/src/startsWith.test-d.ts",
+        "message": "Affected test: packages/remeda/src/startsWith.test-d.ts due to DIRECT_TEST_CHANGE",
+        "path": {
+          "changedFile": "packages/remeda/src/startsWith.test-d.ts",
+          "path": [
+            "packages/remeda/src/startsWith.test-d.ts"
+          ],
+          "pathKind": "dependents"
+        }
+      }
+    ],
+    "performance": {
+      "durationMs": 29.108
+    }
+  }
+}

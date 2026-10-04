@@ -1,0 +1,20 @@
+{
+  "full": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 test --maxWorkers=1",
+  "selected": "corepack pnpm@11.21.0 build && corepack pnpm@11.21.0 lint && corepack pnpm@11.21.0 test:types && corepack pnpm@11.21.0 exec vitest run --typecheck.only --maxWorkers=1 && corepack pnpm@11.21.0 exec vitest run --coverage --maxWorkers=1 test/driver-dependencies.test.ts test/driver-types.test.ts test/drivers/db0.test.ts test/drivers/s3-list.test.ts test/drivers/s3.test.ts",
+  "planningMs": 6.860617999999931,
+  "auxiliaryTypeTests": 4,
+  "s3Tests": 34,
+  "alwaysRunGuards": [
+    "test/driver-dependencies.test.ts",
+    "test/driver-types.test.ts",
+    "test/drivers/db0.test.ts"
+  ],
+  "fixturePatch": "Avoid reopening ephemeral databases after their test driver has disposed them; keep persistent MySQL cleanup",
+  "emulator": "s3rver@3.7.1; serialized filesystem cleanup",
+  "preBuildAnalysis": true,
+  "maxWorkers": 1,
+  "cacheReset": [
+    "node_modules/.vite",
+    "node_modules/.cache/vitest"
+  ]
+}

@@ -1,0 +1,463 @@
+{
+  "head": "09afe15535be715c13c437a1d4d06b08ba4cdbcd",
+  "confidence": "UNSAFE",
+  "integrity": {
+    "findings": [
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/brand/eslint.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/brand/lint-staged.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/brand/prettier.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/eslint.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/lint-staged.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/article-card.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/copy-button.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/h3-card-title.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/header-card-header.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/migration-selector-island.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/search.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/theme-switcher.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/ui/button.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/ui/card.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/ui/dropdown-menu.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/ui/scroll-area.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/components/ui/sheet.tsx"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/content.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/content/docs-articles/content.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/content/v1-migration/content.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/lib/as-html.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/lib/mapping/urls.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/lib/skip-link-target.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/lib/throws.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/lib/typedoc/internal-package-dir.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/lib/utils.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/docs/src/pages/robots.txt.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/remeda/eslint.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/remeda/lint-staged.config.ts"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/remeda/prettier.config.js"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/remeda/release.config.js"
+      },
+      {
+        "level": "warning",
+        "message": "Isolated node: packages/remeda/vitest.config.ts"
+      }
+    ],
+    "criticalCount": 0,
+    "warningCount": 32,
+    "stats": {
+      "nodeCount": 620,
+      "sourceNodeCount": 619,
+      "assetNodeCount": 1,
+      "edgeCount": 1466,
+      "assetEdgeCount": 1
+    }
+  },
+  "unresolved": [
+    {
+      "importer": "packages/docs/src/content.config.ts",
+      "specifier": "@/content/docs-articles/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content.config.ts",
+      "specifier": "@/content/functions/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content.config.ts",
+      "specifier": "@/content/functions/v1/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content.config.ts",
+      "specifier": "@/content/mapping/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content.config.ts",
+      "specifier": "@/content/v1-migration/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/article-card.tsx",
+      "specifier": "@/components/ui/card",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/copy-button.tsx",
+      "specifier": "@/components/ui/button",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/copy-button.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/h3-card-title.tsx",
+      "specifier": "@/components/ui/card",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/header-card-header.tsx",
+      "specifier": "@/components/ui/card",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/migration-selector-island.tsx",
+      "specifier": "@/components/ui/dropdown-menu",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/mobile-nav.tsx",
+      "specifier": "@/components/ui/button",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/mobile-nav.tsx",
+      "specifier": "@/components/ui/sheet",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/mobile-nav.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/navbar.tsx",
+      "specifier": "@/components/ui/button",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/navbar.tsx",
+      "specifier": "@/components/ui/scroll-area",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/navbar.tsx",
+      "specifier": "@/lib/tags",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": true
+    },
+    {
+      "importer": "packages/docs/src/components/navbar.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/tag-badge.tsx",
+      "specifier": "@/lib/tags",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": true
+    },
+    {
+      "importer": "packages/docs/src/components/tag-badge.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/theme-switcher.tsx",
+      "specifier": "@/components/ui/button",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/theme-switcher.tsx",
+      "specifier": "@/components/ui/dropdown-menu",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/theme-switcher.tsx",
+      "specifier": "@/lib/theme",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/ui/badge.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/ui/button.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/ui/card.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/ui/dropdown-menu.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/ui/scroll-area.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/components/ui/sheet.tsx",
+      "specifier": "@/lib/utils",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content/functions/content.config.ts",
+      "specifier": "@/lib/typedoc/internal-package-dir",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content/functions/content.config.ts",
+      "specifier": "@/lib/typedoc/loader",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content/functions/content.config.ts",
+      "specifier": "@/lib/typedoc/schema",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content/functions/v1/content.config.ts",
+      "specifier": "@/lib/typedoc/schema",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content/functions/v1/loaders.ts",
+      "specifier": "@/lib/throws",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/content/functions/v1/loaders.ts",
+      "specifier": "@/lib/to-string",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/lib/articles/entries.ts",
+      "specifier": "@/components/navbar",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": true
+    },
+    {
+      "importer": "packages/docs/src/lib/articles/entries.ts",
+      "specifier": "@/content/docs-articles/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/lib/functions/entries.ts",
+      "specifier": "@/components/navbar",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": true
+    },
+    {
+      "importer": "packages/docs/src/lib/functions/entries.ts",
+      "specifier": "@/content/functions/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/lib/mapping/entries.ts",
+      "specifier": "@/components/navbar",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": true
+    },
+    {
+      "importer": "packages/docs/src/lib/mapping/entries.ts",
+      "specifier": "@/content/mapping/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/lib/mapping/libraries.ts",
+      "specifier": "@/content/mapping/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    },
+    {
+      "importer": "packages/docs/src/lib/v1/entries.ts",
+      "specifier": "@/components/navbar",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": true
+    },
+    {
+      "importer": "packages/docs/src/lib/v1/entries.ts",
+      "specifier": "@/content/functions/v1/content.config",
+      "reason": "unresolved internal module",
+      "dynamic": false,
+      "typeOnly": false
+    }
+  ],
+  "adapterBlockers": [],
+  "counts": {
+    "internalSource": 1465,
+    "internalAsset": 1,
+    "externalPackage": 516,
+    "platformBuiltin": 31,
+    "unresolved": 44
+  }
+}

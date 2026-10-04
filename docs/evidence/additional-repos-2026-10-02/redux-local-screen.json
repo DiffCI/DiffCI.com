@@ -1,0 +1,116 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-10-02T13:58:48.393Z",
+  "observer": {
+    "version": "0.3.1",
+    "engineSha": "721bc390024853ef9850fe634360e2a0d1a77596",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "ea81ac429272c1931a8af3126db058b747725a09",
+    "headSha": "9b21de4947de93dcc7a8234b243aa263b9e8fd22",
+    "source": "explicit-flags"
+  },
+  "status": "OBSERVED",
+  "stage": "complete",
+  "result": {
+    "mode": "SELECTIVE",
+    "changedFileCount": 2,
+    "changedFiles": [
+      "src/createStore.ts",
+      "test/createStore.spec.ts"
+    ],
+    "affectedSourceFileCount": 19,
+    "selectedTests": [
+      "examples/shopping-cart/src/reducers/index.spec.js",
+      "examples/shopping-cart/src/reducers/products.spec.js",
+      "examples/todomvc/src/components/App.spec.js",
+      "examples/todomvc/src/components/MainSection.spec.js",
+      "test/applyMiddleware.spec.ts",
+      "test/bindActionCreators.spec.ts",
+      "test/combineReducers.spec.ts",
+      "test/compose.spec.ts",
+      "test/createStore.spec.ts"
+    ],
+    "totalTestCount": 34,
+    "fallbackReasons": [],
+    "proposedCommands": [
+      "yarn run vitest run examples/shopping-cart/src/reducers/index.spec.js examples/shopping-cart/src/reducers/products.spec.js examples/todomvc/src/components/App.spec.js examples/todomvc/src/components/MainSection.spec.js test/applyMiddleware.spec.ts test/bindActionCreators.spec.ts test/combineReducers.spec.ts test/compose.spec.ts test/createStore.spec.ts"
+    ],
+    "workspaceCommands": false,
+    "unroutedTestPaths": [],
+    "blindSpot": false,
+    "riskSignals": [],
+    "graph": {
+      "nodes": 112,
+      "edges": 171,
+      "confidence": "COMPLETE",
+      "effectiveConfidence": "COMPLETE",
+      "durationMs": 16438,
+      "phasesMs": {
+        "repositoryDiscovery": 1771.101,
+        "scopeDiscovery": 0.8138,
+        "adapterInventory": 359.2281,
+        "adapters": 0.597,
+        "typescriptProgram": 13585.6662,
+        "importExtractionAndResolution": 705.0122,
+        "graphFinalization": 15.3213
+      },
+      "adapterMetrics": {}
+    },
+    "pathBaseline": {
+      "mode": "SELECTIVE",
+      "selectedTestCount": 9,
+      "selectedTests": [
+        "test/applyMiddleware.spec.ts",
+        "test/bindActionCreators.spec.ts",
+        "test/combineReducers.spec.ts",
+        "test/compose.spec.ts",
+        "test/createStore.spec.ts",
+        "test/utils/formatProdErrorMessage.spec.ts",
+        "test/utils/isAction.spec.ts",
+        "test/utils/isPlainObject.spec.ts",
+        "test/utils/warning.spec.ts"
+      ],
+      "matchedRules": [
+        "directory scoping -> tests under test"
+      ]
+    },
+    "analysisStatus": "SAFE_TO_PROPOSE"
+  },
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "9b21de4947de93dcc7a8234b243aa263b9e8fd22",
+    "headShaAfter": "9b21de4947de93dcc7a8234b243aa263b9e8fd22",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 28242,
+    "preObserveMs": 27822,
+    "phasesMs": {
+      "context": 3919,
+      "engineLoad": 4142,
+      "eligibility": 2,
+      "delta": 2876,
+      "graph": 16448,
+      "impactAndCommands": 94,
+      "finalization": 643
+    }
+  }
+}
