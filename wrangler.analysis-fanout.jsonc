@@ -65,6 +65,7 @@
       // same atomic-per-identity pattern as ROLLING_FINGERPRINT_STORE, a deliberately separate DO class
       // (different accumulated shape/concern). See SafetyBudgetStore's own doc comment in execution-shard-do.ts.
       { "name": "SAFETY_BUDGET_STORE", "class_name": "SafetyBudgetStore" }
+      ,{ "name": "PILOT_PACKET_JOB", "class_name": "PilotPacketJob" }
     ]
   },
   // R2 stores the source tarball, the pack record, the frozen build manifest + selection manifests, and
@@ -76,13 +77,15 @@
     { "tag": "v1", "new_sqlite_classes": ["AnalysisRun", "AnalysisShard", "AnalysisShardContainer"] },
     { "tag": "v2", "new_sqlite_classes": ["AnalysisExecutionShard"] },
     { "tag": "v3", "new_sqlite_classes": ["RollingFingerprintStore"] },
-    { "tag": "v4", "new_sqlite_classes": ["SafetyBudgetStore"] }
+    { "tag": "v4", "new_sqlite_classes": ["SafetyBudgetStore"] },
+    { "tag": "v5", "new_sqlite_classes": ["PilotPacketJob"] }
   ],
   "vars": {
     // R2 key of the frozen build manifest the Worker reads for the engineChecksum gate. The CLI `pack`
     // uploads docs/research/blind-baseline-2026-08-23/2026-08-23-diffci-frozen-build-manifest.json to
     // this exact key.
-    "FROZEN_MANIFEST_KEY": "manifests/2026-08-23-diffci-frozen-build-manifest.json"
+    "FROZEN_MANIFEST_KEY": "manifests/2026-08-23-diffci-frozen-build-manifest.json",
+    "DIFFCI_AGENT_ARTIFACT": "npm:@diffci.com/diffci@0.3.5#sha512-QdR6xrF/f39f94ZkOSyRYNt6LEzHRiRbWn21SrNG0Squ9WNByVXm5uLIR0GYAMDgVbzhstTRaynL53GZ+h1EzA=="
   }
   // Secret (NOT committed here): ANALYSIS_CONTROL_TOKEN - set via
   //   `wrangler secret put ANALYSIS_CONTROL_TOKEN --config wrangler.analysis-fanout.jsonc`
