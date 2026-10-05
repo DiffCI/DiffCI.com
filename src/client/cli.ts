@@ -42,6 +42,7 @@ import { detectSpecificationConflicts, readSpecificationFile } from "./spec-conf
 import { formatVerificationSummary, verificationExitCode, verifyChanged, verifyRange } from "./verify.js";
 import { formatGrowthPrompt, formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
 import { auditWorkflows, isNonInterfering } from "./workflow-guard.js";
+import { buildPilotWorkflow, renderPilotPacket } from "./pilot-packet.js";
 
 interface ParsedArgs {
   command?: string;
@@ -773,6 +774,47 @@ function defaultPilotOutputDir(repoPath: string): string {
   return join(dirname(repoPath), "diffci-output");
 }
 
+async function runPilotPacket(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): Promise<number> {
+  const repoPath = resolve(stringFlag(flags, "repo") ?? env.GITHUB_WORKSPACE ?? process.cwd());
+  const outDir = resolve(stringFlag(flags, "out-dir") ?? defaultPilotOutputDir(repoPath));
+  if (isInsideRepository(repoPath, outDir) || outDir === repoPath) {
+    console.error(`Refusing to write pilot packet inside the repository: ${outDir}. Pass --out-dir with a path outside the checkout.`);
+    return 2;
+  }
+
+  const label = stringFlag(flags, "label") ?? basename(repoPath);
+  const repositoryUrl = stringFlag(flags, "repository-url");
+  if (repositoryUrl && !/^https:\/\//i.test(repositoryUrl)) {
+    console.error("--repository-url must be an https URL");
+    return 2;
+  }
+  const observationPath = join(outDir, "diffci-observe.json");
+  const packetPath = join(outDir, "pilot-packet.md");
+  const workflowPath = join(outDir, "diffci-observe.yml");
+  const identity = observerIdentity();
+  const observation = await observe({
+    repoPath,
+    env: env as Record<string, string | undefined>,
+    version: identity.version,
+    engineSha: identity.sha,
+    baseOverride: stringFlag(flags, "base"),
+    headOverride: stringFlag(flags, "head"),
+    redactPaths: flags["redact-paths"] === true,
+    reportPath: observationPath,
+  });
+
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(observationPath, `${JSON.stringify(observation, null, 2)}\n`, "utf8");
+  writeFileSync(packetPath, renderPilotPacket(observation, { label, repositoryUrl }), "utf8");
+  writeFileSync(workflowPath, buildPilotWorkflow(identity.version), "utf8");
+
+  console.log(summarise(observation));
+  console.log(`  packet: ${packetPath}`);
+  console.log(`  observation report: ${observationPath}`);
+  console.log(`  reviewable workflow: ${workflowPath}`);
+  return observation.status === "OBSERVED" ? 0 : 1;
+}
+
 async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): Promise<number> {
   const full = stringFlag(flags, "full");
   if (!full) {
@@ -872,6 +914,8 @@ Usage:
   diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>] [--share-usage]
   diffci pilot --full <command> [--repo <path>] [--out-dir <dir>] [--label <name>]
+  diffci pilot-packet [--repo <path>] [--out-dir <dir>] [--base <sha> --head <sha>]
+                      [--label <name>] [--repository-url <https-url>] [--redact-paths]
   diffci observe [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                  [--redact-paths] [--json] [--quiet] [--fail-on-error]
                  [--api-url <url> --api-token <token>] [--no-send] [--share-usage]
@@ -896,6 +940,8 @@ verify without --changed resolves the CI event range (or HEAD^..HEAD locally), r
 and exits zero only when the analyzed head is the commit that actually passed verification.
 check analyzes the change, runs inferred full and selected commands, and shows measured savings.
 pilot runs observe and verify-savings together, writing reports to ../diffci-output by default.
+pilot-packet writes a shareable compatibility summary, raw observation, and non-blocking workflow
+outside the checkout. It runs no tests, modifies no target-repository files, and sends nothing.
 observe analyses the checkout and writes one JSON report. It runs nothing and changes nothing.
 verify-savings runs both commands and reports measured paired runtime; it is an opt-in pilot command.
 validate-specs checks an explicit list of specification IDs and logical targets and blocks duplicates.
@@ -933,6 +979,9 @@ async function main(): Promise<void> {
       return;
     case "pilot":
       process.exitCode = await runPilot(flags, env);
+      return;
+    case "pilot-packet":
+      process.exitCode = await runPilotPacket(flags, env);
       return;
     case "observe":
       process.exitCode = await runObserve(flags, env);
