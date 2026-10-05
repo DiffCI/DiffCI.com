@@ -71,10 +71,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@12e910f5938fe57cb5e5dc2aa3dce3dc7405d00c
+      - uses: DiffCI/DiffCI.com@3e8e54d4fec1f94880a82bea7d0edde6fa842740
 ```
 
-The example pins release `v0.3.5` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
+The example pins release `v0.3.6` to its qualified feature commit SHA. `npx "@diffci.com/diffci@latest" verify-workflow`
 checks that the job is dedicated, read-only, not required by other jobs, and unable to alter the rest
 of CI.
 
