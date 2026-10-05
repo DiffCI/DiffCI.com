@@ -49,6 +49,17 @@ content-addressed snapshot passed and remained unchanged while tests ran. The JS
 For paired full-versus-selected runtime measurement, use `check`. For analysis without test execution,
 use `npx "@diffci.com/diffci@latest" observe --no-send`.
 
+To prepare a maintainer-reviewable pilot without changing the target repository or running its tests:
+
+```bash
+npx "@diffci.com/diffci@latest" pilot-packet --repo /path/to/checkout \
+  --label owner/repository --repository-url https://github.com/owner/repository
+```
+
+The command writes `pilot-packet.md`, the raw observation, and a pinned non-blocking GitHub Actions
+workflow to `../diffci-output` by default. The packet describes compatibility and planned selection;
+it does not present planned reduction as measured runtime savings.
+
 To add instructions for coding agents, run:
 
 ```bash
