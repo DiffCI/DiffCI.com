@@ -1,0 +1,155 @@
+{
+  "schema": "diffci.typescript-host-benchmark.v1",
+  "collectedAt": "2026-10-05T08:59:00.900Z",
+  "node": "v24.16.0",
+  "typescript": "5.9.3",
+  "platform": "win32",
+  "results": [
+    {
+      "repository": "C:\\Users\\Swati Kale\\OneDrive\\Desktop\\DiffCI.com",
+      "baselineMedianMs": 9477.8176,
+      "optimizedMedianMs": 9153.4981,
+      "medianProgramReduction": 0.034218795263584734,
+      "samples": [
+        {
+          "run": 1,
+          "variant": "baseline",
+          "programMs": 9477.8176,
+          "sourceFiles": 1676,
+          "implementationFiles": 1240,
+          "sourcePathsSha256": "6acffd95c38ac213d498a68ee79453ad92ece26ab5628b825fe3e3190d8f00ac",
+          "implementationSha256": "b955a1cc02dd7fda7c43375beacfc6d0a87c543bad2ab4cafcbcbc060af84573",
+          "referenceDirectivesSha256": "20c0f00a8e8fd80bc35a57a55fa7daf7472586d8960a653f73883bd3f264a6c4"
+        },
+        {
+          "run": 1,
+          "variant": "optimized",
+          "programMs": 9836.5277,
+          "sourceFiles": 1676,
+          "implementationFiles": 1240,
+          "sourcePathsSha256": "6acffd95c38ac213d498a68ee79453ad92ece26ab5628b825fe3e3190d8f00ac",
+          "implementationSha256": "b955a1cc02dd7fda7c43375beacfc6d0a87c543bad2ab4cafcbcbc060af84573",
+          "referenceDirectivesSha256": "20c0f00a8e8fd80bc35a57a55fa7daf7472586d8960a653f73883bd3f264a6c4"
+        },
+        {
+          "run": 2,
+          "variant": "optimized",
+          "programMs": 6786.5576,
+          "sourceFiles": 1676,
+          "implementationFiles": 1240,
+          "sourcePathsSha256": "6acffd95c38ac213d498a68ee79453ad92ece26ab5628b825fe3e3190d8f00ac",
+          "implementationSha256": "b955a1cc02dd7fda7c43375beacfc6d0a87c543bad2ab4cafcbcbc060af84573",
+          "referenceDirectivesSha256": "20c0f00a8e8fd80bc35a57a55fa7daf7472586d8960a653f73883bd3f264a6c4"
+        },
+        {
+          "run": 2,
+          "variant": "baseline",
+          "programMs": 7221.2423,
+          "sourceFiles": 1676,
+          "implementationFiles": 1240,
+          "sourcePathsSha256": "6acffd95c38ac213d498a68ee79453ad92ece26ab5628b825fe3e3190d8f00ac",
+          "implementationSha256": "b955a1cc02dd7fda7c43375beacfc6d0a87c543bad2ab4cafcbcbc060af84573",
+          "referenceDirectivesSha256": "20c0f00a8e8fd80bc35a57a55fa7daf7472586d8960a653f73883bd3f264a6c4"
+        },
+        {
+          "run": 3,
+          "variant": "baseline",
+          "programMs": 9739.7816,
+          "sourceFiles": 1676,
+          "implementationFiles": 1240,
+          "sourcePathsSha256": "6acffd95c38ac213d498a68ee79453ad92ece26ab5628b825fe3e3190d8f00ac",
+          "implementationSha256": "b955a1cc02dd7fda7c43375beacfc6d0a87c543bad2ab4cafcbcbc060af84573",
+          "referenceDirectivesSha256": "20c0f00a8e8fd80bc35a57a55fa7daf7472586d8960a653f73883bd3f264a6c4"
+        },
+        {
+          "run": 3,
+          "variant": "optimized",
+          "programMs": 9153.4981,
+          "sourceFiles": 1676,
+          "implementationFiles": 1240,
+          "sourcePathsSha256": "6acffd95c38ac213d498a68ee79453ad92ece26ab5628b825fe3e3190d8f00ac",
+          "implementationSha256": "b955a1cc02dd7fda7c43375beacfc6d0a87c543bad2ab4cafcbcbc060af84573",
+          "referenceDirectivesSha256": "20c0f00a8e8fd80bc35a57a55fa7daf7472586d8960a653f73883bd3f264a6c4"
+        }
+      ]
+    },
+    {
+      "repository": "C:\\Users\\Swati Kale\\OneDrive\\Desktop\\DentalPresence.in",
+      "baselineMedianMs": 29991.297,
+      "optimizedMedianMs": 31192.3781,
+      "medianProgramReduction": -0.04004765449123471,
+      "samples": [
+        {
+          "run": 1,
+          "variant": "baseline",
+          "programMs": 29991.297,
+          "sourceFiles": 6699,
+          "implementationFiles": 1678,
+          "sourcePathsSha256": "6812447fcbb560984f49c36940d792480e26db56f087e601a0417947d3cf1573",
+          "implementationSha256": "a559e6c5e8dbb93735df52ecd37f5990ff7b20dad1c7c5119b195f2712b79520",
+          "referenceDirectivesSha256": "de2c2a0ada8a2bfae5088e1f1b5ea8b56f7c0876ca4aee49f6f21867189d3c5b"
+        },
+        {
+          "run": 1,
+          "variant": "optimized",
+          "programMs": 31192.3781,
+          "sourceFiles": 6699,
+          "implementationFiles": 1678,
+          "sourcePathsSha256": "6812447fcbb560984f49c36940d792480e26db56f087e601a0417947d3cf1573",
+          "implementationSha256": "a559e6c5e8dbb93735df52ecd37f5990ff7b20dad1c7c5119b195f2712b79520",
+          "referenceDirectivesSha256": "de2c2a0ada8a2bfae5088e1f1b5ea8b56f7c0876ca4aee49f6f21867189d3c5b"
+        },
+        {
+          "run": 2,
+          "variant": "optimized",
+          "programMs": 31289.652100000003,
+          "sourceFiles": 6699,
+          "implementationFiles": 1678,
+          "sourcePathsSha256": "6812447fcbb560984f49c36940d792480e26db56f087e601a0417947d3cf1573",
+          "implementationSha256": "a559e6c5e8dbb93735df52ecd37f5990ff7b20dad1c7c5119b195f2712b79520",
+          "referenceDirectivesSha256": "de2c2a0ada8a2bfae5088e1f1b5ea8b56f7c0876ca4aee49f6f21867189d3c5b"
+        },
+        {
+          "run": 2,
+          "variant": "baseline",
+          "programMs": 33235.9215,
+          "sourceFiles": 6699,
+          "implementationFiles": 1678,
+          "sourcePathsSha256": "6812447fcbb560984f49c36940d792480e26db56f087e601a0417947d3cf1573",
+          "implementationSha256": "a559e6c5e8dbb93735df52ecd37f5990ff7b20dad1c7c5119b195f2712b79520",
+          "referenceDirectivesSha256": "de2c2a0ada8a2bfae5088e1f1b5ea8b56f7c0876ca4aee49f6f21867189d3c5b"
+        },
+        {
+          "run": 3,
+          "variant": "baseline",
+          "programMs": 25676.409,
+          "sourceFiles": 6699,
+          "implementationFiles": 1678,
+          "sourcePathsSha256": "6812447fcbb560984f49c36940d792480e26db56f087e601a0417947d3cf1573",
+          "implementationSha256": "a559e6c5e8dbb93735df52ecd37f5990ff7b20dad1c7c5119b195f2712b79520",
+          "referenceDirectivesSha256": "de2c2a0ada8a2bfae5088e1f1b5ea8b56f7c0876ca4aee49f6f21867189d3c5b"
+        },
+        {
+          "run": 3,
+          "variant": "optimized",
+          "programMs": 28398.805099999998,
+          "sourceFiles": 6699,
+          "implementationFiles": 1678,
+          "sourcePathsSha256": "6812447fcbb560984f49c36940d792480e26db56f087e601a0417947d3cf1573",
+          "implementationSha256": "a559e6c5e8dbb93735df52ecd37f5990ff7b20dad1c7c5119b195f2712b79520",
+          "referenceDirectivesSha256": "de2c2a0ada8a2bfae5088e1f1b5ea8b56f7c0876ca4aee49f6f21867189d3c5b"
+        }
+      ]
+    }
+  ],
+  "evidenceLimit": "Local program-construction timings, three samples per arm in fresh processes with alternating order. OS caches uncontrolled. No end-to-end CI, safety recall or realized savings claim.",
+  "decision": "NOT_ADOPTED",
+  "performanceEvidenceEligibility": {
+    "eligible": false,
+    "reasons": [
+      "Some samples overlapped local typechecking and focused tests",
+      "Only three samples per arm; variation overlaps apparent benefit",
+      "DentalPresence median was slower"
+    ]
+  }
+}

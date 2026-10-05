@@ -210,9 +210,23 @@ export interface GraphIntegrityReport {
   };
 }
 
+export interface TypeScriptProgramMetrics {
+  /** Load attempts, not unique files; elapsed time includes reading and parsing. */
+  sourceFileLoads: number;
+  sourceFileLoadMs: number;
+  failedSourceFileLoads: number;
+  bundledLibraryLoads: number;
+  bundledLibraryLoadMs: number;
+  otherDeclarationLoads: number;
+  otherDeclarationLoadMs: number;
+  implementationLoads: number;
+  implementationLoadMs: number;
+}
+
 export interface GraphPerformanceMetrics {
   durationMs: number;
   phasesMs?: Record<string, number>;
+  typescriptProgram?: TypeScriptProgramMetrics;
   adapterMetrics?: Record<string, { phasesMs: Record<string, number>; counts: Record<string, number> }>;
   heapUsedMb?: number;
   heapAfterExtractionMb?: number;

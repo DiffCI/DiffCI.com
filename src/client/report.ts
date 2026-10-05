@@ -120,6 +120,30 @@ export interface WorkflowFinding {
   job?: string;
 }
 
+export interface TypeScriptProgramMetrics {
+  sourceFileLoads: number;
+  sourceFileLoadMs: number;
+  failedSourceFileLoads: number;
+  bundledLibraryLoads: number;
+  bundledLibraryLoadMs: number;
+  otherDeclarationLoads: number;
+  otherDeclarationLoadMs: number;
+  implementationLoads: number;
+  implementationLoadMs: number;
+}
+
+/** Optional, additive metrics; unknown or incomplete core telemetry stays absent. */
+export function readTypeScriptProgramMetrics(value: unknown): TypeScriptProgramMetrics | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const input = value as Record<string, unknown>;
+  const counts = ["sourceFileLoads", "failedSourceFileLoads", "bundledLibraryLoads", "otherDeclarationLoads", "implementationLoads"] as const;
+  const times = ["sourceFileLoadMs", "bundledLibraryLoadMs", "otherDeclarationLoadMs", "implementationLoadMs"] as const;
+  if (counts.some((key) => typeof input[key] !== "number" || !Number.isInteger(input[key]) || (input[key] as number) < 0) ||
+      times.some((key) => typeof input[key] !== "number" || !Number.isFinite(input[key]) || (input[key] as number) < 0)) return undefined;
+  // Copy only schema fields: a newer core must not smuggle file paths or source text into the report.
+  return Object.fromEntries([...counts, ...times].map((key) => [key, input[key]])) as unknown as TypeScriptProgramMetrics;
+}
+
 export interface ObservationGraph {
   nodes: number;
   edges: number;
@@ -129,6 +153,7 @@ export interface ObservationGraph {
   effectiveConfidence?: string;
   durationMs: number;
   phasesMs?: Record<string, number>;
+  typescriptProgram?: TypeScriptProgramMetrics;
   adapterMetrics?: Record<string, { phasesMs: Record<string, number>; counts: Record<string, number> }>;
 }
 

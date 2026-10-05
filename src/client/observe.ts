@@ -33,6 +33,7 @@ import {
 } from "./context.js";
 import {
   OBSERVATION_SCHEMA,
+  readTypeScriptProgramMetrics,
   redactPath,
   type NonInterferenceEvidence,
   type ObservationReport,
@@ -289,6 +290,7 @@ export async function observe(options: ObserveOptions): Promise<ObservationRepor
           effectiveConfidence: impact.effectiveGraphConfidence,
           durationMs: Math.round(graphResult.performance.durationMs),
           phasesMs: graphResult.performance.phasesMs,
+          typescriptProgram: readTypeScriptProgramMetrics((graphResult.performance as unknown as Record<string, unknown>).typescriptProgram),
           adapterMetrics: graphResult.performance.adapterMetrics,
         },
         pathBaseline: {

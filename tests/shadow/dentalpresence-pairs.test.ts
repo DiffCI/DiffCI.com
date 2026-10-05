@@ -32,6 +32,66 @@ function artifact(version = "0.2.11") {
   } };
 }
 
+function fullArtifact() {
+  const input = artifact();
+  input.pair.mode = "FULL";
+  input.pair.selectedFileIds = [...input.pair.fullFileIds];
+  input.pair.selectedTestFiles = input.pair.fullTestFiles;
+  input.pair.selected.seenFileIds = [...input.pair.fullFileIds];
+  input.pair.selected.outcomes = structuredClone(input.pair.full.outcomes);
+  const prediction = JSON.parse(input.predictionBytes.toString());
+  Object.assign(prediction.result, { mode: "FULL", selectedTests: [], fallbackReasons: [
+    "Configuration file(s) changed; full validation required",
+    "Configuration file(s) changed; full validation required", "Unknown changed file: private/path", "private prose" ] });
+  input.predictionBytes = Buffer.from(JSON.stringify(prediction));
+  input.pair.prediction.frozenSha256 = input.pair.prediction.finalSha256 = hash(input.predictionBytes);
+  input.receiptBytes = Buffer.from(JSON.stringify(input.pair.prediction));
+  return input;
+}
+
+test("diagnoses validated full fallbacks without counting savings or exposing paths", () => {
+  const input = fullArtifact();
+  const report = summarizeDentalPresencePairs([input, input]);
+  assert.equal(report.acceptedPairs, 0);
+  assert.equal(report.netRuntimeReduction, null);
+  assert.equal(report.diagnostics.validatedFullFallbacks, 1);
+  assert.deepEqual(report.diagnostics.fallbackReasons, { CONFIGURATION_CHANGED: 1, UNKNOWN_CHANGED_FILE: 1, OTHER: 1 });
+  assert.equal(JSON.stringify(report).includes("private"), false);
+  assert.equal(report.diagnostics.medianAnalysisWallMs, null);
+});
+
+test("incomplete, inconsistent or conflicting fallback evidence cannot supply diagnostics", () => {
+  for (const mutate of [
+    (input: ReturnType<typeof fullArtifact>) => { input.pair.selected.seenFileIds = []; },
+    (input: ReturnType<typeof fullArtifact>) => { input.pair.selectedFileIds = [input.pair.fullFileIds[0]]; input.pair.selectedTestFiles = 1; },
+    (input: ReturnType<typeof fullArtifact>) => { input.pair.full.startedMonotonicNs = "0"; },
+    (input: ReturnType<typeof fullArtifact>) => { input.pair.mode = "SELECTIVE"; },
+  ]) {
+    const input = fullArtifact(); mutate(input);
+    const report = summarizeDentalPresencePairs([input]);
+    assert.equal(report.diagnostics.validatedFullFallbacks, 0);
+    assert.equal(report.acceptedPairs, 0);
+    assert.equal(report.exclusions.FULL_FALLBACK, undefined);
+  }
+  const input = fullArtifact(); const changed = structuredClone(input);
+  changed.pair.full.wallMs++;
+  const report = summarizeDentalPresencePairs([input, changed]);
+  assert.equal(report.exclusions.CONFLICTING_PAIR, 1);
+  assert.equal(report.diagnostics.validatedFullFallbacks, 0);
+  assert.deepEqual(report.diagnostics.fallbackReasons, {});
+});
+
+test("overhead diagnostics distinguish repeated commits and pairs without a net improvement", () => {
+  const first = artifact(); const second = artifact(); second.pair.runId = "101";
+  second.pair.analysisWallMs = 800;
+  const report = summarizeDentalPresencePairs([first, second]);
+  assert.equal(report.diagnostics.uniqueAcceptedCommits, 1);
+  assert.equal(report.cohorts["0.2.11"].uniqueCommits, 1);
+  assert.equal(report.diagnostics.medianAnalysisWallMs, 450);
+  assert.equal(report.diagnostics.analysisFractionOfSelectedAndAnalysis, 900 / 1700);
+  assert.equal(report.diagnostics.nonImprovingPerformancePairs, 1);
+});
+
 test("recomputes runtime with analysis overhead and deduplicates real pair identity", () => {
   const input = artifact();
   const summary = summarizeDentalPresencePairs([input, input]);

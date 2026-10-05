@@ -1,0 +1,40 @@
+{
+  "schema": "diffci.internal-graph-profile.v1",
+  "collectedAt": "2026-10-05T09:06:03.318Z",
+  "repository": "DiffCI/DiffCI.com",
+  "source": "Internal src/repo/graph.ts, current uncommitted working tree; not the pinned npm core",
+  "graph": {
+    "nodes": 1257,
+    "edges": 2779,
+    "confidence": "COMPLETE"
+  },
+  "performance": {
+    "durationMs": 12929.5308,
+    "phasesMs": {
+      "repositoryDiscovery": 501.8573,
+      "scopeDiscovery": 0.8321,
+      "adapterInventory": 310.7606,
+      "adapters": 0.9793,
+      "typescriptProgram": 10803.0139,
+      "importExtractionAndResolution": 1226.1425,
+      "graphFinalization": 85.9573
+    },
+    "typescriptProgram": {
+      "sourceFileLoads": 1677,
+      "sourceFileLoadMs": 8084.900099999996,
+      "failedSourceFileLoads": 0,
+      "bundledLibraryLoads": 57,
+      "bundledLibraryLoadMs": 193.6288999999997,
+      "otherDeclarationLoads": 379,
+      "otherDeclarationLoadMs": 1989.9334999999896,
+      "implementationLoads": 1241,
+      "implementationLoadMs": 5901.337700000007
+    },
+    "adapterMetrics": {},
+    "heapUsedMb": 396.85,
+    "heapAfterExtractionMb": 396.85,
+    "filesDiscovered": 1243,
+    "filesParsed": 1243
+  },
+  "evidenceLimit": "Single local diagnostic capture; not a speedup, paired safety, packaged-client or savings benchmark."
+}
