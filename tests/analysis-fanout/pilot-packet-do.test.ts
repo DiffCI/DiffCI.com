@@ -3,7 +3,7 @@ import { it } from "node:test";
 import { stepPilotPacket, type PilotPacketRecord } from "../../src/analysis-fanout/cloudflare/pilot-packet-do.js";
 import type { SandboxLike } from "../../src/analysis-fanout/sandbox-like.js";
 
-const artifact = "npm:@diffci.com/diffci@0.3.5#sha512-QdR6xrF/f39f94ZkOSyRYNt6LEzHRiRbWn21SrNG0Squ9WNByVXm5uLIR0GYAMDgVbzhstTRaynL53GZ+h1EzA==";
+const artifact = "npm:@diffci.com/diffci@0.3.6#sha512-Ear3oGNEwMam9253ZQ+jdmOtMZtXq2INWlik7iwPXhHeubqCzQsCzPw1FpaHGogiy/a1yqc20ALiXFTHWAaLXQ==";
 function seed(): PilotPacketRecord { return { id: "job", repository: "acme/project", baseSha: "a".repeat(40), headSha: "b".repeat(40), step: "bootstrapping", sandboxId: "pilot-job", startedAt: 1, updatedAt: 1 }; }
 
 it("runs the complete pilot packet lifecycle only through the sandbox", async () => {
