@@ -37,7 +37,7 @@
     "DIFFCI_PRODUCT_ENABLED": "true",
     // Enable only after applying src/hosted/schema.sql and setting ANALYZER_RATE_SECRET.
     "DIFFCI_PUBLIC_ANALYZER_ENABLED": "true",
-    "DIFFCI_AGENT_ARTIFACT": "npm:@diffci.com/diffci@0.3.3#sha512-MRGml/ip56og4nT28uZ6GIMhJCaAH7O8GTD2VdPsrveLY0gMuxQq72fXVK6MDxjyAejOq9XjCIvFCsAcAYQcaA==",
+    "DIFFCI_AGENT_ARTIFACT": "npm:@diffci.com/diffci@0.3.4#sha512-PHa/ctvGO6Z/CbjYEUooNsWSZSaOo9Dta4mERkXFlFsQxTt1eN26NSDItg7kY26rwE7uo/3TmkNCV4u5qSV6DA==",
     "DIFFCI_ENVIRONMENT": "production",
     "DIFFCI_SESSION_TTL_MS": "2592000000", // 30 days
     // Points the runner-provider selection (product-worker.ts runnerProviderFromEnv) at the real
