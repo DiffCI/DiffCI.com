@@ -3,6 +3,7 @@ import { createTestFileMatcher, DEFAULT_TEST_FILE_MATCHER, testFileMatcherForPro
 import { isBuiltin } from "node:module";
 import { dirname, extname, join, normalize, relative, resolve, sep } from "node:path";
 import ts from "typescript";
+import { createMeasuredGraphCompilerHost } from "./typescript-host.js";
 import { adapterFiles, REPOSITORY_ADAPTERS } from "./adapters/index.js";
 import { analyzeRepository, type AnalyzeRepositoryOptions } from "./analyzer.js";
 import { applyVueScope, inVuePackage } from "./vue-scope.js";
@@ -16,6 +17,7 @@ import type {
   GraphIntegrityFinding,
   GraphIntegrityReport,
   GraphPerformanceMetrics,
+  TypeScriptProgramMetrics,
   ResolutionReference,
   SourceRoot,
   UnresolvedDependency,
@@ -389,6 +391,7 @@ function createProgram(
   options: ts.CompilerOptions;
   fileNames: readonly string[];
   resolvedViaProjectReferences: boolean;
+  typescriptMetrics: TypeScriptProgramMetrics;
 } {
   // Phase 01 F5 (2026-08-26). This was `ts.findConfigFile(repoPath, ...)`, which starts at repoPath
   // and walks UP - so a repository cloned beneath any directory containing a tsconfig.json was
@@ -521,16 +524,19 @@ function createProgram(
     fileNames = [...new Set([...fileNames, ...additionalSources])];
     options = { module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, target: ts.ScriptTarget.ES2022, ...options, allowJs: true };
   }
+  const programOptions = syntaxOnly ? { ...options, noResolve: true, noLib: true, types: [] } : options;
+  const { host, metrics } = createMeasuredGraphCompilerHost(programOptions);
   const program = ts.createProgram({
     rootNames: fileNames,
     // Scoped analysis already inventories every implementation file. It extracts
     // syntax/import edges, never asks TypeScript for semantic diagnostics. Keep
     // the original options below for explicit module resolution.
-    options: syntaxOnly ? { ...options, noResolve: true, noLib: true, types: [] } : options,
+    options: programOptions,
+    host,
     configFileParsingDiagnostics,
   });
 
-  return { program, options, fileNames, resolvedViaProjectReferences };
+  return { program, options, fileNames, resolvedViaProjectReferences, typescriptMetrics: metrics };
 }
 
 function classifySpecifier(specifier: string): "relative" | "absolute" | "alias" | "package" {
@@ -677,7 +683,7 @@ export async function buildDependencyGraph(
   const testSources = profile.testFilePaths
     .filter((file) => /\.[cm]?[jt]sx?$/.test(file))
     .map((file) => join(repoPath, file));
-  let { program, options: compilerOptions, resolvedViaProjectReferences } = createProgram(scope ? join(repoPath, scope.packageRoot) : repoPath, scope ? [] : profile.sourceRoots, [...vueSources, ...testSources], Boolean(scope));
+  let { program, options: compilerOptions, resolvedViaProjectReferences, typescriptMetrics } = createProgram(scope ? join(repoPath, scope.packageRoot) : repoPath, scope ? [] : profile.sourceRoots, [...vueSources, ...testSources], Boolean(scope));
   markPhase("typescriptProgram");
   let moduleResolutionCache = ts.createModuleResolutionCache(
     repoPath,
@@ -992,6 +998,7 @@ export async function buildDependencyGraph(
   const performance: GraphPerformanceMetrics = {
     durationMs,
     phasesMs,
+    typescriptProgram: typescriptMetrics,
     adapterMetrics: Object.fromEntries(contributions.filter(item => item.performance).map(item => [item.id, item.performance!])),
     heapUsedMb: heapDuringBuildMb,
     heapAfterExtractionMb,

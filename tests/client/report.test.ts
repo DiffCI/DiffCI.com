@@ -11,9 +11,23 @@ import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
 import { describe, it } from "node:test";
 
-import { OBSERVATION_SCHEMA, redactPath, validateObservationReport } from "../../src/client/report.js";
+import { OBSERVATION_SCHEMA, readTypeScriptProgramMetrics, redactPath, validateObservationReport } from "../../src/client/report.js";
 
 const sha256 = (input: string): string => createHash("sha256").update(input).digest("hex");
+
+describe("optional compiler telemetry", () => {
+  const metrics = { sourceFileLoads: 3, sourceFileLoadMs: 1.5, failedSourceFileLoads: 0,
+    bundledLibraryLoads: 1, bundledLibraryLoadMs: 0.5, otherDeclarationLoads: 1, otherDeclarationLoadMs: 0.5,
+    implementationLoads: 1, implementationLoadMs: 0.5 };
+  it("preserves measured fields without allowing paths, contents or extra producer fields", () => {
+    assert.deepEqual(readTypeScriptProgramMetrics({ ...metrics, path: "private.ts", contents: "secret" }), metrics);
+  });
+  it("leaves unsupported, incomplete and invalid telemetry absent", () => {
+    for (const input of [undefined, null, [], {}, { ...metrics, sourceFileLoads: 1.5 },
+      { ...metrics, implementationLoadMs: Infinity }, { ...metrics, bundledLibraryLoadMs: -1 }])
+      assert.equal(readTypeScriptProgramMetrics(input), undefined);
+  });
+});
 
 function minimalReport(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {

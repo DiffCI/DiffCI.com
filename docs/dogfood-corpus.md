@@ -15,6 +15,39 @@ checked nothing — none of which a source-tree run could have surfaced.
 `npm run dogfood:report` summarises a corpus. It reports safety and refusals first and the flattering
 efficiency number last, on purpose.
 
+To inspect current CI observation artifacts instead of the default local replay corpus:
+
+```powershell
+gh run download <run-id> --repo DiffCI/DiffCI.com --name diffci-self-observation --dir C:\evidence\self\<run-id>
+npm run dogfood:report -- --observations C:\evidence\self
+```
+
+The report reads `diffci-observation*.json` recursively, validates observation and CI identities, deduplicates equivalent JSON deliveries, and quarantines conflicting execution identities. Imported JSON is not authenticated by the reporter: fetch it from the expected repository. Invalid and conflicting counts remain visible. Repository, selector version, and package integrity or engine SHA define separate comparison and timing cohorts. Repeated observations remain execution counts, with unique commit deltas reported separately. Unknown timings stay unknown.
+
+For FULL predictions the execution workload is the full test universe, even if the impact analysis lists fewer candidates. Both the producer and reporter recompute the baseline comparison with that rule. Refusals use the current observation `reason` field, with the historical `refusal` field as a compatibility fallback. These are observation counts, not measured savings or execution-based failure recall.
+
+## Self-telemetry audit, 5 October 2026
+
+Self-collection is active: the latest inspected observation workflow succeeded today. The default `.dogfood/corpus.jsonl` is a historical 12-row 0.1.0 replay, not the live self-observation history. Hosted D1 contains 101 predictions under `DiffCI/DiffCI.com` and 368 under `adityankale190895/DiffCI.com`; keep those repository-name cohorts separate rather than assuming migration/deduplication semantics. Their verified outcome counts are 79 and 219 respectively, with 77 old-name rows excluded for workflow identity contamination. DentalPresence has 144 predictions and 79 verified outcomes, with 26 contaminated rows excluded. These are record counts, not independent regression experiments.
+
+Ten recent successful self-observation artifacts were downloaded read-only from GitHub: two 0.3.4 SELECTIVE plans and eight 0.3.5 FULL plans. Every 0.3.5 fallback included configuration changes. They support retaining the full-validation rule, consistent with the DentalPresence fallback cohort. All ten declared unchanged worktrees and no privacy-boundary violations. The sample is selected from successful observer jobs and cannot estimate failure incidence.
+
+The latest report listed two impact candidates out of 258 tests but required FULL validation. The old corpus harness counted those two as the selection; it should count 258. Correcting historical envelopes reduces the August self-corpus's "fewer than path baseline" count from nine to three; the other nine become identical. This fixes an inflated workload comparison without changing selection behavior or historical source evidence.
+
+The eight current 0.3.5 self-observations took 6.743–10.741 seconds per analysis. Their TypeScript-program phase accounts for roughly 81–87% of analysis time, identifying graph construction as a profiling target. This is a different measurement cohort from DentalPresence's paired test timings; do not pool their timing ratios or infer realized savings from either observation-only corpus.
+
+The sanitized [audit snapshot](evidence/self-telemetry-2026-10-05/summary.json) records the hosted inventory, report-byte SHA256s, run IDs, exact engine revisions and phase timings. Original downloaded artifacts stay outside the checkout. No new workflow dispatch, hosted write, deployment, or automatic schedule was required for this audit.
+
+## TypeScript graph profiling follow-up
+
+A bundled-library AST shortcut was tested in fresh-process, alternating-order program-construction experiments on both local checkouts. It preserved source-file paths, implementation contents and reference-directive fingerprints in all six samples per repository. Its observed median was 3.4% faster on DiffCI and 4.0% slower on DentalPresence. Some samples overlapped local typechecking/tests and variation was large: these are exploratory results, explicitly excluded from performance evidence. The candidate was not adopted. Its constructor remains under `scripts/lib/typescript-host-candidate.ts` for reproduction and is never installed in the production graph builder. Replay it with `npx tsx scripts/benchmark-typescript-host.ts . ../DentalPresence.in --out <external-summary.json>` while other verification is idle.
+
+The internal graph builder instead uses the original TypeScript compiler host with passive load counters. `performance.typescriptProgram` separates load attempts and read/parse wall time for bundled libraries, other declarations and implementations, plus failed loads. It adds no persistent cache, changes no compiler options or ASTs, and records no paths or file contents. These counters exclude module-resolution and configuration time outside `getSourceFile`; they must not be read as a complete phase breakdown or unique-file counts.
+
+A [single local profile](evidence/typescript-host-2026-10-05/local-profile.json) measured 10.80 seconds in the TypeScript-program phase: bundled-library loading accounted for just 0.194 seconds, other declarations 1.99 seconds, and implementations 5.90 seconds. The checkout also contains ignored repository copies under `outputs/`, discovered by the conventional test-file inventory, so this is a larger working-tree universe than the hosted clean-checkout sample. Do not pool these timings with CI or silently remove discovered tests to improve the result. The profile points away from bundled libraries as the primary optimization target.
+
+The packaged observer imports a separately pinned `@diffci.com/core`, rather than this repository's internal graph builder. Its v1 report can now accept the optional counters from a capable core, copies only whitelisted numeric schema fields, and leaves unsupported/incomplete data absent. The current core pin does not emit them; no upstream core change or dependency-pin update is claimed here. This preserves the OSS boundary and prevents an internal graph experiment from being represented as a shipped client improvement. [Benchmark samples and exclusions](evidence/typescript-host-2026-10-05/benchmark.json) are retained alongside the local profile.
+
 ## The corpus constraint, stated plainly
 
 **Two repositories are owned, both private, both TypeScript.** The five-way stress matrix (monorepo,

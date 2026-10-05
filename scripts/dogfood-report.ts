@@ -7,13 +7,15 @@
  * the privacy boundary, how often did DiffCI refuse rather than guess, and how many SELECTIVE
  * decisions are even falsifiable from the evidence collected.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { selectionComparison, summarizeSelectionCohorts } from "./lib/observation-selection.js";
+import { readObservationCorpus } from "./lib/observation-corpus.js";
 
 const repoRoot = resolve(dirname(import.meta.filename), "..");
 
 interface Row {
-  identity: { repository: string; stresses: string; baseSha: string; headSha: string; agentVersion: string };
+  identity: { repository: string; stresses: string; baseSha: string; headSha: string; agentVersion: string; agentIntegrity?: string };
   understanding: { testUniverse: number | "unknown"; graphNodes: number | "unknown"; graphConfidence: string; changedFiles: number | "unknown" };
   decision: { status: string; mode: string; reason: string; selected: number | "unknown"; total: number | "unknown" };
   counterfactual: { baselineMode: string; baselineSelected: number | "unknown"; netVersusBaseline: number | "unknown" };
@@ -22,11 +24,25 @@ interface Row {
   notes: string[];
 }
 
-const path = resolve(process.argv[2] ?? join(repoRoot, ".dogfood", "corpus.jsonl"));
-const rows = readFileSync(path, "utf8")
+const rawObservations = process.argv[2] === "--observations";
+if (rawObservations && !process.argv[3]) throw new Error("Usage: npm run dogfood:report -- --observations <artifact-directory>");
+const path = resolve((rawObservations ? process.argv[3] : process.argv[2]) ?? join(repoRoot, ".dogfood", "corpus.jsonl"));
+const imported = rawObservations ? readObservationCorpus(readdirSync(path, { recursive: true, encoding: "utf8" })
+  .filter((name) => /(?:^|[\\/])diffci-observation[^\\/]*\.json$/.test(name))
+  .map((name) => { try { return JSON.parse(readFileSync(join(path, name), "utf8")) as unknown; } catch { return null; } })) : null;
+const loadedRows: Row[] = imported ? imported.rows : readFileSync(path, "utf8")
   .split("\n")
   .filter((line) => line.trim().length > 0)
   .map((line) => JSON.parse(line) as Row);
+if (imported) console.log(`IMPORTED CI OBSERVATIONS: inputs=${imported.inputRecords} invalid=${imported.invalidRecords} duplicates=${imported.duplicateDeliveries} conflicts=${imported.conflictingExecutions}; JSON provenance is not authenticated by this report.`);
+const rows = loadedRows
+  .map((row) => {
+    // Historical producers may have counted impact candidates as the FULL execution selection.
+    const comparison = selectionComparison(row.decision.mode, row.decision.selected, row.decision.total,
+      row.counterfactual.baselineMode, row.counterfactual.baselineSelected);
+    return { ...row, decision: { ...row.decision, selected: comparison.selected },
+      counterfactual: { ...row.counterfactual, baselineSelected: comparison.baselineSelected, netVersusBaseline: comparison.netVersusBaseline } };
+  });
 
 if (rows.length === 0) {
   console.log("empty corpus");
@@ -34,9 +50,12 @@ if (rows.length === 0) {
 }
 
 const n = (value: number | "unknown"): number | undefined => (typeof value === "number" ? value : undefined);
+const cohorts = summarizeSelectionCohorts(rows);
 
-console.log(`\nDogfood corpus — ${rows.length} observation(s), agent ${rows[0]!.identity.agentVersion}`);
+console.log(`\nDogfood corpus — ${rows.length} observation(s)`);
 console.log(`  ${path}\n`);
+console.log("COHORTS (repository, version and build identity kept separate)");
+for (const cohort of cohorts) console.log(`  ${cohort.repository}  agent ${cohort.version}  integrity ${cohort.integrity}  observations=${cohort.observations} unique-deltas=${cohort.uniqueDeltas}`);
 
 // 1. SAFETY FIRST. A single violation here outweighs every efficiency number below it.
 const violations = rows.filter((r) => r.notes.some((note) => note.includes("VIOLATED")));
@@ -82,26 +101,16 @@ console.log("  between base and head. On green-to-green history no outcome chang
 console.log("  cannot falsify anything. Real failures or deliberate mutation are required.");
 
 // 4. THE COMPARATOR. Reported as a distribution, never as one flattering average.
-const compared = rows.map((r) => n(r.counterfactual.netVersusBaseline)).filter((x): x is number => x !== undefined);
-const better = compared.filter((x) => x > 0).length;
-const same = compared.filter((x) => x === 0).length;
-const worse = compared.filter((x) => x < 0).length;
-
 console.log("\nVERSUS A SIMPLE PATH-RULE CI");
-console.log(`  DiffCI selected fewer   ${String(better).padStart(4)}`);
-console.log(`  identical               ${String(same).padStart(4)}`);
-console.log(`  DiffCI selected MORE    ${String(worse).padStart(4)}${worse > 0 ? "   <- these are the ones worth reading" : ""}`);
+for (const cohort of cohorts) console.log(`  ${cohort.repository} / ${cohort.version} / ${cohort.integrity}: fewer=${cohort.fewer} identical=${cohort.same} more=${cohort.more} unknown=${cohort.unknownComparisons}`);
+console.log("  Counts respect FULL mode; they describe predicted workload, not executed savings.");
 for (const row of rows.filter((r) => (n(r.counterfactual.netVersusBaseline) ?? 0) < 0).slice(0, 10)) {
   console.log(`    ${row.identity.headSha.slice(0, 9)}  DiffCI ${row.decision.selected} vs baseline ${row.counterfactual.baselineSelected}`);
 }
 
 // 5. COST. What the customer pays on every run, whatever the verdict.
-const durations = rows.map((r) => n(r.economics.analysisMs)).filter((x): x is number => x !== undefined).sort((a, b) => a - b);
-if (durations.length > 0) {
-  const at = (q: number): number => durations[Math.min(durations.length - 1, Math.floor(durations.length * q))]!;
-  console.log("\nANALYSIS OVERHEAD (per commit, added to every CI run)");
-  console.log(`  median ${at(0.5)}ms   p90 ${at(0.9)}ms   max ${durations[durations.length - 1]}ms`);
-}
+console.log("\nANALYSIS OVERHEAD (per observation, by cohort)");
+for (const cohort of cohorts) console.log(`  ${cohort.repository} / ${cohort.version} / ${cohort.integrity}: measured=${cohort.timingObservations} median=${cohort.medianAnalysisMs ?? "unknown"}ms p90=${cohort.p90AnalysisMs ?? "unknown"}ms max=${cohort.maxAnalysisMs ?? "unknown"}ms`);
 
 // 6. Anything the harness could not classify. Unknowns are printed, never silently treated as zero.
 const unknowns = rows.filter((r) => r.decision.selected === "unknown" || r.understanding.graphNodes === "unknown");

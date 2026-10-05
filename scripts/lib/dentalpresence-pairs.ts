@@ -7,6 +7,25 @@ const list = (value: unknown): value is string[] => Array.isArray(value) && valu
 const object = (value: unknown): value is Json => !!value && typeof value === "object" && !Array.isArray(value);
 const mono = (value: unknown): bigint | null => typeof value === "string" && /^\d+$/.test(value) ? BigInt(value) : null;
 
+// Stable categories keep repository paths and arbitrary producer prose out of aggregate diagnostics.
+function fallbackCategory(reason: string): string {
+  if (reason === "Configuration file(s) changed; full validation required") return "CONFIGURATION_CHANGED";
+  if (reason === "Dependency manifest changed; full validation required") return "DEPENDENCY_MANIFEST_CHANGED";
+  if (reason === "GitHub workflow definition(s) changed; full validation required") return "WORKFLOW_CHANGED";
+  if (reason === "Lockfile changed; full validation required") return "LOCKFILE_CHANGED";
+  if (reason === "Infrastructure definition(s) changed; full validation required") return "INFRASTRUCTURE_CHANGED";
+  if (reason === "Database definition(s) changed; full validation required") return "DATABASE_CHANGED";
+  if (reason.startsWith("Unknown changed file: ")) return "UNKNOWN_CHANGED_FILE";
+  return "OTHER";
+}
+
+function median(values: number[]): number | null {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
 export interface PairArtifact { pair: unknown; predictionBytes: Buffer; receiptBytes: Buffer }
 
 // Explicit historical cohorts: upgrading a producer never silently authorizes a new selector.
@@ -18,7 +37,8 @@ export const dentalPresenceSelectorPins = DENTALPRESENCE_SELECTOR_PINS;
 
 /** Recompute eligibility from the artifacts, never trust producer assessment booleans. */
 function inspectPair(input: PairArtifact) {
-  const invalid = (reason: string) => ({ accepted: false as const, reason });
+  const invalid = (reason: string): { accepted: false; reason: string;
+    fallback?: { id: string; selectorVersion: string; categories: string[] } } => ({ accepted: false, reason });
   const pair = input.pair;
   if (!object(pair) || pair.schema !== "dentalpresence.diffci.pair.v1") return invalid("INVALID_SCHEMA");
   if (pair.seededMutation) return invalid("SEEDED_EXPERIMENT");
@@ -48,14 +68,15 @@ function inspectPair(input: PairArtifact) {
   if (typeof version !== "string" || !Object.hasOwn(dentalPresenceSelectorPins, version) ||
       pair.selectorPackage.integrity !== dentalPresenceSelectorPins[version] ||
       prediction.observer?.version !== pair.selectorPackage.version || identity.selectorVersion !== pair.selectorPackage.version) return invalid("SELECTOR_IDENTITY");
-  if (pair.mode !== "SELECTIVE" || prediction.result?.mode !== "SELECTIVE") return invalid("FULL_FALLBACK");
+  if (!["SELECTIVE", "FULL"].includes(pair.mode) || prediction.result?.mode !== pair.mode) return invalid("PLAN_MODE_MISMATCH");
   const files: unknown = prediction.result.selectedTests;
-  if (!Array.isArray(files) || !files.length || files.some((file) => typeof file !== "string") || new Set(files).size !== files.length ||
-      prediction.result.commandRefusalReason || prediction.result.blindSpot || prediction.result.unroutedTestPaths?.length) return invalid("UNEXECUTABLE_SELECTION");
+  if (pair.mode === "SELECTIVE" && (!Array.isArray(files) || !files.length || files.some((file) => typeof file !== "string") || new Set(files).size !== files.length ||
+      prediction.result.commandRefusalReason || prediction.result.blindSpot || prediction.result.unroutedTestPaths?.length)) return invalid("UNEXECUTABLE_SELECTION");
   if (!list(pair.fullFileIds) || !list(pair.selectedFileIds) || pair.fullFileIds.length !== pair.fullTestFiles ||
       pair.selectedFileIds.length !== pair.selectedTestFiles || !hex(pair.universeSha256) ||
       pair.selectedFileIds.some((file: string) => !pair.fullFileIds.includes(file)) ||
-      JSON.stringify([...pair.selectedFileIds].sort()) !== JSON.stringify(files.map((file) => hash(file)).sort())) return invalid("UNIVERSE_MISMATCH");
+      (pair.mode === "SELECTIVE" && JSON.stringify([...pair.selectedFileIds].sort()) !== JSON.stringify((files as string[]).map((file) => hash(file)).sort()))) return invalid("UNIVERSE_MISMATCH");
+  if (pair.mode === "FULL" && JSON.stringify([...pair.selectedFileIds].sort()) !== JSON.stringify([...pair.fullFileIds].sort())) return invalid("UNIVERSE_MISMATCH");
   if (!Array.isArray(pair.mandatoryPhaseIndices) || pair.mandatoryPhaseIndices.some((index: unknown) => !Number.isInteger(index))) return invalid("MANDATORY_PHASES_UNVERIFIED");
   const frozenAt = Date.parse(identity.frozenAt);
   const frozenMono = mono(identity.frozenMonotonicNs);
@@ -85,6 +106,12 @@ function inspectPair(input: PairArtifact) {
   const failed = allOutcomes[0].filter((test) => test.status === "FAIL");
   const selectedFailures = new Set(allOutcomes[1].filter((test) => test.status === "FAIL").map((test) => test.testId));
   const omittedFailures = failed.filter((test) => !pair.selectedFileIds.includes(test.fileId)).length;
+  // FULL remains excluded from selective savings, but only complete, validated fallbacks supply diagnostics.
+  if (pair.mode === "FULL") return { accepted: false as const, reason: "FULL_FALLBACK",
+    fallback: { id: `${pair.runId}:${pair.runAttempt}:${pair.executedSha}`, selectorVersion: version,
+      categories: [...new Set(Array.isArray(prediction.result.fallbackReasons)
+        ? prediction.result.fallbackReasons.filter((reason: unknown): reason is string => typeof reason === "string").map(fallbackCategory)
+        : [])] as string[] } };
   return { accepted: true as const, id: `${pair.runId}:${pair.runAttempt}:${pair.executedSha}`, headSha: pair.executedSha as string,
     selectorVersion: version,
     possibleMiss: pair.selected.status === "PASS" && omittedFailures > 0,
@@ -93,13 +120,14 @@ function inspectPair(input: PairArtifact) {
     fullWallMs: pair.full.wallMs as number, selectedWallMs: pair.selected.wallMs as number, analysisWallMs: pair.analysisWallMs as number };
 }
 
-export function inspectDentalPresencePair(input: PairArtifact) {
+export function inspectDentalPresencePair(input: PairArtifact): ReturnType<typeof inspectPair> {
   try { return inspectPair(input); }
   catch { return { accepted: false as const, reason: "MALFORMED_RECORD" }; }
 }
 
 export function summarizeDentalPresencePairs(inputs: PairArtifact[]) {
   const accepted = new Map<string, Extract<ReturnType<typeof inspectDentalPresencePair>, { accepted: true }>>();
+  const fallbacks = new Map<string, { selectorVersion: string; categories: string[] }>();
   const canonical = new Map<string, string>(); const conflicts = new Set<string>();
   const exclusions: Record<string, number> = {}; let duplicateDeliveries = 0;
   for (const input of inputs) {
@@ -107,12 +135,16 @@ export function summarizeDentalPresencePairs(inputs: PairArtifact[]) {
     const digest = hash(`${JSON.stringify(input.pair) ?? "null"}\n${hash(input.predictionBytes)}\n${hash(input.receiptBytes)}`);
     if (id && canonical.has(id)) {
       if (canonical.get(id) === digest) duplicateDeliveries++;
-      else { conflicts.add(id); accepted.delete(id); }
+      else { conflicts.add(id); accepted.delete(id); fallbacks.delete(id); }
       continue;
     }
     if (id) canonical.set(id, digest);
     const result = inspectDentalPresencePair(input);
-    if (!result.accepted) { exclusions[result.reason] = (exclusions[result.reason] ?? 0) + 1; continue; }
+    if (!result.accepted) {
+      exclusions[result.reason] = (exclusions[result.reason] ?? 0) + 1;
+      if (result.fallback) fallbacks.set(result.fallback.id, result.fallback);
+      continue;
+    }
     accepted.set(result.id, result);
   }
   if (conflicts.size) exclusions.CONFLICTING_PAIR = conflicts.size;
@@ -120,13 +152,20 @@ export function summarizeDentalPresencePairs(inputs: PairArtifact[]) {
   const fullWallMs = performance.reduce((sum, pair) => sum + pair.fullWallMs, 0);
   const selectedWallMs = performance.reduce((sum, pair) => sum + pair.selectedWallMs, 0);
   const analysisWallMs = performance.reduce((sum, pair) => sum + pair.analysisWallMs, 0);
+  const fallbackReasons: Record<string, number> = {};
+  const fallbackVersions: Record<string, number> = {};
+  for (const fallback of fallbacks.values()) {
+    fallbackVersions[fallback.selectorVersion] = (fallbackVersions[fallback.selectorVersion] ?? 0) + 1;
+    for (const category of fallback.categories.length ? fallback.categories : ["UNSPECIFIED"])
+      fallbackReasons[category] = (fallbackReasons[category] ?? 0) + 1;
+  }
   const cohorts = Object.fromEntries([...new Set(pairs.map((pair) => pair.selectorVersion))].sort().map((version) => {
     const cohort = pairs.filter((pair) => pair.selectorVersion === version);
     const measured = cohort.filter((pair) => pair.performanceEligible);
     const full = measured.reduce((sum, pair) => sum + pair.fullWallMs, 0);
     const selected = measured.reduce((sum, pair) => sum + pair.selectedWallMs, 0);
     const analysis = measured.reduce((sum, pair) => sum + pair.analysisWallMs, 0);
-    return [version, { acceptedPairs: cohort.length, performancePairs: measured.length,
+    return [version, { acceptedPairs: cohort.length, uniqueCommits: new Set(cohort.map((pair) => pair.headSha)).size, performancePairs: measured.length,
       possibleMissPairs: cohort.filter((pair) => pair.possibleMiss).length,
       fullWallMs: full, selectedWallMs: selected, analysisWallMs: analysis,
       netRuntimeReduction: full ? 1 - (selected + analysis) / full : null }];
@@ -135,6 +174,11 @@ export function summarizeDentalPresencePairs(inputs: PairArtifact[]) {
     acceptedPairs: pairs.length, performancePairs: performance.length, possibleMissPairs: pairs.filter((pair) => pair.possibleMiss).length,
     fullFailingCases: pairs.reduce((sum, pair) => sum + pair.fullFailingCases, 0),
     omittedFailingCases: pairs.reduce((sum, pair) => sum + pair.omittedFailingCases, 0), exclusions, cohorts,
+    diagnostics: { validatedFullFallbacks: fallbacks.size, fallbackReasons, fallbackVersions,
+      uniqueAcceptedCommits: new Set(pairs.map((pair) => pair.headSha)).size,
+      medianAnalysisWallMs: median(performance.map((pair) => pair.analysisWallMs)),
+      analysisFractionOfSelectedAndAnalysis: selectedWallMs + analysisWallMs ? analysisWallMs / (selectedWallMs + analysisWallMs) : null,
+      nonImprovingPerformancePairs: performance.filter((pair) => pair.selectedWallMs + pair.analysisWallMs >= pair.fullWallMs).length },
     fullWallMs, selectedWallMs, analysisWallMs,
     grossRuntimeReduction: fullWallMs ? 1 - selectedWallMs / fullWallMs : null,
     netRuntimeReduction: fullWallMs ? 1 - (selectedWallMs + analysisWallMs) / fullWallMs : null,

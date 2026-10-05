@@ -28,6 +28,7 @@ import { fileURLToPath } from "node:url";
 
 import { execBounded } from "./process-exec.js";
 import { assertShellSafeArgs } from "./shell-safety.js";
+import { selectionComparison } from "./lib/observation-selection.js";
 
 const repoRoot = resolve(dirname(import.meta.filename), "..");
 
@@ -218,16 +219,16 @@ function observeCommit(agent: { bin: string; version: string; integrity: string 
   const nonInterference = (report.nonInterference ?? {}) as Record<string, unknown>;
   const timings = (report.timings ?? {}) as Record<string, unknown>;
 
-  const selected = num(result.selectedTests !== undefined ? (result.selectedTests as unknown[]).length : undefined);
-  const baselineSelected = num(baseline.selectedTestCount);
-  const netVersusBaseline = typeof selected === "number" && typeof baselineSelected === "number" ? baselineSelected - selected : ("unknown" as const);
+  const { selected, baselineSelected, netVersusBaseline } = selectionComparison(result.mode,
+    Array.isArray(result.selectedTests) ? result.selectedTests.length : undefined,
+    result.totalTestCount, baseline.mode, baseline.selectedTestCount);
 
   const fallbackReasons = Array.isArray(result.fallbackReasons) ? (result.fallbackReasons as string[]) : [];
   // A REFUSED report carries no `result` at all, so mode/selected/total are legitimately absent. An
   // earlier version rendered that as "unknown" in every column, which buried the single most important
   // outcome the corpus can produce: DiffCI declining to analyse a repository it does not understand,
   // with a reason, instead of guessing. REFUSED is a decision and is reported as one.
-  const refusal = str(report.refusal);
+  const refusal = str(report.reason ?? report.refusal);
   const decisionMode = str(report.status) === "REFUSED" ? "REFUSED" : str(result.mode);
   const decisionReason = str(report.status) === "REFUSED" ? refusal : fallbackReasons.length > 0 ? fallbackReasons.join("; ") : str(result.analysisStatus);
 
