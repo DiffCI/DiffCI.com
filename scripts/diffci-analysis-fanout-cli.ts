@@ -6,7 +6,7 @@
  * base URL from DIFFCI_ANALYSIS_FANOUT_URL or --base-url.
  */
 import { createHash } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -284,6 +284,31 @@ async function cmdCollect(args: Record<string, string>): Promise<void> {
   console.log(JSON.stringify({ ok: true, runId, written }, null, 2));
 }
 
+async function cmdPilotStart(args: Record<string, string>): Promise<void> {
+  const url = baseUrl(args); const repository = args.repository ?? ""; const baseSha = args.base ?? ""; const headSha = args.head ?? "";
+  if (!url) fail("pilot-start requires DIFFCI_ANALYSIS_FANOUT_URL or --base-url");
+  if (!token()) fail("pilot-start requires ANALYSIS_CONTROL_TOKEN env var");
+  const { status, body } = await fetchJson(`${url}/v1/pilot-packet`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ repository, baseSha, headSha }) });
+  console.log(JSON.stringify(body, null, 2)); if (status !== 202) process.exit(1);
+}
+
+async function cmdPilotStatus(args: Record<string, string>): Promise<void> {
+  const url = baseUrl(args); const id = args.id ?? "";
+  if (!url) fail("pilot-status requires DIFFCI_ANALYSIS_FANOUT_URL or --base-url");
+  if (!token()) fail("pilot-status requires ANALYSIS_CONTROL_TOKEN env var");
+  const { status, body } = await fetchJson(`${url}/v1/pilot-packet/${id}`, { headers: authHeaders() });
+  if (status !== 200) fail(`pilot packet status failed: ${status}`);
+  const record = body as { step?: string; observation?: unknown; packet?: string; workflow?: string };
+  if (record.step === "done" && args.out) {
+    const out = resolve(args.out); mkdirSync(out, { recursive: true });
+    writeFileSync(join(out, "diffci-observe.json"), `${JSON.stringify(record.observation, null, 2)}\n`, "utf8");
+    writeFileSync(join(out, "pilot-packet.md"), record.packet ?? "", "utf8");
+    writeFileSync(join(out, "diffci-observe.yml"), record.workflow ?? "", "utf8");
+    console.log(JSON.stringify({ id, step: record.step, retrievedTo: out }, null, 2)); return;
+  }
+  console.log(JSON.stringify(body, null, 2));
+}
+
 async function main(): Promise<void> {
   const { command, args } = parseArgs(process.argv.slice(2));
   switch (command) {
@@ -295,8 +320,12 @@ async function main(): Promise<void> {
       return cmdStatus(args);
     case "collect":
       return cmdCollect(args);
+    case "pilot-start":
+      return cmdPilotStart(args);
+    case "pilot-status":
+      return cmdPilotStatus(args);
     default:
-      fail("usage: pack | start | status | collect (see script header)");
+      fail("usage: pack | start | status | collect | pilot-start | pilot-status (see script header)");
   }
 }
 

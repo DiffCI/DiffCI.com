@@ -66,6 +66,7 @@ export { Sandbox as AnalysisShardContainer } from "@cloudflare/sandbox";
 export { AnalysisShard } from "./analysis-shard-do.js";
 export { AnalysisRun } from "./analysis-run-do.js";
 export { AnalysisExecutionShard, RollingFingerprintStore, SafetyBudgetStore } from "./execution-shard-do.js";
+export { PilotPacketJob } from "./pilot-packet-do.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DONamespace = any; // matches validation-worker.ts's idiom - no @cloudflare/workers-types dependency here
@@ -96,9 +97,11 @@ interface R2Bucket {
 interface Env {
   ANALYSIS_RUN: DONamespace;
   ANALYSIS_EXECUTION_SHARD: DONamespace;
+  PILOT_PACKET_JOB: DONamespace;
   ANALYSIS_BUCKET: R2Bucket;
   ANALYSIS_CONTROL_TOKEN?: string;
   FROZEN_MANIFEST_KEY?: string;
+  DIFFCI_AGENT_ARTIFACT?: string;
 }
 
 interface ExecutionCtx {
@@ -149,6 +152,10 @@ function executionShardKey(runId: string, repository: string, mergeSha: string):
 function getExecutionDoStub(env: Env, runId: string, repository: string, mergeSha: string): DOStub {
   const ns = env.ANALYSIS_EXECUTION_SHARD as DONamespace;
   return ns.get(ns.idFromName(executionShardKey(runId, repository, mergeSha))) as DOStub;
+}
+
+function getPilotPacketStub(env: Env, id: string): DOStub {
+  return env.PILOT_PACKET_JOB.get(env.PILOT_PACKET_JOB.idFromName(id)) as DOStub;
 }
 
 function repoSlug(repo: string): string {
@@ -425,6 +432,27 @@ export default {
     const method = request.method;
 
     if (parts[0] !== "v1") return json({ ok: false, error: "not-found" }, 404);
+
+    if (parts[1] === "pilot-packet") {
+      if (!(await authorized(request, env.ANALYSIS_CONTROL_TOKEN))) return json({ ok: false, error: "unauthorized" }, 401);
+      if (method === "POST" && parts.length === 2) {
+        const body = await request.json() as Record<string, unknown>;
+        const repository = typeof body.repository === "string" ? body.repository : "";
+        const baseSha = typeof body.baseSha === "string" ? body.baseSha : "";
+        const headSha = typeof body.headSha === "string" ? body.headSha : "";
+        if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\/[A-Za-z0-9_.-]{1,100}$/.test(repository) || !/^[a-f0-9]{40}$/.test(baseSha) || !/^[a-f0-9]{40}$/.test(headSha)) return json({ ok: false, error: "invalid-repository-or-revision" }, 400);
+        const id = crypto.randomUUID();
+        const seed = { id, repository, baseSha, headSha, step: "bootstrapping", sandboxId: `pilot-${id}`, startedAt: Date.now(), updatedAt: Date.now() };
+        const response = await getPilotPacketStub(env, id).fetch(new Request("https://do/start", { method: "POST", body: JSON.stringify(seed) }));
+        return json(await response.json(), response.status);
+      }
+      const id = parts[2];
+      if (!id || !/^[a-f0-9-]{36}$/.test(id)) return json({ ok: false, error: "not-found" }, 404);
+      const cancel = parts[3] === "cancel";
+      if (method === "GET" && !cancel) { const response = await getPilotPacketStub(env, id).fetch(new Request("https://do/state")); return json(await response.json(), response.status); }
+      if (method === "POST" && cancel) { const response = await getPilotPacketStub(env, id).fetch(new Request("https://do/cancel", { method: "POST" })); return json(await response.json(), response.status); }
+      return json({ ok: false, error: "not-found" }, 404);
+    }
 
     if (parts[1] === "execute") {
       // POST /v1/execute
