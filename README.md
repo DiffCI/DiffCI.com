@@ -198,13 +198,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@cc870c9258adf8a278d7fe678f0d793ff65cdae6
+      - uses: DiffCI/DiffCI.com@12e910f5938fe57cb5e5dc2aa3dce3dc7405d00c
 ```
 
 Then check the workflow locally with `npx "@diffci.com/diffci@latest" verify-workflow`. Keep the observer
 out of required checks and other jobs' `needs` lists. The Action adds a job summary and a
 `diffci-observation` artifact to the run; it does not alter which tests your other jobs execute.
-The example pins release `v0.3.4` to its qualified feature commit SHA for reproducibility.
+The example pins release `v0.3.5` to its qualified feature commit SHA for reproducibility.
 
 The CLI sends no report with `--no-send`. The Action uploads a GitHub artifact by default; sending to
 DiffCI's hosted service requires an explicitly configured endpoint and token.
@@ -407,7 +407,7 @@ npm run research:sandbox:deploy
 DiffCI is intended to be installable as infrastructure, not only as a hosted shadow experiment:
 
 ```yaml
-- uses: DiffCI/DiffCI.com@cc870c9258adf8a278d7fe678f0d793ff65cdae6
+- uses: DiffCI/DiffCI.com@12e910f5938fe57cb5e5dc2aa3dce3dc7405d00c
 ```
 
 ```bash

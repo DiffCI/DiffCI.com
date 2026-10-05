@@ -15,10 +15,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@cc870c9258adf8a278d7fe678f0d793ff65cdae6
+      - uses: DiffCI/DiffCI.com@12e910f5938fe57cb5e5dc2aa3dce3dc7405d00c
 ```
 
-This example pins the Action at the verified `v0.3.4` feature commit. Verify the installed workflow locally:
+This example pins the Action at the verified `v0.3.5` feature commit. Verify the installed workflow locally:
 
 ```sh
 npx "@diffci.com/diffci@latest" verify-workflow
