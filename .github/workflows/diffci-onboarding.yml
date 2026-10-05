@@ -46,11 +46,11 @@ jobs:
 
           } > "${RUNNER_TEMP}/.npmrc"
           npm pack --userconfig "${RUNNER_TEMP}/.npmrc" --ignore-scripts \
-            --pack-destination "${RUNNER_TEMP}/diffci-package" @diffci.com/diffci@0.3.3
+            --pack-destination "${RUNNER_TEMP}/diffci-package" @diffci.com/diffci@0.3.4
           node -e 'const fs = require("node:fs"), crypto = require("node:crypto"); const [file, expected] = process.argv.slice(1); const algorithm = expected.split("-")[0]; const actual = algorithm + "-" + crypto.createHash(algorithm).update(fs.readFileSync(file)).digest("base64"); if (actual !== expected) throw new Error("DiffCI package integrity mismatch");' \
-            "${RUNNER_TEMP}/diffci-package/diffci.com-diffci-0.3.3.tgz" 'sha512-MRGml/ip56og4nT28uZ6GIMhJCaAH7O8GTD2VdPsrveLY0gMuxQq72fXVK6MDxjyAejOq9XjCIvFCsAcAYQcaA=='
+            "${RUNNER_TEMP}/diffci-package/diffci.com-diffci-0.3.4.tgz" 'sha512-PHa/ctvGO6Z/CbjYEUooNsWSZSaOo9Dta4mERkXFlFsQxTt1eN26NSDItg7kY26rwE7uo/3TmkNCV4u5qSV6DA=='
           npm install --userconfig "${RUNNER_TEMP}/.npmrc" --prefix "${RUNNER_TEMP}/diffci" \
-            --ignore-scripts --no-audit --no-fund "${RUNNER_TEMP}/diffci-package/diffci.com-diffci-0.3.3.tgz"
+            --ignore-scripts --no-audit --no-fund "${RUNNER_TEMP}/diffci-package/diffci.com-diffci-0.3.4.tgz"
 
 
       # A block scalar, not an inline value. An inline `run:` beginning with a quote is parsed by YAML
