@@ -73,3 +73,20 @@ it("installs and measures paired commands inside the sandbox", async () => {
   assert.ok(commands.some(command => command.includes(Buffer.from("npm ci").toString("base64"))));
   assert.ok(commands.some(command => command.includes("diffci pilot")));
 });
+
+it("retains sandbox stderr when installation fails", async () => {
+  const sandbox: SandboxLike = {
+    async exec() { return { success: true, exitCode: 0, stdout: "", stderr: "" }; },
+    async startProcess() { return { id: "install", status: "running" }; },
+    async getProcess() { return { id: "install", status: "failed", exitCode: 1 }; },
+    async getProcessLogs() { return { stdout: "", stderr: "npm ci requires a lockfile" }; },
+    async readFile() { return { content: "" }; }, async writeFile() { return { success: true }; },
+    async killProcess() {}, async destroy() {},
+  };
+  const deps = { sandbox, artifact, now: () => 2 };
+  let record: PilotPacketRecord = { ...seed(), step: "installing", installCommand: "npm ci", fullCommand: "npm test" };
+  ({ record } = await stepPilotPacket(record, deps));
+  ({ record } = await stepPilotPacket(record, deps));
+  assert.equal(record.step, "failed");
+  assert.match(record.error ?? "", /npm ci requires a lockfile/);
+});

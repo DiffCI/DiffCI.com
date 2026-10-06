@@ -17,6 +17,16 @@ const OPTIONS = { enableDefaultSession: false, keepAlive: false, sleepAfter: "10
 function fail(record: PilotPacketRecord, error: string): { record: PilotPacketRecord; nextAlarmDelayMs: null } {
   record.step = "failed"; record.error = error.slice(0, 1000); return { record, nextAlarmDelayMs: null };
 }
+async function failProcess(record: PilotPacketRecord, deps: PilotPacketDeps, prefix: string, processId?: string, exitCode?: number): Promise<{ record: PilotPacketRecord; nextAlarmDelayMs: null }> {
+  let detail = "";
+  if (processId) {
+    try {
+      const logs = await deps.sandbox.getProcessLogs(processId);
+      detail = `:${(logs.stderr || logs.stdout).slice(-800)}`;
+    } catch { /* the exit code still remains actionable */ }
+  }
+  return fail(record, `${prefix}:${exitCode ?? "missing"}${detail}`);
+}
 function artifactParts(value: string): { spec: string; integrity: string } | null {
   const match = /^npm:(@diffci\.com\/diffci@(\d+\.\d+\.\d+))#(sha512-[A-Za-z0-9+/=]+)$/.exec(value);
   return match ? { spec: match[1]!, integrity: match[3]! } : null;
@@ -62,9 +72,9 @@ export async function stepPilotPacket(record: PilotPacketRecord, deps: PilotPack
         record.processId = process.id; return { record, nextAlarmDelayMs: POLL_MS };
       }
       const process = await deps.sandbox.getProcess(record.processId);
-      if (!process || ["failed", "killed", "error"].includes(process.status)) return fail(record, `analysis-failed:${process?.exitCode ?? "missing"}`);
+      if (!process || ["failed", "killed", "error"].includes(process.status)) return failProcess(record, deps, "analysis-failed", record.processId, process?.exitCode);
       if (process.status !== "completed") return { record, nextAlarmDelayMs: POLL_MS };
-      if (process.exitCode !== 0) return fail(record, `analysis-exit:${process.exitCode}`);
+      if (process.exitCode !== 0) return failProcess(record, deps, "analysis-exit", record.processId, process.exitCode);
       record.processId = undefined;
       record.step = record.installCommand && record.fullCommand ? "installing" : "finalizing";
       return { record, nextAlarmDelayMs: 0 };
@@ -76,9 +86,9 @@ export async function stepPilotPacket(record: PilotPacketRecord, deps: PilotPack
         record.processId = process.id; return { record, nextAlarmDelayMs: POLL_MS };
       }
       const process = await deps.sandbox.getProcess(record.processId);
-      if (!process || ["failed", "killed", "error"].includes(process.status)) return fail(record, `install-failed:${process?.exitCode ?? "missing"}`);
+      if (!process || ["failed", "killed", "error"].includes(process.status)) return failProcess(record, deps, "install-failed", record.processId, process?.exitCode);
       if (process.status !== "completed") return { record, nextAlarmDelayMs: POLL_MS };
-      if (process.exitCode !== 0) return fail(record, `install-exit:${process.exitCode}`);
+      if (process.exitCode !== 0) return failProcess(record, deps, "install-exit", record.processId, process.exitCode);
       record.processId = undefined; record.step = "measuring"; return { record, nextAlarmDelayMs: 0 };
     }
     if (record.step === "measuring") {
@@ -91,7 +101,7 @@ export async function stepPilotPacket(record: PilotPacketRecord, deps: PilotPack
         record.processId = process.id; return { record, nextAlarmDelayMs: POLL_MS };
       }
       const process = await deps.sandbox.getProcess(record.processId);
-      if (!process || ["killed", "error"].includes(process.status)) return fail(record, `measurement-failed:${process?.exitCode ?? "missing"}`);
+      if (!process || ["killed", "error"].includes(process.status)) return failProcess(record, deps, "measurement-failed", record.processId, process?.exitCode);
       if (process.status !== "completed" && process.status !== "failed") return { record, nextAlarmDelayMs: POLL_MS };
       record.processId = undefined; record.step = "finalizing"; return { record, nextAlarmDelayMs: 0 };
     }
