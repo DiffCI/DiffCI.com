@@ -867,6 +867,7 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
   const savings = runVerifySavings({
     full,
     selectedFromReport: observationPath,
+    selectedCommandOverride: stringFlag(flags, "selected"),
     out: savingsPath,
     markdown: markdownPath,
     label,
@@ -913,7 +914,7 @@ Usage:
                 [--redact-paths] [--timeout-ms <ms>]
   diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>] [--share-usage]
-  diffci pilot --full <command> [--repo <path>] [--out-dir <dir>] [--label <name>]
+  diffci pilot --full <command> [--selected <command>] [--repo <path>] [--out-dir <dir>] [--label <name>]
   diffci pilot-packet [--repo <path>] [--out-dir <dir>] [--base <sha> --head <sha>]
                       [--label <name>] [--repository-url <https-url>] [--redact-paths]
   diffci observe [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
