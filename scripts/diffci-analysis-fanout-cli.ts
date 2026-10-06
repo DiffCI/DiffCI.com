@@ -288,7 +288,9 @@ async function cmdPilotStart(args: Record<string, string>): Promise<void> {
   const url = baseUrl(args); const repository = args.repository ?? ""; const baseSha = args.base ?? ""; const headSha = args.head ?? "";
   if (!url) fail("pilot-start requires DIFFCI_ANALYSIS_FANOUT_URL or --base-url");
   if (!token()) fail("pilot-start requires ANALYSIS_CONTROL_TOKEN env var");
-  const { status, body } = await fetchJson(`${url}/v1/pilot-packet`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ repository, baseSha, headSha }) });
+  const installCommand = args.install; const fullCommand = args.full;
+  const repetitions = args.repetitions ? Number(args.repetitions) : undefined; const timeoutMs = args["timeout-ms"] ? Number(args["timeout-ms"]) : undefined;
+  const { status, body } = await fetchJson(`${url}/v1/pilot-packet`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ repository, baseSha, headSha, installCommand, fullCommand, repetitions, timeoutMs }) });
   console.log(JSON.stringify(body, null, 2)); if (status !== 202) process.exit(1);
 }
 
@@ -298,12 +300,14 @@ async function cmdPilotStatus(args: Record<string, string>): Promise<void> {
   if (!token()) fail("pilot-status requires ANALYSIS_CONTROL_TOKEN env var");
   const { status, body } = await fetchJson(`${url}/v1/pilot-packet/${id}`, { headers: authHeaders() });
   if (status !== 200) fail(`pilot packet status failed: ${status}`);
-  const record = body as { step?: string; observation?: unknown; packet?: string; workflow?: string };
+  const record = body as { step?: string; observation?: unknown; packet?: string; workflow?: string; savings?: unknown; savingsMarkdown?: string };
   if (record.step === "done" && args.out) {
     const out = resolve(args.out); mkdirSync(out, { recursive: true });
     writeFileSync(join(out, "diffci-observe.json"), `${JSON.stringify(record.observation, null, 2)}\n`, "utf8");
     writeFileSync(join(out, "pilot-packet.md"), record.packet ?? "", "utf8");
     writeFileSync(join(out, "diffci-observe.yml"), record.workflow ?? "", "utf8");
+    if (record.savings) writeFileSync(join(out, "diffci-savings.json"), `${JSON.stringify(record.savings, null, 2)}\n`, "utf8");
+    if (record.savingsMarkdown) writeFileSync(join(out, "diffci-savings.md"), record.savingsMarkdown, "utf8");
     console.log(JSON.stringify({ id, step: record.step, retrievedTo: out }, null, 2)); return;
   }
   console.log(JSON.stringify(body, null, 2));
