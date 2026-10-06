@@ -288,9 +288,9 @@ async function cmdPilotStart(args: Record<string, string>): Promise<void> {
   const url = baseUrl(args); const repository = args.repository ?? ""; const baseSha = args.base ?? ""; const headSha = args.head ?? "";
   if (!url) fail("pilot-start requires DIFFCI_ANALYSIS_FANOUT_URL or --base-url");
   if (!token()) fail("pilot-start requires ANALYSIS_CONTROL_TOKEN env var");
-  const installCommand = args.install; const fullCommand = args.full;
+  const installCommand = args.install; const fullCommand = args.full; const selectedCommand = args.selected; const cachePreparationCommand = args["cache-prepare"];
   const repetitions = args.repetitions ? Number(args.repetitions) : undefined; const timeoutMs = args["timeout-ms"] ? Number(args["timeout-ms"]) : undefined;
-  const { status, body } = await fetchJson(`${url}/v1/pilot-packet`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ repository, baseSha, headSha, installCommand, fullCommand, repetitions, timeoutMs }) });
+  const { status, body } = await fetchJson(`${url}/v1/pilot-packet`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ repository, baseSha, headSha, installCommand, fullCommand, selectedCommand, cachePreparationCommand, repetitions, timeoutMs }) });
   console.log(JSON.stringify(body, null, 2)); if (status !== 202) process.exit(1);
 }
 

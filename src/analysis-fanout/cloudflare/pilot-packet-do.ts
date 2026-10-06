@@ -4,7 +4,8 @@ export type PilotPacketStep = "bootstrapping" | "cloning" | "analyzing" | "insta
 export interface PilotPacketRecord {
   id: string; repository: string; baseSha: string; headSha: string; step: PilotPacketStep;
   sandboxId: string; processId?: string; startedAt: number; updatedAt: number; error?: string;
-  installCommand?: string; fullCommand?: string; repetitions?: number; timeoutMs?: number;
+  installCommand?: string; fullCommand?: string; selectedCommand?: string; cachePreparationCommand?: string;
+  repetitions?: number; timeoutMs?: number;
   observation?: unknown; packet?: string; workflow?: string; savings?: unknown; savingsMarkdown?: string;
 }
 export interface PilotPacketDeps { sandbox: SandboxLike; artifact: string; now(): number }
@@ -96,7 +97,11 @@ export async function stepPilotPacket(record: PilotPacketRecord, deps: PilotPack
         const timeoutMs = record.timeoutMs ?? 30 * 60_000;
         const seconds = Math.ceil((timeoutMs * 2 * (record.repetitions ?? 1) + 5 * 60_000) / 1000);
         const full = base64(record.fullCommand!);
-        const command = `FULL=$(printf %s '${full}' | base64 -d); timeout ${seconds}s /opt/pilot/node_modules/.bin/diffci pilot --repo /workspace/repo --out-dir /workspace/paired --base "${record.baseSha}" --head "${record.headSha}" --label "${record.repository}" --full "$FULL" --timeout-ms "${timeoutMs}" --repetitions "${record.repetitions ?? 1}"`;
+        const selected = record.selectedCommand ? ` SELECTED=$(printf %s '${base64(record.selectedCommand)}' | base64 -d);` : "";
+        const cachePrepare = record.cachePreparationCommand ? ` PREP=$(printf %s '${base64(record.cachePreparationCommand)}' | base64 -d);` : "";
+        const selectedArg = record.selectedCommand ? ' --selected "$SELECTED"' : "";
+        const cachePrepareArg = record.cachePreparationCommand ? ' --cache-prepare "$PREP"' : "";
+        const command = `FULL=$(printf %s '${full}' | base64 -d);${selected}${cachePrepare} timeout ${seconds}s /opt/pilot/node_modules/.bin/diffci pilot --repo /workspace/repo --out-dir /workspace/paired --base "${record.baseSha}" --head "${record.headSha}" --label "${record.repository}" --full "$FULL"${selectedArg}${cachePrepareArg} --timeout-ms "${timeoutMs}" --repetitions "${record.repetitions ?? 1}"`;
         const process = await deps.sandbox.startProcess(command, { cwd: "/workspace", autoCleanup: false });
         record.processId = process.id; return { record, nextAlarmDelayMs: POLL_MS };
       }

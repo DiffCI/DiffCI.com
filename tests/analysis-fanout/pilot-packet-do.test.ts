@@ -59,7 +59,11 @@ it("installs and measures paired commands inside the sandbox", async () => {
     async killProcess() {}, async destroy() {},
   };
   const deps = { sandbox, artifact, now: () => 2 };
-  let record: PilotPacketRecord = { ...seed(), installCommand: "npm ci", fullCommand: "npm test", repetitions: 1, timeoutMs: 60_000 };
+  let record: PilotPacketRecord = {
+    ...seed(), installCommand: "npm ci", fullCommand: "npm test",
+    selectedCommand: "npm test -- changed.test.ts", cachePreparationCommand: "npm run warm-cache",
+    repetitions: 1, timeoutMs: 60_000,
+  };
   ({ record } = await stepPilotPacket(record, deps));
   ({ record } = await stepPilotPacket(record, deps));
   ({ record } = await stepPilotPacket(record, deps));
@@ -71,7 +75,11 @@ it("installs and measures paired commands inside the sandbox", async () => {
   ({ record } = await stepPilotPacket(record, deps)); assert.equal(record.step, "done");
   assert.deepEqual(record.savings, { comparison: { evidenceValid: true } });
   assert.ok(commands.some(command => command.includes(Buffer.from("npm ci").toString("base64"))));
-  assert.ok(commands.some(command => command.includes("diffci pilot")));
+  const measurement = commands.find(command => command.includes("diffci pilot") && !command.includes("pilot-packet")) ?? "";
+  assert.match(measurement, /--selected \"\$SELECTED\"/);
+  assert.match(measurement, /--cache-prepare \"\$PREP\"/);
+  assert.ok(measurement.includes(Buffer.from("npm test -- changed.test.ts").toString("base64")));
+  assert.ok(measurement.includes(Buffer.from("npm run warm-cache").toString("base64")));
 });
 
 it("retains sandbox stderr when installation fails", async () => {
