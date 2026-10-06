@@ -41,3 +41,35 @@ it("fails closed before provisioning an unpinned artifact", async () => {
   const { record } = await stepPilotPacket(seed(), { sandbox, artifact: "@diffci.com/diffci@latest", now: () => 2 });
   assert.equal(record.step, "failed"); assert.equal(record.error, "agent-artifact-not-exactly-pinned"); assert.equal(called, false);
 });
+
+it("installs and measures paired commands inside the sandbox", async () => {
+  const commands: string[] = [];
+  let processStatus = "completed";
+  const sandbox: SandboxLike = {
+    async exec(command) { commands.push(command); return { success: true, exitCode: 0, stdout: "", stderr: "" }; },
+    async startProcess(command) { commands.push(command); return { id: `process-${commands.length}`, status: "running" }; },
+    async getProcess() { return { id: "process", status: processStatus, exitCode: 0 }; },
+    async readFile(path) {
+      if (path.endsWith("diffci-observe.json")) return { content: JSON.stringify({ status: "OBSERVED" }) };
+      if (path.endsWith("diffci-savings.json")) return { content: JSON.stringify({ comparison: { evidenceValid: true } }) };
+      if (path.endsWith(".md")) return { content: "# evidence" };
+      return { content: "name: DiffCI" };
+    },
+    async writeFile() { return { success: true }; }, async getProcessLogs() { return { stdout: "", stderr: "" }; },
+    async killProcess() {}, async destroy() {},
+  };
+  const deps = { sandbox, artifact, now: () => 2 };
+  let record: PilotPacketRecord = { ...seed(), installCommand: "npm ci", fullCommand: "npm test", repetitions: 1, timeoutMs: 60_000 };
+  ({ record } = await stepPilotPacket(record, deps));
+  ({ record } = await stepPilotPacket(record, deps));
+  ({ record } = await stepPilotPacket(record, deps));
+  ({ record } = await stepPilotPacket(record, deps)); assert.equal(record.step, "installing");
+  ({ record } = await stepPilotPacket(record, deps));
+  ({ record } = await stepPilotPacket(record, deps)); assert.equal(record.step, "measuring");
+  ({ record } = await stepPilotPacket(record, deps));
+  ({ record } = await stepPilotPacket(record, deps)); assert.equal(record.step, "finalizing");
+  ({ record } = await stepPilotPacket(record, deps)); assert.equal(record.step, "done");
+  assert.deepEqual(record.savings, { comparison: { evidenceValid: true } });
+  assert.ok(commands.some(command => command.includes(Buffer.from("npm ci").toString("base64"))));
+  assert.ok(commands.some(command => command.includes("diffci pilot")));
+});

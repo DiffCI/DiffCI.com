@@ -440,9 +440,15 @@ export default {
         const repository = typeof body.repository === "string" ? body.repository : "";
         const baseSha = typeof body.baseSha === "string" ? body.baseSha : "";
         const headSha = typeof body.headSha === "string" ? body.headSha : "";
+        const installCommand = typeof body.installCommand === "string" ? body.installCommand : undefined;
+        const fullCommand = typeof body.fullCommand === "string" ? body.fullCommand : undefined;
+        const repetitions = typeof body.repetitions === "number" ? body.repetitions : 1;
+        const timeoutMs = typeof body.timeoutMs === "number" ? body.timeoutMs : 30 * 60_000;
         if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\/[A-Za-z0-9_.-]{1,100}$/.test(repository) || !/^[a-f0-9]{40}$/.test(baseSha) || !/^[a-f0-9]{40}$/.test(headSha)) return json({ ok: false, error: "invalid-repository-or-revision" }, 400);
+        if ((installCommand === undefined) !== (fullCommand === undefined) || installCommand && (installCommand.length > 500 || fullCommand!.length > 500 || /[\0\r\n]/.test(installCommand + fullCommand))) return json({ ok: false, error: "invalid-paired-commands" }, 400);
+        if (!Number.isInteger(repetitions) || repetitions < 1 || repetitions > 3 || !Number.isInteger(timeoutMs) || timeoutMs < 60_000 || timeoutMs > 60 * 60_000) return json({ ok: false, error: "invalid-paired-limits" }, 400);
         const id = crypto.randomUUID();
-        const seed = { id, repository, baseSha, headSha, step: "bootstrapping", sandboxId: `pilot-${id}`, startedAt: Date.now(), updatedAt: Date.now() };
+        const seed = { id, repository, baseSha, headSha, installCommand, fullCommand, repetitions, timeoutMs, step: "bootstrapping", sandboxId: `pilot-${id}`, startedAt: Date.now(), updatedAt: Date.now() };
         const response = await getPilotPacketStub(env, id).fetch(new Request("https://do/start", { method: "POST", body: JSON.stringify(seed) }));
         return json(await response.json(), response.status);
       }
