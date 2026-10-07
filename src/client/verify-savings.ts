@@ -184,7 +184,7 @@ function readSelectionFromObservation(path: string, override?: string): Resolved
   };
   if (parsed.status !== "OBSERVED") throw new Error(`--selected-from-report requires an OBSERVED report; got ${String(parsed.status)}`);
   const commands = parsed.result?.proposedCommands;
-  if (!Array.isArray(commands) || !commands.length || commands.some(command => typeof command !== "string" || !command.trim()) || (commands.length !== 1 && !override)) {
+  if (!Array.isArray(commands) || commands.some(command => typeof command !== "string" || !command.trim()) || (commands.length !== 1 && !override)) {
     throw new Error("--selected-from-report requires exactly one non-empty proposed command; use --selected with an explicit command covering the complete selection for multi-command plans");
   }
   const command = override ?? commands[0];
