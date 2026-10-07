@@ -5,7 +5,7 @@
       "args": [
         "--yes",
         "--package",
-        "@diffci.com/diffci@0.3.6",
+        "@diffci.com/diffci@0.3.7",
         "diffci-mcp"
       ]
     }
