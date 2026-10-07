@@ -85,7 +85,7 @@
     // uploads docs/research/blind-baseline-2026-08-23/2026-08-23-diffci-frozen-build-manifest.json to
     // this exact key.
     "FROZEN_MANIFEST_KEY": "manifests/2026-08-23-diffci-frozen-build-manifest.json",
-    "DIFFCI_AGENT_ARTIFACT": "npm:@diffci.com/diffci@0.3.8#sha512-lX5uj0+XWdD3Mf2Kibik2YunTv/KuM/K2hEddS8+I0QTH6kZ+UgqxwDUtNNUn12p3SgGH0yiWl9LsZf1lmXodg=="
+    "DIFFCI_AGENT_ARTIFACT": "npm:@diffci.com/diffci@0.3.9#sha512-dLfSTekU4kcmIeRnTIm16yQ7gHw+mKOFPX5lhUil/Z4fN7669HQz3zmNrOa8im57rCn3MgQEK4M2+THn24mDFw=="
   }
   // Secret (NOT committed here): ANALYSIS_CONTROL_TOKEN - set via
   //   `wrangler secret put ANALYSIS_CONTROL_TOKEN --config wrangler.analysis-fanout.jsonc`
