@@ -817,6 +817,7 @@ async function runPilotPacket(flags: Record<string, string | boolean>, env: Node
 
 async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv): Promise<number> {
   const full = stringFlag(flags, "full");
+  const selectedOverride = stringFlag(flags, "selected");
   if (!full) {
     console.error('--full <command> is required, for example: diffci pilot --full "npm test"');
     return 1;
@@ -859,7 +860,7 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
     console.log("DiffCI pilot: 0% planned test-file reduction on this commit (full validation required). No paired timing was run.");
     return 0;
   }
-  if (!observation.result?.proposedCommands.length || observation.result.commandRefusalReason) {
+  if ((!observation.result?.proposedCommands.length || observation.result.commandRefusalReason) && !selectedOverride) {
     console.log("DiffCI pilot: no runnable selected command. No paired timing was run.");
     return 1;
   }
@@ -867,7 +868,7 @@ async function runPilot(flags: Record<string, string | boolean>, env: NodeJS.Pro
   const savings = runVerifySavings({
     full,
     selectedFromReport: observationPath,
-    selectedCommandOverride: stringFlag(flags, "selected"),
+    selectedCommandOverride: selectedOverride,
     out: savingsPath,
     markdown: markdownPath,
     label,
