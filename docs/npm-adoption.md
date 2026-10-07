@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@3e8e54d4fec1f94880a82bea7d0edde6fa842740
+      - uses: DiffCI/DiffCI.com@dd6ff2e5e9951cab847366e061b2a0faeeda3bf0
 ```
 
 ## Outreach Copy
