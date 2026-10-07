@@ -692,7 +692,7 @@ export function runVerifySavings(options: VerifySavingsOptions): VerifySavingsRe
   const analysisOverheadMs = options.analysisOverheadMs ?? selection.analysisOverheadMs;
   const repetitions = options.repetitions ?? 1;
   if (!Number.isInteger(repetitions) || repetitions < 1 || repetitions > 20) throw new Error("--repetitions must be an integer from 1 to 20");
-  const declaredCacheState = options.cacheState ?? "unknown";
+  const declaredCacheState = options.cacheState ?? (options.cachePreparationCommand ? "warm" : "unknown");
   if (!(["cold", "warm", "unknown"] as const).includes(declaredCacheState)) throw new Error("--cache-state must be cold, warm, or unknown");
   const alternatingOrder = options.alternateOrder ?? repetitions > 1;
   const protocol: SavingsProtocol = {

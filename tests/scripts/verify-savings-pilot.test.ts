@@ -166,6 +166,32 @@ describe("verify-savings pilot report", () => {
     assert.equal(report.failureAssessment.kind, "none");
   });
 
+  it("infers a controlled warm cache when a preparation command is provided", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-pilot-prepared-cache-"));
+    execFileSync("git", ["init", "--quiet"], { cwd: dir });
+    execFileSync("git", ["config", "user.email", "test@diffci.local"], { cwd: dir });
+    execFileSync("git", ["config", "user.name", "Test"], { cwd: dir });
+    writeFileSync(join(dir, "package.json"), "{}\n");
+    execFileSync("git", ["add", "."], { cwd: dir });
+    execFileSync("git", ["commit", "--quiet", "-m", "fixture"], { cwd: dir });
+
+    const report = runPilot({
+      full: "node --version",
+      selected: "node --version",
+      out: join(dir, "report.json"),
+      cwd: dir,
+      timeoutMs: 60_000,
+      tailBytes: 12_000,
+      repetitions: 3,
+      cachePreparationCommand: "node --version",
+    });
+
+    assert.equal(report.protocol.declaredCacheState, "warm");
+    assert.equal(report.protocol.cacheStateControlled, true);
+    assert.ok(report.trials.every((trial) => trial.cacheState.full === "warm" && trial.cacheState.selected === "warm"));
+    assert.equal(report.comparison.performanceEvidence, "CONTROLLED");
+  });
+
   it("classifies a stable repeated full-only failure as a selection miss", () => {
     const trials = [1, 2, 3].map((index) => ({
       index,
