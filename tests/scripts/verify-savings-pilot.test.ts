@@ -7,7 +7,7 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { buildReport, parseArgs, renderMarkdown, runPilot, type CommandMeasurement } from "../../scripts/verify-savings-pilot.js";
-import { formatVerifySavingsSummary, type SavingsProvenance } from "../../src/client/verify-savings.js";
+import { formatVerifySavingsSummary, runVerifySavings, type SavingsProvenance } from "../../src/client/verify-savings.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
@@ -388,5 +388,23 @@ describe("verify-savings pilot report", () => {
     assert.equal(report.totalTestCount, 3);
     assert.equal(report.full.exitCode, 0);
     assert.equal(report.selected.exitCode, 0);
+  });
+
+  it("accepts an explicit selected command for a zero-test observation", () => {
+    const dir = mkdtempSync(join(tmpdir(), "diffci-zero-selection-"));
+    const reportPath = join(dir, "observation.json");
+    writeFileSync(reportPath, JSON.stringify({
+      status: "OBSERVED",
+      observer: { version: "0.3.7" },
+      commitRange: { headSha: "a".repeat(40) },
+      result: { proposedCommands: [], selectedTests: [], totalTestCount: 2 },
+      timings: { totalMs: 10 },
+    }));
+    const report = runVerifySavings({
+      full: `${process.execPath} --version`, selectedFromReport: reportPath,
+      selectedCommandOverride: `${process.execPath} --version`, cwd: dir,
+      out: join(dir, "savings.json"), timeoutMs: 10_000, tailBytes: 1000,
+    });
+    assert.equal(report.selectedTestCount, 0);
   });
 });
