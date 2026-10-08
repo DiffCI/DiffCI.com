@@ -65,6 +65,33 @@ const mcpHeaders = {
   Accept: "application/json, text/event-stream",
 };
 
+test("MCPRush route fails closed and exposes only hosted guidance with the gateway token", async () => {
+  const request = (token?: string) => new Request("https://diffci.com/mcp/mcprush", {
+    method: "POST",
+    headers: { ...mcpHeaders, ...(token ? { "x-mcprush-token": token } : {}) },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} }),
+  });
+  const protectedEnv = { ...env(), MCPRUSH_GATEWAY_TOKEN: "test-gateway-token" };
+  for (const [configuration, token] of [
+    [env(), "test-gateway-token"], [protectedEnv, undefined], [protectedEnv, "wrong-token"],
+  ] as const) {
+    const denied = await worker.fetch(request(token), configuration);
+    assert.equal(denied.status, 401);
+    assert.equal(denied.headers.get("cache-control"), "no-store");
+  }
+  const allowed = await worker.fetch(request("test-gateway-token"), protectedEnv);
+  assert.equal(allowed.status, 200);
+  const body = await allowed.json() as { result: { tools: Array<{ name: string }> } };
+  assert.deepEqual(body.result.tools.map(tool => tool.name), [
+    "diffci_validation_plan", "diffci_interpret_report", "diffci_verify_workflow_text",
+  ]);
+  const direct = await worker.fetch(new Request("https://diffci.com/mcp/v1", {
+    method: "POST", headers: mcpHeaders,
+    body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "ping" }),
+  }), protectedEnv);
+  assert.equal(direct.status, 200);
+});
+
 async function mcp(body: unknown, headers: Record<string, string> = {}): Promise<Response> {
   return worker.fetch(new Request("https://diffci.com/mcp", {
     method: "POST",

@@ -14,6 +14,22 @@ import { handleMcpRequest, MCP_SERVER_INFO } from "./mcp-endpoint.js";
 
 export interface SiteEnv {
   ASSETS: { fetch(request: Request): Promise<Response> };
+  MCPRUSH_GATEWAY_TOKEN?: string;
+}
+
+async function validGatewayToken(request: Request, expected?: string): Promise<boolean> {
+  const supplied = request.headers.get("x-mcprush-token");
+  if (!expected || !supplied) return false;
+  const encoder = new TextEncoder();
+  const [left, right] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(supplied)),
+    crypto.subtle.digest("SHA-256", encoder.encode(expected)),
+  ]);
+  const a = new Uint8Array(left);
+  const b = new Uint8Array(right);
+  let difference = 0;
+  for (let i = 0; i < a.length; i++) difference |= a[i]! ^ b[i]!;
+  return difference === 0;
 }
 
 const discoveryHeaders = {
@@ -105,11 +121,17 @@ export default {
     }
     if (movedOrigin || movedDocument) {
       // Preserve POST when a caller accidentally uses http:// for the HTTPS MCP endpoint.
-      const isMcpEndpoint = url.pathname === "/mcp" || url.pathname === "/mcp/v1";
+      const isMcpEndpoint = url.pathname === "/mcp" || url.pathname === "/mcp/v1" || url.pathname === "/mcp/mcprush";
       const status = isMcpEndpoint && request.method !== "GET" ? 308 : movedOrigin ? 301 : 308;
       return Response.redirect(url.toString(), status);
     }
-    if (url.pathname === "/mcp" || url.pathname === "/mcp/v1") {
+    if (url.pathname === "/mcp/mcprush" && !await validGatewayToken(request, env.MCPRUSH_GATEWAY_TOKEN)) {
+      return Response.json({ jsonrpc: "2.0", id: null, error: { code: -32001, message: "Unauthorized" } }, {
+        status: 401,
+        headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" },
+      });
+    }
+    if (url.pathname === "/mcp" || url.pathname === "/mcp/v1" || url.pathname === "/mcp/mcprush") {
       const response = await handleMcpRequest(request);
       const headers = new Headers(response.headers);
       headers.set("X-Robots-Tag", "noindex");

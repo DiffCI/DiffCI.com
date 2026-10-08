@@ -20,6 +20,18 @@ repository content unless a caller explicitly supplies a report or workflow docu
 
 Copyable Codex, Claude Code, Cursor, and VS Code setup is at https://diffci.com/mcp-server.
 
+## MCPRush gateway analytics
+
+MCPRush connects to `https://diffci.com/mcp/mcprush` using its `x-mcprush-token` header.
+The site Worker validates this against the `MCPRUSH_GATEWAY_TOKEN` Cloudflare secret and
+refuses requests when the secret or matching header is missing. Store the token using
+`wrangler secret put MCPRUSH_GATEWAY_TOKEN --config wrangler.site.jsonc`; never commit it.
+
+This route exposes the same three hosted guidance tools as the public endpoint. MCPRush
+can count calls routed through its gateway; local CLI/stdio verification and direct public
+endpoint traffic are outside those analytics. Reports or workflow text a caller explicitly
+submits through the gateway pass through MCPRush before reaching DiffCI.
+
 ## Local Checkout Tools
 
 DiffCI also ships a stdio MCP server. Use it when MCP tools must inspect the current checkout or run
