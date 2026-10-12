@@ -5,6 +5,37 @@ export interface ConversionTelemetryEnv {
   SENTRY_DSN?: string;
 }
 
+export type WebhookFailureSource = "product" | "research";
+
+const UNAUTHENTICATED_WEBHOOK_REJECTION_REASONS = new Set(["bad_signature", "invalid-signature"]);
+const UNAUTHENTICATED_WEBHOOK_LOG_INTERVAL_MS = 5 * 60 * 1000;
+const lastUnauthenticatedWebhookLog = new Map<string, number>();
+
+/**
+ * An invalid signature is unauthenticated Internet input, not an application
+ * failure. Keep the HTTP rejection path observable without allowing it to
+ * consume one Sentry event per request. This is deliberately a best-effort,
+ * per-isolate log limiter: it is never part of an authorization decision.
+ */
+export function isUnauthenticatedWebhookRejection(reason: string): boolean {
+  return UNAUTHENTICATED_WEBHOOK_REJECTION_REASONS.has(reason);
+}
+
+function logUnauthenticatedWebhookRejection(source: WebhookFailureSource, reason: string): void {
+  const key = `${source}:${reason}`;
+  const now = Date.now();
+  const previous = lastUnauthenticatedWebhookLog.get(key);
+  if (previous !== undefined && now - previous < UNAUTHENTICATED_WEBHOOK_LOG_INTERVAL_MS) return;
+  lastUnauthenticatedWebhookLog.set(key, now);
+  // Deliberately low-cardinality: never log payloads, signatures, delivery IDs, IPs, or user agents.
+  console.warn(JSON.stringify({
+    event: "github_installation_webhook.unauthenticated_rejection_sampled",
+    source,
+    reason,
+    sample_interval_ms: UNAUTHENTICATED_WEBHOOK_LOG_INTERVAL_MS,
+  }));
+}
+
 export async function reportOptInCliUsage(env: ConversionTelemetryEnv, command: string, outcome: string, version: string): Promise<void> {
   if (!env.POSTHOG_API_KEY) return;
   const response = await fetch(`${env.POSTHOG_HOST ?? "https://us.i.posthog.com"}/capture/`, {
@@ -44,7 +75,11 @@ export function reportInstallationCreated(env: ConversionTelemetryEnv, repositor
   return Promise.allSettled(jobs).then(() => undefined);
 }
 
-export function reportInstallationFailure(env: ConversionTelemetryEnv, reason: string): Promise<void> {
+export function reportInstallationFailure(env: ConversionTelemetryEnv, reason: string, source: WebhookFailureSource = "product"): Promise<void> {
+  if (isUnauthenticatedWebhookRejection(reason)) {
+    logUnauthenticatedWebhookRejection(source, reason);
+    return Promise.resolve();
+  }
   if (!env.SENTRY_DSN) return Promise.resolve();
   return reportSentryMessage(env.SENTRY_DSN, `github_installation_webhook_failed:${reason}`, "error");
 }

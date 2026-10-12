@@ -1590,7 +1590,7 @@ async function shadowWebhook(request: Request, env: ValidationEnv, ctx: Executio
     },
   );
   if (outcome.body.ok !== true) {
-    ctx.waitUntil(reportInstallationFailure(env, String(outcome.body.error ?? "unknown")));
+    ctx.waitUntil(reportInstallationFailure(env, String(outcome.body.error ?? "unknown"), "research"));
   } else {
     try {
       await recordInstallationWebhook(env, request.headers.get("X-GitHub-Event"), rawBody, request.headers.get("X-GitHub-Delivery"));

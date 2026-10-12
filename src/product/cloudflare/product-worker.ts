@@ -82,7 +82,7 @@ import { makeD1IngestTokenStore } from "../../ingest/token.js";
 import { parseAgentArtifact } from "../../ingest/agent-artifact.js";
 import { decideRepositoryAdmission, EARLY_ACCESS_ENABLED } from "../../billing/repository-admission.js";
 import { makeD1ObservationStore } from "../../ingest/store.js";
-import { reportInstallationCreated, reportInstallationFailure, reportOptInCliUsage } from "./conversion-telemetry.js";
+import { isUnauthenticatedWebhookRejection, reportInstallationCreated, reportInstallationFailure, reportOptInCliUsage } from "./conversion-telemetry.js";
 import { ingestObservation, MAX_REPORT_BYTES } from "../../ingest/ingest.js";
 import type { IngestRejection } from "../../ingest/types.js";
 import { runRetentionSweep } from "../../ingest/retention.js";
@@ -726,7 +726,9 @@ export default {
         },
       );
       if (!result.ok) {
-        logEvent("installation_webhook.rejected", { error: result.error });
+        // A forged/missing signature is expected untrusted input. The shared telemetry helper
+        // emits one privacy-safe, rate-limited Worker log instead of a Sentry event per request.
+        if (!isUnauthenticatedWebhookRejection(result.error)) logEvent("installation_webhook.rejected", { error: result.error });
         ctx.waitUntil(reportInstallationFailure(env, result.error));
         return json({ ok: false, error: result.error }, result.error === "bad_signature" ? 401 : 400);
       }
