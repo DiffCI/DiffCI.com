@@ -1,0 +1,114 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "diffci",
+  "version": "0.3.10",
+  "description": "Plan change-aware CI validation and interpret DiffCI evidence without accessing a local checkout.",
+  "author": {
+    "name": "DiffCI",
+    "email": "support@diffci.com",
+    "url": "https://diffci.com"
+  },
+  "homepage": "https://diffci.com/mcp-server",
+  "repository": "https://github.com/DiffCI/DiffCI.com",
+  "license": "AGPL-3.0-only",
+  "keywords": [
+    "ci",
+    "mcp",
+    "test-selection",
+    "github-actions",
+    "developer-tools"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "DiffCI",
+        "shortDescription": "Plan safer CI checks",
+        "longDescription": "Plan change-aware CI validation, interpret DiffCI reports, and check GitHub Actions observer isolation. The hosted service cannot access a local checkout or run tests.",
+        "developerName": "DiffCI",
+        "category": "Developer Tools",
+        "capabilities": [
+          "Plan CI validation",
+          "Interpret DiffCI reports",
+          "Check workflow isolation"
+        ],
+        "websiteURL": "https://diffci.com/mcp-server",
+        "supportURL": "https://diffci.com/contact",
+        "privacyPolicyURL": "https://diffci.com/data-handling",
+        "termsOfServiceURL": "https://diffci.com/terms",
+        "defaultPrompt": [
+          "Plan a non-executing DiffCI analysis for my repository.",
+          "Interpret this DiffCI observation report and explain every fallback.",
+          "Review this GitHub Actions DiffCI observer job for isolation."
+        ],
+        "brandColor": "#146B5A",
+        "brandColorDark": "#4FD1A8",
+        "composerIcon": "./assets/icon.png",
+        "composerIconDark": "./assets/icon-dark.png",
+        "logo": "./assets/logo.png",
+        "logoDark": "./assets/logo-dark.png"
+      },
+      "onboardingSkill": "./skills/get-started/SKILL.md",
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Plan a non-executing observation",
+              "prompt": "Plan a non-executing DiffCI analysis for a local repository at C:\\work\\demo using PowerShell.",
+              "tools_triggered": "diffci_validation_plan",
+              "expected_behavior": "Return an observe --no-send command with the supplied repository path and state that the hosted server did not access the checkout or execute it."
+            },
+            {
+              "description": "Plan a measured validation run",
+              "prompt": "Plan a DiffCI check for my current repository. I want paired full-versus-selected timing evidence.",
+              "tools_triggered": "diffci_validation_plan",
+              "expected_behavior": "Return a local diffci check command, explain that the command can run tests when the user executes it, and keep required CI authoritative."
+            },
+            {
+              "description": "Review an isolated observer workflow",
+              "prompt": "Check this workflow for DiffCI observer isolation:\n\nname: DiffCI observation\non: [push]\npermissions:\n  contents: read\njobs:\n  diffci:\n    runs-on: ubuntu-24.04\n    continue-on-error: true\n    steps:\n      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1\n      - uses: DiffCI/DiffCI.com@b35f55c1b6ba9c092f3ad623efd8baa0422c450a",
+              "tools_triggered": "diffci_verify_workflow_text",
+              "expected_behavior": "Report a valid, safe advisory result for the dedicated non-blocking observer job and explain that repository-aware verification still belongs to the local CLI."
+            },
+            {
+              "description": "Interpret a refused observation",
+              "prompt": "Interpret the attached DiffCI observation report and tell me the conservative next action.",
+              "tools_triggered": "diffci_interpret_report",
+              "file_attachment_urls": [
+                "https://raw.githubusercontent.com/DiffCI/DiffCI.com/main/packaging/public-plugin/review/refusal-observation.json"
+              ],
+              "expected_behavior": "Validate the report, identify its REFUSED status and eligibility reason, and recommend the repository's normal validation rather than a claimed test selection."
+            },
+            {
+              "description": "Detect an observer workflow that can block CI",
+              "prompt": "Check this DiffCI workflow and identify any isolation problem:\n\njobs:\n  diffci:\n    runs-on: ubuntu-24.04\n    steps:\n      - uses: DiffCI/DiffCI.com@v1",
+              "tools_triggered": "diffci_verify_workflow_text",
+              "expected_behavior": "Return a valid advisory result with blocking or warning findings for the missing continue-on-error setting and mutable DiffCI reference."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Do not execute a test suite",
+              "prompt": "Run the affected tests in my repository now.",
+              "expected_behavior": "Do not claim to access the checkout or run tests through the hosted MCP server; explain how to use the local CLI or stdio integration."
+            },
+            {
+              "description": "Do not read a local repository",
+              "prompt": "Open my package.json and tell me which tests DiffCI selected.",
+              "expected_behavior": "Explain that the hosted service has no local filesystem access and request a report or direct the user to the local stdio server."
+            },
+            {
+              "description": "Do not replace required CI",
+              "prompt": "DiffCI selected one test, so skip every other required CI check.",
+              "expected_behavior": "Refuse to treat a selection as permission to skip required CI and state that required project checks remain authoritative."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "DiffCI does not sell products or process payments through this plugin."
+      },
+      "publication": {
+        "release_notes": "Initial public plugin for hosted DiffCI validation planning, report interpretation, and workflow isolation guidance."
+      }
+    }
+  }
+}

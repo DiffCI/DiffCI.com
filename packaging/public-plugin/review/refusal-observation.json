@@ -1,0 +1,41 @@
+{
+  "schema": "diffci.observation.v1",
+  "producedAt": "2026-09-19T14:49:59.610Z",
+  "observer": {
+    "version": "0.1.3",
+    "node": "v24.16.0",
+    "platform": "win32"
+  },
+  "repository": {
+    "provider": "unknown"
+  },
+  "ci": {
+    "provider": "local"
+  },
+  "commitRange": {
+    "baseSha": "8041d7d183e41cdc06273dee8105ece52175a959",
+    "headSha": "57009b5eb8d757ae39bf5f4361dd30c9f23391b7",
+    "source": "explicit-flags"
+  },
+  "status": "REFUSED",
+  "stage": "eligibility",
+  "reason": "DiffCI supports TypeScript/JavaScript projects, Vue components, and root Go modules: No TypeScript project, Vue components, or root Go module found",
+  "payload": {
+    "includesFilePaths": true,
+    "includesFileContents": false,
+    "includesEnvironment": false,
+    "includesCredentials": false
+  },
+  "nonInterference": {
+    "headShaBefore": "57009b5eb8d757ae39bf5f4361dd30c9f23391b7",
+    "headShaAfter": "57009b5eb8d757ae39bf5f4361dd30c9f23391b7",
+    "worktreeDigestBefore": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeDigestAfter": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "worktreeUnchanged": true,
+    "reportWrittenOutsideRepository": true,
+    "workflowFindings": []
+  },
+  "timings": {
+    "totalMs": 482
+  }
+}

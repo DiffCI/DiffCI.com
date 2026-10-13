@@ -11,6 +11,13 @@ const pkg = json("package.json");
 const lock = json("package-lock.json");
 const server = json("server.json");
 const smithery = json("packaging/smithery/manifest.json");
+const agentPlugin = json("packaging/agent-plugin/plugin.json");
+const agentCodexPlugin = json("packaging/agent-plugin/.codex-plugin/plugin.json");
+const agentClaudePlugin = json("packaging/agent-plugin/.claude-plugin/plugin.json");
+const agentPortableMcp = json("packaging/agent-plugin/mcp.json");
+const agentCompatibilityMcp = json("packaging/agent-plugin/.mcp.json");
+const publicPlugin = json("packaging/public-plugin/plugin.json");
+const publicPluginMcp = json("packaging/public-plugin/mcp.json");
 const action = read("action.yml");
 const failures = [];
 
@@ -43,6 +50,25 @@ contains(
 );
 equal("MCP package namespace", pkg.mcpName, server.name);
 equal("MCP landing page", server.websiteUrl, `${manifest.homepage}/mcp-server`);
+for (const [label, plugin] of [
+  ["portable local plugin", agentPlugin],
+  ["Codex compatibility plugin", agentCodexPlugin],
+  ["Claude compatibility plugin", agentClaudePlugin],
+  ["public hosted plugin", publicPlugin],
+]) equal(`${label} version`, plugin.version, manifest.packageVersion);
+const expectedLauncher = `${manifest.packageName}@${manifest.packageVersion}`;
+for (const [label, mcp] of [
+  ["portable local plugin MCP", agentPortableMcp],
+  ["compatibility local plugin MCP", agentCompatibilityMcp],
+]) {
+  const args = mcp.mcpServers?.diffci?.args;
+  if (!Array.isArray(args) || !args.includes(expectedLauncher)) {
+    failures.push(`${label}: expected launcher pin ${expectedLauncher}`);
+  }
+}
+equal("portable local plugin MCP transport", agentPortableMcp.mcpServers?.diffci?.type, "stdio");
+equal("public plugin MCP transport", publicPluginMcp.mcpServers?.diffci?.type, "streamable-http");
+equal("public plugin MCP endpoint", publicPluginMcp.mcpServers?.diffci?.url, `${manifest.homepage}/mcp/v1`);
 const mcpPublishWorkflow = read(".github/workflows/publish-mcp-registry.yml");
 contains("MCP release automation main guard", mcpPublishWorkflow, "if: github.ref == 'refs/heads/main'");
 contains("MCP release automation protected environment", mcpPublishWorkflow, "environment: mcp-registry-publish");

@@ -34,12 +34,35 @@ const pkg = readJson("package.json");
 pkg.version = manifest.packageVersion;
 writeJson("package.json", pkg);
 
-const agentMcp = readJson("packaging/agent-plugin/.mcp.json");
-agentMcp.mcpServers.diffci.args = agentMcp.mcpServers.diffci.args.map((arg) =>
-  typeof arg === "string" && arg.startsWith(`${manifest.packageName}@`)
-    ? `${manifest.packageName}@${manifest.packageVersion}` : arg,
-);
-writeJson("packaging/agent-plugin/.mcp.json", agentMcp);
+for (const path of [
+  "packaging/agent-plugin/.mcp.json",
+  "packaging/agent-plugin/mcp.json",
+]) {
+  const pluginMcp = readJson(path);
+  const args = pluginMcp.mcpServers?.diffci?.args;
+  if (!Array.isArray(args)) throw new Error(`${path}: diffci launcher args are missing`);
+  let replacements = 0;
+  pluginMcp.mcpServers.diffci.args = args.map((arg) => {
+    if (typeof arg !== "string" || !arg.startsWith(`${manifest.packageName}@`)) return arg;
+    replacements += 1;
+    return `${manifest.packageName}@${manifest.packageVersion}`;
+  });
+  if (replacements !== 1) {
+    throw new Error(`${path}: expected exactly one ${manifest.packageName} version pin, found ${replacements}`);
+  }
+  writeJson(path, pluginMcp);
+}
+
+for (const path of [
+  "packaging/agent-plugin/.codex-plugin/plugin.json",
+  "packaging/agent-plugin/.claude-plugin/plugin.json",
+  "packaging/agent-plugin/plugin.json",
+  "packaging/public-plugin/plugin.json",
+]) {
+  const plugin = readJson(path);
+  plugin.version = manifest.packageVersion;
+  writeJson(path, plugin);
+}
 
 const lock = readJson("package-lock.json");
 lock.version = manifest.packageVersion;

@@ -1,20 +1,54 @@
 # DiffCI coding-agent plugin
 
-One package in `packaging/agent-plugin` supports Claude Code and Codex through
-their respective manifests, a shared skill, and the same local stdio MCP server.
-It uses the existing CLI and core engine. No additional engine or cloud service
-is required. Node 22.5+ and Git are required.
+DiffCI ships two agent packages with deliberately different trust boundaries:
+
+- `packaging/agent-plugin` is the local Codex and Claude Code plugin. It uses
+  the local stdio MCP server to inspect a selected checkout and, when asked,
+  run repository tests.
+- `packaging/public-plugin` is the portable public-directory package. It
+  connects only to `https://diffci.com/mcp/v1`, which plans commands,
+  interprets submitted reports, and checks submitted workflow text. It cannot
+  read a local checkout or run tests.
+
+The local package uses the existing CLI and core engine. Node 22.5+ and Git are
+required for checkout-aware verification.
 
 ## Install after release
+
+Install from the DiffCI repository marketplace for the most direct native
+experience. The marketplace source includes the portable package as well as
+the Codex and Claude Code compatibility adapters.
+
+Codex:
+
+```bash
+codex plugin marketplace add DiffCI/DiffCI.com
+codex plugin add diffci@diffci-local
+```
+
+For a reviewed release instead of the default branch, use a tag source such as
+`DiffCI/DiffCI.com@v<release-version>`. Do not sparse-checkout only `.agents/plugins`:
+the marketplace entry also needs `packaging/agent-plugin`.
+
+Claude Code:
+
+```bash
+claude plugin marketplace add DiffCI/DiffCI.com
+claude plugin install diffci@diffci-marketplace
+```
+
+The Git marketplace is available once the matching repository release and npm
+package are published. To use the npm package as the marketplace source instead:
 
 ```bash
 npm install --save-dev @diffci.com/diffci
 ```
 
-Claude Code:
+Then register the installed package with the host you use:
 
 ```bash
-claude --plugin-dir ./node_modules/@diffci.com/diffci/packaging/agent-plugin
+claude plugin marketplace add ./node_modules/@diffci.com/diffci
+claude plugin install diffci@diffci-marketplace
 ```
 
 Codex:
@@ -28,6 +62,36 @@ Both integrations use the shared skill automatically when applicable, and it can
 also be invoked explicitly (`/diffci:diffci-verify` in Claude Code).
 These commands require an npm release containing this implementation; use the
 local development steps below before release.
+
+## Public Codex and ChatGPT directory
+
+The portable package in `packaging/public-plugin` is prepared for OpenAI's
+public plugin submission flow. It uses the hosted, read-only MCP endpoint and
+its listing text names that boundary explicitly. It cannot replace the local
+plugin for checkout-aware verification.
+
+Package that directory as a ZIP after releasing the matching npm/site version,
+then follow its [`SUBMISSION.md`](../packaging/public-plugin/SUBMISSION.md).
+The portal still requires a verified publisher, domain verification, a demo
+recording, connection scanning, and human review before the plugin will appear
+in the shared Codex/ChatGPT search directory.
+
+## Claude Code marketplace and directory
+
+The root [`.claude-plugin/marketplace.json`](../.claude-plugin/marketplace.json)
+makes the local plugin installable from DiffCI's own GitHub repository or its
+published npm package. The plugin manifest also includes the presentation
+metadata needed for Anthropic's directory. With Claude Code 2.1.281 or later,
+run the following validation before sharing an update:
+
+```bash
+claude plugin validate --strict ./packaging/agent-plugin
+claude plugin validate --strict .
+```
+
+The self-hosted marketplace does not make DiffCI appear in Anthropic's public
+search. Public Claude discovery still requires submission through Anthropic's
+directory flow and its review of the exact npm launcher.
 
 ## Local development
 
@@ -52,7 +116,8 @@ the server process may start outside that repository.
 Installing an npm package alone does not install an agent plugin. Install or load
 the plugin explicitly to enable skill discovery. This first version uses skill
 discovery and explicit invocation; it does not impose automatic lifecycle hooks.
-The package has not been submitted to either public plugin directory.
+The package is not publicly listed until the separate OpenAI and Anthropic
+directory submissions are approved.
 
 ## Tools
 

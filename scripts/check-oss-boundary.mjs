@@ -10,6 +10,7 @@ const npmPackArgs =
     : ["pack", "--ignore-scripts", "--dry-run", "--json"];
 
 const ALLOWED_PACKAGE_PREFIXES = [
+  ".claude-plugin/marketplace.json",
   ".agents/plugins/marketplace.json",
   "action.yml",
   "dist-client/src/client/",
@@ -19,6 +20,7 @@ const ALLOWED_PACKAGE_PREFIXES = [
   "site/assets/calcom-runtime-evidence.svg",
   "site/llms.txt",
   "packaging/agent-plugin/",
+  "packaging/public-plugin/",
   "server.json",
   "glama.json",
   "llms.txt",

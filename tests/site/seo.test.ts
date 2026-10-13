@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
@@ -25,6 +26,25 @@ function localFileForPath(pathname: string): string {
   const relative = pathname.slice(1);
   if (path.extname(relative)) return path.join(site, relative);
   return path.join(site, `${relative}.html`);
+}
+
+function git(args: string[]): string {
+  try {
+    return execFileSync("git", args, {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return "";
+  }
+}
+
+function sourceLastModifiedDate(file: string): string | undefined {
+  const relative = path.relative(root, file).replaceAll("\\", "/");
+  if (git(["status", "--porcelain", "--", relative])) return new Date().toISOString().slice(0, 10);
+  const date = git(["log", "-1", "--format=%as", "--", relative]);
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined;
 }
 
 test("robots.txt advertises the canonical sitemap", () => {
@@ -78,11 +98,18 @@ test("sitemap contains only canonical, indexable, existing HTML pages", () => {
   assert.equal(lastModified.length, urls.length, "every sitemap URL needs an accurate freshness signal");
   for (const date of lastModified) assert.match(date, /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(new Set(urls.map(String)).size, urls.length, "sitemap URLs must be unique");
-  for (const url of urls) {
+  for (const [index, url] of urls.entries()) {
     assert.equal(url.origin, "https://diffci.com");
     if (url.pathname !== "/") assert.doesNotMatch(url.pathname, /\.html$|\/$/);
     const file = fileForUrl(url);
     assert.ok(existsSync(file), `${url} must resolve to ${path.relative(root, file)}`);
+    const sourceLastmod = sourceLastModifiedDate(file);
+    if (sourceLastmod) {
+      assert.ok(
+        lastModified[index]! >= sourceLastmod,
+        `${url} lastmod (${lastModified[index]}) predates its source (${sourceLastmod})`,
+      );
+    }
     const body = readFileSync(file, "utf8");
     assert.doesNotMatch(body, /<meta\s+name="robots"\s+content="[^"]*noindex/i, `${url} is noindex`);
     assert.match(body, new RegExp(`<link\\s+rel="canonical"\\s+href="${url.toString().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));

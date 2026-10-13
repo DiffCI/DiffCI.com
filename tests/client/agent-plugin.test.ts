@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { execFileSync, spawn } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { before, it } from "node:test";
@@ -94,24 +94,97 @@ it("selects the live snapshot without tests, executes affected tests, and fails 
 
 it("ships both agent manifests and their shared skill/MCP configuration in the npm package", () => {
   const root = join(ROOT, "packaging/agent-plugin");
+  const portable = JSON.parse(readFileSync(join(root, "plugin.json"), "utf8"));
   const codex = JSON.parse(readFileSync(join(root, ".codex-plugin/plugin.json"), "utf8"));
   const claude = JSON.parse(readFileSync(join(root, ".claude-plugin/plugin.json"), "utf8"));
+  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+  assert.equal(portable.$schema, "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json");
+  assert.equal(portable.name, codex.name);
   assert.equal(codex.name, claude.name);
+  assert.equal(portable.version, pkg.version);
+  assert.equal(codex.version, pkg.version);
+  assert.equal(claude.version, pkg.version);
+  assert.deepEqual(portable.extensions["com.openai"].interface, codex.interface);
+  assert.equal(codex.author.name, "DiffCI");
+  assert.equal(claude.author.name, "DiffCI");
+  assert.equal(claude.icon, "./assets/diffci-mark.svg");
+  assert.equal(claude.documentationUrl, "https://diffci.com/mcp-server");
+  assert.equal(claude.supportUrl, "https://diffci.com/contact");
+  assert.equal(claude.privacyPolicyUrl, "https://diffci.com/data-handling");
+  assert.equal(claude.termsOfServiceUrl, "https://diffci.com/terms");
+  assert.equal(codex.interface.composerIcon, "./assets/diffci-mark.svg");
+  assert.ok(existsSync(join(root, "assets/diffci-mark.svg")));
   assert.equal(codex.skills, "./skills/");
   assert.equal(codex.mcpServers, "./.mcp.json");
   assert.match(readFileSync(join(root, "skills/diffci-verify/SKILL.md"), "utf8"), /safe_to_continue/);
+  assert.ok((readFileSync(join(root, "README.md"), "utf8").match(/\b\w+\b/g) ?? []).length >= 40);
   const config = JSON.parse(readFileSync(join(root, ".mcp.json"), "utf8"));
+  const portableConfig = JSON.parse(readFileSync(join(root, "mcp.json"), "utf8"));
+  assert.equal(portableConfig.$schema, "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json");
+  assert.deepEqual(portableConfig.mcpServers.diffci, { type: "stdio", ...config.mcpServers.diffci });
   assert.equal(config.mcpServers.diffci.args.at(-1), "diffci-mcp");
-  const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
   assert.ok(config.mcpServers.diffci.args.includes(`${pkg.name}@${pkg.version}`));
   const marketplace = JSON.parse(readFileSync(join(ROOT, ".agents/plugins/marketplace.json"), "utf8"));
   assert.equal(marketplace.plugins[0].source.path, "./packaging/agent-plugin");
+
+  const claudeMarketplace = JSON.parse(readFileSync(join(ROOT, ".claude-plugin/marketplace.json"), "utf8"));
+  assert.equal(claudeMarketplace.name, "diffci-marketplace");
+  assert.equal(claudeMarketplace.plugins[0].name, "diffci");
+  assert.equal(claudeMarketplace.plugins[0].source, "./packaging/agent-plugin");
+
+  const publicRoot = join(ROOT, "packaging/public-plugin");
+  const publicManifest = JSON.parse(readFileSync(join(publicRoot, "plugin.json"), "utf8"));
+  const publicMcp = JSON.parse(readFileSync(join(publicRoot, "mcp.json"), "utf8"));
+  assert.equal(publicManifest.name, "diffci");
+  assert.equal(publicManifest.version, pkg.version);
+  assert.equal(publicManifest.extensions["com.openai"].onboardingSkill, "./skills/get-started/SKILL.md");
+  assert.equal(publicManifest.extensions["com.openai"].interface.termsOfServiceURL, "https://diffci.com/terms");
+  assert.deepEqual(publicMcp.mcpServers.diffci, {
+    type: "streamable-http",
+    url: "https://diffci.com/mcp/v1",
+    extensions: { "com.openai": { auth: { type: "none" } } },
+  });
+  for (const path of [
+    "assets/icon.png",
+    "assets/icon-dark.png",
+    "assets/logo.png",
+    "assets/logo-dark.png",
+    "skills/get-started/SKILL.md",
+    "skills/diffci-remote/SKILL.md",
+    "review/refusal-observation.json",
+  ]) assert.ok(existsSync(join(publicRoot, path)), path);
+
   const packArgs = ["pack", "--dry-run", "--json", "--ignore-scripts"];
   const packed = JSON.parse(execFileSync(process.platform === "win32" ? "cmd.exe" : "npm",
     process.platform === "win32" ? ["/d", "/c", "npm", ...packArgs] : packArgs,
     { cwd: ROOT, encoding: "utf8" }));
   assert.ok(packed[0].files.some((file: { path: string }) => file.path === ".agents/plugins/marketplace.json"));
-  for (const path of [".codex-plugin/plugin.json", ".claude-plugin/plugin.json", ".mcp.json", "skills/diffci-verify/SKILL.md"]) {
+  assert.ok(packed[0].files.some((file: { path: string }) => file.path === ".claude-plugin/marketplace.json"));
+  for (const path of [
+    "plugin.json",
+    "mcp.json",
+    ".codex-plugin/plugin.json",
+    ".claude-plugin/plugin.json",
+    ".mcp.json",
+    "README.md",
+    "assets/diffci-mark.svg",
+    "skills/diffci-verify/SKILL.md",
+  ]) {
     assert.ok(packed[0].files.some((file: { path: string }) => file.path === `packaging/agent-plugin/${path}`), path);
+  }
+  for (const path of [
+    "plugin.json",
+    "mcp.json",
+    "README.md",
+    "SUBMISSION.md",
+    "assets/icon.png",
+    "assets/icon-dark.png",
+    "assets/logo.png",
+    "assets/logo-dark.png",
+    "skills/get-started/SKILL.md",
+    "skills/diffci-remote/SKILL.md",
+    "review/refusal-observation.json",
+  ]) {
+    assert.ok(packed[0].files.some((file: { path: string }) => file.path === `packaging/public-plugin/${path}`), path);
   }
 });

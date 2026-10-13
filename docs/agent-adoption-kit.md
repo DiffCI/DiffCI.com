@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # immutable checkout pin
         with:
           fetch-depth: 0
-      - uses: DiffCI/DiffCI.com@b35f55c1b6ba9c092f3ad623efd8baa0422c450a # v0.3.9
+      - uses: DiffCI/DiffCI.com@b35f55c1b6ba9c092f3ad623efd8baa0422c450a # v0.3.10
 ```
 
 Run `npx "@diffci.com/diffci@latest" verify-workflow` before starting a pilot. The Action uploads a
