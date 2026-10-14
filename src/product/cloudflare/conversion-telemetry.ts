@@ -36,7 +36,8 @@ function logUnauthenticatedWebhookRejection(source: WebhookFailureSource, reason
   }));
 }
 
-export async function reportOptInCliUsage(env: ConversionTelemetryEnv, command: string, outcome: string, version: string): Promise<void> {
+export interface UsageMetadata { surface?: "cli" | "local-mcp"; activity?: "internal" | "external"; installation_id?: string }
+export async function reportOptInCliUsage(env: ConversionTelemetryEnv, command: string, outcome: string, version: string, metadata: UsageMetadata = {}): Promise<void> {
   if (!env.POSTHOG_API_KEY) return;
   const response = await fetch(`${env.POSTHOG_HOST ?? "https://us.i.posthog.com"}/capture/`, {
     method: "POST",
@@ -45,14 +46,17 @@ export async function reportOptInCliUsage(env: ConversionTelemetryEnv, command: 
       api_key: env.POSTHOG_API_KEY,
       event: "cli_usage_opt_in",
       properties: {
-        distinct_id: "diffci-cli-opt-in",
+        distinct_id: metadata.installation_id ? `installation:${metadata.installation_id}` : "diffci-cli-opt-in",
         command,
         outcome,
         version,
+        ...metadata,
+        phase: command === "verify" ? "verification" : "analysis",
         $process_person_profile: false,
         $geoip_disable: true,
       },
     }),
+    signal: AbortSignal.timeout(3000),
   });
   if (!response.ok) throw new Error(`PostHog capture failed with HTTP ${response.status}`);
 }

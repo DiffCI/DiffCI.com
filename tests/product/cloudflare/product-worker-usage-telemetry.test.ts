@@ -60,7 +60,8 @@ describe("product Worker opt-in CLI telemetry", () => {
       env("phc_test"),
       waits,
     );
-    assert.equal(response.status, 202);
+    assert.equal(response.status, 200);
+    assert.equal(response.body.delivery, "delivered");
     await Promise.all(waits);
     assert.equal(capture?.event, "cli_usage_opt_in");
     assert.equal(capture?.api_key, "phc_test");
@@ -69,6 +70,8 @@ describe("product Worker opt-in CLI telemetry", () => {
       command: "check",
       outcome: "observed",
       version: "9.8.7",
+      surface: "cli",
+      phase: "analysis",
       $process_person_profile: false,
       $geoip_disable: true,
     });
@@ -80,5 +83,29 @@ describe("product Worker opt-in CLI telemetry", () => {
       reportOptInCliUsage({ POSTHOG_API_KEY: "wrong" }, "observe", "error", "9.8.7"),
       /PostHog capture failed with HTTP 401/,
     );
+  });
+
+  it("returns delivery failure rather than falsely acknowledging success", async () => {
+    globalThis.fetch = async () => new Response(null, { status: 401 });
+    const response = await post({ schema: "diffci.usage.v1", command: "verify", outcome: "passed", version: "9.8.7" }, env("phc_test"));
+    assert.equal(response.status, 502);
+    assert.equal(response.body.error, "usage_delivery_failed");
+  });
+
+  it("rejects arbitrary identifiers, unknown fields, invalid outcomes and null payloads", async () => {
+    const valid = { schema: "diffci.usage.v1", command: "verify", outcome: "passed", version: "9.8.7" };
+    for (const body of [null, { ...valid, installation_id: "user@example.com" }, { ...valid, repository: "private" }, { ...valid, outcome: "observed" }]) {
+      assert.equal((await post(body, env("phc_test"))).status, 400);
+    }
+  });
+
+  it("preserves consented installation identity and separates internal MCP verification", async () => {
+    let capture: any;
+    globalThis.fetch = async (_url, init) => { capture = JSON.parse(String(init?.body)); return new Response(null, { status: 200 }); };
+    const installation_id = "e38e4026-f7a6-4f3f-83bc-0995a37c0f65";
+    await post({ schema: "diffci.usage.v1", command: "verify", outcome: "passed", version: "9.8.7", installation_id, surface: "local-mcp", activity: "internal" }, env("phc_test"));
+    assert.equal(capture.properties.distinct_id, `installation:${installation_id}`);
+    assert.equal(capture.properties.activity, "internal");
+    assert.equal(capture.properties.phase, "verification");
   });
 });

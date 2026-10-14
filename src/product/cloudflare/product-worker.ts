@@ -893,18 +893,34 @@ export default {
     // the payload (see src/ingest/ingest.ts).
     if (request.method === "POST" && url.pathname === "/v1/usage-events") {
       if (!env.POSTHOG_API_KEY) return json({ ok: false, error: "usage_collection_unavailable" }, 503);
-      if (Number(request.headers.get("content-length") ?? "0") > 512) return json({ ok: false }, 413);
+      if (Number(request.headers.get("content-length") ?? "0") > 1024) return json({ ok: false }, 413);
       const raw = await request.text();
-      if (raw.length > 512) return json({ ok: false }, 413);
+      if (raw.length > 1024) return json({ ok: false }, 413);
       let body: Record<string, unknown>;
       try { body = JSON.parse(raw) as Record<string, unknown>; } catch { return json({ ok: false }, 400); }
-      if (body.schema !== "diffci.usage.v1" || !["check", "observe"].includes(String(body.command)) ||
-        !["observed", "refused", "error"].includes(String(body.outcome)) ||
+      if (!body || typeof body !== "object" || Array.isArray(body) ||
+        Object.keys(body).some(key => !["schema", "command", "outcome", "version", "surface", "activity", "installation_id"].includes(key)) ||
+        body.schema !== "diffci.usage.v1" || !["check", "observe", "verify"].includes(String(body.command)) ||
+        !(body.command === "verify" ? ["passed", "failed", "blocked"] : ["observed", "refused", "error"]).includes(String(body.outcome)) ||
+        (body.surface !== undefined && !["cli", "local-mcp"].includes(String(body.surface))) ||
+        (body.activity !== undefined && !["internal", "external"].includes(String(body.activity))) ||
+        (body.installation_id !== undefined && (typeof body.installation_id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.installation_id))) ||
         typeof body.version !== "string" || !/^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(body.version)) {
         return json({ ok: false }, 400);
       }
-      ctx.waitUntil(reportOptInCliUsage(env, body.command as string, body.outcome as string, body.version as string).catch(() => undefined));
-      return json({ ok: true }, 202);
+      try {
+        await reportOptInCliUsage(env, body.command as string, body.outcome as string, body.version as string, {
+          surface: (body.surface ?? "cli") as "cli" | "local-mcp",
+          // Historical clients have no internal flag: never infer external adoption from them.
+          ...(body.activity ? { activity: body.activity as "internal" | "external" } : {}),
+          ...(body.installation_id ? { installation_id: body.installation_id as string } : {}),
+        });
+        console.log(JSON.stringify({ event: "usage_delivery", status: "delivered" }));
+        return json({ ok: true, delivery: "delivered" }, 200);
+      } catch {
+        console.error(JSON.stringify({ event: "usage_delivery", status: "failed" }));
+        return json({ ok: false, error: "usage_delivery_failed" }, 502);
+      }
     }
     if (request.method === "POST" && url.pathname === "/v1/ingest/observations") {
       const declaredLength = Number(request.headers.get("content-length") ?? "0");

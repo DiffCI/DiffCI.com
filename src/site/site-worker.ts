@@ -15,6 +15,8 @@ import { handleMcpRequest, MCP_SERVER_INFO } from "./mcp-endpoint.js";
 export interface SiteEnv {
   ASSETS: { fetch(request: Request): Promise<Response> };
   MCPRUSH_GATEWAY_TOKEN?: string;
+  POSTHOG_API_KEY?: string;
+  POSTHOG_HOST?: string;
 }
 
 async function validGatewayToken(request: Request, expected?: string): Promise<boolean> {
@@ -86,7 +88,7 @@ function discoveryResponse(request: Request, body: unknown, contentType: string,
 }
 
 export default {
-  async fetch(request: Request, env: SiteEnv): Promise<Response> {
+  async fetch(request: Request, env: SiteEnv, ctx?: { waitUntil(promise: Promise<unknown>): void }): Promise<Response> {
     const url = new URL(request.url);
     // Cloudflare may present the URL as https even when the visitor connected over http; the original
     // scheme is in the cf-visitor header.
@@ -132,7 +134,21 @@ export default {
       });
     }
     if (url.pathname === "/mcp" || url.pathname === "/mcp/v1" || url.pathname === "/mcp/mcprush") {
-      const response = await handleMcpRequest(request);
+      const response = await handleMcpRequest(request, usage => {
+        if (!env.POSTHOG_API_KEY || !ctx) return;
+        ctx.waitUntil(fetch(`${env.POSTHOG_HOST ?? "https://us.i.posthog.com"}/capture/`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: env.POSTHOG_API_KEY, event: "hosted_mcp_usage_opt_in",
+            properties: { distinct_id: "diffci-hosted-mcp-opt-in", ...usage, surface: "hosted-mcp",
+              channel: url.pathname === "/mcp/mcprush" ? "mcprush" : "direct",
+              activity: request.headers.get("x-diffci-internal-usage") === "1" ? "internal" : "external",
+              $process_person_profile: false, $geoip_disable: true } }),
+          signal: AbortSignal.timeout(3000),
+        }).then(response => {
+          if (!response.ok) throw new Error("capture rejected");
+          console.log(JSON.stringify({ event: "hosted_mcp_usage_delivery", status: "delivered" }));
+        }).catch(() => { console.error(JSON.stringify({ event: "hosted_mcp_usage_delivery", status: "failed" })); }));
+      });
       const headers = new Headers(response.headers);
       headers.set("X-Robots-Tag", "noindex");
       return new Response(response.body, { status: response.status, statusText: response.statusText, headers });

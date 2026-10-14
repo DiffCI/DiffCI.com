@@ -301,7 +301,8 @@ function handleRpc(request: JsonRpcRequest): Record<string, unknown> | null {
   }
 }
 
-export async function handleMcpRequest(request: Request): Promise<Response> {
+export interface McpUsage { method: "initialize" | "tools/list" | "tools/call"; tool?: string; outcome: "success" | "error" }
+export async function handleMcpRequest(request: Request, recordUsage?: (usage: McpUsage) => void): Promise<Response> {
   const origin = validOrigin(request);
   if (origin === false) {
     return json(rpcError(undefined, -32600, "Forbidden Origin header"), 403);
@@ -312,7 +313,7 @@ export async function handleMcpRequest(request: Request): Promise<Response> {
       status: 204,
       headers: {
         ...corsHeaders(origin),
-        "Access-Control-Allow-Headers": "Content-Type, Accept, MCP-Protocol-Version",
+        "Access-Control-Allow-Headers": "Content-Type, Accept, MCP-Protocol-Version, X-DiffCI-Share-Usage, X-DiffCI-Internal-Usage",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Max-Age": "86400",
       },
@@ -348,6 +349,13 @@ export async function handleMcpRequest(request: Request): Promise<Response> {
 
   const message = body as JsonRpcRequest;
   const response = handleRpc(message);
+  if (request.headers.get("x-diffci-share-usage") === "1" && response &&
+    ["initialize", "tools/list", "tools/call"].includes(message.method ?? "")) {
+    const name = (message.params as ToolCallParams | undefined)?.name;
+    recordUsage?.({ method: message.method as McpUsage["method"],
+      ...(message.method === "tools/call" && tools.some(tool => tool.name === name) ? { tool: name } : {}),
+      outcome: "error" in response ? "error" : "success" });
+  }
   if (response === null || message.id === undefined) {
     return new Response(null, { status: 202, headers: corsHeaders(origin) });
   }

@@ -37,7 +37,7 @@ import { addDiffciPackageScripts, detectPackageManager, installDiffci, type Supp
 import type { ObservationReport, WorkflowFinding } from "./report.js";
 import { submitObservation } from "./submit.js";
 import { githubDeliveryWarning } from "./delivery-warning.js";
-import { sendUsageSignal } from "./usage-signal.js";
+import { configureTelemetry, readTelemetryPreference, recordUsage } from "./telemetry.js";
 import { detectSpecificationConflicts, readSpecificationFile } from "./spec-conflicts.js";
 import { formatVerificationSummary, verificationExitCode, verifyChanged, verifyRange } from "./verify.js";
 import { formatGrowthPrompt, formatVerifySavingsSummary, measureCommand, runVerifySavings, writeVerifySavingsReport, type VerifySavingsOptions } from "./verify-savings.js";
@@ -373,6 +373,7 @@ function runInit(flags: Record<string, string | boolean>, env: NodeJS.ProcessEnv
   if (!includeWorkflow) console.log("  skipped .github/workflows/diffci.yml (pass --workflow to add it)");
   if (!includeVerificationWorkflow) console.log("  skipped .github/workflows/diffci-verify.yml (pass --verification-workflow to add it)");
   console.log(`\nDefault agent command: ${agentCommand}`);
+  console.log("\nOptional telemetry is off unless you have opted in. Use diffci telemetry --mode anonymous for execution counts, or --mode installations to also share a random installation ID. No repository content is sent. Use --mode off to disable; --no-send always overrides consent.");
   return 0;
 }
 
@@ -418,6 +419,7 @@ async function runVerifyCommand(flags: Record<string, string | boolean>, env: No
         baseOverride: stringFlag(flags, "base"),
         headOverride: stringFlag(flags, "head"),
       });
+  await recordUsage("verify", report.verification, identity.version, flags, env);
   if (reportPath) {
     mkdirSync(dirname(reportPath), { recursive: true });
     writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
@@ -498,9 +500,7 @@ async function runCheck(flags: Record<string, string | boolean>, env: NodeJS.Pro
   const observationCode = await runObserve({ ...flags, out: reportPath, quiet: true, "no-send": true }, env);
   if (observationCode !== 0) return observationCode;
   const observation = JSON.parse(readFileSync(reportPath, "utf8")) as ObservationReport;
-  if ((flags["share-usage"] === true || env.DIFFCI_SHARE_USAGE === "1") && flags["no-send"] !== true) {
-    await sendUsageSignal({ command: "check", outcome: observation.status === "OBSERVED" ? "observed" : observation.status === "REFUSED" ? "refused" : "error", version: observerIdentity().version });
-  }
+  await recordUsage("check", observation.status === "OBSERVED" ? "observed" : observation.status === "REFUSED" ? "refused" : "error", observerIdentity().version, flags, env);
   const print = (message: string): void => { if (flags.quiet !== true && flags.json !== true) console.log(message); };
   print(summarise(observation, true));
   print(`  observation report: ${reportPath}`);
@@ -622,9 +622,7 @@ async function runObserve(flags: Record<string, string | boolean>, env: NodeJS.P
 
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
-  if ((flags["share-usage"] === true || env.DIFFCI_SHARE_USAGE === "1") && flags["no-send"] !== true) {
-    await sendUsageSignal({ command: "observe", outcome: report.status === "OBSERVED" ? "observed" : report.status === "REFUSED" ? "refused" : "error", version: identity.version });
-  }
+  await recordUsage("observe", report.status === "OBSERVED" ? "observed" : report.status === "REFUSED" ? "refused" : "error", identity.version, flags, env);
 
   const summary = summarise(report);
   if (flags.json === true) {
@@ -912,7 +910,8 @@ Usage:
   diffci init [--repo <path>] [--workflow] [--verification-workflow] [--install] [--force]
   diffci mcp
   diffci verify [--changed | --base <sha> --head <sha>] [--repo <path>] [--out <file>] [--json]
-                [--redact-paths] [--timeout-ms <ms>]
+                [--redact-paths] [--timeout-ms <ms>] [--share-usage] [--no-send]
+  diffci telemetry [--mode off|anonymous|installations] [--internal-usage]
   diffci check [--repo <path>] [--out <file>] [--base <sha> --head <sha>]
                [--redact-paths] [--json] [--quiet] [--fail-on-error] [--timeout-ms <ms>] [--share-usage]
   diffci pilot --full <command> [--selected <command>] [--repo <path>] [--out-dir <dir>] [--label <name>]
@@ -952,8 +951,10 @@ verify-workflow checks that the job running DiffCI cannot affect any other job, 
 The report is sent only when both --api-url and --api-token are given (or DIFFCI_API_URL and
 DIFFCI_TOKEN are set). A failed send is reported and never fails the step - the report is on disk
 either way. Plain http is refused; the token is never printed.
---share-usage (or DIFFCI_SHARE_USAGE=1) sends only command, outcome, and version to DiffCI.
-No repository, commit, test, report, or persistent identifier is sent. --no-send disables it.
+--share-usage (or DIFFCI_SHARE_USAGE=1) opts in to command, outcome, version, surface and activity reporting.
+diffci telemetry --mode anonymous saves consent; --mode installations also shares a random local installation ID.
+--mode off disables saved consent and deletes the ID. --internal-usage labels tests/internal activity.
+No repository, commit, test, report, paths, or machine details are sent. --no-send or DIFFCI_NO_SEND=1 disables it.
 `;
 
 async function main(): Promise<void> {
@@ -967,6 +968,14 @@ async function main(): Promise<void> {
   }
 
   switch (command) {
+    case "telemetry": {
+      const mode = stringFlag(flags, "mode");
+      const preference = mode ? configureTelemetry(mode, flags["internal-usage"] === true, env) : readTelemetryPreference(env);
+      console.log(`DiffCI telemetry: ${preference.mode}; activity: ${preference.internal ? "internal" : "external"}.`);
+      console.log("Reporting includes command, outcome, version, surface and activity. Installation mode adds a random local ID; installations are not people. No repository content or machine details are sent. --no-send always overrides consent.");
+      process.exitCode = 0;
+      return;
+    }
     case "init":
       process.exitCode = runInit(flags, env);
       return;

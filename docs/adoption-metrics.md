@@ -45,22 +45,45 @@ runtime evidence, blocker, and next action. Use consented identifiers for privat
 Unknown activity stays unknown; do not interpret unavailable evidence as confirmed inactivity.
 
 Known active repositories is a lower bound on evidenced usage, not total active repositories.
-Current anonymous opt-in events cannot establish unique repositories or retention.
+Anonymous opt-in events cannot establish unique repositories or retention. Consented random installation IDs can measure active installations and installation retention, never people or repositories.
 
 ## Opt-in CLI usage
 
-Users can run `diffci check --share-usage` or set `DIFFCI_SHARE_USAGE=1` for `check` and
-`observe`. `--no-send` overrides the opt-in. The CLI sends one HTTPS event after analysis to
-`https://app.diffci.com/v1/usage-events` with only the command (`check` or `observe`), analysis
-outcome (`observed`, `refused`, or `error`), and package version. It sends no repository identity,
-paths, commits, test names, report, token, or stable installation identifier. Delivery failure is
-best effort and cannot fail validation. The product Worker records `cli_usage_opt_in` in PostHog
-when its existing `POSTHOG_API_KEY` is configured.
+Reporting is off by default. `--share-usage` or `DIFFCI_SHARE_USAGE=1` opts in for one invocation.
+`diffci telemetry --mode anonymous` saves consent outside the checkout, in `~/.diffci/telemetry.json`.
+`diffci telemetry --mode installations` additionally creates and shares a random local UUID.
+`diffci telemetry --mode off` disables saved consent and deletes that UUID; opting back in creates a new identity.
+Use `diffci telemetry` to inspect the mode. `--no-send`, `DIFFCI_NO_SEND=1`, or `DIFFCI_SHARE_USAGE=0` overrides consent.
 
-Count these events as **opted-in executions**, not unique users or repositories. Report the opt-in
-count separately from npm downloads and external merged integrations. Because there is no stable
-identifier, repeated runs by one user cannot be deduplicated. Network providers may still observe
-connection metadata such as IP address.
+`check`, `observe`, and `verify` send one HTTPS event to `https://app.diffci.com/v1/usage-events`.
+Fields are command, outcome, package version, surface (`cli` or `local-mcp`), activity (`external` or `internal`),
+and the installation UUID only in installation mode. No repository identity, paths, commits, test names,
+report, token, username, or machine details are sent. `check`/`observe` outcomes describe **analysis**;
+`verify` outcomes (`passed`, `failed`, `blocked`) describe **verification**. Observed analysis is not a passing test receipt.
+Local MCP verification inherits the user's saved consent/environment; `DIFFCI_NO_SEND=1` disables it.
+
+Delivery status is printed on stderr, including for JSON/quiet output. `delivered` means PostHog's capture API
+accepted the event, not that it is already queryable. `accepted` means an older Worker accepted it for background
+forwarding. Failure/timeout never changes validation results. The updated Worker waits for capture acceptance,
+returns 502 on forwarding failure, and emits bounded `usage_delivery` success/failure logs without payloads or credentials.
+Monitor failed delivery logs and 502/503 rates in Cloudflare; a missing heartbeat alone does not prove a fault.
+
+For internal activity, pass `--internal-usage`, set `DIFFCI_USAGE_INTERNAL=1`, or configure the saved mode
+with `--internal-usage`. CI/smoke tests should always use this flag or a separate PostHog test project.
+Older unlabelled events remain **unclassified**, not confirmed external adoption. Exclude versions containing
+`smoke`, `probe`, or `test`, and exclude the known internal 2026-10-08 version 0.3.9 check event from adoption claims.
+
+Count anonymous events as **opted-in executions**. Count distinct consented installation UUIDs as
+**active installations**, with numerator/denominator for retention cohorts. Neither identifies unique people
+or repositories. Separate internal/external/unclassified activity and CLI/local MCP/hosted MCP surfaces.
+Report these separately from npm downloads and external merged integrations. Network providers may still
+observe connection metadata such as IP address. PostHog person profiles and GeoIP are disabled for these events.
+
+Hosted MCP callers can explicitly opt in with `X-DiffCI-Share-Usage: 1`; use `X-DiffCI-Internal-Usage: 1`
+for testing. `hosted_mcp_usage_opt_in` records bounded method, allowlisted tool name, outcome, channel
+(`direct` or `mcprush`), surface and activity. It never contains arguments, reports, workflow text or caller identity.
+Initialize/tools-list measure discovery; tools-call success measures guidance usage, not local test execution.
+The site Worker needs `POSTHOG_API_KEY` configured and an execution context to forward events.
 
 ## Package
 
